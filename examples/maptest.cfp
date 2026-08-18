@@ -1,0 +1,11 @@
+::list = Nil | Cons !x xs
+
+start =  printlist (map p5 (fromto 1 10))
+
+fromto !a !b = if (a <= b) (Cons a (fromto (a+1) b)) Nil
+
+map f xs = case xs (Nil -> Nil) (Cons x xs -> Cons (f x) (map f xs))
+
+p5 x = x + 5
+
+printlist !xs = case xs (Nil -> 0) (Cons x xs -> print x <#> printlist xs)

@@ -1,0 +1,189 @@
+::list  = Nil | Cons !x xs
+::Tup   = Tup a b
+::ProTup = ProTup !a !b
+::Maybe = Just !a | Nothing
+::Term  = Con !c|  Var !v |  Fun !n !ts
+::Rule  = Rule !t !ts
+
+fst t = case t (Tup a b -> a) 
+snd t = case t (Tup a b -> b) 
+
+hd xs = case xs nomatch (Cons x xs -> x)
+tl xs = case xs nomatch (Cons x xs -> xs)
+
+length xs = case xs (Nil -> 0) (Cons x xs -> 1 + length xs)
+
+fromto n m = if (n > m) Nil (Cons n (fromto (n+1) m))
+from a      = Cons a (from (a+1))
+
+el n xs   = case xs (Nil -> 111) (Cons x xs -> if (n == 0) x (el (n-1) xs))
+zip xs ys = case xs (Nil -> Nil) (Cons x xs -> case ys (Nil -> Nil) (Cons y ys -> Cons (Tup x y) (zip xs ys)))
+
+take n xs = if (n == 0) Nil (case xs (Nil -> Nil) (Cons x xs -> Cons x (take (n-1) xs)))
+drop n xs = if (n == 0) xs (case xs (Nil -> Nil) (Cons x xs -> drop (n-1) xs))
+
+filter p xs = case xs (Nil -> Nil) (Cons a as -> if (p a) (Cons a (filter p as)) (filter p as))
+map f xs    = case xs (Nil -> Nil) (Cons x xs -> Cons (f x) (map f xs))
+
+append xs ys = case xs (Nil -> ys) (Cons x xs -> Cons x (append xs ys))
+concat xss    = case xss (Nil -> Nil) (Cons ys yss -> case ys (Nil -> concat yss) (Cons a as -> Cons a (concat (Cons as yss))))
+merge xs ys  = case xs (Nil -> ys) (Cons a as -> case ys (Nil -> xs) (Cons b bs -> if (a == b) (Cons a (merge as bs)) (if (a < b) (Cons a (merge as ys)) (Cons b (merge xs bs)))))
+
+foldl f z xs = case xs (Nil -> z) (Cons x xs -> foldl f (f z x) xs)
+foldr f z xs = case xs (Nil -> z) (Cons x xs -> f x (foldr f z xs))
+
+sum xs = case xs (Nil -> 0) (Cons x xs -> x + sum xs)
+
+eqlist as bs = case as (Nil -> case bs (Nil -> True) (Cons y ys -> False)) (Cons x xs -> case bs (Nil -> False) (Cons y ys ->   x == y /\ eqlist xs ys))
+gtlist as bs = case as (Nil -> False)  (Cons x xs ->  case bs (Nil -> True) (Cons y ys ->   x > y \/ gtlist xs ys))
+
+pSymbol a p1 = case p1 (Nil -> Nil) (Cons x xs -> if (x == a) (Cons (Tup x xs) Nil) Nil)
+
+pSatisfy p p1 = case p1 (Nil -> Nil) (Cons x xs -> if (p x) (Cons (Tup x xs) Nil) Nil)
+
+do1 f p1 = case p1 (Tup x zs -> Tup (f x) zs)
+do2 q p1 = case p1 (Tup f ys -> map (do1 f) (q ys))
+
+dt p = case p (Nil -> Nil) (Cons r xs -> Cons r Nil)
+
+null p = case p (Nil -> True) (Cons x xs -> False)
+
+pSequence p0 = case p0 (Nil -> pSucceed Nil) (Cons p ps -> seq (seqapply list p) (pSequence ps))
+
+tag n p1     = case p1 (Con x -> Con x) (Var x -> Var ( n + 10 * x)) (Fun x xs -> Fun x (map (tag n) xs))
+tagRule n p1 = case p1 (Rule c cs -> Rule (tag n c) (map (tag n) cs))
+lookUp bs t  = case t (Con x -> t) (Var x -> look bs x) (Fun x p11 -> t)
+look p0 x    = case p0 (Nil -> Var x) (Cons p00 bs -> case p00 (ProTup z t ->  if (x == z) (lookUp bs t) (look bs x)))
+
+unify d p1 = case p1 (Just bs -> case d (ProTup t u -> uni (lookUp bs t) (lookUp bs u) bs)) (Nothing -> Nothing)
+
+uni p0 p1 bs = case p0 (Con x -> case p1 (Con y    -> if (x !=  y) Nothing (Just bs))
+                                         (Var y    -> Just (bind y p0 bs))
+                                         (Fun y ys -> Nothing))
+                        (Var x -> Just (bind x p1 bs))
+                        (Fun x xs -> case p1 (Con y     -> Nothing) 
+                                             (Var y     -> Just (bind y p0 bs))
+                                             (Fun y ys  -> if (eqlist x y /\ length xs == length ys)
+                                                                (foldr unify (Just bs) (zip xs ys)) Nothing))
+
+
+solve rules p1 e n = case p1 (Nil -> Cons e Nil) (Cons t ts -> concat (map (compose (ff e t rules ts n) (tagRule n)) rules))
+
+ff e t rules ts n p5 = case p5 (Rule c cs -> fh rules ts n cs (unify (ProTup t c) e))
+
+fh rules ts n cs newenv = case newenv (Just p40 -> solve rules (append cs ts) newenv (n + 1)) (Nothing -> Nil)
+
+isSingle p0 = case p0 (Rule p00 cs -> select p00 nomatch nomatch (Fun f fs -> length fs == 1 /\ length cs == 0))
+
+
+list x xs = Cons x xs
+nott a = if a False True
+repeat n x = if (n == 0) Nil (Cons x (repeat (n - 1) x))
+compose f g x = f (g x)
+flip f a b = f b a
+pToken k xs = if (eqlist k (take (length k) xs)) (Cons (Tup k (drop (length k) xs)) Nil) Nil
+pFailp xs = Nil
+pSucceed r xs = Cons (Tup r xs) Nil
+choice p q xs = append (p xs) (q xs)
+seq p q xs = concat (map (do2 q) (p xs))
+seqapply f p = seq (pSucceed f) p
+option p d = choice p (pSucceed d)
+konst f x = f
+seqleft p q = seq (seqapply konst p) q
+seqright p q = seq (seqapply (flip konst) p) q
+seqapplyleft f p = seqapply (konst f) p
+pMany p = option (seq (seqapply list p) (pMany p)) Nil
+pMany1 p = seq (seqapply list p) (pMany p)
+pPack p r q = seqleft (seqright p r) q
+pListSep p s = seq (seqapply list p) (pMany (seqright s p))
+determ p xs = dt (p xs)
+greedy p  = determ (pMany p)
+greedy1 p = determ (pMany1 p)
+pDigit = pSatisfy isDigit
+isDigit c =  (c >= '0') /\ (c <= '9')
+isAlpha c = (c >= 'a' /\ c <= 'z') \/ (c >= 'A'/\ c <= 'Z')
+isAlphaNum c = isAlpha c \/ isDigit c
+pDigAsInt = seqapply dig2num pDigit
+dig2num c = c - '0'
+pNatural = seqapply (foldl makeNum 0) (pMany1 pDigAsInt)
+makeNum a b =  a * 10 + b
+pInteger = seq (option (seqapplyleft negate (pSymbol '-')) id) pNatural
+pNeg = seq (seqapplyleft negate (pSymbol '-')) pNatural
+pNeg2 = seqapply negate (seqright (pSymbol '-') pNatural)
+negate a = 0 - a
+id x = x
+pIdentifier = seq (seqapply list (pSatisfy isAlpha)) (greedy (pSatisfy isAlphaNum))
+pParens p = pPack (pSymbol '(') p (pSymbol ')')
+pCommaList p = pListSep p (pSymbol ',')
+lchoice = foldr option pFailp
+numlist = pPack (pSymbol '[') (pCommaList pInteger) (pSymbol ']')
+numidlist = pPack (pSymbol '[') (pCommaList (choice pInteger pIdentifier)) (pSymbol ']')
+getres f = fst (hd f)
+con n     = Con n
+var n     = Var n
+fun n ns  = Fun n ns
+rule r rs = Rule r rs
+pCon = seqapply con pInteger
+pVar = seqapply var (seqright (pSymbol 'X') pInteger)
+pFun = seq (seqapply fun pIdentifier) (choice (pParens (pListSep pTerm pComma)) (pSucceed Nil))
+pTerm = choice (choice pCon pVar) pFun
+pRule = seqleft (seq (seqapply rule pTerm) (option pRightHandSide Nil)) (pSymbol '.')
+pRightHandSide = seqright (seqright (pSymbol ':') (pSymbol '-')) (pListSep pTerm pComma)
+pComma = pSymbol ','
+isSpace x = x  == ' ' \/ x == '\n'
+pStart p xs = fst (hd (p (filter (compose nott isSpace) xs)))
+parseTerm = pStart pTerm
+parseRules prog = pStart (pMany pRule) prog
+parseRule = pStart pRule
+emptyEnv = Just Nil
+bind v t bs = Cons (ProTup v t) bs
+
+str2list s = strls 0 s
+strls n s = if (n < strlen s) (Cons (strat n s) (strls (n+1) s)) Nil
+
+printstrlist xs = case xs (Nil -> 0) (Cons c cs -> printC c <#> printstrlist cs)
+
+prog = concat (map str2list (Cons line1 (Cons line2 (Cons line3 (Cons line4 (Cons line5 (Cons line6 (Cons line7 (Cons line8 (Cons line9 (Cons line10 (Cons line11 (Cons line12 (Cons line13 (Cons line14 (Cons line15 (Cons line16 (Cons line17 Nil))))))))))))))))))
+prog2 = concat (Cons prog (Cons prog  Nil))
+prog3 = concat (Cons prog (Cons prog (Cons prog  Nil)))
+prog10 = concat (Cons prog (Cons prog (Cons prog (Cons prog (Cons prog (Cons prog (Cons prog (Cons prog (Cons prog (Cons prog Nil))))))))))
+prog20 = concat (Cons prog10 (Cons prog10 Nil))
+prog30 = concat (Cons prog10 (Cons prog10 (Cons prog10  Nil)))
+prog40 = concat (Cons prog10 (Cons prog10 (Cons prog10 (Cons prog10 ( Nil)))))
+prog50 = concat (Cons prog10 (Cons prog10 (Cons prog10 (Cons prog10 (Cons prog10 Nil)))))
+prog100 = concat (Cons prog10 (Cons prog10 (Cons prog10 (Cons prog10 (Cons prog10 (Cons prog10 (Cons prog10 (Cons prog10 (Cons prog10 (Cons prog10 Nil))))))))))
+line1 = "man(jan)."
+line2 = "man(mark)."
+line3 = "vrouw(margriet)."
+line4 = "vrouw(marit)."
+line5 = "ouder(jan,mark)."
+line6 = "ouder(jan,marit)."
+line7 = "ouder(margriet,marit)."
+line8 = "ouder(margriet,mark)."
+line9 = "moeder(X1,X2) :- ouder(X1,X2),vrouw(X1)."
+line10 = "vader(X1,X2) :- ouder(X1,X2),man(X1)."
+line11 = "ouder(joop,jan)."
+line12 = "ouder(nel,jan)."
+line13 = "grootouder(X1,X2) :- ouder(X1,X3),ouder(X3,X2)."
+line14 = "voorouder(X1,X2) :- ouder(X1,X2)."
+line15 = "voorouder(X1,X2) :- ouder(X1,X3),voorouder(X3,X2)."
+line16 = "ouder(siem,nel)."
+line17 = "ouder(cornelia,nel)."
+
+sol rules inp  n  = length (solve rules (Cons (parseTerm  inp) Nil) emptyEnv  0)
+msol n       = sum (map (sol (parseRules prog) (str2list "voorouder(X1,marit)")) (fromto 1 n))
+dosol inp     = solve (parseRules prog20) (Cons (parseTerm inp) Nil) emptyEnv 0
+unitest f s = unify (ProTup (parseTerm (str2list f)) (parseTerm (str2list s))) emptyEnv
+parsetest n  = if (n == 0) Nil (Cons (length (filter isSingle (parseRules prog100))) (parsetest (n - 1)))
+prologtest    = length (dosol "vader(X1,mark)")
+
+start0 = pStart pNatural (str2list "1234 aap")
+start1 = pStart numlist (str2list "[1,2,3,44,555,6666]")
+start2 = pStart numlist (str2list "[1,2,3,44,555,6666]")
+start = printlist (parsetest 20)
+start4 = unitest "p(X1)" "q(X2)"
+start5  = msol 500
+
+printlist xs = case xs (Nil -> 0) (Cons x xs -> print x <#> printlist xs)
+
+

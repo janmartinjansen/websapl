@@ -1,0 +1,13 @@
+::list = Nil | Cons !x xs
+
+start = printlist (reptwice 400)
+
+reptwice !n = if (n==0) Nil (Cons (tinc 0) (reptwice (n-1)))
+
+inc !n = n+1
+
+twice f x =  f (f x)
+
+tinc n = twice twice twice twice inc n
+
+printlist xs = case xs (Nil -> 0) (Cons x xs -> print x <#> printlist xs)

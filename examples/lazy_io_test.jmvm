@@ -1,0 +1,490 @@
+readStream lb1 readStream_1 writeStream lb3 lb4 str2list_lazy str2list strls_lazy strls lb5 strEqual_lazy strEqual lb7 strEqualAt_lazy strEqualAt lb9 lb11 list2str_lazy list2str fillStr_lazy fillStr lb13 lb14 strcat_lazy strcat toUpperChar_lazy toUpperChar lb15 strUpper_lazy strUpper substr_lazy substr itoa lb17 lb19 itoa_2 itoa_3 itoa_4 length lb21 lb22 map lb23 lb24 filter lb25 lb26 lb27 foldl lb29 lb30 foldr lb31 lb32 append lb33 lb34 take lb35 lb36 lb37 take_5 drop lb39 lb40 lb41 drop_6 reverse rev lb43 lb44 start lb45 lb47 start_7 start_8  #
+            call 72                                  || start
+            print 4
+            stop
+0           updsp 1                                  || readStream
+            load 1
+            pushfunc 1 2                             || readStream_1
+            create 2 3
+            dup
+            store 0
+            eval
+            push 0
+            dec
+            sub
+            ifneq 1                                  || lb1
+            ccreatet 0 11 5 0
+            return 2
+1           load 1                                   || lb1
+            pushfunc 1 0                             || readStream
+            create 2 3
+            load 0
+            eval
+            ccreatet 2 11 5 1
+            return 2
+2           load 0                                   || readStream_1
+            eval
+            syscall 6
+            return 1
+3           load 1                                   || writeStream
+            eval
+            jmpt 2 4 5                               || lbs
+4           load 0                                   || lb3
+            eval
+            syscall 5
+            return 2
+5           load 0                                   || lb4
+            load 2
+            eval
+            syscall 7
+            load 1
+            load 2
+            call 3                                   || writeStream
+            return 4
+6           load 0                                   || str2list_lazy
+            eval
+            store 0
+7           load 0                                   || str2list
+            push 0
+            tailcall 1 9                             || strls
+8           load 1                                   || strls_lazy
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+9           load 1                                   || strls
+            strop 2
+            load 0
+            sub
+            ifle 10                                  || lb5
+            load 1
+            loadadd 0 1
+            pushfunc 2 9                             || strls
+            create 3 3
+            load 1
+            load 0
+            strop 4
+            ccreatet 2 11 5 1
+            return 2
+10          ccreatet 0 11 5 0                        || lb5
+            return 2
+11          load 1                                   || strEqual_lazy
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+12          load 0                                   || strEqual
+            strop 2
+            load 1
+            strop 2
+            sub
+            ifneq 13                                 || lb7
+            load 1
+            load 0
+            push 0
+            call 15                                  || strEqualAt
+            ifeq 13                                  || lb7
+            return_const 2 1
+13          return_const 2 0                         || lb7
+14          load 2                                   || strEqualAt_lazy
+            eval
+            store 2
+            load 1
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+15          load 0                                   || strEqualAt
+            load 1
+            strop 2
+            sub
+            iflt 16                                  || lb9
+            return_const 3 1
+16          load 1                                   || lb9
+            load 0
+            strop 4
+            load 2
+            load 0
+            strop 4
+            sub
+            ifneq 17                                 || lb11
+            loadadd 0 1
+            store 0
+            jmp 15                                   || strEqualAt
+17          return_const 3 0                         || lb11
+18          load 0                                   || list2str_lazy
+            eval
+            store 0
+19          load 0                                   || list2str
+            call 39                                  || length
+            array_create_dynamic 1
+            load 0
+            push 0
+            tailcall 1 21                            || fillStr
+20          load 2                                   || fillStr_lazy
+            eval
+            store 2
+            load 1
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+21          load 1                                   || fillStr
+            jmpt 2 22 23                             || lbs
+22          load 2                                   || lb13
+            return 3
+23          load 4                                   || lb14
+            load 2
+            load 0
+            strop 3
+            load 1
+            eval
+            loadadd 2 1
+            tailcall 5 21                            || fillStr
+24          load 1                                   || strcat_lazy
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+25          load 1                                   || strcat
+            pushfunc 1 7                             || str2list
+            create 2 3
+            load 0
+            pushfunc 1 7                             || str2list
+            create 2 3
+            call 55                                  || append
+            tailcall 2 19                            || list2str
+26          load 0                                   || toUpperChar_lazy
+            eval
+            store 0
+27          load 0                                   || toUpperChar
+            push 'a'
+            sub
+            iflt 28                                  || lb15
+            push 'z'
+            load 0
+            sub
+            iflt 28                                  || lb15
+            load 0
+            push 'a'
+            sub
+            push 'A'
+            add
+            return 1
+28          load 0                                   || lb15
+            return 1
+29          load 0                                   || strUpper_lazy
+            eval
+            store 0
+30          load 0                                   || strUpper
+            pushfunc 1 7                             || str2list
+            create 2 3
+            pushfunc 1 26                            || toUpperChar_lazy
+            create 1 7
+            call 42                                  || map
+            tailcall 1 19                            || list2str
+31          load 2                                   || substr_lazy
+            eval
+            store 2
+            load 1
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+32          load 0                                   || substr
+            pushfunc 1 7                             || str2list
+            create 2 3
+            load 1
+            pushfunc 2 63                            || drop
+            create 3 3
+            load 2
+            call 58                                  || take
+            tailcall 3 19                            || list2str
+33          push 0                                   || itoa
+            load 0
+            eval
+            sub
+            ifle 34                                  || lb17
+            load 0
+            pushfunc 1 36                            || itoa_2
+            create 2 3
+            pushfunc 1 33                            || itoa
+            create 2 3
+            push '-'
+            ccreatet 2 11 5 1
+            return 1
+34          push 10                                  || lb17
+            load 0
+            eval
+            sub
+            ifle 35                                  || lb19
+            ccreatet 0 11 5 0
+            push '0'
+            load 0
+            eval
+            add
+            ccreatet 2 11 5 1
+            return 1
+35          load 0                                   || lb19
+            pushfunc 1 37                            || itoa_3
+            create 2 3
+            load 0
+            pushfunc 1 38                            || itoa_4
+            create 2 3
+            pushfunc 1 33                            || itoa
+            create 2 3
+            tailcall 1 55                            || append
+36          push 0                                   || itoa_2
+            load 0
+            eval
+            sub
+            return 1
+37          ccreatet 0 11 5 0                        || itoa_3
+            push '0'
+            load 0
+            eval
+            push 10
+            mod
+            add
+            ccreatet 2 11 5 1
+            return 1
+38          load 0                                   || itoa_4
+            eval
+            push 10
+            div
+            return 1
+39          load 0                                   || length
+            eval
+            jmpt 2 40 41                             || lbs
+40          return_const 1 0                         || lb21
+41          push 1                                   || lb22
+            load 1
+            call 39                                  || length
+            add
+            return 3
+42          load 1                                   || map
+            eval
+            jmpt 2 43 44                             || lbs
+43          ccreatet 0 11 5 0                        || lb23
+            return 2
+44          load 1                                   || lb24
+            load 2
+            pushfunc 2 42                            || map
+            create 3 3
+            load 0
+            load 2
+            eval
+            ccreatet 2 11 5 1
+            return 4
+45          load 1                                   || filter
+            eval
+            jmpt 2 46 47                             || lbs
+46          ccreatet 0 11 5 0                        || lb25
+            return 2
+47          load 0                                   || lb26
+            load 2
+            eval
+            ifeq 48                                  || lb27
+            load 1
+            load 2
+            pushfunc 2 45                            || filter
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 4
+48          load 1                                   || lb27
+            load 2
+            tailcall 4 45                            || filter
+49          load 2                                   || foldl
+            eval
+            jmpt 2 50 51                             || lbs
+50          load 1                                   || lb29
+            eval
+            return 3
+51          load 1                                   || lb30
+            load 0
+            load 3
+            load 2
+            create 3 7
+            load 2
+            tailcall 5 49                            || foldl
+52          load 2                                   || foldr
+            eval
+            jmpt 2 53 54                             || lbs
+53          load 1                                   || lb31
+            eval
+            return 3
+54          load 1                                   || lb32
+            load 3
+            load 2
+            pushfunc 3 52                            || foldr
+            create 4 3
+            load 0
+            load 2
+            eval
+            return 5
+55          load 0                                   || append
+            eval
+            jmpt 2 56 57                             || lbs
+56          load 1                                   || lb33
+            eval
+            return 2
+57          load 3                                   || lb34
+            load 1
+            pushfunc 2 55                            || append
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 4
+58          load 1                                   || take
+            eval
+            jmpt 2 59 60                             || lbs
+59          ccreatet 0 11 5 0                        || lb35
+            return 2
+60          load 2                                   || lb36
+            eval
+            ifneq 61                                 || lb37
+            ccreatet 0 11 5 0
+            return 4
+61          load 1                                   || lb37
+            load 2
+            pushfunc 1 62                            || take_5
+            create 2 3
+            pushfunc 2 58                            || take
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 4
+62          load 0                                   || take_5
+            eval
+            push 1
+            sub
+            return 1
+63          load 1                                   || drop
+            eval
+            jmpt 2 64 65                             || lbs
+64          ccreatet 0 11 5 0                        || lb39
+            return 2
+65          load 2                                   || lb40
+            eval
+            ifneq 66                                 || lb41
+            load 1
+            load 0
+            ccreatet 2 11 5 1
+            return 4
+66          load 1                                   || lb41
+            load 2
+            pushfunc 1 67                            || drop_6
+            create 2 3
+            tailcall 4 63                            || drop
+67          load 0                                   || drop_6
+            eval
+            push 1
+            sub
+            return 1
+68          ccreatet 0 11 5 0                        || reverse
+            load 0
+            tailcall 1 69                            || rev
+69          load 0                                   || rev
+            eval
+            jmpt 2 70 71                             || lbs
+70          load 1                                   || lb43
+            eval
+            return 2
+71          load 3                                   || lb44
+            load 0
+            ccreatet 2 11 5 1
+            load 1
+            tailcall 4 69                            || rev
+72          updsp 2                                  || start
+            pushfunc 0 75                            || start_7
+            create 1 3
+            store 0
+            pushfunc 0 76                            || start_8
+            create 1 3
+            store 1
+            load 0
+            eval
+            push 0
+            dec
+            sub
+            ifneq 73                                 || lb45
+            push "Error: Could not open input file\n"
+            syscall 3
+            return 2
+73          load 1                                   || lb45
+            eval
+            push 0
+            dec
+            sub
+            ifneq 74                                 || lb47
+            push "Error: Could not open output file\n"
+            syscall 3
+            load 0
+            eval
+            syscall 5
+            return 2
+74          load 0                                   || lb47
+            pushfunc 1 0                             || readStream
+            create 2 3
+            load 1
+            call 3                                   || writeStream
+            push "File copied successfully char-by-char!\n"
+            syscall 3
+            return 2
+75          push "r"                                 || start_7
+            push "io/lazy_io_test_input.txt"
+            syscall 4
+            return 0
+76          push "w"                                 || start_8
+            push "io/lazy_io_test_output.txt"
+            syscall 4
+            return 0
+
+.metadata
+types 1
+type 5 list 2
+  constr 0 Nil 0
+  constr 1 Cons 2
+functions 34
+  func 0 readStream 1 00
+  func 3 writeStream 2 000
+  func 7 str2list 1 10
+  func 6 str2list 1 10
+  func 9 strls 2 110
+  func 8 strls 2 110
+  func 12 strEqual 2 110
+  func 11 strEqual 2 110
+  func 15 strEqualAt 3 1110
+  func 14 strEqualAt 3 1110
+  func 19 list2str 1 10
+  func 18 list2str 1 10
+  func 21 fillStr 3 1110
+  func 20 fillStr 3 1110
+  func 25 strcat 2 110
+  func 24 strcat 2 110
+  func 27 toUpperChar 1 10
+  func 26 toUpperChar 1 10
+  func 30 strUpper 1 10
+  func 29 strUpper 1 10
+  func 32 substr 3 1110
+  func 31 substr 3 1110
+  func 33 itoa 1 00
+  func 39 length 1 00
+  func 42 map 2 000
+  func 45 filter 2 000
+  func 49 foldl 3 0000
+  func 52 foldr 3 0000
+  func 55 append 2 000
+  func 58 take 2 000
+  func 63 drop 2 000
+  func 68 reverse 1 00
+  func 69 rev 2 000
+  func 72 start 0 0
+.endmetadata

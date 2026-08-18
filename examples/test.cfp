@@ -1,0 +1,7 @@
+apply f x = f x
+
+p5 n = n + 5
+
+start = apply p5 7
+
+add a b = a + b

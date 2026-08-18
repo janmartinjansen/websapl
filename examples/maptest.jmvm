@@ -1,0 +1,77 @@
+start fromto_lazy fromto lb1 map lb3 lb4 p5 printlist_lazy printlist lb5 lb6  #
+            call 0                                   || start
+            print 4
+            stop
+0           push 10                                  || start
+            push 1
+            pushfunc 2 2                             || fromto
+            create 3 3
+            pushfunc 1 7                             || p5
+            create 1 7
+            call 4                                   || map
+            tailcall 0 9                             || printlist
+1           load 1                                   || fromto_lazy
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+2           load 1                                   || fromto
+            load 0
+            sub
+            iflt 3                                   || lb1
+            load 1
+            loadadd 0 1
+            pushfunc 2 2                             || fromto
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 2
+3           ccreatet 0 11 5 0                        || lb1
+            return 2
+4           load 1                                   || map
+            eval
+            jmpt 2 5 6                               || lbs
+5           ccreatet 0 11 5 0                        || lb3
+            return 2
+6           load 1                                   || lb4
+            load 2
+            pushfunc 2 4                             || map
+            create 3 3
+            load 0
+            load 2
+            eval
+            ccreatet 2 11 5 1
+            return 4
+7           load 0                                   || p5
+            eval
+            push 5
+            add
+            return 1
+8           load 0                                   || printlist_lazy
+            eval
+            store 0
+9           load 0                                   || printlist
+            jmpt 2 10 11                             || lbs
+10          return_const 1 0                         || lb5
+11          load 0                                   || lb6
+            print 0
+            load 1
+            eval
+            call 9                                   || printlist
+            return 3
+
+.metadata
+types 1
+type 5 list 2
+  constr 0 Nil 0
+  constr 1 Cons 2
+functions 7
+  func 0 start 0 0
+  func 2 fromto 2 110
+  func 1 fromto 2 110
+  func 4 map 2 000
+  func 7 p5 1 00
+  func 9 printlist 1 10
+  func 8 printlist 1 10
+.endmetadata

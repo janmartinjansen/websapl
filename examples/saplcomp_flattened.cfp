@@ -1,0 +1,3256 @@
+::list = Nil | Cons !x xs
+
+// File and stream I/O functions
+readStream fd =
+  let c = readChar fd in
+  if (c == (0 - 1))
+    Nil
+    (Cons c (readStream fd))
+
+writeStream fd xs =
+  case xs
+    (Nil -> closeFile fd)
+    (Cons c cs -> writeChar fd c <#> writeStream fd cs)
+
+// Converts a packed-array string (e.g. from readFile) into a char list
+str2list !s = strls 0 s
+
+strls !n !s = if (n < strlen s) (Cons (strat n s) (strls (n+1) s)) Nil
+
+// Compares two packed-array strings for content equality
+strEqual !s1 !s2 = (strlen s1 == strlen s2) /\ strEqualAt 0 s1 s2
+
+strEqualAt !n !s1 !s2 = if (n >= strlen s1) 1 (if (strat n s1 == strat n s2) (strEqualAt (n+1) s1 s2) 0)
+
+// Converts a char list into a packed-array string (inverse of str2list).
+// Note: the raw `update` predef takes its arguments as (value, index, array) -
+// the opposite of what the name suggests - see docs/sapl_programmeer_regels.md §7.
+list2str !cs = fillStr 0 cs (strcreate (length cs))
+
+fillStr !i !xs !arr =
+  case xs
+    (Nil -> arr)
+    (Cons c cs -> fillStr (i+1) cs (update c i arr))
+
+// Concatenates two packed-array strings into a new one
+strcat !s1 !s2 = list2str (append (str2list s1) (str2list s2))
+
+toUpperChar !c = if ((c >= 'a') /\ (c <= 'z')) ((c - 'a') + 'A') c
+
+// Uppercases a packed-array string
+strUpper !s = list2str (map toUpperChar (str2list s))
+
+// Substring of length !len starting at !start (both packed-array strings)
+substr !s !start !len = list2str (take len (drop start (str2list s)))
+
+// Converts an integer to a list of character codes (string)
+itoa n =
+  if (n < 0) (Cons '-' (itoa (0 - n)))
+  (if (n < 10) (Cons ('0' + n) Nil)
+  (append (itoa (n / 10)) (Cons ('0' + (n % 10)) Nil)))
+
+// List operations
+length xs =
+  case xs
+    (Nil -> 0)
+    (Cons x xs -> 1 + length xs)
+
+map f xs =
+  case xs
+    (Nil -> Nil)
+    (Cons x xs -> Cons (f x) (map f xs))
+
+filter f xs =
+  case xs
+    (Nil -> Nil)
+    (Cons x xs -> if (f x) (Cons x (filter f xs)) (filter f xs))
+
+foldl f z xs =
+  case xs
+    (Nil -> z)
+    (Cons x xs -> foldl f (f z x) xs)
+
+foldr f z xs =
+  case xs
+    (Nil -> z)
+    (Cons x xs -> f x (foldr f z xs))
+
+append xs ys =
+  case xs
+    (Nil -> ys)
+    (Cons x xs -> Cons x (append xs ys))
+
+take n xs =
+  case xs
+    (Nil -> Nil)
+    (Cons x xs -> if (n == 0) Nil (Cons x (take (n - 1) xs)))
+
+drop n xs =
+  case xs
+    (Nil -> Nil)
+    (Cons x xs -> if (n == 0) (Cons x xs) (drop (n - 1) xs))
+
+reverse xs = rev xs Nil
+
+rev xs acc =
+  case xs
+    (Nil -> acc)
+    (Cons x xs -> rev xs (Cons x acc))
+
+
+// Direct Sapl port of newparser/lexer.ama (itself explicitly "geen parser
+// combinators", the design docs/bootstrapping_plan.md settled on after the
+// combinator-based version -- sapl_compiler/lexer.cfp + pcomb.cfp -- turned
+// out to blow up exponentially on nested parens, see that document, 9 aug
+// 2026). Same token shape, same character-classification/lookahead logic;
+// only the porting mechanics differ: Amanda's multiple top-level clauses
+// per function name become one Sapl function with an internal `case`
+// (docs/sapl_programmeer_regels.md #5), and numeric char codes are used
+// instead of ' / \ literals wherever the character itself is a quote or
+// backslash (this codebase's own established convention for exactly that
+// reason, see e.g. sapl_compiler/lexer.cfp's `(ch == 32)` for space).
+//
+// Deliberately a NEW file, not a rewrite of sapl_compiler/lexer.cfp: that
+// file's Term/Identifier/Number token type and lexNum/lexIdent helpers are
+// still used by reflection/serialize.cfp's deserialize logic and by
+// arith_repl/func_repl/repl's own small interpreters -- unrelated to this
+// front end, not safe to repurpose.
+::token = TIdent !name | TNum !n | TStr !s | TStrList !s | TOp !op | TLParen | TRParen | TBang | TEquals | TArrow | TComma
+
+isDigitCh c = (c >= '0') /\ (c <= '9')
+isAlphaCh c = ((c >= 'A') /\ (c <= 'Z')) \/ ((c >= 'a') /\ (c <= 'z')) \/ (c == '_')
+isIdentCh c = isAlphaCh c \/ isDigitCh c
+// space=32, tab=9, CR=13, LF=10
+isSpaceCh c = (c == 32) \/ (c == 9) \/ (c == 13) \/ (c == 10)
+
+headOr d cs = case cs (Nil -> d) (Cons c cs2 -> c)
+tailOr d cs = case cs (Nil -> d) (Cons c cs2 -> cs2)
+
+// `//` comment to end of (logical) line -- stripped before tokenizing.
+startsWithSlashSlash cs = (headOr 32 cs == '/') /\ (headOr 32 (tailOr Nil cs) == '/')
+stripComment cs =
+  case cs
+    (Nil -> Nil)
+    (Cons c1 cs2 -> if (startsWithSlashSlash (Cons c1 cs2)) Nil (Cons c1 (stripComment cs2)))
+
+// `::name = ...` ADT declarations are recognized on the raw line, before
+// tokenizing, and the leading `::` is dropped there -- no dedicated token
+// needed (matches newparser/lexer.ama's own reasoning).
+startsWithDoubleColon cs = (headOr 32 cs == ':') /\ (headOr 32 (tailOr Nil cs) == ':')
+
+::Lexres = Lexres !tok !rest
+lexresTok r = case r (Lexres t rst -> t)
+lexresRest r = case r (Lexres t rst -> rst)
+
+readIdentAcc acc cs =
+  case cs
+    (Nil -> Lexres (TIdent (reverse acc)) Nil)
+    (Cons c cs2 -> if (isIdentCh c) (readIdentAcc (Cons c acc) cs2) (Lexres (TIdent (reverse acc)) cs))
+readIdent cs = readIdentAcc Nil cs
+
+readNumAcc acc cs =
+  case cs
+    (Nil -> Lexres (TNum acc) Nil)
+    (Cons c cs2 -> if (isDigitCh c) (readNumAcc (acc * 10 + (c - '0')) cs2) (Lexres (TNum acc) cs))
+readNum cs = readNumAcc 0 cs
+
+// No user-definable operators in this subset, so a fixed lookahead table
+// suffices (no operator-table extensibility needed).
+// backslash = 92
+isBoolOpPair c1 c2 = ((c1 == '/') /\ (c2 == 92)) \/ ((c1 == 92) /\ (c2 == '/'))
+isTwoCharOpPair c1 c2 = ((c1 == '=') /\ (c2 == '=')) \/ ((c1 == '!') /\ (c2 == '=')) \/ ((c1 == '<') /\ (c2 == '=')) \/ ((c1 == '>') /\ (c2 == '=')) \/ (isBoolOpPair c1 c2)
+// `->` gets its own token (TArrow), not TOp "->": it isn't part of the
+// ordinary infix-precedence table, it only separates a case-branch pattern
+// from its body.
+isArrowPair c1 c2 = (c1 == '-') /\ (c2 == '>')
+// `<#>` is the only 3-char operator in this subset, hence its own lookahead
+// step (readOp3) instead of readOp2's simple 2-char check.
+isThreeCharOpStart c1 c2 = (c1 == '<') /\ (c2 == '#')
+
+readOp1 c1 rest = if (c1 == '=') (Lexres TEquals rest) (if (c1 == '!') (Lexres TBang rest) (Lexres (TOp (Cons c1 Nil)) rest))
+
+// Only called once c1,c2 are already known to be '<','#' (isThreeCharOpStart)
+// -- if the third char isn't '>' this wasn't really `<#>` after all, so fall
+// back to a bare '<' and re-tokenize the rest (including '#') normally.
+readOp3 c1 c2 cs3 =
+  case cs3
+    (Nil -> readOp1 c1 (Cons c2 Nil))
+    (Cons c3 cs4 -> if (c3 == '>') (Lexres (TOp (Cons c1 (Cons c2 (Cons c3 Nil)))) cs4) (readOp1 c1 (Cons c2 (Cons c3 cs4))))
+
+readOp2 c1 c2 cs2 =
+  if (isThreeCharOpStart c1 c2) (readOp3 c1 c2 cs2)
+  (if (isArrowPair c1 c2) (Lexres TArrow cs2)
+  (if (isTwoCharOpPair c1 c2) (Lexres (TOp (Cons c1 (Cons c2 Nil))) cs2) (readOp1 c1 (Cons c2 cs2))))
+
+readOp c1 cs =
+  case cs
+    (Nil -> readOp1 c1 Nil)
+    (Cons c2 cs2 -> readOp2 c1 c2 cs2)
+
+// Char literals ('a', '\n'): folded straight to their bare character code
+// as a TNum (same constant-folding-at-parse-time as True/False -> Num 1/0
+// downstream) -- ast.ama/newparser_ast.cfp has no separate Char expr
+// constructor, and every golden use of a char literal is arithmetic
+// (c - 'a', '0' + n), never printC.
+// squote=39
+readCharLitClose ch cs =
+  case cs
+    (Nil -> error "tokenize: missing closing ' in char literal")
+    (Cons q cs4 -> if (q == 39) (Lexres (TNum ch) cs4) (error "tokenize: missing closing ' in char literal"))
+
+// Was `\n`-only ("the only one any golden source uses") until 10 augustus
+// 2026, when self-hosting testing hit `stage5_codegen.cfp`'s own
+// `escapeStrChar` (`'\t'`/`'\\'`/`'\''`, needed to round-trip string
+// literals through the lexer) -- extended to all five escapes pg99.ama's
+// real `readChar` supports (parser.ama's own lexer, ~line 71-76), same
+// mapping: n=10 (newline), t=9 (tab), \\=92 (backslash itself), '=39
+// (single quote), "=34 (double quote).
+readCharLitEscape cs3 =
+  case cs3
+    (Nil -> error "tokenize: unexpected end of input in char escape")
+    (Cons e cs4 -> readCharLitEscapeTok e cs4)
+
+readCharLitEscapeTok e cs4 =
+  if (e == 'n') (readCharLitClose 10 cs4)
+  (if (e == 't') (readCharLitClose 9 cs4)
+  (if (e == '\\') (readCharLitClose 92 cs4)
+  (if (e == '\'') (readCharLitClose 39 cs4)
+  (if (e == '"') (readCharLitClose 34 cs4)
+  (error "tokenize: unknown char escape")))))
+
+// backslash=92
+readCharLit cs2 =
+  case cs2
+    (Nil -> error "tokenize: unexpected end of input in char literal")
+    (Cons c1 cs3 -> if (c1 == 92) (readCharLitEscape cs3) (readCharLitClose c1 cs3))
+
+// String literals ("..."): same escapes as pg99.ama's readString/putString
+// (\n \t \\ \' \"), accumulator-style since escapes aren't a uniform
+// predicate the way plain identifier/digit runs are.
+// dquote=34
+readStrLitEscapeChar e =
+  if (e == 'n') 10
+  (if (e == 't') 9
+  (if (e == 92) 92
+  (if (e == 39) 39
+  (if (e == 34) 34
+  (error "tokenize: unknown string escape")))))
+
+readStrLitEscape acc cs3 =
+  case cs3
+    (Nil -> error "tokenize: unexpected end of input in string escape")
+    (Cons e cs4 -> readStrLit (append acc (Cons (readStrLitEscapeChar e) Nil)) cs4)
+
+readStrLit acc cs2 =
+  case cs2
+    (Nil -> error "tokenize: missing closing \" in string literal")
+    (Cons c1 cs3 ->
+       if (c1 == 34) (Lexres (TStr acc) cs3)
+       (if (c1 == 92) (readStrLitEscape acc cs3) (readStrLit (append acc (Cons c1 Nil)) cs3)))
+
+readStringLit cs = readStrLit Nil cs
+
+// Char-list literals (`['abc']`, docs/sapl_programmeer_regels.md #1/#8):
+// mechanical port of pg99.ama's own `readStringList`/`readStrL` -- raw
+// characters, NO escape processing at all (confirmed empirically while
+// porting stage3_lift.cfp/stage5_codegen.cfp: a literal backslash needs an
+// explicit `Cons '/' (Cons 92 Nil)` instead), terminated by a `'` that is
+// immediately followed by `]` (a LONE `'` not followed by `]` is just
+// ordinary content and the scan continues, exactly `readStrL`'s own
+// `('\'':']':xs) -> ([],xs)` vs. `(x:xs) -> (x:str,rem)` distinction).
+// Deliberately errors on an unterminated literal rather than pg99.ama's own
+// silent `readStrL [] = ([],[])` -- this file's other literal readers
+// (readCharLit/readStringLit) already prefer an explicit error here.
+readStrListLit acc cs =
+  case cs
+    (Nil -> error "tokenize: missing closing '] in char-list literal")
+    (Cons c1 cs2 -> readStrListLitOnChar acc c1 cs2)
+
+readStrListLitOnChar acc c1 cs2 =
+  if (c1 == 39)
+    (readStrListLitMaybeClose acc cs2)
+    (readStrListLit (append acc (Cons c1 Nil)) cs2)
+
+readStrListLitMaybeClose acc cs2 =
+  case cs2
+    (Nil -> error "tokenize: missing closing '] in char-list literal")
+    (Cons c2 cs3 -> if (c2 == ']') (Lexres (TStrList acc) cs3) (readStrListLit (append acc (Cons 39 Nil)) (Cons c2 cs3)))
+
+readStringListLit cs = readStrListLit Nil cs
+
+// `[` starts a char-list literal only when immediately followed by `'`
+// (pg99.ama's own `toknize` guard); Sapl's own subset has no other use for
+// a bare `[` (docs/sapl_programmeer_regels.md #1: no `[e1, e2, ...]`
+// list-literal sugar), so anything else here is a hard error rather than a
+// token nothing in the grammar would ever consume.
+tokenizeLBracket cs2 =
+  case cs2
+    (Nil -> error "tokenize: unexpected [ at end of input")
+    (Cons q cs3 -> if (q == 39) (tokenizeContinue (readStringListLit cs3)) (error "tokenize: unexpected ["))
+
+tokenizeContinue r = Cons (lexresTok r) (tokenizeFrom (lexresRest r))
+
+tokenizeChar c cs2 =
+  if (c == '(') (Cons TLParen (tokenizeFrom cs2))
+  (if (c == ')') (Cons TRParen (tokenizeFrom cs2))
+  (if (c == ',') (Cons TComma (tokenizeFrom cs2))
+  (if (c == 39) (tokenizeContinue (readCharLit cs2))
+  (if (c == 34) (tokenizeContinue (readStringLit cs2))
+  (if (c == '[') (tokenizeLBracket cs2)
+  (if (isDigitCh c) (tokenizeContinue (readNum (Cons c cs2)))
+  (if (isAlphaCh c) (tokenizeContinue (readIdent (Cons c cs2)))
+  (tokenizeContinue (readOp c cs2)))))))))
+
+tokenizeSkipped cs =
+  case cs
+    (Nil -> Nil)
+    (Cons c cs2 -> tokenizeChar c cs2)
+
+skipSpaces cs =
+  case cs
+    (Nil -> Nil)
+    (Cons c cs2 -> if (isSpaceCh c) (skipSpaces cs2) cs)
+
+tokenizeFrom cs = tokenizeSkipped (skipSpaces cs)
+
+tokenize cs = tokenizeFrom (stripComment cs)
+
+
+// newparser_ast.cfp - Sapl-tegenhanger van newparser/ast.ama's expr/func/adt-ADT's:
+// exact dezelfde constructornamen en -ariteit, alleen voor gebruik als brug naar
+// newparser's Amanda-backend (docs/bootstrapping_plan.md sectie 0). Veldnamen zijn
+// puur cosmetisch (sapl_programmeer_regels.md sectie 1) en hoeven niet 1-op-1 met
+// ast.ama's veldnamen te matchen - alleen constructornaam + aantal velden telt,
+// dat is wat constrName/getConstrArity/getField gebruiken bij het serialiseren.
+
+::expr = Num !val | Str !s | Var !name | If !cond !thenB !elseB | App !name !args | Prim !op !args | Ct !name !args | Case !scrut !branches | Let !bindings !body | NoMatch | Lazy !inner | Thunk !inner | Closure !inner | Eval !inner
+
+::casebranch = CaseBranch !con !vars !body
+
+::letbinding = LetBinding !name !strict !rhs
+
+::adtCon = AdtCon !name !fields
+
+::adt = Adt !name !cons
+
+::arg = Arg !name !strict
+
+::func = Func !name !args !body
+
+
+// Direct Sapl port of newparser/ast.ama's helper functions (the expr/func/
+// adt ADTs themselves already live in newparser_ast.cfp). Split out here,
+// separately from newparser_ast.cfp, once the driver (docs/
+// bootstrapping_plan.md section 0 step 4) needed to #import all five
+// sapl_compiler/stageN_*.cfp files together: each stage had its own local
+// copy of these (documented at the time as "standalone per stage file,
+// cross-file sharing is a later integration concern") -- fine while every
+// stage was tested in isolation, but multiple identical top-level
+// definitions of the same name is a hard compile error the moment two
+// stage files are imported into the same program
+// (docs/sapl_programmeer_regels.md #5). This file is that shared home;
+// every stageN_*.cfp now imports it instead of redefining these locally.
+// `funcName`/`funcArity` are renamed `funcNameOf`/`funcArityOf` throughout
+// (collide with Sapl's built-in reflection primitives, sapl_programmeer_
+// regels.md #10) -- same fix parser.cfp already applied on its own.
+
+charListEq a b =
+  case a
+    (Nil -> case b (Nil -> True) (Cons y ys -> False))
+    (Cons x xs -> case b (Nil -> False) (Cons y ys -> if (x == y) (charListEq xs ys) False))
+
+member names n =
+  case names
+    (Nil -> False)
+    (Cons x xs -> if (charListEq x n) True (member xs n))
+
+// `/\` and `\/` need a literal backslash (92), which can't go through a
+// `['...']` literal (no escape processing there, confirmed empirically) --
+// shared between parser.cfp's opTable and stage1_bool.cfp's isBoolConnective,
+// originally a local copy in each.
+slashBackslash = Cons '/' (Cons 92 Nil)
+backslashSlash = Cons 92 (Cons '/' Nil)
+
+concatAll xss =
+  case xss
+    (Nil -> Nil)
+    (Cons xs xss2 -> append xs (concatAll xss2))
+
+argNameOf a = case a (Arg n s -> n)
+argStrict a = case a (Arg n s -> s)
+
+funcNameOf f = case f (Func n as b -> n)
+funcArgs f = case f (Func n as b -> as)
+funcArityOf f = length (funcArgs f)
+
+findFunc name funcs =
+  case funcs
+    (Nil -> error "findFunc: unknown function")
+    (Cons f fs -> if (charListEq (funcNameOf f) name) f (findFunc name fs))
+
+isKnownFunc name funcs =
+  case funcs
+    (Nil -> False)
+    (Cons f fs -> if (charListEq (funcNameOf f) name) True (isKnownFunc name fs))
+
+// `print` is a VM instruction (vm.cpp's `print:`), not a top-level function
+// in `prog` -- every stage must recognize it before isKnownFunc, else it's
+// treated as a call to an unknown (possibly higher-order) function.
+printKw = ['print']
+printCKw = ['printC']
+errorKw = ['error']
+strlenKw = ['strlen']
+stratKw = ['strat']
+updateKw = ['update']
+getKw = ['get']
+strappendKw = ['strappend']
+strsliceKw = ['strslice']
+strcpyKw = ['strcpy']
+
+isPrintCall name = charListEq name printKw
+isPrintCCall name = charListEq name printCKw
+isErrorCall name = charListEq name errorKw
+isPredefCall name =
+  charListEq name strlenKw \/ charListEq name stratKw \/ charListEq name updateKw \/
+  charListEq name getKw \/ charListEq name strappendKw \/ charListEq name strsliceKw \/
+  charListEq name strcpyKw
+
+predefArity name =
+  if (charListEq name strlenKw) 1
+  (if (charListEq name stratKw) 2
+  (if (charListEq name updateKw) 3
+  (if (charListEq name getKw) 2
+  (if (charListEq name strappendKw) 2
+  (if (charListEq name strsliceKw) 3
+  (if (charListEq name strcpyKw) 1
+  (error "predefArity: unknown predef")))))))
+
+predefIndex name =
+  if (charListEq name strlenKw) 2
+  (if (charListEq name stratKw) 4
+  (if (charListEq name updateKw) 3
+  (if (charListEq name getKw) 6
+  (if (charListEq name strappendKw) 0
+  (if (charListEq name strsliceKw) 1
+  (if (charListEq name strcpyKw) 5
+  (error "predefIndex: unknown predef")))))))
+
+// I/O syscalls (mirrors newparser/ast.ama's isSyscallCall/syscallArity/
+// syscallIndex, added 10 augustus 2026 -- same story: `slotOf: unknown
+// variable readFile`/`readChar` when compiling lib/stdlib.cfp/io/*.cfp,
+// these eight names simply weren't recognized at all, so they fell through
+// to being treated as ordinary (unbound) variables). Arities/syscall
+// indices verified against vm.cpp's `case SysCall` (~line 1085-1208).
+readFileKw = ['readFile']
+writeFileKw = ['writeFile']
+readLineKw = ['readLine']
+printStringKw = ['printString']
+openFileKw = ['openFile']
+closeFileKw = ['closeFile']
+readCharKw = ['readChar']
+writeCharKw = ['writeChar']
+strcreateKw = ['strcreate']
+
+isSyscallCall name =
+  charListEq name readFileKw \/ charListEq name writeFileKw \/ charListEq name readLineKw \/
+  charListEq name printStringKw \/ charListEq name openFileKw \/ charListEq name closeFileKw \/
+  charListEq name readCharKw \/ charListEq name writeCharKw
+
+syscallArity name =
+  if (charListEq name readFileKw) 1
+  (if (charListEq name writeFileKw) 2
+  (if (charListEq name readLineKw) 0
+  (if (charListEq name printStringKw) 1
+  (if (charListEq name openFileKw) 2
+  (if (charListEq name closeFileKw) 1
+  (if (charListEq name readCharKw) 1
+  (if (charListEq name writeCharKw) 2
+  (error "syscallArity: unknown syscall"))))))))
+
+syscallIndex name =
+  if (charListEq name readFileKw) 0
+  (if (charListEq name writeFileKw) 1
+  (if (charListEq name readLineKw) 2
+  (if (charListEq name printStringKw) 3
+  (if (charListEq name openFileKw) 4
+  (if (charListEq name closeFileKw) 5
+  (if (charListEq name readCharKw) 6
+  (if (charListEq name writeCharKw) 7
+  (error "syscallIndex: unknown syscall"))))))))
+
+// `strcreate` -> `array_create_dynamic 1` (parser.ama:574), own instruction
+// family, arity always 1.
+isStrcreateCall name = charListEq name strcreateKw
+
+lbNameOf lb = case lb (LetBinding n s e -> n)
+lbStrictOf lb = case lb (LetBinding n s e -> s)
+lbRhsOf lb = case lb (LetBinding n s e -> e)
+
+letBindingToArg lb = case lb (LetBinding n s e -> Arg n s)
+
+cbConOf cb = case cb (CaseBranch c vs b -> c)
+cbVarsOf cb = case cb (CaseBranch c vs b -> vs)
+cbBodyOf cb = case cb (CaseBranch c vs b -> b)
+
+adtConName c = case c (AdtCon n fs -> n)
+adtConFields c = case c (AdtCon n fs -> fs)
+adtConsOf a = case a (Adt n cs -> cs)
+
+isConOfList name cons =
+  case cons
+    (Nil -> False)
+    (Cons c cs -> if (charListEq (adtConName c) name) True (isConOfList name cs))
+
+findAdtByCon name adts =
+  case adts
+    (Nil -> error "findAdtByCon: unknown constructor")
+    (Cons a as -> if (isConOfList name (adtConsOf a)) a (findAdtByCon name as))
+
+findAdtCon name cons =
+  case cons
+    (Nil -> error "findAdtCon: unknown constructor")
+    (Cons c cs -> if (charListEq (adtConName c) name) c (findAdtCon name cs))
+
+// Per-field strictness of a constructor (declaration order), e.g. `Cons !x
+// xs` -> [True, False].
+conFields name adts = adtConFields (findAdtCon name (adtConsOf (findAdtByCon name adts)))
+
+conTag name adts = conTagAt name (adtConsOf (findAdtByCon name adts)) 0
+
+conTagAt name cons i =
+  case cons
+    (Nil -> error "conTag: unknown constructor")
+    (Cons c cs -> if (charListEq (adtConName c) name) i (conTagAt name cs (i+1)))
+
+adtArity name adts = length (adtConsOf (findAdtByCon name adts))
+
+exprConstrNameOf e =
+  case e
+    (Num n -> ['Num'])
+    (Str s -> ['Str'])
+    (Var v -> ['Var'])
+    (If a b c -> ['If'])
+    (App n as -> ['App'])
+    (Prim op as -> ['Prim'])
+    (Ct n as -> ['Ct'])
+    (Case sc cs -> ['Case'])
+    (Let ls b -> ['Let'])
+    (NoMatch -> ['NoMatch'])
+    (Lazy inner -> ['Lazy'])
+    (Thunk inner -> ['Thunk'])
+    (Closure inner -> ['Closure'])
+    (Eval inner -> ['Eval'])
+
+
+// Direct Sapl port of newparser/parse.ama -- see docs/bootstrapping_plan.md
+// (9 aug 2026) for why: the earlier parser-combinator version (pcomb.cfp)
+// blew up exponentially on nested parens, a well-known failure mode of
+// non-memoized backtracking combinators that parse.ama's hand-written,
+// single-token-dispatch design (itself modeled on pg99.ama/
+// ama_interpreter/evalfull.ama) doesn't have. Porting mechanics: Amanda's
+// multiple top-level clauses per function name (one per token variant)
+// become one Sapl function with an internal `case`
+// (docs/sapl_programmeer_regels.md #5); Amanda's `#`/`++`/`(x:xs)` become
+// Sapl's `length`/`append`/`Cons x xs`; nested list patterns like
+// `(hd as, hd (tl as), hd (tl (tl as)))` aren't allowed one level deep
+// (docs/sapl_programmeer_regels.md #2), so those become short chains of
+// single-level-case helper functions instead -- the same shape parse.ama
+// already uses everywhere else, just applied one place it didn't need to
+// itself (Amanda has no such restriction). `charListEq`/`member` and the
+// other ast.ama-derived helpers below (adtConName/adtConsOf/isConOfList/
+// findAdtByCon/adtConFields/findAdtCon/funcNameOf) come from
+// sapl_compiler/ast_helpers.cfp -- originally local copies here, moved out
+// once the driver (docs/bootstrapping_plan.md section 0 step 4) needed to
+// #import parser.cfp and every stageN_*.cfp together (see
+// ast_helpers.cfp's own header for why that forced the move).
+
+// == presult: parsed expression plus remaining tokens ==================
+
+::Presult = Presult !e !rest
+prExpr pr = case pr (Presult e r -> e)
+prRest pr = case pr (Presult e r -> r)
+
+// == Atoms: identifier, number, string, or ( expr ) ======================
+
+ifKw     = ['if']
+caseKw   = ['case']
+selectKw = ['select']
+letKw    = ['let']
+inKw     = ['in']
+nomatchKw = ['nomatch']
+trueKw   = ['True']
+falseKw  = ['False']
+
+// `let`/`in` are valid only at their own, deliberate position
+// (buildFuncFromTok / after a let's binding list) -- everywhere else they're
+// an error, never a silent `Var "let"`/`Var "in"`.
+isLetOrInIdent n = charListEq n letKw \/ charListEq n inKw
+
+// `case`/`select` are themselves just identifier tokens (like `if`) --
+// recognized by name, no dedicated keyword token. `select` is a synonym for
+// `case` (parser.ama's own `selectbody`), used by match.cfp/parsetest.cfp/
+// prolog.cfp.
+isCaseIdent n = charListEq n caseKw \/ charListEq n selectKw
+
+parseAtom toks =
+  case toks
+    (Nil -> error "parseAtom: unexpected end of input, expected an expression")
+    (Cons t rest -> parseAtomTok t rest)
+
+// `['abc']` (TStrList, lexer2.cfp): parser.ama's own `makeStringList`
+// desugars this to `App str2list [String s]` when `str2list` is a known
+// top-level function (always true here, lib/stdlib.cfp is imported
+// everywhere this matters) rather than its fallback eager Cons-chain
+// construction -- mirrored here unconditionally rather than replicating
+// the conditional check, since the fallback path is dead code for every
+// program parser.cfp is used on.
+str2listOp = ['str2list']
+
+// `readLine` (ast_helpers.cfp's isSyscallCall, arity 0) is the one syscall
+// with NO arguments, so it's always written bare -- `let infile = readLine,
+// ...`, never `readLine ...`. Every isSyscallCall/isPredefCall/etc check in
+// stage2-5 only fires on an `App n as` node, so a bare identifier -- which
+// parseAtomTok/collectAppOnTok would otherwise turn into a plain `Var n` --
+// would never be recognized, same "slotOf: unknown variable readLine"
+// failure as the nested-thunked-App bug this session already found and
+// fixed (stage3_lift.cfp's lift3ThunkedAppArg). Desugar it to a
+// fully-saturated zero-arg `App n Nil` right here at parse time instead,
+// so every later stage sees exactly the same shape it already handles.
+identExpr n = if (isSyscallCall n /\ (syscallArity n == 0)) (App n Nil) (Var n)
+
+parseAtomTok t rest =
+  case t
+    (TIdent n -> if (isCaseIdent n) (parseCaseExpr rest) (if (isLetOrInIdent n) (error "parseAtom: 'let'/'in' not allowed here") (Presult (identExpr n) rest)))
+    (TNum n -> Presult (Num n) rest)
+    (TStr s -> Presult (Str s) rest)
+    (TStrList s -> Presult (App str2listOp (Cons (Str s) Nil)) rest)
+    (TOp o -> error "parseAtom: unexpected operator")
+    (TLParen -> parseParenExpr rest)
+    (TRParen -> error "parseAtom: unexpected )")
+    (TBang -> error "parseAtom: unexpected !")
+    (TEquals -> error "parseAtom: unexpected =")
+    (TArrow -> error "parseAtom: unexpected ->")
+    (TComma -> error "parseAtom: unexpected ,")
+
+closeParen pr = closeParenTok (prExpr pr) (prRest pr)
+
+closeParenTok e toks =
+  case toks
+    (Nil -> error "parseParenExpr: missing )")
+    (Cons t rest -> closeParenOnTok e t rest)
+
+closeParenOnTok e t rest =
+  case t
+    (TRParen -> Presult e rest)
+    (_ -> error "parseParenExpr: ) expected")
+
+parseParenExpr toks = closeParen (parseExpr toks)
+
+// == Application: f x (g y) -- juxtaposition, left-assoc, tightest binding ==
+
+appendArg head arg =
+  case head
+    (Var n -> App n (Cons arg Nil))
+    (App n as -> App n (append as (Cons arg Nil)))
+    (_ -> error "appendArg: unexpected argument in this position")
+
+collectAppArg head argPr = collectApp (Presult (appendArg head (prExpr argPr)) (prRest argPr))
+
+// A bare `let`/`in` stops collection instead of being swallowed as an
+// argument (`f x, ... in y` must not silently become `App f [x, Var "in", ...]`)
+// -- same principle as TRParen/TEquals already stopping collection below.
+//
+// `TStrList` (`['abc']`, found 10 augustus 2026 while testing self-hosting:
+// `if (myeq op ['abc']) 1 2` failed with "parseParenExpr: ) expected", but
+// `myeq op ['abc']` alone as a function's whole body silently parsed --
+// this case was missing entirely, so a `['...']` used as anything but the
+// FIRST atom of an expression fell through to the catch-all below, which
+// just STOPS argument collection and leaves the `['...']` tokens
+// unconsumed; as a lone function body that silent truncation happened to
+// go unnoticed (the caller never checked the arg count), but inside an
+// `if`'s condition the leftover tokens landed where a closing `)` was
+// expected instead. Same str2list-desugaring as parseAtomTok's own
+// `TStrList` case (this file, ~line 75).
+collectAppOnTok head t rest =
+  case t
+    (TIdent n -> if (isLetOrInIdent n) (Presult head (Cons t rest)) (collectApp (Presult (appendArg head (identExpr n)) rest)))
+    (TNum n -> collectApp (Presult (appendArg head (Num n)) rest))
+    (TStr s -> collectApp (Presult (appendArg head (Str s)) rest))
+    (TStrList s -> collectApp (Presult (appendArg head (App str2listOp (Cons (Str s) Nil))) rest))
+    (TOp o -> Presult head (Cons t rest))
+    (TLParen -> collectAppArg head (parseParenExpr rest))
+    (_ -> Presult head (Cons t rest))
+
+collectApp pr = collectAppTok (prExpr pr) (prRest pr)
+
+collectAppTok head toks =
+  case toks
+    (Nil -> Presult head Nil)
+    (Cons t rest -> collectAppOnTok head t rest)
+
+parseApp toks = collectApp (parseAtom toks)
+
+// == Infix operators: precedence climbing (fixed table, no user-defined
+// operators in this subset) ==
+
+::OpInfo = OpInfo !sym !prio
+
+opSym  o = case o (OpInfo s p -> s)
+opPrio o = case o (OpInfo s p -> p)
+
+// <#> at the same priority/assoc as +/-; / at the same priority as */%;
+// /\ \/ at their own, looser priority than every comparison
+// (docs/sapl_programmeer_regels.md #1). No `[e1, e2, ...]` list-literal
+// sugar in Sapl (pg99.ama's tokenizer only special-cases `[` immediately
+// followed by `'` as a whole-token quoted char-list -- a bare `[` is just
+// an ordinary Terminal with no comma-list grammar rule), so this is built
+// as an explicit Cons chain. `slashBackslash`/`backslashSlash` (needed
+// because `/\`/`\/` need a literal backslash, which can't go through a
+// `['...']` literal) come from sapl_compiler/ast_helpers.cfp -- originally
+// a local copy here, moved out once the driver needed to import both this
+// file and stage1_bool.cfp (which also needed its own copy) together.
+opTable =
+  Cons (OpInfo slashBackslash 1)
+  (Cons (OpInfo backslashSlash 1)
+  (Cons (OpInfo ['=='] 3)
+  (Cons (OpInfo ['!='] 3)
+  (Cons (OpInfo ['<'] 4)
+  (Cons (OpInfo ['<='] 4)
+  (Cons (OpInfo ['>'] 4)
+  (Cons (OpInfo ['>='] 4)
+  (Cons (OpInfo ['+'] 10)
+  (Cons (OpInfo ['-'] 10)
+  (Cons (OpInfo ['<#>'] 10)
+  (Cons (OpInfo ['*'] 20)
+  (Cons (OpInfo ['%'] 20)
+  (Cons (OpInfo ['/'] 20) Nil)))))))))))))
+
+findOpInfo s ops =
+  case ops
+    (Nil -> error "findOpInfo: unknown operator")
+    (Cons o os -> if (charListEq (opSym o) s) o (findOpInfo s os))
+
+opPrioOf s = opPrio (findOpInfo s opTable)
+
+parseBinExpr minPrio toks = climbBinExpr minPrio (parseApp toks)
+
+climbBinExpr minPrio pr = climbBinExprTok minPrio (prExpr pr) (prRest pr)
+
+climbBinExprTok minPrio left toks =
+  case toks
+    (Nil -> Presult left Nil)
+    (Cons t rest -> climbBinExprOnTok minPrio left t rest)
+
+climbBinExprOnTok minPrio left t rest =
+  case t
+    (TOp o -> if (opPrioOf o >= minPrio) (continueBinExpr minPrio left o rest) (Presult left (Cons t rest)))
+    (_ -> Presult left (Cons t rest))
+
+continueBinExpr minPrio left o rest =
+  let rightPr = parseBinExpr (opPrioOf o + 1) rest in
+  climbBinExprTok minPrio (Prim o (Cons left (Cons (prExpr rightPr) Nil))) (prRest rightPr)
+
+parseExpr toks = parseBinExpr 0 toks
+
+// == case scrut (Con v1 v2 -> body) (Con v1 -> body) ... ==================
+// Can't go through the ordinary application machinery (like `if` does): a
+// branch (`Con vs -> body`) isn't a valid expr on its own (`->` has no
+// place in the infix table), so `case` gets its own dedicated route from
+// parseAtomTok. Patterns are always flat (casebranch ::= CaseBranch [char]
+// [[char]] expr in newparser_ast.cfp has no room for nested patterns).
+
+::BranchResult = BranchResult !b !rest
+brBranch b = case b (BranchResult bb r -> bb)
+brRest b = case b (BranchResult bb r -> r)
+
+parseBranch toks =
+  case toks
+    (Nil -> error "parseBranch: empty case branch")
+    (Cons t rest -> parseBranchTok t rest)
+
+parseBranchTok t rest =
+  case t
+    (TIdent con -> parseBranchFields con Nil rest)
+    (_ -> error "parseBranch: a case branch must start with a constructor name")
+
+parseBranchFields con acc toks =
+  case toks
+    (Nil -> error "parseBranch: missing -> in case branch")
+    (Cons t rest -> parseBranchFieldsTok con acc t rest)
+
+parseBranchFieldsTok con acc t rest =
+  case t
+    (TIdent v -> parseBranchFields con (append acc (Cons v Nil)) rest)
+    (TArrow -> parseBranchBody con acc rest)
+    (_ -> error "parseBranch: expected a field name or -> in the pattern")
+
+parseBranchBody con fields rest = closeBranchParen con fields (parseExpr rest)
+
+closeBranchParen con fields bodyPr = closeBranchParenTok con fields (prExpr bodyPr) (prRest bodyPr)
+
+closeBranchParenTok con fields body toks =
+  case toks
+    (Nil -> error "parseBranch: missing ) after case branch")
+    (Cons t rest -> closeBranchParenOnTok con fields body t rest)
+
+closeBranchParenOnTok con fields body t rest =
+  case t
+    (TRParen -> BranchResult (CaseBranch con fields body) rest)
+    (_ -> error "parseBranch: ) expected after case branch")
+
+::BranchesResult = BranchesResult !bs !rest
+brList b = case b (BranchesResult bs r -> bs)
+brsRest b = case b (BranchesResult bs r -> r)
+
+prependBranchResult b bs = case bs (BranchesResult xs r -> BranchesResult (Cons b xs) r)
+prependBranch br = prependBranchResult (brBranch br) (collectBranches (brRest br))
+
+// Every branch is required to be `( ... )`, so `(` means "one more branch";
+// any other token means "no more branches, this ends the case" (and stays
+// for the caller, same as collectAppOnTok already does for TRParen/TEquals)
+// -- EXCEPT `nomatch`, which is just skipped, letting collection continue.
+// The actual NoMatch-branch-filling per missing constructor happens later,
+// in resolveExpr, where the ADT list is actually available (collectBranches
+// only has tokens).
+collectBranches toks =
+  case toks
+    (Nil -> BranchesResult Nil Nil)
+    (Cons t rest -> collectBranchesTok t rest)
+
+collectBranchesTok t rest =
+  case t
+    (TIdent n -> if (charListEq n nomatchKw) (collectBranches rest) (BranchesResult Nil (Cons t rest)))
+    (TLParen -> prependBranch (parseBranch rest))
+    (_ -> BranchesResult Nil (Cons t rest))
+
+buildCaseExpr scrutPr = buildCaseExprFrom (prExpr scrutPr) (collectBranches (prRest scrutPr))
+buildCaseExprFrom scrut br = Presult (Case scrut (brList br)) (brsRest br)
+
+parseCaseExpr toks = buildCaseExpr (parseAtom toks)
+
+// == Post-processing (like evalfull.ama's graphTrans: rewrite after parsing
+// rather than during) ==
+//  - `if c t e`: Sapl's `if` is an ordinary 3-argument function, so at parse
+//    time it's `App "if" [c,t,e]` -- rewritten here to `If c t e`.
+//  - An uppercase identifier is a constructor, not a variable/function
+//    (Sapl's own convention): bare `Nil` becomes `Ct "Nil" []`, `Cons a b`
+//    becomes `Ct "Cons" [a,b]` instead of `App`. EXCEPT True/False, which
+//    are plain builtin booleans (Num 1/Num 0), not constructors -- Bool
+//    isn't declared as an ADT anywhere, so `Ct "True" []` would fail
+//    codegen's constructor lookup.
+
+isUpperStart n = case n (Nil -> False) (Cons c cs -> (c >= 'A') /\ (c <= 'Z'))
+isBoolLit n = charListEq n trueKw \/ charListEq n falseKw
+boolLitValue n = if (charListEq n trueKw) (Num 1) (Num 0)
+
+ifArgs3 as = case as (Cons a1 rest1 -> ifArgs3a a1 rest1) nomatch
+ifArgs3a a1 rest1 = case rest1 (Cons a2 rest2 -> ifArgs3b a1 a2 rest2) nomatch
+ifArgs3b a1 a2 rest2 = case rest2 (Cons a3 rest3 -> ifArgs3c a1 a2 a3 rest3) nomatch
+ifArgs3c a1 a2 a3 rest3 = case rest3 (Nil -> If a1 a2 a3) nomatch
+
+finishApp n as =
+  if (charListEq n ifKw /\ (length as == 3))
+    (ifArgs3 as)
+    (if (isUpperStart n) (Ct n as) (App n as))
+
+postParseBranch b = case b (CaseBranch c vs bd -> CaseBranch c vs (postParse bd))
+
+postParse e =
+  case e
+    (Num n -> Num n)
+    (Str s -> Str s)
+    (Var v -> if (isBoolLit v) (boolLitValue v) (if (isUpperStart v) (Ct v Nil) (Var v)))
+    (If a b c -> If (postParse a) (postParse b) (postParse c))
+    (App n as -> finishApp n (map postParse as))
+    (Prim o as -> Prim o (map postParse as))
+    (Ct n as -> Ct n (map postParse as))
+    (Case sc cs -> Case (postParse sc) (map postParseBranch cs))
+    (Let ls b -> error "postParse: Let can never occur as a sub-expression, only as a whole function body (docs/sapl_programmeer_regels.md #4)")
+    (NoMatch -> NoMatch)
+    (_ -> error "postParse: unexpected expression form during parsing")
+
+// == let b1 = e1, !b2 = e2, ... in body ====================================
+// Only reachable from buildBody (the whole function body) -- see the header
+// comment for why. Each binding RHS and the final body go through postParse
+// individually; the `Let` node itself never does (postParse's own Let
+// branch is deliberately unreachable from here -- that IS the enforcement).
+
+::LetBindingResult = LetBindingResult !b !rest
+lbrBinding b = case b (LetBindingResult bb r -> bb)
+lbrRest b = case b (LetBindingResult bb r -> r)
+
+wrapBinding name strict pr = LetBindingResult (LetBinding name strict (postParse (prExpr pr))) (prRest pr)
+parseBindingRhs name strict rest = wrapBinding name strict (parseExpr rest)
+
+parseBindingEquals name strict toks =
+  case toks
+    (Nil -> error "parseLet: missing = in let binding")
+    (Cons t rest -> parseBindingEqualsTok name strict t rest)
+
+parseBindingEqualsTok name strict t rest =
+  case t
+    (TEquals -> parseBindingRhs name strict rest)
+    (_ -> error "parseLet: = expected after the name in a let binding")
+
+parseBindingAfterBang toks =
+  case toks
+    (Nil -> error "parseLet: ! not followed by a variable name (end of input)")
+    (Cons t rest -> parseBindingAfterBangTok t rest)
+
+parseBindingAfterBangTok t rest =
+  case t
+    (TIdent n -> parseBindingEquals n True rest)
+    (_ -> error "parseLet: ! must be followed by a variable name")
+
+parseBinding toks =
+  case toks
+    (Nil -> error "parseLet: empty let binding (end of input)")
+    (Cons t rest -> parseBindingTok t rest)
+
+parseBindingTok t rest =
+  case t
+    (TIdent n -> parseBindingEquals n False rest)
+    (TBang -> parseBindingAfterBang rest)
+    (_ -> error "parseLet: a let binding must start with a name (or !)")
+
+::LetResult = LetResult !bs !rest
+lrBindings r = case r (LetResult bs rr -> bs)
+lrRest r = case r (LetResult bs rr -> rr)
+
+prependBinding b r = case r (LetResult bs rr -> LetResult (Cons b bs) rr)
+
+finishBindingsIfIn b n rest = if (charListEq n inKw) (LetResult (Cons b Nil) rest) (error "parseLet: , or in expected after a let binding")
+
+afterBindingOnTok b t rest =
+  case t
+    (TIdent n -> finishBindingsIfIn b n rest)
+    (TComma -> prependBinding b (collectBindings rest))
+    (_ -> error "parseLet: , or in expected after a let binding")
+
+afterBinding lbr = afterBindingTok (lbrBinding lbr) (lbrRest lbr)
+
+afterBindingTok b toks =
+  case toks
+    (Nil -> error "parseLet: missing 'in' after the let bindings")
+    (Cons t rest -> afterBindingOnTok b t rest)
+
+collectBindings toks = afterBinding (parseBinding toks)
+
+checkLetTrailing bs body toks =
+  case toks
+    (Nil -> Let bs body)
+    (Cons t rest -> error "parseLet: unexpected tokens after the let body")
+
+finishLetBody bs pr = checkLetTrailing bs (postParse (prExpr pr)) (prRest pr)
+
+buildLet lr = finishLetBody (lrBindings lr) (parseExpr (lrRest lr))
+
+// `toks` is the rest of the clause AFTER the `let` token itself (already
+// recognized and dropped by the caller, see buildBody).
+parseLetClause toks = buildLet (collectBindings toks)
+
+startsWithLet toks =
+  case toks
+    (Nil -> False)
+    (Cons t rest -> case t (TIdent n -> charListEq n letKw) (_ -> False))
+
+// == Function head: name plus argument patterns (`!n` = strict, `n` = lazy) ==
+
+// Named parseFuncArgs*, not parseArgs*: reflection/serialize.cfp already
+// defines its own, unrelated `parseArgs` (constructor-argument parsing for
+// its deserializer) -- a program that imports both this file and
+// reflection/serialize.cfp (as the bridge harness does) would otherwise hit
+// a hard "'parseArgs' is already defined" compile error.
+parseFuncArgs toks =
+  case toks
+    (Nil -> Nil)
+    (Cons t rest -> parseFuncArgsTok t rest)
+
+parseFuncArgsTok t rest =
+  case t
+    (TIdent n -> Cons (Arg n False) (parseFuncArgs rest))
+    (TBang -> parseFuncArgsBang rest)
+    (_ -> error "parseFuncArgs: unexpected token in argument position")
+
+parseFuncArgsBang toks =
+  case toks
+    (Nil -> error "parseFuncArgs: ! not followed by a variable name (end of line)")
+    (Cons t rest -> parseFuncArgsBangTok t rest)
+
+parseFuncArgsBangTok t rest =
+  case t
+    (TIdent n -> Cons (Arg n True) (parseFuncArgs rest))
+    (_ -> error "parseFuncArgs: ! must be followed by a variable name")
+
+// == Split one line at the defining `=` (LHS = name+patterns, RHS = body) ==
+
+::ClauseSplit = ClauseSplit !lhs !rhs
+csLhs c = case c (ClauseSplit l r -> l)
+csRhs c = case c (ClauseSplit l r -> r)
+
+prependLhs t c = case c (ClauseSplit lhs rhs -> ClauseSplit (Cons t lhs) rhs)
+
+splitAtEquals toks =
+  case toks
+    (Nil -> ClauseSplit Nil Nil)
+    (Cons t rest -> splitAtEqualsTok t rest)
+
+splitAtEqualsTok t rest =
+  case t
+    (TEquals -> ClauseSplit Nil rest)
+    (_ -> prependLhs t (splitAtEquals rest))
+
+// == One function clause (exactly one clause per name, docs/sapl_programmeer_regels.md
+// #5 -- dispatch is via `case` inside the function, so one line always suffices,
+// no Amanda-style multi-equation grouping is needed) ==
+
+// Body: `let ...` is recognized here, at the one deliberate spot (the first
+// RHS token), and routed to parseLetClause; everything else goes through
+// the ordinary expression parser + postParse. This is the only place a
+// `Let` node can originate (see the header comment above postParse).
+buildBody rhs = if (startsWithLet rhs) (parseLetClause (tailOr Nil rhs)) (postParse (prExpr (parseExpr rhs)))
+
+buildFunc cs = buildFuncFrom (csLhs cs) (csRhs cs)
+
+buildFuncFrom toks rhs =
+  case toks
+    (Nil -> error "buildFunc: empty function head")
+    (Cons t rest -> buildFuncFromTok t rest rhs)
+
+buildFuncFromTok t rest rhs =
+  case t
+    (TIdent n -> Func n (parseFuncArgs rest) (buildBody rhs))
+    (_ -> error "buildFunc: a function head must start with a name")
+
+parseClause line = buildFunc (splitAtEquals (tokenize line))
+
+// == ADT declarations: `::name = Con1 !field1 field2 | Con2 | Con3 field3` ==
+// The caller (parseProgramLines) has already stripped the leading `::` on
+// the raw line, so only `name = Con1 ... | Con2 ...` needs tokenizing here.
+// `|` between constructors is just `TOp "|"` (no dedicated token), matched
+// on VALUE like `case`/`let`/`in` are matched on identifier value.
+
+pipeOp = ['|']
+
+::ConFieldsResult = ConFieldsResult !fs !rest
+cfrFields r = case r (ConFieldsResult fs rr -> fs)
+cfrRest r = case r (ConFieldsResult fs rr -> rr)
+
+collectConFields acc toks =
+  case toks
+    (Nil -> ConFieldsResult acc Nil)
+    (Cons t rest -> collectConFieldsTok acc t rest)
+
+// A field ends the field list (rather than being one itself) once we hit
+// `TOp "|"` (another constructor follows) or the end of input -- both mean
+// "this constructor is done", same as TRParen/TEquals elsewhere already
+// mean "stop, leave this token for the caller".
+collectConFieldsTok acc t rest =
+  case t
+    (TIdent n -> collectConFields (append acc (Cons False Nil)) rest)
+    (TBang -> collectConFieldAfterBang acc rest)
+    (TOp o -> if (charListEq o pipeOp) (ConFieldsResult acc (Cons t rest)) (error "parseAdt: unexpected operator in the field list"))
+    (_ -> error "parseAdt: unexpected token in the field list")
+
+collectConFieldAfterBang acc toks =
+  case toks
+    (Nil -> error "parseAdt: ! not followed by a field name (end of input)")
+    (Cons t rest -> collectConFieldAfterBangTok acc t rest)
+
+collectConFieldAfterBangTok acc t rest =
+  case t
+    (TIdent n -> collectConFields (append acc (Cons True Nil)) rest)
+    (_ -> error "parseAdt: ! must be followed by a field name")
+
+::AdtConResult = AdtConResult !c !rest
+acrCon r = case r (AdtConResult c rr -> c)
+acrRest r = case r (AdtConResult c rr -> rr)
+
+wrapAdtCon n cfr = AdtConResult (AdtCon n (cfrFields cfr)) (cfrRest cfr)
+
+parseAdtCon toks =
+  case toks
+    (Nil -> error "parseAdt: empty constructor (end of input)")
+    (Cons t rest -> parseAdtConTok t rest)
+
+parseAdtConTok t rest =
+  case t
+    (TIdent n -> wrapAdtCon n (collectConFields Nil rest))
+    (_ -> error "parseAdt: a constructor must start with a name")
+
+::AdtConsResult = AdtConsResult !cs !rest
+acsCons r = case r (AdtConsResult cs rr -> cs)
+acsRest r = case r (AdtConsResult cs rr -> rr)
+
+prependAdtCon c r = case r (AdtConsResult cs rr -> AdtConsResult (Cons c cs) rr)
+
+collectAdtCons toks = wrapAdtConsResult (parseAdtCon toks)
+wrapAdtConsResult acr = afterAdtCon (acrCon acr) (acrRest acr)
+
+afterAdtCon c toks =
+  case toks
+    (Nil -> AdtConsResult (Cons c Nil) Nil)
+    (Cons t rest -> afterAdtConTok c t rest)
+
+afterAdtConTok c t rest =
+  case t
+    (TOp o -> if (charListEq o pipeOp) (prependAdtCon c (collectAdtCons rest)) (error "parseAdt: unexpected operator after a constructor"))
+    (_ -> error "parseAdt: | expected between constructors")
+
+expectEqualsThenCons n toks =
+  case toks
+    (Nil -> error "parseAdt: missing = after the type name")
+    (Cons t rest -> expectEqualsThenConsTok n t rest)
+
+expectEqualsThenConsTok n t rest =
+  case t
+    (TEquals -> Adt n (acsCons (collectAdtCons rest)))
+    (_ -> error "parseAdt: = expected after the type name")
+
+buildAdtDecl toks =
+  case toks
+    (Nil -> error "parseAdt: empty ADT declaration")
+    (Cons t rest -> buildAdtFromTok t rest)
+
+buildAdtFromTok t rest =
+  case t
+    (TIdent n -> expectEqualsThenCons n rest)
+    (_ -> error "parseAdt: a type name must start with a name")
+
+// `line` still has the leading `::` on it (see parseProgramLines) -- the
+// first two characters are dropped here, before tokenizing.
+dropChars n cs = if (n == 0) cs (case cs (Nil -> Nil) (Cons c cs2 -> dropChars (n - 1) cs2))
+parseAdtDecl line = buildAdtDecl (tokenize (dropChars 2 line))
+
+// == Multi-line clauses: Sapl's offside continuation rule is simple -- a
+// newline followed by a space is treated as a space (so: the next physical
+// line continues the current one as soon as it starts with a space, no
+// matter how many), while blank lines (no leading space) start a fresh,
+// separate "line". Whole logical lines are merged BEFORE tokenizing. ==
+
+startsWithSpace cs = case cs (Nil -> False) (Cons c cs2 -> c == 32)
+
+mergeContinuations lns =
+  case lns
+    (Nil -> Nil)
+    (Cons l1 rest -> mergeContinuationsStep l1 rest)
+
+mergeContinuationsStep l1 rest =
+  case rest
+    (Nil -> Cons l1 Nil)
+    (Cons l2 ls -> if (startsWithSpace l2) (mergeContinuations (Cons (append l1 (Cons 32 l2)) ls)) (Cons l1 (mergeContinuations (Cons l2 ls))))
+
+linesOfAcc acc cs =
+  case cs
+    (Nil -> Cons (reverse acc) Nil)
+    (Cons c cs2 -> if (c == 10) (Cons (reverse acc) (linesOfAcc Nil cs2)) (linesOfAcc (Cons c acc) cs2))
+linesOf cs = linesOfAcc Nil cs
+
+// == Program: one clause/ADT declaration per (post-merge) logical line,
+// blank/comment lines skipped. Produces [func] and [adt] SEPARATELY (as
+// compileProgram prog adts expects), via a named ParsedProgram, not a tuple
+// (docs/amanda_programmeer_regels.md #2). ==
+
+// Not just zero length (after stripping comments): a line of ONLY spaces
+// has length > 0 but no real tokens -- skipping leading spaces first is
+// enough to detect that (length 0 after dropping leading spaces <=> pure
+// whitespace).
+dropLeadingSpaces cs = case cs (Nil -> Nil) (Cons c cs2 -> if (c == 32) (dropLeadingSpaces cs2) cs)
+isBlankLine line = length (dropLeadingSpaces (stripComment line)) == 0
+
+::ParsedProgram = ParsedProgram !fs !as
+ppFuncs p = case p (ParsedProgram fs a -> fs)
+ppAdts  p = case p (ParsedProgram fs a -> a)
+
+prependFunc f p = case p (ParsedProgram fs a -> ParsedProgram (Cons f fs) a)
+prependAdt a p = case p (ParsedProgram fs aa -> ParsedProgram fs (Cons a aa))
+
+parseProgramLines lns =
+  case lns
+    (Nil -> ParsedProgram Nil Nil)
+    (Cons l ls -> parseProgramLinesTok l ls)
+
+parseProgramLinesTok l ls =
+  if (isBlankLine l) (parseProgramLines ls)
+  (if (startsWithDoubleColon l) (prependAdt (parseAdtDecl l) (parseProgramLines ls)) (prependFunc (parseClause l) (parseProgramLines ls)))
+
+// == Name resolution: a bare identifier referring to a known, 0-arity
+// top-level function (e.g. `nums` in `sumlist (sieve nums)`, or
+// `twice`/`inc` in an oversaturated call like `twice twice twice twice inc n`)
+// parses at clause level as `Var n` (parseAtomTok can't tell by itself
+// whether `n` is a local variable or a top-level function name -- that's a
+// WHOLE-PROGRAM question), but must become `App n []` once `n` turns out
+// to not be a local binding AND to be a real function name (matching
+// newparser/driver.ama's progSieve/progTwicex: `App "nums" []`,
+// `App "twice" []`/`App "inc" []`, never a bare `Var`) -- genValue's `Var v`
+// case does a `slotOf` lookup in the function's own argument list, which
+// would hard-fail for anything that isn't an argument. Runs as a separate,
+// whole-program pass AFTER parseProgramLines (which has the full [func]),
+// not as part of parseClause/postParse. ==
+
+resolveVar topNames locals v = if (member locals v) (Var v) (if (member topNames v) (App v Nil) (Var v))
+
+// postParse (parseClause time, no whole-program context) guesses from the
+// uppercase convention whether a bare identifier is a constructor
+// (`Cons a b` -> `Ct "Cons" [a,b]`) -- right for every golden source so far,
+// but wrong for benchmarks/sprimes.cfp, where Add/Sub/Gt/Neq/Mod/Pred are
+// ordinary user-defined FUNCTIONS with capitalized names, not constructors
+// (Sapl doesn't actually enforce "functions are lowercase"). Here, in the
+// whole-program pass (which has adts/topNames), that guess gets corrected:
+// a `Ct n as` where `n` isn't a known ADT constructor but IS a known
+// top-level function name becomes `App n as` after all.
+fixupCtor topNames adts n as = if (isKnownCon n adts) (Ct n as) (if (member topNames n) (App n as) (Ct n as))
+
+// == `nomatch`-filling (benchmarks/primes.cfp: `case xs nomatch (Cons x xs
+// -> ...)`) ==
+// collectBranchesTok already discards `nomatch` tokens while parsing -- at
+// that point there's no [adt] available to know WHICH constructor(s) that
+// leaves uncovered. Here, in the whole-program resolve pass (which does
+// have the adts), every Case gets filled out to exactly one branch per
+// constructor of its ADT (in declaration order), regardless of whether a
+// `nomatch` was written -- exactly how parser.ama's own buildCase does it:
+// every uncovered constructor gets a NoMatch branch regardless of the
+// number/position of `nomatch` tokens in the source, which is purely
+// documentation, not a driving signal.
+
+isConOfAdt name a = isConOfList name (adtConsOf a)
+isKnownCon name adts =
+  case adts
+    (Nil -> False)
+    (Cons a as -> if (isConOfAdt name a) True (isKnownCon name as))
+adtConNamesOf con adts = map adtConName (adtConsOf (findAdtByCon con adts))
+
+cbCon cb = case cb (CaseBranch c vs b -> c)
+cbVars cb = case cb (CaseBranch c vs b -> vs)
+cbBody cb = case cb (CaseBranch c vs b -> b)
+
+conArity name adts = length (adtConFields (findAdtCon name (adtConsOf (findAdtByCon name adts))))
+
+mkPlaceholderFieldsAcc n =
+  if (n == 0) Nil (Cons (append ['_nm'] (itoa n)) (mkPlaceholderFieldsAcc (n - 1)))
+// Field names of a synthesized NoMatch branch are placeholders: the body is
+// NoMatch anyway (never refers to a field), but the COUNT must still match
+// the constructor's own arity (stage4_retag.ama's branchLocals zips these
+// against the real field list by length).
+mkNoMatchBranch adts con = CaseBranch con (mkPlaceholderFieldsAcc (conArity con adts)) NoMatch
+
+// Gevonden 10 augustus 2026: een letterlijke `_`-catch-all-tak (bv. parser.cfp
+// se eigen `closeParenOnTok`/`collectAppOnTok`, die overal `(_ -> ...)`
+// gebruiken) werd hier nooit herkend als "dek de rest af" -- `_` gold gewoon
+// als een aparte, nooit matchende constructornaam, dus fillBranches vulde
+// elke andere constructor stilzwijgend aan met een NoMatch-tak. Blokkeerde
+// sapl_compiler's eigen self-hosting-poging ("nomatch for this case" op
+// runtime); geïsoleerd via catchall/test_catchall_simple.cfp. Zelfde fix als
+// newparser/parse.ama (mirror, zie het commentaar daar voor de volle uitleg).
+hasCatchAllBranch branches =
+  case branches
+    (Nil -> False)
+    (Cons b bs -> if (charListEq (cbCon b) ['_']) True (hasCatchAllBranch bs))
+
+catchAllBody branches =
+  case branches
+    (Nil -> error "catchAllBody: no catch-all branch found")
+    (Cons b bs -> if (charListEq (cbCon b) ['_']) (cbBody b) (catchAllBody bs))
+
+mkCatchAllBranch adts con allBranches = CaseBranch con (mkPlaceholderFieldsAcc (conArity con adts)) (catchAllBody allBranches)
+
+findBranchByCon adts con allBranches branches =
+  case branches
+    (Nil -> if (hasCatchAllBranch allBranches) (mkCatchAllBranch adts con allBranches) (mkNoMatchBranch adts con))
+    (Cons b bs -> if (charListEq (cbCon b) con) b (findBranchByCon adts con allBranches bs))
+
+fillBranches adts branches names =
+  case names
+    (Nil -> Nil)
+    (Cons c cs -> Cons (findBranchByCon adts c branches branches) (fillBranches adts branches cs))
+
+// Unknown constructor (e.g. a fragment file with no ::list of its own):
+// nothing to fill against, branches stay as-is. Empty branch list (a case
+// with only `nomatch`, no real branch at all): also left alone, there's no
+// constructor name to look up an ADT by.
+completeBranches adts branches =
+  if (length branches == 0)
+    branches
+    (if (isKnownCon (cbCon (headBranch branches)) adts) (fillBranches adts branches (adtConNamesOf (cbCon (headBranch branches)) adts)) branches)
+headBranch branches = case branches (Cons b bs -> b) nomatch
+
+resolveBranch topNames adts locals cb =
+  case cb
+    (CaseBranch c vs b -> CaseBranch c vs (resolveExpr topNames adts (append locals vs) b))
+
+resolveBinding topNames adts locals lb =
+  case lb
+    (LetBinding n s e -> LetBinding n s (resolveExpr topNames adts locals e))
+
+lbName lb = case lb (LetBinding n s e -> n)
+
+resolveLetLocals topNames adts locals ls b =
+  let locals2 = append locals (map lbName ls) in
+  Let (map (resolveBinding topNames adts locals2) ls) (resolveExpr topNames adts locals2 b)
+
+resolveExpr topNames adts locals e =
+  case e
+    (Num n -> Num n)
+    (Str s -> Str s)
+    (Var v -> resolveVar topNames locals v)
+    (If a b c -> If (resolveExpr topNames adts locals a) (resolveExpr topNames adts locals b) (resolveExpr topNames adts locals c))
+    (App n as -> App n (map (resolveExpr topNames adts locals) as))
+    (Prim o as -> Prim o (map (resolveExpr topNames adts locals) as))
+    (Ct n as -> fixupCtor topNames adts n (map (resolveExpr topNames adts locals) as))
+    (Case sc cs -> Case (resolveExpr topNames adts locals sc) (map (resolveBranch topNames adts locals) (completeBranches adts cs)))
+    (Let ls b -> resolveLetLocals topNames adts locals ls b)
+    (NoMatch -> NoMatch)
+    (_ -> error "resolveExpr: unexpected expression form")
+
+argName a = case a (Arg n s -> n)
+
+resolveFunc topNames adts f =
+  case f
+    (Func n args body -> Func n args (resolveExpr topNames adts (map argName args) body))
+
+resolveProgram adts funcs = map (resolveFunc (map funcNameOf funcs) adts) funcs
+
+resolveParsedProgram p =
+  case p
+    (ParsedProgram fs a -> ParsedProgram (resolveProgram a fs) a)
+
+parseProgramText text = resolveParsedProgram (parseProgramLines (mergeContinuations (linesOf text)))
+
+// Reads and parses a whole .cfp source file, returning a ParsedProgram
+// (its ppFuncs/ppAdts are compileProgram's own two arguments) -- matching
+// parse.ama's own `parseProgram :: [char] -> parsedProgram`, which does the
+// `fread` itself.
+parseProgram filename = parseProgramText (str2list (readFile filename))
+
+
+// Direct Sapl port of newparser/stage1_bool.ama -- see docs/bootstrapping_plan.md
+// section 0 step 3 (codegen stages ported after the front end, stage1 first).
+// Porting mechanics, same as sapl_compiler/parser.cfp's own header comment:
+// Amanda's per-clause dispatch on a constructor becomes one Sapl function with
+// an internal `case` (docs/sapl_programmeer_regels.md #5). Amanda's nested
+// pattern `(Prim "/\\" (l:r:[]))` -- match the constructor AND check the args
+// list has exactly two elements in one clause -- isn't expressible as a single
+// Sapl case (one level deep only, docs/sapl_programmeer_regels.md #2), so it's
+// decomposed into a short chain of single-level-case helper functions that
+// thread the original whole expression through for the "doesn't match, fall
+// through to the plain case" path, exactly the shape parser.cfp already uses
+// for its own multi-token lookahead (collectAppOnTok/climbBinExprOnTok).
+// `charListEq`/`slashBackslash`/`backslashSlash` moved to sapl_compiler/
+// ast_helpers.cfp (shared across every stageN_*.cfp, and parser.cfp too for
+// slashBackslash/backslashSlash, once the driver needed to import them all
+// together, see that file's own header) -- were local copies here
+// originally.
+
+isBoolConnective op = charListEq op slashBackslash \/ charListEq op backslashSlash
+
+stage1 prog f =
+  case f
+    (Func name args body -> Func name args (bool1 body))
+
+// boolAsGate e t el: `e` as a short-circuit gate -- go to `t` if true, `el`
+// otherwise. `e` itself may again be /\ or \/, which decomposes further, so
+// the result is never "If-as-condition-of-If" (every produced If-condition is
+// already a bool1'd leaf). Used for an explicit `if`-condition (t/el = the
+// already-processed then/else branches).
+boolAsGate e t el =
+  case e
+    (Prim op args -> boolAsGatePrimArgs e op args t el)
+    (_ -> If (bool1 e) t el)
+
+boolAsGatePrimArgs e op args t el =
+  case args
+    (Cons l rest -> boolAsGatePrimRest e op l rest t el)
+    (Nil -> If (bool1 e) t el)
+
+boolAsGatePrimRest e op l rest t el =
+  case rest
+    (Cons r rest2 -> boolAsGatePrimRest2 e op l r rest2 t el)
+    (Nil -> If (bool1 e) t el)
+
+boolAsGatePrimRest2 e op l r rest2 t el =
+  case rest2
+    (Nil -> boolAsGateOp e op l r t el)
+    (Cons x xs -> If (bool1 e) t el)
+
+boolAsGateOp e op l r t el =
+  if (charListEq op slashBackslash) (boolAsGate l (boolAsGate r t el) el)
+  (if (charListEq op backslashSlash) (boolAsGate l t (boolAsGate r t el))
+  (If (bool1 e) t el))
+
+// boolValue e: `e` as a VALUE (a bare, not-wrapped-in-an-if /\ or \/ chain).
+// AND: go to the rest of the chain if true, else Num 0. OR: Num 1 if true,
+// else go to the rest of the chain. The very last operand (no more /\ or \/)
+// falls out via bool1's ordinary recursion as-is.
+boolValue e =
+  case e
+    (Prim op args -> boolValuePrimArgs e op args)
+    (_ -> bool1 e)
+
+boolValuePrimArgs e op args =
+  case args
+    (Cons l rest -> boolValuePrimRest e op l rest)
+    (Nil -> bool1 e)
+
+boolValuePrimRest e op l rest =
+  case rest
+    (Cons r rest2 -> boolValuePrimRest2 e op l r rest2)
+    (Nil -> bool1 e)
+
+boolValuePrimRest2 e op l r rest2 =
+  case rest2
+    (Nil -> boolValueOp e op l r)
+    (Cons x xs -> bool1 e)
+
+boolValueOp e op l r =
+  if (charListEq op slashBackslash) (boolAsGate l (boolValue r) (Num 0))
+  (if (charListEq op backslashSlash) (boolAsGate l (Num 1) (boolValue r))
+  (bool1 e))
+
+// Num/Str/Var/NoMatch are all plain "return unchanged" -- collapsed into the
+// trailing catch-all (`_ -> e`) below, same as stage1_bool.ama's own comment
+// about its `bool1 e = e` clause. Lazy/Thunk/Closure/Eval keep their own
+// explicit branch each: same shape, but each names a different constructor in
+// its error text.
+bool1 e =
+  case e
+    (If a b c -> boolAsGate a (bool1 b) (bool1 c))
+    (App n as -> App n (map bool1 as))
+    (Prim op as -> if (isBoolConnective op) (boolValue (Prim op as)) (Prim op (map bool1 as)))
+    (Ct n as -> Ct n (map bool1 as))
+    (Case sc cs -> Case (bool1 sc) (map bool1Branch cs))
+    (Let ls b -> Let (map bool1LetBinding ls) (bool1 b))
+    (Lazy inner -> error "stage1: Lazy not expected before stage 2")
+    (Thunk inner -> error "stage1: Thunk not expected before stage 2")
+    (Closure inner -> error "stage1: Closure not expected before stage 2")
+    (Eval inner -> error "stage1: Eval not expected before stage 2")
+    (_ -> e)
+
+bool1Branch cb =
+  case cb
+    (CaseBranch c vs b -> CaseBranch c vs (bool1 b))
+
+bool1LetBinding lb =
+  case lb
+    (LetBinding n s rhs -> LetBinding n s (bool1 rhs))
+
+
+// Direct Sapl port of newparser/stage2_lazytag.ama -- see
+// docs/bootstrapping_plan.md section 0 step 3, same porting technique as
+// stage1_bool.cfp/parser.cfp. `funcName`/`funcArity` become `funcNameOf`/
+// `funcArityOf` (built-in reflection primitive collision, docs/
+// sapl_programmeer_regels.md #10).
+//
+// ast.ama's helpers this stage needs (findFunc/isKnownFunc/funcArityOf/
+// funcArgs/argStrict/conFields/isPrintCall/isPrintCCall/isErrorCall/
+// isPredefCall) now come from sapl_compiler/ast_helpers.cfp -- originally
+// local copies here (each stage was its own standalone tested unit), moved
+// out once the driver needed to #import every stageN_*.cfp together (see
+// ast_helpers.cfp's own header for why that forced the move).
+// `tagBySig`/`tagCtArgs` zip a signature list against an argument-expr list
+// one element at a time; ast.ama does this via `(a:as) es = ... (hd es) ...
+// (tl es)` (one discriminated position per equation, newparser/CLAUDE.md's
+// subset rule), which becomes a nested `case` (on the signature, then on
+// the argument list) here instead -- Sapl's `case` already only matches one
+// scrutinee at a time, so there's no need to route through the
+// signature-only match ast.ama used to reach that.
+
+stage2 prog adts f =
+  case f
+    (Func name args body -> Func name args (tag2 prog adts body))
+
+// Num/Str/Var/NoMatch collapsed into the trailing catch-all (same "return
+// unchanged" reasoning as stage1_bool.cfp's bool1). Lazy/Thunk/Closure/Eval
+// kept explicit, each names a different constructor in its error text.
+tag2 prog adts e =
+  case e
+    (If a b c -> If (tag2 prog adts a) (tag2 prog adts b) (tag2 prog adts c))
+    (App n as -> tagApp prog adts n as)
+    (Prim op as -> Prim op (map (tag2 prog adts) as))
+    (Ct n as -> tagCt prog adts n as)
+    (Case sc cs -> Case (tag2 prog adts sc) (map (tag2Branch prog adts) cs))
+    (Let ls b -> Let (map (tag2LetBinding prog adts) ls) (tag2 prog adts b))
+    (Lazy inner -> error "stage2: Lazy not expected before stage 2")
+    (Thunk inner -> error "stage2: Thunk not expected before stage 2")
+    (Closure inner -> error "stage2: Closure not expected before stage 2")
+    (Eval inner -> error "stage2: Eval not expected before stage 2")
+    (_ -> e)
+
+tag2Branch prog adts cb =
+  case cb
+    (CaseBranch c vs b -> CaseBranch c vs (tag2 prog adts b))
+
+// Strict binding (`!a = X`): treated like a strict argument position, no
+// Lazy. Non-strict binding: like a non-strict argument position, wrapped in
+// Lazy -- exactly tagOneArg's rule, applied to a let-rhs instead of a call
+// argument.
+tag2LetBinding prog adts lb =
+  case lb
+    (LetBinding n s rhs -> LetBinding n s (tagLetRhs prog adts s rhs))
+
+// `if` may only appear in tail position (docs/sapl_programmeer_regels.md #3)
+// -- can't inline this as LetBinding's third argument, needs its own name.
+tagLetRhs prog adts s rhs = if s (tag2 prog adts rhs) (tagLazy prog adts rhs)
+
+// One call `n as`: look up the known arity/strictness and tag accordingly.
+tagApp prog adts n as =
+  if (isPrintCall n) (App n (map (tag2 prog adts) as))
+  (if (isPrintCCall n) (App n (map (tag2 prog adts) as))
+  (if (isPredefCall n) (App n (map (tag2 prog adts) as))
+  (if (isErrorCall n) (App n (map (tag2 prog adts) as))
+  (if (isSyscallCall n) (App n (map (tag2 prog adts) as))
+  (if (isStrcreateCall n) (App n (map (tag2 prog adts) as))
+  (if (isKnownFunc n prog) (tagKnownApp prog adts (findFunc n prog) n as) (App n (map (tagLazy prog adts) as))))))))
+
+tagKnownApp prog adts f n as =
+  if (length as == funcArityOf f)
+    (App n (tagBySig prog adts (funcArgs f) as))
+    (tagKnownAppNotSat prog adts f n as)
+
+tagKnownAppNotSat prog adts f n as =
+  if (length as < funcArityOf f)
+    (App n (map (tagLazy prog adts) as))
+    (tagOversaturated prog adts f n as)
+
+// Oversaturated: the first funcArityOf-f arguments follow f's own
+// strictness as usual; the surplus arguments are all tagged lazy.
+tagOversaturated prog adts f n as =
+  let baseArgs = take (funcArityOf f) as, extraArgs = drop (funcArityOf f) as in
+  App n (append (tagBySig prog adts (funcArgs f) baseArgs) (map (tagLazy prog adts) extraArgs))
+
+tagBySig prog adts sig es =
+  case sig
+    (Nil -> Nil)
+    (Cons a asig -> tagBySigCons prog adts a asig es)
+
+tagBySigCons prog adts a asig es =
+  case es
+    (Cons e es2 -> Cons (tagOneArg prog adts a e) (tagBySig prog adts asig es2))
+    (Nil -> error "tagBySig: fewer arguments than signature entries")
+
+tagOneArg prog adts a e = if (argStrict a) (tag2 prog adts e) (tagLazy prog adts e)
+
+tagLazy prog adts e = Lazy (tag2 prog adts e)
+
+// Ct's fields: same principle as tagBySig, but the "signature" comes from
+// the ADT declaration (conFields), not a function argument list.
+tagCt prog adts n as = Ct n (tagCtArgs prog adts (conFields n adts) as)
+
+tagCtArgs prog adts sig es =
+  case sig
+    (Nil -> Nil)
+    (Cons s ssig -> tagCtArgsCons prog adts s ssig es)
+
+tagCtArgsCons prog adts s ssig es =
+  case es
+    (Cons e es2 -> Cons (tagCtOneArg prog adts s e) (tagCtArgs prog adts ssig es2))
+    (Nil -> error "tagCtArgs: fewer arguments than constructor fields")
+
+tagCtOneArg prog adts strict e = if strict (tag2 prog adts e) (tagLazy prog adts e)
+
+
+// Direct Sapl port of newparser/stage3_lift.ama -- see
+// docs/bootstrapping_plan.md section 0 step 3, same technique as
+// stage1_bool.cfp/stage2_lazytag.cfp. ast.ama's helpers this stage needs
+// (isPrintCall/isPrintCCall/isPredefCall/isErrorCall/conFields/argStrict/
+// letBindingToArg/member) now come from sapl_compiler/ast_helpers.cfp --
+// originally local copies here, moved out once the driver needed to
+// #import every stageN_*.cfp together (see ast_helpers.cfp's own header).
+//
+// Amanda's `where` clauses (every lift3-family equation threads an
+// expr/counter/emitted-functions triple through 2-3 sub-results) become a
+// `let ... in ...` that is the WHOLE body of its own named function
+// (docs/sapl_programmeer_regels.md #4/#5: `let` may only be a function's
+// entire body, so every constructor-clause-with-where in stage3_lift.ama
+// gets split into its own top-level Sapl function rather than living inline
+// as a `case` branch). Amanda's `~(A \/ B \/ ...)` (boolean not of an
+// or-chain, in dontLiftApp) becomes a nested `if` chain instead of a literal
+// transliteration -- see dontLiftApp's own comment for why: a bare `\/`/`/\`
+// expression passed inline as a call argument miscompiles in the real
+// `parser.ama`, a newly-found bug unrelated to this port.
+
+::Liftres = Liftres !e !ctr !emits
+::Liftreslist = Liftreslist !es !ctr !emits
+::Liftresbranch = Liftresbranch !b !ctr !emits
+::Liftresbranches = Liftresbranches !bs !ctr !emits
+::Liftreslb = Liftreslb !lb !ctr !emits
+::Liftreslbs = Liftreslbs !lbs !ctr !emits
+::Stage3res = Stage3res !f !emits
+
+liftedExpr r = case r (Liftres e c fs -> e)
+liftedCtr r = case r (Liftres e c fs -> c)
+liftedEmits r = case r (Liftres e c fs -> fs)
+
+liftedExprs r = case r (Liftreslist es c fs -> es)
+liftedListCtr r = case r (Liftreslist es c fs -> c)
+liftedListEmits r = case r (Liftreslist es c fs -> fs)
+
+liftedBranch r = case r (Liftresbranch b c fs -> b)
+liftedBranchCtr r = case r (Liftresbranch b c fs -> c)
+liftedBranchEmits r = case r (Liftresbranch b c fs -> fs)
+
+liftedBranches r = case r (Liftresbranches bs c fs -> bs)
+liftedBranchListCtr r = case r (Liftresbranches bs c fs -> c)
+liftedBranchListEmits r = case r (Liftresbranches bs c fs -> fs)
+
+liftedLb r = case r (Liftreslb lb c fs -> lb)
+liftedLbCtr r = case r (Liftreslb lb c fs -> c)
+liftedLbEmits r = case r (Liftreslb lb c fs -> fs)
+
+liftedLbs r = case r (Liftreslbs lbs c fs -> lbs)
+liftedLbsCtr r = case r (Liftreslbs lbs c fs -> c)
+liftedLbsEmits r = case r (Liftreslbs lbs c fs -> fs)
+
+stage3resFunc r = case r (Stage3res f fs -> f)
+stage3resEmits r = case r (Stage3res f fs -> fs)
+
+// == stage3 entry point ==
+
+stage3 adts f =
+  case f
+    (Func name args body -> stage3Body name args adts body)
+
+stage3Body name args adts body =
+  let r = lift3 name 0 args adts body in
+  Stage3res (Func name args (liftedExpr r)) (liftedEmits r)
+
+// Num/Str/Var/NoMatch collapsed into the trailing catch-all (`Liftres e ctr
+// Nil` is exactly what each of their own cases reduces to -- the constructor
+// is reconstructed unchanged either way). Thunk/Closure/Eval kept explicit,
+// each names a different constructor in its error text.
+lift3 fname ctr args adts e =
+  case e
+    (If a b c -> lift3If fname ctr args adts a b c)
+    (App n as -> lift3App fname ctr args adts n as)
+    (Prim op as -> lift3Prim fname ctr args adts op as)
+    (Ct n as -> lift3Ct fname ctr args adts n as)
+    (Case sc cs -> lift3Case fname ctr args adts sc cs)
+    (Let ls b -> lift3Let fname ctr args adts ls b)
+    (Lazy inner -> liftLazy fname ctr args adts inner)
+    (Thunk inner -> error "stage3: Thunk not expected before stage 4")
+    (Closure inner -> error "stage3: Closure not expected before stage 4")
+    (Eval inner -> error "stage3: Eval not expected before stage 4")
+    (_ -> Liftres e ctr Nil)
+
+lift3If fname ctr args adts a b c =
+  let ra = lift3 fname ctr args adts a,
+      rb = lift3 fname (liftedCtr ra) args adts b,
+      rc = lift3 fname (liftedCtr rb) args adts c in
+  Liftres (If (liftedExpr ra) (liftedExpr rb) (liftedExpr rc)) (liftedCtr rc)
+    (append (liftedEmits ra) (append (liftedEmits rb) (liftedEmits rc)))
+
+lift3App fname ctr args adts n as =
+  let rs = lift3List fname ctr args adts as in
+  Liftres (App n (liftedExprs rs)) (liftedListCtr rs) (liftedListEmits rs)
+
+lift3Prim fname ctr args adts op as =
+  let rs = lift3List fname ctr args adts as in
+  Liftres (Prim op (liftedExprs rs)) (liftedListCtr rs) (liftedListEmits rs)
+
+lift3Ct fname ctr args adts n as =
+  let rs = lift3List fname ctr args adts as in
+  Liftres (Ct n (liftedExprs rs)) (liftedListCtr rs) (liftedListEmits rs)
+
+lift3Case fname ctr args adts sc cs =
+  let re = lift3 fname ctr args adts sc,
+      rbs = lift3Branches fname (liftedCtr re) args adts cs in
+  Liftres (Case (liftedExpr re) (liftedBranches rbs)) (liftedBranchListCtr rbs)
+    (append (liftedEmits re) (liftedBranchListEmits rbs))
+
+lift3Let fname ctr args adts ls b =
+  let extendedArgs = append (map letBindingToArg ls) args,
+      rls = lift3LetBindings fname ctr extendedArgs adts ls,
+      rb = lift3 fname (liftedLbsCtr rls) extendedArgs adts b in
+  Liftres (Let (liftedLbs rls) (liftedExpr rb)) (liftedCtr rb)
+    (append (liftedLbsEmits rls) (liftedEmits rb))
+
+lift3List fname ctr args adts es =
+  case es
+    (Nil -> Liftreslist Nil ctr Nil)
+    (Cons e es2 -> lift3ListCons fname ctr args adts e es2)
+
+lift3ListCons fname ctr args adts e es2 =
+  let re = lift3 fname ctr args adts e,
+      res = lift3List fname (liftedCtr re) args adts es2 in
+  Liftreslist (Cons (liftedExpr re) (liftedExprs res)) (liftedListCtr res)
+    (append (liftedEmits re) (liftedListEmits res))
+
+lift3Branches fname ctr args adts cbs =
+  case cbs
+    (Nil -> Liftresbranches Nil ctr Nil)
+    (Cons cb cbs2 -> lift3BranchesCons fname ctr args adts cb cbs2)
+
+lift3BranchesCons fname ctr args adts cb cbs2 =
+  let rb = lift3Branch fname ctr args adts cb,
+      rbs = lift3Branches fname (liftedBranchCtr rb) args adts cbs2 in
+  Liftresbranches (Cons (liftedBranch rb) (liftedBranches rbs)) (liftedBranchListCtr rbs)
+    (append (liftedBranchEmits rb) (liftedBranchListEmits rbs))
+
+lift3Branch fname ctr args adts cb =
+  case cb
+    (CaseBranch c vs b -> lift3BranchBody fname ctr args adts c vs b)
+
+lift3BranchBody fname ctr args adts c vs b =
+  let extendedArgs = append (mkCaseArgsLift vs (conFields c adts)) args,
+      rb = lift3 fname ctr extendedArgs adts b in
+  Liftresbranch (CaseBranch c vs (liftedExpr rb)) (liftedCtr rb) (liftedEmits rb)
+
+mkCaseArgsLift vs fields =
+  case vs
+    (Nil -> Nil)
+    (Cons v vs2 -> mkCaseArgsLiftCons v vs2 fields)
+
+mkCaseArgsLiftCons v vs2 fields =
+  case fields
+    (Cons f fs -> Cons (Arg v f) (mkCaseArgsLift vs2 fs))
+    (Nil -> error "mkCaseArgsLift: fewer fields than case-bound variables")
+
+// Let-bindings: each rhs goes through lift3 separately (a strict rhs carries
+// no Lazy wrapper, per stage2_lazytag.cfp's tag2LetBinding, so lift3 just
+// recurses structurally there; a non-strict rhs IS Lazy-tagged and follows
+// the same liftLazy/dontLift decision as anywhere else). The rhs's see EACH
+// OTHER's names (cyclic/mutual let is allowed) -- hence extendedArgs (all
+// let names) used for EVERY rhs, not built up incrementally.
+lift3LetBindings fname ctr args adts lbs =
+  case lbs
+    (Nil -> Liftreslbs Nil ctr Nil)
+    (Cons lb lbs2 -> lift3LetBindingsCons fname ctr args adts lb lbs2)
+
+lift3LetBindingsCons fname ctr args adts lb lbs2 =
+  let rlb = lift3LetBinding fname ctr args adts lb,
+      rlbs = lift3LetBindings fname (liftedLbCtr rlb) args adts lbs2 in
+  Liftreslbs (Cons (liftedLb rlb) (liftedLbs rlbs)) (liftedLbsCtr rlbs)
+    (append (liftedLbEmits rlb) (liftedLbsEmits rlbs))
+
+lift3LetBinding fname ctr args adts lb =
+  case lb
+    (LetBinding n s e -> lift3LetBindingBody fname ctr args adts n s e)
+
+lift3LetBindingBody fname ctr args adts n s e =
+  let r = lift3 fname ctr args adts e in
+  Liftreslb (LetBinding n s (liftedExpr r)) (liftedCtr r) (liftedEmits r)
+
+// Was `Lazy e`: e is one of dontLift's shapes, or must be lifted.
+liftLazy fname ctr args adts e =
+  if (dontLift args adts e) (liftLazyKeep fname ctr args adts e) (liftLazyDo fname ctr args adts e)
+
+// dontLift/liftLazy only decide about the node stage2 itself tagged Lazy.
+// Inside a kept (Thunk-bound) App's own arguments, each argument gets its
+// OWN "simple enough, or lift after all" decision independent of the
+// strictness the callee receives it with -- lift3Thunked/lift3ThunkedArg
+// mirror that (matching parser.ama's genlazy, applied per-argument of an
+// already-deferred call).
+liftLazyKeep fname ctr args adts e =
+  let r = lift3Thunked fname ctr args adts e in
+  Liftres (Lazy (liftedExpr r)) (liftedCtr r) (liftedEmits r)
+
+lift3Thunked fname ctr args adts e =
+  case e
+    (App n as -> lift3ThunkedApp fname ctr args adts n as)
+    (_ -> lift3 fname ctr args adts e)
+
+lift3ThunkedApp fname ctr args adts n as =
+  let rs = lift3ThunkedList fname ctr args adts as in
+  Liftres (App n (liftedExprs rs)) (liftedListCtr rs) (liftedListEmits rs)
+
+lift3ThunkedList fname ctr args adts es =
+  case es
+    (Nil -> Liftreslist Nil ctr Nil)
+    (Cons e es2 -> lift3ThunkedListCons fname ctr args adts e es2)
+
+lift3ThunkedListCons fname ctr args adts e es2 =
+  let re = lift3ThunkedArg fname ctr args adts e,
+      res = lift3ThunkedList fname (liftedCtr re) args adts es2 in
+  Liftreslist (Cons (liftedExpr re) (liftedExprs res)) (liftedListCtr res)
+    (append (liftedEmits re) (liftedListEmits res))
+
+// An argument of an already-thunked call whose OWN head is an App: if that
+// App calls a real function, keep it inline (recurse via lift3Thunked --
+// the callee already has its own addressable label, safe to reference
+// later once the outer thunk is forced). If it's print/predef/error/
+// syscall/strcreate (dontLiftApp -- these are VM instructions, not
+// addressable functions), it must be LIFTED into a fresh top-level
+// function instead, same as an over-nested Ct field already was
+// (lift3ThunkedCtArg's own liftArgDo call below): mirrors parser.ama's
+// `glazy`'s catch-all case (`lift2func`, ~line 691), which is exactly
+// how the real compiler produces its own extra numbered helper functions
+// (`pParens_1`, `concat_1`, ...) for this same situation.
+//
+// Found 10 augustus 2026 during self-hosting testing: `parser.cfp`'s own
+// `parseProgram filename = parseProgramText (str2list (readFile
+// filename))` -- `readFile filename` (any predef/syscall call) nested as
+// an argument of `str2list` (itself an argument of the non-strict
+// `parseProgramText`) stayed inline, unlifted; stage5_codegen.cfp's
+// genCreateAppApp then called pushFuncRef directly on the predef/syscall
+// NAME (no addressable label exists for it), which fell through to
+// "treat it as a local variable" and failed with "slotOf: unknown
+// variable readFile" -- reproduced with any long-standing predef too
+// (e.g. strcpy), so this was never specific to today's new syscalls.
+lift3ThunkedArg fname ctr args adts e =
+  case e
+    (Ct n as -> lift3ThunkedCtArg fname ctr args adts n as)
+    (App n as -> lift3ThunkedAppArg fname ctr args adts n as)
+    (_ -> lift3Thunked fname ctr args adts e)
+
+lift3ThunkedAppArg fname ctr args adts n as =
+  if (dontLiftApp n)
+    (lift3Thunked fname ctr args adts (App n as))
+    (liftArgDo fname ctr args adts (App n as))
+
+lift3ThunkedCtArg fname ctr args adts n as =
+  if (ctFieldsOk args (conFields n adts) as)
+    (lift3ThunkedCtArgOk fname ctr args adts n as)
+    (liftArgDo fname ctr args adts (Ct n as))
+
+lift3ThunkedCtArgOk fname ctr args adts n as =
+  let rs = lift3List fname ctr args adts as in
+  Liftres (Ct n (liftedExprs rs)) (liftedListCtr rs) (liftedListEmits rs)
+
+// Like liftLazyDo, but without the Lazy wrapper around the result -- for use
+// as an ARGUMENT inside an App that's already being kept as a Thunk/Closure
+// by liftLazyKeep (see lift3ThunkedArg above).
+liftArgDo fname ctr args adts e =
+  let r = lift3 fname ctr args adts e,
+      fvs = freeVars (liftedExpr r),
+      ctr2 = liftedCtr r,
+      freshName = mkFreshName fname (ctr2 + 1),
+      newFunc = Func freshName (map mkArgNonStrict fvs) (liftedExpr r) in
+  Liftres (App freshName (map mkVarExpr fvs)) (ctr2 + 1) (append (liftedEmits r) (Cons newFunc Nil))
+
+liftLazyDo fname ctr args adts e =
+  let r = lift3 fname ctr args adts e,
+      fvs = freeVars (liftedExpr r),
+      ctr2 = liftedCtr r,
+      freshName = mkFreshName fname (ctr2 + 1),
+      newFunc = Func freshName (map mkArgNonStrict fvs) (liftedExpr r) in
+  Liftres (Lazy (App freshName (map mkVarExpr fvs))) (ctr2 + 1) (append (liftedEmits r) (Cons newFunc Nil))
+
+mkFreshName fname n = append fname (append ['_'] (itoa n))
+
+// Named wrappers instead of passing a constructor bare as a function value
+// (docs/sapl_programmeer_regels.md #6 -- silently corrupts state in Sapl).
+mkVarExpr v = Var v
+mkArgNonStrict v = Arg v False
+
+// Free variables: all Var names in e, no duplicates. No shadow-aware scoping
+// (same as stage3_lift.ama itself) -- a flat collection is enough for now.
+freeVars e = myNodup (collectVars e)
+
+myNodup xs =
+  case xs
+    (Nil -> Nil)
+    (Cons x xs2 -> if (member xs2 x) (myNodup xs2) (Cons x (myNodup xs2)))
+
+collectVars e =
+  case e
+    (Var v -> Cons v Nil)
+    (If a b c -> append (collectVars a) (append (collectVars b) (collectVars c)))
+    (App n as -> concatAll (map collectVars as))
+    (Prim op as -> concatAll (map collectVars as))
+    (Ct n as -> concatAll (map collectVars as))
+    (Case sc cs -> append (collectVars sc) (concatAll (map collectVarsBranch cs)))
+    (Let ls b -> error "collectVars: Let cannot appear as a subexpression (sapl_programmeer_regels.md sectie 4)")
+    (Lazy inner -> collectVars inner)
+    (Thunk inner -> collectVars inner)
+    (Closure inner -> collectVars inner)
+    (Eval inner -> collectVars inner)
+    (_ -> Nil)
+
+collectVarsBranch cb =
+  case cb
+    (CaseBranch c vs b -> collectVars b)
+
+// "Literals, variables, applications, constructors with only non-strict
+// arguments." Case is absent from the paper's dontLift list -- a case
+// expression is therefore never treated as dontLift, same as If/Prim.
+dontLift args adts e =
+  case e
+    (Num n -> True)
+    (Str s -> True)
+    (Var v -> True)
+    (NoMatch -> True)
+    (App n as -> dontLiftApp n)
+    (Ct n as -> ctFieldsOk args (conFields n adts) as)
+    (Let ls b -> error "dontLift: Let cannot appear as a subexpression (sapl_programmeer_regels.md sectie 4)")
+    (_ -> False)
+
+// An App to a real function may always stay dontLift, since that function
+// already has its own label to jump to later (once the thunk is forced).
+// print/predefs are inline VM instructions, not real functions -- without
+// their own label, a later thunk-reference can't be built, so they must go
+// through lifting like anything else (dontLift=False triggers liftLazyDo).
+//
+// Deliberately NOT `notBool (isPrintCall n \/ isPrintCCall n \/ ...)`: a bare
+// `\/`/`/\` expression passed inline as a call ARGUMENT (as opposed to being
+// a function's own whole body, or an if-condition) miscompiles under both
+// `compile` and `compile_nostrict` -- confirmed with a two-line minimal
+// repro (`idOf x = x`, `idOf (0 \/ 1)` etc.) that returns the bitwise
+// complement of every one of the four 0/1 combinations. Real bug in
+// parser.ama's own value-position codegen for `\/`/`/\`, not a strictness-
+// inference artifact and not anything in this port; see
+// docs/sapl_programmeer_regels.md #1 for the write-up. Nested `if` sidesteps
+// it entirely.
+dontLiftApp n =
+  if (isPrintCall n) False
+  (if (isPrintCCall n) False
+  (if (isPredefCall n) False
+  (if (isErrorCall n) False
+  (if (isSyscallCall n) False
+  (if (isStrcreateCall n) False True)))))
+
+// A non-strict field never blocks (its value is only forced on consumption
+// anyway); a strict field must be "simple".
+ctFieldsOk args fields as =
+  case fields
+    (Nil -> True)
+    (Cons s ss -> ctFieldsOkCons args s ss as)
+
+ctFieldsOkCons args s ss as =
+  case as
+    (Cons a as2 -> ctFieldsOkField args s ss a as2)
+    (Nil -> error "ctFieldsOk: fewer arguments than fields")
+
+ctFieldsOkField args s ss a as2 =
+  if s (isSimpleCtArg args a /\ ctFieldsOk args ss as2) (ctFieldsOk args ss as2)
+
+// A nested constructor application counts as simple if EACH of its own
+// arguments is simple -- unfiltered by field strictness (unlike ctFieldsOk's
+// outer, strictness-filtered check).
+isSimpleCtArg args e =
+  case e
+    (Num n -> True)
+    (Var v -> isKnownStrictVarLift v args)
+    (Ct n as -> allSimpleCtArgs args as)
+    (_ -> False)
+
+allSimpleCtArgs args as =
+  case as
+    (Nil -> True)
+    (Cons a as2 -> isSimpleCtArg args a /\ allSimpleCtArgs args as2)
+
+isKnownStrictVarLift v args = argStrict (findArgByNameLift v args)
+
+findArgByNameLift v args =
+  case args
+    (Nil -> error "stage3: unknown variable")
+    (Cons a as -> if (charListEq (argNameOf a) v) a (findArgByNameLift v as))
+
+
+// Direct Sapl port of newparser/stage4_retag.ama -- see
+// docs/bootstrapping_plan.md section 0 step 3, same technique as the earlier
+// stages. ast.ama's helpers this stage needs (isPrintCall/isPrintCCall/
+// isPredefCall/isErrorCall/findFunc/isKnownFunc/funcArgs/argStrict/
+// conFields/letBindingToArg) now come from sapl_compiler/ast_helpers.cfp --
+// originally local copies here, moved out once the driver needed to
+// #import every stageN_*.cfp together (see ast_helpers.cfp's own header).
+// `funcArity` renamed `funcArityOf` (collides with Sapl's built-in
+// reflection primitive, docs/sapl_programmeer_regels.md #10). The one
+// `where` clause (retag4's own Let case) becomes its own named function
+// with a `let` as its whole body (docs/sapl_programmeer_regels.md #4/#5).
+// `tagBySig`-style `(a:as) es = ... hd es ... tl es` list-zipping again
+// becomes a nested `case` on both lists directly, same as stage2/stage3.
+// No `/\`/`\/` used anywhere in this stage, so the inline-boolean-argument
+// bug documented in docs/sapl_programmeer_regels.md #1 (found while
+// porting stage3) doesn't apply here.
+
+// == stage4 entry point ==
+
+stage4 prog adts f =
+  case f
+    (Func name args body -> Func name args (retag4 prog adts args body))
+
+// Num/Str/Var/NoMatch collapsed into the trailing catch-all (identity).
+// Thunk/Closure/Eval kept explicit, each names a different constructor.
+//
+// `If`'s condition `a` must go through `ensureEvaluated`, same as `Case`'s
+// scrutinee below -- mirrors the 10 augustus 2026 fix to the real
+// newparser/stage4_retag.ama (see that file's header comment for the full
+// story: a non-strict-marked argument used directly as an `if`-condition,
+// e.g. `nott a = if a False True`, stayed a bare `Var v` instead of becoming
+// `Eval (Var v)`, which was silently safe as long as the function was only
+// ever entered via a direct call/tailcall but corrupted data the moment it
+// was passed as a first-class value to a higher-order combinator (`compose
+// nott isSpace` in benchmarks/parsetest.cfp/prolog.cfp).
+retag4 prog adts locals e =
+  case e
+    (If a b c -> If (ensureEvaluated prog adts locals a) (retag4 prog adts locals b) (retag4 prog adts locals c))
+    (App n as -> retagApp prog adts locals n as)
+    (Prim op as -> Prim op (map (ensureEvaluated prog adts locals) as))
+    (Ct n as -> Ct n (retagCtArgs prog adts locals (conFields n adts) as))
+    (Case sc cs -> Case (ensureEvaluated prog adts locals sc) (map (retagBranch prog adts locals) cs))
+    (Let ls b -> retag4Let prog adts locals ls b)
+    (Lazy inner -> retagLazy prog adts locals inner)
+    (Thunk inner -> error "stage4: Thunk not expected as stage4 input")
+    (Closure inner -> error "stage4: Closure not expected as stage4 input")
+    (Eval inner -> error "stage4: Eval not expected as stage4 input")
+    (_ -> e)
+
+retag4Let prog adts locals ls b =
+  let extendedLocals = append (map letBindingToArg ls) locals in
+  Let (map (retagLetBinding prog adts extendedLocals) ls) (retag4 prog adts extendedLocals b)
+
+retagCtArgs prog adts locals sig es =
+  case sig
+    (Nil -> Nil)
+    (Cons s ss -> retagCtArgsCons prog adts locals s ss es)
+
+retagCtArgsCons prog adts locals s ss es =
+  case es
+    (Cons e es2 -> Cons (retagCtOneArg prog adts locals s e) (retagCtArgs prog adts locals ss es2))
+    (Nil -> error "retagCtArgs: fewer arguments than fields")
+
+retagCtOneArg prog adts locals strict e = if strict (ensureEvaluated prog adts locals e) (retag4 prog adts locals e)
+
+retagBranch prog adts locals cb =
+  case cb
+    (CaseBranch c vs b -> retagBranchBody prog adts locals c vs b)
+
+retagBranchBody prog adts locals c vs b =
+  CaseBranch c vs (retag4 prog adts (branchLocals adts c vs locals) b)
+
+// The pattern-bound fields go in front of `locals` -- the same "list =
+// positional slots" trick stage5_codegen.ama's genCase uses for real stack
+// addressing.
+branchLocals adts c vs locals = append (mkPatternArgs vs (conFields c adts)) locals
+
+mkPatternArgs vs fields =
+  case vs
+    (Nil -> Nil)
+    (Cons v vs2 -> mkPatternArgsCons v vs2 fields)
+
+mkPatternArgsCons v vs2 fields =
+  case fields
+    (Cons f fs -> Cons (Arg v f) (mkPatternArgs vs2 fs))
+    (Nil -> error "mkPatternArgs: fewer fields than case-bound variables")
+
+// Strict binding: force an evaluated value (like a strict parameter
+// position). Non-strict binding: the rhs already carries a Lazy wrapper
+// (stage2_lazytag.cfp's tag2LetBinding) or was already lifted out by stage3
+// -- plain retag4, which dispatches via retagLazy.
+retagLetBinding prog adts locals lb =
+  case lb
+    (LetBinding n s e -> retagLetBindingBody prog adts locals n s e)
+
+retagLetBindingBody prog adts locals n s e = LetBinding n s (retagLetRhs prog adts locals s e)
+
+// `if` may only appear in tail position (docs/sapl_programmeer_regels.md
+// #3) -- can't inline this as LetBinding's third argument.
+retagLetRhs prog adts locals s e = if s (ensureEvaluated prog adts locals e) (retag4 prog adts locals e)
+
+// Forces an evaluated value at a position that already demands one (Prim
+// arguments, strict parameter positions, case scrutinees). Only a bare
+// non-strict variable gets anything added here; everything else is already
+// "evaluated by construction" (Num/Prim/App/Ct always produce their value
+// directly).
+ensureEvaluated prog adts locals e =
+  case e
+    (Var v -> ensureEvaluatedVar locals v)
+    (Let ls b -> error "ensureEvaluated: Let cannot appear as a subexpression (sapl_programmeer_regels.md sectie 4)")
+    (_ -> retag4 prog adts locals e)
+
+ensureEvaluatedVar locals v = if (findArgStrict v locals) (Var v) (Eval (Var v))
+
+findArgStrict name locals =
+  case locals
+    (Nil -> error "findArgStrict: unknown variable")
+    (Cons a as -> if (charListEq (argNameOf a) name) (argStrict a) (findArgStrict name as))
+
+// Was `Lazy e` -- e is one of dontLift's shapes (stage3 guarantees nothing
+// else survives as a Lazy wrapper). Constructors lose their tag here (the
+// catch-all), Case can never occur here (Case isn't a dontLift shape, so it
+// would already have been lifted in stage3 if it was ever lazy-tagged).
+retagLazy prog adts locals e =
+  case e
+    (App n as -> retagLazyApp prog adts locals n as)
+    (If a b c -> error "stage4: Lazy(If ..) should have been lifted in stage 3")
+    (Prim op as -> error "stage4: Lazy(Prim ..) should have been lifted in stage 3")
+    (Case sc cs -> error "stage4: Lazy(Case ..) should have been lifted in stage 3")
+    (Let ls b -> error "stage4: Lazy(Let ..) should never happen (Let is never lazy-tagged, see tag2LetBinding)")
+    (NoMatch -> error "stage4: Lazy(NoMatch) not expected (NoMatch is never tagged)")
+    (Lazy inner -> error "stage4: nested Lazy not expected")
+    (Thunk inner -> error "stage4: Thunk not expected as stage4 input")
+    (Closure inner -> error "stage4: Closure not expected as stage4 input")
+    (Eval inner -> error "stage4: Eval not expected as stage4 input")
+    (_ -> retag4 prog adts locals e)
+
+// Arguments of an ALREADY-lazy call always stood opposite a non-strict
+// parameter position (otherwise stage2 would never have tagged them lazy)
+// -- so just retag plainly, never force.
+retagLazyApp prog adts locals n as =
+  if (isPrintCall n) (Thunk (App n (map (ensureEvaluated prog adts locals) as)))
+  (if (isPrintCCall n) (Thunk (App n (map (ensureEvaluated prog adts locals) as)))
+  (if (isPredefCall n) (Thunk (App n (map (ensureEvaluated prog adts locals) as)))
+  (if (isErrorCall n) (Thunk (App n (map (ensureEvaluated prog adts locals) as)))
+  (if (isSyscallCall n) (Thunk (App n (map (ensureEvaluated prog adts locals) as)))
+  (if (isStrcreateCall n) (Thunk (App n (map (ensureEvaluated prog adts locals) as)))
+  (if (isKnownFunc n prog) (retagLazyKnownApp prog adts locals (findFunc n prog) n as) (Closure (App n (map (retagLazyArg prog adts locals) as)))))))))
+
+retagLazyKnownApp prog adts locals f n as =
+  if (length as == funcArityOf f)
+    (Thunk (App n (map (retagLazyArg prog adts locals) as)))
+    (Closure (App n (map (retagLazyArg prog adts locals) as)))
+
+// One argument of an ALREADY-lazy call: a nested application stays lazy
+// itself too (recursion in retagLazyApp, not back to retag4/retagApp); all
+// else (Var/Num/Prim/Ct/...) is unchanged from plain retag4.
+retagLazyArg prog adts locals e =
+  case e
+    (App n as -> retagLazyApp prog adts locals n as)
+    (_ -> retag4 prog adts locals e)
+
+// Was an untagged App (no Lazy wrapper). Here the callee's parameter-position
+// strictness matters: a strict position forces eval of a bare non-strict
+// variable, a non-strict position doesn't.
+retagApp prog adts locals n as =
+  if (isPrintCall n) (App n (map (ensureEvaluated prog adts locals) as))
+  (if (isPrintCCall n) (App n (map (ensureEvaluated prog adts locals) as))
+  (if (isPredefCall n) (App n (map (ensureEvaluated prog adts locals) as))
+  (if (isErrorCall n) (App n (map (ensureEvaluated prog adts locals) as))
+  (if (isSyscallCall n) (App n (map (ensureEvaluated prog adts locals) as))
+  (if (isStrcreateCall n) (App n (map (ensureEvaluated prog adts locals) as))
+  (if (isKnownFunc n prog) (retagKnownApp prog adts locals (findFunc n prog) n as) (Eval (App n (map (retag4 prog adts locals) as)))))))))
+
+retagKnownApp prog adts locals f n as =
+  if (length as == funcArityOf f)
+    (App n (retagArgsBySig prog adts locals (funcArgs f) as))
+    (retagKnownAppNotSat prog adts locals f n as)
+
+retagKnownAppNotSat prog adts locals f n as =
+  if (length as < funcArityOf f)
+    (Closure (App n (map (retag4 prog adts locals) as)))
+    (Eval (App n (map (retag4 prog adts locals) as)))
+
+retagArgsBySig prog adts locals sig es =
+  case sig
+    (Nil -> Nil)
+    (Cons declArg declArgs -> retagArgsBySigCons prog adts locals declArg declArgs es)
+
+retagArgsBySigCons prog adts locals declArg declArgs es =
+  case es
+    (Cons e es2 -> Cons (retagOneArg prog adts locals declArg e) (retagArgsBySig prog adts locals declArgs es2))
+    (Nil -> error "retagArgsBySig: fewer arguments than signature entries")
+
+retagOneArg prog adts locals declArg e = if (argStrict declArg) (ensureEvaluated prog adts locals e) (retag4 prog adts locals e)
+
+
+// Direct Sapl port of newparser/stage5_codegen.ama -- see
+// docs/bootstrapping_plan.md section 0 step 3, same technique as the earlier
+// four stages. ast.ama's helpers this stage needs (including
+// predefArity/predefIndex/conTag/adtArity/exprConstrNameOf, first needed
+// here) now come from sapl_compiler/ast_helpers.cfp -- originally local
+// copies here, moved out once the driver needed to #import every
+// stageN_*.cfp together (see ast_helpers.cfp's own header). `funcName`/
+// `funcArity` renamed `funcNameOf`/`funcArityOf` (built-in reflection
+// primitive collision, docs/sapl_programmeer_regels.md #10). Amanda's
+// `where` clauses become named `let`-as-whole-body helper functions
+// (docs/sapl_programmeer_regels.md #4/#5) -- this file has by far the most
+// of any stage (genLet alone threads twelve). Amanda's `hd`/`tl`-based
+// exact-arity checks (`if (# as = 1) ... (hd as) ...`) become a nested
+// `case` matching the exact list shape (`Cons a Nil` vs. anything else)
+// instead of a length check plus a separate head accessor -- more idiomatic
+// in Sapl and avoids needing a generic `hd`. String-building
+// (`"push " ++ itoa n`) becomes nested `append` over char-list literals; the
+// escape-table (`escapeStrChar`) needed real char literals with backslash
+// escapes (`'\n'`, `'\\'`, `'"'`, `'\''`) rather than `['...']` bracket
+// syntax, since that syntax does no escape processing at all (confirmed
+// empirically while porting parser.cfp itself) -- Sapl's ordinary quoted
+// char literal `'\n'` DOES support the standard escapes, confirmed with a
+// throwaway two-line probe before writing this. No `/\`/`\/` used as an
+// inline call argument anywhere below (the two boolean-connective chains
+// here, `isPredefCall`/`isComparisonOp`, are each a function's own whole
+// body, the confirmed-safe shape -- see the bug found while porting stage3,
+// docs/sapl_programmeer_regels.md #1).
+
+// == instr/block/gencode ==
+
+::Instr = Instr !text !target | InstrMulti !text !targets
+::Block = Block !name !is
+::Gencode = Gencode !is !bs
+
+blockName b = case b (Block n is -> n)
+blockInstrs b = case b (Block n is -> is)
+gcInstrs g = case g (Gencode is bs -> is)
+gcBlocks g = case g (Gencode is bs -> bs)
+
+mkI text = Instr text Nil
+mkJ text target = Instr text target
+mkJM text targets = InstrMulti text targets
+
+hasStrictArg args =
+  case args
+    (Nil -> False)
+    (Cons a as -> if (argStrict a) True (hasStrictArg as))
+
+slotOf v args = slotOfAt v args 0
+
+slotOfAt v args i =
+  case args
+    (Nil -> error (list2str (append ['slotOf: unknown variable '] v)))
+    (Cons a as -> if (charListEq (argNameOf a) v) i (slotOfAt v as (i+1)))
+
+isStrictVar v args = argStrict (findArgByName v args)
+
+findArgByName v args =
+  case args
+    (Nil -> error "findArgByName: unknown variable")
+    (Cons a as -> if (charListEq (argNameOf a) v) a (findArgByName v as))
+
+evalIfLazy v args = if (isStrictVar v args) Nil (Cons (mkI ['eval']) Nil)
+
+primInstr op =
+  if (charListEq op ['*']) ['mult']
+  (if (charListEq op ['-']) ['sub']
+  (if (charListEq op ['+']) ['add']
+  (if (charListEq op ['%']) ['mod']
+  (if (charListEq op ['/']) ['div']
+  (error "primInstr: unsupported operator")))))
+
+// Arguments of a call/create (App, Thunk, Closure, Ct) are pushed in
+// REVERSED source order -- the last-named source argument goes first, so
+// the FIRST source argument ends up on top of the stack (where `load 0`
+// reads it, since `load 0` picks up the most-recently-pushed value at call
+// time). This does NOT apply to Prim (arithmetic): those stay in source
+// order (empirically confirmed already at fac/facl, see genValue's Prim
+// case).
+genCallArgs prog adts args as = concatAll (map (genValue prog adts args) (reverse as))
+
+genPrintCall prog adts args as =
+  case as
+    (Cons a rest -> genPrintCallRest prog adts args a rest)
+    (Nil -> error "genValue: print verwacht precies 1 argument")
+
+genPrintCallRest prog adts args a rest =
+  case rest
+    (Nil -> append (genValue prog adts args a) (Cons (mkI ['print 0']) Nil))
+    (Cons x xs -> error "genValue: print verwacht precies 1 argument")
+
+genPrintCCall prog adts args as =
+  case as
+    (Cons a rest -> genPrintCCallRest prog adts args a rest)
+    (Nil -> error "genValue: printC verwacht precies 1 argument")
+
+genPrintCCallRest prog adts args a rest =
+  case rest
+    (Nil -> append (genValue prog adts args a) (Cons (mkI ['print 2']) Nil))
+    (Cons x xs -> error "genValue: printC verwacht precies 1 argument")
+
+genPredefCall prog adts args n as =
+  if (length as == predefArity n)
+    (append (genCallArgs prog adts args as) (Cons (mkI (append ['strop '] (itoa (predefIndex n)))) Nil))
+    (error "genValue: predef arity mismatch")
+
+// I/O syscalls (ast_helpers.cfp's isSyscallCall) -- same shape as
+// genPredefCall, but a different instruction family: `syscall <index>`
+// instead of `strop <index>`.
+genSyscallCall prog adts args n as =
+  if (length as == syscallArity n)
+    (append (genCallArgs prog adts args as) (Cons (mkI (append ['syscall '] (itoa (syscallIndex n)))) Nil))
+    (error "genValue: syscall arity mismatch")
+
+// `strcreate` -> `array_create_dynamic 1`, arity always 1.
+genStrcreateCall prog adts args as =
+  case as
+    (Cons a rest -> genStrcreateCallRest prog adts args a rest)
+    (Nil -> error "genValue: strcreate verwacht precies 1 argument")
+
+genStrcreateCallRest prog adts args a rest =
+  case rest
+    (Nil -> append (genValue prog adts args a) (Cons (mkI ['array_create_dynamic 1']) Nil))
+    (Cons x xs -> error "genValue: strcreate verwacht precies 1 argument")
+
+genErrorCall prog adts args as =
+  case as
+    (Cons a rest -> genErrorCallRest prog adts args a rest)
+    (Nil -> error "genValue: error verwacht precies 1 argument")
+
+genErrorCallRest prog adts args a rest =
+  case rest
+    (Nil -> append (genValue prog adts args a) (Cons (mkI ['syscall 3']) (Cons (mkI ['stop']) Nil)))
+    (Cons x xs -> error "genValue: error verwacht precies 1 argument")
+
+genValueSeq prog adts args as =
+  case as
+    (Cons a rest -> genValueSeqRest prog adts args a rest)
+    (Nil -> error "genValue: <#> verwacht precies 2 operanden")
+
+genValueSeqRest prog adts args a rest =
+  case rest
+    (Cons b rest2 -> genValueSeqRest2 prog adts args a b rest2)
+    (Nil -> error "genValue: <#> verwacht precies 2 operanden")
+
+genValueSeqRest2 prog adts args a b rest2 =
+  case rest2
+    (Nil -> append (genValue prog adts args a) (genValue prog adts args b))
+    (Cons x xs -> error "genValue: <#> verwacht precies 2 operanden")
+
+// String literals: code is one instruction (`push "..."`), but the TEXT
+// needs the same escaping the lexer can read back (`\n`,`\t`,`\\`,`"`,`'`).
+escapeStrChar c =
+  if (c == '\n') (Cons '\\' (Cons 'n' Nil))
+  (if (c == '\t') (Cons '\\' (Cons 't' Nil))
+  (if (c == '\\') (Cons '\\' (Cons '\\' Nil))
+  (if (c == '"') (Cons '\\' (Cons '"' Nil))
+  (if (c == '\'') (Cons '\\' (Cons '\'' Nil))
+  (Cons c Nil)))))
+
+escapeStr cs =
+  case cs
+    (Nil -> Nil)
+    (Cons c rest -> append (escapeStrChar c) (escapeStr rest))
+
+quoteStr s = append (Cons '"' Nil) (append (escapeStr s) (Cons '"' Nil))
+
+// E-mode (value position): leaves a concrete value on the stack.
+genValue prog adts args e =
+  case e
+    (Num n -> Cons (mkI (append ['push '] (itoa n))) Nil)
+    (Str s -> Cons (mkI (append ['push '] (quoteStr s))) Nil)
+    (Var v -> Cons (mkI (append ['load '] (itoa (slotOf v args)))) Nil)
+    (App n as -> genValueApp prog adts args n as)
+    (Prim op as -> genValuePrim prog adts args op as)
+    (Ct n as -> genValueCt prog adts args n as)
+    (Case sc cs -> error "genValue: Case in value position not yet implemented (only tail position built)")
+    (Let ls b -> error "genValue: Let cannot appear as a subexpression (sapl_programmeer_regels.md sectie 4)")
+    (NoMatch -> error "genValue: NoMatch not expected in value position (only as a whole case-branch body)")
+    (Lazy inner -> error "genValue: Lazy should not reach codegen (stage4 removes it)")
+    (Thunk inner -> genCreateApp prog adts args inner 3)
+    (Closure inner -> genCreateApp prog adts args inner 7)
+    (Eval inner -> genEval prog adts args inner)
+
+genValueApp prog adts args n as =
+  if (isPrintCall n) (genPrintCall prog adts args as)
+  (if (isPrintCCall n) (genPrintCCall prog adts args as)
+  (if (isPredefCall n) (genPredefCall prog adts args n as)
+  (if (isErrorCall n) (genErrorCall prog adts args as)
+  (if (isSyscallCall n) (genSyscallCall prog adts args n as)
+  (if (isStrcreateCall n) (genStrcreateCall prog adts args as)
+  (append (genCallArgs prog adts args as) (Cons (mkJ ['call'] n) Nil)))))))
+
+genValuePrim prog adts args op as =
+  if (charListEq op ['<#>'])
+    (genValueSeq prog adts args as)
+    (append (concatAll (map (genValue prog adts args) as)) (Cons (mkI (primInstr op)) Nil))
+
+genValueCt prog adts args n as =
+  append (genCallArgs prog adts args as)
+         (Cons (mkI (append ['ccreate '] (append (itoa (length as)) (append [' 11 '] (itoa (conTag n adts)))))) Nil)
+
+// A function value as its own stack item: `pushfunc <arity> <label>` for a
+// known top-level function, `load <slot>` for a local (unknown) variable
+// (like `twice`'s own parameter `f`) -- no "call" here, this only puts the
+// VALUE on the stack, for use by create/eval. A REFERENCE must ALWAYS point
+// at the lazy entry, since the context where this value is actually invoked
+// later doesn't guarantee its arguments are already evaluated -- EVEN when
+// `f` itself has no strict argument at all. Mirrors the 10 augustus 2026 fix
+// to the real newparser/stage5_codegen.ama: gating this on `hasStrictArg`
+// let a function with zero `!`-marked arguments (but whose body still forces
+// an argument via `if`/`case`, e.g. `nott a = if a False True`) reference
+// its own unsafe, non-evaluating body directly whenever passed around as a
+// first-class value. See stage4_retag.cfp's `retag4`/`If` case for the
+// complementary fix (the actual `eval` insertion) -- this one alone only
+// guarantees the lazy entry point EXISTS and gets referenced.
+pushFuncRef prog args n =
+  if (isKnownFunc n prog) (pushFuncRefKnown prog n) (mkI (append ['load '] (itoa (slotOf n args))))
+
+pushFuncRefKnown prog n =
+  let f = findFunc n prog in
+  mkJ (append ['pushfunc '] (itoa (funcArityOf f))) (funcRefLabel f)
+
+funcRefLabel f = append (funcNameOf f) ['_lazy']
+
+// Arguments (source order) followed by the function value itself, the
+// order create/the direct eval-apply trick expect.
+pushArgsThenFunc prog adts args n as = append (genCallArgs prog adts args as) (Cons (pushFuncRef prog args n) Nil)
+
+// E(thunk as)/E(closure as) = code as + pushfunc <callee arity> + create
+// |as|+1 <tag>. Thunk/Closure always wrap an App (that's how stage4 builds
+// them); any other shape is an invariant violation.
+genCreateApp prog adts args e tag =
+  case e
+    (App n as -> genCreateAppApp prog adts args n as tag)
+    (Lazy inner -> error "genCreateApp: nested Lazy not expected here")
+    (Thunk inner -> error "genCreateApp: nested Thunk not expected here")
+    (Closure inner -> error "genCreateApp: nested Closure not expected here")
+    (Eval inner -> error "genCreateApp: nested Eval not expected here")
+    (_ -> error "genCreateApp: thunk/closure must wrap an application")
+
+genCreateAppApp prog adts args n as tag =
+  append (pushArgsThenFunc prog adts args n as)
+         (Cons (mkI (append ['create '] (append (itoa (length as + 1)) (append [' '] (itoa tag))))) Nil)
+
+// E(eval as)/E(eval(f as)): what "eval" does depends on what it wraps. For
+// an unknown application there's no static label to "call" -- push the
+// arguments plus the function value itself (same order as create) and let
+// `eval` do the generic closure application. For a known but oversaturated
+// application: push ALL arguments (reversed, as usual), then "call f"
+// (consumes exactly f's own arity off the top), then "eval" on the result
+// (which picks up the surplus arguments still lying underneath via the same
+// curried mechanism as an unknown application).
+genEval prog adts args e =
+  case e
+    (App n as -> genEvalApp prog adts args n as)
+    (If a b c -> error "genEval: If inside eval not yet implemented")
+    (Let ls b -> error "genEval: Let cannot appear as a subexpression (sapl_programmeer_regels.md sectie 4)")
+    (Eval inner -> error "genEval: nested Eval not expected")
+    (Num n -> append (genValue prog adts args (Num n)) (Cons (mkI ['eval']) Nil))
+    (Str s -> append (genValue prog adts args (Str s)) (Cons (mkI ['eval']) Nil))
+    (Var v -> append (genValue prog adts args (Var v)) (Cons (mkI ['eval']) Nil))
+    (_ -> genEvalDefault e)
+
+genEvalDefault e = error (append ['genEval: '] (append (exprConstrNameOf e) [' inside eval not expected']))
+
+genEvalApp prog adts args n as =
+  if (isKnownFunc n prog)
+    (genEvalAppKnown prog adts args n as)
+    (append (pushArgsThenFunc prog adts args n as) (Cons (mkI ['eval']) Nil))
+
+genEvalAppKnown prog adts args n as =
+  append (genCallArgs prog adts args as) (append (Cons (mkJ ['call'] n) Nil) (Cons (mkI ['eval']) Nil))
+
+// Condition of an if: special cases for `expr == 0`/`expr != 0`, general
+// fallback for everything else: compute the value, test it for truth
+// (`ifeq` -- jump if 0/false).
+genCond prog adts args e elseLabel =
+  case e
+    (Prim op operands -> genCondPrim prog adts args op operands elseLabel)
+    (If a b c -> error "genCond: nested if-condition not yet implemented")
+    (Let ls b -> error "genCond: Let cannot appear as a subexpression (sapl_programmeer_regels.md sectie 4)")
+    (NoMatch -> error "genCond: NoMatch not expected as if-condition")
+    (Lazy inner -> error "genCond: Lazy in condition not expected")
+    (Thunk inner -> error "genCond: Thunk in condition not expected")
+    (Closure inner -> error "genCond: Closure in condition not expected")
+    (_ -> genCondFallback prog adts args e elseLabel)
+
+genCondFallback prog adts args e elseLabel = append (genValue prog adts args e) (Cons (mkJ ['ifeq'] elseLabel) Nil)
+
+genCondPrim prog adts args op operands elseLabel =
+  case operands
+    (Cons a rest -> genCondPrimRest prog adts args op a rest elseLabel)
+    (Nil -> error "genCond: comparison needs exactly two operands")
+
+genCondPrimRest prog adts args op a rest elseLabel =
+  case rest
+    (Cons b rest2 -> genCondPrimRest2 prog adts args op a b rest2 elseLabel)
+    (Nil -> error "genCond: comparison needs exactly two operands")
+
+genCondPrimRest2 prog adts args op a b rest2 elseLabel =
+  case rest2
+    (Nil -> genCondCompareOp prog adts args op a b elseLabel)
+    (Cons x xs -> error "genCond: comparison needs exactly two operands")
+
+// vm.cpp has no ifgt/ifge -- only ifeq/ifneq/iflt/ifle, each against 0 on
+// the stack top, so every comparison becomes E(x)++E(y)++sub++if<mnem>, with
+// a per-operator (x,y) order and mnemonic (independently re-derived and
+// confirmed against the real benchmarks/hamming.jmvm). The old `expr op 0`
+// shortcut (no redundant "push 0; sub") is kept for ==/!=.
+genCondCompareOp prog adts args op a b elseLabel =
+  if (charListEq op ['==']) (genCondEqNe prog adts args ['ifneq'] a b elseLabel)
+  (if (charListEq op ['!=']) (genCondEqNe prog adts args ['ifeq'] a b elseLabel)
+  (if (charListEq op ['<']) (genCondSwapSub prog adts args ['ifle'] a b elseLabel)
+  (if (charListEq op ['<=']) (genCondSwapSub prog adts args ['iflt'] a b elseLabel)
+  (if (charListEq op ['>']) (genCondDirectSub prog adts args ['ifle'] a b elseLabel)
+  (if (charListEq op ['>=']) (genCondDirectSub prog adts args ['iflt'] a b elseLabel)
+  (error "genCond: unsupported comparison operator"))))))
+
+genCondEqNe prog adts args jumpMnemonic a b elseLabel =
+  if (isZeroLit b)
+    (append (genValue prog adts args a) (Cons (mkJ jumpMnemonic elseLabel) Nil))
+    (append (genCondSub prog adts args a b) (Cons (mkJ jumpMnemonic elseLabel) Nil))
+
+genCondDirectSub prog adts args jumpMnemonic a b elseLabel =
+  append (genCondSub prog adts args a b) (Cons (mkJ jumpMnemonic elseLabel) Nil)
+
+genCondSwapSub prog adts args jumpMnemonic a b elseLabel =
+  append (genCondSub prog adts args b a) (Cons (mkJ jumpMnemonic elseLabel) Nil)
+
+genCondSub prog adts args x y =
+  append (genValue prog adts args x) (append (genValue prog adts args y) (Cons (mkI ['sub']) Nil))
+
+isZeroLit e =
+  case e
+    (Num n -> n == 0)
+    (_ -> False)
+
+isComparisonOp op =
+  charListEq op ['=='] \/ charListEq op ['!='] \/ charListEq op ['<'] \/
+  charListEq op ['<='] \/ charListEq op ['>'] \/ charListEq op ['>=']
+
+// T-mode (tail position): ends in return/tailcall, or splits into blocks.
+genTail prog adts fname args e =
+  case e
+    (If a b c -> genTailIf prog adts fname args a b c)
+    (App n as -> genTailApp prog adts fname args n as)
+    (Var v -> genTailVar prog adts fname args v)
+    (Prim op as -> genTailPrim prog adts fname args op as)
+    (Case sc cs -> genCase prog adts fname args sc cs)
+    (Let ls b -> error "genTail: Let only allowed as a function's whole body (sapl_programmeer_regels.md sectie 4)")
+    (NoMatch -> genTailNoMatch fname args)
+    (Lazy inner -> error "genTail: Lazy should not reach codegen")
+    (_ -> genTailDefault prog adts args e)
+
+genTailDefault prog adts args e =
+  Gencode (append (genValue prog adts args e) (Cons (mkI (append ['return '] (itoa (length args)))) Nil)) Nil
+
+// nomatch trap, now carrying the enclosing function's name (pushed as a
+// string literal right before "debug 2") so a runtime "nomatch for this
+// case" says which function it happened in - see vm.cpp's dodebug case 2 /
+// extractCString, and newparser/stage5_codegen.ama's mirrored change.
+genTailNoMatch fname args =
+  Gencode (Cons (mkI (append ['push '] (quoteStr fname))) (Cons (mkI ['debug 2']) (Cons (mkI (append ['return '] (itoa (length args)))) Nil))) Nil
+
+genTailVar prog adts fname args v =
+  Gencode (append (genValue prog adts args (Var v)) (append (evalIfLazy v args) (Cons (mkI (append ['return '] (itoa (length args)))) Nil))) Nil
+
+genTailIf prog adts fname args a b c =
+  let elseLabel = append fname ['_else'],
+      condInstrs = genCond prog adts args a elseLabel,
+      thenPart = genTail prog adts (append fname ['_then']) args b,
+      elsePart = genTail prog adts (append fname ['_else']) args c in
+  Gencode (append condInstrs (gcInstrs thenPart))
+          (append (gcBlocks thenPart) (Cons (Block elseLabel (gcInstrs elsePart)) (gcBlocks elsePart)))
+
+// `print` in tail position: no "tailcall print" (that label doesn't exist,
+// print isn't a top-level function) -- just the generic value-then-return
+// route, same as parser.ama itself.
+genTailApp prog adts fname args n as =
+  if (isPrintCall n) (Gencode (append (genPrintCall prog adts args as) (Cons (mkI (append ['return '] (itoa (length args)))) Nil)) Nil)
+  (if (isPrintCCall n) (Gencode (append (genPrintCCall prog adts args as) (Cons (mkI (append ['return '] (itoa (length args)))) Nil)) Nil)
+  (if (isPredefCall n) (Gencode (append (genPredefCall prog adts args n as) (Cons (mkI (append ['return '] (itoa (length args)))) Nil)) Nil)
+  (if (isErrorCall n) (Gencode (append (genErrorCall prog adts args as) (Cons (mkI (append ['return '] (itoa (length args)))) Nil)) Nil)
+  (if (isSyscallCall n) (Gencode (append (genSyscallCall prog adts args n as) (Cons (mkI (append ['return '] (itoa (length args)))) Nil)) Nil)
+  (if (isStrcreateCall n) (Gencode (append (genStrcreateCall prog adts args as) (Cons (mkI (append ['return '] (itoa (length args)))) Nil)) Nil)
+  (Gencode (append (genCallArgs prog adts args as) (Cons (mkJ (append ['tailcall '] (itoa (length args))) n) Nil)) Nil))))))
+
+genTailPrim prog adts fname args op as =
+  if (isComparisonOp op) (genTailComparison prog adts fname args op as)
+  (if (charListEq op ['<#>']) (genTailSeq prog adts fname args as)
+  (Gencode (append (genValue prog adts args (Prim op as)) (Cons (mkI (append ['return '] (itoa (length args)))) Nil)) Nil))
+
+genTailComparison prog adts fname args op as =
+  let falseLabel = append fname ['_false'],
+      condInstrs = genCondPrim prog adts args op as falseLabel in
+  Gencode (append condInstrs (Cons (mkI ['push 1']) (Cons (mkI (append ['return '] (itoa (length args)))) Nil)))
+          (Cons (Block falseLabel (Cons (mkI ['push 0']) (Cons (mkI (append ['return '] (itoa (length args)))) Nil))) Nil)
+
+genTailSeq prog adts fname args as =
+  case as
+    (Cons l rest -> genTailSeqRest prog adts fname args l rest)
+    (Nil -> error "genTail: <#> verwacht precies 2 operanden")
+
+genTailSeqRest prog adts fname args l rest =
+  case rest
+    (Cons r rest2 -> genTailSeqRest2 prog adts fname args l r rest2)
+    (Nil -> error "genTail: <#> verwacht precies 2 operanden")
+
+genTailSeqRest2 prog adts fname args l r rest2 =
+  case rest2
+    (Nil -> buildTailSeq prog adts fname args l r)
+    (Cons x xs -> error "genTail: <#> verwacht precies 2 operanden")
+
+buildTailSeq prog adts fname args l r =
+  let rightTail = genTail prog adts fname args r in
+  Gencode (append (genValue prog adts args l) (gcInstrs rightTail)) (gcBlocks rightTail)
+
+// T(case a cs) = E(a) + jmpt n ls + S(c)|c<-cs. Each branch becomes its own
+// block with the pattern variables in front of `args` (same "list =
+// positional slots" trick as stage4_retag.cfp's branchLocals).
+genCase prog adts fname args scrutinee branches =
+  let scrutInstrs = genValue prog adts args scrutinee,
+      firstCon = cbConOf (headBranchOf branches),
+      arity = adtArity firstCon adts,
+      branchLabels = map (branchBlockName fname) branches,
+      jmptInstr = mkJM (append ['jmpt '] (itoa arity)) branchLabels in
+  Gencode (append scrutInstrs (Cons jmptInstr Nil)) (genCaseBranches prog adts fname args branches)
+
+headBranchOf branches =
+  case branches
+    (Cons b bs -> b)
+    (Nil -> error "genCase: case has no branches")
+
+branchBlockName fname cb = append fname (append ['_'] (cbConOf cb))
+
+// A nested case within a branch gets its OWN branch name as its new
+// `fname` (not the outer case's), so its own branch labels can never
+// collide with the outer case's own labels (bug fixed in the original
+// stage5_codegen.ama, see that file's header for the hamming/merge story).
+genCaseBranches prog adts fname args cbs =
+  case cbs
+    (Nil -> Nil)
+    (Cons cb rest -> genCaseBranchesCons prog adts fname args cb rest)
+
+genCaseBranchesCons prog adts fname args cb rest =
+  let extendedArgs = append (mkCaseArgs (cbVarsOf cb) (conFields (cbConOf cb) adts)) args,
+      bodyCode = genTail prog adts (branchBlockName fname cb) extendedArgs (cbBodyOf cb),
+      mainBlock = Block (branchBlockName fname cb) (gcInstrs bodyCode) in
+  append (Cons mainBlock Nil) (append (gcBlocks bodyCode) (genCaseBranches prog adts fname args rest))
+
+mkCaseArgs vs fields =
+  case vs
+    (Nil -> Nil)
+    (Cons v vs2 -> mkCaseArgsCons v vs2 fields)
+
+mkCaseArgsCons v vs2 fields =
+  case fields
+    (Cons f fs -> Cons (Arg v f) (mkCaseArgs vs2 fs))
+    (Nil -> error "mkCaseArgs: fewer fields than case-bound variables")
+
+// == let: two independent orderings, never conflate them. ==
+// 1. SLOT NUMBER = position in the list as DECLARED in the source,
+//    regardless of dependency (letBindingToArg on the ORIGINAL `ls`, plus
+//    slotOf, give this automatically -- same trick as genCaseBranches).
+// 2. EMISSION ORDER = topologically sorted (Kahn): a binding may only emit
+//    once every let-bound free variable it needs is already stored.
+// Cyclic bindings: Phase A (the plain Kahn sort) resolves whatever it can
+// without tricks; whatever's left over is a cyclic group. Within such a
+// group, a reference to a cyclic sibling that's a bare, direct argument of
+// the binding's own Ct/Thunk/Closure construction can always be forward-
+// filled with a dummy value (`push 666`), patched via `update` once the
+// sibling actually exists -- Phase B. A reference that ISN'T such a bare
+// direct argument (nested inside a further call) can't be patched -- that
+// sibling must already exist, so Phase B is itself a topological sort, but
+// on a SMALLER dependency relation (only the non-patchable "must-precede"
+// references). A strict binding can never be resolved via Phase B (a dummy
+// is a lazy placeholder; a strict binding needs a real value right away).
+genLet prog adts fname args ls b =
+  let extendedArgs = append (map letBindingToArg ls) args,
+      allLetNames = map lbNameOf ls,
+      paramNames = map argNameOf args,
+      phaseAResult = phaseASort ls allLetNames paramNames,
+      phaseAOrder = sortResolved phaseAResult,
+      residual = sortResidual phaseAResult,
+      availAfterA = append paramNames (map lbNameOf phaseAOrder),
+      phaseBOrder = genLetPhaseB residual allLetNames availAfterA,
+      phaseACode = concatAll (map (genLetBindingCode prog adts extendedArgs) phaseAOrder),
+      phaseBResult = genLetBindingsPatched prog adts extendedArgs availAfterA phaseBOrder,
+      phaseBCode = pcInstrs phaseBResult,
+      patchCode = concatAll (map (genPatchInstr extendedArgs) (pcPatches phaseBResult)),
+      bindingsCode = append phaseACode (append phaseBCode patchCode),
+      bodyCode = genTail prog adts fname extendedArgs b in
+  Gencode (append (Cons (mkI (append ['updsp '] (itoa (length ls)))) Nil) (append bindingsCode (gcInstrs bodyCode)))
+          (gcBlocks bodyCode)
+
+genLetPhaseB residual allLetNames availAfterA =
+  if (anyStrict residual)
+    (error "genLet: strict binding cannot be part of a cyclic let group (a dummy is a lazy value, a strict binding needs a real one immediately)")
+    (phaseBSort residual allLetNames availAfterA)
+
+// `store`'s slot number comes from `extendedArgs` (declaration order), NOT
+// the position in the sorted order.
+genLetBindingCode prog adts extendedArgs lb =
+  append (genValue prog adts extendedArgs (lbRhsOf lb))
+         (Cons (mkI (append ['store '] (itoa (slotOf (lbNameOf lb) extendedArgs)))) Nil)
+
+::Sortres = Sortres !resolved !residual
+
+sortResolved r = case r (Sortres res resid -> res)
+sortResidual r = case r (Sortres res resid -> resid)
+
+phaseASort lbs allNames avail =
+  case lbs
+    (Nil -> Sortres Nil Nil)
+    (Cons x xs -> phaseASortNonEmpty lbs allNames avail)
+
+phaseASortNonEmpty lbs allNames avail =
+  let ready = letReady lbs allNames avail,
+      rest = letNotReady lbs allNames avail in
+  phaseASortBranch lbs ready rest allNames avail
+
+phaseASortBranch lbs ready rest allNames avail =
+  case ready
+    (Nil -> Sortres Nil lbs)
+    (Cons r rs -> prependSortres ready (phaseASort rest allNames (append avail (map lbNameOf ready))))
+
+prependSortres newly sr =
+  case sr
+    (Sortres resolved residual -> Sortres (append newly resolved) residual)
+
+// Phase B: same Kahn shape as Phase A, but "ready" means every NON-patchable
+// (nested) reference to a cyclic sibling is already available -- patchable
+// (bare, direct) references never block.
+phaseBSort lbs allNames avail =
+  case lbs
+    (Nil -> Nil)
+    (Cons x xs -> phaseBSortNonEmpty lbs allNames avail)
+
+phaseBSortNonEmpty lbs allNames avail =
+  let ready = phaseBReady lbs allNames avail,
+      rest = phaseBNotReady lbs allNames avail in
+  phaseBSortBranch ready rest allNames avail
+
+phaseBSortBranch ready rest allNames avail =
+  case ready
+    (Nil -> error "genLet: cyclic let has a nested reference cycle, not yet supported (zie parser_ama_cyclic_let_bug.md)")
+    (Cons r rs -> append ready (phaseBSort rest allNames (append avail (map lbNameOf ready))))
+
+phaseBReady lbs allNames avail =
+  case lbs
+    (Nil -> Nil)
+    (Cons lb rest -> phaseBReadyCons lb rest allNames avail)
+
+phaseBReadyCons lb rest allNames avail =
+  if (mustPrecedeSatisfied lb allNames avail)
+    (Cons lb (phaseBReady rest allNames avail))
+    (phaseBReady rest allNames avail)
+
+phaseBNotReady lbs allNames avail =
+  case lbs
+    (Nil -> Nil)
+    (Cons lb rest -> phaseBNotReadyCons lb rest allNames avail)
+
+phaseBNotReadyCons lb rest allNames avail =
+  if (mustPrecedeSatisfied lb allNames avail)
+    (phaseBNotReady rest allNames avail)
+    (Cons lb (phaseBNotReady rest allNames avail))
+
+// A strict binding can never be resolved via a dummy -- rejected outright
+// here rather than treated as "ready", so it lands in phaseBSort's own
+// error path instead of silently getting a dummy 666 as its "value".
+mustPrecedeSatisfied lb allNames avail =
+  if (lbStrictOf lb) False (letDepsAvailable (mustPrecedeDeps lb allNames) allNames avail)
+
+anyStrict lbs =
+  case lbs
+    (Nil -> False)
+    (Cons lb rest -> if (lbStrictOf lb) True (anyStrict rest))
+
+mustPrecedeDeps lb allNames = removeNames (letCollectVars (lbRhsOf lb)) (directPatchableNames (lbRhsOf lb))
+
+removeNames xs toRemove =
+  case xs
+    (Nil -> Nil)
+    (Cons x rest -> if (member toRemove x) (removeNames rest toRemove) (Cons x (removeNames rest toRemove)))
+
+// Names that occur as a BARE, DIRECT argument of the binding's own
+// construction -- only Ct/Thunk(App)/Closure(App) have such directly
+// patchable positions.
+directPatchableNames e =
+  case e
+    (Ct n as -> directVarNames as)
+    (Let ls b -> error "directPatchableNames: nested Let not expected (sapl_programmeer_regels.md sectie 4)")
+    (Lazy inner -> error "directPatchableNames: Lazy should not reach codegen")
+    (Thunk inner -> directPatchableNamesThunk inner)
+    (Closure inner -> directPatchableNamesClosure inner)
+    (_ -> Nil)
+
+directPatchableNamesThunk inner =
+  case inner
+    (App n as -> directVarNames as)
+    (Lazy e2 -> error "directPatchableNames: nested Thunk/Lazy not expected")
+    (Thunk e2 -> error "directPatchableNames: nested Thunk not expected")
+    (Closure e2 -> error "directPatchableNames: nested Thunk/Closure not expected")
+    (_ -> error "directPatchableNames: Thunk must wrap an application")
+
+directPatchableNamesClosure inner =
+  case inner
+    (App n as -> directVarNames as)
+    (Lazy e2 -> error "directPatchableNames: nested Closure/Lazy not expected")
+    (Thunk e2 -> error "directPatchableNames: nested Closure/Thunk not expected")
+    (Closure e2 -> error "directPatchableNames: nested Closure not expected")
+    (_ -> error "directPatchableNames: Closure must wrap an application")
+
+directVarNames es =
+  case es
+    (Nil -> Nil)
+    (Cons e rest -> directVarNamesCons e rest)
+
+directVarNamesCons e rest =
+  case e
+    (Var v -> Cons v (directVarNames rest))
+    (_ -> directVarNames rest)
+
+letReady lbs allNames avail =
+  case lbs
+    (Nil -> Nil)
+    (Cons lb rest -> letReadyCons lb rest allNames avail)
+
+letReadyCons lb rest allNames avail =
+  if (letDepsAvailable (letCollectVars (lbRhsOf lb)) allNames avail)
+    (Cons lb (letReady rest allNames avail))
+    (letReady rest allNames avail)
+
+letNotReady lbs allNames avail =
+  case lbs
+    (Nil -> Nil)
+    (Cons lb rest -> letNotReadyCons lb rest allNames avail)
+
+letNotReadyCons lb rest allNames avail =
+  if (letDepsAvailable (letCollectVars (lbRhsOf lb)) allNames avail)
+    (letNotReady rest allNames avail)
+    (Cons lb (letNotReady rest allNames avail))
+
+// Only references to OTHER let-bound names count as a dependency (a
+// reference to a function parameter or top-level function never blocks).
+letDepsAvailable refs allNames avail = letDepsAvailableHelper (filterLetNames refs allNames) avail
+
+filterLetNames vs allNames =
+  case vs
+    (Nil -> Nil)
+    (Cons v rest -> if (member allNames v) (Cons v (filterLetNames rest allNames)) (filterLetNames rest allNames))
+
+letDepsAvailableHelper vs avail =
+  case vs
+    (Nil -> True)
+    (Cons v rest -> if (member avail v) (letDepsAvailableHelper rest avail) False)
+
+// -- Phase B codegen: a dummy value now, `update` instructions afterward. --
+
+::Letpatch = LetPatch !targetSlot !fieldIdx !sourceVar
+
+lpTargetSlot p = case p (LetPatch t i v -> t)
+lpFieldIdx p = case p (LetPatch t i v -> i)
+lpSourceVar p = case p (LetPatch t i v -> v)
+
+::Patchedcode = Patchedcode !is !ps
+
+pcInstrs pc = case pc (Patchedcode is ps -> is)
+pcPatches pc = case pc (Patchedcode is ps -> ps)
+
+// One Phase-B binding: value code (with dummies where needed) + the
+// patches that follow from it, then the rest of the Phase-B list with a
+// GROWN `avail` (this binding's own name is available to later Phase-B
+// bindings in the same group right after its own store).
+genLetBindingsPatched prog adts args avail lbs =
+  case lbs
+    (Nil -> Patchedcode Nil Nil)
+    (Cons lb rest -> genLetBindingsPatchedCons prog adts args avail lb rest)
+
+genLetBindingsPatchedCons prog adts args avail lb rest =
+  let thisResult = genPatchedRhs prog adts args avail (slotOf (lbNameOf lb) args) (lbRhsOf lb),
+      thisInstrs = pcInstrs thisResult,
+      thisPatches = pcPatches thisResult,
+      restResult = genLetBindingsPatched prog adts args (append avail (Cons (lbNameOf lb) Nil)) rest,
+      restInstrs = pcInstrs restResult,
+      restPatches = pcPatches restResult in
+  Patchedcode (append thisInstrs (append (Cons (mkI (append ['store '] (itoa (slotOf (lbNameOf lb) args)))) Nil) restInstrs))
+              (append thisPatches restPatches)
+
+// Only Ct/Thunk(App)/Closure(App) support dummy substitution.
+genPatchedRhs prog adts args avail slot e =
+  case e
+    (Var v -> error "genLet: cyclic let binding rhs must be Ct/Thunk(App)/Closure(App), bare Var alias not supported")
+    (App n as -> error "genLet: cyclic let binding rhs must be Ct/Thunk(App)/Closure(App), bare (strict) App not supported")
+    (Ct n as -> genPatchedCt prog adts args avail slot n as)
+    (Let ls b -> error "genLet: nested Let not expected (sapl_programmeer_regels.md sectie 4)")
+    (Lazy inner -> error "genLet: Lazy should not reach codegen")
+    (Thunk inner -> genPatchedRhsThunk prog adts args avail slot inner)
+    (Closure inner -> genPatchedRhsClosure prog adts args avail slot inner)
+    (_ -> error (append ['genLet: cyclic let binding rhs must be Ct/Thunk(App)/Closure(App), '] (append (exprConstrNameOf e) [' not supported'])))
+
+genPatchedRhsThunk prog adts args avail slot inner =
+  case inner
+    (App n as -> genPatchedCreate prog adts args avail slot n as 3)
+    (Lazy e2 -> error "genLet: nested Thunk/Lazy not expected")
+    (Thunk e2 -> error "genLet: nested Thunk not expected")
+    (Closure e2 -> error "genLet: nested Thunk/Closure not expected")
+    (_ -> error "genLet: Thunk must wrap an application")
+
+genPatchedRhsClosure prog adts args avail slot inner =
+  case inner
+    (App n as -> genPatchedCreate prog adts args avail slot n as 7)
+    (Lazy e2 -> error "genLet: nested Closure/Lazy not expected")
+    (Thunk e2 -> error "genLet: nested Closure/Thunk not expected")
+    (Closure e2 -> error "genLet: nested Closure not expected")
+    (_ -> error "genLet: Closure must wrap an application")
+
+// Ct target: field index = 0-based source position (no header field to
+// count, unlike Thunk/Closure below).
+genPatchedCt prog adts args avail slot n as =
+  Patchedcode
+    (append (genArgsWithDummies prog adts args avail as)
+            (Cons (mkI (append ['ccreate '] (append (itoa (length as)) (append [' 11 '] (itoa (conTag n adts)))))) Nil))
+    (ctPatches slot avail 0 as)
+
+ctPatches slot avail p as =
+  case as
+    (Nil -> Nil)
+    (Cons e rest -> ctPatchesCons slot avail p e rest)
+
+ctPatchesCons slot avail p e rest =
+  case e
+    (Var v -> ctPatchOne slot avail p v rest)
+    (_ -> ctPatches slot avail (p+1) rest)
+
+ctPatchOne slot avail p v rest =
+  if (member avail v)
+    (ctPatches slot avail (p+1) rest)
+    (Cons (LetPatch slot p v) (ctPatches slot avail (p+1) rest))
+
+// Thunk/Closure target: field index = source position + 1 (the function
+// reference itself counts as position 0).
+genPatchedCreate prog adts args avail slot n as tag =
+  Patchedcode
+    (append (genArgsWithDummies prog adts args avail as)
+            (append (Cons (pushFuncRef prog args n) Nil)
+                    (Cons (mkI (append ['create '] (append (itoa (length as + 1)) (append [' '] (itoa tag))))) Nil)))
+    (createPatches slot avail 0 as)
+
+createPatches slot avail p as =
+  case as
+    (Nil -> Nil)
+    (Cons e rest -> createPatchesCons slot avail p e rest)
+
+createPatchesCons slot avail p e rest =
+  case e
+    (Var v -> createPatchOne slot avail p v rest)
+    (_ -> createPatches slot avail (p+1) rest)
+
+createPatchOne slot avail p v rest =
+  if (member avail v)
+    (createPatches slot avail (p+1) rest)
+    (Cons (LetPatch slot (p+1) v) (createPatches slot avail (p+1) rest))
+
+// Arguments in the same reversed order as genCallArgs (codegen order), but
+// each bare-Var argument gets a dummy instead of a `load` if its sibling
+// isn't available yet -- every other shape just goes via the existing
+// genValue (never patchable, see directPatchableNames/directVarNames).
+genArgsWithDummies prog adts args avail as = concatAll (map (genOneArgWithDummy prog adts args avail) (reverse as))
+
+genOneArgWithDummy prog adts args avail e =
+  case e
+    (Var v -> genDummyOrLoad prog adts args avail v)
+    (_ -> genValue prog adts args e)
+
+genDummyOrLoad prog adts args avail v =
+  if (member avail v) (genValue prog adts args (Var v)) (Cons (mkI ['push 666']) Nil)
+
+// Executing one patch: `load <target slot>, push <field idx>, load <source
+// slot>, update`.
+genPatchInstr args p =
+  Cons (mkI (append ['load '] (itoa (lpTargetSlot p))))
+  (Cons (mkI (append ['push '] (itoa (lpFieldIdx p))))
+  (Cons (mkI (append ['load '] (itoa (slotOf (lpSourceVar p) args))))
+  (Cons (mkI ['update']) Nil)))
+
+// Own small free-variable collector (not stage3_lift.cfp's collectVars --
+// each stage file only imports newparser_ast.cfp, same discipline as every
+// other stage here). Must cover every shape a let-rhs can have AFTER stage
+// 4 (so Thunk/Closure/Eval too), unlike stage3's variant which runs before
+// stage 4.
+letCollectVars e =
+  case e
+    (Var v -> Cons v Nil)
+    (If a b c -> append (letCollectVars a) (append (letCollectVars b) (letCollectVars c)))
+    (App n as -> Cons n (concatAll (map letCollectVars as)))
+    (Prim op as -> concatAll (map letCollectVars as))
+    (Ct n as -> concatAll (map letCollectVars as))
+    (Case sc cs -> append (letCollectVars sc) (concatAll (map letCollectVarsBranch cs)))
+    (Let ls b -> error "letCollectVars: nested Let not expected (sapl_programmeer_regels.md sectie 4)")
+    (Lazy inner -> letCollectVars inner)
+    (Thunk inner -> letCollectVars inner)
+    (Closure inner -> letCollectVars inner)
+    (Eval inner -> letCollectVars inner)
+    (_ -> Nil)
+
+letCollectVarsBranch cb = case cb (CaseBranch c vs b -> letCollectVars b)
+
+// Two entry points for functions with a strict argument: a lazy entry
+// evaluates each strict argument and falls through into the strict entry
+// (no jump).
+genLazyEntry i args =
+  case args
+    (Nil -> Nil)
+    (Cons a rest -> genLazyEntryCons i a rest)
+
+genLazyEntryCons i a rest =
+  if (argStrict a)
+    (append (evalSlot i) (genLazyEntry (i+1) rest))
+    (genLazyEntry (i+1) rest)
+
+evalSlot i =
+  Cons (mkI (append ['load '] (itoa i))) (Cons (mkI ['eval']) (Cons (mkI (append ['store '] (itoa i))) Nil))
+
+genFunc prog adts f =
+  case f
+    (Func name args body -> genFuncBody prog adts name args body)
+
+genFuncBody prog adts name args body =
+  let bodyCode = genBody prog adts name args body,
+      mainBlock = Block name (gcInstrs bodyCode),
+      mainBlocks = genFuncMainBlocks name args mainBlock in
+  append mainBlocks (gcBlocks bodyCode)
+
+// The `_lazy` entry is ALWAYS generated now (see pushFuncRef above for why)
+// -- even when `f` has no strict argument at all. Without any strict
+// argument, `genLazyEntry` has nothing to evaluate and returns Nil; a block
+// with ZERO instructions wouldn't carry its own index label in the rendered
+// text (renderBlockLines only emits a line for a non-empty instruction
+// list), so that case falls back to a bare `jmp` into the strict entry
+// block (a semantic no-op fallthrough that's still >=1 real instruction).
+genFuncMainBlocks name args mainBlock =
+  genFuncMainBlocksFromLazy name mainBlock (genLazyEntry 0 args)
+
+genFuncMainBlocksFromLazy name mainBlock lazyBody =
+  case lazyBody
+    (Nil -> Cons (Block (append name ['_lazy']) (Cons (mkJ ['jmp'] name) Nil)) (Cons mainBlock Nil))
+    (Cons a as -> Cons (Block (append name ['_lazy']) lazyBody) (Cons mainBlock Nil))
+
+// `Let` may only be the WHOLE function body -- only here, at a function's
+// own top level, does `Let` get special treatment; everywhere else
+// (genTail/genValue/genCond/genEval/genCreateApp) it's a hard error.
+genBody prog adts fname args e =
+  case e
+    (Let ls b -> genLet prog adts fname args ls b)
+    (_ -> genTail prog adts fname args e)
+
+// Peephole optimization, direct Sapl port of newparser/stage5_codegen.ama's
+// own port of parser.ama:882-896's `optimize` -- see that file's header
+// comment for the full rationale (text-based instr representation instead
+// of a real ADT, per-block application being provably equivalent to
+// parser.ama's flat-list-with-inline-labels approach, and why the two
+// `Push 1 : Sub/Add -> Dec/Inc` rules are deliberately not ported).
+
+hasPrefix s p =
+  case p
+    (Nil -> True)
+    (Cons pc prest -> hasPrefixCons s pc prest)
+
+hasPrefixCons s pc prest =
+  case s
+    (Nil -> False)
+    (Cons sc srest -> if (sc == pc) (hasPrefix srest prest) False)
+
+dropN n xs =
+  if (n == 0) xs (dropNCons n xs)
+
+dropNCons n xs =
+  case xs
+    (Nil -> Nil)
+    (Cons x rest -> dropN (n - 1) rest)
+
+digitsToNum ds = digitsToNumAcc ds 0
+
+digitsToNumAcc ds acc =
+  case ds
+    (Nil -> acc)
+    (Cons d rest -> digitsToNumAcc rest ((acc * 10) + (d - '0')))
+
+instrTextOf i =
+  case i
+    (Instr t target -> t)
+    (InstrMulti t targets -> t)
+
+isLoadI i = hasPrefix (instrTextOf i) ['load ']
+isStoreI i = hasPrefix (instrTextOf i) ['store ']
+isPushI i = hasPrefix (instrTextOf i) ['push ']
+isAddI i = charListEq (instrTextOf i) ['add']
+isSubI i = charListEq (instrTextOf i) ['sub']
+isReturnI i = hasPrefix (instrTextOf i) ['return ']
+
+numArgOf i prefixLen = digitsToNum (dropN prefixLen (instrTextOf i))
+loadSlotOf i = numArgOf i 5
+storeSlotOf i = numArgOf i 6
+returnArityOf i = numArgOf i 7
+
+// A `push` argument is only a number if it doesn't start with a `"`
+// (string literal, `push "..."`) -- the Sapl compiler never pushes a bare
+// char literal (chars become Num during lexing), so this is the only
+// ambiguity to guard against.
+isNumPushI i =
+  if (isPushI i) (isNumPushRest (dropN 5 (instrTextOf i))) False
+
+isNumPushRest rest =
+  case rest
+    (Nil -> True)
+    (Cons c cs -> if (c == '"') False True)
+
+pushNumOf i = numArgOf i 5
+
+isAddNext is =
+  case is
+    (Nil -> False)
+    (Cons i3 rest -> isAddI i3)
+
+isSubNext is =
+  case is
+    (Nil -> False)
+    (Cons i3 rest -> isSubI i3)
+
+optimizeInstrs xs =
+  case xs
+    (Nil -> Nil)
+    (Cons i1 rest1 -> optimizeInstrsFrom i1 rest1)
+
+optimizeInstrsFrom i1 rest1 =
+  case rest1
+    (Nil -> Cons i1 Nil)
+    (Cons i2 is -> optimizeInstrsPair i1 i2 is)
+
+optimizeInstrsPair i1 i2 is =
+  if (isLoadI i1 /\ isLoadI i2) (optimizeLoadLoad i1 i2 is)
+  (if (isStoreI i1 /\ isLoadI i2) (optimizeStoreLoad i1 i2 is)
+  (if (isLoadI i1 /\ isStoreI i2) (optimizeLoadStore i1 i2 is)
+  (if (isLoadI i1 /\ isNumPushI i2 /\ isAddNext is) (optimizeLoadPushAdd i1 i2 is)
+  (if (isLoadI i1 /\ isNumPushI i2 /\ isSubNext is) (optimizeLoadPushSub i1 i2 is)
+  (if (isNumPushI i1 /\ isReturnI i2) (optimizePushReturn i1 i2 is)
+  (Cons i1 (optimizeInstrsFrom i2 is)))))))
+
+optimizeLoadLoad i1 i2 is =
+  if (loadSlotOf i1 == loadSlotOf i2) (Cons i1 (Cons (mkI ['dup']) (optimizeInstrs is)))
+  (Cons i1 (optimizeInstrsFrom i2 is))
+
+optimizeStoreLoad i1 i2 is =
+  if (storeSlotOf i1 == loadSlotOf i2) (Cons (mkI ['dup']) (optimizeInstrsFrom i1 is))
+  (Cons i1 (optimizeInstrsFrom i2 is))
+
+optimizeLoadStore i1 i2 is =
+  if (loadSlotOf i1 == storeSlotOf i2) (optimizeInstrs is)
+  (Cons i1 (optimizeInstrsFrom i2 is))
+
+optimizeLoadPushAdd i1 i2 is =
+  case is
+    nomatch
+    (Cons i3 rest -> Cons (mkI (append ['loadadd '] (append (itoa (loadSlotOf i1)) (append [' '] (itoa (pushNumOf i2)))))) (optimizeInstrs rest))
+
+optimizeLoadPushSub i1 i2 is =
+  case is
+    nomatch
+    (Cons i3 rest -> Cons (mkI (append ['loadadd '] (append (itoa (loadSlotOf i1)) (append [' '] (itoa (0 - (pushNumOf i2))))))) (optimizeInstrs rest))
+
+optimizePushReturn i1 i2 is =
+  Cons (mkI (append ['return_const '] (append (itoa (returnArityOf i2)) (append [' '] (itoa (pushNumOf i1)))))) (optimizeInstrs is)
+
+optimizeBlockInstrs b =
+  case b
+    (Block name instrs -> Block name (optimizeInstrs instrs))
+
+// -- Render: resolve symbolic label names to their position in `blocks`. --
+
+blockIndex name blocks = blockIndexAt name blocks 0
+
+blockIndexAt name blocks i =
+  case blocks
+    (Nil -> error "blockIndex: unknown label")
+    (Cons b rest -> if (charListEq (blockName b) name) i (blockIndexAt name rest (i+1)))
+
+renderInstr blocks instrVal =
+  case instrVal
+    (Instr t target -> renderInstrSingle blocks t target)
+    (InstrMulti t targets -> append t (renderTargets blocks targets))
+
+renderInstrSingle blocks t target =
+  case target
+    (Nil -> t)
+    (Cons x xs -> append t (append [' '] (itoa (blockIndex target blocks))))
+
+renderTargets blocks targets =
+  case targets
+    (Nil -> Nil)
+    (Cons t rest -> append [' '] (append (itoa (blockIndex t blocks)) (renderTargets blocks rest)))
+
+renderBlockLines blocks idx is =
+  case is
+    (Nil -> Nil)
+    (Cons i rest -> renderBlockLinesCons blocks idx i rest)
+
+renderBlockLinesCons blocks idx i rest =
+  Cons (append (itoa idx) (append ['           '] (renderInstr blocks i))) (map (renderInstr blocks) rest)
+
+renderAllBlocks blocks = renderAllBlocksAt blocks blocks 0
+
+renderAllBlocksAt allBlocks blocks idx =
+  case blocks
+    (Nil -> Nil)
+    (Cons b rest -> append (renderBlockLines allBlocks idx (blockInstrs b)) (renderAllBlocksAt allBlocks rest (idx+1)))
+
+prologueInstrs = Cons (mkJ ['call'] ['start']) (Cons (mkI ['print 4']) (Cons (mkI ['stop']) Nil))
+
+// unwords/unlines aren't real Amanda builtins (only pg99.ama's prelude has
+// them, which this port deliberately doesn't import) -- own, subset-
+// conforming versions.
+joinWith sep first xs =
+  case xs
+    (Nil -> first)
+    (Cons x rest -> joinWithCons sep first x rest)
+
+joinWithCons sep first x rest = append first (append sep (joinWith sep x rest))
+
+myUnwords xs =
+  case xs
+    (Nil -> Nil)
+    (Cons x rest -> joinWith [' '] x rest)
+
+myUnlines xs =
+  case xs
+    (Nil -> Nil)
+    (Cons x rest -> append x (append (Cons '\n' Nil) (myUnlines rest)))
+
+headerLine blocks = append (myUnwords (map blockName blocks)) [' #']
+
+// Public: take a fully transformed (stage 1-4) program (incl. the
+// functions stage 3 emitted) plus the ADT declarations, produce textual
+// .jmvm instructions.
+renderProgram funcs adts =
+  let blocks = map optimizeBlockInstrs (concatAll (map (genFunc funcs adts) funcs)) in
+  myUnlines (append (Cons (headerLine blocks) Nil) (append (map (renderInstr blocks) prologueInstrs) (renderAllBlocks blocks)))
+
+
+// Direct Sapl port of newparser/driver.ama -- see docs/bootstrapping_plan.md
+// section 0 step 4: wires all five stageN_*.cfp ports together end-to-end.
+// This is the reason sapl_compiler/ast_helpers.cfp exists: importing all
+// five stage files (each previously carrying its own local copy of shared
+// helpers like charListEq/isPrintCall/conFields/findFunc) into one program
+// is exactly the case docs/sapl_programmeer_regels.md #5 warns about
+// (duplicate top-level definitions of the same name) -- each stage now
+// imports ast_helpers.cfp instead, so this file can import all five without
+// collisions.
+//
+// Pipeline (important since facl, see stage3_lift.cfp): stage 3 can EMIT
+// new functions (like facl_1) that haven't themselves been through stage 4
+// yet. Those must be added at the program level before stage 4 runs --
+// stage 4's App-retagging needs the complete function list to look up
+// facl_1's arity/strictness. Stage 1+2 only run on the ORIGINAL functions
+// (they already have their own signature; lifting can't change that), stage
+// 4 runs on the combined list.
+//
+// `adts`: one fixed list of ADT declarations, unchanged through the whole
+// pipeline (unlike `prog`/`combined`, which can grow via stage 3's emit
+// list) -- lifting never creates new ADTs.
+
+stage123 prog adts f = stage3 adts (stage2 prog adts (stage1 prog f))
+
+allStage3Results prog adts fs = map (stage123 prog adts) fs
+
+collectMainFuncs results = map stage3resFunc results
+
+collectEmittedFuncs results = concatAll (map stage3resEmits results)
+
+transformProgram origProg adts =
+  let results = allStage3Results origProg adts origProg,
+      combined = append (collectMainFuncs results) (collectEmittedFuncs results) in
+  map (stage4 combined adts) combined
+
+compileProgram prog adts = renderProgram (transformProgram prog adts) adts
+
+// `renderProgram` (stage5_codegen.cfp) returns a char-list, but
+// `writeFile` (like `printString`) expects a packed-array string
+// (lib/stdlib.cfp's `list2str` bridges the two, docs/sapl_programmeer_
+// regels.md #7) -- Amanda has no such distinction (`fwrite` takes the
+// char-list result of `compileProgram` directly), so this `list2str` call
+// is the one genuine (not just renamed) addition this port needed over
+// driver.ama's own `writeProgram`.
+writeProgram outfile prog adts = writeFile outfile (list2str (compileProgram prog adts))
+
+noAdts = Nil
+
+
+// saplcomp: the Sapl compiler (this bootstrap's parser.cfp + driver.cfp) as
+// its own standalone entry point -- docs/bootstrapping_plan.md plan section
+// 3, "Stage 1 (cross-compilation)". Reads two lines from stdin (source
+// .cfp path, then destination .jmvm path) and compiles the first into the
+// second, exactly like a non-interactive `ama parser.ama` session
+// (`compile "fn"`) does for the production compiler -- two separate lines
+// rather than one `compile "fn"`-style path-without-extension argument
+// because the VM has no argv exposure to a running .jmvm program (checked:
+// vm.cpp's `main` only uses argv to pick which .jmvm to LOAD, nothing is
+// passed through to the program itself) and no string-splitting primitive
+// here to parse a single combined argument.
+//
+// Usage: `printf '%s\n%s\n' "path/to/source" "path/to/out.jmvm" | ./run
+// sapl_compiler/saplcomp.jmvm` (after Stage 1 below has produced
+// saplcomp.jmvm).
+
+start =
+  let infile = readLine,
+      outfile = readLine,
+      parsed = parseProgram infile in
+  writeProgram outfile (ppFuncs parsed) (ppAdts parsed) <#> printString "success, output written\n"
+

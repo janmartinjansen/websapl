@@ -1,0 +1,20 @@
+start_lazy start fac_lazy fac fac_else #
+call 1
+print 4
+stop
+0           jmp 1
+1           push 6
+tailcall 0 3
+2           load 0
+eval
+store 0
+3           load 0
+ifneq 4
+return_const 1 1
+4           load 0
+dup
+push 1
+sub
+call 3
+mult
+return 1

@@ -1,0 +1,31 @@
+::list = Nil | Cons !x xs
+::Tup  = Tup !a !b
+
+start = printlist (head (knights 5))
+knights n = doknights n (Cons (Tup 1 1) Nil)
+
+doknights n qs  = case qs (Nil -> 111) (Cons p ps -> if (length ps + 1 == n * n) (Cons qs Nil) (concat (map (dkaf n qs) (moves n ps p))))
+
+dkaf n qs q = doknights n (Cons q qs)
+moves n as t = case t (Tup p q -> filter (legal n as) (Cons (Tup (p+1) (q+2)) (Cons (Tup (p+1)(q-2)) (Cons (Tup (p-1)(q+2))
+                      (Cons (Tup (p-1)(q-2)) (Cons (Tup (p+2)(q+1)) (Cons (Tup (p+2)(q-1)) (Cons (Tup (p-2)(q+1)) (Cons (Tup (p-2)(q-1)) Nil)))))))))
+
+legal n as t = case t (Tup p q -> p >= 1 /\ n >= p /\ q >= 1 /\ n >= q /\ notmemb as t)
+
+neqtup t1 t2 = case t1 (Tup a1 b1 -> case t2 (Tup a2 b2 -> a1 != a2 \/ b1 != b2))
+notmemb xs a = case xs (Nil -> True) (Cons x xs ->  neqtup a x /\ notmemb xs a)
+
+filter p xs = case xs (Nil -> Nil) (Cons a as -> if (p a) (Cons a (filter p as)) (filter p as))
+
+map f xs = case xs (Nil -> Nil) (Cons x xs -> Cons (f x) (map f xs))
+
+concat xss = case xss (Nil -> Nil) (Cons ys yss -> case ys (Nil -> concat yss) (Cons a as -> Cons a (concat (Cons as yss))))
+
+length xs = case xs (Nil -> 0) (Cons x xs -> 1 + length xs)
+
+printtup t = case t (Tup a b -> print a <#> print b)
+
+printlist xs = case xs (Nil -> 0) (Cons x xs -> printtup x <#> printlist xs)
+
+head xs = case xs (Nil -> 111) (Cons x xs -> x)
+

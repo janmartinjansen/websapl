@@ -1,0 +1,23 @@
+::list = Nil | Cons !x xs
+
+start =  queens 11
+
+length xs = case xs (Nil -> 0) (Cons x xs -> 1 + length xs)
+
+fromto n m = if (n > m) Nil (Cons n (fromto (n+1) m))
+
+queens n = length (qqueens n n)
+
+qqueens k n = if (n == 0) (Cons Nil Nil) (concat (map (recqq k) (qqueens k (n - 1))))
+
+recqq k xs = mapfil (safe xs 1) (rcons xs) (fromto 1 k)
+
+safe xs d x = case xs (Nil -> True) (Cons y ys ->  x != y  /\ x + d != y /\ x - d != y /\ safe ys (d + 1) x)
+
+rcons xs x = Cons x xs
+
+concat xss = case xss (Nil -> Nil) (Cons ys yss -> case ys (Nil -> concat yss) (Cons a as -> Cons a (concat (Cons as yss))))
+
+mapfil p f xs = case xs (Nil -> Nil) (Cons a as -> if (p a) (Cons (f a) (mapfil p f as)) (mapfil p f as))
+
+map f xs = case xs (Nil -> Nil) (Cons x xs -> Cons (f x) (map f xs))

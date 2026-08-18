@@ -1,0 +1,277 @@
+start tstart hamming_lazy hamming mult_lazy mult map_lazy map lb1 lb2 el_lazy el lb3 lb4 lb5 el_1 merge_lazy merge lb7 lb8 lb9 lb10 lb11 lb13 printlist_lazy printlist lb15 lb16 take_lazy take lb17 lb19 lb20 rep_lazy rep lb21 sum_lazy sum lb23 lb24 rephamming_lazy rephamming ff_lazy ff lb25 hm_lazy hm  #
+            call 0                                   || start
+            print 4
+            stop
+0           push 1000                                || start
+            push 4000
+            tailcall 0 41                            || rephamming
+1           push 1                                   || tstart
+            call 3                                   || hamming
+            push 1000
+            tailcall 0 11                            || el
+2           load 0                                   || hamming_lazy
+            eval
+            store 0
+3           updsp 4                                  || hamming
+            push 666
+            push 2
+            pushfunc 2 4                             || mult_lazy
+            create 2 7
+            pushfunc 2 7                             || map
+            create 3 3
+            store 1
+            push 666
+            push 3
+            pushfunc 2 4                             || mult_lazy
+            create 2 7
+            pushfunc 2 7                             || map
+            create 3 3
+            store 2
+            push 666
+            push 5
+            pushfunc 2 4                             || mult_lazy
+            create 2 7
+            pushfunc 2 7                             || map
+            create 3 3
+            dup
+            store 3
+            load 2
+            load 1
+            pushfunc 2 16                            || merge_lazy
+            create 3 3
+            pushfunc 2 16                            || merge_lazy
+            create 3 3
+            load 4
+            ccreatet 2 11 5 1
+            store 0
+            load 1
+            push 2
+            load 0
+            update
+            load 2
+            push 2
+            load 0
+            update
+            load 3
+            push 2
+            load 0
+            update
+            load 0
+            eval
+            return 5
+4           load 1                                   || mult_lazy
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+5           load 0                                   || mult
+            load 1
+            mult
+            return 2
+6           load 1                                   || map_lazy
+            eval
+            store 1
+7           load 1                                   || map
+            jmpt 2 8 9                               || lbs
+8           ccreatet 0 11 5 0                        || lb1
+            return 2
+9           load 1                                   || lb2
+            load 2
+            pushfunc 2 6                             || map_lazy
+            create 3 3
+            load 0
+            load 2
+            eval
+            ccreatet 2 11 5 1
+            return 4
+10          load 1                                   || el_lazy
+            eval
+            store 1
+11          load 1                                   || el
+            jmpt 2 12 13                             || lbs
+12          return_const 2 666                       || lb3
+13          load 2                                   || lb4
+            eval
+            ifneq 14                                 || lb5
+            load 0
+            return 4
+14          load 1                                   || lb5
+            eval
+            load 2
+            pushfunc 1 15                            || el_1
+            create 2 3
+            tailcall 4 11                            || el
+15          load 0                                   || el_1
+            eval
+            push 1
+            sub
+            return 1
+16          load 1                                   || merge_lazy
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+17          load 0                                   || merge
+            jmpt 2 18 19                             || lbs
+18          load 1                                   || lb7
+            return 2
+19          load 3                                   || lb8
+            jmpt 2 20 21                             || lbs
+20          load 2                                   || lb9
+            return 4
+21          load 2                                   || lb10
+            load 0
+            sub
+            ifneq 22                                 || lb11
+            load 1
+            load 3
+            pushfunc 2 16                            || merge_lazy
+            create 3 3
+            load 2
+            ccreatet 2 11 5 1
+            return 6
+22          load 0                                   || lb11
+            load 2
+            sub
+            ifle 23                                  || lb13
+            load 5
+            load 3
+            pushfunc 2 16                            || merge_lazy
+            create 3 3
+            load 2
+            ccreatet 2 11 5 1
+            return 6
+23          load 1                                   || lb13
+            load 4
+            pushfunc 2 16                            || merge_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 6
+24          load 0                                   || printlist_lazy
+            eval
+            store 0
+25          load 0                                   || printlist
+            jmpt 2 26 27                             || lbs
+26          return_const 1 0                         || lb15
+27          load 0                                   || lb16
+            print 0
+            load 1
+            eval
+            call 25                                  || printlist
+            return 3
+28          load 0                                   || take_lazy
+            eval
+            store 0
+29          load 0                                   || take
+            ifneq 30                                 || lb17
+            ccreatet 0 11 5 0
+            return 2
+30          load 1                                   || lb17
+            eval
+            jmpt 2 31 32                             || lbs
+31          ccreatet 0 11 5 0                        || lb19
+            return 2
+32          load 1                                   || lb20
+            loadadd 2 -1
+            pushfunc 2 29                            || take
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 4
+33          load 0                                   || rep_lazy
+            eval
+            store 0
+34          load 0                                   || rep
+            ifneq 35                                 || lb21
+            ccreatet 0 11 5 0
+            return 2
+35          load 1                                   || lb21
+            loadadd 0 -1
+            pushfunc 2 34                            || rep
+            create 3 3
+            load 1
+            eval
+            ccreatet 2 11 5 1
+            return 2
+36          load 0                                   || sum_lazy
+            eval
+            store 0
+37          load 0                                   || sum
+            jmpt 2 38 39                             || lbs
+38          return_const 1 0                         || lb23
+39          load 0                                   || lb24
+            load 1
+            eval
+            call 37                                  || sum
+            add
+            return 3
+40          load 0                                   || rephamming_lazy
+            eval
+            store 0
+41          load 1                                   || rephamming
+            load 0
+            call 34                                  || rep
+            pushfunc 1 45                            || hm_lazy
+            create 1 7
+            call 7                                   || map
+            tailcall 2 37                            || sum
+42          load 0                                   || ff_lazy
+            eval
+            store 0
+43          load 0                                   || ff
+            push 2
+            mod
+            ifneq 44                                 || lb25
+            return_const 1 1
+44          load 0                                   || lb25
+            push 2
+            mod
+            return 1
+45          load 0                                   || hm_lazy
+            eval
+            store 0
+46          load 0                                   || hm
+            call 43                                  || ff
+            call 3                                   || hamming
+            load 0
+            call 11                                  || el
+            push 999
+            mod
+            return 1
+
+.metadata
+types 1
+type 5 list 2
+  constr 0 Nil 0
+  constr 1 Cons 2
+functions 26
+  func 0 start 0 0
+  func 1 tstart 0 0
+  func 3 hamming 1 10
+  func 2 hamming 1 10
+  func 5 mult 2 110
+  func 4 mult 2 110
+  func 7 map 2 010
+  func 6 map 2 010
+  func 11 el 2 010
+  func 10 el 2 010
+  func 17 merge 2 110
+  func 16 merge 2 110
+  func 25 printlist 1 10
+  func 24 printlist 1 10
+  func 29 take 2 100
+  func 28 take 2 100
+  func 34 rep 2 100
+  func 33 rep 2 100
+  func 37 sum 1 10
+  func 36 sum 1 10
+  func 41 rephamming 2 100
+  func 40 rephamming 2 100
+  func 43 ff 1 10
+  func 42 ff 1 10
+  func 46 hm 1 10
+  func 45 hm 1 10
+.endmetadata

@@ -1,0 +1,15 @@
+start = printLinesStart (readFile "benchmarks/primes.cfp")
+
+printLinesStart content = printLines 0 (strlen content) content 1 <#> 0
+
+printLines !i !len str !needDash
+  = if (i == len)
+      0
+      (if (needDash == 1)
+         (printC 45 <#> printC 32 <#> printLines i len str 0)
+         (checkChar i len str (strat i str)))
+
+checkChar !i !len str !c
+  = if (c == 10)
+      (printC 10 <#> printLines (i + 1) len str 1)
+      (printC c <#> printLines (i + 1) len str 0)

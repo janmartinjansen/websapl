@@ -1,0 +1,44 @@
+::nat  = Zero | Suc !n
+::list = Nil | Cons !x xs
+
+start = tonum (el h280 primes)
+
+Add n m  = case n (Zero -> m) (Suc n -> Suc (Add n m))
+
+tonum n   = case n (Zero -> 0) (Suc n -> tonum n + 1)
+fromnum n = if (n==0) Zero (Suc (fromnum (n - 1)))
+
+one    = Suc Zero
+two    = Add one one
+four   = Add two two
+eight  = Add four four
+five   = Suc(Suc (Suc (Suc (Suc  Zero))))
+ten    = Add five five
+twenty = Add ten ten
+forty  = Add twenty twenty
+eighty = Add forty forty
+h60    = Add eighty eighty
+h20    = Add eighty forty
+h200   = Add h60 forty
+h280   = Add h200 eighty
+
+Pred n         = case n (Zero -> 111)  (Suc n -> n)
+Sub m n       = case n (Zero -> m) (Suc n -> case m (Zero -> 123) (Suc m -> Sub m n))
+Gt n k        = case n (Zero -> 0) (Suc n -> case k (Zero -> 1)   (Suc k -> Gt n k))
+Neq k m       = case k (Zero -> case m (Zero -> 0) (Suc m -> 1)) (Suc k -> case m (Zero -> 1) (Suc m -> Neq k m))
+el n xs       = case n (Zero -> case xs (Nil -> 111) (Cons a as -> a)) (Suc n -> case xs (Nil -> 111) (Cons a as -> el n as))
+
+Mod n m       = if (Gt m n) n (Mod (Sub n m) m)
+notmodzero x y = Neq (Mod y x) Zero
+
+from n         = Cons n (from (Suc n))
+
+primes          = sieve (from two)
+sieve xs       = case xs (Nil -> 111) (Cons x xs -> Cons x (sieve (filter (notmodzero x) xs)))
+filter p xs    = case xs (Nil -> Nil) (Cons a as -> if (p a) (Cons a (filter p as)) (filter p as))
+domain n        = tonum (el n primes)
+
+printlist xs = case xs (Nil -> 0) (Cons n ns -> print (tonum n) <#> printlist ns)
+
+
+

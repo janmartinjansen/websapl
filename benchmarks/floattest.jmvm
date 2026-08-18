@@ -1,0 +1,10 @@
+start start_1 #
+            call 0
+            stop
+0           push 3.5
+            push 2.0
+            fadd
+            push 1.5
+            fmult
+            print 1
+            return_const 0 0

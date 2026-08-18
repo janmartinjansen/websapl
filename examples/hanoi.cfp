@@ -1,0 +1,19 @@
+::list = Nil | Cons !x xs
+::tup = Tup a b
+ 
+start =  length (hanoi 20 1 2 3)
+
+hanoi !n !a !b !c = if (n == 0) Nil (append (hanoi (n-1) a c b) (Cons (Tup a b) (hanoi (n-1) c b a)))
+
+length !xs  = al 0 xs
+al !n !xs   = case xs (Nil -> n) (Cons x xs -> al (n+1) xs)
+
+append !xs ys = case xs (Nil -> ys) (Cons x xs -> Cons x (append xs ys))
+
+printlist !xs = case xs (Nil -> 0) (Cons x xs -> printtup x <#> printlist xs)
+printtup !t = case t (Tup a b -> print a <#> print b)
+
+
+
+
+

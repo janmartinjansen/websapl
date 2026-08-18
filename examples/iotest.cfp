@@ -1,0 +1,2 @@
+start = seq (writeFile "test_io.txt" "Hello from JMVM SysCall FFI!\n") (printString (readFile "test_io.txt"))
+seq !x y = y

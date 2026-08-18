@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WebSapl — Luie Functionele Programmeertaal & JMVM WebAssembly IDE</title>
+  <meta name="description" content="Webversie van de Sapl interpreter en compiler aangedreven door de JMVM WebAssembly runtime met virtueel bestandssysteem en benchmarksuite." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/codemirror.min.css" />
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+  <!-- Header Toolbar -->
+  <header class="app-header">
+    <div class="header-brand">
+      <div class="brand-logo">λ</div>
+      <div class="brand-text">WebSapl</div>
+      <span class="brand-badge">JMVM WASM</span>
+    </div>
+
+    <div class="header-center">
+      <button class="btn btn-primary" id="btn-run" title="Draai het huidige programma (F5 of Ctrl+Enter)">
+        <span class="btn-icon">▶</span> Run
+      </button>
+      <button class="btn btn-secondary" id="btn-compile" title="Compileer naar .jmvm bytecode">
+        <span class="btn-icon">⚙</span> Compileer
+      </button>
+      <button class="btn btn-secondary" id="btn-save" title="Sla bestand op (Ctrl+S)">
+        <span class="btn-icon">💾</span> Opslaan
+      </button>
+      <button class="btn btn-ghost" id="btn-new" title="Nieuw bestand aanmaken">
+        <span class="btn-icon">+</span> Nieuw
+      </button>
+      <button class="btn btn-ghost" id="btn-focus-mode" title="Focusmodus: Alleen editor (verberg zijbalk en onderpaneel)">
+        <span class="btn-icon">⛶</span> Focus
+      </button>
+
+      <div class="view-toggle-group">
+        <button class="toggle-btn active" id="btn-view-editor">
+          <span>📝</span> Editor
+        </button>
+        <button class="toggle-btn" id="btn-view-benchmarks">
+          <span>⚡</span> Benchmarks
+        </button>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <select class="select-dropdown" id="select-example" title="Kies een voorbeeldprogramma">
+        <option value="">📁 Voorbeelden...</option>
+      </select>
+
+      <button class="btn btn-ghost" id="btn-theme-toggle" title="Wissel thema (Light / Dark mode)">
+        <span id="theme-icon">🌙</span> <span id="theme-text">Dark</span>
+      </button>
+
+      <div class="app-status">
+        <span class="status-dot ready" id="status-indicator"></span>
+        <span id="status-text">Klaar</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Body Content -->
+  <main class="app-body">
+    <!-- Sidebar: File Explorer -->
+    <aside class="app-sidebar" id="filetree-container"></aside>
+
+    <!-- Main Views Area -->
+    <section class="app-main">
+      <!-- Editor View -->
+      <div class="view-container" id="view-editor">
+        <div class="editor-view-split">
+          <div class="editor-pane" id="editor-container"></div>
+          <div class="bottom-pane">
+            <div id="metrics-container"></div>
+            <div id="terminal-container" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Benchmark Suite View -->
+      <div class="view-container benchmark-view" id="view-benchmarks" style="display: none;">
+        <div id="benchmarks-container"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Bundled Data & Scripts -->
+  <script src="js/stdlib_data.js"></script>
+  <script src="js/compiler_data.js"></script>
+  <script src="js/benchmarks_data.js"></script>
+  <script src="js/examples_data.js"></script>
+  <script src="js/codemirror.min.js"></script>
+  <script src="js/matchbrackets.min.js"></script>
+  <script src="js/closebrackets.min.js"></script>
+  <script src="js/sapl_mode.js"></script>
+  <script src="js/editor.js"></script>
+  <script src="js/filetree.js"></script>
+  <script src="js/terminal.js"></script>
+  <script src="js/metrics.js"></script>
+  <script src="js/benchmarks_ui.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+::list = Nil | Cons !x xs
+
+// File and stream I/O functions
+readStream fd =
+  let c = readChar fd in
+  if (c == (0 - 1))
+    Nil
+    (Cons c (readStream fd))
+
+writeStream fd xs =
+  case xs
+    (Nil -> closeFile fd)
+    (Cons c cs -> writeChar fd c <#> writeStream fd cs)
+
+// Converts a packed-array string (e.g. from readFile) into a char list
+str2list !s = strls 0 s
+
+strls !n !s = if (n < strlen s) (Cons (strat n s) (strls (n+1) s)) Nil
+
+// Compares two packed-array strings for content equality
+strEqual !s1 !s2 = (strlen s1 == strlen s2) /\ strEqualAt 0 s1 s2
+
+strEqualAt !n !s1 !s2 = if (n >= strlen s1) 1 (if (strat n s1 == strat n s2) (strEqualAt (n+1) s1 s2) 0)
+
+// Converts a char list into a packed-array string (inverse of str2list).
+// Note: the raw `update` predef takes its arguments as (value, index, array) -
+// the opposite of what the name suggests - see docs/sapl_programmeer_regels.md §7.
+list2str !cs = fillStr 0 cs (strcreate (length cs))
+
+fillStr !i !xs !arr =
+  case xs
+    (Nil -> arr)
+    (Cons c cs -> fillStr (i+1) cs (update c i arr))
+
+// Concatenates two packed-array strings into a new one
+strcat !s1 !s2 = list2str (append (str2list s1) (str2list s2))
+
+toUpperChar !c = if ((c >= 'a') /\ (c <= 'z')) ((c - 'a') + 'A') c
+
+// Char <-> num conversion (Amanda's code/decode) -- no Sapl/JMVM primitive
+// exists for this; '0' (ASCII 48) as a known anchor point is enough given
+// char arithmetic already works directly (see toUpperChar above).
+code !c = (c - '0') + 48
+decode !n = '0' + (n - 48)
+
+// Uppercases a packed-array string
+strUpper !s = list2str (map toUpperChar (str2list s))
+
+// Substring of length !len starting at !start (both packed-array strings)
+substr !s !start !len = list2str (take len (drop start (str2list s)))
+
+// Converts an integer to a list of character codes (string)
+itoa n =
+  if (n < 0) (Cons '-' (itoa (0 - n)))
+  (if (n < 10) (Cons ('0' + n) Nil)
+  (append (itoa (n / 10)) (Cons ('0' + (n % 10)) Nil)))
+
+// List operations
+length xs =
+  case xs
+    (Nil -> 0)
+    (Cons x xs -> 1 + length xs)
+
+map f xs =
+  case xs
+    (Nil -> Nil)
+    (Cons x xs -> Cons (f x) (map f xs))
+
+filter f xs =
+  case xs
+    (Nil -> Nil)
+    (Cons x xs -> if (f x) (Cons x (filter f xs)) (filter f xs))
+
+foldl f z xs =
+  case xs
+    (Nil -> z)
+    (Cons x xs -> foldl f (f z x) xs)
+
+foldr f z xs =
+  case xs
+    (Nil -> z)
+    (Cons x xs -> f x (foldr f z xs))
+
+append xs ys =
+  case xs
+    (Nil -> ys)
+    (Cons x xs -> Cons x (append xs ys))
+
+take n xs =
+  case xs
+    (Nil -> Nil)
+    (Cons x xs -> if (n == 0) Nil (Cons x (take (n - 1) xs)))
+
+drop n xs =
+  case xs
+    (Nil -> Nil)
+    (Cons x xs -> if (n == 0) (Cons x xs) (drop (n - 1) xs))
+
+reverse xs = rev xs Nil
+
+rev xs acc =
+  case xs
+    (Nil -> acc)
+    (Cons x xs -> rev xs (Cons x acc))

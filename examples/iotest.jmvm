@@ -1,0 +1,27 @@
+start start_1 seq_lazy seq  #
+            call 0                                   || start
+            print 4
+            stop
+0           pushfunc 0 1                             || start_1 || start
+            create 1 3
+            push "Hello from JMVM SysCall FFI!\n"
+            push "test_io.txt"
+            syscall 1
+            tailcall 0 3                             || seq
+1           push "test_io.txt"                       || start_1
+            syscall 0
+            syscall 3
+            return 0
+2           load 0                                   || seq_lazy
+            eval
+            store 0
+3           load 1                                   || seq
+            eval
+            return 2
+
+.metadata
+functions 3
+  func 0 start 0 0
+  func 3 seq 2 100
+  func 2 seq 2 100
+.endmetadata

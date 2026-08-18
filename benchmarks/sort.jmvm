@@ -1,0 +1,626 @@
+start allsort allsort_2 allsort_1 isorttest msorttest qsorttest t7 length_lazy length lb1 lb2 fromto_lazy fromto lb3 downto_lazy downto lb5 ft_lazy ft lb7 ft_3 dt_lazy dt lb9 dt_4 el_lazy el lb11 lb12 lb13 el_5 filter_lazy filter lb15 lb16 lb17 take_lazy take lb19 lb21 lb22 drop_lazy drop lb23 lb25 lb26 sumrem_lazy sumrem lb27 lb28 sum_lazy sum lb29 lb30 map_lazy map lb31 lb32 inc_lazy inc printlist_lazy printlist lb33 lb34 merge_lazy merge lb35 lb36 lb37 lb38 lb39 fst_lazy fst lb41 snd_lazy snd lb42 append_lazy append lb43 lb44 split split_6 msort lb45 msort_7 last_lazy last lb47 lb48 lb49 lb50 insert_lazy insert lb51 lb52 lb53 isort_lazy isort lb55 lb56 qsort_lazy qsort lb57 lb58 kl_lazy kl lb59 gr_lazy gr lb61 mklist mkl_lazy mkl lb63 mklaf_lazy mklaf lb65  #
+            call 0                                   || start
+            print 4
+            stop
+0           call 1                                   || allsort || start
+            return 0
+1           pushfunc 0 3                             || allsort_1 || allsort
+            create 1 3
+            push 1000
+            call 6                                   || qsorttest
+            call 52                                  || sum
+            ccreatet 2 11 5 1
+            tailcall 0 62                            || printlist
+2           ccreatet 0 11 5 0                        || allsort_2
+            push 10000
+            call 5                                   || msorttest
+            call 52                                  || sum
+            ccreatet 2 11 5 1
+            return 0
+3           pushfunc 0 2                             || allsort_2 || allsort_1
+            create 1 3
+            push 600
+            call 4                                   || isorttest
+            call 52                                  || sum
+            ccreatet 2 11 5 1
+            return 0
+4           load 0                                   || isorttest
+            call 112                                 || mklist
+            tailcall 1 99                            || isort
+5           load 0                                   || msorttest
+            pushfunc 1 112                           || mklist
+            create 2 3
+            tailcall 1 84                            || msort
+6           load 0                                   || qsorttest
+            call 112                                 || mklist
+            tailcall 1 103                           || qsort
+7           push 10000                               || t7
+            pushfunc 1 112                           || mklist
+            create 2 3
+            call 84                                  || msort
+            tailcall 0 62                            || printlist
+8           load 0                                   || length_lazy
+            eval
+            store 0
+9           load 0                                   || length
+            jmpt 2 10 11                             || lbs
+10          return_const 1 0                         || lb1
+11          push 1                                   || lb2
+            load 1
+            eval
+            call 9                                   || length
+            add
+            return 3
+12          load 1                                   || fromto_lazy
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+13          load 0                                   || fromto
+            load 1
+            sub
+            ifle 14                                  || lb3
+            ccreatet 0 11 5 0
+            return 2
+14          load 1                                   || lb3
+            loadadd 0 1
+            pushfunc 2 13                            || fromto
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 2
+15          load 1                                   || downto_lazy
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+16          load 1                                   || downto
+            load 0
+            sub
+            ifle 17                                  || lb5
+            ccreatet 0 11 5 0
+            return 2
+17          load 1                                   || lb5
+            loadadd 0 -1
+            pushfunc 2 16                            || downto
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 2
+18          load 1                                   || ft_lazy
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+19          load 0                                   || ft
+            load 1
+            sub
+            ifle 20                                  || lb7
+            ccreatet 0 11 5 0
+            return 3
+20          load 2                                   || lb7
+            load 1
+            load 2
+            load 0
+            pushfunc 2 21                            || ft_3
+            create 3 3
+            pushfunc 3 18                            || ft_lazy
+            create 4 3
+            load 0
+            ccreatet 2 11 5 1
+            return 3
+21          load 0                                   || ft_3
+            load 1
+            eval
+            add
+            return 2
+22          load 1                                   || dt_lazy
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+23          load 1                                   || dt
+            load 0
+            sub
+            ifle 24                                  || lb9
+            ccreatet 0 11 5 0
+            return 3
+24          load 2                                   || lb9
+            load 1
+            load 2
+            load 0
+            pushfunc 2 25                            || dt_4
+            create 3 3
+            pushfunc 3 22                            || dt_lazy
+            create 4 3
+            load 0
+            ccreatet 2 11 5 1
+            return 3
+25          load 0                                   || dt_4
+            load 1
+            eval
+            sub
+            return 2
+26          load 1                                   || el_lazy
+            eval
+            store 1
+27          load 1                                   || el
+            jmpt 2 28 29                             || lbs
+28          return_const 2 111                       || lb11
+29          load 2                                   || lb12
+            eval
+            ifneq 30                                 || lb13
+            load 0
+            return 4
+30          load 1                                   || lb13
+            eval
+            load 2
+            pushfunc 1 31                            || el_5
+            create 2 3
+            tailcall 4 27                            || el
+31          load 0                                   || el_5
+            eval
+            push 1
+            sub
+            return 1
+32          load 1                                   || filter_lazy
+            eval
+            store 1
+33          load 1                                   || filter
+            jmpt 2 34 35                             || lbs
+34          ccreatet 0 11 5 0                        || lb15
+            return 2
+35          load 0                                   || lb16
+            load 2
+            eval
+            ifeq 36                                  || lb17
+            load 1
+            load 2
+            pushfunc 2 32                            || filter_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 4
+36          load 1                                   || lb17
+            eval
+            load 2
+            tailcall 4 33                            || filter
+37          load 0                                   || take_lazy
+            eval
+            store 0
+38          load 0                                   || take
+            ifneq 39                                 || lb19
+            ccreatet 0 11 5 0
+            return 2
+39          load 1                                   || lb19
+            eval
+            jmpt 2 40 41                             || lbs
+40          ccreatet 0 11 5 0                        || lb21
+            return 2
+41          load 1                                   || lb22
+            loadadd 2 -1
+            pushfunc 2 38                            || take
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 4
+42          load 1                                   || drop_lazy
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+43          load 0                                   || drop
+            ifneq 44                                 || lb23
+            load 1
+            return 2
+44          load 1                                   || lb23
+            jmpt 2 45 46                             || lbs
+45          ccreatet 0 11 5 0                        || lb25
+            return 2
+46          load 1                                   || lb26
+            eval
+            loadadd 2 -1
+            tailcall 4 43                            || drop
+47          load 0                                   || sumrem_lazy
+            eval
+            store 0
+48          load 0                                   || sumrem
+            jmpt 2 49 50                             || lbs
+49          return_const 1 0                         || lb27
+50          load 0                                   || lb28
+            load 1
+            eval
+            call 48                                  || sumrem
+            add
+            push 7
+            mod
+            return 3
+51          load 0                                   || sum_lazy
+            eval
+            store 0
+52          load 0                                   || sum
+            jmpt 2 53 54                             || lbs
+53          return_const 1 0                         || lb29
+54          load 0                                   || lb30
+            load 1
+            eval
+            call 52                                  || sum
+            add
+            return 3
+55          load 1                                   || map_lazy
+            eval
+            store 1
+56          load 1                                   || map
+            jmpt 2 57 58                             || lbs
+57          ccreatet 0 11 5 0                        || lb31
+            return 2
+58          load 1                                   || lb32
+            load 2
+            pushfunc 2 55                            || map_lazy
+            create 3 3
+            load 0
+            load 2
+            eval
+            ccreatet 2 11 5 1
+            return 4
+59          load 0                                   || inc_lazy
+            eval
+            store 0
+60          loadadd 0 1                              || inc
+            return 1
+61          load 0                                   || printlist_lazy
+            eval
+            store 0
+62          load 0                                   || printlist
+            jmpt 2 63 64                             || lbs
+63          return_const 1 0                         || lb33
+64          load 0                                   || lb34
+            print 0
+            load 1
+            eval
+            call 62                                  || printlist
+            return 3
+65          load 1                                   || merge_lazy
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+66          load 0                                   || merge
+            jmpt 2 67 68                             || lbs
+67          load 1                                   || lb35
+            return 2
+68          load 3                                   || lb36
+            jmpt 2 69 70                             || lbs
+69          load 2                                   || lb37
+            return 4
+70          load 0                                   || lb38
+            load 2
+            sub
+            iflt 71                                  || lb39
+            load 5
+            load 3
+            pushfunc 2 65                            || merge_lazy
+            create 3 3
+            load 2
+            ccreatet 2 11 5 1
+            return 6
+71          load 1                                   || lb39
+            load 4
+            pushfunc 2 65                            || merge_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 6
+72          load 0                                   || fst_lazy
+            eval
+            store 0
+73          load 0                                   || fst
+            jmpt 1 74                                || lbs
+74          load 0                                   || lb41
+            return 3
+75          load 0                                   || snd_lazy
+            eval
+            store 0
+76          load 0                                   || snd
+            jmpt 1 77                                || lbs
+77          load 1                                   || lb42
+            return 3
+78          load 0                                   || append_lazy
+            eval
+            store 0
+79          load 0                                   || append
+            jmpt 2 80 81                             || lbs
+80          load 1                                   || lb43
+            eval
+            return 2
+81          load 3                                   || lb44
+            load 1
+            pushfunc 2 78                            || append_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 4
+82          updsp 2                                  || split
+            load 2
+            pushfunc 1 8                             || length_lazy
+            create 2 3
+            dup
+            store 0
+            pushfunc 1 83                            || split_6
+            create 2 3
+            store 1
+            load 2
+            eval
+            load 1
+            eval
+            call 43                                  || drop
+            load 2
+            load 1
+            eval
+            call 38                                  || take
+            ccreatet 2 11 6 0
+            return 3
+83          load 0                                   || split_6
+            eval
+            push 2
+            div
+            return 1
+84          updsp 2                                  || msort
+            load 2
+            pushfunc 1 8                             || length_lazy
+            create 2 3
+            dup
+            store 0
+            pushfunc 1 86                            || msort_7
+            create 2 3
+            store 1
+            push 2
+            load 0
+            eval
+            sub
+            ifle 85                                  || lb45
+            load 2
+            eval
+            return 3
+85          load 2                                   || lb45
+            load 1
+            pushfunc 2 42                            || drop_lazy
+            create 3 3
+            call 84                                  || msort
+            load 2
+            load 1
+            pushfunc 2 37                            || take_lazy
+            create 3 3
+            call 84                                  || msort
+            tailcall 3 66                            || merge
+86          load 0                                   || msort_7
+            eval
+            push 2
+            div
+            return 1
+87          load 0                                   || last_lazy
+            eval
+            store 0
+88          load 0                                   || last
+            jmpt 2 89 90                             || lbs
+89          return_const 1 666                       || lb47
+90          load 1                                   || lb48
+            eval
+            jmpt 2 91 92                             || lbs
+91          load 0                                   || lb49
+            return 3
+92          load 3                                   || lb50
+            eval
+            tailcall 5 88                            || last
+93          load 1                                   || insert_lazy
+            eval
+            store 1
+94          load 1                                   || insert
+            jmpt 2 95 96                             || lbs
+95          ccreatet 0 11 5 0                        || lb51
+            load 0
+            eval
+            ccreatet 2 11 5 1
+            return 2
+96          load 0                                   || lb52
+            load 2
+            eval
+            sub
+            ifle 97                                  || lb53
+            load 3
+            load 2
+            eval
+            ccreatet 2 11 5 1
+            return 4
+97          load 1                                   || lb53
+            load 2
+            pushfunc 2 93                            || insert_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 4
+98          load 0                                   || isort_lazy
+            eval
+            store 0
+99          load 0                                   || isort
+            jmpt 2 100 101                           || lbs
+100         ccreatet 0 11 5 0                        || lb55
+            return 1
+101         load 1                                   || lb56
+            eval
+            call 99                                  || isort
+            load 0
+            tailcall 3 94                            || insert
+102         load 0                                   || qsort_lazy
+            eval
+            store 0
+103         load 0                                   || qsort
+            jmpt 2 104 105                           || lbs
+104         ccreatet 0 11 5 0                        || lb57
+            return 1
+105         load 1                                   || lb58
+            load 0
+            pushfunc 2 109                           || gr_lazy
+            create 2 7
+            pushfunc 2 32                            || filter_lazy
+            create 3 3
+            pushfunc 1 102                           || qsort_lazy
+            create 2 3
+            load 0
+            ccreatet 2 11 5 1
+            load 1
+            eval
+            load 0
+            pushfunc 2 106                           || kl_lazy
+            create 2 7
+            call 33                                  || filter
+            call 103                                 || qsort
+            tailcall 3 79                            || append
+106         load 1                                   || kl_lazy
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+107         load 0                                   || kl
+            load 1
+            sub
+            iflt 108                                 || lb59
+            return_const 2 1
+108         return_const 2 0                         || lb59
+109         load 1                                   || gr_lazy
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+110         load 1                                   || gr
+            load 0
+            sub
+            ifle 111                                 || lb61
+            return_const 2 1
+111         return_const 2 0                         || lb61
+112         push 0                                   || mklist
+            load 0
+            push 0
+            tailcall 1 114                           || mkl
+113         load 2                                   || mkl_lazy
+            eval
+            store 2
+114         loadadd 2 -10                            || mkl
+            ifneq 115                                || lb63
+            ccreatet 0 11 5 0
+            return 3
+115         load 2                                   || lb63
+            load 1
+            eval
+            load 0
+            eval
+            tailcall 3 117                           || mklaf
+116         load 1                                   || mklaf_lazy
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+117         load 1                                   || mklaf
+            load 0
+            sub
+            ifle 118                                 || lb65
+            load 2
+            load 1
+            loadadd 0 1
+            pushfunc 3 113                           || mkl_lazy
+            create 4 3
+            load 0
+            push 10
+            mult
+            load 2
+            eval
+            add
+            ccreatet 2 11 5 1
+            return 3
+118         load 2                                   || lb65
+            eval
+            push 1
+            add
+            load 1
+            push 0
+            tailcall 3 114                           || mkl
+
+.metadata
+types 2
+type 5 list 2
+  constr 0 Nil 0
+  constr 1 Cons 2
+type 6 Tup 1
+  constr 0 Tup 2
+functions 61
+  func 0 start 0 0
+  func 1 allsort 0 0
+  func 4 isorttest 1 00
+  func 5 msorttest 1 00
+  func 6 qsorttest 1 00
+  func 7 t7 0 0
+  func 9 length 1 10
+  func 8 length 1 10
+  func 13 fromto 2 110
+  func 12 fromto 2 110
+  func 16 downto 2 110
+  func 15 downto 2 110
+  func 19 ft 3 1100
+  func 18 ft 3 1100
+  func 23 dt 3 1100
+  func 22 dt 3 1100
+  func 27 el 2 010
+  func 26 el 2 010
+  func 33 filter 2 010
+  func 32 filter 2 010
+  func 38 take 2 100
+  func 37 take 2 100
+  func 43 drop 2 110
+  func 42 drop 2 110
+  func 48 sumrem 1 10
+  func 47 sumrem 1 10
+  func 52 sum 1 10
+  func 51 sum 1 10
+  func 56 map 2 010
+  func 55 map 2 010
+  func 60 inc 1 10
+  func 59 inc 1 10
+  func 62 printlist 1 10
+  func 61 printlist 1 10
+  func 66 merge 2 110
+  func 65 merge 2 110
+  func 73 fst 1 10
+  func 72 fst 1 10
+  func 76 snd 1 10
+  func 75 snd 1 10
+  func 79 append 2 100
+  func 78 append 2 100
+  func 82 split 1 00
+  func 84 msort 1 00
+  func 88 last 1 10
+  func 87 last 1 10
+  func 94 insert 2 010
+  func 93 insert 2 010
+  func 99 isort 1 10
+  func 98 isort 1 10
+  func 103 qsort 1 10
+  func 102 qsort 1 10
+  func 107 kl 2 110
+  func 106 kl 2 110
+  func 110 gr 2 110
+  func 109 gr 2 110
+  func 112 mklist 1 00
+  func 114 mkl 3 0010
+  func 113 mkl 3 0010
+  func 117 mklaf 3 1100
+  func 116 mklaf 3 1100
+.endmetadata

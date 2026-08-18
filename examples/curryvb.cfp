@@ -1,0 +1,7 @@
+::tup = Tup !a !b
+
+start = case (dub t 3 4)  (Tup f g -> f 6 + g 6)
+
+dub f x y = Tup (f x) (f y)
+
+t x y = x + y

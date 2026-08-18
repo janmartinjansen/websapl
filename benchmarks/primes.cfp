@@ -1,0 +1,18 @@
+::list = Nil | Cons !x xs
+
+start =  el 5000 primes
+
+el n xs = case xs nomatch (Cons x xs -> if (n == 0) x (el (n-1) xs))
+
+take n xs = if (n == 0) Nil (case xs (Nil -> Nil) (Cons x xs -> Cons x (take (n-1) xs)))
+
+nmz n m = m % n != 0
+
+filter p xs = case xs (Nil -> Nil) (Cons a as -> if (p a) (Cons a (filter p as)) (filter p as))
+
+from a      = Cons a (from (a+1))
+
+sieve xs    = case xs nomatch (Cons a as -> Cons a (sieve (filter (nmz a) as)))
+primes      = sieve (from 2)
+
+printlist xs = case xs (Nil -> 0) (Cons x xs -> print x <#> printlist xs)

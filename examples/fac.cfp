@@ -1,0 +1,2 @@
+start = fac 6
+fac !n = if (n == 0) 1 (n * fac (n-1))

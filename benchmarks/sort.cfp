@@ -1,0 +1,59 @@
+::list = Nil | Cons !x xs
+::Tup  = Tup !a !b
+
+start = allsort
+allsort = printlist (Cons (sum (qsorttest 1000)) (Cons (sum (isorttest 600)) (Cons (sum (msorttest 10000)) Nil)))
+
+isorttest n =  (isort (mklist n))
+msorttest n =  (msort (mklist n))
+qsorttest n =  (qsort (mklist n))
+t7 = printlist (msort (mklist 10000))
+
+length xs = case xs (Nil -> 0) (Cons x xs -> 1 + length xs)
+
+fromto n m = if (n > m) Nil (Cons n (fromto (n+1) m))
+downto n m = if (n < m) Nil  (Cons n (downto (n-1) m))
+ft n m i =  if (n > m) Nil (Cons n (ft (n+i) m i))
+dt n m i =  if (n < m) Nil (Cons n (dt (n-i) m i))
+
+el n xs = case xs (Nil -> 111) (Cons x xs -> if (n == 0) x (el (n-1) xs))
+filter p xs = case xs (Nil -> Nil) (Cons a as -> if (p a) (Cons a (filter p as)) (filter p as))
+
+take n xs = if (n == 0) Nil (case xs (Nil -> Nil) (Cons x xs -> Cons x (take (n-1) xs)))
+drop n xs = if (n == 0) xs (case xs (Nil -> Nil) (Cons x xs -> drop (n-1) xs))
+
+sumrem xs = case xs (Nil -> 0) (Cons a as -> (a + sumrem as) % 7 )
+sum xs = case xs (Nil -> 0) (Cons a as -> a + sum as)
+
+map f xs = case xs (Nil -> Nil) (Cons x xs -> Cons (f x) (map f xs))
+
+inc n = n+1
+
+printlist xs = case xs (Nil -> 0) (Cons x xs -> print x <#> printlist xs)
+
+merge xs ys = case xs (Nil -> ys) (Cons a as -> case ys (Nil -> xs) (Cons b bs -> if (a <= b) (Cons a (merge as ys)) (Cons b (merge xs bs))))
+
+fst t = case t (Tup a b -> a)
+snd t = case t (Tup a b -> b)
+
+append xs ys = case xs (Nil -> ys) (Cons x xs -> Cons x (append xs ys))
+
+split xs = let n = length xs, h = n / 2 in Tup (take h xs) (drop h xs)
+
+msort xs = let n = length xs, h = n / 2 in if (n < 2) xs (merge (msort (take h xs)) (msort (drop h xs)))
+
+last xs = case xs (Nil -> 666) (Cons x xs -> case xs (Nil -> x) (Cons y ys -> last xs))
+
+insert x xs = case xs (Nil -> Cons x Nil) (Cons y ys -> if (x < y) (Cons x xs) (Cons y (insert x ys)))
+
+isort xs = case xs (Nil -> Nil) (Cons y ys -> insert y (isort ys))
+
+qsort xs = case xs (Nil -> Nil) (Cons y ys -> append (qsort (filter (kl y) ys)) (Cons y (qsort (filter (gr y) ys))))
+kl x y = y <= x
+gr x y = y > x
+
+mklist n      = mkl 0 n 0
+mkl m n k   = if (k == 10) Nil (mklaf m n k)
+mklaf m n k = if (n > m) (Cons (m * 10 + k) (mkl (m + 1) n k)) (mkl 0 n (k + 1))
+
+

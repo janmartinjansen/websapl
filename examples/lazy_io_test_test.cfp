@@ -1,0 +1,61 @@
+::list = Nil | Cons !x xs
+
+readStream fd =
+  let c = readChar fd in
+  if (c == (0 - 1))
+    Nil
+    (Cons c (readStream fd))
+
+writeStream fd xs =
+  case xs 
+    (Nil -> closeFile fd)
+    (Cons c cs -> writeChar fd c <#> writeStream fd cs)
+
+length xs =
+  case xs
+    (Nil -> 0)
+    (Cons x xs -> 1 + length xs)
+
+map f xs =
+  case xs
+    (Nil -> Nil)
+    (Cons x xs -> Cons (f x) (map f xs))
+
+filter f xs =
+  case xs
+    (Nil -> Nil)
+    (Cons x xs -> if (f x) (Cons x (filter f xs)) (filter f xs))
+
+foldl f z xs =
+  case xs
+    (Nil -> z)
+    (Cons x xs -> foldl f (f z x) xs)
+
+foldr f z xs =
+  case xs
+    (Nil -> z)
+    (Cons x xs -> f x (foldr f z xs))
+
+append xs ys =
+  case xs
+    (Nil -> ys)
+    (Cons x xs -> Cons x (append xs ys))
+
+take n xs =
+  case xs
+    (Nil -> Nil)
+    (Cons x xs -> if (n == 0) Nil (Cons x (take (n - 1) xs)))
+
+drop n xs =
+  case xs
+    (Nil -> Nil)
+    (Cons x xs -> if (n == 0) (Cons x xs) (drop (n - 1) xs))
+
+start =
+  let read_fd = openFile "io/lazy_io_test_input.txt" "r",
+      write_fd = openFile "io/lazy_io_test_output.txt" "w" in
+  if (read_fd == (0 - 1))
+    (printString "Error: Could not open input file\n")
+    (if (write_fd == (0 - 1))
+       (printString "Error: Could not open output file\n" <#> closeFile read_fd)
+       (writeStream write_fd (readStream read_fd) <#> printString "File copied successfully char-by-char!\n"))

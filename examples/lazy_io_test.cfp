@@ -1,0 +1,10 @@
+#import "lib/stdlib.cfp"
+
+start =
+  let read_fd = openFile "io/lazy_io_test_input.txt" "r",
+      write_fd = openFile "io/lazy_io_test_output.txt" "w" in
+  if (read_fd == (0 - 1))
+    (printString "Error: Could not open input file\n")
+    (if (write_fd == (0 - 1))
+       (printString "Error: Could not open output file\n" <#> closeFile read_fd)
+       (writeStream write_fd (readStream read_fd) <#> printString "File copied successfully char-by-char!\n"))

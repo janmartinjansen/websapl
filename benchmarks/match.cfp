@@ -1,0 +1,21 @@
+::list = Nil | Cons !x xs
+
+start = match 2000
+t = cm (Cons 3 (Cons 4 (Cons 5 (Cons 6 (Cons 7 Nil)))))
+
+fromto n m = if (n > m) Nil (Cons n (fromto (n+1) m))
+sum xs    = case xs (Nil -> 0) (Cons x xs -> x + sum xs)
+length xs = case xs (Nil -> 0) (Cons x xs -> 1 + length xs)
+
+map f xs = case xs (Nil -> Nil) (Cons x xs -> Cons (f x) (map f xs))
+
+
+cm ps = select ps (Nil -> 0) (Cons a p1 -> select p1 (Nil -> a) (Cons b p2 -> select p2 (Nil -> a + b)
+                              (Cons c p3 ->  select p3 (Nil -> a + b + c) (Cons d xs -> select xs (Nil -> a + b + c +  d)
+                              (Cons p4 p5 -> a + b + c + d + length xs)))))
+
+mtestaf0 m  = cm  (fromto 1 (m % 10))
+mtest n     = sum (map mtestaf0 (fromto 1 n))
+match n     = sum (map mtest (fromto 1 n))
+
+                  

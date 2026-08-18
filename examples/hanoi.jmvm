@@ -1,0 +1,124 @@
+start hanoi_lazy hanoi lb1 length_lazy length al_lazy al lb3 lb4 append_lazy append lb5 lb6 printlist_lazy printlist lb7 lb8 printtup_lazy printtup lb9  #
+            call 0                                   || start
+            print 4
+            stop
+0           push 3                                   || start
+            push 2
+            push 1
+            push 20
+            call 2                                   || hanoi
+            tailcall 0 5                             || length
+1           load 3                                   || hanoi_lazy
+            eval
+            store 3
+            load 2
+            eval
+            store 2
+            load 1
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+2           load 0                                   || hanoi
+            ifneq 3                                  || lb1
+            ccreatet 0 11 5 0
+            return 4
+3           load 1                                   || lb1
+            load 2
+            load 3
+            loadadd 0 -1
+            pushfunc 4 2                             || hanoi
+            create 5 3
+            load 2
+            load 1
+            ccreatet 2 11 6 0
+            ccreatet 2 11 5 1
+            load 2
+            load 3
+            load 1
+            loadadd 0 -1
+            call 2                                   || hanoi
+            tailcall 4 11                            || append
+4           load 0                                   || length_lazy
+            eval
+            store 0
+5           load 0                                   || length
+            push 0
+            tailcall 1 7                             || al
+6           load 1                                   || al_lazy
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+7           load 1                                   || al
+            jmpt 2 8 9                               || lbs
+8           load 0                                   || lb3
+            return 2
+9           load 1                                   || lb4
+            eval
+            loadadd 2 1
+            tailcall 4 7                             || al
+10          load 0                                   || append_lazy
+            eval
+            store 0
+11          load 0                                   || append
+            jmpt 2 12 13                             || lbs
+12          load 1                                   || lb5
+            eval
+            return 2
+13          load 3                                   || lb6
+            load 1
+            pushfunc 2 10                            || append_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 4
+14          load 0                                   || printlist_lazy
+            eval
+            store 0
+15          load 0                                   || printlist
+            jmpt 2 16 17                             || lbs
+16          return_const 1 0                         || lb7
+17          load 0                                   || lb8
+            call 19                                  || printtup
+            load 1
+            eval
+            call 15                                  || printlist
+            return 3
+18          load 0                                   || printtup_lazy
+            eval
+            store 0
+19          load 0                                   || printtup
+            jmpt 1 20                                || lbs
+20          load 0                                   || lb9
+            eval
+            print 0
+            load 1
+            eval
+            print 0
+            return 3
+
+.metadata
+types 2
+type 5 list 2
+  constr 0 Nil 0
+  constr 1 Cons 2
+type 6 tup 1
+  constr 0 Tup 2
+functions 13
+  func 0 start 0 0
+  func 2 hanoi 4 11110
+  func 1 hanoi 4 11110
+  func 5 length 1 10
+  func 4 length 1 10
+  func 7 al 2 110
+  func 6 al 2 110
+  func 11 append 2 100
+  func 10 append 2 100
+  func 15 printlist 1 10
+  func 14 printlist 1 10
+  func 19 printtup 1 10
+  func 18 printtup 1 10
+.endmetadata

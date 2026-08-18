@@ -1,0 +1,89 @@
+start start_1 printLinesStart printLines_lazy printLines lb1 lb3 checkChar_lazy checkChar lb5  #
+            call 0                                   || start
+            print 4
+            stop
+0           pushfunc 0 1                             || start_1 || start
+            create 1 3
+            tailcall 0 2                             || printLinesStart
+1           push "benchmarks/primes.cfp"             || start_1
+            syscall 0
+            return 0
+2           push 1                                   || printLinesStart
+            load 0
+            dup
+            eval
+            strop 2
+            push 0
+            call 4                                   || printLines
+            return_const 1 0
+3           load 3                                   || printLines_lazy
+            eval
+            store 3
+            load 1
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+4           load 0                                   || printLines
+            load 1
+            sub
+            ifneq 5                                  || lb1
+            return_const 4 0
+5           loadadd 3 -1                             || lb1
+            ifneq 6                                  || lb3
+            push 45
+            print 2
+            push 32
+            print 2
+            push 0
+            load 2
+            load 1
+            load 0
+            call 4                                   || printLines
+            return 4
+6           load 2                                   || lb3
+            eval
+            load 0
+            strop 4
+            load 2
+            load 1
+            load 0
+            tailcall 4 8                             || checkChar
+7           load 3                                   || checkChar_lazy
+            eval
+            store 3
+            load 1
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+8           loadadd 3 -10                            || checkChar
+            ifneq 9                                  || lb5
+            push 10
+            print 2
+            push 1
+            load 2
+            load 1
+            loadadd 0 1
+            call 4                                   || printLines
+            return 4
+9           load 3                                   || lb5
+            print 2
+            push 0
+            load 2
+            load 1
+            loadadd 0 1
+            call 4                                   || printLines
+            return 4
+
+.metadata
+functions 6
+  func 0 start 0 0
+  func 2 printLinesStart 1 00
+  func 4 printLines 4 11010
+  func 3 printLines 4 11010
+  func 8 checkChar 4 11010
+  func 7 checkChar 4 11010
+.endmetadata

@@ -1,0 +1,101 @@
+::Stack = SNil | SCons x xs
+::Tup   = Tup !a !b
+::Expr  = App a b| Func !a | Var !a | Num !a | Oper a | Relop a | Boolean !b | Error
+::flist = FNil | FCons !f !fs
+
+add a b  = a + b
+md a b   = a % b
+div a b  = a / b
+mult a b = a * b
+sub a b  = a - b
+mod a b  = a % b
+eq a b   = a == b
+
+elf n fs = case fs (FNil -> 111) (FCons f fs -> if (n == 0) f (elf (n-1) fs))
+
+length xs = case xs (SNil -> 0) (SCons x xs -> 1 + length xs)
+
+fst t = case t (Tup a b -> a)
+snd t = case t (Tup a b -> b)
+
+el n xs = case xs (SNil -> 111) (SCons x xs -> if (n == 0) x (el (n-1) xs))
+
+take n xs = if (n == 0) SNil (case xs (SNil -> SNil) (SCons x xs -> SCons x (take (n-1) xs)))
+drop n xs = if (n == 0) xs (case xs (SNil -> SNil) (SCons x xs -> drop (n-1) xs))
+
+subst x es = case x (App l r -> App (subst l es) (subst r es)) 
+                     (Func n ->  x) 
+                     (Var n -> el n es) 
+                     (Num n -> x) 
+                     (Oper o -> x) 
+                     (Relop o -> x) 
+                     (Boolean l -> x) 
+                     (Error -> x)
+
+evol p0 es fs = case p0 (App f r -> evol f (SCons (evol r SNil fs)  es)  fs)
+                        (Func f ->  if (length es >= fst (elf f fs)) 
+                                       (evol (subst (snd (elf f fs)) es) (drop (fst (elf f fs)) es) fs) 
+                                       (rebuild (Func f) es)) 
+                        (Var n -> el n es) 
+                        (Num n  -> Num n) 
+                        (Oper f -> apply f (el 0 es) (el 1 es)) 
+                        (Relop f -> evol (apprel f (el 0 es) (el 1 es)) (drop 2 es) fs) 
+                        (Boolean b -> if (length es >= 2) (evol (dobool b (el 0 es) (el 1 es)) (drop 2 es) fs) 
+                                                           p0)
+                        nomatch
+                        
+rebuild e p1 = case p1 (SNil -> e) (SCons x xs -> rebuild (App e x) xs)
+apply op p1 p2  = case p1 nomatch nomatch nomatch   (Num n -> case p2  nomatch nomatch nomatch (Num m -> Num (op n m))     nomatch nomatch nomatch nomatch)  nomatch nomatch nomatch nomatch
+apprel op p1 p2 = case p1 nomatch nomatch  nomatch  (Num n -> case p2  nomatch nomatch nomatch (Num m -> Boolean (op n m)) nomatch nomatch nomatch nomatch)  nomatch nomatch nomatch nomatch
+dobool b f s = if b f s
+
+getNum a = case a nomatch nomatch nomatch (Num n -> n) nomatch nomatch (Boolean b -> b) nomatch
+
+funcs = (FCons fneq (FCons ftypeof (FCons fnrargs (FCons fnrapps (FCons fstacksize (FCons fError (FCons fsuc (FCons ffac (FCons fEmpty (FCons fCons (FCons ffrom
+        (FCons ftake (FCons fdrp (FCons ffilter (FCons fel (FCons fcount (FCons fmember (FCons fnotmodzero (FCons fprimes (FCons fsieve (FCons ftake0 (FCons fdrp0
+        (FCons ffilter0 (FCons fel0 (FCons fcount0 (FCons fmember0 (FCons fsieve0 FNil)))))))))))))))))))))))))))
+fneq = (Tup 2 (Error))
+ftypeof = (Tup 1 (Error))
+fnrargs = (Tup 1 (Error))
+fnrapps = (Tup 1 (Error))
+fstacksize = (Tup 1 (Error))
+fError = (Tup 1 ((Var 0)))
+fsuc = (Tup 1 ((App (App (Oper add) (Var 0)) (Num 1))))
+ffac = (Tup 1 ((App (App (App (App (Relop eq) (Var 0)) (Num 0)) (Num 1)) (App (App (Oper mult) (Var 0)) (App (Func 7) (App (App (Oper sub) (Var 0)) (Num 1)))))))
+fEmpty = (Tup 2 ((Var 0)))
+fCons = (Tup 4 ((App (App (Var 3) (Var 0)) (Var 1))))
+ffrom = (Tup 1 ((App (App (Func 9) (Var 0)) (App (Func 10) (App (Func 6) (Var 0))))))
+ftake = (Tup 2 ((App (App (Var 1) (Func 8)) (App (Func 20) (Var 0)))))
+fdrp = (Tup 2 ((App (App (Var 1) (Func 8)) (App (Func 21) (Var 0)))))
+ffilter = (Tup 2 ((App (App (Var 1) (Func 8)) (App (Func 22) (Var 0)))))
+fel = (Tup 2 ((App (App (Var 1) (Func 5)) (App (Func 23) (Var 0)))))
+fcount = (Tup 1 ((App (App (Var 0) (Num 0)) (Func 24))))
+fmember = (Tup 2 ((App (App (Var 0) (Boolean False)) (App (Func 25) (Var 1)))))
+fnotmodzero = (Tup 2 ((App (App (App (App (Relop eq) (App (App (Oper mod) (Var 1)) (Var 0))) (Num 0)) (Boolean False)) (Boolean True))))
+fprimes = (Tup 0 ((App (Func 19) (App (Func 10) (Num 2)))))
+fsieve = (Tup 1 ((App (App (Var 0) (Func 5)) (Func 26))))
+
+ftake0 = (Tup 3 ((App (App (App (App (Relop eq) (Var 0)) (Num 0)) (Func 8)) (App (App (Func 9) (Var 1)) (App (App (Func 11) (App (App (Oper sub) (Var 0)) (Num 1))) (Var 2))))))
+fdrp0 = (Tup 3 ((App (App (App (App (Relop eq) (Var 0)) (Num 0)) (App (App (Func 9) (Var 1)) (Var 2))) (App (App (Func 12) (App (App (Oper sub) (Var 0)) (Num 1))) (Var 2)))))
+ffilter0 = (Tup 3 ((App (App (App (Var 0) (Var 1)) (App (App (Func 9) (Var 1)) (App (App (Func 13) (Var 0)) (Var 2)))) (App (App (Func 13) (Var 0)) (Var 2)))))
+fel0 = (Tup 3 ((App (App (App (App (Relop eq) (Var 0)) (Num 0)) (Var 1)) (App (App (Func 14) (App (App (Oper sub) (Var 0)) (Num 1))) (Var 2)))))
+fcount0 = (Tup 2 ((App (Func 6) (App (Func 15) (Var 1)))))
+fmember0 = (Tup 3 ((App (App (App (App (Relop eq) (Var 1)) (Var 0)) (Boolean True)) (App (App (Func 16) (Var 2)) (Var 0)))))
+fsieve0 = (Tup 2 ((App (App (Func 9) (Var 0)) (App (Func 19) (App (App (Func 13) (App (Func 17) (Var 0))) (Var 1))))))
+
+smain a = evol ((App (App (Func 14) (Num a)) (Func 18))) SNil funcs
+domain m = getNum (smain m)
+
+tadd a b c = evol (App (App (Oper add) (Num a)) (App (App (Oper mult) (Num b)) (Num c)))  SNil SNil
+teq a b = evol (App (App (App (App (Relop eq) (Num a)) (Num b)) (Num 1)) (Num 2))  SNil SNil
+tteq a b = evol (App (App (Relop eq) (Num a)) (Num b))   SNil SNil
+ctfac a = evol (App (Func 7) (Num a)) SNil funcs
+
+ttstart = getNum (App (Func 0) (Num 4)) SNil (SCons fsuc SNil)
+tfac =   Tup 1  (App (App (App (App (Relop eq) (Var 0)) (Num 0))    (Num 1)) (App (App (Oper mult) (Var 0)) (App (Func 0) (App (App (Oper sub) (Var 0)) (Num 1)))))
+tfeq =   Tup 1  (App (App (App (App (Relop eq) (Var 0)) (Num 0))    (Num 55)) (Num 66))
+
+start = getNum (smain 100)
+tstart = getNum (evol( App (Func 7)  (Num 6)) SNil funcs)
+
+

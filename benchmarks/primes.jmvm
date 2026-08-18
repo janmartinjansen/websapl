@@ -1,0 +1,148 @@
+start el_lazy el lb1 lb2 lb3 take_lazy take lb5 lb7 lb8 nmz_lazy nmz lb9 filter_lazy filter lb11 lb12 lb13 from from_1 sieve_lazy sieve lb15 lb16 primes printlist_lazy printlist lb17 lb18  #
+            call 0                                   || start
+            print 4
+            stop
+0           call 25                                  || primes || start
+            push 5000
+            tailcall 0 2                             || el
+1           load 1                                   || el_lazy
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+2           load 1                                   || el
+            jmpt 2 3 4                               || lbs
+3           debug 1                                  || lb1
+            return 2
+4           load 2                                   || lb2
+            ifneq 5                                  || lb3
+            load 0
+            return 4
+5           load 1                                   || lb3
+            eval
+            loadadd 2 -1
+            tailcall 4 2                             || el
+6           load 0                                   || take_lazy
+            eval
+            store 0
+7           load 0                                   || take
+            ifneq 8                                  || lb5
+            ccreatet 0 11 5 0
+            return 2
+8           load 1                                   || lb5
+            eval
+            jmpt 2 9 10                              || lbs
+9           ccreatet 0 11 5 0                        || lb7
+            return 2
+10          load 1                                   || lb8
+            loadadd 2 -1
+            pushfunc 2 7                             || take
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 4
+11          load 1                                   || nmz_lazy
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+12          load 1                                   || nmz
+            load 0
+            mod
+            ifeq 13                                  || lb9
+            return_const 2 1
+13          return_const 2 0                         || lb9
+14          load 1                                   || filter_lazy
+            eval
+            store 1
+15          load 1                                   || filter
+            jmpt 2 16 17                             || lbs
+16          ccreatet 0 11 5 0                        || lb11
+            return 2
+17          load 0                                   || lb12
+            load 2
+            eval
+            ifeq 18                                  || lb13
+            load 1
+            load 2
+            pushfunc 2 14                            || filter_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 4
+18          load 1                                   || lb13
+            eval
+            load 2
+            tailcall 4 15                            || filter
+19          load 0                                   || from
+            pushfunc 1 20                            || from_1
+            create 2 3
+            pushfunc 1 19                            || from
+            create 2 3
+            load 0
+            eval
+            ccreatet 2 11 5 1
+            return 1
+20          load 0                                   || from_1
+            eval
+            push 1
+            add
+            return 1
+21          load 0                                   || sieve_lazy
+            eval
+            store 0
+22          load 0                                   || sieve
+            jmpt 2 23 24                             || lbs
+23          debug 1                                  || lb15
+            return 1
+24          load 1                                   || lb16
+            load 0
+            pushfunc 2 11                            || nmz_lazy
+            create 2 7
+            pushfunc 2 14                            || filter_lazy
+            create 3 3
+            pushfunc 1 21                            || sieve_lazy
+            create 2 3
+            load 0
+            ccreatet 2 11 5 1
+            return 3
+25          push 2                                   || primes
+            call 19                                  || from
+            tailcall 0 22                            || sieve
+26          load 0                                   || printlist_lazy
+            eval
+            store 0
+27          load 0                                   || printlist
+            jmpt 2 28 29                             || lbs
+28          return_const 1 0                         || lb17
+29          load 0                                   || lb18
+            print 0
+            load 1
+            eval
+            call 27                                  || printlist
+            return 3
+
+.metadata
+types 1
+type 5 list 2
+  constr 0 Nil 0
+  constr 1 Cons 2
+functions 15
+  func 0 start 0 0
+  func 2 el 2 110
+  func 1 el 2 110
+  func 7 take 2 100
+  func 6 take 2 100
+  func 12 nmz 2 110
+  func 11 nmz 2 110
+  func 15 filter 2 010
+  func 14 filter 2 010
+  func 19 from 1 00
+  func 22 sieve 1 10
+  func 21 sieve 1 10
+  func 25 primes 0 0
+  func 27 printlist 1 10
+  func 26 printlist 1 10
+.endmetadata
