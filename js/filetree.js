@@ -32,6 +32,7 @@ class SaplFileTree {
           <button class="icon-btn" id="btn-new-file" title="Nieuw bestand">+ 📄</button>
           <button class="icon-btn" id="btn-upload-file" title="Bestand uploaden">⬆</button>
           <button class="icon-btn" id="btn-refresh-tree" title="Vernieuwen">⟳</button>
+          <button class="icon-btn" id="btn-close-filetree" title="Zijbalk inklappen">«</button>
         </div>
       </div>
       <div class="filetree-search-box">
@@ -51,6 +52,10 @@ class SaplFileTree {
 
     this.container.querySelector("#btn-upload-file").addEventListener("click", () => {
       this.uploadInput.click();
+    });
+
+    this.container.querySelector("#btn-close-filetree").addEventListener("click", () => {
+      if (this.options.onClose) this.options.onClose();
     });
 
     this.uploadInput.addEventListener("change", (e) => {

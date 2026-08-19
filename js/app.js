@@ -18,7 +18,8 @@ class WebSaplApp {
 
     this.currentTheme = localStorage.getItem("websapl_theme") || "light";
     this.currentView = "editor"; // "editor" | "benchmarks"
-    this.isFocusMode = false;
+    this.isSidebarVisible = true;
+    this.isBottomVisible = true;
     this.isRunning = false;
   }
 
@@ -36,7 +37,8 @@ class WebSaplApp {
     this.btnCompile = document.getElementById("btn-compile");
     this.btnSave = document.getElementById("btn-save");
     this.btnNew = document.getElementById("btn-new");
-    this.btnFocusMode = document.getElementById("btn-focus-mode");
+    this.btnToggleSidebar = document.getElementById("btn-toggle-sidebar");
+    this.btnToggleBottom = document.getElementById("btn-toggle-bottom");
     this.btnViewEditor = document.getElementById("btn-view-editor");
     this.btnViewBenchmarks = document.getElementById("btn-view-benchmarks");
     this.selectExample = document.getElementById("select-example");
@@ -55,7 +57,8 @@ class WebSaplApp {
     this.btnCompile.addEventListener("click", () => this.compileCurrent());
     this.btnSave.addEventListener("click", () => this.saveCurrent());
     this.btnNew.addEventListener("click", () => this.fileTree.promptNewFile());
-    this.btnFocusMode.addEventListener("click", () => this.toggleFocusMode());
+    this.btnToggleSidebar.addEventListener("click", () => this.toggleSidebar());
+    this.btnToggleBottom.addEventListener("click", () => this.toggleBottom());
     this.btnThemeToggle.addEventListener("click", () => this.toggleTheme());
 
     this.btnViewEditor.addEventListener("click", () => this.switchView("editor"));
@@ -85,7 +88,9 @@ class WebSaplApp {
 
   initComponents() {
     // Terminal
-    this.terminal = new SaplTerminal(document.getElementById("terminal-container"));
+    this.terminal = new SaplTerminal(document.getElementById("terminal-container"), {
+      onClose: () => this.setBottomVisible(false)
+    });
     this.terminal.append("🚀 Welkom bij WebSapl! De JMVM WebAssembly interpreter wordt geladen...\n", "stdout");
 
     // Metrics Bar
@@ -103,7 +108,8 @@ class WebSaplApp {
       onSelectFile: (path, isReadOnly) => this.loadFile(path, isReadOnly),
       onNewFile: (path) => this.createNewFile(path),
       onDeleteFile: (path) => this.deleteFile(path),
-      onUploadFile: (filename, content) => this.uploadFile(filename, content)
+      onUploadFile: (filename, content) => this.uploadFile(filename, content),
+      onClose: () => this.setSidebarVisible(false)
     });
 
     // Benchmark Suite
@@ -305,8 +311,8 @@ resultaat   = length (map verdubbel mijnLijst)
     this.saveCurrent();
 
     // Zorg ervoor dat het onderpaneel (terminal / metrieken) zichtbaar wordt
-    if (this.isFocusMode) {
-      this.setFocusMode(false);
+    if (!this.isBottomVisible) {
+      this.setBottomVisible(true);
     }
 
     const content = this.editor.getValue();
@@ -331,8 +337,8 @@ resultaat   = length (map verdubbel mijnLijst)
     this.saveCurrent();
 
     // Zorg ervoor dat het onderpaneel (terminal / metrieken) zichtbaar wordt
-    if (this.isFocusMode) {
-      this.setFocusMode(false);
+    if (!this.isBottomVisible) {
+      this.setBottomVisible(true);
     }
 
     const content = this.editor.getValue();
@@ -432,19 +438,23 @@ resultaat   = length (map verdubbel mijnLijst)
     }
   }
 
-  setFocusMode(enable) {
-    this.isFocusMode = enable;
-    if (enable) {
-      document.body.classList.add("focus-mode");
-      if (this.btnFocusMode) {
-        this.btnFocusMode.classList.add("active");
-        this.btnFocusMode.title = "Herstel standaard weergave (toon zijbalk en onderpaneel)";
+  toggleTheme() {
+    this.setTheme(this.currentTheme === "light" ? "dark" : "light");
+  }
+
+  setSidebarVisible(visible) {
+    this.isSidebarVisible = visible;
+    if (visible) {
+      document.body.classList.remove("hide-sidebar");
+      if (this.btnToggleSidebar) {
+        this.btnToggleSidebar.classList.add("active");
+        this.btnToggleSidebar.title = "Verberg zijbalk (Bestandsverkenner)";
       }
     } else {
-      document.body.classList.remove("focus-mode");
-      if (this.btnFocusMode) {
-        this.btnFocusMode.classList.remove("active");
-        this.btnFocusMode.title = "Focusmodus: Alleen editor (verberg zijbalk en onderpaneel)";
+      document.body.classList.add("hide-sidebar");
+      if (this.btnToggleSidebar) {
+        this.btnToggleSidebar.classList.remove("active");
+        this.btnToggleSidebar.title = "Toon zijbalk (Bestandsverkenner)";
       }
     }
     if (this.editor) {
@@ -452,8 +462,32 @@ resultaat   = length (map verdubbel mijnLijst)
     }
   }
 
-  toggleFocusMode() {
-    this.setFocusMode(!this.isFocusMode);
+  toggleSidebar() {
+    this.setSidebarVisible(!this.isSidebarVisible);
+  }
+
+  setBottomVisible(visible) {
+    this.isBottomVisible = visible;
+    if (visible) {
+      document.body.classList.remove("hide-bottom");
+      if (this.btnToggleBottom) {
+        this.btnToggleBottom.classList.add("active");
+        this.btnToggleBottom.title = "Verberg onderpaneel (Terminal & Metrieken)";
+      }
+    } else {
+      document.body.classList.add("hide-bottom");
+      if (this.btnToggleBottom) {
+        this.btnToggleBottom.classList.remove("active");
+        this.btnToggleBottom.title = "Toon onderpaneel (Terminal & Metrieken)";
+      }
+    }
+    if (this.editor) {
+      this.editor.refresh();
+    }
+  }
+
+  toggleBottom() {
+    this.setBottomVisible(!this.isBottomVisible);
   }
 
   setStatus(type, text) {

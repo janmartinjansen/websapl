@@ -30,6 +30,7 @@ class SaplTerminal {
           </label>
           <button class="btn btn-xs btn-ghost" id="btn-copy-terminal" title="Kopieer output">📋 Kopiëren</button>
           <button class="btn btn-xs btn-ghost" id="btn-clear-terminal" title="Wis terminal">🧹 Wissen</button>
+          <button class="btn btn-xs btn-ghost" id="btn-close-terminal" title="Verberg onderpaneel">✕</button>
         </div>
       </div>
       <div class="terminal-body" id="terminal-body">
@@ -47,6 +48,10 @@ class SaplTerminal {
 
     this.container.querySelector("#btn-copy-terminal").addEventListener("click", () => {
       this.copyToClipboard();
+    });
+
+    this.container.querySelector("#btn-close-terminal").addEventListener("click", () => {
+      if (this.options.onClose) this.options.onClose();
     });
   }
 

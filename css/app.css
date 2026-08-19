@@ -296,16 +296,16 @@ body {
   font-weight: 600;
 }
 
-/* Focus Mode: Hide sidebar & bottom pane, maximize editor */
-body.focus-mode .app-sidebar {
+/* Independent Panel Visibility Toggles */
+body.hide-sidebar .app-sidebar {
   display: none !important;
 }
 
-body.focus-mode .bottom-pane {
+body.hide-bottom .bottom-pane {
   display: none !important;
 }
 
-body.focus-mode .editor-pane {
+body.hide-bottom .editor-pane {
   flex: 1 1 100% !important;
   border-bottom: none !important;
 }
