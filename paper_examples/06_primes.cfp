@@ -7,9 +7,8 @@
 start = el 1000 primes
 
 el !n !xs =
-  case xs
-    (Nil -> nomatch)
-    (Cons x xs -> if (n == 0) x (el (n - 1) xs))
+  case xs nomatch
+    (Cons x as -> if (n == 0) x (el (n - 1) as))
 
 from a = Cons a (from (a + 1))
 
@@ -21,8 +20,7 @@ filter p xs =
     (Cons a as -> if (p a) (Cons a (filter p as)) (filter p as))
 
 sieve xs =
-  case xs
-    (Nil -> nomatch)
+  case xs nomatch
     (Cons a as -> Cons a (sieve (filter (nmz a) as)))
 
 primes = sieve (from 2)
