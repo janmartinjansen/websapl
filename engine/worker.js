@@ -98,11 +98,35 @@ async function initEngine(data) {
   }
 
   stdlibContent = data.stdlib || "";
+  if (!stdlibContent) {
+    try {
+      const res = await fetch("../lib/stdlib.cfp");
+      if (res.ok) stdlibContent = await res.text();
+    } catch (_) {}
+  }
+
   if (data.saplcompBase64) {
     saplcompBytecode = base64ToUint8Array(data.saplcompBase64);
+  } else {
+    try {
+      const res = await fetch("./saplcomp.jmvm");
+      if (res.ok) {
+        const buf = await res.arrayBuffer();
+        saplcompBytecode = new Uint8Array(buf);
+      }
+    } catch (_) {}
   }
+
   if (data.retagcompBase64) {
     retagcompBytecode = base64ToUint8Array(data.retagcompBase64);
+  } else {
+    try {
+      const res = await fetch("./retagcomp.jmvm");
+      if (res.ok) {
+        const buf = await res.arrayBuffer();
+        retagcompBytecode = new Uint8Array(buf);
+      }
+    } catch (_) {}
   }
 
   jmvmModule = await createJMVMModule({
@@ -180,7 +204,6 @@ async function runCompilerStage(flattenedSource, stageFlag, outPath) {
   let content = "";
   if (outExists) {
     content = instance.FS.readFile(outPath, { encoding: "utf8" });
-    // Mirror to main VFS
     try {
       if (!jmvmModule.FS.analyzePath(dir).exists) jmvmModule.FS.mkdir(dir);
     } catch (_) {}

@@ -112,12 +112,12 @@
   };
 
   // --- INITIALIZATION ---
-  function init() {
+  async function init() {
     applyTheme(state.theme);
     initCodeMirror();
     setupEventListeners();
     initWorker();
-    loadManifestFiles();
+    await loadTreeData();
     showWelcomeMessage();
     renderTree();
 
@@ -128,7 +128,7 @@
       } else if (state.fileMap.has("paper_examples/README.md")) {
         openFile("paper_examples/README.md", { preview: false });
       }
-    }, 200);
+    }, 150);
   }
 
   // --- THEME ---
@@ -184,12 +184,9 @@
       }
     };
 
-    const manifest = window.WEBSAPL_MANIFEST || {};
     state.worker.postMessage({
       type: "INIT",
-      stdlib: window.STDLIB_DATA || "",
-      saplcompBase64: manifest.saplcompBase64 || "",
-      retagcompBase64: manifest.retagcompBase64 || ""
+      stdlib: window.STDLIB_DATA || ""
     });
   }
 
@@ -204,7 +201,7 @@
       autoCloseBrackets: true,
       tabSize: 2,
       indentUnit: 2,
-      lineWrapping: true
+      lineWrapping: false
     });
 
     state.editor.on("change", () => {
@@ -227,22 +224,33 @@
     });
   }
 
-  // --- MANIFEST & VFS ---
-  function loadManifestFiles() {
-    const manifest = window.WEBSAPL_MANIFEST || {};
-    state.treeData = manifest.tree || [];
-    state.fileMap.clear();
+  // --- TREE DATA & FILE MAP ---
+  async function loadTreeData() {
+    if (window.WEBSAPL_TREE && Array.isArray(window.WEBSAPL_TREE)) {
+      state.treeData = window.WEBSAPL_TREE;
+    } else {
+      try {
+        const res = await fetch("manifest.json");
+        if (res.ok) {
+          const data = await res.json();
+          state.treeData = data.tree || [];
+        }
+      } catch (err) {
+        console.warn("Failed to fetch manifest.json:", err);
+      }
+    }
 
-    function populateMap(nodes) {
-      for (const node of nodes) {
-        if (node.type === "file") {
-          state.fileMap.set(node.path, node);
-        } else if (node.type === "directory" && node.children) {
-          populateMap(node.children);
+    state.fileMap.clear();
+    function indexNodes(nodes) {
+      for (const n of nodes) {
+        if (n.type === "file") {
+          state.fileMap.set(n.path, n);
+        } else if (n.type === "directory" && n.children) {
+          indexNodes(n.children);
         }
       }
     }
-    populateMap(state.treeData);
+    indexNodes(state.treeData);
 
     // Also load user files from LocalStorage
     try {
@@ -251,7 +259,7 @@
         const userFiles = JSON.parse(userFilesJson);
         for (const [p, content] of Object.entries(userFiles)) {
           const name = pathBasename(p);
-          const ext = pathExt(p);
+          const ext = pathExt(name);
           const fileObj = { name, path: p, type: "file", ext, content, size: content.length, isBinary: false };
           state.fileMap.set(p, fileObj);
           insertIntoTree(state.treeData, fileObj);
@@ -283,7 +291,7 @@
     return state.openTabs.find(t => t.path === state.activeTabPath);
   }
 
-  function openFile(filePath, options = {}) {
+  async function openFile(filePath, options = {}) {
     const isPreview = (options.preview === true);
 
     const existingIdx = state.openTabs.findIndex(t => t.path === filePath);
@@ -295,27 +303,47 @@
       return;
     }
 
-    const fileObj = state.fileMap.get(filePath);
-    if (!fileObj) {
-      const name = pathBasename(filePath);
-      const ext = pathExt(filePath);
-      const newFile = {
-        path: filePath,
-        name: name,
-        ext: ext,
-        content: "",
-        originalContent: "",
-        isDirty: false,
-        isPreview: isPreview,
-        viewMode: ext === ".md" ? "render" : "edit",
-        isBinary: ext === ".pdf",
-        rawUrl: filePath
-      };
-      state.fileMap.set(filePath, newFile);
-      state.openTabs.push(newFile);
-      setActiveTab(filePath);
-      return;
+    let fileObj = state.fileMap.get(filePath);
+    let content = fileObj ? fileObj.content : null;
+
+    if (content === null || content === undefined) {
+      const userFiles = JSON.parse(localStorage.getItem("websapl_user_files") || "{}");
+      if (userFiles[filePath] !== undefined) {
+        content = userFiles[filePath];
+      }
     }
+
+    const name = pathBasename(filePath);
+    const ext = pathExt(name);
+    const isBinary = (ext === ".pdf" || ext === ".wasm");
+
+    if (content === null || content === undefined) {
+      if (!isBinary) {
+        try {
+          const res = await fetch(filePath);
+          if (res.ok) {
+            content = await res.text();
+          } else {
+            content = `// Bestand niet gevonden: ${filePath}`;
+          }
+        } catch (err) {
+          content = `// Fout bij laden: ${err.message}`;
+        }
+      } else {
+        content = "";
+      }
+    }
+
+    fileObj = {
+      path: filePath,
+      name: name,
+      ext: ext,
+      content: content,
+      size: content ? content.length : 0,
+      isBinary: isBinary,
+      rawUrl: filePath
+    };
+    state.fileMap.set(filePath, fileObj);
 
     if (isPreview) {
       const previewIdx = state.openTabs.findIndex(t => t.isPreview && !t.isDirty);
@@ -325,16 +353,16 @@
     }
 
     const newTab = {
-      path: fileObj.path,
-      name: fileObj.name,
-      ext: fileObj.ext || pathExt(fileObj.name),
-      content: fileObj.content || "",
-      originalContent: fileObj.content || "",
+      path: filePath,
+      name: name,
+      ext: ext,
+      content: content,
+      originalContent: content,
       isDirty: false,
       isPreview: isPreview,
-      viewMode: fileObj.ext === ".md" ? "render" : "edit",
-      isBinary: fileObj.isBinary || fileObj.ext === ".pdf",
-      rawUrl: fileObj.rawUrl || fileObj.path
+      viewMode: ext === ".md" ? "render" : "edit",
+      isBinary: isBinary,
+      rawUrl: filePath
     };
 
     state.openTabs.push(newTab);
@@ -923,7 +951,12 @@
 
   function logTerminal(text, type = "normal") {
     const span = document.createElement("span");
-    span.className = `log-${type}`;
+    if (type === "success") span.className = "log-success";
+    else if (type === "error") span.className = "log-error";
+    else if (type === "info") span.className = "log-info";
+    else if (type === "warning") span.className = "log-warning";
+    else if (type === "accent") span.className = "log-stage";
+    else span.className = "log-muted";
     span.textContent = text;
     el.terminalContent.appendChild(span);
     el.terminalContent.scrollTop = el.terminalContent.scrollHeight;
@@ -957,21 +990,27 @@
 
   // --- PANEL TOGGLES ---
   function toggleSidebar(forceState) {
-    const isVisible = (forceState !== undefined) ? forceState : el.appSidebar.classList.contains("collapsed");
-    el.appSidebar.classList.toggle("collapsed", !isVisible);
-    el.btnToggleSidebar.classList.toggle("active", isVisible);
+    const isHidden = el.appSidebar.classList.toggle("hidden", forceState === false ? true : (forceState === true ? false : undefined));
+    el.btnToggleSidebar.classList.toggle("active", !isHidden);
+    triggerEditorRefresh();
   }
 
   function toggleTerminal(forceState) {
-    const isVisible = (forceState !== undefined) ? forceState : el.bottomPanel.classList.contains("collapsed");
-    el.bottomPanel.classList.toggle("collapsed", !isVisible);
-    el.btnToggleTerminal.classList.toggle("active", isVisible);
+    const isHidden = el.bottomPanel.classList.toggle("hidden", forceState === false ? true : (forceState === true ? false : undefined));
+    el.btnToggleTerminal.classList.toggle("active", !isHidden);
+    triggerEditorRefresh();
   }
 
   function toggleSettings(forceState) {
-    const isVisible = (forceState !== undefined) ? forceState : el.settingsPanel.classList.contains("collapsed");
-    el.settingsPanel.classList.toggle("collapsed", !isVisible);
-    el.btnToggleSettings.classList.toggle("active", isVisible);
+    const isHidden = el.settingsPanel.classList.toggle("hidden", forceState === false ? true : (forceState === true ? false : undefined));
+    el.btnToggleSettings.classList.toggle("active", !isHidden);
+    triggerEditorRefresh();
+  }
+
+  function triggerEditorRefresh() {
+    setTimeout(() => {
+      if (state.editor) state.editor.refresh();
+    }, 50);
   }
 
   // --- EVENT LISTENERS ---
@@ -981,7 +1020,7 @@
     el.btnCompileRun.onclick = () => compileActiveFile(true);
     el.btnRun.onclick = () => runJmvmFile();
     el.btnTheme.onclick = () => applyTheme(state.theme === "dark" ? "light" : "dark");
-    el.btnRefreshTree.onclick = () => { loadManifestFiles(); renderTree(); };
+    el.btnRefreshTree.onclick = async () => { await loadTreeData(); renderTree(); };
     el.viewToggleBtn.onclick = () => toggleViewMode();
     el.btnClearTerminal.onclick = () => showWelcomeMessage();
     el.treeSearch.oninput = () => renderTree();

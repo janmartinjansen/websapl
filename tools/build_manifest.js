@@ -29,15 +29,11 @@ function scanDirectory(dirPath, relBase = "") {
         path: relPath,
         type: "directory",
         children: children,
-        _expanded: (relBase === "" || relPath === "paper_examples" || relPath === "benchmarks")
+        _expanded: true
       });
     } else if (entry.isFile()) {
       const ext = path.extname(entry.name).toLowerCase();
       const isBinary = [".pdf", ".wasm", ".png", ".jpg", ".ico"].includes(ext);
-      let content = "";
-      if (!isBinary) {
-        content = fs.readFileSync(fullPath, "utf-8");
-      }
 
       items.push({
         name: entry.name,
@@ -45,8 +41,7 @@ function scanDirectory(dirPath, relBase = "") {
         type: "file",
         ext: ext,
         size: fs.statSync(fullPath).size,
-        isBinary: isBinary,
-        content: content
+        isBinary: isBinary
       });
     }
   }
@@ -55,27 +50,10 @@ function scanDirectory(dirPath, relBase = "") {
 
 const tree = scanDirectory(WEBSAPL_DIR);
 
-// Also encode saplcomp.jmvm and retagcomp.jmvm for fallback embedding
-const saplcompPath = path.join(WEBSAPL_DIR, "engine/saplcomp.jmvm");
-const retagcompPath = path.join(WEBSAPL_DIR, "engine/retagcomp.jmvm");
-
-let saplcompBase64 = "";
-if (fs.existsSync(saplcompPath)) {
-  saplcompBase64 = fs.readFileSync(saplcompPath).toString("base64");
-}
-
-let retagcompBase64 = "";
-if (fs.existsSync(retagcompPath)) {
-  retagcompBase64 = fs.readFileSync(retagcompPath).toString("base64");
-}
-
-const manifestContent = `// Auto-generated WebSapl Bundled Files Manifest
-window.WEBSAPL_MANIFEST = {
-  tree: ${JSON.stringify(tree, null, 2)},
-  saplcompBase64: "${saplcompBase64}",
-  retagcompBase64: "${retagcompBase64}"
-};
+const manifestContent = `// Auto-generated WebSapl Tree Manifest
+window.WEBSAPL_TREE = ${JSON.stringify(tree, null, 2)};
 `;
 
-fs.writeFileSync(path.join(WEBSAPL_DIR, "js/bundled_files.js"), manifestContent, "utf-8");
-console.log("✓ Generated websapl/js/bundled_files.js with", tree.length, "top-level folders");
+fs.writeFileSync(path.join(WEBSAPL_DIR, "js/manifest.js"), manifestContent, "utf-8");
+fs.writeFileSync(path.join(WEBSAPL_DIR, "manifest.json"), JSON.stringify({ tree }, null, 2), "utf-8");
+console.log("✓ Generated websapl/js/manifest.js and manifest.json with", tree.length, "top-level folders");
