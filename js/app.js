@@ -702,6 +702,20 @@
     const activeTab = getActiveTab();
     if (!activeTab) return;
 
+    if (activeTab.ext === ".jmvm") {
+      if (andRun) {
+        runJmvmFile(activeTab.path);
+      } else {
+        logTerminal("ℹ️ Dit bestand is al gecompileerde .jmvm bytecode. Klik op 'Run' om het uit te voeren.\n", "info");
+      }
+      return;
+    }
+
+    if (activeTab.ext.startsWith(".cfp_") && !activeTab.name.endsWith(".cfp_retag") && !activeTab.name.endsWith(".cfp_decompiled")) {
+      logTerminal(`ℹ️ ${activeTab.name} is een tussenformaat. Selecteer het bronbestand (${activeTab.name.split(".cfp_")[0]}.cfp) om te compileren.\n`, "info");
+      return;
+    }
+
     if (state.isCompiling) return;
     state.isCompiling = true;
 
