@@ -130,6 +130,7 @@ async function initEngine(data) {
   }
 
   jmvmModule = await createJMVMModule({
+    noInitialRun: true,
     locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm" : (prefix || "") + p)
   });
 
@@ -167,6 +168,7 @@ async function runCompilerStage(flattenedSource, stageFlag, outPath) {
   let stdinIndex = 0;
 
   const instance = await createJMVMModule({
+    noInitialRun: true,
     locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm" : (prefix || "") + p),
     stdin: () => {
       if (stdinIndex < stdinBuffer.length) {
@@ -300,6 +302,7 @@ async function compileRetag(source, srcPath) {
   let stdinIndex = 0;
 
   const instance = await createJMVMModule({
+    noInitialRun: true,
     locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm" : (prefix || "") + p),
     stdin: () => {
       if (stdinIndex < stdinBuffer.length) {
@@ -363,6 +366,7 @@ async function executeJmvm(contentOrPath, isPath = false, customStdin = "") {
   let stdinIndex = 0;
 
   const execInstance = await createJMVMModule({
+    noInitialRun: true,
     locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm" : (prefix || "") + p),
     stdin: () => {
       if (stdinIndex < stdinBuffer.length) {
