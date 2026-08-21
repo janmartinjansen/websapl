@@ -1,42 +1,42 @@
 /**
- * Sapl Web Workbench — Online Client-side IDE & Compiler Pipeline
- * Direct WebAssembly runtime with self-hosted saplcomp and retagcomp.
+ * Sapl Web Workbench - Main Client Application Logic (WebAssembly Edition)
  */
 
-(function () {
+(function() {
   "use strict";
 
-  // --- STATE ---
+  // Application State
   const state = {
-    theme: localStorage.getItem("websapl_theme") || "dark",
     treeData: [],
-    fileMap: new Map(), // path -> { name, ext, content, isBinary, rawUrl }
-    openTabs: [],
+    fileMap: new Map(), // path -> { name, ext, content, size, isBinary, rawUrl }
+    openTabs: [], // array of { path, name, ext, content, originalContent, isDirty, isPreview, isBinary, rawUrl, viewMode: 'render'|'edit'|'pdf' }
     activeTabPath: null,
+    contextMenuTabPath: null,
     editor: null,
+    theme: localStorage.getItem("websapl_theme") || "dark",
     worker: null,
     workerReady: false,
     isCompiling: false,
-    isExecuting: false,
-    contextMenuTabPath: null,
+    isRunning: false,
     pendingCompileCallbacks: new Map(),
     compileSeq: 0
   };
 
-  // --- DOM ELEMENTS ---
+  // DOM Elements
   const el = {
     fileTree: document.getElementById("file-tree"),
     treeSearch: document.getElementById("tree-search"),
-    tabBar: document.getElementById("tab-bar"),
-    fileBreadcrumb: document.getElementById("file-breadcrumb"),
-    tabStatus: document.getElementById("tab-status"),
+    tabsBar: document.getElementById("tabs-bar"),
     editorContainer: document.getElementById("editor-container"),
     markdownPreview: document.getElementById("markdown-preview"),
     pdfPreview: document.getElementById("pdf-preview"),
     pdfFrame: document.getElementById("pdf-frame"),
-    viewToggleBtn: document.getElementById("btn-toggle-view"),
+    fileBreadcrumb: document.getElementById("file-breadcrumb"),
+    viewToggleBtn: document.getElementById("btn-view-toggle"),
+    statusDot: document.getElementById("status-dot"),
+    statusText: document.getElementById("status-text"),
     
-    // Tab Context Menu
+    // Tab Context Menu Elements
     tabContextMenu: document.getElementById("tab-context-menu"),
     ctxCloseTab: document.getElementById("ctx-close-tab"),
     ctxCloseOthers: document.getElementById("ctx-close-others"),
@@ -73,15 +73,15 @@
 
     // Compiler Settings Sections
     sectionCompilerBackend: document.getElementById("section-compiler-backend"),
-    lblCompilerSapl: document.getElementById("lbl-compiler-sapl"),
-    lblCompilerRetag: document.getElementById("lbl-compiler-retag"),
+    sectionStrictness: document.getElementById("section-strictness"),
+    sectionStages: document.getElementById("section-stages"),
+    sectionEngine: document.getElementById("section-engine"),
+
     compilerSapl: document.getElementById("compiler-sapl"),
     compilerRetag: document.getElementById("compiler-retag"),
-    
-    sectionStrictness: document.getElementById("section-strictness"),
+    lblCompilerSapl: document.getElementById("lbl-compiler-sapl"),
+    lblCompilerRetag: document.getElementById("lbl-compiler-retag"),
     chkStrictness: document.getElementById("chk-strictness"),
-    
-    sectionStages: document.getElementById("section-stages"),
     chkStages: {
       parse: document.getElementById("stage-parse"),
       strictness: document.getElementById("stage-strictness"),
@@ -93,56 +93,55 @@
     },
     btnSelectAllStages: document.getElementById("btn-select-all-stages"),
     btnSelectJmvmOnly: document.getElementById("btn-select-jmvm-only"),
-    sectionEngine: document.getElementById("section-engine"),
-
-    // Terminal & Metrics Elements
-    terminalBody: document.getElementById("terminal-body"),
+    
+    // Bottom Panel & Terminal
+    terminalContent: document.getElementById("terminal-content"),
     btnClearTerminal: document.getElementById("btn-clear-terminal"),
+    terminalPromptBar: document.getElementById("terminal-prompt-bar"),
+    terminalPromptLabel: document.getElementById("terminal-prompt-label"),
     terminalInput: document.getElementById("terminal-input"),
     btnTerminalSend: document.getElementById("btn-terminal-send"),
-    terminalPromptLabel: document.getElementById("terminal-prompt-label"),
     
+    // Metrics
     metricRes: document.getElementById("metric-res"),
     metricTime: document.getElementById("metric-time"),
-    metricInstructions: document.getElementById("metric-instructions"),
-    metricCalls: document.getElementById("metric-calls"),
+    metricInstr: document.getElementById("metric-instr"),
     metricCreates: document.getElementById("metric-creates"),
+    metricCalls: document.getElementById("metric-calls"),
     metricGc: document.getElementById("metric-gc")
   };
 
   // --- INITIALIZATION ---
-
-  async function init() {
+  function init() {
     applyTheme(state.theme);
     initCodeMirror();
     setupEventListeners();
-    setupPanelTabs();
     initWorker();
     loadManifestFiles();
-    renderTree();
     showWelcomeMessage();
+    renderTree();
 
-    // Open first paper example or README if available
-    if (state.fileMap.has("paper_examples/01_fac.cfp")) {
-      openFile("paper_examples/01_fac.cfp", { preview: false });
-    } else if (state.fileMap.has("paper_examples/README.md")) {
-      openFile("paper_examples/README.md", { preview: false });
-    }
+    // Default: open first paper example or README
+    setTimeout(() => {
+      if (state.fileMap.has("paper_examples/01_fac.cfp")) {
+        openFile("paper_examples/01_fac.cfp", { preview: false });
+      } else if (state.fileMap.has("paper_examples/README.md")) {
+        openFile("paper_examples/README.md", { preview: false });
+      }
+    }, 200);
   }
 
   // --- THEME ---
-
   function applyTheme(themeName) {
     state.theme = themeName;
     document.documentElement.setAttribute("data-theme", themeName);
     localStorage.setItem("websapl_theme", themeName);
     if (el.btnTheme) {
-      el.btnTheme.textContent = themeName === "dark" ? "🌙" : "☀️";
+      el.btnTheme.textContent = themeName === "dark" ? "☀️ Light" : "🌙 Dark";
     }
   }
 
-  // --- WORKER INITIALIZATION ---
-
+  // --- WEB WORKER ---
   function initWorker() {
     state.worker = new Worker("engine/worker.js");
 
@@ -163,11 +162,21 @@
           break;
 
         case "COMPILE_COMPLETE":
-          handleWorkerCompileComplete(msg);
+          state.isCompiling = false;
+          const cb = state.pendingCompileCallbacks.get(msg.id);
+          if (cb) {
+            state.pendingCompileCallbacks.delete(msg.id);
+            cb(msg);
+          }
           break;
 
         case "RUN_COMPLETE":
-          handleWorkerRunComplete(msg);
+          state.isRunning = false;
+          setStatus("ready", "Klaar");
+          if (msg.metrics) {
+            updateMetricsUI(msg.metrics);
+          }
+          logTerminal(`\n[Uitvoering voltooid]\n`, "info");
           break;
 
         default:
@@ -184,26 +193,41 @@
     });
   }
 
-  function handleWorkerCompileComplete(msg) {
-    state.isCompiling = false;
-    const cb = state.pendingCompileCallbacks.get(msg.id);
-    if (cb) {
-      state.pendingCompileCallbacks.delete(msg.id);
-      cb(msg);
-    }
+  // --- CODEMIRROR SETUP ---
+  function initCodeMirror() {
+    state.editor = CodeMirror(el.editorContainer, {
+      value: "",
+      mode: "sapl",
+      theme: "default",
+      lineNumbers: true,
+      matchBrackets: true,
+      autoCloseBrackets: true,
+      tabSize: 2,
+      indentUnit: 2,
+      lineWrapping: true
+    });
+
+    state.editor.on("change", () => {
+      const activeTab = getActiveTab();
+      if (!activeTab) return;
+
+      const currentVal = state.editor.getValue();
+      const isDirty = (currentVal !== activeTab.originalContent);
+      if (activeTab.isDirty !== isDirty) {
+        activeTab.isDirty = isDirty;
+        if (isDirty) {
+          activeTab.isPreview = false;
+        }
+        activeTab.content = currentVal;
+        renderTabs();
+      } else {
+        activeTab.content = currentVal;
+      }
+      setStatus(isDirty ? "busy" : "ready", isDirty ? "Aangepast" : "Klaar");
+    });
   }
 
-  function handleWorkerRunComplete(msg) {
-    state.isExecuting = false;
-    setStatus("ready", "Gereed");
-    if (msg.metrics) {
-      updateMetricsUI(msg.metrics);
-    }
-    logTerminal(`\n[Uitvoering voltooid]\n`, "info");
-  }
-
-  // --- FILE MANIFEST & VFS ---
-
+  // --- MANIFEST & VFS ---
   function loadManifestFiles() {
     const manifest = window.WEBSAPL_MANIFEST || {};
     state.treeData = manifest.tree || [];
@@ -220,7 +244,7 @@
     }
     populateMap(state.treeData);
 
-    // Also load user files from LocalStorage if present
+    // Also load user files from LocalStorage
     try {
       const userFilesJson = localStorage.getItem("websapl_user_files");
       if (userFilesJson) {
@@ -254,42 +278,7 @@
     insertIntoTree(folder.children, { ...fileObj, path: subPath });
   }
 
-  // --- CODEMIRROR SETUP ---
-
-  function initCodeMirror() {
-    state.editor = CodeMirror(el.editorContainer, {
-      value: "",
-      mode: "sapl",
-      theme: "default",
-      lineNumbers: true,
-      matchBrackets: true,
-      autoCloseBrackets: true,
-      tabSize: 2,
-      indentUnit: 2,
-      lineWrapping: true
-    });
-
-    state.editor.on("change", () => {
-      const activeTab = getActiveTab();
-      if (!activeTab) return;
-
-      const currentVal = state.editor.getValue();
-      const isDirty = (currentVal !== activeTab.originalContent);
-      if (activeTab.isDirty !== isDirty) {
-        activeTab.isDirty = isDirty;
-        if (isDirty) {
-          activeTab.isPreview = false;
-        }
-        activeTab.content = currentVal;
-        renderTabs();
-      } else {
-        activeTab.content = currentVal;
-      }
-    });
-  }
-
   // --- TAB MANAGEMENT ---
-
   function getActiveTab() {
     return state.openTabs.find(t => t.path === state.activeTabPath);
   }
@@ -308,7 +297,6 @@
 
     const fileObj = state.fileMap.get(filePath);
     if (!fileObj) {
-      // Create memory file
       const name = pathBasename(filePath);
       const ext = pathExt(filePath);
       const newFile = {
@@ -360,13 +348,13 @@
     const tab = getActiveTab();
     if (!tab) {
       el.fileBreadcrumb.textContent = "Geen bestand geopend";
-      setStatus("ready", "Gereed");
+      setStatus("ready", "Klaar");
       state.editor.setValue("");
       return;
     }
 
     el.fileBreadcrumb.textContent = tab.path;
-    setStatus("ready", tab.isDirty ? "Aangepast" : "Gereed");
+    setStatus("ready", tab.isDirty ? "Aangepast" : "Klaar");
 
     if (tab.ext === ".pdf") {
       if (el.editorContainer) el.editorContainer.style.display = "none";
@@ -387,7 +375,7 @@
       }
       if (el.viewToggleBtn) {
         el.viewToggleBtn.style.display = "inline-flex";
-        el.viewToggleBtn.innerHTML = "<span>✏️</span> Bewerk Markdown";
+        el.viewToggleBtn.textContent = "📝 Broncode bewerken";
       }
     } else {
       if (el.pdfPreview) el.pdfPreview.style.display = "none";
@@ -397,7 +385,7 @@
       if (tab.ext === ".md") {
         if (el.viewToggleBtn) {
           el.viewToggleBtn.style.display = "inline-flex";
-          el.viewToggleBtn.innerHTML = "<span>📖</span> Bekijk Markdown";
+          el.viewToggleBtn.textContent = "📖 Markdown bekijken";
         }
       } else {
         if (el.viewToggleBtn) el.viewToggleBtn.style.display = "none";
@@ -445,7 +433,7 @@
   }
 
   function renderTabs() {
-    el.tabBar.innerHTML = "";
+    el.tabsBar.innerHTML = "";
 
     for (const tab of state.openTabs) {
       const tabEl = document.createElement("div");
@@ -481,12 +469,11 @@
         showTabContextMenu(tab.path, e.clientX, e.clientY);
       };
 
-      el.tabBar.appendChild(tabEl);
+      el.tabsBar.appendChild(tabEl);
     }
   }
 
   // --- TAB CONTEXT MENU ---
-
   function showTabContextMenu(tabPath, x, y) {
     state.contextMenuTabPath = tabPath;
     const targetTab = state.openTabs.find(t => t.path === tabPath);
@@ -565,8 +552,7 @@
     }
   }
 
-  // --- COMPILER & CONTEXT CONFIG ---
-
+  // --- CONTEXT CONFIG ---
   function updateCompilerConfigForFile(tab) {
     if (!tab) return;
 
@@ -616,7 +602,7 @@
         if (el.txtStageInfoDesc) el.txtStageInfoDesc.textContent = info.desc;
       }
     } else if (tab.ext === ".cfp") {
-      // Original source file: saplcomp in WASM
+      // Original source file
       if (el.lblCompilerSapl) el.lblCompilerSapl.style.display = "flex";
       if (el.lblCompilerRetag) el.lblCompilerRetag.style.display = "none";
       if (el.compilerSapl) el.compilerSapl.checked = true;
@@ -647,7 +633,6 @@
       if (el.sectionStages) el.sectionStages.style.display = "none";
       if (el.sectionEngine) el.sectionEngine.style.display = "block";
     } else {
-      // .md, .pdf, etc.
       if (el.btnCompile) el.btnCompile.style.display = "none";
       if (el.btnCompileRun) el.btnCompileRun.style.display = "none";
       if (el.btnRun) el.btnRun.style.display = "none";
@@ -660,7 +645,6 @@
   }
 
   // --- ACTIONS: SAVE, COMPILE, RUN ---
-
   function saveActiveFile() {
     const activeTab = getActiveTab();
     if (!activeTab) return;
@@ -670,7 +654,6 @@
     activeTab.isDirty = false;
     activeTab.isPreview = false;
 
-    // Save in fileMap and localStorage
     state.fileMap.set(activeTab.path, {
       ...activeTab,
       size: activeTab.content.length
@@ -683,7 +666,7 @@
     } catch (_) {}
 
     renderTabs();
-    setStatus("ready", "Opgeslagen");
+    setStatus("ready", "Klaar");
     logTerminal(`✓ Opgeslagen: ${activeTab.path}\n`, "success");
   }
 
@@ -694,7 +677,6 @@
     if (state.isCompiling) return;
     state.isCompiling = true;
 
-    // Save content before compiling
     activeTab.content = state.editor.getValue();
 
     const isRetag = activeTab.name.endsWith(".cfp_retag") || activeTab.name.endsWith(".cfp_decompiled");
@@ -712,7 +694,7 @@
 
     toggleTerminal(true);
     logTerminal(`\n=== Compileren: ${activeTab.path} (WebAssembly saplcomp) ===\n`, "info");
-    setStatus("busy", "Compileren...");
+    setStatus("busy", "Bezig met compileren...");
 
     const compileId = ++state.compileSeq;
 
@@ -724,7 +706,6 @@
         setStatus("ready", `Gecompileerd (${data.durationMs}ms)`);
         logTerminal(`✓ Succesvol gecompileerd in ${data.durationMs}ms (${data.files.length} bestanden gegenereerd)\n`, "success");
 
-        // Add generated files to fileMap and tabs
         for (const f of data.files) {
           state.fileMap.set(f.path, {
             path: f.path,
@@ -753,7 +734,6 @@
           }
         }
 
-        // Switch to .jmvm tab or last generated stage
         const jmvmFile = data.files.find(f => f.stage === "jmvm") || data.files[data.files.length - 1];
         if (jmvmFile) {
           setActiveTab(jmvmFile.path);
@@ -790,7 +770,6 @@
         targetPath = activeTab.path;
         targetContent = activeTab.content;
       } else if (activeTab.ext === ".cfp") {
-        // Compile and run
         compileActiveFile(true);
         return;
       }
@@ -799,8 +778,8 @@
       if (fileObj) targetContent = fileObj.content;
     }
 
-    if (state.isExecuting) return;
-    state.isExecuting = true;
+    if (state.isRunning) return;
+    state.isRunning = true;
 
     toggleTerminal(true);
     logTerminal(`\n=== Uitvoeren: ${targetPath} (WebAssembly JMVM) ===\n`, "info");
@@ -815,7 +794,6 @@
   }
 
   // --- FILE TREE RENDERING ---
-
   function renderTree() {
     el.fileTree.innerHTML = "";
     const filterText = el.treeSearch.value.trim().toLowerCase();
@@ -934,9 +912,8 @@
   }
 
   // --- TERMINAL & METRICS ---
-
   function showWelcomeMessage() {
-    el.terminalBody.innerHTML = "";
+    el.terminalContent.innerHTML = "";
     logTerminal("=========================================================================\n", "accent");
     logTerminal("🚀 Welkom bij de Sapl Web Workbench (WASM Edition)\n", "accent");
     logTerminal("Draait de self-hosted Sapl compiler en JMVM direct in de browser via WebAssembly.\n", "normal");
@@ -948,20 +925,23 @@
     const span = document.createElement("span");
     span.className = `log-${type}`;
     span.textContent = text;
-    el.terminalBody.appendChild(span);
-    el.terminalBody.scrollTop = el.terminalBody.scrollHeight;
+    el.terminalContent.appendChild(span);
+    el.terminalContent.scrollTop = el.terminalContent.scrollHeight;
   }
 
   function setStatus(type, text) {
-    if (!el.tabStatus) return;
-    el.tabStatus.className = `tab-status ${type}`;
-    el.tabStatus.textContent = text;
+    if (el.statusDot) {
+      el.statusDot.className = `status-dot ${type}`;
+    }
+    if (el.statusText) {
+      el.statusText.textContent = text;
+    }
   }
 
   function updateMetricsUI(m) {
     if (el.metricRes) el.metricRes.textContent = m.res !== null ? m.res : "-";
-    if (el.metricTime) el.metricTime.textContent = m.elapsed_time !== null ? m.elapsed_time : "-";
-    if (el.metricInstructions) el.metricInstructions.textContent = m.instr_executed ? m.instr_executed.toLocaleString() : "-";
+    if (el.metricTime) el.metricTime.textContent = m.elapsed_time !== null ? `${m.elapsed_time}s` : "-";
+    if (el.metricInstr) el.metricInstr.textContent = m.instr_executed ? m.instr_executed.toLocaleString() : "-";
     if (el.metricCalls) el.metricCalls.textContent = m.calls ? m.calls.toLocaleString() : "-";
     if (el.metricCreates) el.metricCreates.textContent = m.creates ? m.creates.toLocaleString() : "-";
     if (el.metricGc) el.metricGc.textContent = m.gc_count !== null ? m.gc_count : "-";
@@ -975,8 +955,7 @@
     runJmvmFile(null, inputVal);
   }
 
-  // --- PANEL TOGGLES & TABS ---
-
+  // --- PANEL TOGGLES ---
   function toggleSidebar(forceState) {
     const isVisible = (forceState !== undefined) ? forceState : el.appSidebar.classList.contains("collapsed");
     el.appSidebar.classList.toggle("collapsed", !isVisible);
@@ -995,21 +974,7 @@
     el.btnToggleSettings.classList.toggle("active", isVisible);
   }
 
-  function setupPanelTabs() {
-    const tabBtns = el.bottomPanel.querySelectorAll(".panel-tab");
-    const contents = el.bottomPanel.querySelectorAll(".panel-content");
-
-    tabBtns.forEach(btn => {
-      btn.onclick = () => {
-        const target = btn.dataset.tab;
-        tabBtns.forEach(b => b.classList.toggle("active", b === btn));
-        contents.forEach(c => c.classList.toggle("active", c.id === `content-${target}`));
-      };
-    });
-  }
-
   // --- EVENT LISTENERS ---
-
   function setupEventListeners() {
     el.btnSave.onclick = () => saveActiveFile();
     el.btnCompile.onclick = () => compileActiveFile(false);
@@ -1079,7 +1044,6 @@
   }
 
   // --- HELPERS ---
-
   function pathBasename(p) { return p.split("/").pop(); }
   function pathExt(p) {
     const base = pathBasename(p);
