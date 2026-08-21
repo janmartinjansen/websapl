@@ -1,5 +1,5 @@
 /**
- * Zero-dependency local web server for WebSapl
+ * Zero-dependency local static web server for WebSapl testing
  * Usage: node server.js [port]
  */
 
@@ -16,9 +16,11 @@ const MIME_TYPES = {
   ".js": "application/javascript",
   ".wasm": "application/wasm",
   ".json": "application/json",
+  ".pdf": "application/pdf",
   ".cfp": "text/plain",
   ".jmvm": "text/plain",
   ".txt": "text/plain",
+  ".md": "text/plain",
   ".svg": "image/svg+xml",
   ".png": "image/png",
   ".ico": "image/x-icon"
@@ -47,12 +49,11 @@ const server = http.createServer((req, res) => {
     }
 
     const ext = path.extname(filePath).toLowerCase();
-    const contentType = MIME_TYPES[ext] || "application/octet-stream";
+    const contentType = MIME_TYPES[ext] || "text/plain";
 
     res.writeHead(200, {
       "Content-Type": contentType,
-      "Cross-Origin-Opener-Policy": "same-origin",
-      "Cross-Origin-Embedder-Policy": "require-corp",
+      "Content-Disposition": ext === ".pdf" ? "inline" : "inline",
       "Cache-Control": "no-cache"
     });
 

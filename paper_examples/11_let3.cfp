@@ -1,0 +1,9 @@
+// IFL 2016 Paper - Section 5.2 (Mixed Strict & Lazy Let)
+// Strict binding (!c) depends on lazy binding (a).
+
+start = f 3 4
+
+f x y =
+  let a = x + 1,
+      !c = a + y in
+  c

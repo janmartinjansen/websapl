@@ -1,0 +1,28 @@
+// IFL 2016 Paper - Figure 2 & 8
+// Infinite Prime Stream: computes the 1000th prime (7919) or 5000th (48619).
+// Demonstrates infinite lazy stream generation (from), filtering, and indexing (el).
+
+::list = Nil | Cons !x0 x1
+
+start = el 1000 primes
+
+el !n !xs =
+  case xs
+    (Nil -> nomatch)
+    (Cons x xs -> if (n == 0) x (el (n - 1) xs))
+
+from a = Cons a (from (a + 1))
+
+nmz n m = (m % n) != 0
+
+filter p xs =
+  case xs
+    (Nil -> Nil)
+    (Cons a as -> if (p a) (Cons a (filter p as)) (filter p as))
+
+sieve xs =
+  case xs
+    (Nil -> nomatch)
+    (Cons a as -> Cons a (sieve (filter (nmz a) as)))
+
+primes = sieve (from 2)

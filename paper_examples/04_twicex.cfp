@@ -1,0 +1,12 @@
+// IFL 2016 Paper - Figure 2 & 9
+// Curried Higher-Order Function Chain (twicex)
+// Demonstrates over-saturated and curried application.
+// Expected result: 2^16 = 65536
+
+start = twicex
+
+twicex = twice twice twice twice inc 0
+
+twice f x = f (f x)
+
+inc !n = n + 1

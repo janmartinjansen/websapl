@@ -1,0 +1,26 @@
+// IFL 2016 Paper - Figure 2, 3 & 5
+// Sieve of Eratosthenes on finite list [2..7]
+// Demonstrates lazy list constructors, filter, and notdiv closures.
+
+::list = Nil | Cons !x0 x1
+
+start = sumlist (sieve nums)
+
+nums = Cons 2 (Cons 3 (Cons 4 (Cons 5 (Cons 6 (Cons 7 Nil)))))
+
+sieve xs =
+  case xs
+    (Nil -> Nil)
+    (Cons a as -> Cons a (sieve (filter (notdiv a) as)))
+
+notdiv n m = (m % n) != 0
+
+filter p xs =
+  case xs
+    (Nil -> Nil)
+    (Cons a as -> if (p a) (Cons a (filter p as)) (filter p as))
+
+sumlist xs =
+  case xs
+    (Nil -> 0)
+    (Cons a as -> a + sumlist as)

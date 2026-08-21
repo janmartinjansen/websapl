@@ -1,0 +1,9 @@
+// IFL 2016 Paper - Section 5.2 (Acyclic Let)
+// Independent lazy bindings: tests slot numbering and declaration ordering.
+
+start = f 3 4
+
+f x y =
+  let a = x + 1,
+      b = y + 1 in
+  a + b

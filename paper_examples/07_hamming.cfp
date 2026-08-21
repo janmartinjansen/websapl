@@ -1,0 +1,40 @@
+// IFL 2016 Paper - Figure 2, 3 & 5
+// Hamming Numbers (Cyclic let):
+// Generates the stream of numbers whose only prime factors are 2, 3, and 5.
+// Demonstrates mutual cyclic let bindings resolved at runtime.
+
+::list = Nil | Cons !x0 x1
+
+start = el 100 (hamming 1)
+
+mult !a !b = a * b
+
+map f !xs =
+  case xs
+    (Nil -> Nil)
+    (Cons x xs -> Cons (f x) (map f xs))
+
+el !n !xs =
+  case xs
+    (Nil -> 666)
+    (Cons x xs -> if (n == 0) x (el (n - 1) xs))
+
+merge !xs !ys =
+  case xs
+    (Nil -> ys)
+    (Cons a as ->
+      case ys
+        (Nil -> xs)
+        (Cons b bs ->
+          if (a == b)
+            (Cons a (merge as bs))
+            (if (a < b)
+              (Cons a (merge as ys))
+              (Cons b (merge xs bs)))))
+
+hamming !n =
+  let h = Cons n (merge (merge as bs) cs),
+      as = map (mult 2) h,
+      bs = map (mult 3) h,
+      cs = map (mult 5) h in
+  h

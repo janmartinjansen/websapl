@@ -1,0 +1,18 @@
+// IFL 2016 Paper - Section 5.2 (Cyclic Let with Update)
+// Minimal 2-way mutual cycle:
+// let a = Cons n b, b = Cons (n+1) a in a
+// Produces periodic stream [1, 2, 1, 2, ...]
+
+::list = Nil | Cons !x0 x1
+
+start = el 5 (pair 1)
+
+pair !n =
+  let a = Cons n b,
+      b = Cons (n + 1) a in
+  a
+
+el !n !xs =
+  case xs
+    (Nil -> 666)
+    (Cons x xs -> if (n == 0) x (el (n - 1) xs))

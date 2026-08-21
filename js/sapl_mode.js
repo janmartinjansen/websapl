@@ -1,7 +1,6 @@
 /**
- * CodeMirror 5 Syntax Mode for the Sapl Functional Language & JMVM Bytecode
+ * CodeMirror 5 Syntax Mode for Sapl, Amanda, and Stage Formats (.cfp, .ama, .cfp_*, .jmvm)
  */
-
 (function(mod) {
   if (typeof exports === "object" && typeof module === "object") {
     mod(require("codemirror"));
@@ -19,7 +18,11 @@
       "nomatch": true, "if": true, "then": true, "else": true, "type": true,
       "seq": true, "readFile": true, "writeFile": true, "openFile": true,
       "closeFile": true, "readChar": true, "writeChar": true, "readLine": true,
-      "printString": true
+      "printString": true, "printInt": true, "printChar": true, "error": true
+    };
+
+    const stageKeywords = {
+      "eval": true, "thunk": true, "lazy": true, "closure": true
     };
 
     const builtins = {
@@ -32,13 +35,13 @@
       },
 
       token: function(stream, state) {
-        // Handle whitespace
+        // Whitespace
         if (stream.eatSpace()) return null;
 
         const ch = stream.peek();
 
-        // 1. Comments: || to end of line
-        if (stream.match("||")) {
+        // 1. Comments: || or //
+        if (stream.match("||") || stream.match("//")) {
           stream.skipToEnd();
           return "comment";
         }
@@ -76,7 +79,7 @@
         if (ch === "!") {
           stream.next();
           if (stream.match(/^[a-zA-Z0-9_]+/)) {
-            return "variable-3"; // Highlighted as strict variable
+            return "variable-3"; // Strict variable
           }
           return "operator";
         }
@@ -87,7 +90,7 @@
         }
 
         // 7. Operators & Type definition symbols
-        if (stream.match(/^::/) || stream.match(/^->/) || stream.match(/^[=+\-*\/%<>|!&]+/)) {
+        if (stream.match(/^::/) || stream.match(/^->/) || stream.match(/^<#>/) || stream.match(/^[=+\-*\/%<>|!&~]+/)) {
           return "operator";
         }
 
@@ -97,13 +100,14 @@
           return "bracket";
         }
 
-        // 9. Identifiers (functions, constructors, keywords)
+        // 9. Identifiers (functions, constructors, keywords, stage keywords)
         if (stream.match(/^[a-zA-Z_][a-zA-Z0-9_]*/)) {
           const word = stream.current();
           if (keywords[word]) return "keyword";
+          if (stageKeywords[word]) return "builtin";
           if (builtins[word]) return "atom";
           if (/^[A-Z]/.test(word)) return "variable-2"; // Constructor / Type name
-          if (stream.sol()) return "def"; // Top-level function definition
+          if (stream.sol()) return "def"; // Top-level definition
           return "variable";
         }
 
@@ -111,9 +115,10 @@
         return null;
       },
 
-      lineComment: "||"
+      lineComment: "//"
     };
   });
 
   CodeMirror.defineMIME("text/x-sapl", "sapl");
+  CodeMirror.defineMIME("text/x-amanda", "sapl");
 });

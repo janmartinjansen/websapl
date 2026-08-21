@@ -1,0 +1,9 @@
+// IFL 2016 Paper - Figure 2, 3 & 5
+// Higher-Order Function: closure over a function argument.
+// Demonstrates closure creation and application: eval(f (closure (f x)))
+
+start = twice inc 5
+
+twice f x = f (f x)
+
+inc !n = n + 1

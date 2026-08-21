@@ -1,112 +1,348 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="nl" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WebSapl — Luie Functionele Programmeertaal & JMVM WebAssembly IDE</title>
-  <meta name="description" content="Webversie van de Sapl interpreter en compiler aangedreven door de JMVM WebAssembly runtime met virtueel bestandssysteem en benchmarksuite." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <title>Sapl Web Workbench — Online Compiler & VM</title>
   <link rel="stylesheet" href="css/codemirror.min.css" />
-  <link rel="stylesheet" href="css/app.css" />
+  <link rel="stylesheet" href="css/workbench.css" />
 </head>
 <body>
-  <!-- Header Toolbar -->
+
+  <!-- Top App Header -->
   <header class="app-header">
-    <div class="header-brand">
-      <div class="brand-logo">λ</div>
-      <div class="brand-text">WebSapl</div>
-      <span class="brand-badge">JMVM WASM</span>
+    <div class="brand">
+      <div class="brand-icon">λ</div>
+      <span>Sapl Workbench</span>
+      <span class="brand-badge">Web IDE (WASM)</span>
     </div>
 
-    <div class="header-center">
-      <button class="btn btn-primary" id="btn-run" title="Draai het huidige programma (F5 of Ctrl+Enter)">
-        <span class="btn-icon">▶</span> Run
+    <!-- Quick Action Buttons -->
+    <div class="header-actions">
+      <button class="btn" id="btn-save" title="Bestand opslaan (Cmd+S / Ctrl+S)">
+        <span>💾</span> Opslaan
       </button>
-      <button class="btn btn-secondary" id="btn-compile" title="Compileer naar .jmvm bytecode">
-        <span class="btn-icon">⚙</span> Compileer
+      <button class="btn btn-primary" id="btn-compile" title="Compileer (Cmd+B / Ctrl+B)">
+        <span>⚙️</span> Compileer
       </button>
-      <button class="btn btn-secondary" id="btn-save" title="Sla bestand op (Ctrl+S)">
-        <span class="btn-icon">💾</span> Opslaan
+      <button class="btn btn-success" id="btn-compile-run" title="Compileer & Draai meteen (Cmd+Enter / F5)">
+        <span>⚡</span> Compileer & Run
       </button>
-      <button class="btn btn-ghost" id="btn-new" title="Nieuw bestand aanmaken">
-        <span class="btn-icon">+</span> Nieuw
+      <button class="btn" id="btn-run" title="Draai bestand">
+        <span>▶</span> Run
       </button>
-      <div class="view-toggle-group">
-        <button class="toggle-btn active" id="btn-toggle-sidebar" title="Zijbalk tonen/verbergen (Bestandsverkenner)">
-          <span>◧</span> Zijbalk
-        </button>
-        <button class="toggle-btn active" id="btn-toggle-bottom" title="Onderpaneel tonen/verbergen (Terminal & Metrieken)">
-          <span>⬓</span> Terminal
-        </button>
-      </div>
-
-      <div class="view-toggle-group">
-        <button class="toggle-btn active" id="btn-view-editor">
-          <span>📝</span> Editor
-        </button>
-        <button class="toggle-btn" id="btn-view-benchmarks">
-          <span>⚡</span> Benchmarks
-        </button>
-      </div>
     </div>
 
-    <div class="header-right">
-      <select class="select-dropdown" id="select-example" title="Kies een voorbeeldprogramma">
-        <option value="">📁 Voorbeelden...</option>
-      </select>
-
-      <button class="btn btn-ghost" id="btn-theme-toggle" title="Wissel thema (Light / Dark mode)">
-        <span id="theme-icon">🌙</span> <span id="theme-text">Dark</span>
+    <!-- Panel View Toggles -->
+    <div class="header-actions">
+      <button class="btn-toggle-panel active" id="btn-toggle-sidebar" title="Bestandsverkenner tonen/verbergen">
+        <span>◧</span> Bestanden
       </button>
-
-      <div class="app-status">
-        <span class="status-dot ready" id="status-indicator"></span>
-        <span id="status-text">Klaar</span>
-      </div>
+      <button class="btn-toggle-panel active" id="btn-toggle-terminal" title="Terminal & Metrieken tonen/verbergen">
+        <span>⬓</span> Terminal
+      </button>
+      <button class="btn-toggle-panel active" id="btn-toggle-settings" title="Compiler instellingen tonen/verbergen">
+        <span>⚙️</span> Instellingen
+      </button>
+      <button class="theme-toggle-btn" id="btn-theme-toggle" title="Wissel tussen donker en licht thema">
+        🌙
+      </button>
     </div>
   </header>
 
-  <!-- Body Content -->
-  <main class="app-body">
-    <!-- Sidebar: File Explorer -->
-    <aside class="app-sidebar" id="filetree-container"></aside>
-
-    <!-- Main Views Area -->
-    <section class="app-main">
-      <!-- Editor View -->
-      <div class="view-container" id="view-editor">
-        <div class="editor-view-split">
-          <div class="editor-pane" id="editor-container"></div>
-          <div class="bottom-pane">
-            <div id="metrics-container"></div>
-            <div id="terminal-container" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;"></div>
-          </div>
+  <!-- Main 3-Pane Layout -->
+  <div class="main-layout">
+    
+    <!-- Left Sidebar: File Tree -->
+    <aside class="sidebar" id="app-sidebar">
+      <div class="sidebar-header">
+        <span>BESTANDEN</span>
+        <div style="display: flex; gap: 4px; align-items: center;">
+          <button class="sidebar-action-btn" id="btn-refresh-tree" title="Ververs bestanden">
+            🔄
+          </button>
+          <button class="panel-close-btn" id="btn-close-sidebar" title="Zijbalk inklappen">
+            ✕
+          </button>
         </div>
       </div>
 
-      <!-- Benchmark Suite View -->
-      <div class="view-container benchmark-view" id="view-benchmarks" style="display: none;">
-        <div id="benchmarks-container"></div>
+      <div class="tree-search-box">
+        <input type="text" id="tree-search" class="tree-search-input" placeholder="Zoek bestand..." />
       </div>
-    </section>
-  </main>
 
-  <!-- Bundled Data & Scripts -->
-  <script src="js/stdlib_data.js"></script>
-  <script src="js/compiler_data.js"></script>
-  <script src="js/benchmarks_data.js"></script>
-  <script src="js/examples_data.js"></script>
+      <div class="file-tree" id="file-tree">
+        <!-- Dynamically rendered file tree -->
+      </div>
+    </aside>
+
+    <!-- Center Workspace Area -->
+    <main class="center-area">
+      
+      <!-- Top Workspace: Tabs + Editor + Settings Panel -->
+      <div class="workspace-top">
+        
+        <!-- Editor Column -->
+        <div class="editor-pane">
+          
+          <!-- Tab Bar -->
+          <div class="tab-bar-container">
+            <div class="tab-bar" id="tab-bar">
+              <!-- Dynamically rendered tabs -->
+            </div>
+          </div>
+
+          <!-- Breadcrumb & View Mode Toggle -->
+          <div class="file-breadcrumb-bar">
+            <span class="file-breadcrumb" id="file-breadcrumb">Geen bestand geopend</span>
+            
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <button class="btn btn-sm" id="btn-toggle-view" style="display: none; font-size: 11px; padding: 2px 8px;">
+                <span>📖</span> Bekijk Markdown
+              </button>
+              <div class="tab-status" id="tab-status">Gereed</div>
+            </div>
+          </div>
+
+          <!-- CodeMirror Editor Container -->
+          <div class="editor-container" id="editor-container"></div>
+
+          <!-- Markdown Rendered Preview (for .md files) -->
+          <div class="markdown-preview" id="markdown-preview" style="display: none;"></div>
+
+          <!-- PDF Preview Frame (for .pdf files) -->
+          <div class="pdf-preview" id="pdf-preview" style="display: none;">
+            <iframe id="pdf-frame" title="PDF Document Viewer"></iframe>
+          </div>
+        </div>
+
+        <!-- Right Side: Compiler & Pipeline Settings -->
+        <aside class="settings-panel" id="settings-panel">
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">
+            <span style="font-weight: 700; font-size: 12px; color: var(--text-primary);">COMPILER & OPTIES</span>
+            <button class="panel-close-btn" id="btn-close-settings" title="Instellingen inklappen">
+              ✕
+            </button>
+          </div>
+
+          <!-- Intermediate Stage Info Section (visible for .cfp_parse, .cfp_strictness, .cfp_bool, .cfp_lazytag, .cfp_lift) -->
+          <div class="settings-section" id="section-stage-info" style="display: none;">
+            <span class="settings-heading">Tussenformaat (Stage AST)</span>
+            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 11px; color: var(--text-secondary);">
+              <div style="background: var(--bg-tertiary); padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border-color);">
+                <span id="txt-stage-info-badge" style="color: var(--accent); font-weight: 700; display: block; margin-bottom: 2px;">Stage</span>
+                <span id="txt-stage-info-desc" style="font-size: 11px; color: var(--text-primary);">Gegenereerd tussenstadium van de compiler pipeline.</span>
+              </div>
+              <span style="font-size: 10px; color: var(--text-muted);">Tussenstadia zijn puur ter inspectie. Om te compileren, open het originele .cfp bestand.</span>
+            </div>
+          </div>
+
+          <!-- Compiler Backend -->
+          <div class="settings-section" id="section-compiler-backend">
+            <span class="settings-heading">Compiler Backend</span>
+            <div class="radio-group">
+              <label class="control-label" id="lbl-compiler-sapl">
+                <input type="radio" name="compiler" id="compiler-sapl" value="sapl" checked />
+                <span><strong>saplcomp</strong> (Self-hosted in WebAssembly)</span>
+              </label>
+              <label class="control-label" id="lbl-compiler-retag" style="display: none;">
+                <input type="radio" name="compiler" id="compiler-retag" value="retag" />
+                <span><strong>retagcomp</strong> (Stage-4 Retag → JMVM)</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Strictness Inference -->
+          <div class="settings-section" id="section-strictness">
+            <span class="settings-heading">Strictness Analyse</span>
+            <label class="control-label">
+              <input type="checkbox" id="chk-strictness" checked />
+              <span>Automatische strictness analyse</span>
+            </label>
+            <span style="font-size: 10px; color: var(--text-muted); margin-top: 4px; display: block;">
+              Bepaalt automatisch welke functieparameters strikt geëvalueerd kunnen worden (met ! annotatie).
+            </span>
+          </div>
+
+          <!-- Intermediate Stages Selection -->
+          <div class="settings-section" id="section-stages">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span class="settings-heading" style="margin-bottom: 0;">Tussenformaten (Stages)</span>
+              <div style="display: flex; gap: 4px;">
+                <button class="btn btn-sm" id="btn-select-all-stages" style="font-size: 10px; padding: 2px 6px;">Alles</button>
+                <button class="btn btn-sm" id="btn-select-jmvm-only" style="font-size: 10px; padding: 2px 6px;">Alleen JMVM</button>
+              </div>
+            </div>
+            <div class="stage-grid">
+              <label class="control-label">
+                <input type="checkbox" id="stage-parse" />
+                <span>0. Parse (AST)</span>
+              </label>
+              <label class="control-label">
+                <input type="checkbox" id="stage-strictness" />
+                <span>0s. Strictness</span>
+              </label>
+              <label class="control-label">
+                <input type="checkbox" id="stage-bool" />
+                <span>1. Boolean (bool)</span>
+              </label>
+              <label class="control-label">
+                <input type="checkbox" id="stage-lazytag" />
+                <span>2. LazyTag</span>
+              </label>
+              <label class="control-label">
+                <input type="checkbox" id="stage-lift" />
+                <span>3. Lambda-Lift</span>
+              </label>
+              <label class="control-label">
+                <input type="checkbox" id="stage-retag" />
+                <span>4. Retag</span>
+              </label>
+              <label class="control-label">
+                <input type="checkbox" id="stage-jmvm" checked />
+                <span>5. JMVM Bytecode</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Execution Engine Selection -->
+          <div class="settings-section" id="section-engine">
+            <span class="settings-heading">VM Uitvoeringsengine</span>
+            <div class="radio-group">
+              <label class="control-label">
+                <input type="radio" name="engine" id="engine-wasm" value="wasm" checked />
+                <span><strong>WebAssembly JMVM</strong> (WASM Runtime in browser)</span>
+              </label>
+            </div>
+          </div>
+
+        </aside>
+      </div>
+
+      <!-- Bottom Panel: Output, Terminal & Metrics -->
+      <div class="bottom-panel" id="bottom-panel">
+        <div class="panel-header">
+          <div class="panel-tabs">
+            <button class="panel-tab active" data-tab="output" id="tab-btn-output">Terminal & Uitvoer</button>
+            <button class="panel-tab" data-tab="metrics" id="tab-btn-metrics">Metrieken</button>
+            <button class="panel-tab" data-tab="help" id="tab-btn-help">Sneltoetsen & Help</button>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <button class="panel-action-btn" id="btn-clear-terminal" title="Terminal wissen">
+              🗑️ Wissen
+            </button>
+            <button class="panel-close-btn" id="btn-close-terminal" title="Terminal inklappen">
+              ✕
+            </button>
+          </div>
+        </div>
+
+        <div class="panel-body">
+          
+          <!-- Terminal Output Tab -->
+          <div class="panel-content active" id="content-output">
+            <div class="terminal-body" id="terminal-body">
+              <!-- Logs printed here -->
+            </div>
+            
+            <!-- Terminal Stdin Bar -->
+            <div class="terminal-prompt-bar">
+              <span class="terminal-prompt-label" id="terminal-prompt-label">Stdin &gt;</span>
+              <input type="text" id="terminal-input" class="terminal-input" placeholder="Typ invoer en druk op Enter..." />
+              <button class="btn btn-sm btn-primary" id="btn-terminal-send">Verstuur</button>
+            </div>
+          </div>
+
+          <!-- Metrics Tab -->
+          <div class="panel-content" id="content-metrics">
+            <div class="metrics-grid">
+              <div class="metric-card">
+                <div class="metric-value" id="metric-res">-</div>
+                <div class="metric-label">Resultaat (res)</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-value" id="metric-time">-</div>
+                <div class="metric-label">Uitvoeringstijd (sec)</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-value" id="metric-instructions">-</div>
+                <div class="metric-label">Instructies uitgevoerd</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-value" id="metric-calls">-</div>
+                <div class="metric-label">Functie-aanroepen (calls)</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-value" id="metric-creates">-</div>
+                <div class="metric-label">Heap allocaties (creates)</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-value" id="metric-gc">-</div>
+                <div class="metric-label">Garbage Collections (GC)</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Help Tab -->
+          <div class="panel-content" id="content-help">
+            <div style="font-size: 12px; line-height: 1.6; color: var(--text-secondary); max-width: 800px;">
+              <h4 style="color: var(--text-primary); margin-bottom: 8px;">⌨️ Sneltoetsen</h4>
+              <ul style="margin-left: 20px; margin-bottom: 16px;">
+                <li><code>Cmd+S</code> / <code>Ctrl+S</code>: Bestand opslaan in lokale werkruimte</li>
+                <li><code>Cmd+B</code> / <code>Ctrl+B</code>: Actief bestand compileren naar geselecteerde tussenformaten</li>
+                <li><code>Cmd+Enter</code> / <code>F5</code>: Actief bestand compileren én meteen uitvoeren in WebAssembly</li>
+                <li><code>1 klik</code> in bestandsboom: Tijdelijk preview-tabblad (vervangt vorig preview-bestand)</li>
+                <li><code>Dubbelklik</code> in bestandsboom / tab: Permanent tabblad vastmaken</li>
+                <li><code>Rechtsklik</code> op tabblad: Contextmenu met o.a. <em>"Sluit andere tabs"</em></li>
+              </ul>
+
+              <h4 style="color: var(--text-primary); margin-bottom: 8px;">📚 IFL 2016 Paper Voorbeelden</h4>
+              <p>In de map <strong>paper_examples</strong> vind je alle kernfiguren uit het gepubliceerde IFL 2016 paper en het paper zelf als PDF (<code>main.pdf</code>).</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- Tab Context Menu (Right Click) -->
+  <div id="tab-context-menu" class="context-menu" style="display: none;">
+    <div class="context-menu-item" id="ctx-close-tab">
+      <span class="ctx-icon">✕</span>
+      <span>Sluit tab</span>
+    </div>
+    <div class="context-menu-item" id="ctx-close-others">
+      <span class="ctx-icon">⇥</span>
+      <span>Sluit andere tabs</span>
+    </div>
+    <div class="context-menu-item" id="ctx-close-right">
+      <span class="ctx-icon">➔</span>
+      <span>Sluit tabs naar rechts</span>
+    </div>
+    <div class="context-menu-item" id="ctx-close-all">
+      <span class="ctx-icon">🗑️</span>
+      <span>Sluit alle tabs</span>
+    </div>
+    <div class="context-menu-separator" id="ctx-sep-pin"></div>
+    <div class="context-menu-item" id="ctx-keep-open">
+      <span class="ctx-icon">📌</span>
+      <span>Houd geopend (Vastmaken)</span>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/marked.min.js"></script>
   <script src="js/codemirror.min.js"></script>
   <script src="js/matchbrackets.min.js"></script>
   <script src="js/closebrackets.min.js"></script>
   <script src="js/sapl_mode.js"></script>
-  <script src="js/editor.js"></script>
-  <script src="js/filetree.js"></script>
-  <script src="js/terminal.js"></script>
-  <script src="js/metrics.js"></script>
-  <script src="js/benchmarks_ui.js"></script>
+  <script src="js/clike_mode.js"></script>
+  <script src="js/stdlib_data.js"></script>
+  <script src="js/bundled_files.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

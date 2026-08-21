@@ -1,0 +1,14 @@
+// IFL 2016 Paper - Figure 2, 4, 5 & 7
+// Lazy Factorial: parameter n is non-strict.
+// Demonstrates:
+// - Stage 2: lazy tagging of (n - 1)
+// - Stage 3: lambda lifting into helper function facl_1
+// - Stage 4: explicit thunk creation (thunk (facl_1 n)) and eval(n)
+// - Stage 5: dual entry point (facl_lazy vs facl)
+
+start = facl 6
+
+facl n =
+  if (n == 0)
+    1
+    (n * facl (n - 1))

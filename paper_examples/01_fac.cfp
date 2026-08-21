@@ -1,0 +1,10 @@
+// IFL 2016 Paper - Figure 2 & 6
+// Strict Factorial: parameter !n is strict, allowing direct evaluation
+// and arithmetic without thunks.
+
+start = fac 6
+
+fac !n =
+  if (n == 0)
+    1
+    (n * fac (n - 1))
