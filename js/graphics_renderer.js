@@ -318,11 +318,27 @@ class SaplGraphicsRenderer {
 
     // Mask string literals to prevent parentheses in strings from breaking AST parsing
     const stringTable = [];
-    let cleanText = text.replace(/\(string:\s*([^)]*)\)/g, (_, str) => {
-      const idx = stringTable.length;
-      stringTable.push(str);
-      return `(str_slot_${idx})`;
-    });
+    let cleanText = "";
+    let i = 0;
+    while (i < text.length) {
+      if (text.startsWith("(string:", i)) {
+        i += 8; // skip "(string:"
+        let start = i;
+        let pCount = 1;
+        while (i < text.length && pCount > 0) {
+          if (text[i] === '(') pCount++;
+          else if (text[i] === ')') pCount--;
+          i++;
+        }
+        const strContent = text.substring(start, i - 1).trim();
+        const slot = stringTable.length;
+        stringTable.push(strContent);
+        cleanText += ` (str_slot_${slot}) `;
+      } else {
+        cleanText += text[i];
+        i++;
+      }
+    }
 
     const tokens = cleanText.replace(/\(/g, " ( ").replace(/\)/g, " ) ").replace(/\[/g, " [ ").replace(/\]/g, " ] ").trim().split(/\s+/);
     let pos = 0;

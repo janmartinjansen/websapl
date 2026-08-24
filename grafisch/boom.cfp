@@ -9,12 +9,16 @@ mapRechtSeg seg = case seg (Nil -> Nil) (Cons p1 ps -> case ps (Nil -> Nil) (Con
 mapLinks lines = case lines (Nil -> Nil) (Cons seg rest -> Cons (mapLinkSeg seg) (mapLinks rest))
 mapRechts lines = case lines (Nil -> Nil) (Cons seg rest -> Cons (mapRechtSeg seg) (mapRechts rest))
 
-boomStep n bnm1 = Cons (Cons (Pt 0.0 (0.0 - 0.6)) (Cons (Pt 0.0 (0.0 - 0.3)) Nil)) (append (mapLinks bnm1) (mapRechts bnm1))
+boomStep n bnm1 = Cons (Cons (Pt 0.0 0.0) (Cons (Pt 0.0 0.3) Nil)) (append (mapLinks bnm1) (mapRechts bnm1))
 
 boom n = if (n <= 0) Nil (boomStep n (boom (n - 1)))
 
+shiftTreeSeg seg = case seg (Nil -> Nil) (Cons p1 ps -> case ps (Nil -> Nil) (Cons p2 rest -> Cons (verschuifPt (Pt 0.0 (0.0 - 0.7)) p1) (Cons (verschuifPt (Pt 0.0 (0.0 - 0.7)) p2) Nil)))
+
+shiftTree lines = case lines (Nil -> Nil) (Cons seg rest -> Cons (shiftTreeSeg seg) (shiftTree rest))
+
 tekenBoom lines col = case lines (Nil -> Nil) (Cons l ls -> Cons (GraphPolyLine col l) (tekenBoom ls (if (col == 14) 1 (col + 1))))
 
-demo n = forceGraphics (tekenBoom (boom n) 2)
+demo n = forceGraphics (tekenBoom (shiftTree (boom n)) 2)
 
 start = demo 3

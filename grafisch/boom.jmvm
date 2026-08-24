@@ -1,5 +1,5 @@
-col_black_lazy col_black col_blue_lazy col_blue col_green_lazy col_green col_cyan_lazy col_cyan col_red_lazy col_red col_magenta_lazy col_magenta col_brown_lazy col_brown col_lightgray_lazy col_lightgray col_darkgray_lazy col_darkgray col_brightblue_lazy col_brightblue col_brightgreen_lazy col_brightgreen col_brightcyan_lazy col_brightcyan col_brightred_lazy col_brightred col_brightmagenta_lazy col_brightmagenta col_yellow_lazy col_yellow col_white_lazy col_white pt_lazy pt vergrootPt_lazy vergrootPt vergrootPt_Pt draaiPt_lazy draaiPt draaiPt_Pt verschuifPt_lazy verschuifPt verschuifPt_Pt verschuifPt_Pt_Pt addPt_lazy addPt addPt_Pt addPt_Pt_Pt subPt_lazy subPt subPt_Pt subPt_Pt_Pt scalePt_lazy scalePt scalePt_Pt dotPt_lazy dotPt dotPt_Pt dotPt_Pt_Pt distPtHelper_lazy distPtHelper distPt_lazy distPt distPt_Pt distPt_Pt_Pt append_lazy append append_Nil append_Cons revAppend_lazy revAppend revAppend_Nil revAppend_Cons reverseList_lazy reverseList mapList_lazy mapList mapList_Nil mapList_Cons filterList_lazy filterList filterList_Nil filterList_Cons filterList_Cons_else lengthList_lazy lengthList lengthList_Nil lengthList_Cons forcePt_lazy forcePt forcePt_Pt forcePoints_lazy forcePoints forcePoints_Nil forcePoints_Cons forceItem_lazy forceItem forceItem_GraphText forceItem_GraphPolyLine forceItem_GraphPolygon forceItem_GraphRectangle forceItem_GraphEllipse forceItem_GraphDisc forceItem_GraphClear forceGraphics_lazy forceGraphics forceGraphics_Nil forceGraphics_Cons transLink_lazy transLink transRechts_lazy transRechts mapLinkSeg_lazy mapLinkSeg mapLinkSeg_Nil mapLinkSeg_Cons mapLinkSeg_Cons_Nil mapLinkSeg_Cons_Cons mapRechtSeg_lazy mapRechtSeg mapRechtSeg_Nil mapRechtSeg_Cons mapRechtSeg_Cons_Nil mapRechtSeg_Cons_Cons mapLinks_lazy mapLinks mapLinks_Nil mapLinks_Cons mapRechts_lazy mapRechts mapRechts_Nil mapRechts_Cons boomStep_lazy boomStep boom_lazy boom boom_else tekenBoom_lazy tekenBoom tekenBoom_Nil tekenBoom_Cons demo_lazy demo start_lazy start draaiPt_1_lazy draaiPt_1 draaiPt_2_lazy draaiPt_2 distPtHelper_1_lazy distPtHelper_1 distPtHelper_2_lazy distPtHelper_2 revAppend_1_lazy revAppend_1 tekenBoom_1_lazy tekenBoom_1 tekenBoom_1_else #
-call 144
+col_black_lazy col_black col_blue_lazy col_blue col_green_lazy col_green col_cyan_lazy col_cyan col_red_lazy col_red col_magenta_lazy col_magenta col_brown_lazy col_brown col_lightgray_lazy col_lightgray col_darkgray_lazy col_darkgray col_brightblue_lazy col_brightblue col_brightgreen_lazy col_brightgreen col_brightcyan_lazy col_brightcyan col_brightred_lazy col_brightred col_brightmagenta_lazy col_brightmagenta col_yellow_lazy col_yellow col_white_lazy col_white pt_lazy pt vergrootPt_lazy vergrootPt vergrootPt_Pt draaiPt_lazy draaiPt draaiPt_Pt verschuifPt_lazy verschuifPt verschuifPt_Pt verschuifPt_Pt_Pt addPt_lazy addPt addPt_Pt addPt_Pt_Pt subPt_lazy subPt subPt_Pt subPt_Pt_Pt scalePt_lazy scalePt scalePt_Pt dotPt_lazy dotPt dotPt_Pt dotPt_Pt_Pt distPtHelper_lazy distPtHelper distPt_lazy distPt distPt_Pt distPt_Pt_Pt append_lazy append append_Nil append_Cons revAppend_lazy revAppend revAppend_Nil revAppend_Cons reverseList_lazy reverseList mapList_lazy mapList mapList_Nil mapList_Cons filterList_lazy filterList filterList_Nil filterList_Cons filterList_Cons_else lengthList_lazy lengthList lengthList_Nil lengthList_Cons forcePt_lazy forcePt forcePt_Pt forcePoints_lazy forcePoints forcePoints_Nil forcePoints_Cons forceItem_lazy forceItem forceItem_GraphText forceItem_GraphPolyLine forceItem_GraphPolygon forceItem_GraphRectangle forceItem_GraphEllipse forceItem_GraphDisc forceItem_GraphClear forceGraphics_lazy forceGraphics forceGraphics_Nil forceGraphics_Cons transLink_lazy transLink transRechts_lazy transRechts mapLinkSeg_lazy mapLinkSeg mapLinkSeg_Nil mapLinkSeg_Cons mapLinkSeg_Cons_Nil mapLinkSeg_Cons_Cons mapRechtSeg_lazy mapRechtSeg mapRechtSeg_Nil mapRechtSeg_Cons mapRechtSeg_Cons_Nil mapRechtSeg_Cons_Cons mapLinks_lazy mapLinks mapLinks_Nil mapLinks_Cons mapRechts_lazy mapRechts mapRechts_Nil mapRechts_Cons boomStep_lazy boomStep boom_lazy boom boom_else shiftTreeSeg_lazy shiftTreeSeg shiftTreeSeg_Nil shiftTreeSeg_Cons shiftTreeSeg_Cons_Nil shiftTreeSeg_Cons_Cons shiftTree_lazy shiftTree shiftTree_Nil shiftTree_Cons tekenBoom_lazy tekenBoom tekenBoom_Nil tekenBoom_Cons demo_lazy demo start_lazy start draaiPt_1_lazy draaiPt_1 draaiPt_2_lazy draaiPt_2 distPtHelper_1_lazy distPtHelper_1 distPtHelper_2_lazy distPtHelper_2 revAppend_1_lazy revAppend_1 tekenBoom_1_lazy tekenBoom_1 tekenBoom_1_else #
+call 154
 print 4
 stop
 0           jmp 1
@@ -61,11 +61,11 @@ eval
 store 1
 38           updsp 2
 load 2
-pushfunc 1 145
+pushfunc 1 155
 create 2 3
 store 0
 load 2
-pushfunc 1 147
+pushfunc 1 157
 create 2 3
 store 1
 load 3
@@ -183,12 +183,12 @@ return 6
 60           updsp 2
 load 4
 load 2
-pushfunc 2 149
+pushfunc 2 159
 create 3 3
 store 0
 load 5
 load 3
-pushfunc 2 151
+pushfunc 2 161
 create 3 3
 store 1
 load 0
@@ -243,7 +243,7 @@ eval
 return 2
 72           load 3
 load 0
-pushfunc 2 153
+pushfunc 2 163
 create 3 3
 load 1
 tailcall 4 70
@@ -477,15 +477,11 @@ eval
 call 125
 call 66
 ccreatet 0 11 6 0
-push 0.0
 push 0.3
-sub
 push 0.0
 ccreatet 2 11 5 0
 ccreatet 2 11 6 1
 push 0.0
-push 0.6
-sub
 push 0.0
 ccreatet 2 11 5 0
 ccreatet 2 11 6 1
@@ -511,68 +507,111 @@ store 0
 138           load 0
 jmpt 2 139 140
 139           ccreatet 0 11 6 0
+return 1
+140           load 1
+jmpt 2 141 142
+141           ccreatet 0 11 6 0
+return 3
+142           ccreatet 0 11 6 0
+load 0
+push 0.0
+push 0.7
+sub
+push 0.0
+ccreatet 2 11 5 0
+call 41
+ccreatet 2 11 6 1
+load 2
+push 0.0
+push 0.7
+sub
+push 0.0
+ccreatet 2 11 5 0
+call 41
+ccreatet 2 11 6 1
+return 5
+143           load 0
+eval
+store 0
+144           load 0
+jmpt 2 145 146
+145           ccreatet 0 11 6 0
+return 1
+146           load 1
+call 144
+load 0
+call 138
+ccreatet 2 11 6 1
+return 3
+147           load 0
+eval
+store 0
+148           load 0
+jmpt 2 149 150
+149           ccreatet 0 11 6 0
 return 2
-140           load 3
-pushfunc 1 155
+150           load 3
+pushfunc 1 165
 create 2 3
 load 1
-call 138
+call 148
 load 0
 load 3
 eval
 ccreatet 2 11 7 1
 ccreatet 2 11 6 1
 return 4
-141           load 0
+151           load 0
 eval
 store 0
-142           push 2
+152           push 2
 load 0
 call 135
-call 138
+call 144
+call 148
 tailcall 1 105
-143           jmp 144
-144           push 3
-tailcall 0 142
-145           jmp 146
-146           load 0
+153           jmp 154
+154           push 3
+tailcall 0 152
+155           jmp 156
+156           load 0
 eval
 floatop 1
 return 1
-147           jmp 148
-148           load 0
+157           jmp 158
+158           load 0
 eval
 floatop 0
 return 1
-149           jmp 150
-150           load 0
+159           jmp 160
+160           load 0
 eval
 load 1
 eval
 sub
 return 2
-151           jmp 152
-152           load 0
+161           jmp 162
+162           load 0
 eval
 load 1
 eval
 sub
 return 2
-153           jmp 154
-154           load 1
+163           jmp 164
+164           load 1
 eval
 load 0
 eval
 ccreatet 2 11 6 1
 return 2
-155           jmp 156
-156           load 0
+165           jmp 166
+166           load 0
 eval
 push 14
 sub
-ifneq 157
+ifneq 167
 return_const 1 1
-157           load 0
+167           load 0
 eval
 inc
 return 1
@@ -599,7 +638,7 @@ type 8 Event 6
   constr 3 MouseDragged 1
   constr 4 MouseDoubleClick 1
   constr 5 NoInput 0
-functions 106
+functions 110
   func 1 col_black 0 0
   func 0 col_black 0 0
   func 3 col_blue 0 0
@@ -688,22 +727,26 @@ functions 106
   func 132 boomStep 2 000
   func 135 boom 1 10
   func 134 boom 1 10
-  func 138 tekenBoom 2 100
-  func 137 tekenBoom 2 100
-  func 142 demo 1 10
-  func 141 demo 1 10
-  func 144 start 0 0
-  func 143 start 0 0
-  func 146 draaiPt_1 1 00
-  func 145 draaiPt_1 1 00
-  func 148 draaiPt_2 1 00
-  func 147 draaiPt_2 1 00
-  func 150 distPtHelper_1 2 000
-  func 149 distPtHelper_1 2 000
-  func 152 distPtHelper_2 2 000
-  func 151 distPtHelper_2 2 000
-  func 154 revAppend_1 2 000
-  func 153 revAppend_1 2 000
-  func 156 tekenBoom_1 1 00
-  func 155 tekenBoom_1 1 00
+  func 138 shiftTreeSeg 1 10
+  func 137 shiftTreeSeg 1 10
+  func 144 shiftTree 1 10
+  func 143 shiftTree 1 10
+  func 148 tekenBoom 2 100
+  func 147 tekenBoom 2 100
+  func 152 demo 1 10
+  func 151 demo 1 10
+  func 154 start 0 0
+  func 153 start 0 0
+  func 156 draaiPt_1 1 00
+  func 155 draaiPt_1 1 00
+  func 158 draaiPt_2 1 00
+  func 157 draaiPt_2 1 00
+  func 160 distPtHelper_1 2 000
+  func 159 distPtHelper_1 2 000
+  func 162 distPtHelper_2 2 000
+  func 161 distPtHelper_2 2 000
+  func 164 revAppend_1 2 000
+  func 163 revAppend_1 2 000
+  func 166 tekenBoom_1 1 00
+  func 165 tekenBoom_1 1 00
 .endmetadata
