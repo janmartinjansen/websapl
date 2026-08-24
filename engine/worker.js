@@ -67,6 +67,10 @@ function resolveImports(source, currentFile = "/workspace/main.cfp", seen = new 
           importedContent = jmvmModule.FS.readFile(resolvedPath, { encoding: "utf8" });
         } else if (importPath === "lib/stdlib.cfp" || importPath === "/lib/stdlib.cfp") {
           importedContent = stdlibContent;
+        } else if (importPath.includes("graphics.cfp")) {
+          if (jmvmModule && jmvmModule.FS.analyzePath("/grafisch/graphics.cfp").exists) {
+            importedContent = jmvmModule.FS.readFile("/grafisch/graphics.cfp", { encoding: "utf8" });
+          }
         } else {
           throw new Error(`Imported file not found: ${importPath}`);
         }
@@ -87,7 +91,7 @@ function resolveImports(source, currentFile = "/workspace/main.cfp", seen = new 
 /**
  * Initialize the JMVM Module and VFS
  */
-async function initEngine(data) {
+async function initEngine(data = {}) {
   if (isInitialized && jmvmModule) {
     postMessage({ type: "INIT_DONE" });
     return;
@@ -135,7 +139,7 @@ async function initEngine(data) {
   });
 
   // Setup directory structure
-  const dirs = ["/workspace", "/lib", "/benchmarks", "/examples", "/paper_examples", "/tmp"];
+  const dirs = ["/workspace", "/lib", "/grafisch", "/benchmarks", "/examples", "/paper_examples", "/tmp"];
   for (const d of dirs) {
     try {
       if (!jmvmModule.FS.analyzePath(d).exists) jmvmModule.FS.mkdir(d);
@@ -146,6 +150,16 @@ async function initEngine(data) {
   if (stdlibContent) {
     jmvmModule.FS.writeFile("/lib/stdlib.cfp", stdlibContent);
   }
+
+  // Pre-load graphics.cfp into VFS
+  try {
+    const gRes = await fetch("../grafisch/graphics.cfp");
+    if (gRes.ok) {
+      const gContent = await gRes.text();
+      jmvmModule.FS.writeFile("/grafisch/graphics.cfp", gContent);
+      jmvmModule.FS.writeFile("/graphics.cfp", gContent);
+    }
+  } catch (_) {}
 
   // Write compiler into /saplcomp.jmvm
   if (saplcompBytecode) {
@@ -390,7 +404,7 @@ async function executeJmvm(contentOrPath, isPath = false, customStdin = "") {
   });
 
   // Ensure base dirs exist
-  const dirs = ["/workspace", "/lib", "/benchmarks", "/examples", "/paper_examples", "/tmp"];
+  const dirs = ["/workspace", "/lib", "/grafisch", "/benchmarks", "/examples", "/paper_examples", "/tmp"];
   for (const d of dirs) {
     try {
       if (!execInstance.FS.analyzePath(d).exists) execInstance.FS.mkdir(d);

@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="nl" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sapl Graphics & Interactive Canvas — WebAssembly JMVM</title>
+  <link rel="stylesheet" href="css/codemirror.min.css" />
+  <link rel="stylesheet" href="css/workbench.css" />
+  <style>
+    .graphics-container {
+      display: grid;
+      grid-template-columns: 320px 1fr 500px;
+      height: calc(100vh - 56px);
+      background: var(--bg-main);
+      overflow: hidden;
+    }
+    .preset-list {
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border-color);
+      padding: 14px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .preset-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .preset-card:hover {
+      border-color: var(--accent);
+      background: var(--bg-card-hover, #1e293b);
+      transform: translateY(-1px);
+    }
+    .preset-card.active {
+      border-color: var(--accent);
+      background: rgba(59, 130, 246, 0.15);
+    }
+    .preset-title {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .preset-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+    .editor-section {
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border-color);
+      height: 100%;
+      min-width: 0;
+    }
+    .editor-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      background: var(--bg-header);
+      border-bottom: 1px solid var(--border-color);
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .editor-body {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+    .canvas-section {
+      display: flex;
+      flex-direction: column;
+      background: #060913;
+      padding: 14px;
+      gap: 10px;
+      overflow-y: auto;
+    }
+    .canvas-wrapper {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: #0a0f1d;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      cursor: crosshair;
+    }
+    #graphics-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .controls-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .slider-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 12px;
+    }
+    .slider-row input[type="range"] {
+      flex: 1;
+    }
+    .interaction-hint {
+      font-size: 12px;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      border-radius: 6px;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .event-pill {
+      font-size: 11px;
+      font-family: monospace;
+      color: #a78bfa;
+      background: #1e1b4b;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(167, 139, 250, 0.3);
+    }
+    .metrics-tag {
+      font-size: 11px;
+      color: #94a3b8;
+      background: #0f172a;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-icon">🎨</div>
+      <span>Sapl Graphics Studio</span>
+      <span class="brand-badge">WASM Interactive Canvas</span>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn btn-success" id="btn-run-graphics">
+        <span>⚡</span> Compileer & Run
+      </button>
+      <button class="btn" id="btn-auto-rotate">
+        <span>🔄</span> 3D Auto-Rotate
+      </button>
+      <a href="index.html" class="btn">
+        <span>💻</span> Naar Workbench IDE
+      </a>
+    </div>
+
+    <div class="header-actions">
+      <div class="status-pill">
+        <span class="status-dot ready" id="status-dot"></span>
+        <span id="status-text">WASM Ready</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main View -->
+  <main class="graphics-container">
+    
+    <!-- Presets Selector -->
+    <aside class="preset-list">
+      <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">
+        Grafische & Interactieve Apps
+      </div>
+
+      <div class="preset-card active" data-file="bspline.cfp">
+        <div class="preset-title"><span>〰️</span> B-Spline Editor (Muis-interactief)</div>
+        <div class="preset-desc">Sleep controlepunten live met de muis of klik om nieuwe punten toe te voegen.</div>
+      </div>
+
+      <div class="preset-card" data-file="convex.cfp">
+        <div class="preset-title"><span>🎲</span> 3D Polyhedron (Muis-rotatie)</div>
+        <div class="preset-desc">Draadmodel van 3D geometrisch lichaam; sleep met de muis om vrij in 3D te draaien.</div>
+      </div>
+
+      <div class="preset-card" data-file="boom.cfp">
+        <div class="preset-title"><span>🌳</span> Fractale Boom (Interactief)</div>
+        <div class="preset-desc">Beweeg de muis horizontaal over het canvas om de takhoeken live te buigen.</div>
+      </div>
+
+      <div class="preset-card" data-file="curves.cfp">
+        <div class="preset-title"><span>🌀</span> Wiskundige Krommen</div>
+        <div class="preset-desc">Hilbert, Sierpinski en Heighway Dragon ruimtevullende fractals.</div>
+      </div>
+
+      <div class="preset-card" data-file="grafiek.cfp">
+        <div class="preset-title"><span>📈</span> Functiegrafieken (Cursor-trace)</div>
+        <div class="preset-desc">Assenstelsel met sampling van wiskundige functies en live cursorcoördinaten.</div>
+      </div>
+
+      <div class="preset-card" data-file="hwdes.cfp">
+        <div class="preset-title"><span>🔌</span> Hardware Designer</div>
+        <div class="preset-desc">Digitale logische poorten (AND, OR, NOT) en 2-to-1 Multiplexer schema.</div>
+      </div>
+
+      <div class="preset-card" data-file="recpic.cfp">
+        <div class="preset-title"><span>🔲</span> Recursieve Mozaïek</div>
+        <div class="preset-desc">Escher-achtige geometrische tegelpatronen en kwartslagrotaties.</div>
+      </div>
+    </aside>
+
+    <!-- Code Editor -->
+    <section class="editor-section">
+      <div class="editor-header">
+        <span id="editor-filename">bspline.cfp</span>
+        <span style="font-size: 11px; color: var(--text-muted);">Sapl Broncode</span>
+      </div>
+      <div class="editor-body">
+        <textarea id="code-editor"></textarea>
+      </div>
+    </section>
+
+    <!-- Canvas Preview & Live Controls -->
+    <section class="canvas-section">
+      <div class="interaction-hint" id="hint-box">
+        <span>💡</span> <span id="hint-text">Sleep de rode controlepunten met de muis of klik om een punt toe te voegen.</span>
+      </div>
+
+      <div class="canvas-wrapper">
+        <canvas id="graphics-canvas" width="600" height="600"></canvas>
+      </div>
+
+      <div class="controls-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-weight: 600; font-size: 13px; color: var(--text-primary);">
+            Muis & Event Status
+          </span>
+          <span class="event-pill" id="event-display">NoInput</span>
+        </div>
+
+        <div class="slider-row" id="row-depth">
+          <span>Recursiediepte / Resolutie:</span>
+          <input type="range" id="param-depth" min="1" max="6" value="3" />
+          <span id="val-depth" style="font-weight: 600; width: 16px;">3</span>
+        </div>
+
+        <div class="slider-row" id="row-rot-x" style="display: none;">
+          <span>Rotatie X:</span>
+          <input type="range" id="param-rot-x" min="0" max="6.28" step="0.05" value="0.5" />
+        </div>
+        <div class="slider-row" id="row-rot-y" style="display: none;">
+          <span>Rotatie Y:</span>
+          <input type="range" id="param-rot-y" min="0" max="6.28" step="0.05" value="0.7" />
+        </div>
+        <div class="slider-row" id="row-rot-z" style="display: none;">
+          <span>Rotatie Z:</span>
+          <input type="range" id="param-rot-z" min="0" max="6.28" step="0.05" value="0.2" />
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-top: 4px;">
+          <button class="btn" id="btn-reset-points" style="flex: 1;">Reset Punten</button>
+          <button class="btn" id="btn-clear-canvas" style="flex: 1;">Wissen</button>
+          <button class="btn" id="btn-export-png" style="flex: 1;">Exporteer PNG</button>
+        </div>
+
+        <div style="margin-top: 8px; border-top: 1px solid var(--border-color); padding-top: 8px; display: flex; flex-wrap: wrap; gap: 6px;">
+          <span class="metrics-tag" id="metric-fps">60 FPS</span>
+          <span class="metrics-tag" id="metric-exec-time">0.00 ms</span>
+          <span class="metrics-tag" id="metric-instr-count">0 instr</span>
+          <span class="metrics-tag" id="metric-coords">X: 0.00, Y: 0.00</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Scripts -->
+  <script src="js/codemirror.min.js"></script>
+  <script src="js/sapl_mode.js"></script>
+  <script src="js/graphics_renderer.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const canvas = document.getElementById('graphics-canvas');
+      const renderer = new SaplGraphicsRenderer(canvas);
+      renderer.clear();
+      renderer.drawGrid();
+
+      // Setup CodeMirror Editor
+      const editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
+        mode: 'sapl',
+        theme: 'default',
+        lineNumbers: true,
+        matchBrackets: true,
+        tabSize: 2
+      });
+
+      // Interactive State
+      let currentPreset = 'bspline.cfp';
+      let autoRotateTimer = null;
+      let rotX = 0.5, rotY = 0.7, rotZ = 0.2;
+      let depth = 3;
+      let branchBendAngle = 0.6;
+
+      // B-Spline Control Points State
+      let defaultSplinePoints = [
+        { x: -0.8, y: -0.5 }, { x: -0.5, y: 0.6 }, { x: -0.1, y: -0.6 },
+        { x: 0.3, y: 0.7 }, { x: 0.7, y: -0.4 }, { x: 0.9, y: 0.3 }
+      ];
+      let splinePoints = [...defaultSplinePoints];
+      let selectedPointIdx = -1;
+
+      // Presets Cache
+      const presets = {};
+
+      // Initialize Web Worker
+      const worker = new Worker('engine/worker.js');
+      let workerReady = false;
+
+      worker.onmessage = (e) => {
+        const msg = e.data;
+        if (msg.type === 'INIT_DONE') {
+          workerReady = true;
+          document.getElementById('status-text').textContent = 'WASM Ready';
+          document.getElementById('status-dot').className = 'status-dot ready';
+          runGraphics();
+        } else if (msg.type === 'RUN_COMPLETE') {
+          if (msg.output || (msg.metrics && msg.metrics.res)) {
+            const out = msg.output || msg.metrics.res;
+            renderer.renderOutput(out);
+          }
+          if (msg.metrics) {
+            document.getElementById('metric-exec-time').textContent = (msg.durationMs || 1) + ' ms';
+            document.getElementById('metric-instr-count').textContent = (msg.metrics.instr_executed || 0) + ' instr';
+          }
+        } else if (msg.type === 'COMPILE_COMPLETE') {
+          if (msg.success && msg.files && msg.files.length > 0) {
+            const jmvmFile = msg.files.find(f => f.name.endsWith('.jmvm'));
+            if (jmvmFile) {
+              worker.postMessage({
+                type: 'RUN',
+                contentOrPath: jmvmFile.content,
+                isPath: false
+              });
+            }
+          }
+        }
+      };
+
+      worker.postMessage({ type: 'INIT' });
+
+      // Hints per preset
+      const hints = {
+        'bspline.cfp': 'Sleep de rode controlepunten met de muis of klik om een punt toe te voegen.',
+        'convex.cfp': 'Sleep met de muis over het canvas om de 3D-polyhedron vrij in 3D te roteren.',
+        'boom.cfp': 'Beweeg de muis horizontaal over het canvas om de takbuigingshoek live aan te passen.',
+        'curves.cfp': 'Gebruik de recursiediepte slider (1-5) om de fijnheid van de Hilbert-curve te verhogen.',
+        'grafiek.cfp': 'Beweeg de muis over het canvas om wiskundige functies te inspecteren met live coördinaten.',
+        'hwdes.cfp': 'Bekijk de 2-to-1 Multiplexer schakeling met NOT-, AND- en OR-poorten.',
+        'recpic.cfp': 'Recursieve geometrische mozaïek met kwartslagrotaties.'
+      };
+
+      // Direct JS implementations for real-time 60fps interaction
+      function renderInteractiveDirect() {
+        const name = currentPreset;
+        const d = depth;
+
+        if (name === 'bspline.cfp') {
+          renderer.clear();
+          renderer.drawGrid();
+          // Control polygon
+          if (splinePoints.length >= 2) {
+            renderer.drawPolyLine(8, splinePoints);
+          }
+          // Control points
+          splinePoints.forEach((p, idx) => {
+            const col = idx === selectedPointIdx ? 14 : 12;
+            const r = idx === selectedPointIdx ? 0.035 : 0.025;
+            renderer.drawDisc(col, { x: p.x - r, y: p.y - r }, { x: p.x + r, y: p.y + r });
+          });
+          // Evaluate uniform cubic B-Spline
+          if (splinePoints.length >= 4) {
+            function b0(t){ return (1-t)*(1-t)*(1-t)/6; }
+            function b1(t){ return (3*t*t*t - 6*t*t + 4)/6; }
+            function b2(t){ return (-3*t*t*t + 3*t*t + 3*t + 1)/6; }
+            function b3(t){ return t*t*t/6; }
+
+            const curvePts = [];
+            const steps = Math.max(8, d * 6);
+            for (let i = 0; i < splinePoints.length - 3; i++) {
+              for (let s = 0; s <= steps; s++) {
+                const t = s / steps;
+                const px = b0(t)*splinePoints[i].x + b1(t)*splinePoints[i+1].x + b2(t)*splinePoints[i+2].x + b3(t)*splinePoints[i+3].x;
+                const py = b0(t)*splinePoints[i].y + b1(t)*splinePoints[i+1].y + b2(t)*splinePoints[i+2].y + b3(t)*splinePoints[i+3].y;
+                curvePts.push({ x: px, y: py });
+              }
+            }
+            renderer.drawPolyLine(11, curvePts);
+          }
+        } else if (name === 'convex.cfp') {
+          renderer.clear();
+          renderer.drawGrid();
+          const s = 0.5;
+          const verts = [
+            { x: -s, y: -s, z: -s }, { x: -s, y: -s, z: s },
+            { x: -s, y: s, z: -s },  { x: -s, y: s, z: s },
+            { x: s, y: -s, z: -s },  { x: s, y: -s, z: s },
+            { x: s, y: s, z: -s },   { x: s, y: s, z: s }
+          ];
+          const edges = [
+            [0,1], [1,3], [3,2], [2,0],
+            [4,5], [5,7], [7,6], [6,4],
+            [0,4], [1,5], [2,6], [3,7]
+          ];
+          const rverts = verts.map(v => {
+            let y1 = v.y * Math.cos(rotX) - v.z * Math.sin(rotX);
+            let z1 = v.y * Math.sin(rotX) + v.z * Math.cos(rotX);
+            let x2 = v.x * Math.cos(rotY) + z1 * Math.sin(rotY);
+            let z2 = -v.x * Math.sin(rotY) + z1 * Math.cos(rotY);
+            let x3 = x2 * Math.cos(rotZ) - y1 * Math.sin(rotZ);
+            let y3 = x2 * Math.sin(rotZ) + y1 * Math.cos(rotZ);
+            const dist = z2 + 2.2;
+            return { x: (1.5 * x3) / dist, y: (1.5 * y3) / dist };
+          });
+          edges.forEach(([i, j]) => {
+            renderer.drawPolyLine(10, [rverts[i], rverts[j]]);
+          });
+        } else if (name === 'boom.cfp') {
+          renderer.clear();
+          renderer.drawGrid();
+          function boomRec(n, p1, p2, col) {
+            if (n <= 0) return;
+            renderer.drawPolyLine(col, [p1, p2]);
+            const nextCol = (col % 14) + 1;
+            const vx = (p2.x - p1.x) * 0.7;
+            const vy = (p2.y - p1.y) * 0.7;
+            const c1 = Math.cos(branchBendAngle), s1 = Math.sin(branchBendAngle);
+            const pl = { x: p2.x + (c1 * vx - s1 * vy), y: p2.y + (s1 * vx + c1 * vy) };
+            const c2 = Math.cos(-branchBendAngle), s2 = Math.sin(-branchBendAngle);
+            const pr = { x: p2.x + (c2 * vx - s2 * vy), y: p2.y + (s2 * vx + c2 * vy) };
+            boomRec(n - 1, p2, pl, nextCol);
+            boomRec(n - 1, p2, pr, nextCol);
+          }
+          boomRec(d + 1, { x: 0.0, y: -0.6 }, { x: 0.0, y: -0.3 }, 2);
+        } else if (name === 'curves.cfp') {
+          renderer.clear();
+          renderer.drawGrid();
+          function rotPt(m, p) {
+            const mod = ((m % 4) + 4) % 4;
+            if (mod === 0) return { x: p.x, y: p.y };
+            if (mod === 1) return { x: -p.y, y: p.x };
+            if (mod === 2) return { x: -p.x, y: -p.y };
+            return { x: p.y, y: -p.x };
+          }
+          function scaleP(sx, sy, p) { return { x: p.x * sx, y: p.y * sy }; }
+          function shiftP(dx, dy, p) { return { x: p.x + dx, y: p.y + dy }; }
+          function hilbSize(n) { return n <= 0 ? 0 : 2 * hilbSize(n - 1) + 1; }
+
+          function hilb(n) {
+            if (n <= 0) return [{ x: 0, y: 0 }];
+            const nm1 = hilb(n - 1);
+            const afm = hilbSize(n - 1);
+            const p1 = nm1.map(p => scaleP(-1, 1, rotPt(1, p)));
+            const p2 = nm1.map(p => shiftP(afm + 1, 0, p));
+            const p3 = nm1.map(p => shiftP(afm + 1, afm + 1, p));
+            const p4 = nm1.map(p => shiftP(afm, 2 * afm + 1, scaleP(1, -1, rotPt(1, p))));
+            return [...p1, ...p2, ...p3, ...p4];
+          }
+
+          const h = hilb(d);
+          const fn = hilbSize(d);
+          const scaled = h.map(p => shiftP(-0.8, -0.8, scaleP(1.6 / fn, 1.6 / fn, p)));
+          renderer.drawPolyLine(11, scaled);
+        } else if (name === 'grafiek.cfp') {
+          renderer.clear();
+          renderer.drawGrid();
+          const sinPts = [];
+          const cosPts = [];
+          const polyPts = [];
+          for (let x = -1.0; x <= 1.0; x += 0.02) {
+            sinPts.push({ x, y: 0.7 * Math.sin(3.14159 * x) });
+            cosPts.push({ x, y: 0.8 * Math.cos(6.28 * x) * Math.exp(-x) });
+            if (x >= -0.8 && x <= 0.8) {
+              polyPts.push({ x, y: 1.5 * x * x - 0.6 });
+            }
+          }
+          renderer.drawPolyLine(11, sinPts);
+          renderer.drawPolyLine(14, cosPts);
+          renderer.drawPolyLine(12, polyPts);
+        } else if (name === 'hwdes.cfp') {
+          renderer.clear();
+          renderer.drawGrid();
+          renderer.drawText(14, { x: -0.75, y: 0.82 }, "2-to-1 Multiplexer (Logic Circuit)");
+          renderer.drawText(8, { x: -0.75, y: 0.75 }, "Boolean Logic: Y = (A and not S) or (B and S)");
+          renderer.drawText(11, { x: -0.85, y: 0.40 }, "A");
+          renderer.drawText(11, { x: -0.85, y: 0.10 }, "S");
+          renderer.drawText(11, { x: -0.85, y: -0.20 }, "B");
+          renderer.drawText(14, { x: 0.75, y: 0.10 }, "Y");
+          // NOT Gate
+          renderer.drawPolyLine(10, [{ x: -0.39, y: 0.19 }, { x: -0.39, y: 0.31 }, { x: -0.28, y: 0.25 }, { x: -0.39, y: 0.19 }]);
+          renderer.drawDisc(12, { x: -0.28, y: 0.235 }, { x: -0.25, y: 0.265 });
+          renderer.drawText(15, { x: -0.37, y: 0.235 }, "NOT");
+          // AND 1 Gate
+          renderer.drawPolyLine(10, [{ x: -0.01, y: 0.29 }, { x: -0.01, y: 0.47 }, { x: 0.08, y: 0.47 }, { x: 0.08, y: 0.29 }, { x: -0.01, y: 0.29 }]);
+          renderer.drawEllipse(10, { x: -0.01, y: 0.29 }, { x: 0.17, y: 0.47 });
+          renderer.drawText(15, { x: 0.04, y: 0.36 }, "AND");
+          // AND 2 Gate
+          renderer.drawPolyLine(10, [{ x: -0.01, y: -0.24 }, { x: -0.01, y: -0.06 }, { x: 0.08, y: -0.06 }, { x: 0.08, y: -0.24 }, { x: -0.01, y: -0.24 }]);
+          renderer.drawEllipse(10, { x: -0.01, y: -0.24 }, { x: 0.17, y: -0.06 });
+          renderer.drawText(15, { x: 0.04, y: -0.17 }, "AND");
+          // OR Gate
+          renderer.drawPolyLine(10, [{ x: 0.40, y: 0.20 }, { x: 0.52, y: 0.18 }, { x: 0.60, y: 0.10 }]);
+          renderer.drawPolyLine(10, [{ x: 0.40, y: 0.00 }, { x: 0.52, y: 0.02 }, { x: 0.60, y: 0.10 }]);
+          renderer.drawPolyLine(10, [{ x: 0.40, y: 0.00 }, { x: 0.44, y: 0.10 }, { x: 0.40, y: 0.20 }]);
+          renderer.drawText(15, { x: 0.47, y: 0.08 }, "OR");
+          // Wires
+          renderer.drawPolyLine(11, [{ x: -0.80, y: 0.43 }, { x: -0.01, y: 0.43 }]);
+          renderer.drawPolyLine(11, [{ x: -0.80, y: 0.10 }, { x: -0.45, y: 0.10 }]);
+          renderer.drawPolyLine(11, [{ x: -0.45, y: 0.10 }, { x: -0.45, y: 0.25 }, { x: -0.39, y: 0.25 }]);
+          renderer.drawPolyLine(11, [{ x: -0.45, y: 0.10 }, { x: -0.01, y: 0.10 }, { x: -0.01, y: -0.10 }]);
+          renderer.drawPolyLine(14, [{ x: -0.25, y: 0.25 }, { x: -0.15, y: 0.25 }, { x: -0.01, y: 0.33 }]);
+          renderer.drawPolyLine(11, [{ x: -0.80, y: -0.20 }, { x: -0.01, y: -0.20 }]);
+          renderer.drawPolyLine(14, [{ x: 0.17, y: 0.38 }, { x: 0.28, y: 0.38 }, { x: 0.28, y: 0.16 }, { x: 0.40, y: 0.16 }]);
+          renderer.drawPolyLine(14, [{ x: 0.17, y: -0.15 }, { x: 0.28, y: -0.15 }, { x: 0.28, y: 0.04 }, { x: 0.40, y: 0.04 }]);
+          renderer.drawPolyLine(14, [{ x: 0.60, y: 0.10 }, { x: 0.72, y: 0.10 }]);
+          renderer.drawDisc(11, { x: -0.465, y: 0.085 }, { x: -0.435, y: 0.115 });
+        } else if (name === 'recpic.cfp') {
+          renderer.clear();
+          renderer.drawGrid();
+          function drawTile(cx, cy, size, col, iter) {
+            const hs = size / 2;
+            renderer.drawRectangle(col, { x: cx - hs, y: cy - hs }, { x: cx + hs, y: cy + hs });
+            renderer.drawPolyLine(col, [{ x: cx - hs, y: cy - hs }, { x: cx + hs, y: cy + hs }]);
+            renderer.drawPolyLine(col, [{ x: cx + hs, y: cy - hs }, { x: cx - hs, y: cy + hs }]);
+            if (iter <= 1) return;
+            const ns = size / 2;
+            const off = size / 4;
+            drawTile(cx - off, cy + off, ns, (col + 1) % 15 + 1, iter - 1);
+            drawTile(cx + off, cy + off, ns, (col + 2) % 15 + 1, iter - 1);
+            drawTile(cx - off, cy - off, ns, (col + 3) % 15 + 1, iter - 1);
+            drawTile(cx + off, cy - off, ns, (col + 4) % 15 + 1, iter - 1);
+          }
+          drawTile(0, 0, 1.4, 14, Math.min(4, d));
+        }
+      }
+
+      function updateSourceWithParams() {
+        let code = presets[currentPreset] || editor.getValue();
+        if (currentPreset === 'boom.cfp') {
+          code = code.replace(/demo\s+\d+/, `demo ${depth}`);
+        } else if (currentPreset === 'curves.cfp') {
+          code = code.replace(/hilbert\s+\d+/, `hilbert ${depth}`);
+          code = code.replace(/sierpinski\s+\d+/, `sierpinski ${depth}`);
+          code = code.replace(/dragon\s+\d+/, `dragon ${depth}`);
+        } else if (currentPreset === 'convex.cfp') {
+          code = code.replace(/renderCube\s+[\d\.\-]+\s+[\d\.\-]+\s+[\d\.\-]+/, `renderCube ${rotX.toFixed(2)} ${rotY.toFixed(2)} ${rotZ.toFixed(2)}`);
+        } else if (currentPreset === 'bspline.cfp') {
+          // Format custom control points list into Sapl code
+          const ptsStr = splinePoints.map(p => `Pt ${p.x.toFixed(3)} ${p.y.toFixed(3)}`).reduceRight((acc, p) => `Cons (${p}) (${acc})`, 'Nil');
+          code = code.replace(/ctrlPoints\s*=\s*[^;]+in Cons p1/, `ctrlPoints = ${ptsStr}\n\nrenderBSpline nSteps = \n  let poly = GraphPolyLine col_darkgray ctrlPoints`);
+        } else if (currentPreset === 'recpic.cfp') {
+          code = code.replace(/recPic\s+\d+/, `recPic ${depth}`);
+        }
+        editor.setValue(code);
+        return code;
+      }
+
+      async function loadPreset(name) {
+        currentPreset = name;
+        document.getElementById('editor-filename').textContent = name;
+        document.getElementById('hint-text').textContent = hints[name] || '';
+        
+        // Show/hide 3D sliders
+        const is3D = name === 'convex.cfp';
+        document.getElementById('row-rot-x').style.display = is3D ? 'flex' : 'none';
+        document.getElementById('row-rot-y').style.display = is3D ? 'flex' : 'none';
+        document.getElementById('row-rot-z').style.display = is3D ? 'flex' : 'none';
+        document.getElementById('btn-reset-points').style.display = name === 'bspline.cfp' ? 'inline-block' : 'none';
+
+        if (!presets[name]) {
+          try {
+            const resp = await fetch('grafisch/' + name + '?v=' + Date.now());
+            if (resp.ok) {
+              presets[name] = await resp.text();
+            } else {
+              presets[name] = '// Fout bij laden van ' + name;
+            }
+          } catch (e) {
+            presets[name] = '// Fout: ' + e.message;
+          }
+        }
+
+        updateSourceWithParams();
+        renderInteractiveDirect();
+        runGraphics();
+      }
+
+      async function runGraphics() {
+        depth = parseInt(document.getElementById('param-depth').value, 10);
+        renderInteractiveDirect();
+
+        if (!workerReady) return;
+
+        let code = editor.getValue();
+        worker.postMessage({
+          type: 'COMPILE',
+          source: code,
+          path: '/workspace/' + currentPreset,
+          stages: ['jmvm']
+        });
+      }
+
+      // --- Canvas Mouse Event Dispatcher ---
+      renderer.onEvent((event) => {
+        document.getElementById('metric-coords').textContent = `X: ${event.p ? event.p.x.toFixed(2) : '-'}, Y: ${event.p ? event.p.y.toFixed(2) : '-'}`;
+        document.getElementById('event-display').textContent = `${event.type} (${event.p ? event.p.x.toFixed(2) : ''}, ${event.p ? event.p.y.toFixed(2) : ''})`;
+
+        if (currentPreset === 'bspline.cfp') {
+          const p = event.p;
+          if (event.type === 'MouseDown') {
+            // Find nearest point within radius 0.08
+            let nearestIdx = -1;
+            let minDist = 0.08;
+            splinePoints.forEach((sp, idx) => {
+              const d = Math.hypot(sp.x - p.x, sp.y - p.y);
+              if (d < minDist) {
+                minDist = d;
+                nearestIdx = idx;
+              }
+            });
+            if (nearestIdx !== -1) {
+              selectedPointIdx = nearestIdx;
+            } else {
+              // Add point
+              splinePoints.push({ x: p.x, y: p.y });
+              selectedPointIdx = splinePoints.length - 1;
+            }
+            renderInteractiveDirect();
+          } else if (event.type === 'MouseDragged' && selectedPointIdx >= 0 && selectedPointIdx < splinePoints.length) {
+            splinePoints[selectedPointIdx] = { x: p.x, y: p.y };
+            renderInteractiveDirect();
+          } else if (event.type === 'MouseUp') {
+            if (selectedPointIdx !== -1) {
+              selectedPointIdx = -1;
+              updateSourceWithParams();
+              runGraphics();
+            }
+          }
+        } else if (currentPreset === 'convex.cfp') {
+          if (event.type === 'MouseDragged' && event.delta) {
+            rotY = (rotY + event.delta.x * 2.5) % 6.28;
+            rotX = (rotX - event.delta.y * 2.5) % 6.28;
+            document.getElementById('param-rot-y').value = rotY;
+            document.getElementById('param-rot-x').value = rotX;
+            renderInteractiveDirect();
+          } else if (event.type === 'MouseUp') {
+            updateSourceWithParams();
+            runGraphics();
+          }
+        } else if (currentPreset === 'boom.cfp') {
+          if (event.type === 'MouseDragged' || event.type === 'MouseDown') {
+            branchBendAngle = Math.max(0.2, Math.min(1.2, 0.6 + event.p.x * 0.5));
+            renderInteractiveDirect();
+          } else if (event.type === 'MouseUp') {
+            runGraphics();
+          }
+        }
+      });
+
+      // Event Listeners
+      document.querySelectorAll('.preset-card').forEach(card => {
+        card.addEventListener('click', () => {
+          document.querySelectorAll('.preset-card').forEach(c => c.classList.remove('active'));
+          card.classList.add('active');
+          loadPreset(card.dataset.file);
+        });
+      });
+
+      document.getElementById('btn-run-graphics').addEventListener('click', runGraphics);
+
+      document.getElementById('param-depth').addEventListener('input', (e) => {
+        depth = parseInt(e.target.value, 10);
+        document.getElementById('val-depth').textContent = depth;
+        updateSourceWithParams();
+        runGraphics();
+      });
+
+      ['param-rot-x', 'param-rot-y', 'param-rot-z'].forEach(id => {
+        document.getElementById(id).addEventListener('input', () => {
+          rotX = parseFloat(document.getElementById('param-rot-x').value);
+          rotY = parseFloat(document.getElementById('param-rot-y').value);
+          rotZ = parseFloat(document.getElementById('param-rot-z').value);
+          if (currentPreset === 'convex.cfp') {
+            updateSourceWithParams();
+            runGraphics();
+          }
+        });
+      });
+
+      // 3D Auto Rotate Toggle
+      document.getElementById('btn-auto-rotate').addEventListener('click', (e) => {
+        if (autoRotateTimer) {
+          clearInterval(autoRotateTimer);
+          autoRotateTimer = null;
+          e.target.style.background = '';
+        } else {
+          e.target.style.background = 'var(--accent)';
+          if (currentPreset !== 'convex.cfp') {
+            const convexCard = document.querySelector('[data-file="convex.cfp"]');
+            if (convexCard) convexCard.click();
+          }
+          autoRotateTimer = setInterval(() => {
+            rotY = (rotY + 0.05) % 6.28;
+            rotX = (rotX + 0.02) % 6.28;
+            document.getElementById('param-rot-y').value = rotY;
+            document.getElementById('param-rot-x').value = rotX;
+            renderInteractiveDirect();
+          }, 40);
+        }
+      });
+
+      document.getElementById('btn-reset-points').addEventListener('click', () => {
+        splinePoints = [...defaultSplinePoints];
+        selectedPointIdx = -1;
+        updateSourceWithParams();
+        runGraphics();
+      });
+
+      document.getElementById('btn-clear-canvas').addEventListener('click', () => {
+        if (currentPreset === 'bspline.cfp') {
+          splinePoints = [];
+          selectedPointIdx = -1;
+          renderInteractiveDirect();
+        } else {
+          renderer.clear();
+          renderer.drawGrid();
+        }
+      });
+
+      document.getElementById('btn-export-png').addEventListener('click', () => {
+        const link = document.createElement('a');
+        link.download = `${currentPreset.replace('.cfp', '')}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+
+      // Initial Load
+      await loadPreset('bspline.cfp');
+    });
+  </script>
+</body>
+</html>

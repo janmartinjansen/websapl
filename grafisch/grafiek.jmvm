@@ -1,0 +1,793 @@
+col_black_lazy col_black col_blue_lazy col_blue col_green_lazy col_green col_cyan_lazy col_cyan col_red_lazy col_red col_magenta_lazy col_magenta col_brown_lazy col_brown col_lightgray_lazy col_lightgray col_darkgray_lazy col_darkgray col_brightblue_lazy col_brightblue col_brightgreen_lazy col_brightgreen col_brightcyan_lazy col_brightcyan col_brightred_lazy col_brightred col_brightmagenta_lazy col_brightmagenta col_yellow_lazy col_yellow col_white_lazy col_white pt_lazy pt vergrootPt_lazy vergrootPt vergrootPt_Pt draaiPt_lazy draaiPt draaiPt_Pt verschuifPt_lazy verschuifPt verschuifPt_Pt verschuifPt_Pt_Pt addPt_lazy addPt addPt_Pt addPt_Pt_Pt subPt_lazy subPt subPt_Pt subPt_Pt_Pt scalePt_lazy scalePt scalePt_Pt dotPt_lazy dotPt dotPt_Pt dotPt_Pt_Pt distPtHelper_lazy distPtHelper distPt_lazy distPt distPt_Pt distPt_Pt_Pt append_lazy append append_Nil append_Cons revAppend_lazy revAppend revAppend_Nil revAppend_Cons reverseList_lazy reverseList mapList_lazy mapList mapList_Nil mapList_Cons filterList_lazy filterList filterList_Nil filterList_Cons filterList_Cons_else lengthList_lazy lengthList lengthList_Nil lengthList_Cons forcePt_lazy forcePt forcePt_Pt forcePoints_lazy forcePoints forcePoints_Nil forcePoints_Cons forceItem_lazy forceItem forceItem_GraphText forceItem_GraphPolyLine forceItem_GraphPolygon forceItem_GraphRectangle forceItem_GraphEllipse forceItem_GraphDisc forceItem_GraphClear forceGraphics_lazy forceGraphics forceGraphics_Nil forceGraphics_Cons sampleStep_lazy sampleStep sampleFuncHelper_lazy sampleFuncHelper sampleFuncHelper_else sampleFunc_lazy sampleFunc axisX_lazy axisX axisY_lazy axisY axes_lazy axes fnSin_lazy fnSin fnDampedCos_lazy fnDampedCos fnPoly_lazy fnPoly plotFunction_lazy plotFunction plotDemo_lazy plotDemo start_lazy start draaiPt_1_lazy draaiPt_1 draaiPt_2_lazy draaiPt_2 distPtHelper_1_lazy distPtHelper_1 distPtHelper_2_lazy distPtHelper_2 revAppend_1_lazy revAppend_1 sampleStep_1_lazy sampleStep_1 sampleStep_2_lazy sampleStep_2 plotFunction_1_lazy plotFunction_1 plotDemo_1_lazy plotDemo_1 #
+call 132
+print 4
+stop
+0           jmp 1
+1           return_const 0 0
+2           jmp 3
+3           return_const 0 1
+4           jmp 5
+5           return_const 0 2
+6           jmp 7
+7           return_const 0 3
+8           jmp 9
+9           return_const 0 4
+10           jmp 11
+11           return_const 0 5
+12           jmp 13
+13           return_const 0 6
+14           jmp 15
+15           return_const 0 7
+16           jmp 17
+17           return_const 0 8
+18           jmp 19
+19           return_const 0 9
+20           jmp 21
+21           return_const 0 10
+22           jmp 23
+23           return_const 0 11
+24           jmp 25
+25           return_const 0 12
+26           jmp 27
+27           return_const 0 13
+28           jmp 29
+29           return_const 0 14
+30           jmp 31
+31           return_const 0 15
+32           jmp 33
+33           load 1
+eval
+load 0
+eval
+ccreatet 2 11 5 0
+return 2
+34           load 1
+eval
+store 1
+35           load 1
+jmpt 1 36
+36           load 2
+eval
+load 1
+mult
+load 2
+eval
+load 0
+mult
+ccreatet 2 11 5 0
+return 4
+37           load 1
+eval
+store 1
+38           updsp 2
+load 2
+pushfunc 1 133
+create 2 3
+store 0
+load 2
+pushfunc 1 135
+create 2 3
+store 1
+load 3
+jmpt 1 39
+39           push 0.0
+load 3
+eval
+load 0
+mult
+sub
+load 2
+eval
+load 1
+mult
+add
+load 2
+eval
+load 0
+mult
+load 3
+eval
+load 1
+mult
+add
+ccreatet 2 11 5 0
+return 6
+40           load 0
+eval
+store 0
+load 1
+eval
+store 1
+41           load 0
+jmpt 1 42
+42           load 3
+jmpt 1 43
+43           load 1
+load 3
+add
+load 0
+load 2
+add
+ccreatet 2 11 5 0
+return 6
+44           load 0
+eval
+store 0
+load 1
+eval
+store 1
+45           load 0
+jmpt 1 46
+46           load 3
+jmpt 1 47
+47           load 3
+load 1
+add
+load 2
+load 0
+add
+ccreatet 2 11 5 0
+return 6
+48           load 0
+eval
+store 0
+load 1
+eval
+store 1
+49           load 0
+jmpt 1 50
+50           load 3
+jmpt 1 51
+51           load 3
+load 1
+sub
+load 2
+load 0
+sub
+ccreatet 2 11 5 0
+return 6
+52           load 1
+eval
+store 1
+53           load 1
+jmpt 1 54
+54           load 2
+eval
+load 1
+mult
+load 2
+eval
+load 0
+mult
+ccreatet 2 11 5 0
+return 4
+55           load 0
+eval
+store 0
+load 1
+eval
+store 1
+56           load 0
+jmpt 1 57
+57           load 3
+jmpt 1 58
+58           load 2
+load 0
+mult
+load 3
+load 1
+mult
+add
+return 6
+59           jmp 60
+60           updsp 2
+load 4
+load 2
+pushfunc 2 137
+create 3 3
+store 0
+load 5
+load 3
+pushfunc 2 139
+create 3 3
+store 1
+load 0
+eval
+load 0
+eval
+mult
+load 1
+eval
+load 1
+eval
+mult
+add
+floatop 9
+return 6
+61           load 0
+eval
+store 0
+load 1
+eval
+store 1
+62           load 0
+jmpt 1 63
+63           load 3
+jmpt 1 64
+64           load 1
+load 0
+load 3
+load 2
+tailcall 6 60
+65           load 0
+eval
+store 0
+66           load 0
+jmpt 2 67 68
+67           load 1
+eval
+return 2
+68           load 3
+load 1
+call 66
+load 0
+ccreatet 2 11 6 1
+return 4
+69           load 0
+eval
+store 0
+70           load 0
+jmpt 2 71 72
+71           load 1
+eval
+return 2
+72           load 3
+load 0
+pushfunc 2 141
+create 3 3
+load 1
+tailcall 4 70
+73           load 0
+eval
+store 0
+74           ccreatet 0 11 6 0
+load 0
+tailcall 1 70
+75           load 1
+eval
+store 1
+76           load 1
+jmpt 2 77 78
+77           ccreatet 0 11 6 0
+return 2
+78           load 1
+load 2
+call 76
+load 0
+load 2
+eval
+ccreatet 2 11 6 1
+return 4
+79           load 1
+eval
+store 1
+80           load 1
+jmpt 2 81 82
+81           ccreatet 0 11 6 0
+return 2
+82           load 0
+load 2
+eval
+ifeq 83
+load 1
+load 2
+call 80
+load 0
+ccreatet 2 11 6 1
+return 4
+83           load 1
+load 2
+tailcall 4 80
+84           load 0
+eval
+store 0
+85           load 0
+jmpt 2 86 87
+86           return_const 1 0
+87           push 1
+load 1
+call 85
+add
+return 3
+88           load 0
+eval
+store 0
+89           load 0
+jmpt 1 90
+90           load 1
+load 0
+ccreatet 2 11 5 0
+return 3
+91           load 0
+eval
+store 0
+92           load 0
+jmpt 2 93 94
+93           ccreatet 0 11 6 0
+return 1
+94           load 1
+call 92
+load 0
+call 89
+ccreatet 2 11 6 1
+return 3
+95           load 0
+eval
+store 0
+96           load 0
+jmpt 7 97 98 99 100 101 102 103
+97           load 2
+load 1
+call 89
+load 0
+ccreatet 3 11 7 0
+return 4
+98           load 1
+call 92
+load 0
+ccreatet 2 11 7 1
+return 3
+99           load 1
+call 92
+load 0
+ccreatet 2 11 7 2
+return 3
+100           load 2
+call 89
+load 1
+call 89
+load 0
+ccreatet 3 11 7 3
+return 4
+101           load 2
+call 89
+load 1
+call 89
+load 0
+ccreatet 3 11 7 4
+return 4
+102           load 2
+call 89
+load 1
+call 89
+load 0
+ccreatet 3 11 7 5
+return 4
+103           ccreatet 0 11 7 6
+return 1
+104           load 0
+eval
+store 0
+105           load 0
+jmpt 2 106 107
+106           ccreatet 0 11 6 0
+return 1
+107           load 1
+call 105
+load 0
+call 96
+ccreatet 2 11 6 1
+return 3
+108           load 1
+eval
+store 1
+load 2
+eval
+store 2
+load 3
+eval
+store 3
+109           updsp 2
+load 3
+load 2
+create 2 7
+dup
+store 0
+load 3
+pushfunc 2 143
+create 3 3
+store 1
+load 6
+load 1
+pushfunc 2 145
+create 3 3
+load 5
+load 4
+load 3
+load 5
+add
+load 2
+tailcall 7 111
+110           load 1
+eval
+store 1
+load 2
+eval
+store 2
+111           load 1
+load 2
+sub
+ifle 112
+load 4
+eval
+return 5
+112           load 4
+load 3
+eval
+load 2
+load 1
+load 0
+tailcall 5 109
+113           jmp 114
+114           updsp 1
+ccreatet 0 11 6 0
+load 4
+load 3
+load 2
+load 1
+pushfunc 5 110
+create 6 3
+dup
+store 0
+eval
+tailcall 5 74
+115           jmp 116
+116           ccreatet 0 11 6 0
+push 0.0
+push 1.0
+ccreatet 2 11 5 0
+ccreatet 2 11 6 1
+push 0.0
+push 0.0
+push 1.0
+sub
+ccreatet 2 11 5 0
+ccreatet 2 11 6 1
+return 0
+117           jmp 118
+118           ccreatet 0 11 6 0
+push 1.0
+push 0.0
+ccreatet 2 11 5 0
+ccreatet 2 11 6 1
+push 0.0
+push 1.0
+sub
+push 0.0
+ccreatet 2 11 5 0
+ccreatet 2 11 6 1
+return 0
+119           jmp 120
+120           ccreatet 0 11 6 0
+call 118
+call 17
+ccreatet 2 11 7 1
+ccreatet 2 11 6 1
+call 116
+call 17
+ccreatet 2 11 7 1
+ccreatet 2 11 6 1
+return 0
+121           jmp 122
+122           push 0.7
+push 3.14159
+load 0
+eval
+mult
+floatop 0
+mult
+return 1
+123           jmp 124
+124           push 0.8
+push 6.28
+load 0
+eval
+mult
+floatop 1
+push 0.0
+load 0
+eval
+sub
+floatop 8
+mult
+mult
+return 1
+125           load 0
+eval
+store 0
+126           push 1.5
+load 0
+dup
+mult
+mult
+push 0.6
+sub
+return 1
+127           jmp 128
+128           updsp 2
+load 6
+load 4
+load 5
+pushfunc 3 147
+create 4 3
+dup
+store 0
+load 5
+load 4
+load 2
+pushfunc 4 113
+create 5 3
+dup
+store 1
+eval
+load 3
+eval
+ccreatet 2 11 7 1
+return 7
+129           jmp 130
+130           updsp 4
+push 40
+push 1.0
+push 0.0
+push 1.0
+sub
+pushfunc 0 22
+create 1 3
+pushfunc 1 121
+create 1 7
+pushfunc 5 127
+create 6 3
+store 0
+push 40
+push 1.0
+push 0.0
+push 1.0
+sub
+pushfunc 0 28
+create 1 3
+pushfunc 1 123
+create 1 7
+pushfunc 5 127
+create 6 3
+store 1
+push 30
+push 0.8
+push 0.0
+push 0.8
+sub
+pushfunc 0 24
+create 1 3
+pushfunc 1 125
+create 1 7
+pushfunc 5 127
+create 6 3
+dup
+store 2
+load 1
+load 0
+pushfunc 3 149
+create 4 3
+dup
+store 3
+call 120
+tailcall 4 66
+131           jmp 132
+132           call 130
+tailcall 0 105
+133           jmp 134
+134           load 0
+eval
+floatop 1
+return 1
+135           jmp 136
+136           load 0
+eval
+floatop 0
+return 1
+137           jmp 138
+138           load 0
+eval
+load 1
+eval
+sub
+return 2
+139           jmp 140
+140           load 0
+eval
+load 1
+eval
+sub
+return 2
+141           jmp 142
+142           load 1
+eval
+load 0
+eval
+ccreatet 2 11 6 1
+return 2
+143           jmp 144
+144           load 1
+eval
+load 0
+eval
+ccreatet 2 11 5 0
+return 2
+145           jmp 146
+146           load 1
+eval
+load 0
+eval
+ccreatet 2 11 6 1
+return 2
+147           jmp 148
+148           load 0
+eval
+load 1
+eval
+sub
+load 2
+eval
+floatop 14
+div
+return 3
+149           jmp 150
+150           ccreatet 0 11 6 0
+load 2
+eval
+ccreatet 2 11 6 1
+load 1
+eval
+ccreatet 2 11 6 1
+load 0
+eval
+ccreatet 2 11 6 1
+return 3
+
+.metadata
+types 4
+type 5 Point 1
+  constr 0 Pt 2
+type 6 List 2
+  constr 0 Nil 0
+  constr 1 Cons 2
+type 7 Graphics 7
+  constr 0 GraphText 3
+  constr 1 GraphPolyLine 2
+  constr 2 GraphPolygon 2
+  constr 3 GraphRectangle 3
+  constr 4 GraphEllipse 3
+  constr 5 GraphDisc 3
+  constr 6 GraphClear 0
+type 8 Event 6
+  constr 0 KeyIn 1
+  constr 1 MouseDown 1
+  constr 2 MouseUp 1
+  constr 3 MouseDragged 1
+  constr 4 MouseDoubleClick 1
+  constr 5 NoInput 0
+functions 114
+  func 1 col_black 0 0
+  func 0 col_black 0 0
+  func 3 col_blue 0 0
+  func 2 col_blue 0 0
+  func 5 col_green 0 0
+  func 4 col_green 0 0
+  func 7 col_cyan 0 0
+  func 6 col_cyan 0 0
+  func 9 col_red 0 0
+  func 8 col_red 0 0
+  func 11 col_magenta 0 0
+  func 10 col_magenta 0 0
+  func 13 col_brown 0 0
+  func 12 col_brown 0 0
+  func 15 col_lightgray 0 0
+  func 14 col_lightgray 0 0
+  func 17 col_darkgray 0 0
+  func 16 col_darkgray 0 0
+  func 19 col_brightblue 0 0
+  func 18 col_brightblue 0 0
+  func 21 col_brightgreen 0 0
+  func 20 col_brightgreen 0 0
+  func 23 col_brightcyan 0 0
+  func 22 col_brightcyan 0 0
+  func 25 col_brightred 0 0
+  func 24 col_brightred 0 0
+  func 27 col_brightmagenta 0 0
+  func 26 col_brightmagenta 0 0
+  func 29 col_yellow 0 0
+  func 28 col_yellow 0 0
+  func 31 col_white 0 0
+  func 30 col_white 0 0
+  func 33 pt 2 000
+  func 32 pt 2 000
+  func 35 vergrootPt 2 010
+  func 34 vergrootPt 2 010
+  func 38 draaiPt 2 010
+  func 37 draaiPt 2 010
+  func 41 verschuifPt 2 110
+  func 40 verschuifPt 2 110
+  func 45 addPt 2 110
+  func 44 addPt 2 110
+  func 49 subPt 2 110
+  func 48 subPt 2 110
+  func 53 scalePt 2 010
+  func 52 scalePt 2 010
+  func 56 dotPt 2 110
+  func 55 dotPt 2 110
+  func 60 distPtHelper 4 00000
+  func 59 distPtHelper 4 00000
+  func 62 distPt 2 110
+  func 61 distPt 2 110
+  func 66 append 2 100
+  func 65 append 2 100
+  func 70 revAppend 2 100
+  func 69 revAppend 2 100
+  func 74 reverseList 1 10
+  func 73 reverseList 1 10
+  func 76 mapList 2 010
+  func 75 mapList 2 010
+  func 80 filterList 2 010
+  func 79 filterList 2 010
+  func 85 lengthList 1 10
+  func 84 lengthList 1 10
+  func 89 forcePt 1 10
+  func 88 forcePt 1 10
+  func 92 forcePoints 1 10
+  func 91 forcePoints 1 10
+  func 96 forceItem 1 10
+  func 95 forceItem 1 10
+  func 105 forceGraphics 1 10
+  func 104 forceGraphics 1 10
+  func 109 sampleStep 5 011100
+  func 108 sampleStep 5 011100
+  func 111 sampleFuncHelper 5 011000
+  func 110 sampleFuncHelper 5 011000
+  func 114 sampleFunc 4 00000
+  func 113 sampleFunc 4 00000
+  func 116 axisX 0 0
+  func 115 axisX 0 0
+  func 118 axisY 0 0
+  func 117 axisY 0 0
+  func 120 axes 0 0
+  func 119 axes 0 0
+  func 122 fnSin 1 00
+  func 121 fnSin 1 00
+  func 124 fnDampedCos 1 00
+  func 123 fnDampedCos 1 00
+  func 126 fnPoly 1 10
+  func 125 fnPoly 1 10
+  func 128 plotFunction 5 000000
+  func 127 plotFunction 5 000000
+  func 130 plotDemo 0 0
+  func 129 plotDemo 0 0
+  func 132 start 0 0
+  func 131 start 0 0
+  func 134 draaiPt_1 1 00
+  func 133 draaiPt_1 1 00
+  func 136 draaiPt_2 1 00
+  func 135 draaiPt_2 1 00
+  func 138 distPtHelper_1 2 000
+  func 137 distPtHelper_1 2 000
+  func 140 distPtHelper_2 2 000
+  func 139 distPtHelper_2 2 000
+  func 142 revAppend_1 2 000
+  func 141 revAppend_1 2 000
+  func 144 sampleStep_1 2 000
+  func 143 sampleStep_1 2 000
+  func 146 sampleStep_2 2 000
+  func 145 sampleStep_2 2 000
+  func 148 plotFunction_1 3 0000
+  func 147 plotFunction_1 3 0000
+  func 150 plotDemo_1 3 0000
+  func 149 plotDemo_1 3 0000
+.endmetadata

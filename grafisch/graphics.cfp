@@ -1,0 +1,60 @@
+::Point = Pt !x !y
+::List = Nil | Cons !x !xs
+::Graphics = GraphText !c !p !txt | GraphPolyLine !c !pts | GraphPolygon !c !pts | GraphRectangle !c !p1 !p2 | GraphEllipse !c !p1 !p2 | GraphDisc !c !p1 !p2 | GraphClear
+::Event = KeyIn !c | MouseDown !p | MouseUp !p | MouseDragged !p | MouseDoubleClick !p | NoInput
+
+// 16 VGA/EGA Colors
+col_black        = 0
+col_blue         = 1
+col_green        = 2
+col_cyan         = 3
+col_red          = 4
+col_magenta      = 5
+col_brown        = 6
+col_lightgray    = 7
+col_darkgray     = 8
+col_brightblue   = 9
+col_brightgreen  = 10
+col_brightcyan   = 11
+col_brightred    = 12
+col_brightmagenta = 13
+col_yellow       = 14
+col_white        = 15
+
+// Basic Point Constructors & Transformers
+pt x y = Pt x y
+
+vergrootPt factor p = case p (Pt x y -> Pt (factor * x) (factor * y))
+
+draaiPt hoek p = let c = cos hoek, s = sin hoek in case p (Pt x y -> Pt ((c * x) + (s * y)) ((0.0 - (s * x)) + (c * y)))
+
+verschuifPt d p = case d (Pt dx dy -> case p (Pt x y -> Pt (x + dx) (y + dy)))
+
+addPt p1 p2 = case p1 (Pt x1 y1 -> case p2 (Pt x2 y2 -> Pt (x1 + x2) (y1 + y2)))
+subPt p1 p2 = case p1 (Pt x1 y1 -> case p2 (Pt x2 y2 -> Pt (x1 - x2) (y1 - y2)))
+scalePt factor p = case p (Pt x y -> Pt (factor * x) (factor * y))
+dotPt p1 p2 = case p1 (Pt x1 y1 -> case p2 (Pt x2 y2 -> (x1 * x2) + (y1 * y2)))
+
+distPtHelper x1 y1 x2 y2 = let dx = x1 - x2, dy = y1 - y2 in sqrt ((dx * dx) + (dy * dy))
+distPt p1 p2 = case p1 (Pt x1 y1 -> case p2 (Pt x2 y2 -> distPtHelper x1 y1 x2 y2))
+
+// List Helpers
+append xs ys = case xs (Nil -> ys) (Cons x rest -> Cons x (append rest ys))
+
+revAppend xs acc = case xs (Nil -> acc) (Cons x rest -> revAppend rest (Cons x acc))
+reverseList xs = revAppend xs Nil
+
+mapList f xs = case xs (Nil -> Nil) (Cons x rest -> Cons (f x) (mapList f rest))
+
+filterList p xs = case xs (Nil -> Nil) (Cons x rest -> if (p x) (Cons x (filterList p rest)) (filterList p rest))
+
+lengthList xs = case xs (Nil -> 0) (Cons x rest -> 1 + lengthList rest)
+
+// Force evaluation of entire graphics tree
+forcePt p = case p (Pt x y -> Pt x y)
+
+forcePoints pts = case pts (Nil -> Nil) (Cons p ps -> Cons (forcePt p) (forcePoints ps))
+
+forceItem item = case item (GraphText c p txt -> GraphText c (forcePt p) txt) (GraphPolyLine c pts -> GraphPolyLine c (forcePoints pts)) (GraphPolygon c pts -> GraphPolygon c (forcePoints pts)) (GraphRectangle c p1 p2 -> GraphRectangle c (forcePt p1) (forcePt p2)) (GraphEllipse c p1 p2 -> GraphEllipse c (forcePt p1) (forcePt p2)) (GraphDisc c p1 p2 -> GraphDisc c (forcePt p1) (forcePt p2)) (GraphClear -> GraphClear)
+
+forceGraphics g = case g (Nil -> Nil) (Cons item rest -> Cons (forceItem item) (forceGraphics rest))

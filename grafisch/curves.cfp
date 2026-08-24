@@ -1,0 +1,82 @@
+#import "grafisch/graphics.cfp"
+
+// Geometric primitive: a plaatje is a list of polylines (List of List of Point)
+point p = Cons (Cons p Nil) Nil
+to p q = Cons (Cons p (Cons q Nil)) Nil
+
+scaleP sx sy p = case p (Pt x y -> Pt (x * sx) (y * sy))
+shiftP dx dy p = case p (Pt x y -> Pt (x + dx) (y + dy))
+
+rotStepHelper m x y = if (m == 0) (Pt x y) (if (m == 1) (Pt (0.0 - y) x) (if (m == 2) (Pt (0.0 - x) (0.0 - y)) (Pt y (0.0 - x))))
+rotStep n p = case p (Pt x y -> rotStepHelper (n % 4) x y)
+
+scalePic sx sy pic = mapList (mapList (scaleP sx sy)) pic
+shiftPic dx dy pic = mapList (mapList (shiftP dx dy)) pic
+rotPic n pic = mapList (mapList (rotStep n)) pic
+
+// cat: connect last polyline of p1 to first polyline of p2
+catHelper lastLine restP1 p2 = case p2 (Nil -> Cons lastLine restP1) (Cons firstP2 restP2 -> append (reverseList restP1) (Cons (append lastLine firstP2) restP2))
+catHelper2 p1 p2 rev = case rev (Nil -> p2) (Cons lastLine restP1 -> catHelper lastLine restP1 p2)
+cat p1 p2 = case p1 (Nil -> p2) (Cons l ls -> catHelper2 p1 p2 (reverseList p1))
+
+toPolyLines col lines = case lines (Nil -> Nil) (Cons l ls -> Cons (GraphPolyLine col l) (toPolyLines col ls))
+
+// Hilbert Curve
+hilbSize n = if (n <= 0) 0.0 ((2.0 * (hilbSize (n - 1))) + 1.0)
+
+hilbStep nm1 afm = 
+  let part1 = scalePic (0.0 - 1.0) 1.0 (rotPic 1 nm1),
+      part2 = shiftPic (afm + 1.0) 0.0 nm1,
+      part3 = shiftPic (afm + 1.0) (afm + 1.0) nm1,
+      part4 = shiftPic afm ((2.0 * afm) + 1.0) (scalePic 1.0 (0.0 - 1.0) (rotPic 1 nm1))
+  in cat part1 (cat part2 (cat part3 part4))
+
+hilb n = if (n <= 0) (point (Pt 0.0 0.0)) (hilbStep (hilb (n - 1)) (hilbSize (n - 1)))
+
+hilbert n = 
+  let h = hilb n,
+      fn = hilbSize n,
+      scaled = scalePic (1.6 / fn) (1.6 / fn) h,
+      shifted = shiftPic (0.0 - 0.8) (0.0 - 0.8) scaled
+  in toPolyLines col_brightcyan shifted
+
+// Sierpinski Curve
+sierSize n = if (n <= 0) 0.0 ((2.0 * (sierSize (n - 1))) + 3.0)
+
+sierStep nm1 = 
+  let p1 = nm1,
+      p2 = shiftPic (0.0 - 1.0) 1.0 (rotPic 1 nm1),
+      p3 = shiftPic 0.0 1.0 (rotPic 3 nm1),
+      p4 = shiftPic 1.0 1.0 nm1
+  in cat p1 (cat p2 (cat p3 p4))
+
+sier n = if (n <= 0) (point (Pt 0.0 0.0)) (sierStep (sier (n - 1)))
+
+sierpinski n = 
+  let s = sier n,
+      fn = sierSize n,
+      scaled = scalePic (1.6 / fn) (1.6 / fn) s,
+      shifted = shiftPic (0.0 - 0.8) (0.0 - 0.8) scaled
+  in toPolyLines col_yellow shifted
+
+// Dragon Curve
+dragonHelper nm1 p1 p2 x1 y1 x2 y2 = 
+  let dx = x2 - x1,
+      dy = y2 - y1,
+      px = x1 + (0.5 * (dx - dy)),
+      py = y1 + (0.5 * (dx + dy)),
+      mid = Pt px py
+  in cat (dragonStep nm1 p1 mid) (dragonStep nm1 mid p2)
+
+dragonRec nm1 p1 p2 = case p1 (Pt x1 y1 -> case p2 (Pt x2 y2 -> dragonHelper nm1 p1 p2 x1 y1 x2 y2))
+
+dragonStep n p1 p2 = if (n <= 0) (to p1 p2) (dragonRec (n - 1) p1 p2)
+
+dragonOrigin = Pt (0.0 - 0.5) 0.0
+dragonEnd = Pt 0.5 0.0
+
+dragon n = 
+  let d = dragonStep n dragonOrigin dragonEnd in
+  toPolyLines col_brightgreen d
+
+start = forceGraphics (hilbert 2)

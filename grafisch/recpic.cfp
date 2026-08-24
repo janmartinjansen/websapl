@@ -1,0 +1,52 @@
+#import "grafisch/graphics.cfp"
+
+point p = Cons (Cons p Nil) Nil
+to p q = Cons (Cons p (Cons q Nil)) Nil
+
+scaleP sx sy p = case p (Pt x y -> Pt (x * sx) (y * sy))
+shiftP dx dy p = case p (Pt x y -> Pt (x + dx) (y + dy))
+
+rotStepHelper m x y = if (m == 0) (Pt x y) (if (m == 1) (Pt (0.0 - y) x) (if (m == 2) (Pt (0.0 - x) (0.0 - y)) (Pt y (0.0 - x))))
+rotStep n p = case p (Pt x y -> rotStepHelper (n % 4) x y)
+
+scalePic sx sy pic = mapList (mapList (scaleP sx sy)) pic
+shiftPic dx dy pic = mapList (mapList (shiftP dx dy)) pic
+rotPic n pic = mapList (mapList (rotStep n)) pic
+
+catHelper lastLine restP1 p2 = case p2 (Nil -> Cons lastLine restP1) (Cons firstP2 restP2 -> append (reverseList restP1) (Cons (append lastLine firstP2) restP2))
+catHelper2 p1 p2 rev = case rev (Nil -> p2) (Cons lastLine restP1 -> catHelper lastLine restP1 p2)
+cat p1 p2 = case p1 (Nil -> p2) (Cons l ls -> catHelper2 p1 p2 (reverseList p1))
+
+toPolyLines col lines = case lines (Nil -> Nil) (Cons l ls -> Cons (GraphPolyLine col l) (toPolyLines col ls))
+
+// Basic Tile
+baseTile = 
+  let p0 = Pt (0.0 - 0.5) (0.0 - 0.5),
+      p1 = Pt 0.5 (0.0 - 0.5),
+      p2 = Pt 0.5 0.5,
+      p3 = Pt (0.0 - 0.5) 0.5,
+      border = Cons (Cons p0 (Cons p1 (Cons p2 (Cons p3 (Cons p0 Nil))))) Nil,
+      diags = Cons (Cons p0 (Cons p2 Nil)) (Cons (Cons p1 (Cons p3 Nil)) Nil)
+  in append border diags
+
+// 2x2 Composite Tile
+fourTiles tl tr bl br = 
+  let stl = shiftPic (0.0 - 0.5) 0.5 (scalePic 0.5 0.5 tl),
+      str = shiftPic 0.5 0.5 (scalePic 0.5 0.5 tr),
+      sbl = shiftPic (0.0 - 0.5) (0.0 - 0.5) (scalePic 0.5 0.5 bl),
+      sbr = shiftPic 0.5 (0.0 - 0.5) (scalePic 0.5 0.5 br)
+  in append stl (append str (append sbl sbr))
+
+recStep prev = 
+  let r1 = rotPic 1 prev,
+      r2 = rotPic 2 prev,
+      r3 = rotPic 3 prev
+  in fourTiles prev r1 r3 r2
+
+recPattern n tile = if (n <= 0) tile (recStep (recPattern (n - 1) tile))
+
+recPic n = 
+  let p = recPattern n baseTile in
+  toPolyLines col_yellow p
+
+start = forceGraphics (recPic 2)

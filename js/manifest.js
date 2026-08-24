@@ -505,6 +505,134 @@ window.WEBSAPL_TREE = [
     "_expanded": true
   },
   {
+    "name": "grafisch",
+    "path": "grafisch",
+    "type": "directory",
+    "children": [
+      {
+        "name": "boom.cfp",
+        "path": "grafisch/boom.cfp",
+        "type": "file",
+        "ext": ".cfp",
+        "size": 1049,
+        "isBinary": false
+      },
+      {
+        "name": "boom.jmvm",
+        "path": "grafisch/boom.jmvm",
+        "type": "file",
+        "ext": ".jmvm",
+        "size": 23776,
+        "isBinary": false
+      },
+      {
+        "name": "bspline.cfp",
+        "path": "grafisch/bspline.cfp",
+        "type": "file",
+        "ext": ".cfp",
+        "size": 2464,
+        "isBinary": false
+      },
+      {
+        "name": "bspline.jmvm",
+        "path": "grafisch/bspline.jmvm",
+        "type": "file",
+        "ext": ".jmvm",
+        "size": 32514,
+        "isBinary": false
+      },
+      {
+        "name": "convex.cfp",
+        "path": "grafisch/convex.cfp",
+        "type": "file",
+        "ext": ".cfp",
+        "size": 2590,
+        "isBinary": false
+      },
+      {
+        "name": "convex.jmvm",
+        "path": "grafisch/convex.jmvm",
+        "type": "file",
+        "ext": ".jmvm",
+        "size": 38020,
+        "isBinary": false
+      },
+      {
+        "name": "curves.cfp",
+        "path": "grafisch/curves.cfp",
+        "type": "file",
+        "ext": ".cfp",
+        "size": 2998,
+        "isBinary": false
+      },
+      {
+        "name": "curves.jmvm",
+        "path": "grafisch/curves.jmvm",
+        "type": "file",
+        "ext": ".jmvm",
+        "size": 39623,
+        "isBinary": false
+      },
+      {
+        "name": "grafiek.cfp",
+        "path": "grafisch/grafiek.cfp",
+        "type": "file",
+        "ext": ".cfp",
+        "size": 1270,
+        "isBinary": false
+      },
+      {
+        "name": "grafiek.jmvm",
+        "path": "grafisch/grafiek.jmvm",
+        "type": "file",
+        "ext": ".jmvm",
+        "size": 24766,
+        "isBinary": false
+      },
+      {
+        "name": "graphics.cfp",
+        "path": "grafisch/graphics.cfp",
+        "type": "file",
+        "ext": ".cfp",
+        "size": 2675,
+        "isBinary": false
+      },
+      {
+        "name": "hwdes.cfp",
+        "path": "grafisch/hwdes.cfp",
+        "type": "file",
+        "ext": ".cfp",
+        "size": 3757,
+        "isBinary": false
+      },
+      {
+        "name": "hwdes.jmvm",
+        "path": "grafisch/hwdes.jmvm",
+        "type": "file",
+        "ext": ".jmvm",
+        "size": 54443,
+        "isBinary": false
+      },
+      {
+        "name": "recpic.cfp",
+        "path": "grafisch/recpic.cfp",
+        "type": "file",
+        "ext": ".cfp",
+        "size": 2003,
+        "isBinary": false
+      },
+      {
+        "name": "recpic.jmvm",
+        "path": "grafisch/recpic.jmvm",
+        "type": "file",
+        "ext": ".jmvm",
+        "size": 32476,
+        "isBinary": false
+      }
+    ],
+    "_expanded": true
+  },
+  {
     "name": "lib",
     "path": "lib",
     "type": "directory",
@@ -570,7 +698,7 @@ window.WEBSAPL_TREE = [
         "path": "paper_examples/06_primes.cfp",
         "type": "file",
         "ext": ".cfp",
-        "size": 627,
+        "size": 601,
         "isBinary": false
       },
       {
@@ -641,11 +769,27 @@ window.WEBSAPL_TREE = [
     "isBinary": false
   },
   {
+    "name": "graphics.html",
+    "path": "graphics.html",
+    "type": "file",
+    "ext": ".html",
+    "size": 14902,
+    "isBinary": false
+  },
+  {
     "name": "index.html",
     "path": "index.html",
     "type": "file",
     "ext": ".html",
-    "size": 13190,
+    "size": 13185,
+    "isBinary": false
+  },
+  {
+    "name": "manifest.json",
+    "path": "manifest.json",
+    "type": "file",
+    "ext": ".json",
+    "size": 16470,
     "isBinary": false
   },
   {

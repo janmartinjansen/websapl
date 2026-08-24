@@ -1,0 +1,70 @@
+#import "grafisch/graphics.cfp"
+
+// Cubic B-Spline Basis Functions for t in [0, 1]
+b0 t = ((1.0 - t) * (1.0 - t) * (1.0 - t)) / 6.0
+b1 t = ((3.0 * t * t * t) - (6.0 * t * t) + 4.0) / 6.0
+b2 t = (((0.0 - 3.0) * t * t * t) + (3.0 * t * t) + (3.0 * t) + 1.0) / 6.0
+b3 t = (t * t * t) / 6.0
+
+// Evaluate single point on B-Spline segment
+evalSplineHelper x0 y0 x1 y1 x2 y2 x3 y3 t = 
+  let c0 = b0 t,
+      c1 = b1 t,
+      c2 = b2 t,
+      c3 = b3 t,
+      px = (c0 * x0) + (c1 * x1) + (c2 * x2) + (c3 * x3),
+      py = (c0 * y0) + (c1 * y1) + (c2 * y2) + (c3 * y3)
+  in Pt px py
+
+evalSplinePt p0 p1 p2 p3 t = 
+  case p0 (Pt x0 y0 -> case p1 (Pt x1 y1 -> case p2 (Pt x2 y2 -> case p3 (Pt x3 y3 ->
+    evalSplineHelper x0 y0 x1 y1 x2 y2 x3 y3 t))))
+
+// Sample a segment from t=0 to t=1 with nSteps
+sampleSegmentNext p0 p1 p2 p3 step nSteps acc = 
+  let t = (itof step) / (itof nSteps),
+      pt = evalSplinePt p0 p1 p2 p3 t
+  in sampleSegmentStep p0 p1 p2 p3 (step + 1) nSteps (Cons pt acc)
+
+sampleSegmentStep p0 p1 p2 p3 step nSteps acc = 
+  if (step > nSteps) acc (sampleSegmentNext p0 p1 p2 p3 step nSteps acc)
+
+sampleSegment p0 p1 p2 p3 nSteps = 
+  let pts = sampleSegmentStep p0 p1 p2 p3 0 nSteps Nil in
+  reverseList pts
+
+// Generate all spline segments for a list of control points
+genSplineHelper p0 p1 p2 p3 r1 nSteps = 
+  let seg = sampleSegment p0 p1 p2 p3 nSteps,
+      tailSegs = genSplineSegments r1 nSteps
+  in append seg tailSegs
+
+genSplineSegments pts nSteps = 
+  case pts (Nil -> Nil) (Cons p0 r1 ->
+  case r1 (Nil -> Nil) (Cons p1 r2 ->
+  case r2 (Nil -> Nil) (Cons p2 r3 ->
+  case r3 (Nil -> Nil) (Cons p3 rest ->
+    genSplineHelper p0 p1 p2 p3 r1 nSteps))))
+
+// Draw control point markers
+toDisc p = case p (Pt x y -> GraphDisc col_brightred (Pt (x - 0.02) (y - 0.02)) (Pt (x + 0.02) (y + 0.02)))
+drawControlDiscs pts = mapList toDisc pts
+
+// Example Control Points
+ctrlPoints = 
+  let p1 = Pt (0.0 - 0.8) (0.0 - 0.5),
+      p2 = Pt (0.0 - 0.5) 0.6,
+      p3 = Pt (0.0 - 0.1) (0.0 - 0.6),
+      p4 = Pt 0.3 0.7,
+      p5 = Pt 0.7 (0.0 - 0.4),
+      p6 = Pt 0.9 0.3
+  in Cons p1 (Cons p2 (Cons p3 (Cons p4 (Cons p5 (Cons p6 Nil)))))
+
+renderBSpline nSteps = 
+  let poly = GraphPolyLine col_darkgray ctrlPoints,
+      discs = drawControlDiscs ctrlPoints,
+      curvePts = genSplineSegments ctrlPoints nSteps,
+      curve = GraphPolyLine col_brightcyan curvePts
+  in append (Cons poly discs) (Cons curve Nil)
+
+start = forceGraphics (renderBSpline 12)

@@ -1,0 +1,39 @@
+#import "grafisch/graphics.cfp"
+
+// Sample points of a function f from xMin to xMax with step dx
+sampleStep f x xMax dx acc = 
+  let y = f x,
+      pt = Pt x y
+  in sampleFuncHelper f (x + dx) xMax dx (Cons pt acc)
+
+sampleFuncHelper f x xMax dx acc = 
+  if (x > xMax) acc (sampleStep f x xMax dx acc)
+
+sampleFunc f xMin xMax dx = 
+  let pts = sampleFuncHelper f xMin xMax dx Nil in
+  reverseList pts
+
+// Coordinate axes
+axisX = Cons (Pt (0.0 - 1.0) 0.0) (Cons (Pt 1.0 0.0) Nil)
+axisY = Cons (Pt 0.0 (0.0 - 1.0)) (Cons (Pt 0.0 1.0) Nil)
+
+axes = Cons (GraphPolyLine col_darkgray axisX) (Cons (GraphPolyLine col_darkgray axisY) Nil)
+
+// Sample math functions
+fnSin x = 0.7 * (sin (3.14159 * x))
+fnDampedCos x = 0.8 * ((cos (6.28 * x)) * (exp (0.0 - x)))
+fnPoly x = ((1.5 * (x * x)) - 0.6)
+
+plotFunction f col xMin xMax nSteps = 
+  let dx = (xMax - xMin) / (itof nSteps),
+      pts = sampleFunc f xMin xMax dx
+  in GraphPolyLine col pts
+
+plotDemo = 
+  let curve1 = plotFunction fnSin col_brightcyan (0.0 - 1.0) 1.0 40,
+      curve2 = plotFunction fnDampedCos col_yellow (0.0 - 1.0) 1.0 40,
+      curve3 = plotFunction fnPoly col_brightred (0.0 - 0.8) 0.8 30,
+      curves = Cons curve1 (Cons curve2 (Cons curve3 Nil))
+  in append axes curves
+
+start = forceGraphics plotDemo

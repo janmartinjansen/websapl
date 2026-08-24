@@ -1,0 +1,118 @@
+#import "grafisch/graphics.cfp"
+
+// Component drawing helpers
+
+drawWire x1 y1 x2 y2 col = 
+  let p1 = Pt x1 y1,
+      p2 = Pt x2 y2,
+      pts = Cons p1 (Cons p2 Nil)
+  in GraphPolyLine col pts
+
+drawPoly3 x1 y1 x2 y2 x3 y3 col = 
+  let p1 = Pt x1 y1,
+      p2 = Pt x2 y2,
+      p3 = Pt x3 y3,
+      pts = Cons p1 (Cons p2 (Cons p3 Nil))
+  in GraphPolyLine col pts
+
+drawPoly4 x1 y1 x2 y2 x3 y3 x4 y4 col = 
+  let p1 = Pt x1 y1,
+      p2 = Pt x2 y2,
+      p3 = Pt x3 y3,
+      p4 = Pt x4 y4,
+      pts = Cons p1 (Cons p2 (Cons p3 (Cons p4 Nil)))
+  in GraphPolyLine col pts
+
+drawDot x y col = 
+  let p1 = Pt (x - 0.015) (y - 0.015),
+      p2 = Pt (x + 0.015) (y + 0.015)
+  in GraphDisc col p1 p2
+
+// AND Gate centered at (x, y) with w=0.18, h=0.18
+drawAndGate x y = 
+  let hw = 0.09,
+      hh = 0.09,
+      box = GraphPolyLine col_brightgreen (Cons (Pt (x - hw) (y - hh)) (Cons (Pt (x - hw) (y + hh)) (Cons (Pt x (y + hh)) (Cons (Pt x (y - hh)) (Cons (Pt (x - hw) (y - hh)) Nil))))),
+      arc = GraphEllipse col_brightgreen (Pt (x - hw) (y - hh)) (Pt (x + hw) (y + hh)),
+      lbl = GraphText col_white (Pt (x - 0.04) (y - 0.02)) "AND"
+  in Cons box (Cons arc (Cons lbl Nil))
+
+// OR Gate centered at (x, y) with w=0.20, h=0.20
+drawOrGate x y = 
+  let hw = 0.10,
+      hh = 0.10,
+      pTop = Pt (x - hw) (y + hh),
+      pBot = Pt (x - hw) (y - hh),
+      pTip = Pt (x + hw) y,
+      pInMid = Pt (x - hw + 0.04) y,
+      topArc = GraphPolyLine col_brightgreen (Cons pTop (Cons (Pt (x + 0.02) (y + 0.08)) (Cons pTip Nil))),
+      botArc = GraphPolyLine col_brightgreen (Cons pBot (Cons (Pt (x + 0.02) (y - 0.08)) (Cons pTip Nil))),
+      inArc = GraphPolyLine col_brightgreen (Cons pBot (Cons pInMid (Cons pTop Nil))),
+      lbl = GraphText col_white (Pt (x - 0.03) (y - 0.02)) "OR"
+  in Cons topArc (Cons botArc (Cons inArc (Cons lbl Nil)))
+
+// NOT Gate centered at (x, y) with w=0.14, h=0.12
+drawNotGate x y = 
+  let hw = 0.07,
+      hh = 0.06,
+      p1 = Pt (x - hw) (y - hh),
+      p2 = Pt (x - hw) (y + hh),
+      p3 = Pt (x + hw - 0.03) y,
+      tri = GraphPolyLine col_brightgreen (Cons p1 (Cons p2 (Cons p3 (Cons p1 Nil)))),
+      bub = GraphDisc col_brightred (Pt (x + hw - 0.03) (y - 0.015)) (Pt (x + hw) (y + 0.015)),
+      lbl = GraphText col_white (Pt (x - 0.05) (y - 0.015)) "NOT"
+  in Cons tri (Cons bub (Cons lbl Nil))
+
+// Circuit Layout
+schematic = 
+  let // Header & Labels
+      h1 = GraphText col_yellow (Pt (0.0 - 0.75) 0.82) "2-to-1 Multiplexer (Logic Circuit)",
+      h2 = GraphText col_darkgray (Pt (0.0 - 0.75) 0.75) "Boolean Logic: Y = (A and not S) or (B and S)",
+      lblA = GraphText col_brightcyan (Pt (0.0 - 0.85) 0.40) "A",
+      lblS = GraphText col_brightcyan (Pt (0.0 - 0.85) 0.10) "S",
+      lblB = GraphText col_brightcyan (Pt (0.0 - 0.85) (0.0 - 0.20)) "B",
+      lblY = GraphText col_yellow (Pt 0.75 0.10) "Y",
+      labels = Cons h1 (Cons h2 (Cons lblA (Cons lblS (Cons lblB (Cons lblY Nil))))),
+
+      // Gates
+      not1 = drawNotGate (0.0 - 0.32) 0.25,
+      and1 = drawAndGate 0.08 0.38,
+      and2 = drawAndGate 0.08 (0.0 - 0.15),
+      or1  = drawOrGate 0.50 0.10,
+      gates = append not1 (append and1 (append and2 or1)),
+
+      // Wires
+      // Input A to AND1 (top input at y=0.43)
+      wA = drawWire (0.0 - 0.80) 0.43 (0.0 - 0.01) 0.43 col_brightcyan,
+      
+      // Input S trunk line at y=0.10
+      wS_main = drawWire (0.0 - 0.80) 0.10 (0.0 - 0.45) 0.10 col_brightcyan,
+      // S branch up to NOT gate input at (-0.39, 0.25)
+      wS_to_not = drawPoly3 (0.0 - 0.45) 0.10 (0.0 - 0.45) 0.25 (0.0 - 0.39) 0.25 col_brightcyan,
+      // S branch down to AND2 top input at (-0.01, -0.10)
+      wS_to_and2 = drawPoly3 (0.0 - 0.45) 0.10 (0.0 - 0.01) 0.10 (0.0 - 0.01) (0.0 - 0.10) col_brightcyan,
+      
+      // NOT output at (-0.25, 0.25) to AND1 bottom input at (-0.01, 0.33)
+      w_not_out = drawPoly3 (0.0 - 0.25) 0.25 (0.0 - 0.15) 0.25 (0.0 - 0.01) 0.33 col_yellow,
+      
+      // Input B to AND2 (bottom input at y=-0.20)
+      wB = drawWire (0.0 - 0.80) (0.0 - 0.20) (0.0 - 0.01) (0.0 - 0.20) col_brightcyan,
+      
+      // AND1 output (0.17, 0.38) to OR top input (0.40, 0.16)
+      w_and1_or = drawPoly4 0.17 0.38 0.28 0.38 0.28 0.16 0.40 0.16 col_yellow,
+      
+      // AND2 output (0.17, -0.15) to OR bottom input (0.40, 0.04)
+      w_and2_or = drawPoly4 0.17 (0.0 - 0.15) 0.28 (0.0 - 0.15) 0.28 0.04 0.40 0.04 col_yellow,
+      
+      // OR output (0.60, 0.10) to Y output terminal (0.72, 0.10)
+      w_out = drawWire 0.60 0.10 0.72 0.10 col_yellow,
+      
+      // Branch dots
+      dot1 = drawDot (0.0 - 0.45) 0.10 col_brightcyan,
+      
+      wireList1 = Cons wA (Cons wS_main (Cons wS_to_not (Cons wS_to_and2 (Cons w_not_out Nil)))),
+      wireList2 = Cons wB (Cons w_and1_or (Cons w_and2_or (Cons w_out (Cons dot1 Nil)))),
+      wires = append wireList1 wireList2
+  in append labels (append gates wires)
+
+start = forceGraphics schematic

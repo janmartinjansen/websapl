@@ -1,0 +1,94 @@
+#import "grafisch/graphics.cfp"
+
+::Pt3 = Pt3 !x !y !z
+::Edge3 = Edge3 !p1 !p2
+
+// 3D Rotations
+rotX3Helper phi x y z = 
+  let c = cos phi, s = sin phi in
+  Pt3 x ((c * y) - (s * z)) ((s * y) + (c * z))
+
+rotX3 phi p = case p (Pt3 x y z -> rotX3Helper phi x y z)
+
+rotY3Helper phi x y z = 
+  let c = cos phi, s = sin phi in
+  Pt3 ((c * x) + (s * z)) y ((0.0 - (s * x)) + (c * z))
+
+rotY3 phi p = case p (Pt3 x y z -> rotY3Helper phi x y z)
+
+rotZ3Helper phi x y z = 
+  let c = cos phi, s = sin phi in
+  Pt3 ((c * x) - (s * y)) ((s * x) + (c * y)) z
+
+rotZ3 phi p = case p (Pt3 x y z -> rotZ3Helper phi x y z)
+
+rotEdgeX phi e = case e (Edge3 p1 p2 -> Edge3 (rotX3 phi p1) (rotX3 phi p2))
+rotEdgeY phi e = case e (Edge3 p1 p2 -> Edge3 (rotY3 phi p1) (rotY3 phi p2))
+rotEdgeZ phi e = case e (Edge3 p1 p2 -> Edge3 (rotZ3 phi p1) (rotZ3 phi p2))
+
+// Perspective Projection from 3D to 2D
+projectPtHelper x y z = 
+  let d = z + 2.2,
+      px = (1.5 * x) / d,
+      py = (1.5 * y) / d
+  in Pt px py
+
+projectPt p = case p (Pt3 x y z -> projectPtHelper x y z)
+
+projectEdgeHelper p1 p2 = 
+  let pt1 = projectPt p1,
+      pt2 = projectPt p2
+  in Cons pt1 (Cons pt2 Nil)
+
+projectEdge e = case e (Edge3 p1 p2 -> projectEdgeHelper p1 p2)
+
+makeList4 a b c d = Cons a (Cons b (Cons c (Cons d Nil)))
+
+// 3D Cube Edges
+cubeEdges = 
+  let s = 0.5,
+      ns = 0.0 - 0.5,
+      p000 = Pt3 ns ns ns,
+      p001 = Pt3 ns ns s,
+      p010 = Pt3 ns s ns,
+      p011 = Pt3 ns s s,
+      p100 = Pt3 s ns ns,
+      p101 = Pt3 s ns s,
+      p110 = Pt3 s s ns,
+      p111 = Pt3 s s s,
+      e1  = Edge3 p000 p001,
+      e2  = Edge3 p001 p011,
+      e3  = Edge3 p011 p010,
+      e4  = Edge3 p010 p000,
+      e5  = Edge3 p100 p101,
+      e6  = Edge3 p101 p111,
+      e7  = Edge3 p111 p110,
+      e8  = Edge3 p110 p100,
+      e9  = Edge3 p000 p100,
+      e10 = Edge3 p001 p101,
+      e11 = Edge3 p010 p110,
+      e12 = Edge3 p011 p111,
+      l1  = makeList4 e1 e2 e3 e4,
+      l2  = makeList4 e5 e6 e7 e8,
+      l3  = makeList4 e9 e10 e11 e12
+  in append l1 (append l2 l3)
+
+// Render 3D Edges to Graphics
+toPolyGreen seg = GraphPolyLine col_brightgreen seg
+renderEdges edges = 
+  let projLines = mapList projectEdge edges in
+  mapList toPolyGreen projLines
+
+// Rotate entire scene
+rotateScene phiX phiY phiZ edges = 
+  let rX = mapList (rotEdgeX phiX) edges,
+      rY = mapList (rotEdgeY phiY) rX,
+      rZ = mapList (rotEdgeZ phiZ) rY
+  in rZ
+
+// Static demo view (rotated 3D cube)
+renderCube phiX phiY phiZ = 
+  let rot = rotateScene phiX phiY phiZ cubeEdges in
+  renderEdges rot
+
+start = forceGraphics (renderCube 0.5 0.7 0.2)
