@@ -457,7 +457,7 @@
             boomRec(n - 1, p2, pl, nextCol);
             boomRec(n - 1, p2, pr, nextCol);
           }
-          boomRec(d + 1, { x: 0.0, y: -0.6 }, { x: 0.0, y: -0.3 }, 2);
+          boomRec(d, { x: 0.0, y: -0.6 }, { x: 0.0, y: -0.3 }, 2);
         } else if (name === 'curves.cfp') {
           renderer.clear();
           renderer.drawGrid();
@@ -543,20 +543,41 @@
         } else if (name === 'recpic.cfp') {
           renderer.clear();
           renderer.drawGrid();
-          function drawTile(cx, cy, size, col, iter) {
-            const hs = size / 2;
-            renderer.drawRectangle(col, { x: cx - hs, y: cy - hs }, { x: cx + hs, y: cy + hs });
-            renderer.drawPolyLine(col, [{ x: cx - hs, y: cy - hs }, { x: cx + hs, y: cy + hs }]);
-            renderer.drawPolyLine(col, [{ x: cx + hs, y: cy - hs }, { x: cx - hs, y: cy + hs }]);
-            if (iter <= 1) return;
-            const ns = size / 2;
-            const off = size / 4;
-            drawTile(cx - off, cy + off, ns, (col + 1) % 15 + 1, iter - 1);
-            drawTile(cx + off, cy + off, ns, (col + 2) % 15 + 1, iter - 1);
-            drawTile(cx - off, cy - off, ns, (col + 3) % 15 + 1, iter - 1);
-            drawTile(cx + off, cy - off, ns, (col + 4) % 15 + 1, iter - 1);
+          function getBaseTile() {
+            const p0 = { x: -0.5, y: -0.5 }, p1 = { x: 0.5, y: -0.5 }, p2 = { x: 0.5, y: 0.5 }, p3 = { x: -0.5, y: 0.5 };
+            return [
+              [p0, p1, p2, p3, p0],
+              [p0, p2],
+              [p1, p3]
+            ];
           }
-          drawTile(0, 0, 1.4, 14, Math.min(4, d));
+          function rotPt(m, p) {
+            const mod = ((m % 4) + 4) % 4;
+            if (mod === 0) return { x: p.x, y: p.y };
+            if (mod === 1) return { x: -p.y, y: p.x };
+            if (mod === 2) return { x: -p.x, y: -p.y };
+            return { x: p.y, y: -p.x };
+          }
+          function rotPic(m, pic) {
+            return pic.map(line => line.map(p => rotPt(m, p)));
+          }
+          function transformPic(sx, sy, dx, dy, pic) {
+            return pic.map(line => line.map(p => ({ x: p.x * sx + dx, y: p.y * sy + dy })));
+          }
+          function fourTiles(tl, tr, bl, br) {
+            const stl = transformPic(0.5, 0.5, -0.5, 0.5, tl);
+            const str = transformPic(0.5, 0.5, 0.5, 0.5, tr);
+            const sbl = transformPic(0.5, 0.5, -0.5, -0.5, bl);
+            const sbr = transformPic(0.5, 0.5, 0.5, -0.5, br);
+            return [...stl, ...str, ...sbl, ...sbr];
+          }
+          function recPattern(n, tile) {
+            if (n <= 0) return tile;
+            const prev = recPattern(n - 1, tile);
+            return fourTiles(prev, rotPic(1, prev), rotPic(3, prev), rotPic(2, prev));
+          }
+          const lines = recPattern(d, getBaseTile());
+          lines.forEach(l => renderer.drawPolyLine(14, l));
         }
       }
 
@@ -564,6 +585,8 @@
         let code = presets[currentPreset] || editor.getValue();
         if (currentPreset === 'boom.cfp') {
           code = code.replace(/demo\s+\d+/, `demo ${depth}`);
+          code = code.replace(/draaiPt\s*\(\s*0\.0\s*-\s*[\d\.]+\s*\)/, `draaiPt (0.0 - ${branchBendAngle.toFixed(2)})`);
+          code = code.replace(/draaiPt\s+[\d\.]+\s+/, `draaiPt ${branchBendAngle.toFixed(2)} `);
         } else if (currentPreset === 'curves.cfp') {
           code = code.replace(/hilbert\s+\d+/, `hilbert ${depth}`);
           code = code.replace(/sierpinski\s+\d+/, `sierpinski ${depth}`);
@@ -571,9 +594,12 @@
         } else if (currentPreset === 'convex.cfp') {
           code = code.replace(/renderCube\s+[\d\.\-]+\s+[\d\.\-]+\s+[\d\.\-]+/, `renderCube ${rotX.toFixed(2)} ${rotY.toFixed(2)} ${rotZ.toFixed(2)}`);
         } else if (currentPreset === 'bspline.cfp') {
-          // Format custom control points list into Sapl code
-          const ptsStr = splinePoints.map(p => `Pt ${p.x.toFixed(3)} ${p.y.toFixed(3)}`).reduceRight((acc, p) => `Cons (${p}) (${acc})`, 'Nil');
-          code = code.replace(/ctrlPoints\s*=\s*[^;]+in Cons p1/, `ctrlPoints = ${ptsStr}\n\nrenderBSpline nSteps = \n  let poly = GraphPolyLine col_darkgray ctrlPoints`);
+          const ptsStr = splinePoints.map(p => {
+            const sx = p.x >= 0 ? p.x.toFixed(3) : `(0.0 - ${(-p.x).toFixed(3)})`;
+            const sy = p.y >= 0 ? p.y.toFixed(3) : `(0.0 - ${(-p.y).toFixed(3)})`;
+            return `Pt ${sx} ${sy}`;
+          }).reduceRight((acc, p) => `Cons (${p}) (${acc})`, 'Nil');
+          code = code.replace(/ctrlPoints\s*=[\s\S]*?(?=renderBSpline)/, `ctrlPoints = \n  ${ptsStr}\n\n`);
         } else if (currentPreset === 'recpic.cfp') {
           code = code.replace(/recPic\s+\d+/, `recPic ${depth}`);
         }
@@ -592,6 +618,14 @@
         document.getElementById('row-rot-y').style.display = is3D ? 'flex' : 'none';
         document.getElementById('row-rot-z').style.display = is3D ? 'flex' : 'none';
         document.getElementById('btn-reset-points').style.display = name === 'bspline.cfp' ? 'inline-block' : 'none';
+
+        // Set default depth per preset
+        if (name === 'curves.cfp') depth = 2;
+        else if (name === 'boom.cfp') depth = 3;
+        else if (name === 'recpic.cfp') depth = 2;
+        else depth = 3;
+        document.getElementById('param-depth').value = depth;
+        document.getElementById('val-depth').textContent = depth;
 
         if (!presets[name]) {
           try {

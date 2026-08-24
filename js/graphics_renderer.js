@@ -314,7 +314,17 @@ class SaplGraphicsRenderer {
    * Parse S-Expression AST from JMVM constructor output
    */
   parseAST(text) {
-    const tokens = text.replace(/\(/g, " ( ").replace(/\)/g, " ) ").replace(/\[/g, " [ ").replace(/\]/g, " ] ").trim().split(/\s+/);
+    if (!text || typeof text !== 'string') return null;
+
+    // Mask string literals to prevent parentheses in strings from breaking AST parsing
+    const stringTable = [];
+    let cleanText = text.replace(/\(string:\s*([^)]*)\)/g, (_, str) => {
+      const idx = stringTable.length;
+      stringTable.push(str);
+      return `(str_slot_${idx})`;
+    });
+
+    const tokens = cleanText.replace(/\(/g, " ( ").replace(/\)/g, " ) ").replace(/\[/g, " [ ").replace(/\]/g, " ] ").trim().split(/\s+/);
     let pos = 0;
 
     function parseExpr() {
@@ -338,6 +348,10 @@ class SaplGraphicsRenderer {
       } else if (token === ")") {
         return null;
       } else {
+        const m = token.match(/^str_slot_(\d+)$/);
+        if (m) {
+          return stringTable[parseInt(m[1], 10)] || "";
+        }
         return token;
       }
     }
@@ -378,6 +392,7 @@ class SaplGraphicsRenderer {
    * Main render entrypoint
    */
   renderOutput(text) {
+    this.setupHighDPI();
     this.clear();
     this.drawGrid();
 
@@ -417,7 +432,12 @@ class SaplGraphicsRenderer {
         } else if (tag === "constr_0" || tag === "GraphText") {
           const color = parseFloat(item[1]) || 15;
           const p = this.extractPt(item[2]) || { x: 0, y: 0 };
-          const txt = item[3] ? String(item[3]).replace(/string:\s*/, "") : "";
+          let txt = "";
+          if (Array.isArray(item[3])) {
+            txt = item[3][0] || "";
+          } else if (item[3]) {
+            txt = String(item[3]);
+          }
           this.drawText(color, p, txt);
         } else if (tag === "constr_6" || tag === "GraphClear") {
           this.clear();

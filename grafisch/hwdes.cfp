@@ -65,8 +65,8 @@ drawNotGate x y =
 
 // Circuit Layout
 schematic = 
-  let // Header & Labels
-      h1 = GraphText col_yellow (Pt (0.0 - 0.75) 0.82) "2-to-1 Multiplexer (Logic Circuit)",
+  // Header & Labels
+  let h1 = GraphText col_yellow (Pt (0.0 - 0.75) 0.82) "2-to-1 Multiplexer (Logic Circuit)",
       h2 = GraphText col_darkgray (Pt (0.0 - 0.75) 0.75) "Boolean Logic: Y = (A and not S) or (B and S)",
       lblA = GraphText col_brightcyan (Pt (0.0 - 0.85) 0.40) "A",
       lblS = GraphText col_brightcyan (Pt (0.0 - 0.85) 0.10) "S",
