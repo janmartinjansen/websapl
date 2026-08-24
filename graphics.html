@@ -294,7 +294,7 @@
   <!-- Scripts -->
   <script src="js/codemirror.min.js"></script>
   <script src="js/sapl_mode.js"></script>
-  <script src="js/graphics_renderer.js"></script>
+  <script src="js/graphics_renderer.js?v=20260824_1845"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       const canvas = document.getElementById('graphics-canvas');
@@ -329,8 +329,8 @@
       // Presets Cache
       const presets = {};
 
-      // Initialize Web Worker
-      const worker = new Worker('engine/worker.js');
+      // Initialize Web Worker with cache-busting timestamp
+      const worker = new Worker('engine/worker.js?v=' + Date.now());
       let workerReady = false;
 
       worker.onmessage = (e) => {

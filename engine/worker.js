@@ -98,13 +98,13 @@ async function initEngine(data = {}) {
   }
 
   if (typeof importScripts === "function") {
-    importScripts("./jmvm.js");
+    importScripts("./jmvm.js?v=" + Date.now());
   }
 
   stdlibContent = data.stdlib || "";
   if (!stdlibContent) {
     try {
-      const res = await fetch("../lib/stdlib.cfp");
+      const res = await fetch("../lib/stdlib.cfp?v=" + Date.now());
       if (res.ok) stdlibContent = await res.text();
     } catch (_) {}
   }
@@ -113,7 +113,7 @@ async function initEngine(data = {}) {
     saplcompBytecode = base64ToUint8Array(data.saplcompBase64);
   } else {
     try {
-      const res = await fetch("./saplcomp.jmvm");
+      const res = await fetch("./saplcomp.jmvm?v=" + Date.now());
       if (res.ok) {
         const buf = await res.arrayBuffer();
         saplcompBytecode = new Uint8Array(buf);
@@ -125,7 +125,7 @@ async function initEngine(data = {}) {
     retagcompBytecode = base64ToUint8Array(data.retagcompBase64);
   } else {
     try {
-      const res = await fetch("./retagcomp.jmvm");
+      const res = await fetch("./retagcomp.jmvm?v=" + Date.now());
       if (res.ok) {
         const buf = await res.arrayBuffer();
         retagcompBytecode = new Uint8Array(buf);
@@ -135,7 +135,7 @@ async function initEngine(data = {}) {
 
   jmvmModule = await createJMVMModule({
     noInitialRun: true,
-    locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm" : (prefix || "") + p)
+    locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm?v=" + Date.now() : (prefix || "") + p)
   });
 
   // Setup directory structure
