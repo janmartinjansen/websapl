@@ -1,0 +1,21 @@
+// N-queens -- the classic list-comprehension formulation: each extension
+// step is a single ZF-expression with two generators (existing partial
+// solutions, candidate columns via `[1..k]` range syntax) and a filter
+// (safety check), replacing the original's `concat (map (recqq k) ...)`
+// + `mapfil` + a hand-written `fromto` combination; the destructuring
+// patterns use `:` cons-sugar instead of a bare `Cons x xs`, and the base
+// case's single-element list is `[Nil]` instead of `Cons Nil Nil`.
+::list = Nil | Cons !x xs
+
+queens n = length (qqueens n n)
+
+qqueens k 0 = [Nil]
+qqueens k n = [ Cons x xs | xs <- qqueens k (n - 1), x <- [1..k], safe xs 1 x ]
+
+safe Nil d x = True
+safe (y:ys) d x = (x != y) /\ (x + d != y) /\ (x - d != y) /\ safe ys (d + 1) x
+
+length Nil = 0
+length (x:xs) = 1 + length xs
+
+start = queens 11

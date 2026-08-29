@@ -1,0 +1,44 @@
+// Hamming numbers via three mutually-recursive lazy streams (`let`s that
+// refer to each other and to their own head, unchanged -- that part was
+// already as elegant as it gets); the 3-way merge and the odd/even
+// predicate become guards instead of nested `if`s; the "multiply by a
+// constant" helper is now an inline lambda at each call site instead of
+// a named point-free function; `rep` (build a list of n copies of v) is
+// now a ZF-expression over a `[1..n]` range instead of hand recursion;
+// every list-destructuring pattern uses `:` cons-sugar.
+::list = Nil | Cons !x xs
+
+hamming n =
+  let h = Cons n (merge (merge as bs) cs),
+      as = map (\x -> x * 2) h,
+      bs = map (\x -> x * 3) h,
+      cs = map (\x -> x * 5) h
+  in h
+
+map f Nil = Nil
+map f (x:xs) = Cons (f x) (map f xs)
+
+el 0 (x:xs) = x
+el n (x:xs) = el (n - 1) xs
+
+merge Nil ys = ys
+merge xs Nil = xs
+merge (a:as) (b:bs)
+  | a == b = Cons a (merge as bs)
+  | a < b = Cons a (merge as (Cons b bs))
+  | otherwise = Cons b (merge (Cons a as) bs)
+
+sum Nil = 0
+sum (x:xs) = x + sum xs
+
+ff k
+  | k % 2 == 0 = 1
+  | otherwise = k % 2
+
+hm n = el n (hamming (ff n)) % 999
+
+rep n v = [ v | i <- [1..n] ]
+
+rephamming n m = sum (map hm (rep n m))
+
+start = rephamming 4000 1000

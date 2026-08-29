@@ -1,0 +1,426 @@
+::__Tuple2 = __Tuple2 x0 x1
+::list = Nil | Cons !x0 x1
+::PRes = POk x0 x1 | PErr x0 x1
+::expr = Num !x0 | FloatLit !x0 | Str !x0 | Var !x0 | If !x0 !x1 !x2 | App !x0 !x1 | Prim !x0 !x1 | Ct !x0 !x1 | Case !x0 !x1 | Let !x0 !x1 | NoMatch | Lazy !x0 | Thunk !x0 | Closure !x0 | Eval !x0 | Try !x0 !x1 | Throw !x0 !x1
+::casebranch = CaseBranch !x0 !x1 !x2
+::letbinding = LetBinding !x0 !x1 !x2
+::adtCon = AdtCon !x0 !x1
+::adt = Adt !x0 !x1
+::arg = Arg !x0 !x1
+::func = Func !x0 !x1 !x2
+::token = TIdent !x0 | TNum !x0 | TFloatStr !x0 | TStr !x0 | TStrList !x0 | TOp !x0 | TLParen | TRParen | TBang | TEquals | TArrow | TComma
+::Lexres = Lexres !x0 !x1
+::ParsedProgram = ParsedProgram !x0 !x1
+readStream __pat_0 = __pat_1 __pat_0
+writeStream __pat_2 __pat_3 = case __pat_3 (Nil -> closeFile __pat_2) (Cons c cs -> writeChar __pat_2 c <#> writeStream __pat_2 cs)
+str2list __pat_4 = strls 0 __pat_4
+strls __pat_5 __pat_6 = if (__pat_5 < strlen __pat_6) (Cons (strat __pat_5 __pat_6) (strls (__pat_5 + 1) __pat_6)) Nil
+strEqual __pat_7 __pat_8 = (strlen __pat_7 == strlen __pat_8) /\ strEqualAt 0 __pat_7 __pat_8
+strEqualAt __pat_9 __pat_10 __pat_11 = if (__pat_9 >= strlen __pat_10) 1 (if (strat __pat_9 __pat_10 == strat __pat_9 __pat_11) (strEqualAt (__pat_9 + 1) __pat_10 __pat_11) 0)
+list2str __pat_12 = fillStr 0 __pat_12 (strcreate (length __pat_12))
+fillStr __pat_13 __pat_14 __pat_15 = case __pat_14 (Nil -> __pat_15) (Cons c cs -> fillStr (__pat_13 + 1) cs (update c __pat_13 __pat_15))
+strcat __pat_16 __pat_17 = list2str (append (str2list __pat_16) (str2list __pat_17))
+toUpperChar __pat_18 = if ((__pat_18 >= 97) /\ (__pat_18 <= 122)) ((__pat_18 - 97) + 65) __pat_18
+code __pat_19 = (__pat_19 - 48) + 48
+decode __pat_20 = 48 + (__pat_20 - 48)
+strUpper __pat_21 = list2str (map toUpperChar (str2list __pat_21))
+substr __pat_22 __pat_23 __pat_24 = list2str (take __pat_24 (drop __pat_23 (str2list __pat_22)))
+itoa __pat_25 = if (__pat_25 < 0) (Cons 45 (itoa (0 - __pat_25))) (if (__pat_25 < 10) (Cons (48 + __pat_25) Nil) (append (itoa (__pat_25 / 10)) (Cons (48 + (__pat_25 % 10)) Nil)))
+length __pat_26 = case __pat_26 (Nil -> 0) (Cons x xs -> 1 + length xs)
+map __pat_27 __pat_28 = case __pat_28 (Nil -> Nil) (Cons x xs -> Cons (__pat_27 x) (map __pat_27 xs))
+filter __pat_29 __pat_30 = case __pat_30 (Nil -> Nil) (Cons x xs -> if (__pat_29 x) (Cons x (filter __pat_29 xs)) (filter __pat_29 xs))
+foldl __pat_31 __pat_32 __pat_33 = case __pat_33 (Nil -> __pat_32) (Cons x xs -> foldl __pat_31 (__pat_31 __pat_32 x) xs)
+foldr __pat_34 __pat_35 __pat_36 = case __pat_36 (Nil -> __pat_35) (Cons x xs -> __pat_34 x (foldr __pat_34 __pat_35 xs))
+append __pat_37 __pat_38 = case __pat_37 (Nil -> __pat_38) (Cons x xs -> Cons x (append xs __pat_38))
+take __pat_39 __pat_40 = case __pat_40 (Nil -> Nil) (Cons x xs -> if (__pat_39 == 0) Nil (Cons x (take (__pat_39 - 1) xs)))
+drop __pat_41 __pat_42 = case __pat_42 (Nil -> Nil) (Cons x xs -> if (__pat_41 == 0) (Cons x xs) (drop (__pat_41 - 1) xs))
+reverse __pat_43 = rev __pat_43 Nil
+rev __pat_44 __pat_45 = case __pat_44 (Nil -> __pat_45) (Cons x xs -> rev xs (Cons x __pat_45))
+pReturn __pat_46 __pat_47 = POk __pat_46 __pat_47
+pFail __pat_48 __pat_49 = PErr __pat_48 __pat_49
+pItem __pat_50 = case __pat_50 (Nil -> PErr "unexpected end of input" Nil) (Cons __pat_51 __pat_52 -> POk __pat_51 __pat_52)
+pSat __pat_53 __pat_54 __pat_55 = case (__pat_54 __pat_55) (POk v rest -> if (__pat_53 v) (POk v rest) (PErr "predicate failed" rest)) (PErr m r -> PErr m r)
+pChar __pat_56 = pSat (charEq __pat_56) pItem
+charEq __pat_57 __pat_58 = __pat_58 == __pat_57
+__op_minus_minus_gt __pat_59 __pat_60 __pat_61 = case (__pat_59 __pat_61) (POk v rest -> POk (__pat_60 v) rest) (PErr m r -> PErr m r)
+__op_plus_plus_plus __pat_62 __pat_63 __pat_64 = case (__pat_62 __pat_64) (POk v1 rest1 -> pSeqRight __pat_63 v1 rest1) (PErr m r -> PErr m r)
+pSeqRight __pat_65 __pat_66 __pat_67 = case (__pat_65 __pat_67) (POk v2 rest2 -> POk (__Tuple2 __pat_66 v2) rest2) (PErr m r -> PErr m r)
+fstOf __pat_68 = case __pat_68 (__Tuple2 __pat_69 __pat_70 -> __pat_69)
+sndOf __pat_71 = case __pat_71 (__Tuple2 __pat_72 __pat_73 -> __pat_73)
+__op_plus_plus_gt __pat_74 __pat_75 = __op_minus_minus_gt (__op_plus_plus_plus __pat_74 __pat_75) sndOf
+__op_lt_plus_plus __pat_76 __pat_77 = __op_minus_minus_gt (__op_plus_plus_plus __pat_76 __pat_77) fstOf
+__op_x __pat_78 __pat_79 __pat_80 = case (__pat_78 __pat_80) (POk v rest -> POk v rest) (PErr m r -> __pat_79 __pat_80)
+pChoice __pat_81 = case __pat_81 (Nil -> pFail "no alternatives") (Cons __pat_82 __pat_83 -> pChoiceGo __pat_82 __pat_83)
+pChoiceGo __pat_84 __pat_85 = case __pat_85 (Nil -> __pat_84) (Cons __pat_86 __pat_87 -> pChoiceGo (__op_x __pat_84 __pat_86) __pat_87)
+pMany __pat_88 __pat_89 = case (__pat_88 __pat_89) (POk v rest -> pManyCons v (pMany __pat_88 rest)) (PErr m r -> POk Nil __pat_89)
+pManyCons __pat_90 __pat_91 = case __pat_91 (POk __pat_92 __pat_93 -> POk (Cons __pat_90 __pat_92) __pat_93)
+consPair __pat_94 = case __pat_94 (__Tuple2 __pat_95 __pat_96 -> Cons __pat_95 __pat_96)
+pMany1 __pat_97 = __op_minus_minus_gt (__op_plus_plus_plus __pat_97 (pMany __pat_97)) consPair
+pOption __pat_98 __pat_99 = case (__pat_98 __pat_99) (POk v rest -> POk (Cons v Nil) rest) (PErr m r -> POk Nil __pat_99)
+pSepBy1 __pat_100 __pat_101 = __op_minus_minus_gt (__op_plus_plus_plus __pat_100 (pMany (__op_plus_plus_gt __pat_101 __pat_100))) consPair
+pSepBy __pat_102 __pat_103 __pat_104 = __op_x (pSepBy1 __pat_102 __pat_103) (pReturn Nil) __pat_104
+pChainl1 __pat_105 __pat_106 = __op_minus_minus_gt (__op_plus_plus_plus __pat_105 (pMany (__op_plus_plus_plus __pat_106 __pat_105))) applyChain
+applyChain __pat_107 = case __pat_107 (__Tuple2 __pat_108 __pat_109 -> foldChain __pat_108 __pat_109)
+foldChain __pat_110 __pat_111 = case __pat_111 (Nil -> __pat_110) (Cons __pat_112 __pat_113 -> case __pat_112 (__Tuple2 __pat_114 __pat_115 -> foldChain (__pat_114 __pat_110 __pat_115) __pat_113))
+pLiteral __pat_116 __pat_117 = case __pat_116 (Nil -> POk Nil __pat_117) (Cons __pat_118 __pat_119 -> case (pSat (charEq __pat_118) pItem __pat_117) (POk v rest -> pLiteralCons v (pLiteral __pat_119 rest)) (PErr m r -> PErr m r))
+pLiteralCons __pat_120 __pat_121 = case __pat_121 (POk __pat_122 __pat_123 -> POk (Cons __pat_120 __pat_122) __pat_123) (PErr __pat_124 __pat_125 -> PErr __pat_124 __pat_125)
+pcIsSpaceCh __pat_126 = (((__pat_126 == 32) \/ (__pat_126 == 9)) \/ (__pat_126 == 10)) \/ (__pat_126 == 13)
+pSpaces = pMany (pSat pcIsSpaceCh pItem)
+pToken __pat_127 = __op_lt_plus_plus __pat_127 pSpaces
+pRunString __pat_128 __pat_129 = pRun __pat_128 (str2list __pat_129)
+pRun __pat_130 __pat_131 = case (__op_plus_plus_gt pSpaces __pat_130 __pat_131) (POk v rest -> pRunRest v rest) (PErr m r -> PErr m r)
+pRunRest __pat_132 __pat_133 = case __pat_133 (Nil -> POk __pat_132 Nil) (_ -> PErr "trailing input not consumed" __pat_133)
+isDigitCh __pat_134 = (__pat_134 >= 48) /\ (__pat_134 <= 57)
+isAlphaCh __pat_135 = (((__pat_135 >= 65) /\ (__pat_135 <= 90)) \/ ((__pat_135 >= 97) /\ (__pat_135 <= 122))) \/ (__pat_135 == 95)
+isIdentCh __pat_136 = isAlphaCh __pat_136 \/ isDigitCh __pat_136
+isSpaceCh __pat_137 = (((__pat_137 == 32) \/ (__pat_137 == 9)) \/ (__pat_137 == 13)) \/ (__pat_137 == 10)
+headOr __pat_138 __pat_139 = case __pat_139 (Nil -> __pat_138) (Cons c cs2 -> c)
+tailOr __pat_140 __pat_141 = case __pat_141 (Nil -> __pat_140) (Cons c cs2 -> cs2)
+startsWithSlashSlash __pat_142 = (headOr 32 __pat_142 == 47) /\ (headOr 32 (tailOr Nil __pat_142) == 47)
+stripComment __pat_143 = case __pat_143 (Nil -> Nil) (Cons c1 cs2 -> if (startsWithSlashSlash (Cons c1 cs2)) Nil (Cons c1 (stripComment cs2)))
+startsWithDoubleColon __pat_144 = (headOr 32 __pat_144 == 58) /\ (headOr 32 (tailOr Nil __pat_144) == 58)
+lexresTok __pat_145 = case __pat_145 (Lexres t rst -> t)
+lexresRest __pat_146 = case __pat_146 (Lexres t rst -> rst)
+readIdentAcc __pat_147 __pat_148 = case __pat_148 (Nil -> Lexres (TIdent (reverse __pat_147)) Nil) (Cons c cs2 -> if (isIdentCh c) (readIdentAcc (Cons c __pat_147) cs2) (Lexres (TIdent (reverse __pat_147)) __pat_148))
+readIdent __pat_149 = readIdentAcc Nil __pat_149
+readFracDigits __pat_150 __pat_151 = case __pat_151 (Nil -> Lexres (TFloatStr (reverse __pat_150)) Nil) (Cons c cs2 -> if (isDigitCh c) (readFracDigits (Cons c __pat_150) cs2) (Lexres (TFloatStr (reverse __pat_150)) __pat_151))
+readNumAcc __pat_152 __pat_153 __pat_154 = case __pat_154 (Nil -> Lexres (TNum __pat_153) Nil) (Cons c cs2 -> if (isDigitCh c) (readNumAcc (Cons c __pat_152) ((__pat_153 * 10) + (c - 48)) cs2) (if ((c == 46) /\ isDigitCh (headOr 0 cs2)) (readFracDigits (Cons 46 __pat_152) cs2) (Lexres (TNum __pat_153) __pat_154)))
+readNum __pat_155 = readNumAcc Nil 0 __pat_155
+isBoolOpPair __pat_156 __pat_157 = ((__pat_156 == 47) /\ (__pat_157 == 92)) \/ ((__pat_156 == 92) /\ (__pat_157 == 47))
+isTwoCharOpPair __pat_158 __pat_159 = (((((__pat_158 == 61) /\ (__pat_159 == 61)) \/ ((__pat_158 == 33) /\ (__pat_159 == 61))) \/ ((__pat_158 == 60) /\ (__pat_159 == 61))) \/ ((__pat_158 == 62) /\ (__pat_159 == 61))) \/ isBoolOpPair __pat_158 __pat_159
+isArrowPair __pat_160 __pat_161 = (__pat_160 == 45) /\ (__pat_161 == 62)
+isThreeCharOpStart __pat_162 __pat_163 = (__pat_162 == 60) /\ (__pat_163 == 35)
+readOp1 __pat_164 __pat_165 = if (__pat_164 == 61) (Lexres TEquals __pat_165) (if (__pat_164 == 33) (Lexres TBang __pat_165) (Lexres (TOp (Cons __pat_164 Nil)) __pat_165))
+readOp3 __pat_166 __pat_167 __pat_168 = case __pat_168 (Nil -> readOp1 __pat_166 (Cons __pat_167 Nil)) (Cons c3 cs4 -> if (c3 == 62) (Lexres (TOp (Cons __pat_166 (Cons __pat_167 (Cons c3 Nil)))) cs4) (readOp1 __pat_166 (Cons __pat_167 (Cons c3 cs4))))
+readOp2 __pat_169 __pat_170 __pat_171 = if (isThreeCharOpStart __pat_169 __pat_170) (readOp3 __pat_169 __pat_170 __pat_171) (if (isArrowPair __pat_169 __pat_170) (Lexres TArrow __pat_171) (if (isTwoCharOpPair __pat_169 __pat_170) (Lexres (TOp (Cons __pat_169 (Cons __pat_170 Nil))) __pat_171) (readOp1 __pat_169 (Cons __pat_170 __pat_171))))
+readOp __pat_172 __pat_173 = case __pat_173 (Nil -> readOp1 __pat_172 Nil) (Cons c2 cs2 -> readOp2 __pat_172 c2 cs2)
+readCharLitClose __pat_174 __pat_175 = case __pat_175 (Nil -> error "tokenize: missing closing ' in char literal") (Cons q cs4 -> if (q == 39) (Lexres (TNum __pat_174) cs4) (error "tokenize: missing closing ' in char literal"))
+readCharLitEscape __pat_176 = case __pat_176 (Nil -> error "tokenize: unexpected end of input in char escape") (Cons e cs4 -> readCharLitEscapeTok e cs4)
+readCharLitEscapeTok __pat_177 __pat_178 = if (__pat_177 == 110) (readCharLitClose 10 __pat_178) (if (__pat_177 == 116) (readCharLitClose 9 __pat_178) (if (__pat_177 == 92) (readCharLitClose 92 __pat_178) (if (__pat_177 == 39) (readCharLitClose 39 __pat_178) (if (__pat_177 == 34) (readCharLitClose 34 __pat_178) (error "tokenize: unknown char escape")))))
+readCharLit __pat_179 = case __pat_179 (Nil -> error "tokenize: unexpected end of input in char literal") (Cons c1 cs3 -> if (c1 == 92) (readCharLitEscape cs3) (readCharLitClose c1 cs3))
+readStrLitEscapeChar __pat_180 = if (__pat_180 == 110) 10 (if (__pat_180 == 116) 9 (if (__pat_180 == 92) 92 (if (__pat_180 == 39) 39 (if (__pat_180 == 34) 34 (error "tokenize: unknown string escape")))))
+readStrLitEscape __pat_181 __pat_182 = case __pat_182 (Nil -> error "tokenize: unexpected end of input in string escape") (Cons e cs4 -> readStrLit (append __pat_181 (Cons (readStrLitEscapeChar e) Nil)) cs4)
+readStrLit __pat_183 __pat_184 = case __pat_184 (Nil -> error "tokenize: missing closing \" in string literal") (Cons c1 cs3 -> if (c1 == 34) (Lexres (TStr __pat_183) cs3) (if (c1 == 92) (readStrLitEscape __pat_183 cs3) (readStrLit (append __pat_183 (Cons c1 Nil)) cs3)))
+readStringLit __pat_185 = readStrLit Nil __pat_185
+readStrListLit __pat_186 __pat_187 = case __pat_187 (Nil -> error "tokenize: missing closing '] in char-list literal") (Cons c1 cs2 -> readStrListLitOnChar __pat_186 c1 cs2)
+readStrListLitOnChar __pat_188 __pat_189 __pat_190 = if (__pat_189 == 39) (readStrListLitMaybeClose __pat_188 __pat_190) (readStrListLit (append __pat_188 (Cons __pat_189 Nil)) __pat_190)
+readStrListLitMaybeClose __pat_191 __pat_192 = case __pat_192 (Nil -> error "tokenize: missing closing '] in char-list literal") (Cons c2 cs3 -> if (c2 == 93) (Lexres (TStrList __pat_191) cs3) (readStrListLit (append __pat_191 (Cons 39 Nil)) (Cons c2 cs3)))
+readStringListLit __pat_193 = readStrListLit Nil __pat_193
+tokenizeLBracket __pat_194 = case __pat_194 (Nil -> error "tokenize: unexpected [ at end of input") (Cons q cs3 -> if (q == 39) (tokenizeContinue (readStringListLit cs3)) (error "tokenize: unexpected ["))
+tokenizeContinue __pat_195 = Cons (lexresTok __pat_195) (tokenizeFrom (lexresRest __pat_195))
+tokenizeChar __pat_196 __pat_197 = if (__pat_196 == 40) (Cons TLParen (tokenizeFrom __pat_197)) (if (__pat_196 == 41) (Cons TRParen (tokenizeFrom __pat_197)) (if (__pat_196 == 44) (Cons TComma (tokenizeFrom __pat_197)) (if (__pat_196 == 39) (tokenizeContinue (readCharLit __pat_197)) (if (__pat_196 == 34) (tokenizeContinue (readStringLit __pat_197)) (if (__pat_196 == 91) (tokenizeLBracket __pat_197) (if (isDigitCh __pat_196) (tokenizeContinue (readNum (Cons __pat_196 __pat_197))) (if (isAlphaCh __pat_196) (tokenizeContinue (readIdent (Cons __pat_196 __pat_197))) (tokenizeContinue (readOp __pat_196 __pat_197)))))))))
+tokenizeSkipped __pat_198 = case __pat_198 (Nil -> Nil) (Cons c cs2 -> tokenizeChar c cs2)
+skipSpaces __pat_199 = case __pat_199 (Nil -> Nil) (Cons c cs2 -> if (isSpaceCh c) (skipSpaces cs2) __pat_199)
+tokenizeFrom __pat_200 = tokenizeSkipped (skipSpaces __pat_200)
+tokenize __pat_201 = tokenizeFrom (stripComment __pat_201)
+charListEq __pat_202 __pat_203 = case __pat_202 (Nil -> case __pat_203 (Nil -> 1) (Cons y ys -> 0)) (Cons x xs -> case __pat_203 (Nil -> 0) (Cons y ys -> if (x == y) (charListEq xs ys) 0))
+member __pat_204 __pat_205 = case __pat_204 (Nil -> 0) (Cons x xs -> if (charListEq x __pat_205) 1 (member xs __pat_205))
+slashBackslash = Cons 47 (Cons 92 Nil)
+backslashSlash = Cons 92 (Cons 47 Nil)
+concatAll __pat_206 = case __pat_206 (Nil -> Nil) (Cons xs xss2 -> append xs (concatAll xss2))
+argNameOf __pat_207 = case __pat_207 (Arg n s -> n)
+argStrict __pat_208 = case __pat_208 (Arg n s -> s)
+funcNameOf __pat_209 = case __pat_209 (Func n as b -> n)
+funcArgs __pat_210 = case __pat_210 (Func n as b -> as)
+funcArityOf __pat_211 = length (funcArgs __pat_211)
+findFunc __pat_212 __pat_213 = case __pat_213 (Nil -> error "findFunc: unknown function") (Cons f fs -> if (charListEq (funcNameOf f) __pat_212) f (findFunc __pat_212 fs))
+isKnownFunc __pat_214 __pat_215 = case __pat_215 (Nil -> 0) (Cons f fs -> if (charListEq (funcNameOf f) __pat_214) 1 (isKnownFunc __pat_214 fs))
+printKw = str2list "print"
+printCKw = str2list "printC"
+printSKw = str2list "printS"
+errorKw = str2list "error"
+strlenKw = str2list "strlen"
+stratKw = str2list "strat"
+updateKw = str2list "update"
+getKw = str2list "get"
+strappendKw = str2list "strappend"
+strsliceKw = str2list "strslice"
+strcpyKw = str2list "strcpy"
+isPrintCall __pat_216 = charListEq __pat_216 printKw
+isPrintCCall __pat_217 = charListEq __pat_217 printCKw
+isPrintSCall __pat_218 = charListEq __pat_218 printSKw
+isErrorCall __pat_219 = charListEq __pat_219 errorKw
+isPredefCall __pat_220 = (((((charListEq __pat_220 strlenKw \/ charListEq __pat_220 stratKw) \/ charListEq __pat_220 updateKw) \/ charListEq __pat_220 getKw) \/ charListEq __pat_220 strappendKw) \/ charListEq __pat_220 strsliceKw) \/ charListEq __pat_220 strcpyKw
+predefArity __pat_221 = if (charListEq __pat_221 strlenKw) 1 (if (charListEq __pat_221 stratKw) 2 (if (charListEq __pat_221 updateKw) 3 (if (charListEq __pat_221 getKw) 2 (if (charListEq __pat_221 strappendKw) 2 (if (charListEq __pat_221 strsliceKw) 3 (if (charListEq __pat_221 strcpyKw) 1 (error "predefArity: unknown predef")))))))
+predefIndex __pat_222 = if (charListEq __pat_222 strlenKw) 2 (if (charListEq __pat_222 stratKw) 4 (if (charListEq __pat_222 updateKw) 3 (if (charListEq __pat_222 getKw) 6 (if (charListEq __pat_222 strappendKw) 0 (if (charListEq __pat_222 strsliceKw) 1 (if (charListEq __pat_222 strcpyKw) 5 (error "predefIndex: unknown predef")))))))
+readFileKw = str2list "readFile"
+writeFileKw = str2list "writeFile"
+readLineKw = str2list "readLine"
+printStringKw = str2list "printString"
+openFileKw = str2list "openFile"
+closeFileKw = str2list "closeFile"
+readCharKw = str2list "readChar"
+writeCharKw = str2list "writeChar"
+strcreateKw = str2list "strcreate"
+isSyscallCall __pat_223 = ((((((charListEq __pat_223 readFileKw \/ charListEq __pat_223 writeFileKw) \/ charListEq __pat_223 readLineKw) \/ charListEq __pat_223 printStringKw) \/ charListEq __pat_223 openFileKw) \/ charListEq __pat_223 closeFileKw) \/ charListEq __pat_223 readCharKw) \/ charListEq __pat_223 writeCharKw
+syscallArity __pat_224 = if (charListEq __pat_224 readFileKw) 1 (if (charListEq __pat_224 writeFileKw) 2 (if (charListEq __pat_224 readLineKw) 0 (if (charListEq __pat_224 printStringKw) 1 (if (charListEq __pat_224 openFileKw) 2 (if (charListEq __pat_224 closeFileKw) 1 (if (charListEq __pat_224 readCharKw) 1 (if (charListEq __pat_224 writeCharKw) 2 (error "syscallArity: unknown syscall"))))))))
+syscallIndex __pat_225 = if (charListEq __pat_225 readFileKw) 0 (if (charListEq __pat_225 writeFileKw) 1 (if (charListEq __pat_225 readLineKw) 2 (if (charListEq __pat_225 printStringKw) 3 (if (charListEq __pat_225 openFileKw) 4 (if (charListEq __pat_225 closeFileKw) 5 (if (charListEq __pat_225 readCharKw) 6 (if (charListEq __pat_225 writeCharKw) 7 (error "syscallIndex: unknown syscall"))))))))
+isStrcreateCall __pat_226 = charListEq __pat_226 strcreateKw
+sinKw = str2list "sin"
+cosKw = str2list "cos"
+tanKw = str2list "tan"
+asinKw = str2list "asin"
+acosKw = str2list "acos"
+atanKw = str2list "atan"
+logKw = str2list "log"
+log10Kw = str2list "log10"
+expKw = str2list "exp"
+sqrtKw = str2list "sqrt"
+floorKw = str2list "floor"
+ceilKw = str2list "ceil"
+roundKw = str2list "round"
+fabsKw = str2list "fabs"
+absKw = str2list "abs"
+itofKw = str2list "itof"
+ftoiKw = str2list "ftoi"
+atofKw = str2list "atof"
+ftoaKw = str2list "ftoa"
+atan2Kw = str2list "atan2"
+isFloatOpCall __pat_227 = ((((((((((((((((((charListEq __pat_227 sinKw \/ charListEq __pat_227 cosKw) \/ charListEq __pat_227 tanKw) \/ charListEq __pat_227 asinKw) \/ charListEq __pat_227 acosKw) \/ charListEq __pat_227 atanKw) \/ charListEq __pat_227 logKw) \/ charListEq __pat_227 log10Kw) \/ charListEq __pat_227 expKw) \/ charListEq __pat_227 sqrtKw) \/ charListEq __pat_227 floorKw) \/ charListEq __pat_227 ceilKw) \/ charListEq __pat_227 roundKw) \/ charListEq __pat_227 fabsKw) \/ charListEq __pat_227 absKw) \/ charListEq __pat_227 itofKw) \/ charListEq __pat_227 ftoiKw) \/ charListEq __pat_227 atofKw) \/ charListEq __pat_227 ftoaKw) \/ charListEq __pat_227 atan2Kw
+floatOpArity __pat_228 = if (charListEq __pat_228 atan2Kw) 2 1
+floatOpIndex __pat_229 = if (charListEq __pat_229 sinKw) 0 (if (charListEq __pat_229 cosKw) 1 (if (charListEq __pat_229 tanKw) 2 (if (charListEq __pat_229 asinKw) 3 (if (charListEq __pat_229 acosKw) 4 (if (charListEq __pat_229 atanKw) 5 (if (charListEq __pat_229 logKw) 6 (if (charListEq __pat_229 log10Kw) 7 (if (charListEq __pat_229 expKw) 8 (if (charListEq __pat_229 sqrtKw) 9 (if (charListEq __pat_229 floorKw) 10 (if (charListEq __pat_229 ceilKw) 11 (if (charListEq __pat_229 roundKw) 12 (if (charListEq __pat_229 fabsKw) 13 (if (charListEq __pat_229 absKw) 13 (if (charListEq __pat_229 itofKw) 14 (if (charListEq __pat_229 ftoiKw) 15 (if (charListEq __pat_229 atofKw) 16 (if (charListEq __pat_229 ftoaKw) 17 (if (charListEq __pat_229 atan2Kw) 25 (error "floatOpIndex: unknown floatop"))))))))))))))))))))
+lbNameOf __pat_230 = case __pat_230 (LetBinding n s e -> n)
+lbStrictOf __pat_231 = case __pat_231 (LetBinding n s e -> s)
+lbRhsOf __pat_232 = case __pat_232 (LetBinding n s e -> e)
+letBindingToArg __pat_233 = case __pat_233 (LetBinding n s e -> Arg n s)
+cbConOf __pat_234 = case __pat_234 (CaseBranch c vs b -> c)
+cbVarsOf __pat_235 = case __pat_235 (CaseBranch c vs b -> vs)
+cbBodyOf __pat_236 = case __pat_236 (CaseBranch c vs b -> b)
+adtConName __pat_237 = case __pat_237 (AdtCon n fs -> n)
+adtConFields __pat_238 = case __pat_238 (AdtCon n fs -> fs)
+adtConsOf __pat_239 = case __pat_239 (Adt n cs -> cs)
+isConOfList __pat_240 __pat_241 = case __pat_241 (Nil -> 0) (Cons c cs -> if (charListEq (adtConName c) __pat_240) 1 (isConOfList __pat_240 cs))
+findAdtByCon __pat_242 __pat_243 = case __pat_243 (Nil -> error "findAdtByCon: unknown constructor") (Cons a as -> if (isConOfList __pat_242 (adtConsOf a)) a (findAdtByCon __pat_242 as))
+findAdtCon __pat_244 __pat_245 = case __pat_245 (Nil -> error "findAdtCon: unknown constructor") (Cons c cs -> if (charListEq (adtConName c) __pat_244) c (findAdtCon __pat_244 cs))
+conFields __pat_246 __pat_247 = adtConFields (findAdtCon __pat_246 (adtConsOf (findAdtByCon __pat_246 __pat_247)))
+conTag __pat_248 __pat_249 = conTagAt __pat_248 (adtConsOf (findAdtByCon __pat_248 __pat_249)) 0
+conTagAt __pat_250 __pat_251 __pat_252 = case __pat_251 (Nil -> error "conTag: unknown constructor") (Cons c cs -> if (charListEq (adtConName c) __pat_250) __pat_252 (conTagAt __pat_250 cs (__pat_252 + 1)))
+adtArity __pat_253 __pat_254 = length (adtConsOf (findAdtByCon __pat_253 __pat_254))
+adtName __pat_255 = case __pat_255 (Adt n cs -> n)
+adtTypeId __pat_256 __pat_257 = adtTypeIdAt __pat_256 __pat_257 5
+adtTypeIdAt __pat_258 __pat_259 __pat_260 = case __pat_259 (Nil -> error "adtTypeId: unknown adt") (Cons a as -> if (charListEq (adtName a) __pat_258) __pat_260 (adtTypeIdAt __pat_258 as (__pat_260 + 1)))
+conTypeId __pat_261 __pat_262 = adtTypeId (adtName (findAdtByCon __pat_261 __pat_262)) __pat_262
+typeIdKw = str2list "typeId"
+constrNameKw = str2list "constrName"
+getFieldKw = str2list "getField"
+makeConstrKw = str2list "makeConstr"
+funcNameKw = str2list "funcName"
+funcArityKw = str2list "funcArity"
+funcRemainingKw = str2list "funcRemaining"
+applyDynamicKw = str2list "applyDynamic"
+lookupKw = str2list "lookup"
+reflectionKws = Cons typeIdKw (Cons constrNameKw (Cons getFieldKw (Cons makeConstrKw (Cons funcNameKw (Cons funcArityKw (Cons funcRemainingKw (Cons applyDynamicKw (Cons lookupKw Nil))))))))
+isReflectionCall __pat_263 = member reflectionKws __pat_263
+reflectionOpcode __pat_264 = if (charListEq __pat_264 typeIdKw) (str2list "gettypeid") (if (charListEq __pat_264 constrNameKw) (str2list "getconstrname") (if (charListEq __pat_264 getFieldKw) (str2list "getfield") (if (charListEq __pat_264 makeConstrKw) (str2list "makeconstr") (if (charListEq __pat_264 funcNameKw) (str2list "getfuncname") (if (charListEq __pat_264 funcArityKw) (str2list "getfuncarity") (if (charListEq __pat_264 funcRemainingKw) (str2list "getfuncremaining") (if (charListEq __pat_264 applyDynamicKw) (str2list "applydynamic") (if (charListEq __pat_264 lookupKw) (str2list "lookup") (error "reflectionOpcode: unknown reflection call")))))))))
+exprConstrNameOf __pat_265 = case __pat_265 (Num n -> str2list "Num") (Str s -> str2list "Str") (Var v -> str2list "Var") (If a b c -> str2list "If") (App n as -> str2list "App") (Prim op as -> str2list "Prim") (Ct n as -> str2list "Ct") (Case sc cs -> str2list "Case") (Let ls b -> str2list "Let") (NoMatch -> str2list "NoMatch") (Lazy inner -> str2list "Lazy") (Thunk inner -> str2list "Thunk") (Closure inner -> str2list "Closure") (Eval inner -> str2list "Eval") (Try b h -> str2list "Try") (Throw n p -> str2list "Throw")
+getCatchNr __pat_266 = case __pat_266 (App n as -> getCatchNrArgs as) (Num n -> n) (_ -> 0)
+getCatchNrArgs __pat_267 = case __pat_267 (Nil -> 0) (Cons a rest -> getCatchNrArgsOne a rest)
+getCatchNrArgsOne __pat_268 __pat_269 = case __pat_269 (Nil -> getCatchNrOne __pat_268) (Cons b more -> 0)
+getCatchNrOne __pat_270 = case __pat_270 (Num n -> n) (_ -> 0)
+ifKw = str2list "if"
+caseKw = str2list "case"
+selectKw = str2list "select"
+letKw = str2list "let"
+inKw = str2list "in"
+nomatchKw = str2list "nomatch"
+trueKw = str2list "True"
+falseKw = str2list "False"
+tryKw = str2list "try"
+throwKw = str2list "throw"
+str2listOp = str2list "str2list"
+pipeOp = str2list "|"
+isLetOrInIdent __pat_271 = charListEq __pat_271 letKw \/ charListEq __pat_271 inKw
+isCaseIdent __pat_272 = charListEq __pat_272 caseKw \/ charListEq __pat_272 selectKw
+isBoolLit __pat_273 = charListEq __pat_273 trueKw \/ charListEq __pat_273 falseKw
+boolLitValue __pat_274 = if (charListEq __pat_274 trueKw) (Num 1) (Num 0)
+isUpperStart __pat_275 = case __pat_275 (Nil -> 0) (Cons c cs -> if (c == 95) (isUpperStart cs) ((c >= 65) /\ (c <= 90)))
+identExpr __pat_276 = if (isSyscallCall __pat_276 /\ (syscallArity __pat_276 == 0)) (App __pat_276 Nil) (Var __pat_276)
+isTIdentTok __pat_277 = case __pat_277 (TIdent n -> 1) (_ -> 0)
+tIdentName __pat_278 = case __pat_278 (TIdent n -> n) (_ -> error "tIdentName: not a TIdent")
+pIdentTok = __op_minus_minus_gt (pSat isTIdentTok pItem) tIdentName
+isTNumTok __pat_279 = case __pat_279 (TNum n -> 1) (_ -> 0)
+tNumVal __pat_280 = case __pat_280 (TNum n -> Num n) (_ -> error "tNumVal: not a TNum")
+pNumAtom = __op_minus_minus_gt (pSat isTNumTok pItem) tNumVal
+isTFloatTok __pat_281 = case __pat_281 (TFloatStr s -> 1) (_ -> 0)
+tFloatVal __pat_282 = case __pat_282 (TFloatStr s -> FloatLit s) (_ -> error "tFloatVal: not a TFloatStr")
+pFloatAtom = __op_minus_minus_gt (pSat isTFloatTok pItem) tFloatVal
+isTStrTok __pat_283 = case __pat_283 (TStr s -> 1) (_ -> 0)
+tStrVal __pat_284 = case __pat_284 (TStr s -> Str s) (_ -> error "tStrVal: not a TStr")
+pStrAtom = __op_minus_minus_gt (pSat isTStrTok pItem) tStrVal
+isTStrListTok __pat_285 = case __pat_285 (TStrList s -> 1) (_ -> 0)
+tStrListVal __pat_286 = case __pat_286 (TStrList s -> App str2listOp (Cons (Str s) Nil)) (_ -> error "tStrListVal: not a TStrList")
+pStrListAtom = __op_minus_minus_gt (pSat isTStrListTok pItem) tStrListVal
+isTLParenTok __pat_287 = case __pat_287 (TLParen -> 1) (_ -> 0)
+pLParenTok = pSat isTLParenTok pItem
+isTRParenTok __pat_288 = case __pat_288 (TRParen -> 1) (_ -> 0)
+pRParenTok = pSat isTRParenTok pItem
+isTBangTok __pat_289 = case __pat_289 (TBang -> 1) (_ -> 0)
+pBangTok = pSat isTBangTok pItem
+isTCommaTok __pat_290 = case __pat_290 (TComma -> 1) (_ -> 0)
+pCommaTok = pSat isTCommaTok pItem
+isTOpEq __pat_291 __pat_292 = case __pat_292 (TOp o -> charListEq o __pat_291) (_ -> 0)
+pOpEqTok __pat_293 = pSat (isTOpEq __pat_293) pItem
+pPipeTok = pOpEqTok pipeOp
+constTrue __pat_294 = 1
+pStrictMark = __op_x (__op_minus_minus_gt pBangTok constTrue) (pReturn 0)
+pIdentAtom __pat_295 = case __pat_295 (Nil -> PErr "pIdentAtom: unexpected end of input" Nil) (Cons t rest -> pIdentAtomTok t rest)
+pIdentAtomTok __pat_296 __pat_297 = case __pat_296 (TIdent n -> pIdentAtomName n __pat_297) (_ -> PErr "pIdentAtom: not an identifier" (Cons __pat_296 __pat_297))
+pIdentAtomName __pat_298 __pat_299 = if (isCaseIdent __pat_298) (pCaseExpr __pat_299) (if (isLetOrInIdent __pat_298) (PErr "pIdentAtom: let/in not allowed here" (Cons (TIdent __pat_298) __pat_299)) (POk (identExpr __pat_298) __pat_299))
+pParenAtom = __op_lt_plus_plus (__op_plus_plus_gt pLParenTok pExpr) pRParenTok
+pAtom = __op_x (__op_x (__op_x (__op_x (__op_x pNumAtom pFloatAtom) pStrAtom) pStrListAtom) pIdentAtom) pParenAtom
+appendArgRaw __pat_300 __pat_301 = case __pat_300 (Var n -> App n (Cons __pat_301 Nil)) (App n as -> App n (append as (Cons __pat_301 Nil))) (_ -> error "appendArgRaw: unexpected argument in this position")
+foldAppArgs __pat_302 __pat_303 = case __pat_303 (Nil -> __pat_302) (Cons a rest -> foldAppArgs (appendArgRaw __pat_302 a) rest)
+foldApp __pat_304 = case __pat_304 (__Tuple2 __pat_305 __pat_306 -> foldAppArgs __pat_305 __pat_306)
+pApp = __op_minus_minus_gt (__op_plus_plus_plus pAtom (pMany pAtom)) foldApp
+mkPrim2 __pat_307 __pat_308 __pat_309 = Prim __pat_307 (Cons __pat_308 (Cons __pat_309 Nil))
+isTOpAny __pat_310 __pat_311 = case __pat_311 (TOp o -> member __pat_310 o) (_ -> 0)
+tOpName __pat_312 = case __pat_312 (TOp o -> o) (_ -> error "tOpName: not a TOp")
+pOpAny __pat_313 = __op_minus_minus_gt (pSat (isTOpAny __pat_313) pItem) tOpName
+pOpCombiner __pat_314 = __op_minus_minus_gt (pOpAny __pat_314) mkPrim2
+mulSyms = Cons (str2list "*") (Cons (str2list "%") (Cons (str2list "/") Nil))
+addSyms = Cons (str2list "+") (Cons (str2list "-") (Cons (str2list "<#>") Nil))
+cmpSyms = Cons (str2list "<") (Cons (str2list "<=") (Cons (str2list ">") (Cons (str2list ">=") Nil)))
+eqSyms = Cons (str2list "==") (Cons (str2list "!=") Nil)
+boolSyms = Cons slashBackslash (Cons backslashSlash Nil)
+pLevel20 = pChainl1 pApp (pOpCombiner mulSyms)
+pLevel10 = pChainl1 pLevel20 (pOpCombiner addSyms)
+pLevel4 = pChainl1 pLevel10 (pOpCombiner cmpSyms)
+pLevel3 = pChainl1 pLevel4 (pOpCombiner eqSyms)
+pLevel1 = pChainl1 pLevel3 (pOpCombiner boolSyms)
+pExpr = pLevel1
+pCaseExpr __pat_315 = case (pAtom __pat_315) (POk scrut rest -> pCaseExprBranches scrut rest) (PErr m r -> PErr m r)
+pCaseExprBranches __pat_316 __pat_317 = case (pMany pBranchItem __pat_317) (POk items rest -> POk (Case __pat_316 (concatAll items)) rest) (PErr m r -> error "pCaseExprBranches: unreachable, pMany never fails")
+singletonList __pat_318 = Cons __pat_318 Nil
+constNil __pat_319 = Nil
+isNomatchTok __pat_320 = case __pat_320 (TIdent n -> charListEq n nomatchKw) (_ -> 0)
+pNomatchSkip = pSat isNomatchTok pItem
+pBranchItem = __op_x (__op_minus_minus_gt pNomatchSkip constNil) (__op_minus_minus_gt pOneBranch singletonList)
+pOneBranch = __op_lt_plus_plus (__op_plus_plus_gt pLParenTok pBranchInner) pRParenTok
+pBranchInner __pat_321 = case (pIdentTok __pat_321) (POk con rest -> pBranchInnerFields con Nil rest) (PErr m r -> PErr m r)
+pBranchInnerFields __pat_322 __pat_323 __pat_324 = case __pat_324 (Nil -> PErr "pBranchInner: missing -> in case branch" Nil) (Cons t rest -> pBranchInnerFieldsTok __pat_322 __pat_323 t rest)
+pBranchInnerFieldsTok __pat_325 __pat_326 __pat_327 __pat_328 = case __pat_327 (TIdent v -> pBranchInnerFields __pat_325 (append __pat_326 (Cons v Nil)) __pat_328) (TArrow -> pBranchInnerBody __pat_325 __pat_326 __pat_328) (_ -> PErr "pBranchInner: expected a field name or -> in the pattern" (Cons __pat_327 __pat_328))
+pBranchInnerBody __pat_329 __pat_330 __pat_331 = case (pExpr __pat_331) (POk body rest -> POk (CaseBranch __pat_329 __pat_330 (postParseExpr body)) rest) (PErr m r -> PErr m r)
+pLetBindingOne __pat_332 = case (pStrictMark __pat_332) (POk strict rest -> pLetBindingOneName strict rest) (PErr m r -> error "pLetBindingOne: unreachable, pStrictMark never fails")
+pLetBindingOneName __pat_333 __pat_334 = case (pIdentTok __pat_334) (POk name rest -> pLetBindingOneEq __pat_333 name rest) (PErr m r -> PErr m r)
+pLetBindingOneEq __pat_335 __pat_336 __pat_337 = case __pat_337 (Nil -> PErr "pLetBindingOne: missing = in let binding" Nil) (Cons t rest -> pLetBindingOneEqTok __pat_335 __pat_336 t rest)
+pLetBindingOneEqTok __pat_338 __pat_339 __pat_340 __pat_341 = case __pat_340 (TEquals -> case (pExpr __pat_341) (POk e rest2 -> POk (LetBinding __pat_339 __pat_338 (postParseExpr e)) rest2) (PErr m r -> PErr m r)) (_ -> PErr "pLetBindingOne: = expected after the name in a let binding" (Cons __pat_340 __pat_341))
+pLetClauseBody __pat_342 = case (pSepBy1 pLetBindingOne pCommaTok __pat_342) (POk bindings rest -> pLetClauseAfterBindings bindings rest) (PErr m r -> error (strcat "parseLet: " m))
+pLetClauseAfterBindings __pat_343 __pat_344 = case __pat_344 (Nil -> error "parseLet: missing 'in' after the let bindings") (Cons t rest -> pLetClauseAfterBindingsTok __pat_343 t rest)
+pLetClauseAfterBindingsTok __pat_345 __pat_346 __pat_347 = case __pat_346 (TIdent n -> if (charListEq n inKw) (pLetClauseAfterIn __pat_345 __pat_347) (error "parseLet: , or in expected after a let binding")) (_ -> error "parseLet: , or in expected after a let binding")
+pLetClauseAfterIn __pat_348 __pat_349 = case (pExpr __pat_349) (POk body remTail -> Let __pat_348 (postParseExpr body)) (PErr m r -> error (strcat "parseLet: " m))
+startsWithLetToks __pat_350 = case __pat_350 (Nil -> 0) (Cons t rest -> case t (TIdent n -> charListEq n letKw) (_ -> 0))
+pFuncBody __pat_351 = if (startsWithLetToks __pat_351) (pLetClauseBody (tailOr Nil __pat_351)) (pPlainFuncBody __pat_351)
+pPlainFuncBody __pat_352 = case (pExpr __pat_352) (POk e rest -> postParseExpr e) (PErr m r -> error (strcat "buildFunc: " m))
+ifArgs3 __pat_353 = case __pat_353 (Cons a1 rest1 -> ifArgs3a a1 rest1) (Nil -> error "ifArgs3: expected 3 args")
+ifArgs3a __pat_354 __pat_355 = case __pat_355 (Cons a2 rest2 -> ifArgs3b __pat_354 a2 rest2) (Nil -> error "ifArgs3: expected 3 args")
+ifArgs3b __pat_356 __pat_357 __pat_358 = case __pat_358 (Cons a3 rest3 -> ifArgs3c __pat_356 __pat_357 a3 rest3) (Nil -> error "ifArgs3: expected 3 args")
+ifArgs3c __pat_359 __pat_360 __pat_361 __pat_362 = case __pat_362 (Nil -> If __pat_359 __pat_360 __pat_361) (Cons x xs -> error "ifArgs3: expected 3 args")
+tryArgs2 __pat_363 = case __pat_363 (Cons a1 rest1 -> tryArgs2a a1 rest1) (Nil -> error "tryArgs2: expected 2 args")
+tryArgs2a __pat_364 __pat_365 = case __pat_365 (Cons a2 rest2 -> tryArgs2b __pat_364 a2 rest2) (Nil -> error "tryArgs2: expected 2 args")
+tryArgs2b __pat_366 __pat_367 __pat_368 = case __pat_368 (Nil -> Try __pat_366 __pat_367) (Cons x xs -> error "tryArgs2: expected 2 args")
+throwArgs2 __pat_369 = case __pat_369 (Cons a1 rest1 -> throwArgs2a a1 rest1) (Nil -> error "throwArgs2: expected 2 args")
+throwArgs2a __pat_370 __pat_371 = case __pat_371 (Cons a2 rest2 -> throwArgs2b __pat_370 a2 rest2) (Nil -> error "throwArgs2: expected 2 args")
+throwArgs2b __pat_372 __pat_373 __pat_374 = case __pat_374 (Nil -> Throw __pat_372 __pat_373) (Cons x xs -> error "throwArgs2: expected 2 args")
+finishApp __pat_375 __pat_376 = if (charListEq __pat_375 ifKw /\ (length __pat_376 == 3)) (ifArgs3 __pat_376) (if (charListEq __pat_375 tryKw /\ (length __pat_376 == 2)) (tryArgs2 __pat_376) (if (charListEq __pat_375 throwKw /\ (length __pat_376 == 2)) (throwArgs2 __pat_376) (if (isUpperStart __pat_375) (Ct __pat_375 __pat_376) (App __pat_375 __pat_376))))
+postParseBranch __pat_377 = case __pat_377 (CaseBranch c vs bd -> CaseBranch c vs (postParseExpr bd))
+postParseExpr __pat_378 = case __pat_378 (Num n -> Num n) (FloatLit s -> FloatLit s) (Str s -> Str s) (Var v -> if (isBoolLit v) (boolLitValue v) (if (isUpperStart v) (Ct v Nil) (Var v))) (If a b c -> If (postParseExpr a) (postParseExpr b) (postParseExpr c)) (App n as -> finishApp n (map postParseExpr as)) (Prim o as -> Prim o (map postParseExpr as)) (Ct n as -> Ct n (map postParseExpr as)) (Case sc cs -> Case (postParseExpr sc) (map postParseBranch cs)) (NoMatch -> NoMatch) (Try b h -> Try (postParseExpr b) (postParseExpr h)) (Throw nr p -> Throw (postParseExpr nr) (postParseExpr p)) (_ -> error "postParseExpr: unexpected expression form during parsing")
+pAdtField = __op_minus_minus_gt (__op_plus_plus_plus pStrictMark pIdentTok) fstOf
+mkAdtCon __pat_379 = case __pat_379 (__Tuple2 __pat_380 __pat_381 -> AdtCon __pat_380 __pat_381)
+pAdtCon = __op_minus_minus_gt (__op_plus_plus_plus pIdentTok (pMany pAdtField)) mkAdtCon
+pAdtDeclToks __pat_382 = case __pat_382 (Nil -> error "parseAdt: empty ADT declaration") (Cons t rest -> pAdtDeclHead t rest)
+pAdtDeclHead __pat_383 __pat_384 = case __pat_383 (TIdent n -> pAdtDeclEquals n __pat_384) (_ -> error "parseAdt: a type name must start with a name")
+pAdtDeclEquals __pat_385 __pat_386 = case __pat_386 (Nil -> error "parseAdt: missing = after the type name") (Cons t rest -> pAdtDeclEqualsTok __pat_385 t rest)
+pAdtDeclEqualsTok __pat_387 __pat_388 __pat_389 = case __pat_388 (TEquals -> case (pSepBy1 pAdtCon pPipeTok __pat_389) (POk cons remTail -> Adt __pat_387 cons) (PErr m r -> error (strcat "parseAdt: " m))) (_ -> error "parseAdt: = expected after the type name")
+mkArg __pat_390 = case __pat_390 (__Tuple2 __pat_391 __pat_392 -> Arg __pat_392 __pat_391)
+pFuncArg = __op_minus_minus_gt (__op_plus_plus_plus pStrictMark pIdentTok) mkArg
+pFuncClauseToks __pat_393 = case __pat_393 (Nil -> error "buildFunc: empty function head") (Cons t rest -> pFuncClauseHead t rest)
+pFuncClauseHead __pat_394 __pat_395 = case __pat_394 (TIdent n -> pFuncClauseArgs n __pat_395) (_ -> error "buildFunc: a function head must start with a name")
+pFuncClauseArgs __pat_396 __pat_397 = case (pMany pFuncArg __pat_397) (POk args rest -> pFuncClauseEquals __pat_396 args rest) (PErr m r -> error "pFuncClauseArgs: unreachable, pMany never fails")
+pFuncClauseEquals __pat_398 __pat_399 __pat_400 = case __pat_400 (Nil -> error "buildFunc: missing = in function definition") (Cons t rest -> pFuncClauseEqualsTok __pat_398 __pat_399 t rest)
+pFuncClauseEqualsTok __pat_401 __pat_402 __pat_403 __pat_404 = case __pat_403 (TEquals -> Func __pat_401 __pat_402 (pFuncBody __pat_404)) (_ -> error "buildFunc: = expected after function head")
+startsWithSpace __pat_405 = case __pat_405 (Nil -> 0) (Cons c cs2 -> c == 32)
+mergeContinuations __pat_406 = case __pat_406 (Nil -> Nil) (Cons l1 rest -> mergeContinuationsStep l1 rest)
+mergeContinuationsStep __pat_407 __pat_408 = case __pat_408 (Nil -> Cons __pat_407 Nil) (Cons l2 ls -> if (startsWithSpace l2) (mergeContinuations (Cons (append __pat_407 (Cons 32 l2)) ls)) (Cons __pat_407 (mergeContinuations (Cons l2 ls))))
+linesOfAcc __pat_409 __pat_410 = case __pat_410 (Nil -> Cons (reverse __pat_409) Nil) (Cons c cs2 -> if (c == 10) (Cons (reverse __pat_409) (linesOfAcc Nil cs2)) (linesOfAcc (Cons c __pat_409) cs2))
+linesOf __pat_411 = linesOfAcc Nil __pat_411
+dropLeadingSpaces __pat_412 = case __pat_412 (Nil -> Nil) (Cons c cs2 -> if (c == 32) (dropLeadingSpaces cs2) __pat_412)
+isBlankLine __pat_413 = length (dropLeadingSpaces (stripComment __pat_413)) == 0
+dropBlankLines __pat_414 = case __pat_414 (Nil -> Nil) (Cons l rest -> if (isBlankLine l) (dropBlankLines rest) (Cons l (dropBlankLines rest)))
+dropChars __pat_415 __pat_416 = if (__pat_415 == 0) __pat_416 (case __pat_416 (Nil -> Nil) (Cons c cs2 -> dropChars (__pat_415 - 1) cs2))
+ppFuncs __pat_417 = case __pat_417 (ParsedProgram fs a -> fs)
+ppAdts __pat_418 = case __pat_418 (ParsedProgram fs a -> a)
+prependFunc __pat_419 __pat_420 = case __pat_420 (ParsedProgram fs a -> ParsedProgram (Cons __pat_419 fs) a)
+prependAdt __pat_421 __pat_422 = case __pat_422 (ParsedProgram fs aa -> ParsedProgram fs (Cons __pat_421 aa))
+parseAdtDeclLine __pat_423 = pAdtDeclToks (tokenize (dropChars 2 __pat_423))
+parseFuncClauseLine __pat_424 = pFuncClauseToks (tokenize __pat_424)
+parseProgramLines __pat_425 = case __pat_425 (Nil -> ParsedProgram Nil Nil) (Cons l ls -> parseProgramLinesTok l ls)
+parseProgramLinesTok __pat_426 __pat_427 = if (isBlankLine __pat_426) (parseProgramLines __pat_427) (if (startsWithDoubleColon __pat_426) (prependAdt (parseAdtDeclLine __pat_426) (parseProgramLines __pat_427)) (prependFunc (parseFuncClauseLine __pat_426) (parseProgramLines __pat_427)))
+resolveVar __pat_428 __pat_429 __pat_430 = if (member __pat_429 __pat_430) (Var __pat_430) (if (member __pat_428 __pat_430) (App __pat_430 Nil) (Var __pat_430))
+fixupCtor __pat_431 __pat_432 __pat_433 __pat_434 = if (isKnownCon __pat_433 __pat_432) (Ct __pat_433 __pat_434) (if (member __pat_431 __pat_433) (App __pat_433 __pat_434) (Ct __pat_433 __pat_434))
+isConOfAdt __pat_435 __pat_436 = isConOfList __pat_435 (adtConsOf __pat_436)
+isKnownCon __pat_437 __pat_438 = case __pat_438 (Nil -> 0) (Cons a as -> if (isConOfAdt __pat_437 a) 1 (isKnownCon __pat_437 as))
+adtConNamesOf __pat_439 __pat_440 = map adtConName (adtConsOf (findAdtByCon __pat_439 __pat_440))
+cbCon __pat_441 = case __pat_441 (CaseBranch c vs b -> c)
+cbVars __pat_442 = case __pat_442 (CaseBranch c vs b -> vs)
+cbBody __pat_443 = case __pat_443 (CaseBranch c vs b -> b)
+conArity __pat_444 __pat_445 = length (adtConFields (findAdtCon __pat_444 (adtConsOf (findAdtByCon __pat_444 __pat_445))))
+mkPlaceholderFieldsAcc __pat_446 = if (__pat_446 == 0) Nil (Cons (append (str2list "_nm") (itoa __pat_446)) (mkPlaceholderFieldsAcc (__pat_446 - 1)))
+mkNoMatchBranch __pat_447 __pat_448 = CaseBranch __pat_448 (mkPlaceholderFieldsAcc (conArity __pat_448 __pat_447)) NoMatch
+hasCatchAllBranch __pat_449 = case __pat_449 (Nil -> 0) (Cons b bs -> if (charListEq (cbCon b) (str2list "_")) 1 (hasCatchAllBranch bs))
+catchAllBody __pat_450 = case __pat_450 (Nil -> error "catchAllBody: no catch-all branch found") (Cons b bs -> if (charListEq (cbCon b) (str2list "_")) (cbBody b) (catchAllBody bs))
+mkCatchAllBranch __pat_451 __pat_452 __pat_453 = CaseBranch __pat_452 (mkPlaceholderFieldsAcc (conArity __pat_452 __pat_451)) (catchAllBody __pat_453)
+findBranchByCon __pat_454 __pat_455 __pat_456 __pat_457 = case __pat_457 (Nil -> if (hasCatchAllBranch __pat_456) (mkCatchAllBranch __pat_454 __pat_455 __pat_456) (mkNoMatchBranch __pat_454 __pat_455)) (Cons b bs -> if (charListEq (cbCon b) __pat_455) b (findBranchByCon __pat_454 __pat_455 __pat_456 bs))
+fillBranches __pat_458 __pat_459 __pat_460 = case __pat_460 (Nil -> Nil) (Cons c cs -> Cons (findBranchByCon __pat_458 c __pat_459 __pat_459) (fillBranches __pat_458 __pat_459 cs))
+headBranch __pat_461 = case __pat_461 (Cons b bs -> b) (Nil -> error "headBranch: empty")
+completeBranches __pat_462 __pat_463 = if (length __pat_463 == 0) __pat_463 (if (isKnownCon (cbCon (headBranch __pat_463)) __pat_462) (fillBranches __pat_462 __pat_463 (adtConNamesOf (cbCon (headBranch __pat_463)) __pat_462)) __pat_463)
+resolveBranch __pat_464 __pat_465 __pat_466 __pat_467 = case __pat_467 (CaseBranch c vs b -> CaseBranch c vs (resolveExpr __pat_464 __pat_465 (append __pat_466 vs) b))
+resolveBinding __pat_468 __pat_469 __pat_470 __pat_471 = case __pat_471 (LetBinding n s e -> LetBinding n s (resolveExpr __pat_468 __pat_469 __pat_470 e))
+lbName __pat_472 = case __pat_472 (LetBinding n s e -> n)
+resolveLetLocals __pat_473 __pat_474 __pat_475 __pat_476 __pat_477 = __pat_478 __pat_475 __pat_476 __pat_473 __pat_474 __pat_477
+resolveExpr __pat_479 __pat_480 __pat_481 __pat_482 = case __pat_482 (Num n -> Num n) (FloatLit s -> FloatLit s) (Str s -> Str s) (Var v -> resolveVar __pat_479 __pat_481 v) (If a b c -> If (resolveExpr __pat_479 __pat_480 __pat_481 a) (resolveExpr __pat_479 __pat_480 __pat_481 b) (resolveExpr __pat_479 __pat_480 __pat_481 c)) (App n as -> App n (map (resolveExpr __pat_479 __pat_480 __pat_481) as)) (Prim o as -> Prim o (map (resolveExpr __pat_479 __pat_480 __pat_481) as)) (Ct n as -> fixupCtor __pat_479 __pat_480 n (map (resolveExpr __pat_479 __pat_480 __pat_481) as)) (Case sc cs -> Case (resolveExpr __pat_479 __pat_480 __pat_481 sc) (map (resolveBranch __pat_479 __pat_480 __pat_481) (completeBranches __pat_480 cs))) (Let ls b -> resolveLetLocals __pat_479 __pat_480 __pat_481 ls b) (NoMatch -> NoMatch) (Try b h -> Try (resolveExpr __pat_479 __pat_480 __pat_481 b) (resolveExpr __pat_479 __pat_480 __pat_481 h)) (Throw nr p -> Throw (resolveExpr __pat_479 __pat_480 __pat_481 nr) (resolveExpr __pat_479 __pat_480 __pat_481 p)) (_ -> error "resolveExpr: unexpected expression form")
+argName __pat_483 = case __pat_483 (Arg n s -> n)
+resolveFunc __pat_484 __pat_485 __pat_486 = case __pat_486 (Func n args body -> Func n args (resolveExpr __pat_484 __pat_485 (map argName args) body))
+resolveProgram __pat_487 __pat_488 = map (resolveFunc (map funcNameOf __pat_488) __pat_487) __pat_488
+resolveParsedProgram __pat_489 = case __pat_489 (ParsedProgram fs a -> ParsedProgram (resolveProgram a fs) a)
+parseProgramText __pat_490 = resolveParsedProgram (parseProgramLines (mergeContinuations (dropBlankLines (map stripComment (linesOf __pat_490)))))
+parseProgramFile __pat_491 = parseProgramText (str2list (readFile __pat_491))
+isAtomExpr __pat_492 = case __pat_492 (Num n -> 1) (FloatLit s -> 1) (Str s -> 1) (Var v -> 1) (NoMatch -> 1) (App n as -> isEmptyArgs as) (Ct n as -> isEmptyArgs as) (_ -> 0)
+isEmptyArgs __pat_493 = case __pat_493 (Nil -> 1) (_ -> 0)
+needsWrapAsPrimOperand __pat_494 = case __pat_494 (Prim op as -> 1) (If c t el -> 1) (Case sc cs -> 1) (Let ls b -> 1) (Try b h -> 1) (Throw nr p -> 1) (_ -> 0)
+ppPrimOperand __pat_495 = if (needsWrapAsPrimOperand __pat_495) (strcat "(" (strcat (ppExpr __pat_495) ")")) (ppExpr __pat_495)
+ppAppArg __pat_496 = if (isAtomExpr __pat_496) (ppExpr __pat_496) (strcat "(" (strcat (ppExpr __pat_496) ")"))
+ppExpr __pat_497 = case __pat_497 (Num n -> list2str (itoa n)) (FloatLit s -> list2str s) (Str s -> strcat "\"" (strcat (list2str s) "\"")) (Var v -> list2str v) (NoMatch -> "nomatch") (If c t el -> ppIf c t el) (App n as -> ppJuxtaposed n as) (Prim op as -> ppPrim op as) (Ct n as -> ppJuxtaposed n as) (Case sc cs -> ppCase sc cs) (Let ls b -> ppLet ls b) (Lazy inner -> strcat "lazy " (ppAppArg inner)) (Thunk inner -> strcat "thunk " (ppAppArg inner)) (Closure inner -> strcat "closure " (ppAppArg inner)) (Eval inner -> strcat "eval(" (strcat (ppExpr inner) ")")) (Try b h -> strcat "try " (strcat (ppAppArg b) (strcat " " (ppAppArg h)))) (Throw nr p -> strcat "throw " (strcat (ppAppArg nr) (strcat " " (ppAppArg p))))
+ppIf __pat_498 __pat_499 __pat_500 = strcat "if " (strcat (ppAppArg __pat_498) (strcat " " (strcat (ppAppArg __pat_499) (strcat " " (ppAppArg __pat_500)))))
+ppJuxtaposed __pat_501 __pat_502 = strcat (list2str __pat_501) (ppArgsSpace __pat_502)
+ppArgsSpace __pat_503 = case __pat_503 (Nil -> "") (Cons a rest -> strcat " " (strcat (ppAppArg a) (ppArgsSpace rest)))
+ppPrim __pat_504 __pat_505 = case __pat_505 (Cons a rest -> ppPrimRest __pat_504 a rest) (Nil -> strcat "prim_" (strcat (list2str __pat_504) (ppArgsSpace __pat_505)))
+ppPrimRest __pat_506 __pat_507 __pat_508 = case __pat_508 (Cons b rest2 -> ppPrimCheckTail __pat_506 __pat_507 b rest2) (Nil -> strcat "prim_" (strcat (list2str __pat_506) (ppArgsSpace (Cons __pat_507 __pat_508))))
+ppPrimCheckTail __pat_509 __pat_510 __pat_511 __pat_512 = case __pat_512 (Nil -> strcat (ppPrimOperand __pat_510) (strcat " " (strcat (list2str __pat_509) (strcat " " (ppPrimOperand __pat_511))))) (Cons c more -> strcat "prim_" (strcat (list2str __pat_509) (ppArgsSpace (Cons __pat_510 (Cons __pat_511 __pat_512)))))
+ppCase __pat_513 __pat_514 = strcat "case " (strcat (ppAppArg __pat_513) (strcat " " (ppBranches __pat_514)))
+ppBranches __pat_515 = case __pat_515 (Nil -> "") (Cons cb rest -> ppBranchesCons cb rest)
+ppBranchesCons __pat_516 __pat_517 = case __pat_517 (Nil -> ppBranch __pat_516) (Cons cb2 rest2 -> strcat (ppBranch __pat_516) (strcat " " (ppBranchesCons cb2 rest2)))
+ppBranch __pat_518 = case __pat_518 (CaseBranch con vars body -> strcat "(" (strcat (list2str con) (strcat (ppVarsSpace vars) (strcat " -> " (strcat (ppExpr body) ")")))))
+ppVarsSpace __pat_519 = case __pat_519 (Nil -> "") (Cons v rest -> strcat " " (strcat (list2str v) (ppVarsSpace rest)))
+ppLet __pat_520 __pat_521 = strcat "let " (strcat (ppLetBindings __pat_520) (strcat " in " (ppExpr __pat_521)))
+ppLetBindings __pat_522 = case __pat_522 (Nil -> "") (Cons lb rest -> ppLetBindingsCons lb rest)
+ppLetBindingsCons __pat_523 __pat_524 = case __pat_524 (Nil -> ppLetBinding __pat_523) (Cons lb2 rest2 -> strcat (ppLetBinding __pat_523) (strcat ", " (ppLetBindingsCons lb2 rest2)))
+ppLetBinding __pat_525 = case __pat_525 (LetBinding n s rhs -> strcat (ppStrictMark s) (strcat (list2str n) (strcat " = " (ppExpr rhs))))
+ppStrictMark __pat_526 = if (__pat_526 == 0) "" "!"
+ppArg __pat_527 = case __pat_527 (Arg n s -> strcat (ppStrictMark s) (list2str n))
+ppArgsHeader __pat_528 = case __pat_528 (Nil -> "") (Cons a rest -> strcat " " (strcat (ppArg a) (ppArgsHeader rest)))
+ppFunc __pat_529 = case __pat_529 (Func name args body -> strcat (list2str name) (strcat (ppArgsHeader args) (strcat " = " (ppExpr body))))
+ppFuncsOnly __pat_530 = case __pat_530 (Nil -> "") (Cons f rest -> strcat (ppFunc f) (strcat "\n" (ppFuncsOnly rest)))
+ppAdt __pat_531 = case __pat_531 (Adt name cons -> strcat "::" (strcat (list2str name) (strcat " = " (ppAdtCons cons))))
+ppAdtCons __pat_532 = case __pat_532 (Nil -> "") (Cons c rest -> ppAdtConsCons c rest)
+ppAdtConsCons __pat_533 __pat_534 = case __pat_534 (Nil -> ppAdtCon __pat_533) (Cons c2 rest2 -> strcat (ppAdtCon __pat_533) (strcat " | " (ppAdtConsCons c2 rest2)))
+ppAdtCon __pat_535 = case __pat_535 (AdtCon name fields -> strcat (list2str name) (ppAdtFieldsAt fields 0))
+ppAdtFieldsAt __pat_536 __pat_537 = case __pat_536 (Nil -> "") (Cons s rest -> strcat " " (strcat (ppStrictMark s) (strcat "x" (strcat (list2str (itoa __pat_537)) (ppAdtFieldsAt rest (__pat_537 + 1))))))
+ppAdtsOnly __pat_538 = case __pat_538 (Nil -> "") (Cons a rest -> strcat (ppAdt a) (strcat "\n" (ppAdtsOnly rest)))
+dumpProgram __pat_539 __pat_540 = strcat (ppAdtsOnly __pat_540) (ppFuncsOnly __pat_539)
+nl = list2str (Cons 10 Nil)
+joinLines __pat_541 = case __pat_541 (Nil -> "") (Cons __pat_542 __pat_543 -> case __pat_543 (Nil -> __pat_542) (_ -> strcat __pat_542 (strcat nl (joinLines __pat_543))))
+demoSrc = joinLines (Cons "::list = Nil | Cons !x xs" (Cons "sumList lst = case lst" (Cons "  (Nil -> 0)" (Cons "  (Cons x xs -> x + sumList xs)" (Cons "myList = Cons 1 (Cons 2 (Cons 3 Nil))" (Cons "start = sumList myList" Nil))))))
+start = __pat_544
+__pat_544 = let prog = parseProgramText (str2list demoSrc) in ((((((printString "-- Sapl-bron: --" <#> writeChar 1 10) <#> printString demoSrc) <#> writeChar 1 10) <#> printString "-- geparset door saplParse.spp, geprint door sapl_compiler's eigen stage_dump.cfp: --") <#> writeChar 1 10) <#> printString (dumpProgram (ppFuncs prog) (ppAdts prog))) <#> writeChar 1 10
+__pat_478 __pat_475 __pat_476 __pat_473 __pat_474 __pat_477 = let locals2 = append __pat_475 (map lbName __pat_476) in Let (map (resolveBinding __pat_473 __pat_474 locals2) __pat_476) (resolveExpr __pat_473 __pat_474 locals2 __pat_477)
+__pat_1 __pat_0 = let c = readChar __pat_0 in if (c == (0 - 1)) Nil (Cons c (readStream __pat_0))

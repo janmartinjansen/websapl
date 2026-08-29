@@ -1,0 +1,433 @@
+qsort_lazy qsort qsort_Nil qsort_Cons insert_lazy insert insert_Nil insert_Cons insert_Cons_else isort_lazy isort isort_Nil isort_Cons merge_lazy merge merge_Nil merge_Nil_Nil merge_Nil_Cons merge_Cons merge_Cons_Nil merge_Cons_Cons merge_Cons_Cons_else msort_lazy msort append_lazy append append_Nil append_Cons take_lazy take take_then_Nil take_then_Cons take_else take_else_Nil take_else_Cons drop_lazy drop drop_then_Nil drop_then_Cons drop_else drop_else_Nil drop_else_Cons length_lazy length length_Nil length_Cons sum_lazy sum sum_Nil sum_Cons printlist_lazy printlist printlist_Nil printlist_Cons mkl_lazy mkl mkl_else mkl_else_else mklist_lazy mklist qsorttest_lazy qsorttest isorttest_lazy isorttest msorttest_lazy msorttest allsort_lazy allsort start_lazy start __zf_3_lazy __zf_3 __zf_3_Nil __zf_3_Cons __zf_3_Cons_else __zf_1_lazy __zf_1 __zf_1_Nil __zf_1_Cons __zf_1_Cons_else __pat_17_lazy __pat_17 __pat_17_else mkl_1_lazy mkl_1 allsort_1_lazy allsort_1 allsort_2_lazy allsort_2 __pat_17_1_lazy __pat_17_1 #
+call 69
+print 4
+stop
+0           load 0
+eval
+store 0
+1           load 0
+jmpt 2 2 3
+2           ccreatet 0 11 5 0
+return 1
+3           load 1
+ccreatet 0 11 5 0
+load 0
+pushfunc 3 70
+create 4 3
+pushfunc 1 0
+create 2 3
+load 0
+ccreatet 2 11 5 1
+load 1
+eval
+ccreatet 0 11 5 0
+load 0
+call 76
+call 1
+tailcall 3 25
+4           load 1
+eval
+store 1
+5           load 1
+jmpt 2 6 7
+6           ccreatet 0 11 5 0
+load 0
+eval
+ccreatet 2 11 5 1
+return 2
+7           load 0
+load 2
+eval
+sub
+ifle 8
+load 1
+load 0
+ccreatet 2 11 5 1
+load 2
+eval
+ccreatet 2 11 5 1
+return 4
+8           load 1
+load 2
+pushfunc 2 4
+create 3 3
+load 0
+ccreatet 2 11 5 1
+return 4
+9           load 0
+eval
+store 0
+10           load 0
+jmpt 2 11 12
+11           ccreatet 0 11 5 0
+return 1
+12           load 1
+eval
+call 10
+load 0
+tailcall 3 5
+13           load 0
+eval
+store 0
+load 1
+eval
+store 1
+14           load 0
+jmpt 2 15 18
+15           load 1
+jmpt 2 16 17
+16           load 1
+return 2
+17           load 3
+return 4
+18           load 3
+jmpt 2 19 20
+19           load 2
+return 4
+20           load 0
+load 2
+sub
+iflt 21
+load 1
+load 0
+ccreatet 2 11 5 1
+load 3
+pushfunc 2 13
+create 3 3
+load 2
+ccreatet 2 11 5 1
+return 6
+21           load 1
+load 3
+load 2
+ccreatet 2 11 5 1
+pushfunc 2 13
+create 3 3
+load 0
+ccreatet 2 11 5 1
+return 6
+22           jmp 23
+23           load 0
+tailcall 1 81
+24           load 0
+eval
+store 0
+25           load 0
+jmpt 2 26 27
+26           load 1
+eval
+return 2
+27           load 3
+load 1
+pushfunc 2 24
+create 3 3
+load 0
+ccreatet 2 11 5 1
+return 4
+28           load 0
+eval
+store 0
+load 1
+eval
+store 1
+29           load 0
+ifneq 32
+load 1
+jmpt 2 30 31
+30           ccreatet 0 11 5 0
+return 2
+31           ccreatet 0 11 5 0
+return 4
+32           load 1
+jmpt 2 33 34
+33           ccreatet 0 11 5 0
+return 2
+34           load 1
+loadadd 2 -1
+pushfunc 2 28
+create 3 3
+load 0
+ccreatet 2 11 5 1
+return 4
+35           load 0
+eval
+store 0
+load 1
+eval
+store 1
+36           load 0
+ifneq 39
+load 1
+jmpt 2 37 38
+37           load 1
+return 2
+38           load 3
+return 4
+39           load 1
+jmpt 2 40 41
+40           ccreatet 0 11 5 0
+return 2
+41           load 1
+eval
+loadadd 2 -1
+tailcall 4 36
+42           load 0
+eval
+store 0
+43           load 0
+jmpt 2 44 45
+44           return_const 1 0
+45           push 1
+load 1
+eval
+call 43
+add
+return 3
+46           load 0
+eval
+store 0
+47           load 0
+jmpt 2 48 49
+48           return_const 1 0
+49           load 0
+load 1
+eval
+call 47
+add
+return 3
+50           load 0
+eval
+store 0
+51           load 0
+jmpt 2 52 53
+52           return_const 1 0
+53           load 0
+print 0
+load 1
+eval
+tailcall 3 51
+54           load 2
+eval
+store 2
+55           loadadd 2 -10
+ifneq 56
+ccreatet 0 11 5 0
+return 3
+56           load 1
+eval
+load 0
+eval
+sub
+ifle 57
+load 2
+load 1
+load 0
+pushfunc 1 83
+create 2 3
+pushfunc 3 54
+create 4 3
+load 0
+eval
+push 10
+mult
+load 2
+add
+ccreatet 2 11 5 1
+return 3
+57           loadadd 2 1
+load 1
+push 0
+tailcall 3 55
+58           jmp 59
+59           push 0
+load 0
+push 0
+tailcall 1 55
+60           jmp 61
+61           load 0
+call 59
+tailcall 1 1
+62           jmp 63
+63           load 0
+call 59
+tailcall 1 10
+64           jmp 65
+65           load 0
+pushfunc 1 58
+create 2 3
+tailcall 1 23
+66           jmp 67
+67           pushfunc 0 87
+create 1 3
+push 1000
+call 61
+call 47
+ccreatet 2 11 5 1
+tailcall 0 51
+68           jmp 69
+69           tailcall 0 67
+70           load 2
+eval
+store 2
+71           load 2
+jmpt 2 72 73
+72           load 1
+eval
+return 3
+73           load 0
+load 2
+eval
+sub
+ifle 74
+load 1
+load 3
+load 2
+pushfunc 3 70
+create 4 3
+load 0
+ccreatet 2 11 5 1
+return 5
+74           load 1
+eval
+load 3
+load 2
+tailcall 5 71
+75           load 2
+eval
+store 2
+76           load 2
+jmpt 2 77 78
+77           load 1
+eval
+return 3
+78           load 2
+eval
+load 0
+sub
+iflt 79
+load 1
+load 3
+load 2
+pushfunc 3 75
+create 4 3
+load 0
+ccreatet 2 11 5 1
+return 5
+79           load 1
+eval
+load 3
+load 2
+tailcall 5 76
+80           jmp 81
+81           updsp 2
+load 2
+pushfunc 1 42
+create 2 3
+dup
+store 0
+pushfunc 1 89
+create 2 3
+store 1
+push 2
+load 0
+eval
+sub
+ifle 82
+load 2
+eval
+return 3
+82           load 2
+load 1
+pushfunc 2 35
+create 3 3
+call 23
+load 2
+load 1
+pushfunc 2 28
+create 3 3
+call 23
+tailcall 3 14
+83           jmp 84
+84           load 0
+eval
+inc
+return 1
+85           jmp 86
+86           ccreatet 0 11 5 0
+push 10000
+call 65
+call 47
+ccreatet 2 11 5 1
+return 0
+87           jmp 88
+88           pushfunc 0 85
+create 1 3
+push 600
+call 63
+call 47
+ccreatet 2 11 5 1
+return 0
+89           jmp 90
+90           load 0
+eval
+push 2
+div
+return 1
+
+.metadata
+types 1
+type 5 list 2
+  constr 0 Nil 0
+  constr 1 Cons 2
+functions 50
+  func 1 qsort 1 10
+  func 0 qsort 1 10
+  func 5 insert 2 010
+  func 4 insert 2 010
+  func 10 isort 1 10
+  func 9 isort 1 10
+  func 14 merge 2 110
+  func 13 merge 2 110
+  func 23 msort 1 00
+  func 22 msort 1 00
+  func 25 append 2 100
+  func 24 append 2 100
+  func 29 take 2 110
+  func 28 take 2 110
+  func 36 drop 2 110
+  func 35 drop 2 110
+  func 43 length 1 10
+  func 42 length 1 10
+  func 47 sum 1 10
+  func 46 sum 1 10
+  func 51 printlist 1 10
+  func 50 printlist 1 10
+  func 55 mkl 3 0010
+  func 54 mkl 3 0010
+  func 59 mklist 1 00
+  func 58 mklist 1 00
+  func 61 qsorttest 1 00
+  func 60 qsorttest 1 00
+  func 63 isorttest 1 00
+  func 62 isorttest 1 00
+  func 65 msorttest 1 00
+  func 64 msorttest 1 00
+  func 67 allsort 0 0
+  func 66 allsort 0 0
+  func 69 start 0 0
+  func 68 start 0 0
+  func 71 __zf_3 3 0010
+  func 70 __zf_3 3 0010
+  func 76 __zf_1 3 0010
+  func 75 __zf_1 3 0010
+  func 81 __pat_17 1 00
+  func 80 __pat_17 1 00
+  func 84 mkl_1 1 00
+  func 83 mkl_1 1 00
+  func 86 allsort_1 0 0
+  func 85 allsort_1 0 0
+  func 88 allsort_2 0 0
+  func 87 allsort_2 0 0
+  func 90 __pat_17_1 1 00
+  func 89 __pat_17_1 1 00
+.endmetadata

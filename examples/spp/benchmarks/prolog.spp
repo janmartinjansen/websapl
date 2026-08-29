@@ -1,0 +1,18 @@
+// Prolog-style unification/resolution stress test: solve "vader(X1,mark)"
+// against a 30x-duplicated fact base. Entry point on top of
+// prologlib.spp (see that file's header for what got more elegant);
+// dosol/prologtest here use prog30, matching the original
+// benchmarks/prolog.cfp.
+#import "benchmarks_spp/prologlib.spp"
+
+dosol inp = solve (parseRules prog30) [parseTerm inp] emptyEnv 0
+prologtest = length (dosol (str2list "vader(X1,mark)"))
+
+start0 = pStart pNatural (str2list "1234 aap")
+start1 = pStart numlist (str2list "[1,2,3,44,555,6666]")
+start2 = pStart numlist (str2list "[1,2,3,44,555,6666]")
+start3 = printlist (parsetest 20)
+start4 = unitest "p(X1)" "q(X2)"
+start5 = msol 500
+
+start = prologtest

@@ -1,0 +1,9 @@
+::list = Nil | Cons !x0 x1
+queens __pat_0 = length (qqueens __pat_0 __pat_0)
+qqueens __pat_1 __pat_2 = if (__pat_2 == 0) (Cons Nil Nil) (__zf_1 __pat_1 Nil (qqueens __pat_1 (__pat_2 - 1)))
+safe __pat_3 __pat_4 __pat_5 = case __pat_3 (Nil -> 1) (Cons __pat_6 __pat_7 -> (((__pat_5 != __pat_6) /\ ((__pat_5 + __pat_4) != __pat_6)) /\ ((__pat_5 - __pat_4) != __pat_6)) /\ safe __pat_7 (__pat_4 + 1) __pat_5)
+length __pat_8 = case __pat_8 (Nil -> 0) (Cons __pat_9 __pat_10 -> 1 + length __pat_10)
+start = queens 11
+__rangeStepGo __pat_11 __pat_12 __pat_13 = if (__pat_12 >= 0) (if (__pat_11 > __pat_13) Nil (Cons __pat_11 (__rangeStepGo (__pat_11 + __pat_12) __pat_12 __pat_13))) (if (__pat_11 < __pat_13) Nil (Cons __pat_11 (__rangeStepGo (__pat_11 + __pat_12) __pat_12 __pat_13)))
+__zf_1 __pat_14 __pat_15 __pat_16 = case __pat_16 (Nil -> __pat_15) (Cons xs __zf_tail -> __zf_3 xs (__zf_1 __pat_14 __pat_15 __zf_tail) (__rangeStepGo 1 1 __pat_14))
+__zf_3 __pat_17 __pat_18 __pat_19 = case __pat_19 (Nil -> __pat_18) (Cons x __zf_tail -> if (safe __pat_17 1 x) (Cons (Cons x __pat_17) (__zf_3 __pat_17 __pat_18 __zf_tail)) (__zf_3 __pat_17 __pat_18 __zf_tail))

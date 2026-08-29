@@ -1,0 +1,16 @@
+// Parser stress test: repeatedly parse a 100x-duplicated fact base and
+// count "single-clause" rules. Entry point on top of prologlib.spp (see
+// that file's header for what got more elegant); dosol/prologtest here
+// use prog20, matching the original benchmarks/parsetest.cfp.
+#import "benchmarks_spp/prologlib.spp"
+
+dosol inp = solve (parseRules prog20) [parseTerm inp] emptyEnv 0
+prologtest = length (dosol (str2list "vader(X1,mark)"))
+
+start0 = pStart pNatural (str2list "1234 aap")
+start1 = pStart numlist (str2list "[1,2,3,44,555,6666]")
+start2 = pStart numlist (str2list "[1,2,3,44,555,6666]")
+start4 = unitest "p(X1)" "q(X2)"
+start5 = msol 500
+
+start = printlist (parsetest 20)

@@ -1,0 +1,23 @@
+// Sieve of Eratosthenes over a lazy, infinite stream -- the sieve step
+// itself is now a one-line ZF-expression instead of a separate `filter`
+// + `nmz` predicate pair, and every list-destructuring pattern uses `:`
+// cons-sugar instead of a bare `Cons x xs`.
+::list = Nil | Cons !x xs
+
+from a = Cons a (from (a + 1))
+
+sieve (a:as) = Cons a (sieve [ x | x <- as, x % a != 0 ])
+
+primes = sieve (from 2)
+
+take 0 xs = Nil
+take n Nil = Nil
+take n (x:xs) = Cons x (take (n - 1) xs)
+
+el 0 (x:xs) = x
+el n (x:xs) = el (n - 1) xs
+
+printlist Nil = 0
+printlist (x:xs) = print x <#> printlist xs
+
+start = el 5000 primes

@@ -1,0 +1,27 @@
+// `cm` (sum the first up-to-4 elements of a list, plus the count of any
+// elements beyond that) was a deeply nested `select`/`case` ladder --
+// pattern-definitions with cons-chains turn it into six flat, obviously-
+// correct clauses, one per length. `fromto` becomes `[a..b]` range syntax.
+::list = Nil | Cons !x xs
+
+cm Nil = 0
+cm (a:Nil) = a
+cm (a:b:Nil) = a + b
+cm (a:b:c:Nil) = a + b + c
+cm (a:b:c:d:Nil) = a + b + c + d
+cm (a:b:c:d:xs) = a + b + c + d + length xs
+
+sum Nil = 0
+sum (x:xs) = x + sum xs
+
+length Nil = 0
+length (x:xs) = 1 + length xs
+
+map f Nil = Nil
+map f (x:xs) = Cons (f x) (map f xs)
+
+mtestaf0 m = cm [1 .. (m % 10)]
+mtest n = sum (map mtestaf0 [1..n])
+match n = sum (map mtest [1..n])
+
+start = match 2000

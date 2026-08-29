@@ -1,0 +1,415 @@
+start_lazy start knights_lazy knights doknights_lazy doknights doknights_Nil doknights_Cons doknights_Cons_else deltas_lazy deltas moves_lazy moves moves___Tuple2 legal_lazy legal legal___Tuple2 legal___Tuple2_then_then_then_else legal___Tuple2_then_then_else legal___Tuple2_then_else legal___Tuple2_else notElem_lazy notElem notElem___Tuple2 notElem___Tuple2_Nil notElem___Tuple2_Cons notElem___Tuple2_Cons___Tuple2 notElem___Tuple2_Cons___Tuple2_else notElem___Tuple2_Cons___Tuple2_else_else map_lazy map map_Nil map_Cons concat_lazy concat concat_Nil concat_Cons concat_Cons_Nil concat_Cons_Cons length_lazy length length_Nil length_Cons printtup_lazy printtup printtup___Tuple2 printlist_lazy printlist printlist_Nil printlist_Cons head_lazy head head_Nil head_Cons __lam_0_lazy __lam_0 __zf_2_lazy __zf_2 __zf_2_Nil __zf_2_Cons __zf_2_Cons___Tuple2 __zf_2_Cons___Tuple2_else concat_1_lazy concat_1 __lam_0_1_lazy __lam_0_1 __zf_2_1_lazy __zf_2_1 __zf_2_2_lazy __zf_2_2 __zf_2_3_lazy __zf_2_3 __zf_2_4_lazy __zf_2_4 #
+call 1
+print 4
+stop
+0           jmp 1
+1           push 5
+call 3
+call 51
+tailcall 0 47
+2           jmp 3
+3           ccreatet 0 11 6 0
+push 1
+push 1
+ccreatet 2 11 5 0
+ccreatet 2 11 6 1
+load 0
+tailcall 1 5
+4           load 1
+eval
+store 1
+5           load 1
+jmpt 2 6 7
+6           return_const 2 111
+7           load 1
+eval
+call 40
+inc
+load 2
+eval
+load 2
+eval
+mult
+sub
+ifneq 8
+ccreatet 0 11 6 0
+load 1
+load 0
+ccreatet 2 11 6 1
+ccreatet 2 11 6 1
+return 4
+8           load 0
+load 1
+load 2
+call 12
+load 1
+load 0
+load 2
+pushfunc 4 54
+create 4 7
+call 30
+tailcall 4 34
+9           jmp 10
+10           ccreatet 0 11 6 0
+push 0
+dec
+push 0
+push 2
+sub
+ccreatet 2 11 5 0
+ccreatet 2 11 6 1
+push 1
+push 0
+push 2
+sub
+ccreatet 2 11 5 0
+ccreatet 2 11 6 1
+push 0
+dec
+push 2
+ccreatet 2 11 5 0
+ccreatet 2 11 6 1
+push 1
+push 2
+ccreatet 2 11 5 0
+ccreatet 2 11 6 1
+push 0
+push 2
+sub
+push 0
+dec
+ccreatet 2 11 5 0
+ccreatet 2 11 6 1
+push 2
+push 0
+dec
+ccreatet 2 11 5 0
+ccreatet 2 11 6 1
+push 0
+push 2
+sub
+push 1
+ccreatet 2 11 5 0
+ccreatet 2 11 6 1
+push 2
+push 1
+ccreatet 2 11 5 0
+ccreatet 2 11 6 1
+return 0
+11           load 2
+eval
+store 2
+12           load 2
+jmpt 1 13
+13           call 10
+ccreatet 0 11 6 0
+load 1
+load 0
+load 3
+load 2
+tailcall 5 57
+14           load 2
+eval
+store 2
+15           load 2
+jmpt 1 16
+16           load 0
+eval
+dec
+iflt 20
+load 2
+eval
+load 0
+eval
+sub
+iflt 19
+load 1
+eval
+dec
+iflt 18
+load 2
+eval
+load 1
+eval
+sub
+iflt 17
+load 3
+eval
+load 1
+load 0
+ccreatet 2 11 5 0
+tailcall 5 22
+17           return_const 5 0
+18           return_const 5 0
+19           return_const 5 0
+20           return_const 5 0
+21           load 0
+eval
+store 0
+load 1
+eval
+store 1
+22           load 0
+jmpt 1 23
+23           load 3
+jmpt 2 24 25
+24           return_const 4 1
+25           load 0
+jmpt 1 26
+26           load 4
+eval
+load 0
+eval
+sub
+ifeq 27
+load 3
+eval
+load 5
+load 4
+ccreatet 2 11 5 0
+tailcall 8 22
+27           load 5
+eval
+load 1
+eval
+sub
+ifeq 28
+load 3
+eval
+load 5
+load 4
+ccreatet 2 11 5 0
+tailcall 8 22
+28           return_const 8 0
+29           load 1
+eval
+store 1
+30           load 1
+jmpt 2 31 32
+31           ccreatet 0 11 6 0
+return 2
+32           load 1
+load 2
+pushfunc 2 29
+create 3 3
+load 0
+load 2
+eval
+ccreatet 2 11 6 1
+return 4
+33           load 0
+eval
+store 0
+34           load 0
+jmpt 2 35 36
+35           ccreatet 0 11 6 0
+return 1
+36           load 0
+jmpt 2 37 38
+37           load 1
+eval
+tailcall 3 34
+38           load 3
+load 1
+pushfunc 2 62
+create 3 3
+pushfunc 1 33
+create 2 3
+load 0
+ccreatet 2 11 6 1
+return 5
+39           load 0
+eval
+store 0
+40           load 0
+jmpt 2 41 42
+41           return_const 1 0
+42           push 1
+load 1
+eval
+call 40
+add
+return 3
+43           load 0
+eval
+store 0
+44           load 0
+jmpt 1 45
+45           load 0
+eval
+print 0
+load 1
+eval
+print 0
+return 3
+46           load 0
+eval
+store 0
+47           load 0
+jmpt 2 48 49
+48           return_const 1 0
+49           load 0
+call 44
+load 1
+eval
+tailcall 3 47
+50           load 0
+eval
+store 0
+51           load 0
+jmpt 2 52 53
+52           return_const 1 111
+53           load 0
+return 3
+54           jmp 55
+55           load 2
+load 1
+pushfunc 2 64
+create 3 3
+load 3
+eval
+ccreatet 2 11 6 1
+load 0
+tailcall 4 5
+56           load 5
+eval
+store 5
+57           load 5
+jmpt 2 58 59
+58           load 4
+eval
+return 6
+59           load 0
+jmpt 1 60
+60           load 1
+load 7
+pushfunc 2 68
+create 3 3
+load 0
+load 6
+pushfunc 2 66
+create 3 3
+ccreatet 2 11 5 0
+load 5
+load 4
+call 15
+ifeq 61
+load 3
+load 8
+load 7
+load 6
+load 5
+load 4
+pushfunc 6 56
+create 7 3
+load 1
+load 7
+pushfunc 2 72
+create 3 3
+load 0
+load 6
+pushfunc 2 70
+create 3 3
+ccreatet 2 11 5 0
+ccreatet 2 11 6 1
+return 10
+61           load 3
+eval
+load 8
+load 7
+load 6
+load 5
+load 4
+tailcall 10 57
+62           jmp 63
+63           load 1
+load 0
+eval
+ccreatet 2 11 6 1
+return 2
+64           jmp 65
+65           load 1
+load 0
+eval
+ccreatet 2 11 6 1
+return 2
+66           jmp 67
+67           load 0
+eval
+load 1
+eval
+add
+return 2
+68           jmp 69
+69           load 0
+eval
+load 1
+eval
+add
+return 2
+70           jmp 71
+71           load 0
+eval
+load 1
+eval
+add
+return 2
+72           jmp 73
+73           load 0
+eval
+load 1
+eval
+add
+return 2
+
+.metadata
+types 2
+type 5 __Tuple2 1
+  constr 0 __Tuple2 2
+type 6 list 2
+  constr 0 Nil 0
+  constr 1 Cons 2
+functions 42
+  func 1 start 0 0
+  func 0 start 0 0
+  func 3 knights 1 00
+  func 2 knights 1 00
+  func 5 doknights 2 010
+  func 4 doknights 2 010
+  func 10 deltas 0 0
+  func 9 deltas 0 0
+  func 12 moves 3 0010
+  func 11 moves 3 0010
+  func 15 legal 3 0010
+  func 14 legal 3 0010
+  func 22 notElem 2 110
+  func 21 notElem 2 110
+  func 30 map 2 010
+  func 29 map 2 010
+  func 34 concat 1 10
+  func 33 concat 1 10
+  func 40 length 1 10
+  func 39 length 1 10
+  func 44 printtup 1 10
+  func 43 printtup 1 10
+  func 47 printlist 1 10
+  func 46 printlist 1 10
+  func 51 head 1 10
+  func 50 head 1 10
+  func 55 __lam_0 4 00000
+  func 54 __lam_0 4 00000
+  func 57 __zf_2 6 0000010
+  func 56 __zf_2 6 0000010
+  func 63 concat_1 2 000
+  func 62 concat_1 2 000
+  func 65 __lam_0_1 2 000
+  func 64 __lam_0_1 2 000
+  func 67 __zf_2_1 2 000
+  func 66 __zf_2_1 2 000
+  func 69 __zf_2_2 2 000
+  func 68 __zf_2_2 2 000
+  func 71 __zf_2_3 2 000
+  func 70 __zf_2_3 2 000
+  func 73 __zf_2_4 2 000
+  func 72 __zf_2_4 2 000
+.endmetadata

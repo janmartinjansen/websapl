@@ -1,0 +1,17 @@
+::list = Nil | Cons !x0 x1
+hamming __pat_0 = __pat_1 __pat_0
+map __pat_2 __pat_3 = case __pat_3 (Nil -> Nil) (Cons __pat_4 __pat_5 -> Cons (__pat_2 __pat_4) (map __pat_2 __pat_5))
+el __pat_6 __pat_7 = if (__pat_6 == 0) (case __pat_7 (Cons __pat_8 __pat_9 -> __pat_8)) (case __pat_7 (Cons __pat_10 __pat_11 -> el (__pat_6 - 1) __pat_11))
+merge __pat_12 __pat_13 = case __pat_12 (Nil -> case __pat_13 (Nil -> __pat_13) (_ -> __pat_13)) (Cons __pat_14 __pat_15 -> case __pat_13 (Nil -> __pat_12) (Cons __pat_16 __pat_17 -> if (__pat_14 == __pat_16) (Cons __pat_14 (merge __pat_15 __pat_17)) (if (__pat_14 < __pat_16) (Cons __pat_14 (merge __pat_15 (Cons __pat_16 __pat_17))) (Cons __pat_16 (merge (Cons __pat_14 __pat_15) __pat_17))))) (_ -> case __pat_13 (Nil -> __pat_12))
+sum __pat_18 = case __pat_18 (Nil -> 0) (Cons __pat_19 __pat_20 -> __pat_19 + sum __pat_20)
+ff __pat_21 = if ((__pat_21 % 2) == 0) 1 (__pat_21 % 2)
+hm __pat_22 = el __pat_22 (hamming (ff __pat_22)) % 999
+rep __pat_23 __pat_24 = __zf_1 __pat_24 Nil (__rangeStepGo 1 1 __pat_23)
+rephamming __pat_25 __pat_26 = sum (map hm (rep __pat_25 __pat_26))
+start = rephamming 4000 1000
+__rangeStepGo __pat_27 __pat_28 __pat_29 = if (__pat_28 >= 0) (if (__pat_27 > __pat_29) Nil (Cons __pat_27 (__rangeStepGo (__pat_27 + __pat_28) __pat_28 __pat_29))) (if (__pat_27 < __pat_29) Nil (Cons __pat_27 (__rangeStepGo (__pat_27 + __pat_28) __pat_28 __pat_29)))
+__lam_2 __pat_30 = __pat_30 * 5
+__lam_1 __pat_31 = __pat_31 * 3
+__lam_0 __pat_32 = __pat_32 * 2
+__zf_1 __pat_33 __pat_34 __pat_35 = case __pat_35 (Nil -> __pat_34) (Cons i __zf_tail -> Cons __pat_33 (__zf_1 __pat_33 __pat_34 __zf_tail))
+__pat_1 __pat_0 = let h = Cons __pat_0 (merge (merge as bs) cs), as = map __lam_0 h, bs = map __lam_1 h, cs = map __lam_2 h in h

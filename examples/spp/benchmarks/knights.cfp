@@ -1,0 +1,17 @@
+::__Tuple2 = __Tuple2 x0 x1
+::list = Nil | Cons !x0 x1
+start = printlist (head (knights 5))
+knights __pat_0 = doknights __pat_0 (Cons (__Tuple2 1 1) Nil)
+doknights __pat_1 __pat_2 = case __pat_2 (Nil -> 111) (Cons __pat_3 __pat_4 -> if ((length __pat_4 + 1) == (__pat_1 * __pat_1)) (Cons (Cons __pat_3 __pat_4) Nil) (concat (map (__lam_0 __pat_1 __pat_3 __pat_4) (moves __pat_1 __pat_4 __pat_3))))
+deltas = Cons (__Tuple2 1 2) (Cons (__Tuple2 1 (0 - 2)) (Cons (__Tuple2 (0 - 1) 2) (Cons (__Tuple2 (0 - 1) (0 - 2)) (Cons (__Tuple2 2 1) (Cons (__Tuple2 2 (0 - 1)) (Cons (__Tuple2 (0 - 2) 1) (Cons (__Tuple2 (0 - 2) (0 - 1)) Nil)))))))
+moves __pat_5 __pat_6 __pat_7 = case __pat_7 (__Tuple2 __pat_8 __pat_9 -> __zf_2 __pat_5 __pat_6 __pat_8 __pat_9 Nil deltas)
+legal __pat_10 __pat_11 __pat_12 = case __pat_12 (__Tuple2 __pat_13 __pat_14 -> ((((__pat_13 >= 1) /\ (__pat_10 >= __pat_13)) /\ (__pat_14 >= 1)) /\ (__pat_10 >= __pat_14)) /\ notElem (__Tuple2 __pat_13 __pat_14) __pat_11)
+notElem __pat_15 __pat_16 = case __pat_15 (__Tuple2 __pat_17 __pat_18 -> case __pat_16 (Nil -> 1) (Cons __pat_19 __pat_20 -> case __pat_19 (__Tuple2 __pat_21 __pat_22 -> ((__pat_17 != __pat_21) \/ (__pat_18 != __pat_22)) /\ notElem (__Tuple2 __pat_17 __pat_18) __pat_20))) (_ -> case __pat_16 (Nil -> 1))
+map __pat_23 __pat_24 = case __pat_24 (Nil -> Nil) (Cons __pat_25 __pat_26 -> Cons (__pat_23 __pat_25) (map __pat_23 __pat_26))
+concat __pat_27 = case __pat_27 (Nil -> Nil) (Cons __pat_28 __pat_29 -> case __pat_28 (Nil -> concat __pat_29) (Cons __pat_30 __pat_31 -> Cons __pat_30 (concat (Cons __pat_31 __pat_29))))
+length __pat_32 = case __pat_32 (Nil -> 0) (Cons __pat_33 __pat_34 -> 1 + length __pat_34)
+printtup __pat_35 = case __pat_35 (__Tuple2 __pat_36 __pat_37 -> print __pat_36 <#> print __pat_37)
+printlist __pat_38 = case __pat_38 (Nil -> 0) (Cons __pat_39 __pat_40 -> printtup __pat_39 <#> printlist __pat_40)
+head __pat_41 = case __pat_41 (Nil -> 111) (Cons __pat_42 __pat_43 -> __pat_42)
+__lam_0 __pat_44 __pat_45 __pat_46 __pat_47 = doknights __pat_44 (Cons __pat_47 (Cons __pat_45 __pat_46))
+__zf_2 __pat_48 __pat_49 __pat_50 __pat_51 __pat_52 __pat_53 = case __pat_53 (Nil -> __pat_52) (Cons __zf_0 __zf_tail -> case __zf_0 (__Tuple2 dp dq -> if (legal __pat_48 __pat_49 (__Tuple2 (__pat_50 + dp) (__pat_51 + dq))) (Cons (__Tuple2 (__pat_50 + dp) (__pat_51 + dq)) (__zf_2 __pat_48 __pat_49 __pat_50 __pat_51 __pat_52 __zf_tail)) (__zf_2 __pat_48 __pat_49 __pat_50 __pat_51 __pat_52 __zf_tail)) (_ -> __zf_2 __pat_48 __pat_49 __pat_50 __pat_51 __pat_52 __zf_tail))

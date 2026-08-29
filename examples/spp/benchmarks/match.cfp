@@ -1,0 +1,10 @@
+::list = Nil | Cons !x0 x1
+cm __pat_0 = case __pat_0 (Nil -> 0) (Cons __pat_1 __pat_2 -> case __pat_2 (Nil -> __pat_1) (Cons __pat_3 __pat_4 -> case __pat_4 (Nil -> __pat_1 + __pat_3) (Cons __pat_5 __pat_6 -> case __pat_6 (Nil -> (__pat_1 + __pat_3) + __pat_5) (Cons __pat_7 __pat_8 -> case __pat_8 (Nil -> ((__pat_1 + __pat_3) + __pat_5) + __pat_7) (_ -> (((__pat_1 + __pat_3) + __pat_5) + __pat_7) + length __pat_8)))))
+sum __pat_9 = case __pat_9 (Nil -> 0) (Cons __pat_10 __pat_11 -> __pat_10 + sum __pat_11)
+length __pat_12 = case __pat_12 (Nil -> 0) (Cons __pat_13 __pat_14 -> 1 + length __pat_14)
+map __pat_15 __pat_16 = case __pat_16 (Nil -> Nil) (Cons __pat_17 __pat_18 -> Cons (__pat_15 __pat_17) (map __pat_15 __pat_18))
+mtestaf0 __pat_19 = cm (__rangeStepGo 1 1 (__pat_19 % 10))
+mtest __pat_20 = sum (map mtestaf0 (__rangeStepGo 1 1 __pat_20))
+match __pat_21 = sum (map mtest (__rangeStepGo 1 1 __pat_21))
+start = match 2000
+__rangeStepGo __pat_22 __pat_23 __pat_24 = if (__pat_23 >= 0) (if (__pat_22 > __pat_24) Nil (Cons __pat_22 (__rangeStepGo (__pat_22 + __pat_23) __pat_23 __pat_24))) (if (__pat_22 < __pat_24) Nil (Cons __pat_22 (__rangeStepGo (__pat_22 + __pat_23) __pat_23 __pat_24)))

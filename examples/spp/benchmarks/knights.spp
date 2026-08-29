@@ -1,0 +1,46 @@
+// Knight's tour -- positions are plain tuples `(row, col)` instead of a
+// hand-declared `::Tup`; `moves` is a single ZF-expression (generate the
+// 8 knight deltas, keep the legal ones) instead of a separate
+// `filter (legal n as) (Cons ... Nil)` chain of 8 manually-consed tuples;
+// `dkaf`'s one-line body is now inlined as a lambda argument to `map`
+// instead of a named point-free helper; every list-destructuring pattern
+// uses `:` cons-sugar instead of a bare `Cons x xs`; every fixed-size
+// literal list (the starting position, a found solution, the deltas
+// themselves) uses `[e1, e2, ...]` instead of a hand-nested `Cons` chain.
+::list = Nil | Cons !x xs
+
+start = printlist (head (knights 5))
+
+knights n = doknights n [(1, 1)]
+
+doknights n Nil = 111
+doknights n (p:ps)
+  | length ps + 1 == n * n = [Cons p ps]
+  | otherwise = concat (map (\q -> doknights n (Cons q (Cons p ps))) (moves n ps p))
+
+deltas = [(1, 2), (1, 0 - 2), (0 - 1, 2), (0 - 1, 0 - 2), (2, 1), (2, 0 - 1), (0 - 2, 1), (0 - 2, 0 - 1)]
+
+moves n as (p, q) = [ (p + dp, q + dq) | (dp, dq) <- deltas, legal n as (p + dp, q + dq) ]
+
+legal n as (x, y) = (x >= 1) /\ (n >= x) /\ (y >= 1) /\ (n >= y) /\ notElem (x, y) as
+
+notElem t Nil = True
+notElem (x, y) ((a, b):rest) = (x != a \/ y != b) /\ notElem (x, y) rest
+
+map f Nil = Nil
+map f (x:xs) = Cons (f x) (map f xs)
+
+concat Nil = Nil
+concat (Nil:yss) = concat yss
+concat ((a:as):yss) = Cons a (concat (Cons as yss))
+
+length Nil = 0
+length (x:xs) = 1 + length xs
+
+printtup (a, b) = print a <#> print b
+
+printlist Nil = 0
+printlist (x:xs) = printtup x <#> printlist xs
+
+head Nil = 111
+head (x:xs) = x

@@ -1,0 +1,40 @@
+#import "preprocess/parsecomb/saplParse.spp"
+#import "sapl_compiler/stage_dump.cfp"
+
+// saplParse_demo.spp -- a small, self-contained showcase of saplParse.spp
+// (the capstone of the whole preprocess/parsecomb/ exercise, see
+// docs/spp_taal_en_parser_combinators.md section 5.6 and
+// preprocess/PLAN.md section 17): parses a short SAPL fragment, entirely
+// as an embedded string (no readFile), with the PARSER-COMBINATOR-BASED
+// parser, and pretty-prints the resulting AST via sapl_compiler/
+// stage_dump.cfp's OWN dumpProgram -- the exact same pretty-printer
+// `./compile-sapl <file> --emit=parse` uses on the real, hand-written
+// sapl_compiler/parser.cfp's own parse. saplParse_test.spp (in
+// preprocess/parsecomb/) proves this is byte-for-byte identical on all 12
+// core benchmarks (+ their strict-annotated variants) against the real
+// compiler's own --emit=parse output; this file is the same parser, just
+// on one small, embedded, no-file-I/O example, so it also runs unchanged
+// inside websapl's in-browser WASM VM (which has no access to the real
+// repo's benchmarks/*.cfp files, only to a virtual filesystem).
+
+nl = list2str (Cons 10 Nil)
+joinLines Nil = ""
+joinLines (Cons l Nil) = l
+joinLines (Cons l rest) = strcat l (strcat nl (joinLines rest))
+
+demoSrc = joinLines
+  [ "::list = Nil | Cons !x xs"
+  , "sumList lst = case lst"
+  , "  (Nil -> 0)"
+  , "  (Cons x xs -> x + sumList xs)"
+  , "myList = Cons 1 (Cons 2 (Cons 3 Nil))"
+  , "start = sumList myList"
+  ]
+
+start =
+  let prog = parseProgramText (str2list demoSrc) in
+  printString "-- Sapl-bron: --" <#> writeChar 1 10 <#>
+  printString demoSrc <#> writeChar 1 10 <#>
+  printString "-- geparset door saplParse.spp, geprint door sapl_compiler's eigen stage_dump.cfp: --" <#> writeChar 1 10 <#>
+  printString (dumpProgram (ppFuncs prog) (ppAdts prog)) <#>
+  writeChar 1 10

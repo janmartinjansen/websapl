@@ -1,0 +1,66 @@
+#import "preprocess/parsecomb/parsecomb.spp"
+
+// calc_demo.spp -- a small arithmetic-expression evaluator built on
+// parsecomb.spp, the way pg99.ama itself is used to build parser.ama's
+// own expression grammar: `expr = term (addOp term)*`, `term = factor
+// (mulOp factor)*`, `factor = number | '(' expr ')'`, using pChainl1 for
+// the classic left-associative "a op b op c" folding.
+
+isDigitCh c = (c >= '0') /\ (c <= '9')
+
+pDigit = pSat isDigitCh pItem
+
+digitsToNum cs = digitsToNumAcc 0 cs
+digitsToNumAcc acc Nil = acc
+digitsToNumAcc acc (c:cs) = digitsToNumAcc ((acc * 10) + (c - '0')) cs
+
+pNumber = pToken (pMany1 pDigit --> digitsToNum)
+pOpenParen = pToken (pChar '(')
+pCloseParen = pToken (pChar ')')
+pOpenBracket = pToken (pChar '[')
+pCloseBracket = pToken (pChar ']')
+pComma = pToken (pChar ',')
+
+addNums a b = a + b
+subNums a b = a - b
+mulNums a b = a * b
+divNums a b = a / b
+
+// `p ++> q <++ r` is a case where the flat, single-priority default
+// (every user operator at the same level, see parsecomb.spp's header)
+// happens to give exactly the wanted grouping on its own: left-to-right
+// is `(p ++> q) <++ r`, i.e. "run p, discard; run q, keep; run r,
+// discard" -- precisely a parenthesized sub-expression.
+pFactor = pNumber ? (pOpenParen ++> pExpr <++ pCloseParen)
+
+// Here flat priority does NOT give the wanted grouping by itself, so the
+// parens below are load-bearing, not decoration: without them,
+// `pToken (pChar '+') --> (\_ -> addNums) ? pToken (pChar '-')` would
+// left-associate as `((... --> addNums) ? pToken (pChar '-')) --> ...`,
+// choosing between a FULLY-BUILT operator-parser and a bare `pChar '-'`
+// instead of choosing between "+" and "-" before applying `-->`.
+pAddOp = (pToken (pChar '+') --> (\_ -> addNums)) ? (pToken (pChar '-') --> (\_ -> subNums))
+pMulOp = (pToken (pChar '*') --> (\_ -> mulNums)) ? (pToken (pChar '/') --> (\_ -> divNums))
+
+pTerm = pChainl1 pFactor pMulOp
+pExpr = pChainl1 pTerm pAddOp
+
+sumList Nil = 0
+sumList (x:xs) = x + sumList xs
+
+pNumberList = (pOpenBracket ++> pSepBy pNumber pComma <++ pCloseBracket) --> sumList
+
+printLabeled label pres =
+  case pres
+    (POk v rest -> printString label <#> printString ": " <#> print v <#> writeChar 1 10)
+    (PErr m rest -> printString label <#> printString ": ERROR: " <#> printString m <#> writeChar 1 10)
+
+start =
+  printLabeled "1+2*3" (pRunString pExpr "1+2*3") <#>
+  printLabeled "(1+2)*3" (pRunString pExpr "(1+2)*3") <#>
+  printLabeled "10-2-3" (pRunString pExpr "10-2-3") <#>
+  printLabeled "2*3+4*5" (pRunString pExpr "2*3+4*5") <#>
+  printLabeled " 12 + 8 " (pRunString pExpr " 12 + 8 ") <#>
+  printLabeled "sum [1,2,3,4]" (pRunString pNumberList "[1,2,3,4]") <#>
+  printLabeled "1+ (malformed)" (pRunString pExpr "1+") <#>
+  writeChar 1 10

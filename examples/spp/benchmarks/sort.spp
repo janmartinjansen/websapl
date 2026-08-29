@@ -1,0 +1,65 @@
+// Three sorts side by side -- quicksort is now the textbook two-ZF
+// definition (`append` of the recursively-sorted "less" and "greater"
+// partitions around the pivot), the nested if-chains in insertion sort /
+// merge / the list generator become guards, and every list-destructuring
+// pattern uses `:` cons-sugar instead of a bare `Cons x xs`, and a
+// fixed-size literal list uses `[e1, e2, ...]` instead of a hand-nested
+// `Cons` chain.
+::list = Nil | Cons !x xs
+
+qsort Nil = Nil
+qsort (y:ys) =
+  append (qsort [ x | x <- ys, x <= y ]) (Cons y (qsort [ x | x <- ys, x > y ]))
+
+insert x Nil = [x]
+insert x (y:ys)
+  | x < y = Cons x (Cons y ys)
+  | otherwise = Cons y (insert x ys)
+
+isort Nil = Nil
+isort (y:ys) = insert y (isort ys)
+
+merge Nil ys = ys
+merge xs Nil = xs
+merge (a:as) (b:bs)
+  | a <= b = Cons a (merge as (Cons b bs))
+  | otherwise = Cons b (merge (Cons a as) bs)
+
+msort xs =
+  let n = length xs, h = n / 2 in
+  if (n < 2) xs (merge (msort (take h xs)) (msort (drop h xs)))
+
+append Nil ys = ys
+append (x:xs) ys = Cons x (append xs ys)
+
+take 0 xs = Nil
+take n Nil = Nil
+take n (x:xs) = Cons x (take (n - 1) xs)
+
+drop 0 xs = xs
+drop n Nil = Nil
+drop n (x:xs) = drop (n - 1) xs
+
+length Nil = 0
+length (x:xs) = 1 + length xs
+
+sum Nil = 0
+sum (a:as) = a + sum as
+
+printlist Nil = 0
+printlist (x:xs) = print x <#> printlist xs
+
+mkl m n 10 = Nil
+mkl m n k
+  | n > m = Cons (m * 10 + k) (mkl (m + 1) n k)
+  | otherwise = mkl 0 n (k + 1)
+
+mklist n = mkl 0 n 0
+
+qsorttest n = qsort (mklist n)
+isorttest n = isort (mklist n)
+msorttest n = msort (mklist n)
+
+allsort = printlist [sum (qsorttest 1000), sum (isorttest 600), sum (msorttest 10000)]
+
+start = allsort

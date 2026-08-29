@@ -1,0 +1,221 @@
+#import "lib/stdlib.cfp"
+
+// `#operator l N sym` declarations (PLAN.md section 15, added
+// 2026-08-28), copied VERBATIM from pg99.ama's own header -- these give
+// `+++`/`++>`/`<++`/`-->`/`?` the exact same relative priority real
+// Amanda gives them, so a whole grammar rule below reads left-to-right
+// without parentheses, same as it would in pg99.ama itself (before this
+// declaration existed, every infix combinator here shared Sapl+'s one
+// flat fallback priority instead, and needed explicit parens wherever
+// the intended grouping wasn't already "strictly left to right" --
+// calc_demo.spp's own header still shows one worked example of that,
+// now redundant-but-harmless, for comparison).
+#operator l 1 +++
+#operator l 1 ++>
+#operator l 1 <++
+#operator l 2 -->
+#operator l 3 ?
+
+// parsecomb.spp -- a small parser-combinator library, "mini pg99": a
+// simplified, self-contained take on this repo's own pg99.ama parser-
+// generator combinator style (see pg99.ama itself, and the sequencing/
+// alternative/result-mapping operators there: `+++`, `?`, `-->`, `++>`,
+// `<++`), written in Sapl+ to exercise lambdas, pattern-definitions, and
+// user-defined infix operators (with real, Amanda-faithful per-operator
+// priority via `#operator`, above) together.
+//
+// A parser is an ordinary Sapl+ function `tokens -> PRes`: given a list
+// of "tokens" (any Cons-list -- a char list for every combinator/demo
+// below, but nothing in the core type is char-specific), it returns
+// either `POk value remainingTokens` (success) or `PErr message
+// remainingTokens` (failure, carrying the tokens at the point of
+// failure, for a location-ish error message).
+//
+// Differences from the real pg99.ama, deliberate simplifications for a
+// "mini" library:
+//   - No extra threaded STATE parameter. pg99's own parser type is
+//     `[token] -> state -> (parseres result, [token], state, bool)` --
+//     the extra `state` slot is there for symbol-table-style bookkeeping
+//     while parsing a whole compiler's input, and isn't needed for
+//     ordinary expression/data parsing. `->-`/`->>` (pg99's
+//     state-manipulation operators) have no equivalent here for the same
+//     reason -- `-->` (result-only mapping) is this library's one
+//     "operation on the result" combinator, and is enough on its own.
+
+// `::list` itself comes from `lib/stdlib.cfp` (imported above) --
+// declaring it again here would just duplicate the ADT (found the hard
+// way: a duplicate `::list` declaration reaching sapl_compiler/
+// saplcomp.jmvm produces an opaque `tagCtArgs: fewer arguments than
+// constructor fields`, unrelated to anything actually wrong with either
+// declaration -- see amaexpr_test.spp's own header for the full story).
+//
+// Deliberately NON-strict `PRes` fields (no `!`): a parser can produce a
+// FUNCTION as its result value (e.g. `pAddOp`'s result in calc_demo.spp
+// is the combining function `addNums`, not a number) -- and forcing a
+// STRICT field that turns out to hold a function/closure value, then
+// later reading it back out of the constructor and applying it, was
+// found to silently corrupt it (a `!val`/`!rest`-marked version of this
+// exact type gives a wrong/garbage answer for calc_demo.spp's `-->`)
+// under `sapl_compiler/saplcomp.jmvm`, the self-hosted "gen1" compiler
+// this repo's sandbox uses in place of `ama` -- a narrow, specific bug
+// in that ONE compiler's strict-field codegen, not in the real
+// production `parser.ama`/`ama` toolchain, and not in preprocess/'s own
+// Sapl+ pipeline. Non-strict fields sidestep it entirely, at the cost of
+// the (usually negligible, for a parser combinator's own bookkeeping
+// values) performance a `!` would otherwise buy.
+::PRes = POk val rest | PErr msg rest
+
+// == Primitives ==============================================================
+
+// Always succeeds without consuming any input, injecting `v` as the result.
+pReturn v toks = POk v toks
+
+// Always fails with the given message, without consuming input.
+pFail msg toks = PErr msg toks
+
+// Consumes any single token.
+pItem Nil = PErr "unexpected end of input" Nil
+pItem (t:ts) = POk t ts
+
+// `pSat pred p` runs `p`, then only accepts its result if `pred` holds --
+// e.g. `pSat isDigitCh pItem` consumes one token, but only if it's a digit.
+pSat pred p toks =
+  case (p toks)
+    (POk v rest -> if (pred v) (POk v rest) (PErr "predicate failed" rest))
+    (PErr m r -> PErr m r)
+
+// One specific character.
+pChar c = pSat (charEq c) pItem
+charEq c x = x == c
+
+// == Result transformation ==================================================
+
+// `p --> f`: on success, apply `f` to p's result (pg99's own name/spirit).
+(-->) p f toks =
+  case (p toks)
+    (POk v rest -> POk (f v) rest)
+    (PErr m r -> PErr m r)
+
+// == Sequencing ==============================================================
+
+// `p +++ q`: run p then q, pairing both results into a tuple. Fails (with
+// the FIRST failure) if either fails.
+(+++) p q toks =
+  case (p toks)
+    (POk v1 rest1 -> pSeqRight q v1 rest1)
+    (PErr m r -> PErr m r)
+
+pSeqRight q v1 rest1 =
+  case (q rest1)
+    (POk v2 rest2 -> POk (v1, v2) rest2)
+    (PErr m r -> PErr m r)
+
+fstOf (a, b) = a
+sndOf (a, b) = b
+
+// `p ++> q`: sequence, keep only q's result.
+(++>) p q = (p +++ q) --> sndOf
+
+// `p <++ q`: sequence, keep only p's result.
+(<++) p q = (p +++ q) --> fstOf
+
+// == Alternatives =============================================================
+
+// `p ? q`: try p; if it fails, try q on the SAME original input.
+(?) p q toks =
+  case (p toks)
+    (POk v rest -> POk v rest)
+    (PErr m r -> q toks)
+
+// choicelist-equivalent: the first alternative that succeeds.
+pChoice Nil = pFail "no alternatives"
+pChoice (p:ps) = pChoiceGo p ps
+pChoiceGo p Nil = p
+pChoiceGo p (q:qs) = pChoiceGo (p ? q) qs
+
+// == Repetition ===============================================================
+
+// Zero or more repetitions -- never fails (an empty match is success).
+pMany p toks =
+  case (p toks)
+    (POk v rest -> pManyCons v (pMany p rest))
+    (PErr m r -> POk Nil toks)
+
+pManyCons v (POk vs rest) = POk (Cons v vs) rest
+
+// One or more repetitions.
+consPair (v, vs) = Cons v vs
+pMany1 p = (p +++ pMany p) --> consPair
+
+// Zero or one occurrence, as a 0- or 1-element list (pg99's `option`).
+pOption p toks =
+  case (p toks)
+    (POk v rest -> POk (Cons v Nil) rest)
+    (PErr m r -> POk Nil toks)
+
+// == Derived, "important" combinators ========================================
+
+// One or more `p`s separated by `sep` (the separator's own result is
+// discarded) -- e.g. a comma-separated list.
+pSepBy1 p sep = (p +++ pMany (sep ++> p)) --> consPair
+pSepBy p sep toks = (pSepBy1 p sep ? pReturn Nil) toks
+
+// Left-associative chain: `p (op p)*`, folding left with the function
+// each `op` parse itself produced (so `op` is normally written as
+// `pSomeSymbol --> (\_ -> combiningFn)`, see calc_demo.spp).
+pChainl1 p pOp = (p +++ pMany (pOp +++ p)) --> applyChain
+applyChain (v0, ops) = foldChain v0 ops
+foldChain v0 Nil = v0
+foldChain v0 ((f, v):rest) = foldChain (f v0 v) rest
+
+// A literal sequence of tokens (pg99's `terminal`, generalized to any
+// list of expected values, not just chars) -- e.g. `pLiteral (str2list
+// "let")` to match a keyword.
+pLiteral Nil toks = POk Nil toks
+pLiteral (x:xs) toks =
+  case (pSat (charEq x) pItem toks)
+    (POk v rest -> pLiteralCons v (pLiteral xs rest))
+    (PErr m r -> PErr m r)
+pLiteralCons v (POk vs rest) = POk (Cons v vs) rest
+pLiteralCons v (PErr m r) = PErr m r
+
+// == Whitespace handling ======================================================
+
+// `pcIsSpaceCh`, not `isSpaceCh`: sapl_compiler/lexer2.cfp declares its own
+// top-level `isSpaceCh` with the exact same name -- harmless as long as
+// nothing imports both files, but saplParse.spp (2026-08-29, the parse-stage
+// capstone, PLAN.md section 17) needs this library's PRes/POk/PErr
+// combinators AND lexer2.cfp's token type/tokenizer together in one
+// program, which would otherwise hit the same "already defined" collision
+// documented in amaexpr_test.spp's own header (a duplicate `::list`
+// declaration there). Renaming the (file-local-only) definition here is
+// lower-blast-radius than touching lexer2.cfp, a shared file the whole
+// self-hosted compiler pipeline depends on.
+pcIsSpaceCh c = (c == 32) \/ (c == 9) \/ (c == 10) \/ (c == 13)
+
+pSpaces = pMany (pSat pcIsSpaceCh pItem)
+
+// `pToken p`: run `p`, then swallow any TRAILING whitespace -- the usual
+// way to get "whitespace between tokens is insignificant" without
+// sprinkling `pSpaces` everywhere; the caller only needs one `pSpaces` up
+// front, before the very first token.
+pToken p = p <++ pSpaces
+
+// Run a parser against a packed string, requiring it to consume the
+// WHOLE input (skipping leading whitespace first) -- the usual top-level
+// entry point for a demo/program.
+pRunString p s = pRun p (str2list s)
+// NOTE: the scrutinee below is wrapped in ONE full set of parens
+// (`((pSpaces ++> p) toks)`, not `(pSpaces ++> p) toks`) -- `case`'s
+// scrutinee-expression parser stops at the first top-level `)`, so an
+// UNWRAPPED trailing application argument (`toks`) is left dangling
+// right before the first branch's own `(...)`, and gets greedily
+// swallowed as a further application argument instead (an opaque
+// `appendArg: unexpected argument in this position` error -- found by
+// hitting exactly this while writing this function).
+pRun p toks =
+  case ((pSpaces ++> p) toks)
+    (POk v rest -> pRunRest v rest)
+    (PErr m r -> PErr m r)
+pRunRest v Nil = POk v Nil
+pRunRest v rest = PErr "trailing input not consumed" rest

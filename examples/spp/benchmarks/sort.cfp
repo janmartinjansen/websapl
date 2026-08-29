@@ -1,0 +1,22 @@
+::list = Nil | Cons !x0 x1
+qsort __pat_0 = case __pat_0 (Nil -> Nil) (Cons __pat_1 __pat_2 -> append (qsort (__zf_1 __pat_1 Nil __pat_2)) (Cons __pat_1 (qsort (__zf_3 __pat_1 Nil __pat_2))))
+insert __pat_3 __pat_4 = case __pat_4 (Nil -> Cons __pat_3 Nil) (Cons __pat_5 __pat_6 -> if (__pat_3 < __pat_5) (Cons __pat_3 (Cons __pat_5 __pat_6)) (Cons __pat_5 (insert __pat_3 __pat_6)))
+isort __pat_7 = case __pat_7 (Nil -> Nil) (Cons __pat_8 __pat_9 -> insert __pat_8 (isort __pat_9))
+merge __pat_10 __pat_11 = case __pat_10 (Nil -> case __pat_11 (Nil -> __pat_11) (_ -> __pat_11)) (Cons __pat_12 __pat_13 -> case __pat_11 (Nil -> __pat_10) (Cons __pat_14 __pat_15 -> if (__pat_12 <= __pat_14) (Cons __pat_12 (merge __pat_13 (Cons __pat_14 __pat_15))) (Cons __pat_14 (merge (Cons __pat_12 __pat_13) __pat_15)))) (_ -> case __pat_11 (Nil -> __pat_10))
+msort __pat_16 = __pat_17 __pat_16
+append __pat_18 __pat_19 = case __pat_18 (Nil -> __pat_19) (Cons __pat_20 __pat_21 -> Cons __pat_20 (append __pat_21 __pat_19))
+take __pat_22 __pat_23 = if (__pat_22 == 0) (case __pat_23 (Nil -> Nil) (Cons __pat_24 __pat_25 -> Nil) (_ -> Nil)) (case __pat_23 (Nil -> Nil) (Cons __pat_26 __pat_27 -> Cons __pat_26 (take (__pat_22 - 1) __pat_27)))
+drop __pat_28 __pat_29 = if (__pat_28 == 0) (case __pat_29 (Nil -> __pat_29) (Cons __pat_30 __pat_31 -> __pat_29) (_ -> __pat_29)) (case __pat_29 (Nil -> Nil) (Cons __pat_32 __pat_33 -> drop (__pat_28 - 1) __pat_33))
+length __pat_34 = case __pat_34 (Nil -> 0) (Cons __pat_35 __pat_36 -> 1 + length __pat_36)
+sum __pat_37 = case __pat_37 (Nil -> 0) (Cons __pat_38 __pat_39 -> __pat_38 + sum __pat_39)
+printlist __pat_40 = case __pat_40 (Nil -> 0) (Cons __pat_41 __pat_42 -> print __pat_41 <#> printlist __pat_42)
+mkl __pat_43 __pat_44 __pat_45 = if (__pat_45 == 10) Nil (if (__pat_44 > __pat_43) (Cons ((__pat_43 * 10) + __pat_45) (mkl (__pat_43 + 1) __pat_44 __pat_45)) (mkl 0 __pat_44 (__pat_45 + 1)))
+mklist __pat_46 = mkl 0 __pat_46 0
+qsorttest __pat_47 = qsort (mklist __pat_47)
+isorttest __pat_48 = isort (mklist __pat_48)
+msorttest __pat_49 = msort (mklist __pat_49)
+allsort = printlist (Cons (sum (qsorttest 1000)) (Cons (sum (isorttest 600)) (Cons (sum (msorttest 10000)) Nil)))
+start = allsort
+__zf_3 __pat_50 __pat_51 __pat_52 = case __pat_52 (Nil -> __pat_51) (Cons x __zf_tail -> if (x > __pat_50) (Cons x (__zf_3 __pat_50 __pat_51 __zf_tail)) (__zf_3 __pat_50 __pat_51 __zf_tail))
+__zf_1 __pat_53 __pat_54 __pat_55 = case __pat_55 (Nil -> __pat_54) (Cons x __zf_tail -> if (x <= __pat_53) (Cons x (__zf_1 __pat_53 __pat_54 __zf_tail)) (__zf_1 __pat_53 __pat_54 __zf_tail))
+__pat_17 __pat_16 = let n = length __pat_16, h = n / 2 in if (n < 2) __pat_16 (merge (msort (take h __pat_16)) (msort (drop h __pat_16)))

@@ -1,0 +1,198 @@
+cm_lazy cm cm_Nil cm_Cons cm_Cons_Nil cm_Cons_Cons cm_Cons_Cons_Nil cm_Cons_Cons_Cons cm_Cons_Cons_Cons_Nil cm_Cons_Cons_Cons_Cons cm_Cons_Cons_Cons_Cons_Nil cm_Cons_Cons_Cons_Cons_Cons sum_lazy sum sum_Nil sum_Cons length_lazy length length_Nil length_Cons map_lazy map map_Nil map_Cons mtestaf0_lazy mtestaf0 mtest_lazy mtest match_lazy match start_lazy start __rangeStepGo_lazy __rangeStepGo __rangeStepGo_then_else __rangeStepGo_else __rangeStepGo_else_else #
+call 31
+print 4
+stop
+0           load 0
+eval
+store 0
+1           load 0
+jmpt 2 2 3
+2           return_const 1 0
+3           load 1
+eval
+jmpt 2 4 5
+4           load 0
+return 3
+5           load 1
+eval
+jmpt 2 6 7
+6           load 2
+load 0
+add
+return 5
+7           load 1
+eval
+jmpt 2 8 9
+8           load 4
+load 2
+add
+load 0
+add
+return 7
+9           load 1
+eval
+jmpt 2 10 11
+10           load 6
+load 4
+add
+load 2
+add
+load 0
+add
+return 9
+11           load 8
+load 6
+add
+load 4
+add
+load 2
+add
+load 3
+eval
+call 17
+add
+return 11
+12           load 0
+eval
+store 0
+13           load 0
+jmpt 2 14 15
+14           return_const 1 0
+15           load 0
+load 1
+eval
+call 13
+add
+return 3
+16           load 0
+eval
+store 0
+17           load 0
+jmpt 2 18 19
+18           return_const 1 0
+19           push 1
+load 1
+eval
+call 17
+add
+return 3
+20           load 1
+eval
+store 1
+21           load 1
+jmpt 2 22 23
+22           ccreatet 0 11 5 0
+return 2
+23           load 1
+load 2
+pushfunc 2 20
+create 3 3
+load 0
+load 2
+eval
+ccreatet 2 11 5 1
+return 4
+24           load 0
+eval
+store 0
+25           load 0
+push 10
+mod
+push 1
+push 1
+call 33
+tailcall 1 1
+26           load 0
+eval
+store 0
+27           load 0
+push 1
+push 1
+call 33
+pushfunc 1 24
+create 1 7
+call 21
+tailcall 1 13
+28           load 0
+eval
+store 0
+29           load 0
+push 1
+push 1
+call 33
+pushfunc 1 26
+create 1 7
+call 21
+tailcall 1 13
+30           jmp 31
+31           push 2000
+tailcall 0 29
+32           load 0
+eval
+store 0
+load 1
+eval
+store 1
+load 2
+eval
+store 2
+33           loadadd 1 0
+iflt 35
+load 0
+load 2
+sub
+ifle 34
+ccreatet 0 11 5 0
+return 3
+34           load 2
+load 1
+load 0
+load 1
+add
+pushfunc 3 32
+create 4 3
+load 0
+ccreatet 2 11 5 1
+return 3
+35           load 2
+load 0
+sub
+ifle 36
+ccreatet 0 11 5 0
+return 3
+36           load 2
+load 1
+load 0
+load 1
+add
+pushfunc 3 32
+create 4 3
+load 0
+ccreatet 2 11 5 1
+return 3
+
+.metadata
+types 1
+type 5 list 2
+  constr 0 Nil 0
+  constr 1 Cons 2
+functions 18
+  func 1 cm 1 10
+  func 0 cm 1 10
+  func 13 sum 1 10
+  func 12 sum 1 10
+  func 17 length 1 10
+  func 16 length 1 10
+  func 21 map 2 010
+  func 20 map 2 010
+  func 25 mtestaf0 1 10
+  func 24 mtestaf0 1 10
+  func 27 mtest 1 10
+  func 26 mtest 1 10
+  func 29 match 1 10
+  func 28 match 1 10
+  func 31 start 0 0
+  func 30 start 0 0
+  func 33 __rangeStepGo 3 1110
+  func 32 __rangeStepGo 3 1110
+.endmetadata
