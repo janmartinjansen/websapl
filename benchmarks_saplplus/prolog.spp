@@ -3,7 +3,7 @@
 // prologlib.spp (see that file's header for what got more elegant);
 // dosol/prologtest here use prog30, matching the original
 // benchmarks/prolog.cfp.
-#import "benchmarks_spp/prologlib.spp"
+#import "benchmarks_saplplus/prologlib.spp"
 
 dosol inp = solve (parseRules prog30) [parseTerm inp] emptyEnv 0
 prologtest = length (dosol (str2list "vader(X1,mark)"))

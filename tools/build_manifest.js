@@ -3,6 +3,11 @@ const path = require("path");
 
 const WEBSAPL_DIR = path.resolve(__dirname, "..");
 
+// App-shell/tooling files at websapl's own root -- not Sapl content, so kept
+// out of the browsable tree (they're still served as real files, just not
+// listed as an entry). README.md stays visible on purpose.
+const ROOT_FILE_EXCLUDES = new Set(["index.html", "graphics.html", "manifest.json", "server.js"]);
+
 function scanDirectory(dirPath, relBase = "") {
   const items = [];
   const entries = fs.readdirSync(dirPath, { withFileTypes: true });
@@ -16,6 +21,9 @@ function scanDirectory(dirPath, relBase = "") {
 
   for (const entry of entries) {
     if (entry.name.startsWith(".") || entry.name === "node_modules" || entry.name === "tools" || entry.name === "css" || entry.name === "js" || entry.name === "engine") {
+      continue;
+    }
+    if (!relBase && entry.isFile() && ROOT_FILE_EXCLUDES.has(entry.name)) {
       continue;
     }
 

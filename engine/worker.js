@@ -14,7 +14,7 @@ let retagcompBytecode = null;
 let driverBytecode = null;
 // #import dependencies driver.jmvm's own expandImports (preprocess/
 // importexpand.cfp) needs on disk to preprocess the bundled Sapl+ examples
-// (websapl/benchmarks_spp/, websapl/parser_combinators/):
+// (websapl/benchmarks_saplplus/, websapl/parser_combinators/):
 // VFS-absolute path -> file text, fetched once at init. Keyed by the SAME
 // repo-root-relative path a `#import "..."` line
 // names verbatim (expandImports calls `readFile` on that string directly,
@@ -165,7 +165,7 @@ async function initEngine(data = {}) {
     { url: "../sapl_compiler/stage_dump.cfp", vfsPath: "/sapl_compiler/stage_dump.cfp" },
     { url: "../parser_combinators/parsecomb.spp", vfsPath: "/parser_combinators/parsecomb.spp" },
     { url: "../parser_combinators/saplParse.spp", vfsPath: "/parser_combinators/saplParse.spp" },
-    { url: "../benchmarks_spp/prologlib.spp", vfsPath: "/benchmarks_spp/prologlib.spp" }
+    { url: "../benchmarks_saplplus/prologlib.spp", vfsPath: "/benchmarks_saplplus/prologlib.spp" }
   ];
   for (const dep of sppDepFiles) {
     try {
@@ -450,7 +450,7 @@ async function preprocessSpp(source, srcPath) {
   // Mount every #import dependency at the SAME repo-root-relative path
   // driver.jmvm's own expandImports (preprocess/importexpand.cfp) will
   // `readFile` verbatim -- see the sppDeps declaration up top.
-  const depDirs = ["/lib", "/sapl_compiler", "/parser_combinators", "/benchmarks_spp"];
+  const depDirs = ["/lib", "/sapl_compiler", "/parser_combinators", "/benchmarks_saplplus"];
   for (const d of depDirs) {
     try {
       if (!instance.FS.analyzePath(d).exists) instance.FS.mkdir(d);

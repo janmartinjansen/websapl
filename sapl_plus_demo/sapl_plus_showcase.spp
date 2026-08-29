@@ -1,0 +1,44 @@
+// sapl_plus_showcase.spp -- klein overzicht van Sapl+'s belangrijkste
+// syntaxuitbreidingen t.o.v. kale Sapl, elk in een paar regels. Zie
+// README.md (in deze map) voor uitleg per feature en hoe het wordt
+// afgebeeld op kale Sapl. Volledige taalgids:
+// docs/spp_taal_en_parser_combinators.md.
+
+::pair = Pair !a !b | NoPair
+::list = Nil | Cons !x xs
+
+sumList Nil     = 0
+sumList (x:xs)  = x + sumList xs
+
+mapL f Nil     = Nil
+mapL f (x:xs)  = Cons (f x) (mapL f xs)
+
+// 1. Lambda-expressies (als argument aan een hogere-orde-functie).
+doubled = mapL (\x -> x * 2) [1, 2, 3, 4]
+
+// 2. Lijst-comprehensies (ZF), iets complexer: twee generatoren plus een
+//    filter-conditie (x != y).
+pairs = [ x * 10 + y | x <- [1..3], y <- [1..3], x != y ]
+
+// 3. mapPair: een ZF met een CONSTRUCTOR-PATROON als generator -- een
+//    niet-passend element (hier: NoPair) wordt stilzwijgend overgeslagen,
+//    net als in Haskell/Clean.
+mapPair f prs = [ f a b | (Pair a b) <- prs ]
+somePairs = [Pair 1 10, NoPair, Pair 2 20]
+pairSums = mapPair (\a b -> a + b) somePairs
+
+// 4. merge: patroon-definities met meerdere clausules + guards samen --
+//    de klassieke merge van twee gesorteerde lijsten.
+merge Nil ys = ys
+merge xs Nil = xs
+merge (x:xs) (y:ys)
+  | x <= y    = x : merge xs (y:ys)
+  | otherwise = y : merge (x:xs) ys
+
+merged = merge [1, 3, 5, 7] [2, 4, 6]
+
+start =
+  print (sumList doubled) <#> writeChar 1 10 <#>
+  print (sumList pairs) <#> writeChar 1 10 <#>
+  print (sumList pairSums) <#> writeChar 1 10 <#>
+  print (sumList merged) <#> writeChar 1 10

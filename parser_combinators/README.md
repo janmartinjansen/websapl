@@ -18,7 +18,7 @@ aan. Dezelfde twee stappen als de CLI (`docs/spp_taal_en_parser_combinators.md`
 sectie 2), nu ook zonder terminal.
 
 (De `.spp`-herschreven versies van 9 van de 12 kernbenchmarks staan niet
-hier, maar op het top-niveau in `benchmarks_spp/`.)
+hier, maar op het top-niveau in `benchmarks_saplplus/`.)
 
 - **`parsecomb.spp`** — de bibliotheek zelf (`POk`/`PErr`, `pMany`,
   `pChainl1`, `?`, ...).

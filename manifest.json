@@ -1,13 +1,13 @@
 {
   "tree": [
     {
-      "name": "benchmarks",
-      "path": "benchmarks",
+      "name": "benchmarks_sapl",
+      "path": "benchmarks_sapl",
       "type": "directory",
       "children": [
         {
           "name": "eval.cfp",
-          "path": "benchmarks/eval.cfp",
+          "path": "benchmarks_sapl/eval.cfp",
           "type": "file",
           "ext": ".cfp",
           "size": 5853,
@@ -15,7 +15,7 @@
         },
         {
           "name": "fib.cfp",
-          "path": "benchmarks/fib.cfp",
+          "path": "benchmarks_sapl/fib.cfp",
           "type": "file",
           "ext": ".cfp",
           "size": 69,
@@ -23,7 +23,7 @@
         },
         {
           "name": "hamming.cfp",
-          "path": "benchmarks/hamming.cfp",
+          "path": "benchmarks_sapl/hamming.cfp",
           "type": "file",
           "ext": ".cfp",
           "size": 941,
@@ -31,7 +31,7 @@
         },
         {
           "name": "knights.cfp",
-          "path": "benchmarks/knights.cfp",
+          "path": "benchmarks_sapl/knights.cfp",
           "type": "file",
           "ext": ".cfp",
           "size": 1368,
@@ -39,7 +39,7 @@
         },
         {
           "name": "match.cfp",
-          "path": "benchmarks/match.cfp",
+          "path": "benchmarks_sapl/match.cfp",
           "type": "file",
           "ext": ".cfp",
           "size": 795,
@@ -47,7 +47,7 @@
         },
         {
           "name": "parsetest.cfp",
-          "path": "benchmarks/parsetest.cfp",
+          "path": "benchmarks_sapl/parsetest.cfp",
           "type": "file",
           "ext": ".cfp",
           "size": 8896,
@@ -55,7 +55,7 @@
         },
         {
           "name": "primes.cfp",
-          "path": "benchmarks/primes.cfp",
+          "path": "benchmarks_sapl/primes.cfp",
           "type": "file",
           "ext": ".cfp",
           "size": 550,
@@ -63,7 +63,7 @@
         },
         {
           "name": "prolog.cfp",
-          "path": "benchmarks/prolog.cfp",
+          "path": "benchmarks_sapl/prolog.cfp",
           "type": "file",
           "ext": ".cfp",
           "size": 8928,
@@ -71,7 +71,7 @@
         },
         {
           "name": "queens.cfp",
-          "path": "benchmarks/queens.cfp",
+          "path": "benchmarks_sapl/queens.cfp",
           "type": "file",
           "ext": ".cfp",
           "size": 776,
@@ -79,7 +79,7 @@
         },
         {
           "name": "sort.cfp",
-          "path": "benchmarks/sort.cfp",
+          "path": "benchmarks_sapl/sort.cfp",
           "type": "file",
           "ext": ".cfp",
           "size": 2230,
@@ -87,7 +87,7 @@
         },
         {
           "name": "sprimes.cfp",
-          "path": "benchmarks/sprimes.cfp",
+          "path": "benchmarks_sapl/sprimes.cfp",
           "type": "file",
           "ext": ".cfp",
           "size": 1509,
@@ -95,7 +95,7 @@
         },
         {
           "name": "twice.cfp",
-          "path": "benchmarks/twice.cfp",
+          "path": "benchmarks_sapl/twice.cfp",
           "type": "file",
           "ext": ".cfp",
           "size": 281,
@@ -105,13 +105,13 @@
       "_expanded": false
     },
     {
-      "name": "benchmarks_spp",
-      "path": "benchmarks_spp",
+      "name": "benchmarks_saplplus",
+      "path": "benchmarks_saplplus",
       "type": "directory",
       "children": [
         {
           "name": "eval.spp",
-          "path": "benchmarks_spp/eval.spp",
+          "path": "benchmarks_saplplus/eval.spp",
           "type": "file",
           "ext": ".spp",
           "size": 6337,
@@ -119,7 +119,7 @@
         },
         {
           "name": "hamming.spp",
-          "path": "benchmarks_spp/hamming.spp",
+          "path": "benchmarks_saplplus/hamming.spp",
           "type": "file",
           "ext": ".spp",
           "size": 1245,
@@ -127,7 +127,7 @@
         },
         {
           "name": "knights.spp",
-          "path": "benchmarks_spp/knights.spp",
+          "path": "benchmarks_saplplus/knights.spp",
           "type": "file",
           "ext": ".spp",
           "size": 1629,
@@ -135,7 +135,7 @@
         },
         {
           "name": "match.spp",
-          "path": "benchmarks_spp/match.spp",
+          "path": "benchmarks_saplplus/match.spp",
           "type": "file",
           "ext": ".spp",
           "size": 731,
@@ -143,15 +143,15 @@
         },
         {
           "name": "parsetest.spp",
-          "path": "benchmarks_spp/parsetest.spp",
+          "path": "benchmarks_saplplus/parsetest.spp",
           "type": "file",
           "ext": ".spp",
-          "size": 688,
+          "size": 693,
           "isBinary": false
         },
         {
           "name": "primes.spp",
-          "path": "benchmarks_spp/primes.spp",
+          "path": "benchmarks_saplplus/primes.spp",
           "type": "file",
           "ext": ".spp",
           "size": 612,
@@ -159,15 +159,15 @@
         },
         {
           "name": "prolog.spp",
-          "path": "benchmarks_spp/prolog.spp",
+          "path": "benchmarks_saplplus/prolog.spp",
           "type": "file",
           "ext": ".spp",
-          "size": 718,
+          "size": 723,
           "isBinary": false
         },
         {
           "name": "prologlib.spp",
-          "path": "benchmarks_spp/prologlib.spp",
+          "path": "benchmarks_saplplus/prologlib.spp",
           "type": "file",
           "ext": ".spp",
           "size": 9318,
@@ -175,7 +175,7 @@
         },
         {
           "name": "queens.spp",
-          "path": "benchmarks_spp/queens.spp",
+          "path": "benchmarks_saplplus/queens.spp",
           "type": "file",
           "ext": ".spp",
           "size": 831,
@@ -183,7 +183,7 @@
         },
         {
           "name": "sort.spp",
-          "path": "benchmarks_spp/sort.spp",
+          "path": "benchmarks_saplplus/sort.spp",
           "type": "file",
           "ext": ".spp",
           "size": 1672,
@@ -586,7 +586,7 @@
           "path": "parser_combinators/README.md",
           "type": "file",
           "ext": ".md",
-          "size": 2815,
+          "size": 2820,
           "isBinary": false
         },
         {
@@ -649,44 +649,28 @@
       "_expanded": false
     },
     {
-      "name": "COMPILER_PIPELINE_PLAN.md",
-      "path": "COMPILER_PIPELINE_PLAN.md",
-      "type": "file",
-      "ext": ".md",
-      "size": 12028,
-      "isBinary": false
-    },
-    {
-      "name": "graphics.html",
-      "path": "graphics.html",
-      "type": "file",
-      "ext": ".html",
-      "size": 32394,
-      "isBinary": false
-    },
-    {
-      "name": "index.html",
-      "path": "index.html",
-      "type": "file",
-      "ext": ".html",
-      "size": 13471,
-      "isBinary": false
-    },
-    {
-      "name": "manifest.json",
-      "path": "manifest.json",
-      "type": "file",
-      "ext": ".json",
-      "size": 18452,
-      "isBinary": false
-    },
-    {
-      "name": "PLAN.md",
-      "path": "PLAN.md",
-      "type": "file",
-      "ext": ".md",
-      "size": 17939,
-      "isBinary": false
+      "name": "sapl_plus_demo",
+      "path": "sapl_plus_demo",
+      "type": "directory",
+      "children": [
+        {
+          "name": "README.md",
+          "path": "sapl_plus_demo/README.md",
+          "type": "file",
+          "ext": ".md",
+          "size": 4483,
+          "isBinary": false
+        },
+        {
+          "name": "sapl_plus_showcase.spp",
+          "path": "sapl_plus_demo/sapl_plus_showcase.spp",
+          "type": "file",
+          "ext": ".spp",
+          "size": 1597,
+          "isBinary": false
+        }
+      ],
+      "_expanded": false
     },
     {
       "name": "README.md",
@@ -694,14 +678,6 @@
       "type": "file",
       "ext": ".md",
       "size": 4221,
-      "isBinary": false
-    },
-    {
-      "name": "server.js",
-      "path": "server.js",
-      "type": "file",
-      "ext": ".js",
-      "size": 1858,
       "isBinary": false
     }
   ]
