@@ -29,7 +29,7 @@ function scanDirectory(dirPath, relBase = "") {
         path: relPath,
         type: "directory",
         children: children,
-        _expanded: true
+        _expanded: false
       });
     } else if (entry.isFile()) {
       const ext = path.extname(entry.name).toLowerCase();

@@ -121,12 +121,14 @@
     showWelcomeMessage();
     renderTree();
 
-    // Default: open first paper example or README
+    // Default: open the usage guide (README.md) so a first-time visitor
+    // sees how to use the editor before anything else, rather than landing
+    // straight in a random code example.
     setTimeout(() => {
-      if (state.fileMap.has("paper_examples/01_fac.cfp")) {
+      if (state.fileMap.has("README.md")) {
+        openFile("README.md", { preview: false });
+      } else if (state.fileMap.has("paper_examples/01_fac.cfp")) {
         openFile("paper_examples/01_fac.cfp", { preview: false });
-      } else if (state.fileMap.has("paper_examples/README.md")) {
-        openFile("paper_examples/README.md", { preview: false });
       }
     }, 150);
   }

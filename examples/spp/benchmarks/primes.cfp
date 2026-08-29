@@ -1,9 +1,0 @@
-::list = Nil | Cons !x0 x1
-from __pat_0 = Cons __pat_0 (from (__pat_0 + 1))
-sieve __pat_1 = case __pat_1 (Cons __pat_2 __pat_3 -> Cons __pat_2 (sieve (__zf_1 __pat_2 Nil __pat_3)))
-primes = sieve (from 2)
-take __pat_4 __pat_5 = if (__pat_4 == 0) (case __pat_5 (Nil -> Nil) (Cons __pat_6 __pat_7 -> Nil) (_ -> Nil)) (case __pat_5 (Nil -> Nil) (Cons __pat_8 __pat_9 -> Cons __pat_8 (take (__pat_4 - 1) __pat_9)))
-el __pat_10 __pat_11 = if (__pat_10 == 0) (case __pat_11 (Cons __pat_12 __pat_13 -> __pat_12)) (case __pat_11 (Cons __pat_14 __pat_15 -> el (__pat_10 - 1) __pat_15))
-printlist __pat_16 = case __pat_16 (Nil -> 0) (Cons __pat_17 __pat_18 -> print __pat_17 <#> printlist __pat_18)
-start = el 5000 primes
-__zf_1 __pat_19 __pat_20 __pat_21 = case __pat_21 (Nil -> __pat_20) (Cons x __zf_tail -> if ((x % __pat_19) != 0) (Cons x (__zf_1 __pat_19 __pat_20 __zf_tail)) (__zf_1 __pat_19 __pat_20 __zf_tail))

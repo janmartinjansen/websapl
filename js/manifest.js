@@ -14,27 +14,11 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
-        "name": "eval.jmvm",
-        "path": "benchmarks/eval.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 42001,
-        "isBinary": false
-      },
-      {
         "name": "fib.cfp",
         "path": "benchmarks/fib.cfp",
         "type": "file",
         "ext": ".cfp",
         "size": 69,
-        "isBinary": false
-      },
-      {
-        "name": "fib.jmvm",
-        "path": "benchmarks/fib.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 799,
         "isBinary": false
       },
       {
@@ -46,27 +30,11 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
-        "name": "hamming.jmvm",
-        "path": "benchmarks/hamming.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 9572,
-        "isBinary": false
-      },
-      {
         "name": "knights.cfp",
         "path": "benchmarks/knights.cfp",
         "type": "file",
         "ext": ".cfp",
         "size": 1368,
-        "isBinary": false
-      },
-      {
-        "name": "knights.jmvm",
-        "path": "benchmarks/knights.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 11145,
         "isBinary": false
       },
       {
@@ -78,27 +46,11 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
-        "name": "match.jmvm",
-        "path": "benchmarks/match.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 6350,
-        "isBinary": false
-      },
-      {
         "name": "parsetest.cfp",
         "path": "benchmarks/parsetest.cfp",
         "type": "file",
         "ext": ".cfp",
         "size": 8896,
-        "isBinary": false
-      },
-      {
-        "name": "parsetest.jmvm",
-        "path": "benchmarks/parsetest.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 81441,
         "isBinary": false
       },
       {
@@ -110,27 +62,11 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
-        "name": "primes.jmvm",
-        "path": "benchmarks/primes.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 5356,
-        "isBinary": false
-      },
-      {
         "name": "prolog.cfp",
         "path": "benchmarks/prolog.cfp",
         "type": "file",
         "ext": ".cfp",
         "size": 8928,
-        "isBinary": false
-      },
-      {
-        "name": "prolog.jmvm",
-        "path": "benchmarks/prolog.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 81656,
         "isBinary": false
       },
       {
@@ -142,27 +78,11 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
-        "name": "queens.jmvm",
-        "path": "benchmarks/queens.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 7644,
-        "isBinary": false
-      },
-      {
         "name": "sort.cfp",
         "path": "benchmarks/sort.cfp",
         "type": "file",
         "ext": ".cfp",
         "size": 2230,
-        "isBinary": false
-      },
-      {
-        "name": "sort.jmvm",
-        "path": "benchmarks/sort.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 22511,
         "isBinary": false
       },
       {
@@ -174,31 +94,15 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
-        "name": "sprimes.jmvm",
-        "path": "benchmarks/sprimes.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 13411,
-        "isBinary": false
-      },
-      {
         "name": "twice.cfp",
         "path": "benchmarks/twice.cfp",
         "type": "file",
         "ext": ".cfp",
         "size": 281,
         "isBinary": false
-      },
-      {
-        "name": "twice.jmvm",
-        "path": "benchmarks/twice.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 2629,
-        "isBinary": false
       }
     ],
-    "_expanded": true
+    "_expanded": false
   },
   {
     "name": "benchmarks_spp",
@@ -206,15 +110,87 @@ window.WEBSAPL_TREE = [
     "type": "directory",
     "children": [
       {
+        "name": "eval.spp",
+        "path": "benchmarks_spp/eval.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 6337,
+        "isBinary": false
+      },
+      {
+        "name": "hamming.spp",
+        "path": "benchmarks_spp/hamming.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 1245,
+        "isBinary": false
+      },
+      {
+        "name": "knights.spp",
+        "path": "benchmarks_spp/knights.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 1629,
+        "isBinary": false
+      },
+      {
+        "name": "match.spp",
+        "path": "benchmarks_spp/match.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 731,
+        "isBinary": false
+      },
+      {
+        "name": "parsetest.spp",
+        "path": "benchmarks_spp/parsetest.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 688,
+        "isBinary": false
+      },
+      {
+        "name": "primes.spp",
+        "path": "benchmarks_spp/primes.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 612,
+        "isBinary": false
+      },
+      {
+        "name": "prolog.spp",
+        "path": "benchmarks_spp/prolog.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 718,
+        "isBinary": false
+      },
+      {
         "name": "prologlib.spp",
         "path": "benchmarks_spp/prologlib.spp",
         "type": "file",
         "ext": ".spp",
         "size": 9318,
         "isBinary": false
+      },
+      {
+        "name": "queens.spp",
+        "path": "benchmarks_spp/queens.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 831,
+        "isBinary": false
+      },
+      {
+        "name": "sort.spp",
+        "path": "benchmarks_spp/sort.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 1672,
+        "isBinary": false
       }
     ],
-    "_expanded": true
+    "_expanded": false
   },
   {
     "name": "docs",
@@ -230,7 +206,7 @@ window.WEBSAPL_TREE = [
         "isBinary": true
       }
     ],
-    "_expanded": true
+    "_expanded": false
   },
   {
     "name": "examples",
@@ -243,258 +219,10 @@ window.WEBSAPL_TREE = [
         "type": "directory",
         "children": [
           {
-            "name": "benchmarks",
-            "path": "examples/spp/benchmarks",
-            "type": "directory",
-            "children": [
-              {
-                "name": "eval.cfp",
-                "path": "examples/spp/benchmarks/eval.cfp",
-                "type": "file",
-                "ext": ".cfp",
-                "size": 5280,
-                "isBinary": false
-              },
-              {
-                "name": "eval.jmvm",
-                "path": "examples/spp/benchmarks/eval.jmvm",
-                "type": "file",
-                "ext": ".jmvm",
-                "size": 18383,
-                "isBinary": false
-              },
-              {
-                "name": "eval.spp",
-                "path": "examples/spp/benchmarks/eval.spp",
-                "type": "file",
-                "ext": ".spp",
-                "size": 6337,
-                "isBinary": false
-              },
-              {
-                "name": "hamming.cfp",
-                "path": "examples/spp/benchmarks/hamming.cfp",
-                "type": "file",
-                "ext": ".cfp",
-                "size": 1780,
-                "isBinary": false
-              },
-              {
-                "name": "hamming.jmvm",
-                "path": "examples/spp/benchmarks/hamming.jmvm",
-                "type": "file",
-                "ext": ".jmvm",
-                "size": 4580,
-                "isBinary": false
-              },
-              {
-                "name": "hamming.spp",
-                "path": "examples/spp/benchmarks/hamming.spp",
-                "type": "file",
-                "ext": ".spp",
-                "size": 1245,
-                "isBinary": false
-              },
-              {
-                "name": "knights.cfp",
-                "path": "examples/spp/benchmarks/knights.cfp",
-                "type": "file",
-                "ext": ".cfp",
-                "size": 2567,
-                "isBinary": false
-              },
-              {
-                "name": "knights.jmvm",
-                "path": "examples/spp/benchmarks/knights.jmvm",
-                "type": "file",
-                "ext": ".jmvm",
-                "size": 6299,
-                "isBinary": false
-              },
-              {
-                "name": "knights.spp",
-                "path": "examples/spp/benchmarks/knights.spp",
-                "type": "file",
-                "ext": ".spp",
-                "size": 1629,
-                "isBinary": false
-              },
-              {
-                "name": "match.cfp",
-                "path": "examples/spp/benchmarks/match.cfp",
-                "type": "file",
-                "ext": ".cfp",
-                "size": 1204,
-                "isBinary": false
-              },
-              {
-                "name": "match.jmvm",
-                "path": "examples/spp/benchmarks/match.jmvm",
-                "type": "file",
-                "ext": ".jmvm",
-                "size": 2804,
-                "isBinary": false
-              },
-              {
-                "name": "match.spp",
-                "path": "examples/spp/benchmarks/match.spp",
-                "type": "file",
-                "ext": ".spp",
-                "size": 731,
-                "isBinary": false
-              },
-              {
-                "name": "parsetest.cfp",
-                "path": "examples/spp/benchmarks/parsetest.cfp",
-                "type": "file",
-                "ext": ".cfp",
-                "size": 13087,
-                "isBinary": false
-              },
-              {
-                "name": "parsetest.jmvm",
-                "path": "examples/spp/benchmarks/parsetest.jmvm",
-                "type": "file",
-                "ext": ".jmvm",
-                "size": 42357,
-                "isBinary": false
-              },
-              {
-                "name": "parsetest.spp",
-                "path": "examples/spp/benchmarks/parsetest.spp",
-                "type": "file",
-                "ext": ".spp",
-                "size": 688,
-                "isBinary": false
-              },
-              {
-                "name": "primes.cfp",
-                "path": "examples/spp/benchmarks/primes.cfp",
-                "type": "file",
-                "ext": ".cfp",
-                "size": 910,
-                "isBinary": false
-              },
-              {
-                "name": "primes.jmvm",
-                "path": "examples/spp/benchmarks/primes.jmvm",
-                "type": "file",
-                "ext": ".jmvm",
-                "size": 2492,
-                "isBinary": false
-              },
-              {
-                "name": "primes.spp",
-                "path": "examples/spp/benchmarks/primes.spp",
-                "type": "file",
-                "ext": ".spp",
-                "size": 612,
-                "isBinary": false
-              },
-              {
-                "name": "prolog.cfp",
-                "path": "examples/spp/benchmarks/prolog.cfp",
-                "type": "file",
-                "ext": ".cfp",
-                "size": 13107,
-                "isBinary": false
-              },
-              {
-                "name": "prolog.jmvm",
-                "path": "examples/spp/benchmarks/prolog.jmvm",
-                "type": "file",
-                "ext": ".jmvm",
-                "size": 42471,
-                "isBinary": false
-              },
-              {
-                "name": "prolog.spp",
-                "path": "examples/spp/benchmarks/prolog.spp",
-                "type": "file",
-                "ext": ".spp",
-                "size": 718,
-                "isBinary": false
-              },
-              {
-                "name": "prologlib.spp",
-                "path": "examples/spp/benchmarks/prologlib.spp",
-                "type": "file",
-                "ext": ".spp",
-                "size": 9318,
-                "isBinary": false
-              },
-              {
-                "name": "queens.cfp",
-                "path": "examples/spp/benchmarks/queens.cfp",
-                "type": "file",
-                "ext": ".cfp",
-                "size": 1158,
-                "isBinary": false
-              },
-              {
-                "name": "queens.jmvm",
-                "path": "examples/spp/benchmarks/queens.jmvm",
-                "type": "file",
-                "ext": ".jmvm",
-                "size": 2835,
-                "isBinary": false
-              },
-              {
-                "name": "queens.spp",
-                "path": "examples/spp/benchmarks/queens.spp",
-                "type": "file",
-                "ext": ".spp",
-                "size": 831,
-                "isBinary": false
-              },
-              {
-                "name": "sort.cfp",
-                "path": "examples/spp/benchmarks/sort.cfp",
-                "type": "file",
-                "ext": ".cfp",
-                "size": 2752,
-                "isBinary": false
-              },
-              {
-                "name": "sort.jmvm",
-                "path": "examples/spp/benchmarks/sort.jmvm",
-                "type": "file",
-                "ext": ".jmvm",
-                "size": 6792,
-                "isBinary": false
-              },
-              {
-                "name": "sort.spp",
-                "path": "examples/spp/benchmarks/sort.spp",
-                "type": "file",
-                "ext": ".spp",
-                "size": 1672,
-                "isBinary": false
-              }
-            ],
-            "_expanded": true
-          },
-          {
             "name": "parser_combinators",
             "path": "examples/spp/parser_combinators",
             "type": "directory",
             "children": [
-              {
-                "name": "calc_demo.cfp",
-                "path": "examples/spp/parser_combinators/calc_demo.cfp",
-                "type": "file",
-                "ext": ".cfp",
-                "size": 8581,
-                "isBinary": false
-              },
-              {
-                "name": "calc_demo.jmvm",
-                "path": "examples/spp/parser_combinators/calc_demo.jmvm",
-                "type": "file",
-                "ext": ".jmvm",
-                "size": 23766,
-                "isBinary": false
-              },
               {
                 "name": "calc_demo.spp",
                 "path": "examples/spp/parser_combinators/calc_demo.spp",
@@ -509,22 +237,6 @@ window.WEBSAPL_TREE = [
                 "type": "file",
                 "ext": ".spp",
                 "size": 9613,
-                "isBinary": false
-              },
-              {
-                "name": "saplParse_demo.cfp",
-                "path": "examples/spp/parser_combinators/saplParse_demo.cfp",
-                "type": "file",
-                "ext": ".cfp",
-                "size": 49999,
-                "isBinary": false
-              },
-              {
-                "name": "saplParse_demo.jmvm",
-                "path": "examples/spp/parser_combinators/saplParse_demo.jmvm",
-                "type": "file",
-                "ext": ".jmvm",
-                "size": 175486,
                 "isBinary": false
               },
               {
@@ -544,18 +256,18 @@ window.WEBSAPL_TREE = [
                 "isBinary": false
               }
             ],
-            "_expanded": true
+            "_expanded": false
           },
           {
             "name": "README.md",
             "path": "examples/spp/README.md",
             "type": "file",
             "ext": ".md",
-            "size": 2611,
+            "size": 2808,
             "isBinary": false
           }
         ],
-        "_expanded": true
+        "_expanded": false
       },
       {
         "name": "curryvb.cfp",
@@ -563,14 +275,6 @@ window.WEBSAPL_TREE = [
         "type": "file",
         "ext": ".cfp",
         "size": 112,
-        "isBinary": false
-      },
-      {
-        "name": "curryvb.jmvm",
-        "path": "examples/curryvb.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 1068,
         "isBinary": false
       },
       {
@@ -582,35 +286,11 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
-        "name": "curryvbns.jmvm",
-        "path": "examples/curryvbns.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 1080,
-        "isBinary": false
-      },
-      {
-        "name": "fac_via_saplcomp.jmvm",
-        "path": "examples/fac_via_saplcomp.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 242,
-        "isBinary": false
-      },
-      {
         "name": "fac.cfp",
         "path": "examples/fac.cfp",
         "type": "file",
         "ext": ".cfp",
         "size": 52,
-        "isBinary": false
-      },
-      {
-        "name": "fac.jmvm",
-        "path": "examples/fac.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 798,
         "isBinary": false
       },
       {
@@ -622,27 +302,11 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
-        "name": "fib1.jmvm",
-        "path": "examples/fib1.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 799,
-        "isBinary": false
-      },
-      {
         "name": "fib43.cfp",
         "path": "examples/fib43.cfp",
         "type": "file",
         "ext": ".cfp",
         "size": 70,
-        "isBinary": false
-      },
-      {
-        "name": "fib43.jmvm",
-        "path": "examples/fib43.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 799,
         "isBinary": false
       },
       {
@@ -654,27 +318,11 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
-        "name": "hanoi.jmvm",
-        "path": "examples/hanoi.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 4145,
-        "isBinary": false
-      },
-      {
         "name": "iotest.cfp",
         "path": "examples/iotest.cfp",
         "type": "file",
         "ext": ".cfp",
         "size": 123,
-        "isBinary": false
-      },
-      {
-        "name": "iotest.jmvm",
-        "path": "examples/iotest.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 810,
         "isBinary": false
       },
       {
@@ -686,27 +334,11 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
-        "name": "lazy_io_test_test.jmvm",
-        "path": "examples/lazy_io_test_test.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 8146,
-        "isBinary": false
-      },
-      {
         "name": "lazy_io_test.cfp",
         "path": "examples/lazy_io_test.cfp",
         "type": "file",
         "ext": ".cfp",
         "size": 457,
-        "isBinary": false
-      },
-      {
-        "name": "lazy_io_test.jmvm",
-        "path": "examples/lazy_io_test.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 16903,
         "isBinary": false
       },
       {
@@ -718,14 +350,6 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
-        "name": "maptest.jmvm",
-        "path": "examples/maptest.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 2508,
-        "isBinary": false
-      },
-      {
         "name": "print_primes.cfp",
         "path": "examples/print_primes.cfp",
         "type": "file",
@@ -734,27 +358,11 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
-        "name": "print_primes.jmvm",
-        "path": "examples/print_primes.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 2744,
-        "isBinary": false
-      },
-      {
         "name": "saplcomp_flattened.cfp",
         "path": "examples/saplcomp_flattened.cfp",
         "type": "file",
         "ext": ".cfp",
         "size": 141600,
-        "isBinary": false
-      },
-      {
-        "name": "saplcomp_flattened.jmvm",
-        "path": "examples/saplcomp_flattened.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 299747,
         "isBinary": false
       },
       {
@@ -782,27 +390,11 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
-        "name": "test.jmvm",
-        "path": "examples/test.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 840,
-        "isBinary": false
-      },
-      {
         "name": "tlazy.cfp",
         "path": "examples/tlazy.cfp",
         "type": "file",
         "ext": ".cfp",
         "size": 254,
-        "isBinary": false
-      },
-      {
-        "name": "tlazy.jmvm",
-        "path": "examples/tlazy.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 2357,
         "isBinary": false
       },
       {
@@ -814,31 +406,15 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
-        "name": "twice_direct.jmvm",
-        "path": "examples/twice_direct.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 2570,
-        "isBinary": false
-      },
-      {
         "name": "twice1.cfp",
         "path": "examples/twice1.cfp",
         "type": "file",
         "ext": ".cfp",
         "size": 273,
         "isBinary": false
-      },
-      {
-        "name": "twice1.jmvm",
-        "path": "examples/twice1.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 2450,
-        "isBinary": false
       }
     ],
-    "_expanded": true
+    "_expanded": false
   },
   {
     "name": "grafisch",
@@ -854,27 +430,11 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
-        "name": "boom.jmvm",
-        "path": "grafisch/boom.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 13475,
-        "isBinary": false
-      },
-      {
         "name": "bspline.cfp",
         "path": "grafisch/bspline.cfp",
         "type": "file",
         "ext": ".cfp",
         "size": 2464,
-        "isBinary": false
-      },
-      {
-        "name": "bspline.jmvm",
-        "path": "grafisch/bspline.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 16517,
         "isBinary": false
       },
       {
@@ -886,14 +446,6 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
-        "name": "convex.jmvm",
-        "path": "grafisch/convex.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 20845,
-        "isBinary": false
-      },
-      {
         "name": "curves.cfp",
         "path": "grafisch/curves.cfp",
         "type": "file",
@@ -902,27 +454,11 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
-        "name": "curves.jmvm",
-        "path": "grafisch/curves.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 19988,
-        "isBinary": false
-      },
-      {
         "name": "grafiek.cfp",
         "path": "grafisch/grafiek.cfp",
         "type": "file",
         "ext": ".cfp",
         "size": 1270,
-        "isBinary": false
-      },
-      {
-        "name": "grafiek.jmvm",
-        "path": "grafisch/grafiek.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 13216,
         "isBinary": false
       },
       {
@@ -942,31 +478,15 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
-        "name": "hwdes.jmvm",
-        "path": "grafisch/hwdes.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 24776,
-        "isBinary": false
-      },
-      {
         "name": "recpic.cfp",
         "path": "grafisch/recpic.cfp",
         "type": "file",
         "ext": ".cfp",
         "size": 2003,
         "isBinary": false
-      },
-      {
-        "name": "recpic.jmvm",
-        "path": "grafisch/recpic.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 15735,
-        "isBinary": false
       }
     ],
-    "_expanded": true
+    "_expanded": false
   },
   {
     "name": "lib",
@@ -982,7 +502,7 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       }
     ],
-    "_expanded": true
+    "_expanded": false
   },
   {
     "name": "paper_examples",
@@ -1094,7 +614,7 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       }
     ],
-    "_expanded": true
+    "_expanded": false
   },
   {
     "name": "preprocess",
@@ -1123,10 +643,10 @@ window.WEBSAPL_TREE = [
             "isBinary": false
           }
         ],
-        "_expanded": true
+        "_expanded": false
       }
     ],
-    "_expanded": true
+    "_expanded": false
   },
   {
     "name": "sapl_compiler",
@@ -1166,7 +686,7 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       }
     ],
-    "_expanded": true
+    "_expanded": false
   },
   {
     "name": "COMPILER_PIPELINE_PLAN.md",
@@ -1197,7 +717,7 @@ window.WEBSAPL_TREE = [
     "path": "manifest.json",
     "type": "file",
     "ext": ".json",
-    "size": 30917,
+    "size": 19617,
     "isBinary": false
   },
   {
@@ -1213,7 +733,7 @@ window.WEBSAPL_TREE = [
     "path": "README.md",
     "type": "file",
     "ext": ".md",
-    "size": 2142,
+    "size": 4215,
     "isBinary": false
   },
   {

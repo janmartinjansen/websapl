@@ -5,9 +5,9 @@ Haskell/Clean-achtige taal die naar gewone Sapl (`.cfp`) vertaalt via een
 in Sapl geschreven pre-processor (`preprocess/`). Volledige uitleg,
 taalkenmerken en gebruik: `docs/spp_taal_en_parser_combinators.md` (repo-root).
 
-Elk `.spp`-bestand hier staat naast zijn al vertaalde `.cfp` en gecompileerde
-`.jmvm` — zo kun je de voorbeelden direct draaien zonder eerst zelf iets te
-hoeven vertalen. Maar het hoeft ook niet: **WebSapl herkent de `.spp`-
+Alleen de `.spp`-bron zelf staat hier (plus een enkele gedeelde `#import`-
+afhankelijkheid zoals `prologlib.spp`/`parsecomb.spp`) — bewust **geen**
+voorgecompileerde `.cfp` of `.jmvm` ernaast. **WebSapl herkent de `.spp`-
 extensie zelf.** Open een `.spp`-bestand en klik op "Preprocess (.spp → .cfp)"
 — dat draait `preprocess/driver.jmvm` (de pre-processor zelf, ook gewoon
 gecompileerde `.jmvm`-bytecode) rechtstreeks in de browser via WebAssembly,
@@ -16,15 +16,11 @@ altijd: "Compileer" / "Compileer & Run" op die `.cfp` roept de normale Sapl-
 compiler aan. Dezelfde twee stappen als de CLI (`docs/spp_taal_en_parser_combinators.md`
 sectie 2), nu ook zonder terminal.
 
-## `benchmarks/`
-
-De `.spp`-herschreven versies van 9 van de 12 kernbenchmarks
-(`benchmarks/*.cfp`, CLAUDE.md) — dezelfde programma's, nu geschreven met
-Sapl+'s pattern-definities, lijstletterlijken, ZF-expressies en
-gebruiker-infix-operatoren in plaats van kale Sapl. Laat zien hoe Sapl+
-er in de praktijk uitziet op niet-triviale, realistische programma's:
-`eval`, `hamming`, `knights`, `match`, `parsetest`, `primes`, `prolog`
-(+ `prologlib.spp`, gedeeld via `#import`), `queens`, `sort`.
+De `.spp`-herschreven versies van 9 van de 12 kernbenchmarks staan hier
+NIET onder — die staan op het top-niveau in `benchmarks_spp/` (naast
+`benchmarks/`, de gewone-Sapl versies), niet genest onder `examples/`. Zie
+`benchmarks_spp/` voor `eval`, `hamming`, `knights`, `match`, `parsetest`,
+`primes`, `prolog` (+ `prologlib.spp`, gedeeld via `#import`), `queens`, `sort`.
 
 ## `parser_combinators/`
 

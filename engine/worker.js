@@ -14,8 +14,9 @@ let retagcompBytecode = null;
 let driverBytecode = null;
 // #import dependencies driver.jmvm's own expandImports (preprocess/
 // importexpand.cfp) needs on disk to preprocess the bundled Sapl+ examples
-// (websapl/examples/spp/): VFS-absolute path -> file text, fetched once at
-// init. Keyed by the SAME repo-root-relative path a `#import "..."` line
+// (websapl/benchmarks_spp/, websapl/examples/spp/parser_combinators/):
+// VFS-absolute path -> file text, fetched once at init. Keyed by the SAME
+// repo-root-relative path a `#import "..."` line
 // names verbatim (expandImports calls `readFile` on that string directly,
 // no /workspace/-prefixing -- unlike this worker's own resolveImports(),
 // a separate, .cfp-specific JS reimplementation used for the "Compileer"
