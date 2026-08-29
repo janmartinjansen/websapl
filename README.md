@@ -42,7 +42,7 @@
 5. **Graphics Studio** (rechtsboven) — een aparte pagina om de `.cfp`-
    programma's in `grafisch/` visueel te draaien.
 
-Zie ook `examples/spp/README.md` voor meer over Sapl+ specifiek, en
+Zie ook `parser_combinators/README.md` voor meer over Sapl+ specifiek, en
 `paper_examples/README.md` voor de voorbeelden uit het onderliggende paper.
 
 ---

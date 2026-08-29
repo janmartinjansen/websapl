@@ -1,4 +1,4 @@
-#import "preprocess/parsecomb/parsecomb.spp"
+#import "parser_combinators/parsecomb.spp"
 #import "sapl_compiler/newparser_ast.cfp"
 #import "sapl_compiler/lexer2.cfp"
 #import "sapl_compiler/ast_helpers.cfp"

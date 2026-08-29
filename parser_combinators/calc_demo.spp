@@ -1,4 +1,4 @@
-#import "preprocess/parsecomb/parsecomb.spp"
+#import "parser_combinators/parsecomb.spp"
 
 // calc_demo.spp -- a small arithmetic-expression evaluator built on
 // parsecomb.spp, the way pg99.ama itself is used to build parser.ama's

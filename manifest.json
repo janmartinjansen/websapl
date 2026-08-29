@@ -214,62 +214,6 @@
       "type": "directory",
       "children": [
         {
-          "name": "spp",
-          "path": "examples/spp",
-          "type": "directory",
-          "children": [
-            {
-              "name": "parser_combinators",
-              "path": "examples/spp/parser_combinators",
-              "type": "directory",
-              "children": [
-                {
-                  "name": "calc_demo.spp",
-                  "path": "examples/spp/parser_combinators/calc_demo.spp",
-                  "type": "file",
-                  "ext": ".spp",
-                  "size": 2769,
-                  "isBinary": false
-                },
-                {
-                  "name": "parsecomb.spp",
-                  "path": "examples/spp/parser_combinators/parsecomb.spp",
-                  "type": "file",
-                  "ext": ".spp",
-                  "size": 9613,
-                  "isBinary": false
-                },
-                {
-                  "name": "saplParse_demo.spp",
-                  "path": "examples/spp/parser_combinators/saplParse_demo.spp",
-                  "type": "file",
-                  "ext": ".spp",
-                  "size": 1853,
-                  "isBinary": false
-                },
-                {
-                  "name": "saplParse.spp",
-                  "path": "examples/spp/parser_combinators/saplParse.spp",
-                  "type": "file",
-                  "ext": ".spp",
-                  "size": 28595,
-                  "isBinary": false
-                }
-              ],
-              "_expanded": false
-            },
-            {
-              "name": "README.md",
-              "path": "examples/spp/README.md",
-              "type": "file",
-              "ext": ".md",
-              "size": 2808,
-              "isBinary": false
-            }
-          ],
-          "_expanded": false
-        },
-        {
           "name": "curryvb.cfp",
           "path": "examples/curryvb.cfp",
           "type": "file",
@@ -617,33 +561,49 @@
       "_expanded": false
     },
     {
-      "name": "preprocess",
-      "path": "preprocess",
+      "name": "parser_combinators",
+      "path": "parser_combinators",
       "type": "directory",
       "children": [
         {
-          "name": "parsecomb",
-          "path": "preprocess/parsecomb",
-          "type": "directory",
-          "children": [
-            {
-              "name": "parsecomb.spp",
-              "path": "preprocess/parsecomb/parsecomb.spp",
-              "type": "file",
-              "ext": ".spp",
-              "size": 9613,
-              "isBinary": false
-            },
-            {
-              "name": "saplParse.spp",
-              "path": "preprocess/parsecomb/saplParse.spp",
-              "type": "file",
-              "ext": ".spp",
-              "size": 28595,
-              "isBinary": false
-            }
-          ],
-          "_expanded": false
+          "name": "calc_demo.spp",
+          "path": "parser_combinators/calc_demo.spp",
+          "type": "file",
+          "ext": ".spp",
+          "size": 2767,
+          "isBinary": false
+        },
+        {
+          "name": "parsecomb.spp",
+          "path": "parser_combinators/parsecomb.spp",
+          "type": "file",
+          "ext": ".spp",
+          "size": 9613,
+          "isBinary": false
+        },
+        {
+          "name": "README.md",
+          "path": "parser_combinators/README.md",
+          "type": "file",
+          "ext": ".md",
+          "size": 2815,
+          "isBinary": false
+        },
+        {
+          "name": "saplParse_demo.spp",
+          "path": "parser_combinators/saplParse_demo.spp",
+          "type": "file",
+          "ext": ".spp",
+          "size": 1847,
+          "isBinary": false
+        },
+        {
+          "name": "saplParse.spp",
+          "path": "parser_combinators/saplParse.spp",
+          "type": "file",
+          "ext": ".spp",
+          "size": 28593,
+          "isBinary": false
         }
       ],
       "_expanded": false
@@ -717,7 +677,7 @@
       "path": "manifest.json",
       "type": "file",
       "ext": ".json",
-      "size": 19617,
+      "size": 18452,
       "isBinary": false
     },
     {
@@ -733,7 +693,7 @@
       "path": "README.md",
       "type": "file",
       "ext": ".md",
-      "size": 4215,
+      "size": 4221,
       "isBinary": false
     },
     {

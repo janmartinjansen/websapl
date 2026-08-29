@@ -1,8 +1,8 @@
-#import "preprocess/parsecomb/saplParse.spp"
+#import "parser_combinators/saplParse.spp"
 #import "sapl_compiler/stage_dump.cfp"
 
 // saplParse_demo.spp -- a small, self-contained showcase of saplParse.spp
-// (the capstone of the whole preprocess/parsecomb/ exercise, see
+// (the capstone of the whole parser_combinators/ exercise, see
 // docs/spp_taal_en_parser_combinators.md section 5.6 and
 // preprocess/PLAN.md section 17): parses a short SAPL fragment, entirely
 // as an embedded string (no readFile), with the PARSER-COMBINATOR-BASED
@@ -10,7 +10,7 @@
 // stage_dump.cfp's OWN dumpProgram -- the exact same pretty-printer
 // `./compile-sapl <file> --emit=parse` uses on the real, hand-written
 // sapl_compiler/parser.cfp's own parse. saplParse_test.spp (in
-// preprocess/parsecomb/) proves this is byte-for-byte identical on all 12
+// parser_combinators/) proves this is byte-for-byte identical on all 12
 // core benchmarks (+ their strict-annotated variants) against the real
 // compiler's own --emit=parse output; this file is the same parser, just
 // on one small, embedded, no-file-I/O example, so it also runs unchanged
