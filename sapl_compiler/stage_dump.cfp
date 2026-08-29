@@ -1,0 +1,228 @@
+#import "lib/stdlib.cfp"
+#import "sapl_compiler/newparser_ast.cfp"
+
+// stage_dump.cfp - pretty-printer for newparser_ast.cfp's Func/expr/adt
+// types, for the --emit=<stage> CLI flag on ./compile-sapl (see docs/
+// 2026-08-18_eval_hang_pauze_en_stagevorm_decompiler_plan.md section 4).
+// Renders in the SAME concrete notation as main.pdf's own figures and
+// ordinary Sapl source (juxtaposed application, infix Prim operators,
+// `if (c) t e`, `case x (Con v -> body) ...`, `let a = X, b = Y in body`,
+// `eval(n)`/`thunk (...)`/`lazy (...)`/`closure (...)`) -- NOT the earlier
+// generic reflection-based Cons(...)-nested dump this file used to
+// contain (superseded 18 augustus 2026, same day: the reflection version
+// was readable enough to spot bugs in, but didn't look like the paper,
+// which was the actual point of --emit=<stage> for an educational site).
+//
+// A plain typed pretty-printer, not reflection-based: newparser_ast.cfp's
+// shapes are fully known ahead of time (unlike a truly generic dumper),
+// so ordinary `case` pattern matching is simpler, faster, and needs no
+// runtime type inspection at all. Every name/identifier field (Var's
+// name, App's name, Ct's name, CaseBranch's con/vars, Arg's name, ...) is
+// a Sapl char-list (what ['...'] bracket-literal sugar produces) by
+// construction from the parser -- list2str turns it into a packed string
+// directly, no char-list-vs-string ambiguity to detect (the old version's
+// isCharListLike heuristic is gone; it's simply not needed once the exact
+// type is known).
+//
+// Parenthesization matches docs/sapl_programmeer_regels.md's own
+// precedence table (juxtaposed application binds tighter than any infix
+// operator) and was verified character-for-character against main.pdf's
+// own facl example: `facl n = if (eval(n) == 0) 1 (eval(n) * facl (thunk
+// (facl_1 n)))`. Two DIFFERENT wrapping rules are needed, not one:
+//   - ppPrimOperand (a Prim's own two operands): a compound application
+//     (App/Ct/Thunk/Lazy/Closure, all rendered as juxtaposition) does NOT
+//     need wrapping here, since juxtaposition binds tighter than any
+//     infix operator -- `eval(n) * facl (thunk (facl_1 n))` has no extra
+//     parens around `facl (thunk (facl_1 n))` even though it's the right
+//     operand of `*`.
+//   - ppAppArg (an application's OWN argument -- App/Ct's arg list,
+//     Thunk/Lazy/Closure's inner expr, If/Try/Throw's sub-parts): the
+//     SAME compound application DOES need wrapping here, since
+//     juxtaposition is left-associative (`thunk facl_1 n` would parse as
+//     `(thunk facl_1) n`, not `thunk (facl_1 n)` -- confirmed this was
+//     the bug in an early draft, caught by checking against the paper's
+//     exact text before committing).
+// Eval as a Prim operand never needs extra wrapping (`eval(n)`'s own
+// tight parens already self-delimit it there, matching the paper: `eval(n)
+// == 0`, not `(eval(n)) == 0`) -- but as an APPLICATION'S OWN ARGUMENT it
+// DOES, same reason as any other compound application: `sumall eval(xs2)`
+// would parse as `(sumall eval) (xs2)` under left-associative
+// juxtaposition, not `sumall (eval(xs2))` (caught by inspecting real
+// output on an ADT-matching example before committing -- facl's own
+// example never exercises this, Eval only ever appears there as a Prim
+// operand). So isAtomExpr/ppAppArg treat Eval as any other non-atomic
+// expression; only ppPrimOperand special-cases it.
+//
+// A zero-argument App/Ct (a bare function/constructor reference, e.g.
+// MyNil or a 0-arity helper) is also atomic for ppAppArg's purposes --
+// nothing can misassociate with it since there's no argument list to
+// swallow a following token, so `MyCons 3 MyNil` (not `MyCons 3
+// (MyNil)`) is both unambiguous and matches how it'd actually be written.
+
+isAtomExpr e =
+  case e
+    (Num n -> True)
+    (FloatLit s -> True)
+    (Str s -> True)
+    (Var v -> True)
+    (NoMatch -> True)
+    (App n as -> isEmptyArgs as)
+    (Ct n as -> isEmptyArgs as)
+    (_ -> False)
+
+isEmptyArgs as = case as (Nil -> True) (_ -> False)
+
+needsWrapAsPrimOperand e =
+  case e
+    (Prim op as -> True)
+    (If c t el -> True)
+    (Case sc cs -> True)
+    (Let ls b -> True)
+    (Try b h -> True)
+    (Throw nr p -> True)
+    (_ -> False)
+
+ppPrimOperand e =
+  if (needsWrapAsPrimOperand e) (strcat "(" (strcat (ppExpr e) ")")) (ppExpr e)
+
+ppAppArg e =
+  if (isAtomExpr e) (ppExpr e) (strcat "(" (strcat (ppExpr e) ")"))
+
+ppExpr e =
+  case e
+    (Num n -> list2str (itoa n))
+    (FloatLit s -> list2str s)
+    (Str s -> strcat "\"" (strcat (list2str s) "\""))
+    (Var v -> list2str v)
+    (NoMatch -> "nomatch")
+    (If c t el -> ppIf c t el)
+    (App n as -> ppJuxtaposed n as)
+    (Prim op as -> ppPrim op as)
+    (Ct n as -> ppJuxtaposed n as)
+    (Case sc cs -> ppCase sc cs)
+    (Let ls b -> ppLet ls b)
+    (Lazy inner -> strcat "lazy " (ppAppArg inner))
+    (Thunk inner -> strcat "thunk " (ppAppArg inner))
+    (Closure inner -> strcat "closure " (ppAppArg inner))
+    (Eval inner -> strcat "eval(" (strcat (ppExpr inner) ")"))
+    (Try b h -> strcat "try " (strcat (ppAppArg b) (strcat " " (ppAppArg h))))
+    (Throw nr p -> strcat "throw " (strcat (ppAppArg nr) (strcat " " (ppAppArg p))))
+
+ppIf c t el = strcat "if " (strcat (ppAppArg c) (strcat " " (strcat (ppAppArg t) (strcat " " (ppAppArg el)))))
+
+// Juxtaposed application: `name arg1 arg2 ...` (App and Ct render
+// identically -- a constructor application is just a juxtaposed
+// application whose head happens to be capitalized by convention).
+ppJuxtaposed n as = strcat (list2str n) (ppArgsSpace as)
+
+ppArgsSpace as =
+  case as
+    (Nil -> "")
+    (Cons a rest -> strcat " " (strcat (ppAppArg a) (ppArgsSpace rest)))
+
+// Infix rendering for the two-operand case (every Prim this codebase
+// actually produces -- primInstr/isComparisonOp in stage5_codegen.cfp
+// only ever cover binary operators). Falls back to a labeled juxtaposed
+// form for any other arity instead of erroring: this is a display tool,
+// not a codegen stage, so a graceful (if unexpected) rendering beats
+// refusing to show a genuinely-encountered value.
+ppPrim op as =
+  case as
+    (Cons a rest -> ppPrimRest op a rest)
+    (Nil -> strcat "prim_" (strcat (list2str op) (ppArgsSpace as)))
+
+ppPrimRest op a rest =
+  case rest
+    (Cons b rest2 -> ppPrimCheckTail op a b rest2)
+    (Nil -> strcat "prim_" (strcat (list2str op) (ppArgsSpace (Cons a rest))))
+
+ppPrimCheckTail op a b rest2 =
+  case rest2
+    (Nil -> strcat (ppPrimOperand a) (strcat " " (strcat (list2str op) (strcat " " (ppPrimOperand b)))))
+    (Cons c more -> strcat "prim_" (strcat (list2str op) (ppArgsSpace (Cons a (Cons b rest2)))))
+
+ppCase sc cs = strcat "case " (strcat (ppAppArg sc) (strcat " " (ppBranches cs)))
+
+ppBranches cs =
+  case cs
+    (Nil -> "")
+    (Cons cb rest -> ppBranchesCons cb rest)
+
+ppBranchesCons cb rest =
+  case rest
+    (Nil -> ppBranch cb)
+    (Cons cb2 rest2 -> strcat (ppBranch cb) (strcat " " (ppBranchesCons cb2 rest2)))
+
+ppBranch cb = case cb (CaseBranch con vars body -> strcat "(" (strcat (list2str con) (strcat (ppVarsSpace vars) (strcat " -> " (strcat (ppExpr body) ")")))))
+
+ppVarsSpace vars =
+  case vars
+    (Nil -> "")
+    (Cons v rest -> strcat " " (strcat (list2str v) (ppVarsSpace rest)))
+
+ppLet ls b = strcat "let " (strcat (ppLetBindings ls) (strcat " in " (ppExpr b)))
+
+ppLetBindings ls =
+  case ls
+    (Nil -> "")
+    (Cons lb rest -> ppLetBindingsCons lb rest)
+
+ppLetBindingsCons lb rest =
+  case rest
+    (Nil -> ppLetBinding lb)
+    (Cons lb2 rest2 -> strcat (ppLetBinding lb) (strcat ", " (ppLetBindingsCons lb2 rest2)))
+
+ppLetBinding lb = case lb (LetBinding n s rhs -> strcat (ppStrictMark s) (strcat (list2str n) (strcat " = " (ppExpr rhs))))
+
+ppStrictMark s = if (s == 0) "" "!"
+
+// == functions, with their parameter list (!-marked when strict, same
+// convention as real Sapl source syntax: `fac !n = ...`) ==
+
+ppArg a = case a (Arg n s -> strcat (ppStrictMark s) (list2str n))
+
+ppArgsHeader args =
+  case args
+    (Nil -> "")
+    (Cons a rest -> strcat " " (strcat (ppArg a) (ppArgsHeader rest)))
+
+ppFunc f = case f (Func name args body -> strcat (list2str name) (strcat (ppArgsHeader args) (strcat " = " (ppExpr body))))
+
+ppFuncsOnly fs =
+  case fs
+    (Nil -> "")
+    (Cons f rest -> strcat (ppFunc f) (strcat "\n" (ppFuncsOnly rest)))
+
+// == ADT declarations: `::name = Con1 x0 x1 | Con2` (field NAMES aren't
+// tracked anywhere in this AST -- docs/sapl_programmeer_regels.md section
+// 1 notes they're free labels -- only per-field strictness is, so fields
+// render as generic x0/x1/... with a !-mark, same convention decompiler.py
+// already uses in impersapl/ for the same reason). ==
+
+ppAdt a = case a (Adt name cons -> strcat "::" (strcat (list2str name) (strcat " = " (ppAdtCons cons))))
+
+ppAdtCons cons =
+  case cons
+    (Nil -> "")
+    (Cons c rest -> ppAdtConsCons c rest)
+
+ppAdtConsCons c rest =
+  case rest
+    (Nil -> ppAdtCon c)
+    (Cons c2 rest2 -> strcat (ppAdtCon c) (strcat " | " (ppAdtConsCons c2 rest2)))
+
+ppAdtCon c = case c (AdtCon name fields -> strcat (list2str name) (ppAdtFieldsAt fields 0))
+
+ppAdtFieldsAt fields i =
+  case fields
+    (Nil -> "")
+    (Cons s rest -> strcat " " (strcat (ppStrictMark s) (strcat "x" (strcat (list2str (itoa i)) (ppAdtFieldsAt rest (i + 1))))))
+
+ppAdtsOnly adts =
+  case adts
+    (Nil -> "")
+    (Cons a rest -> strcat (ppAdt a) (strcat "\n" (ppAdtsOnly rest)))
+
+// Public entry point: ADT declarations first (if any), then every
+// function, one per line -- matches the layout of real Sapl source.
+dumpProgram fs adts = strcat (ppAdtsOnly adts) (ppFuncsOnly fs)

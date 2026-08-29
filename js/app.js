@@ -422,7 +422,7 @@
       state.editor.setValue(tab.content);
       state.editor.clearHistory();
 
-      if (tab.ext === ".cfp" || tab.ext.startsWith(".cfp_")) {
+      if (tab.ext === ".cfp" || tab.ext.startsWith(".cfp_") || tab.ext === ".spp") {
         state.editor.setOption("mode", "sapl");
       } else if ([".c", ".cpp", ".cc", ".cxx", ".h", ".hpp", ".hh", ".hxx"].includes(tab.ext)) {
         state.editor.setOption("mode", "clike");
@@ -629,6 +629,22 @@
         if (el.txtStageInfoBadge) el.txtStageInfoBadge.textContent = info.badge;
         if (el.txtStageInfoDesc) el.txtStageInfoDesc.textContent = info.desc;
       }
+    } else if (tab.ext === ".spp") {
+      // Sapl+ source: preprocess to plain .cfp first (preprocess/driver.jmvm,
+      // itself an ordinary compiled Sapl program), not directly compilable
+      // by saplcomp/retagcomp -- see worker.js's preprocessSpp.
+      if (el.btnCompile) {
+        el.btnCompile.style.display = "inline-flex";
+        el.btnCompile.innerHTML = "<span>🔤</span> Preprocess (.spp → .cfp)";
+      }
+      if (el.btnCompileRun) el.btnCompileRun.style.display = "none";
+      if (el.btnRun) el.btnRun.style.display = "none";
+      if (el.sectionStageInfo) el.sectionStageInfo.style.display = "none";
+
+      if (el.sectionCompilerBackend) el.sectionCompilerBackend.style.display = "none";
+      if (el.sectionStrictness) el.sectionStrictness.style.display = "none";
+      if (el.sectionStages) el.sectionStages.style.display = "none";
+      if (el.sectionEngine) el.sectionEngine.style.display = "none";
     } else if (tab.ext === ".cfp") {
       // Original source file
       if (el.lblCompilerSapl) el.lblCompilerSapl.style.display = "flex";
@@ -698,9 +714,91 @@
     logTerminal(`✓ Opgeslagen: ${activeTab.path}\n`, "success");
   }
 
+  // Shared by compileActiveFile's and preprocessActiveFile's success
+  // callbacks: register each generated file in the file map and open (or
+  // refresh) a tab for it.
+  function openGeneratedFiles(files) {
+    for (const f of files) {
+      state.fileMap.set(f.path, {
+        path: f.path,
+        name: f.name,
+        ext: pathExt(f.name),
+        content: f.content,
+        size: f.size,
+        isBinary: false
+      });
+
+      const openTab = state.openTabs.find(t => t.path === f.path);
+      if (openTab) {
+        openTab.content = f.content;
+        openTab.originalContent = f.content;
+        openTab.isDirty = false;
+      } else {
+        state.openTabs.push({
+          path: f.path,
+          name: f.name,
+          ext: pathExt(f.name),
+          content: f.content,
+          originalContent: f.content,
+          isDirty: false,
+          viewMode: "edit"
+        });
+      }
+    }
+  }
+
+  // Sapl+ (.spp) -> plain Sapl (.cfp): runs preprocess/driver.jmvm (itself
+  // an ordinary compiled Sapl program, see worker.js's preprocessSpp) and
+  // opens the resulting .cfp in a new tab -- from there, compileActiveFile
+  // (the regular "Compileer"/"Compileer & Run" buttons) takes over exactly
+  // as for any hand-written .cfp source.
+  async function preprocessActiveFile() {
+    const activeTab = getActiveTab();
+    if (!activeTab || activeTab.ext !== ".spp") return;
+    if (state.isCompiling) return;
+    state.isCompiling = true;
+
+    activeTab.content = state.editor.getValue();
+
+    toggleTerminal(true);
+    logTerminal(`\n=== Preprocessen: ${activeTab.path} (Sapl+ -> Sapl, WebAssembly driver.jmvm) ===\n`, "info");
+    setStatus("busy", "Bezig met preprocessen...");
+
+    const compileId = ++state.compileSeq;
+
+    state.pendingCompileCallbacks.set(compileId, (data) => {
+      if (data.stdout) logTerminal(data.stdout, "normal");
+      if (data.stderr) logTerminal(data.stderr, "warning");
+
+      if (data.success && data.files && data.files.length > 0) {
+        setStatus("ready", `Voorverwerkt (${data.durationMs}ms)`);
+        logTerminal(`✓ .spp → .cfp voorverwerkt in ${data.durationMs}ms\n`, "success");
+
+        openGeneratedFiles(data.files);
+        setActiveTab(data.files[0].path);
+        renderTabs();
+      } else {
+        setStatus("error", "Preprocessen mislukt");
+        logTerminal(`✗ Preprocessen mislukt.\n`, "error");
+      }
+    });
+
+    state.worker.postMessage({
+      type: "PREPROCESS",
+      id: compileId,
+      source: activeTab.content,
+      path: activeTab.path
+    });
+  }
+
   async function compileActiveFile(andRun = false) {
     const activeTab = getActiveTab();
     if (!activeTab) return;
+
+    if (activeTab.ext === ".spp") {
+      preprocessActiveFile();
+      return;
+    }
 
     if (activeTab.ext === ".jmvm") {
       if (andRun) {
@@ -748,33 +846,7 @@
         setStatus("ready", `Gecompileerd (${data.durationMs}ms)`);
         logTerminal(`✓ Succesvol gecompileerd in ${data.durationMs}ms (${data.files.length} bestanden gegenereerd)\n`, "success");
 
-        for (const f of data.files) {
-          state.fileMap.set(f.path, {
-            path: f.path,
-            name: f.name,
-            ext: pathExt(f.name),
-            content: f.content,
-            size: f.size,
-            isBinary: false
-          });
-
-          const openTab = state.openTabs.find(t => t.path === f.path);
-          if (openTab) {
-            openTab.content = f.content;
-            openTab.originalContent = f.content;
-            openTab.isDirty = false;
-          } else {
-            state.openTabs.push({
-              path: f.path,
-              name: f.name,
-              ext: pathExt(f.name),
-              content: f.content,
-              originalContent: f.content,
-              isDirty: false,
-              viewMode: "edit"
-            });
-          }
-        }
+        openGeneratedFiles(data.files);
 
         const jmvmFile = data.files.find(f => f.stage === "jmvm") || data.files[data.files.length - 1];
         if (jmvmFile) {
@@ -941,6 +1013,7 @@
     }
     switch (ext) {
       case ".cfp": return { icon: "λ", className: "file-icon-cfp" };
+      case ".spp": return { icon: "λ+", className: "file-icon-cfp" };
       case ".jmvm": return { icon: "⚙", className: "file-icon-jmvm" };
       case ".md": return { icon: "📖", className: "file-icon-md" };
       case ".pdf": return { icon: "📕", className: "file-icon-pdf" };

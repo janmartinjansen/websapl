@@ -1,0 +1,358 @@
+#import "lib/stdlib.cfp"
+#import "sapl_compiler/newparser_ast.cfp"
+
+// Direct Sapl port of newparser/ast.ama's helper functions (the expr/func/
+// adt ADTs themselves already live in newparser_ast.cfp). Split out here,
+// separately from newparser_ast.cfp, once the driver (docs/
+// bootstrapping_plan.md section 0 step 4) needed to #import all five
+// sapl_compiler/stageN_*.cfp files together: each stage had its own local
+// copy of these (documented at the time as "standalone per stage file,
+// cross-file sharing is a later integration concern") -- fine while every
+// stage was tested in isolation, but multiple identical top-level
+// definitions of the same name is a hard compile error the moment two
+// stage files are imported into the same program
+// (docs/sapl_programmeer_regels.md #5). This file is that shared home;
+// every stageN_*.cfp now imports it instead of redefining these locally.
+// `funcName`/`funcArity` are renamed `funcNameOf`/`funcArityOf` throughout
+// (collide with Sapl's built-in reflection primitives, sapl_programmeer_
+// regels.md #10) -- same fix parser.cfp already applied on its own.
+
+charListEq a b =
+  case a
+    (Nil -> case b (Nil -> True) (Cons y ys -> False))
+    (Cons x xs -> case b (Nil -> False) (Cons y ys -> if (x == y) (charListEq xs ys) False))
+
+member names n =
+  case names
+    (Nil -> False)
+    (Cons x xs -> if (charListEq x n) True (member xs n))
+
+// `/\` and `\/` need a literal backslash (92), which can't go through a
+// `['...']` literal (no escape processing there, confirmed empirically) --
+// shared between parser.cfp's opTable and stage1_bool.cfp's isBoolConnective,
+// originally a local copy in each.
+slashBackslash = Cons '/' (Cons 92 Nil)
+backslashSlash = Cons 92 (Cons '/' Nil)
+
+concatAll xss =
+  case xss
+    (Nil -> Nil)
+    (Cons xs xss2 -> append xs (concatAll xss2))
+
+argNameOf a = case a (Arg n s -> n)
+argStrict a = case a (Arg n s -> s)
+
+funcNameOf f = case f (Func n as b -> n)
+funcArgs f = case f (Func n as b -> as)
+funcArityOf f = length (funcArgs f)
+
+findFunc name funcs =
+  case funcs
+    (Nil -> error "findFunc: unknown function")
+    (Cons f fs -> if (charListEq (funcNameOf f) name) f (findFunc name fs))
+
+isKnownFunc name funcs =
+  case funcs
+    (Nil -> False)
+    (Cons f fs -> if (charListEq (funcNameOf f) name) True (isKnownFunc name fs))
+
+// `print` is a VM instruction (vm.cpp's `print:`), not a top-level function
+// in `prog` -- every stage must recognize it before isKnownFunc, else it's
+// treated as a call to an unknown (possibly higher-order) function.
+printKw = ['print']
+printCKw = ['printC']
+printSKw = ['printS']
+errorKw = ['error']
+strlenKw = ['strlen']
+stratKw = ['strat']
+updateKw = ['update']
+getKw = ['get']
+strappendKw = ['strappend']
+strsliceKw = ['strslice']
+strcpyKw = ['strcpy']
+
+isPrintCall name = charListEq name printKw
+isPrintCCall name = charListEq name printCKw
+// `printS`: third member of the print family, same VM instruction (`print`)
+// but typecode 3 instead of 0/2 (parser.ama:557: `[Print 3]`) -- prints a
+// Sapl STRING value (vm.cpp's `print` opcode reads a heap pointer at
+// typecode 3 and prints the raw bytes as a C string).
+isPrintSCall name = charListEq name printSKw
+isErrorCall name = charListEq name errorKw
+isPredefCall name =
+  charListEq name strlenKw \/ charListEq name stratKw \/ charListEq name updateKw \/
+  charListEq name getKw \/ charListEq name strappendKw \/ charListEq name strsliceKw \/
+  charListEq name strcpyKw
+
+predefArity name =
+  if (charListEq name strlenKw) 1
+  (if (charListEq name stratKw) 2
+  (if (charListEq name updateKw) 3
+  (if (charListEq name getKw) 2
+  (if (charListEq name strappendKw) 2
+  (if (charListEq name strsliceKw) 3
+  (if (charListEq name strcpyKw) 1
+  (error "predefArity: unknown predef")))))))
+
+predefIndex name =
+  if (charListEq name strlenKw) 2
+  (if (charListEq name stratKw) 4
+  (if (charListEq name updateKw) 3
+  (if (charListEq name getKw) 6
+  (if (charListEq name strappendKw) 0
+  (if (charListEq name strsliceKw) 1
+  (if (charListEq name strcpyKw) 5
+  (error "predefIndex: unknown predef")))))))
+
+// I/O syscalls (mirrors newparser/ast.ama's isSyscallCall/syscallArity/
+// syscallIndex, added 10 augustus 2026 -- same story: `slotOf: unknown
+// variable readFile`/`readChar` when compiling lib/stdlib.cfp/io/*.cfp,
+// these eight names simply weren't recognized at all, so they fell through
+// to being treated as ordinary (unbound) variables). Arities/syscall
+// indices verified against vm.cpp's `case SysCall` (~line 1085-1208).
+readFileKw = ['readFile']
+writeFileKw = ['writeFile']
+readLineKw = ['readLine']
+printStringKw = ['printString']
+openFileKw = ['openFile']
+closeFileKw = ['closeFile']
+readCharKw = ['readChar']
+writeCharKw = ['writeChar']
+strcreateKw = ['strcreate']
+
+isSyscallCall name =
+  charListEq name readFileKw \/ charListEq name writeFileKw \/ charListEq name readLineKw \/
+  charListEq name printStringKw \/ charListEq name openFileKw \/ charListEq name closeFileKw \/
+  charListEq name readCharKw \/ charListEq name writeCharKw
+
+syscallArity name =
+  if (charListEq name readFileKw) 1
+  (if (charListEq name writeFileKw) 2
+  (if (charListEq name readLineKw) 0
+  (if (charListEq name printStringKw) 1
+  (if (charListEq name openFileKw) 2
+  (if (charListEq name closeFileKw) 1
+  (if (charListEq name readCharKw) 1
+  (if (charListEq name writeCharKw) 2
+  (error "syscallArity: unknown syscall"))))))))
+
+syscallIndex name =
+  if (charListEq name readFileKw) 0
+  (if (charListEq name writeFileKw) 1
+  (if (charListEq name readLineKw) 2
+  (if (charListEq name printStringKw) 3
+  (if (charListEq name openFileKw) 4
+  (if (charListEq name closeFileKw) 5
+  (if (charListEq name readCharKw) 6
+  (if (charListEq name writeCharKw) 7
+  (error "syscallIndex: unknown syscall"))))))))
+
+// `strcreate` -> `array_create_dynamic 1` (parser.ama:574), own instruction
+// family, arity always 1.
+isStrcreateCall name = charListEq name strcreateKw
+
+// Float builtins and generic floatop (mirrors parser.ama FloatOpE indices)
+sinKw = ['sin']
+cosKw = ['cos']
+tanKw = ['tan']
+asinKw = ['asin']
+acosKw = ['acos']
+atanKw = ['atan']
+logKw = ['log']
+log10Kw = ['log10']
+expKw = ['exp']
+sqrtKw = ['sqrt']
+floorKw = ['floor']
+ceilKw = ['ceil']
+roundKw = ['round']
+fabsKw = ['fabs']
+absKw = ['abs']
+itofKw = ['itof']
+ftoiKw = ['ftoi']
+atofKw = ['atof']
+ftoaKw = ['ftoa']
+atan2Kw = ['atan2']
+
+isFloatOpCall name =
+  charListEq name sinKw \/ charListEq name cosKw \/ charListEq name tanKw \/
+  charListEq name asinKw \/ charListEq name acosKw \/ charListEq name atanKw \/
+  charListEq name logKw \/ charListEq name log10Kw \/ charListEq name expKw \/
+  charListEq name sqrtKw \/ charListEq name floorKw \/ charListEq name ceilKw \/
+  charListEq name roundKw \/ charListEq name fabsKw \/ charListEq name absKw \/
+  charListEq name itofKw \/ charListEq name ftoiKw \/ charListEq name atofKw \/
+  charListEq name ftoaKw \/ charListEq name atan2Kw
+
+floatOpArity name =
+  if (charListEq name atan2Kw) 2 1
+
+floatOpIndex name =
+  if (charListEq name sinKw) 0
+  (if (charListEq name cosKw) 1
+  (if (charListEq name tanKw) 2
+  (if (charListEq name asinKw) 3
+  (if (charListEq name acosKw) 4
+  (if (charListEq name atanKw) 5
+  (if (charListEq name logKw) 6
+  (if (charListEq name log10Kw) 7
+  (if (charListEq name expKw) 8
+  (if (charListEq name sqrtKw) 9
+  (if (charListEq name floorKw) 10
+  (if (charListEq name ceilKw) 11
+  (if (charListEq name roundKw) 12
+  (if (charListEq name fabsKw) 13
+  (if (charListEq name absKw) 13
+  (if (charListEq name itofKw) 14
+  (if (charListEq name ftoiKw) 15
+  (if (charListEq name atofKw) 16
+  (if (charListEq name ftoaKw) 17
+  (if (charListEq name atan2Kw) 25
+  (error "floatOpIndex: unknown floatop"))))))))))))))))))))
+
+lbNameOf lb = case lb (LetBinding n s e -> n)
+lbStrictOf lb = case lb (LetBinding n s e -> s)
+lbRhsOf lb = case lb (LetBinding n s e -> e)
+
+letBindingToArg lb = case lb (LetBinding n s e -> Arg n s)
+
+cbConOf cb = case cb (CaseBranch c vs b -> c)
+cbVarsOf cb = case cb (CaseBranch c vs b -> vs)
+cbBodyOf cb = case cb (CaseBranch c vs b -> b)
+
+adtConName c = case c (AdtCon n fs -> n)
+adtConFields c = case c (AdtCon n fs -> fs)
+adtConsOf a = case a (Adt n cs -> cs)
+
+isConOfList name cons =
+  case cons
+    (Nil -> False)
+    (Cons c cs -> if (charListEq (adtConName c) name) True (isConOfList name cs))
+
+findAdtByCon name adts =
+  case adts
+    (Nil -> error "findAdtByCon: unknown constructor")
+    (Cons a as -> if (isConOfList name (adtConsOf a)) a (findAdtByCon name as))
+
+findAdtCon name cons =
+  case cons
+    (Nil -> error "findAdtCon: unknown constructor")
+    (Cons c cs -> if (charListEq (adtConName c) name) c (findAdtCon name cs))
+
+// Per-field strictness of a constructor (declaration order), e.g. `Cons !x
+// xs` -> [True, False].
+conFields name adts = adtConFields (findAdtCon name (adtConsOf (findAdtByCon name adts)))
+
+conTag name adts = conTagAt name (adtConsOf (findAdtByCon name adts)) 0
+
+conTagAt name cons i =
+  case cons
+    (Nil -> error "conTag: unknown constructor")
+    (Cons c cs -> if (charListEq (adtConName c) name) i (conTagAt name cs (i+1)))
+
+adtArity name adts = length (adtConsOf (findAdtByCon name adts))
+
+adtName a = case a (Adt n cs -> n)
+
+// Global, ordinal type_id of an ADT (by name), STARTING AT 5 -- not 1: 1-4
+// are hard-reserved in vm.cpp's GetTypeId for Int/Float/String/Function
+// (repl/stddyn.cfp's TYPE_INT..TYPE_FUNC), so starting at 1 would collide
+// the first ADT in `adts` with Int (parser.ama:1012-1018 documents the same
+// reason on the parser.ama side, found 5 August 2026). Purely a function of
+// the ADT's POSITION in `adts` (declaration order) -- no separate stamping
+// pass needed like parser.ama's fixupConstrTids, since `adts` is already
+// threaded through everywhere as an explicit parameter (see conTag above).
+// Direct port of newparser/ast.ama's adtTypeId/adtTypeIdAt (13 August 2026).
+adtTypeId name adts = adtTypeIdAt name adts 5
+
+adtTypeIdAt name adts n =
+  case adts
+    (Nil -> error "adtTypeId: unknown adt")
+    (Cons a as -> if (charListEq (adtName a) name) n (adtTypeIdAt name as (n+1)))
+
+// type_id of the ADT a CONSTRUCTOR (not ADT name) belongs to -- what codegen
+// needs at a `Ct` node (ccreatet).
+conTypeId name adts = adtTypeId (adtName (findAdtByCon name adts)) adts
+
+// Dynamic/reflection primitives (parser.ama:349-357's findvf table, mirrors
+// newparser/ast.ama's isReflectionCall/reflectionOpcode). Same kind of
+// language form as isPrintCall/isPredefCall/isSyscallCall above (no Func
+// entry in `prog`, so every stage must recognize it before isKnownFunc).
+// Deliberately NO arity table like predefArity/syscallArity: parser.ama
+// itself doesn't validate arity here either, and `makeConstr` has no fixed
+// arity at all -- the field count is itself one of the arguments (vm.cpp's
+// MakeConstr opcode: `[field_0..field_N-1, N, type_id, constr_aux]`).
+typeIdKw = ['typeId']
+constrNameKw = ['constrName']
+getFieldKw = ['getField']
+makeConstrKw = ['makeConstr']
+funcNameKw = ['funcName']
+funcArityKw = ['funcArity']
+funcRemainingKw = ['funcRemaining']
+applyDynamicKw = ['applyDynamic']
+lookupKw = ['lookup']
+
+reflectionKws = Cons typeIdKw (Cons constrNameKw (Cons getFieldKw (Cons makeConstrKw (Cons funcNameKw (Cons funcArityKw (Cons funcRemainingKw (Cons applyDynamicKw (Cons lookupKw Nil))))))))
+
+isReflectionCall name = member reflectionKws name
+
+// Name -> VM opcode mnemonic (exact spelling from parser.cpp's opcode table,
+// see also parser.ama:1186-1194's `prE`).
+reflectionOpcode name =
+  if (charListEq name typeIdKw) ['gettypeid']
+  (if (charListEq name constrNameKw) ['getconstrname']
+  (if (charListEq name getFieldKw) ['getfield']
+  (if (charListEq name makeConstrKw) ['makeconstr']
+  (if (charListEq name funcNameKw) ['getfuncname']
+  (if (charListEq name funcArityKw) ['getfuncarity']
+  (if (charListEq name funcRemainingKw) ['getfuncremaining']
+  (if (charListEq name applyDynamicKw) ['applydynamic']
+  (if (charListEq name lookupKw) ['lookup']
+  (error "reflectionOpcode: unknown reflection call")))))))))
+
+exprConstrNameOf e =
+  case e
+    (Num n -> ['Num'])
+    (Str s -> ['Str'])
+    (Var v -> ['Var'])
+    (If a b c -> ['If'])
+    (App n as -> ['App'])
+    (Prim op as -> ['Prim'])
+    (Ct n as -> ['Ct'])
+    (Case sc cs -> ['Case'])
+    (Let ls b -> ['Let'])
+    (NoMatch -> ['NoMatch'])
+    (Lazy inner -> ['Lazy'])
+    (Thunk inner -> ['Thunk'])
+    (Closure inner -> ['Closure'])
+    (Eval inner -> ['Eval'])
+    (Try b h -> ['Try'])
+    (Throw n p -> ['Throw'])
+
+// Direct port of newparser/ast.ama's getCatchNr (parser.ama:613-615, Gat 2
+// try/catch): which catch_nr a Try's handler expression FILTERS, a pure
+// COMPILE-TIME analysis of the handler's SOURCE-TEXT shape, unrelated to how
+// the handler is actually codegen'd. Only recognizes `handlerFn
+// <literal-integer>` (an App with EXACTLY one argument, itself a bare Num)
+// or a bare Num n; every other shape (no arguments, a name referring to a
+// constant, more than one argument) silently becomes catch_nr=0 (wildcard --
+// catches every throw). See docs/sapl_programmeer_regels.md section 9 for
+// the full, empirically verified specification of this behavior.
+getCatchNr e =
+  case e
+    (App n as -> getCatchNrArgs as)
+    (Num n -> n)
+    (_ -> 0)
+
+getCatchNrArgs as =
+  case as
+    (Nil -> 0)
+    (Cons a rest -> getCatchNrArgsOne a rest)
+
+getCatchNrArgsOne a rest =
+  case rest
+    (Nil -> getCatchNrOne a)
+    (Cons b more -> 0)
+
+getCatchNrOne a =
+  case a
+    (Num n -> n)
+    (_ -> 0)

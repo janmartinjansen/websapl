@@ -1,0 +1,22 @@
+#import "lib/stdlib.cfp"
+
+// newparser_ast.cfp - Sapl-tegenhanger van newparser/ast.ama's expr/func/adt-ADT's:
+// exact dezelfde constructornamen en -ariteit, alleen voor gebruik als brug naar
+// newparser's Amanda-backend (docs/bootstrapping_plan.md sectie 0). Veldnamen zijn
+// puur cosmetisch (sapl_programmeer_regels.md sectie 1) en hoeven niet 1-op-1 met
+// ast.ama's veldnamen te matchen - alleen constructornaam + aantal velden telt,
+// dat is wat constrName/getConstrArity/getField gebruiken bij het serialiseren.
+
+::expr = Num !val | FloatLit !str | Str !s | Var !name | If !cond !thenB !elseB | App !name !args | Prim !op !args | Ct !name !args | Case !scrut !branches | Let !bindings !body | NoMatch | Lazy !inner | Thunk !inner | Closure !inner | Eval !inner | Try !body !handler | Throw !nr !payload
+
+::casebranch = CaseBranch !con !vars !body
+
+::letbinding = LetBinding !name !strict !rhs
+
+::adtCon = AdtCon !name !fields
+
+::adt = Adt !name !cons
+
+::arg = Arg !name !strict
+
+::func = Func !name !args !body

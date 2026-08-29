@@ -6,11 +6,15 @@ in Sapl geschreven pre-processor (`preprocess/`). Volledige uitleg,
 taalkenmerken en gebruik: `docs/spp_taal_en_parser_combinators.md` (repo-root).
 
 Elk `.spp`-bestand hier staat naast zijn al vertaalde `.cfp` en gecompileerde
-`.jmvm` — zo kun je de voorbeelden direct draaien (in WebSapl of Workbench)
-zonder de preprocessor zelf te hoeven bouwen. De `.spp`-bronnen zijn er om te
-LEZEN en als voorbeeld van de syntax; om zelf te wijzigen en opnieuw te
-vertalen heb je de repo-brede toolchain nodig (zie het document hierboven,
-sectie 2 — "Pipeline en gebruik").
+`.jmvm` — zo kun je de voorbeelden direct draaien zonder eerst zelf iets te
+hoeven vertalen. Maar het hoeft ook niet: **WebSapl herkent de `.spp`-
+extensie zelf.** Open een `.spp`-bestand en klik op "Preprocess (.spp → .cfp)"
+— dat draait `preprocess/driver.jmvm` (de pre-processor zelf, ook gewoon
+gecompileerde `.jmvm`-bytecode) rechtstreeks in de browser via WebAssembly,
+en opent het resultaat als nieuw `.cfp`-tabblad. Vanaf daar werkt alles zoals
+altijd: "Compileer" / "Compileer & Run" op die `.cfp` roept de normale Sapl-
+compiler aan. Dezelfde twee stappen als de CLI (`docs/spp_taal_en_parser_combinators.md`
+sectie 2), nu ook zonder terminal.
 
 ## `benchmarks/`
 

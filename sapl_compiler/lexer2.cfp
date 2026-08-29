@@ -1,0 +1,228 @@
+#import "lib/stdlib.cfp"
+
+// Direct Sapl port of newparser/lexer.ama (itself explicitly "geen parser
+// combinators", the design docs/bootstrapping_plan.md settled on after the
+// combinator-based version -- sapl_compiler/lexer.cfp + pcomb.cfp -- turned
+// out to blow up exponentially on nested parens, see that document, 9 aug
+// 2026). Same token shape, same character-classification/lookahead logic;
+// only the porting mechanics differ: Amanda's multiple top-level clauses
+// per function name become one Sapl function with an internal `case`
+// (docs/sapl_programmeer_regels.md #5), and numeric char codes are used
+// instead of ' / \ literals wherever the character itself is a quote or
+// backslash (this codebase's own established convention for exactly that
+// reason, see e.g. sapl_compiler/lexer.cfp's `(ch == 32)` for space).
+//
+// Deliberately a NEW file, not a rewrite of sapl_compiler/lexer.cfp: that
+// file's Term/Identifier/Number token type and lexNum/lexIdent helpers are
+// still used by reflection/serialize.cfp's deserialize logic and by
+// arith_repl/func_repl/repl's own small interpreters -- unrelated to this
+// front end, not safe to repurpose.
+::token = TIdent !name | TNum !n | TFloatStr !s | TStr !s | TStrList !s | TOp !op | TLParen | TRParen | TBang | TEquals | TArrow | TComma
+
+isDigitCh c = (c >= '0') /\ (c <= '9')
+isAlphaCh c = ((c >= 'A') /\ (c <= 'Z')) \/ ((c >= 'a') /\ (c <= 'z')) \/ (c == '_')
+isIdentCh c = isAlphaCh c \/ isDigitCh c
+// space=32, tab=9, CR=13, LF=10
+isSpaceCh c = (c == 32) \/ (c == 9) \/ (c == 13) \/ (c == 10)
+
+headOr d cs = case cs (Nil -> d) (Cons c cs2 -> c)
+tailOr d cs = case cs (Nil -> d) (Cons c cs2 -> cs2)
+
+// `//` comment to end of (logical) line -- stripped before tokenizing.
+startsWithSlashSlash cs = (headOr 32 cs == '/') /\ (headOr 32 (tailOr Nil cs) == '/')
+stripComment cs =
+  case cs
+    (Nil -> Nil)
+    (Cons c1 cs2 -> if (startsWithSlashSlash (Cons c1 cs2)) Nil (Cons c1 (stripComment cs2)))
+
+// `::name = ...` ADT declarations are recognized on the raw line, before
+// tokenizing, and the leading `::` is dropped there -- no dedicated token
+// needed (matches newparser/lexer.ama's own reasoning).
+startsWithDoubleColon cs = (headOr 32 cs == ':') /\ (headOr 32 (tailOr Nil cs) == ':')
+
+::Lexres = Lexres !tok !rest
+lexresTok r = case r (Lexres t rst -> t)
+lexresRest r = case r (Lexres t rst -> rst)
+
+readIdentAcc acc cs =
+  case cs
+    (Nil -> Lexres (TIdent (reverse acc)) Nil)
+    (Cons c cs2 -> if (isIdentCh c) (readIdentAcc (Cons c acc) cs2) (Lexres (TIdent (reverse acc)) cs))
+readIdent cs = readIdentAcc Nil cs
+
+readFracDigits acc cs =
+  case cs
+    (Nil -> Lexres (TFloatStr (reverse acc)) Nil)
+    (Cons c cs2 -> if (isDigitCh c) (readFracDigits (Cons c acc) cs2) (Lexres (TFloatStr (reverse acc)) cs))
+
+readNumAcc acc intVal cs =
+  case cs
+    (Nil -> Lexres (TNum intVal) Nil)
+    (Cons c cs2 ->
+      if (isDigitCh c)
+        (readNumAcc (Cons c acc) (intVal * 10 + (c - '0')) cs2)
+        (if ((c == '.') /\ (isDigitCh (headOr 0 cs2)))
+          (readFracDigits (Cons '.' acc) cs2)
+          (Lexres (TNum intVal) cs)))
+readNum cs = readNumAcc Nil 0 cs
+
+// No user-definable operators in this subset, so a fixed lookahead table
+// suffices (no operator-table extensibility needed).
+// backslash = 92
+isBoolOpPair c1 c2 = ((c1 == '/') /\ (c2 == 92)) \/ ((c1 == 92) /\ (c2 == '/'))
+isTwoCharOpPair c1 c2 = ((c1 == '=') /\ (c2 == '=')) \/ ((c1 == '!') /\ (c2 == '=')) \/ ((c1 == '<') /\ (c2 == '=')) \/ ((c1 == '>') /\ (c2 == '=')) \/ (isBoolOpPair c1 c2)
+// `->` gets its own token (TArrow), not TOp "->": it isn't part of the
+// ordinary infix-precedence table, it only separates a case-branch pattern
+// from its body.
+isArrowPair c1 c2 = (c1 == '-') /\ (c2 == '>')
+// `<#>` is the only 3-char operator in this subset, hence its own lookahead
+// step (readOp3) instead of readOp2's simple 2-char check.
+isThreeCharOpStart c1 c2 = (c1 == '<') /\ (c2 == '#')
+
+readOp1 c1 rest = if (c1 == '=') (Lexres TEquals rest) (if (c1 == '!') (Lexres TBang rest) (Lexres (TOp (Cons c1 Nil)) rest))
+
+// Only called once c1,c2 are already known to be '<','#' (isThreeCharOpStart)
+// -- if the third char isn't '>' this wasn't really `<#>` after all, so fall
+// back to a bare '<' and re-tokenize the rest (including '#') normally.
+readOp3 c1 c2 cs3 =
+  case cs3
+    (Nil -> readOp1 c1 (Cons c2 Nil))
+    (Cons c3 cs4 -> if (c3 == '>') (Lexres (TOp (Cons c1 (Cons c2 (Cons c3 Nil)))) cs4) (readOp1 c1 (Cons c2 (Cons c3 cs4))))
+
+readOp2 c1 c2 cs2 =
+  if (isThreeCharOpStart c1 c2) (readOp3 c1 c2 cs2)
+  (if (isArrowPair c1 c2) (Lexres TArrow cs2)
+  (if (isTwoCharOpPair c1 c2) (Lexres (TOp (Cons c1 (Cons c2 Nil))) cs2) (readOp1 c1 (Cons c2 cs2))))
+
+readOp c1 cs =
+  case cs
+    (Nil -> readOp1 c1 Nil)
+    (Cons c2 cs2 -> readOp2 c1 c2 cs2)
+
+// Char literals ('a', '\n'): folded straight to their bare character code
+// as a TNum (same constant-folding-at-parse-time as True/False -> Num 1/0
+// downstream) -- ast.ama/newparser_ast.cfp has no separate Char expr
+// constructor, and every golden use of a char literal is arithmetic
+// (c - 'a', '0' + n), never printC.
+// squote=39
+readCharLitClose ch cs =
+  case cs
+    (Nil -> error "tokenize: missing closing ' in char literal")
+    (Cons q cs4 -> if (q == 39) (Lexres (TNum ch) cs4) (error "tokenize: missing closing ' in char literal"))
+
+// Was `\n`-only ("the only one any golden source uses") until 10 augustus
+// 2026, when self-hosting testing hit `stage5_codegen.cfp`'s own
+// `escapeStrChar` (`'\t'`/`'\\'`/`'\''`, needed to round-trip string
+// literals through the lexer) -- extended to all five escapes pg99.ama's
+// real `readChar` supports (parser.ama's own lexer, ~line 71-76), same
+// mapping: n=10 (newline), t=9 (tab), \\=92 (backslash itself), '=39
+// (single quote), "=34 (double quote).
+readCharLitEscape cs3 =
+  case cs3
+    (Nil -> error "tokenize: unexpected end of input in char escape")
+    (Cons e cs4 -> readCharLitEscapeTok e cs4)
+
+readCharLitEscapeTok e cs4 =
+  if (e == 'n') (readCharLitClose 10 cs4)
+  (if (e == 't') (readCharLitClose 9 cs4)
+  (if (e == '\\') (readCharLitClose 92 cs4)
+  (if (e == '\'') (readCharLitClose 39 cs4)
+  (if (e == '"') (readCharLitClose 34 cs4)
+  (error "tokenize: unknown char escape")))))
+
+// backslash=92
+readCharLit cs2 =
+  case cs2
+    (Nil -> error "tokenize: unexpected end of input in char literal")
+    (Cons c1 cs3 -> if (c1 == 92) (readCharLitEscape cs3) (readCharLitClose c1 cs3))
+
+// String literals ("..."): same escapes as pg99.ama's readString/putString
+// (\n \t \\ \' \"), accumulator-style since escapes aren't a uniform
+// predicate the way plain identifier/digit runs are.
+// dquote=34
+readStrLitEscapeChar e =
+  if (e == 'n') 10
+  (if (e == 't') 9
+  (if (e == 92) 92
+  (if (e == 39) 39
+  (if (e == 34) 34
+  (error "tokenize: unknown string escape")))))
+
+readStrLitEscape acc cs3 =
+  case cs3
+    (Nil -> error "tokenize: unexpected end of input in string escape")
+    (Cons e cs4 -> readStrLit (append acc (Cons (readStrLitEscapeChar e) Nil)) cs4)
+
+readStrLit acc cs2 =
+  case cs2
+    (Nil -> error "tokenize: missing closing \" in string literal")
+    (Cons c1 cs3 ->
+       if (c1 == 34) (Lexres (TStr acc) cs3)
+       (if (c1 == 92) (readStrLitEscape acc cs3) (readStrLit (append acc (Cons c1 Nil)) cs3)))
+
+readStringLit cs = readStrLit Nil cs
+
+// Char-list literals (`['abc']`, docs/sapl_programmeer_regels.md #1/#8):
+// mechanical port of pg99.ama's own `readStringList`/`readStrL` -- raw
+// characters, NO escape processing at all (confirmed empirically while
+// porting stage3_lift.cfp/stage5_codegen.cfp: a literal backslash needs an
+// explicit `Cons '/' (Cons 92 Nil)` instead), terminated by a `'` that is
+// immediately followed by `]` (a LONE `'` not followed by `]` is just
+// ordinary content and the scan continues, exactly `readStrL`'s own
+// `('\'':']':xs) -> ([],xs)` vs. `(x:xs) -> (x:str,rem)` distinction).
+// Deliberately errors on an unterminated literal rather than pg99.ama's own
+// silent `readStrL [] = ([],[])` -- this file's other literal readers
+// (readCharLit/readStringLit) already prefer an explicit error here.
+readStrListLit acc cs =
+  case cs
+    (Nil -> error "tokenize: missing closing '] in char-list literal")
+    (Cons c1 cs2 -> readStrListLitOnChar acc c1 cs2)
+
+readStrListLitOnChar acc c1 cs2 =
+  if (c1 == 39)
+    (readStrListLitMaybeClose acc cs2)
+    (readStrListLit (append acc (Cons c1 Nil)) cs2)
+
+readStrListLitMaybeClose acc cs2 =
+  case cs2
+    (Nil -> error "tokenize: missing closing '] in char-list literal")
+    (Cons c2 cs3 -> if (c2 == ']') (Lexres (TStrList acc) cs3) (readStrListLit (append acc (Cons 39 Nil)) (Cons c2 cs3)))
+
+readStringListLit cs = readStrListLit Nil cs
+
+// `[` starts a char-list literal only when immediately followed by `'`
+// (pg99.ama's own `toknize` guard); Sapl's own subset has no other use for
+// a bare `[` (docs/sapl_programmeer_regels.md #1: no `[e1, e2, ...]`
+// list-literal sugar), so anything else here is a hard error rather than a
+// token nothing in the grammar would ever consume.
+tokenizeLBracket cs2 =
+  case cs2
+    (Nil -> error "tokenize: unexpected [ at end of input")
+    (Cons q cs3 -> if (q == 39) (tokenizeContinue (readStringListLit cs3)) (error "tokenize: unexpected ["))
+
+tokenizeContinue r = Cons (lexresTok r) (tokenizeFrom (lexresRest r))
+
+tokenizeChar c cs2 =
+  if (c == '(') (Cons TLParen (tokenizeFrom cs2))
+  (if (c == ')') (Cons TRParen (tokenizeFrom cs2))
+  (if (c == ',') (Cons TComma (tokenizeFrom cs2))
+  (if (c == 39) (tokenizeContinue (readCharLit cs2))
+  (if (c == 34) (tokenizeContinue (readStringLit cs2))
+  (if (c == '[') (tokenizeLBracket cs2)
+  (if (isDigitCh c) (tokenizeContinue (readNum (Cons c cs2)))
+  (if (isAlphaCh c) (tokenizeContinue (readIdent (Cons c cs2)))
+  (tokenizeContinue (readOp c cs2)))))))))
+
+tokenizeSkipped cs =
+  case cs
+    (Nil -> Nil)
+    (Cons c cs2 -> tokenizeChar c cs2)
+
+skipSpaces cs =
+  case cs
+    (Nil -> Nil)
+    (Cons c cs2 -> if (isSpaceCh c) (skipSpaces cs2) cs)
+
+tokenizeFrom cs = tokenizeSkipped (skipSpaces cs)
+
+tokenize cs = tokenizeFrom (stripComment cs)

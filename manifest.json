@@ -201,6 +201,22 @@
       "_expanded": true
     },
     {
+      "name": "benchmarks_spp",
+      "path": "benchmarks_spp",
+      "type": "directory",
+      "children": [
+        {
+          "name": "prologlib.spp",
+          "path": "benchmarks_spp/prologlib.spp",
+          "type": "file",
+          "ext": ".spp",
+          "size": 9318,
+          "isBinary": false
+        }
+      ],
+      "_expanded": true
+    },
+    {
       "name": "docs",
       "path": "docs",
       "type": "directory",
@@ -1081,6 +1097,78 @@
       "_expanded": true
     },
     {
+      "name": "preprocess",
+      "path": "preprocess",
+      "type": "directory",
+      "children": [
+        {
+          "name": "parsecomb",
+          "path": "preprocess/parsecomb",
+          "type": "directory",
+          "children": [
+            {
+              "name": "parsecomb.spp",
+              "path": "preprocess/parsecomb/parsecomb.spp",
+              "type": "file",
+              "ext": ".spp",
+              "size": 9613,
+              "isBinary": false
+            },
+            {
+              "name": "saplParse.spp",
+              "path": "preprocess/parsecomb/saplParse.spp",
+              "type": "file",
+              "ext": ".spp",
+              "size": 28595,
+              "isBinary": false
+            }
+          ],
+          "_expanded": true
+        }
+      ],
+      "_expanded": true
+    },
+    {
+      "name": "sapl_compiler",
+      "path": "sapl_compiler",
+      "type": "directory",
+      "children": [
+        {
+          "name": "ast_helpers.cfp",
+          "path": "sapl_compiler/ast_helpers.cfp",
+          "type": "file",
+          "ext": ".cfp",
+          "size": 13523,
+          "isBinary": false
+        },
+        {
+          "name": "lexer2.cfp",
+          "path": "sapl_compiler/lexer2.cfp",
+          "type": "file",
+          "ext": ".cfp",
+          "size": 10145,
+          "isBinary": false
+        },
+        {
+          "name": "newparser_ast.cfp",
+          "path": "sapl_compiler/newparser_ast.cfp",
+          "type": "file",
+          "ext": ".cfp",
+          "size": 1021,
+          "isBinary": false
+        },
+        {
+          "name": "stage_dump.cfp",
+          "path": "sapl_compiler/stage_dump.cfp",
+          "type": "file",
+          "ext": ".cfp",
+          "size": 9623,
+          "isBinary": false
+        }
+      ],
+      "_expanded": true
+    },
+    {
       "name": "COMPILER_PIPELINE_PLAN.md",
       "path": "COMPILER_PIPELINE_PLAN.md",
       "type": "file",
@@ -1109,7 +1197,7 @@
       "path": "manifest.json",
       "type": "file",
       "ext": ".json",
-      "size": 19925,
+      "size": 30917,
       "isBinary": false
     },
     {
