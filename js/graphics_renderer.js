@@ -317,12 +317,20 @@ class SaplGraphicsRenderer {
    * produced. Uses paren-counting, not indexOf(')'), because GraphText
    * labels can themselves contain literal parens (e.g. "... (Logic
    * Circuit)" in grafisch/hwdes.cfp).
+   *
+   * The state-per-event interactive demos (bspline/convex/boom) don't
+   * go through this auto-printed path at all: their `start` calls
+   * `printString` directly (see grafisch/bspline.cfp), which writes
+   * the raw graphicsout text with no `(string: ...)` wrapper - so when
+   * that wrapper isn't found, treat the whole text as already being
+   * the content instead of returning null (which used to make
+   * renderOutput silently draw nothing but the grid).
    */
   extractGraphicsOutContent(text) {
     const resIdx = text.indexOf("res:");
     const searchFrom = resIdx !== -1 ? resIdx + 4 : 0;
     const strIdx = text.indexOf("(string:", searchFrom);
-    if (strIdx === -1) return null;
+    if (strIdx === -1) return text.trim();
     let i = strIdx + 8;
     const start = i;
     let pCount = 1;
