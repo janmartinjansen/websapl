@@ -294,7 +294,12 @@
   <!-- Scripts -->
   <script src="js/codemirror.min.js"></script>
   <script src="js/sapl_mode.js"></script>
-  <script src="js/graphics_renderer.js?v=20260824_1845"></script>
+  <!-- Bump this query string on every graphics_renderer.js edit: some hosts
+       cache this exact URL far longer than the local dev server's
+       Cache-Control: no-cache, so a stale ?v= silently keeps serving an old
+       build (this bit us: the extractGraphicsOutContent fix landed in the
+       file but the deployed page kept running the pre-fix version). -->
+  <script src="js/graphics_renderer.js?v=20260830_interactive_fix"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       const canvas = document.getElementById('graphics-canvas');
