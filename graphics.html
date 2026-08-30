@@ -62,6 +62,12 @@
       border-right: 1px solid var(--border-color);
       height: 100%;
       min-width: 0;
+      /* .graphics-container is a grid row; without this, a grid/flex item
+         defaults to min-height: auto and grows to fit ALL of the code's
+         content instead of staying within its row's height - which is
+         exactly why CodeMirror never got a scrollbar (nothing overflowed
+         its box, the box itself just grew past the viewport). */
+      min-height: 0;
     }
     .editor-header {
       display: flex;
@@ -77,6 +83,7 @@
       flex: 1;
       position: relative;
       overflow: hidden;
+      min-height: 0; /* same flex-child shrink issue, one level down */
     }
     .canvas-section {
       display: flex;
