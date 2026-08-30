@@ -115,4 +115,4 @@ schematic =
       wires = append wireList1 wireList2
   in append labels (append gates wires)
 
-start = forceGraphics schematic
+start = graphicsout (forceGraphics schematic)

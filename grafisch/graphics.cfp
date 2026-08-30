@@ -58,3 +58,169 @@ forcePoints pts = case pts (Nil -> Nil) (Cons p ps -> Cons (forcePt p) (forcePoi
 forceItem item = case item (GraphText c p txt -> GraphText c (forcePt p) txt) (GraphPolyLine c pts -> GraphPolyLine c (forcePoints pts)) (GraphPolygon c pts -> GraphPolygon c (forcePoints pts)) (GraphRectangle c p1 p2 -> GraphRectangle c (forcePt p1) (forcePt p2)) (GraphEllipse c p1 p2 -> GraphEllipse c (forcePt p1) (forcePt p2)) (GraphDisc c p1 p2 -> GraphDisc c (forcePt p1) (forcePt p2)) (GraphClear -> GraphClear)
 
 forceGraphics g = case g (Nil -> Nil) (Cons item rest -> Cons (forceItem item) (forceGraphics rest))
+
+// ============================================================
+// graphicsout: serializes a [Graphics] list into one flat string for
+// transfer across the JMVM/WASM boundary (see
+// websapl/js/graphics_renderer.js). Every item is tagged with its
+// REAL constructor name, read via `constrName` straight from the
+// compiler's own constructor table, instead of a positional
+// `constr_N` index - so reordering or renaming a constructor in the
+// `::Graphics` declaration above can never silently desync the tag
+// the renderer dispatches on: a mismatch either fails to compile
+// (case pattern check below) or shows up as an unrecognized tag
+// string, never a silently misrendered picture. Point lists are
+// length-prefixed (`<n> x1 y1 x2 y2 ...`) so the renderer doesn't
+// need to search for an end-of-list sentinel either.
+// ============================================================
+
+graphicsout gs = list2str (graphicsoutChars gs)
+
+graphicsoutChars gs =
+  case gs
+    (Nil -> Nil)
+    (Cons g rest -> append (itemChars g) (graphicsoutChars rest))
+
+itemChars g =
+  case g
+    (GraphClear -> tagChars g)
+    (GraphText c p txt -> append (tagChars g) (append (intChars c) (append (ptChars p) (quotedChars txt))))
+    (GraphPolyLine c pts -> pointsItemChars g c pts)
+    (GraphPolygon c pts -> pointsItemChars g c pts)
+    (GraphRectangle c p1 p2 -> pairItemChars g c p1 p2)
+    (GraphEllipse c p1 p2 -> pairItemChars g c p1 p2)
+    (GraphDisc c p1 p2 -> pairItemChars g c p1 p2)
+
+pairItemChars g c p1 p2 = append (tagChars g) (append (intChars c) (append (ptChars p1) (ptChars p2)))
+
+pointsItemChars g c pts = append (tagChars g) (append (intChars c) (append (intChars (lengthList pts)) (ptsChars pts)))
+
+ptsChars pts =
+  case pts
+    (Nil -> Nil)
+    (Cons p rest -> append (ptChars p) (ptsChars rest))
+
+ptChars p = case p (Pt x y -> append (floatChars x) (floatChars y))
+
+tagChars g = append (str2list (constrName g)) (Cons ' ' Nil)
+
+intChars n = append (itoa n) (Cons ' ' Nil)
+
+floatChars x = append (str2list (ftoa x)) (Cons ' ' Nil)
+
+// txt is assumed not to contain a literal '"' - true for every GraphText
+// call site in grafisch/*.cfp today; not a general-purpose escaping scheme.
+quotedChars txt = Cons '"' (append (str2list txt) (Cons '"' (Cons ' ' Nil)))
+
+// -------------------------------------------------------------
+// Minimal char-list <-> packed-string helpers, kept local to this
+// file (same recipe as lib/stdlib.cfp) rather than imported from it,
+// since importing lib/stdlib.cfp would redefine `append`/`mapList`/...
+// already declared above and Sapl rejects duplicate top-level names.
+// -------------------------------------------------------------
+
+str2list s = strls 0 s
+strls n s = if (n < strlen s) (Cons (strat n s) (strls (n + 1) s)) Nil
+
+list2str cs = fillStr 0 cs (strcreate (lengthList cs))
+fillStr i xs arr =
+  case xs
+    (Nil -> arr)
+    (Cons c cs -> fillStr (i + 1) cs (update c i arr))
+
+itoa n =
+  if (n < 0) (Cons '-' (itoa (0 - n)))
+  (if (n < 10) (Cons ('0' + n) Nil)
+  (append (itoa (n / 10)) (Cons ('0' + (n % 10)) Nil)))
+
+// ============================================================
+// parseEvent / splitWords / decodePointList: the input-side mirror of
+// graphicsout above - decode a stdin line back into real Sapl values
+// for the state-per-event protocol (see the interactive demos'
+// `start`, e.g. grafisch/bspline.cfp). Same tag-based, no-quoting-
+// needed style: an Event's fields are only floats/a charcode, so a
+// line is just whitespace-separated words, no string escaping.
+// ============================================================
+
+strEqual s1 s2 = (strlen s1 == strlen s2) /\ strEqualAt 0 s1 s2
+strEqualAt n s1 s2 = if (n >= strlen s1) 1 (if (strat n s1 == strat n s2) (strEqualAt (n + 1) s1 s2) 0)
+
+splitWords s = splitWordsChars (str2list s)
+
+splitWordsChars cs =
+  case cs
+    (Nil -> Nil)
+    (Cons c rest -> if (c == ' ') (splitWordsChars rest) (splitWordsWord cs))
+
+splitWordsWord cs = Cons (list2str (takeWordChars cs)) (splitWordsChars (dropWordChars cs))
+
+takeWordChars cs =
+  case cs
+    (Nil -> Nil)
+    (Cons c rest -> if (c == ' ') Nil (Cons c (takeWordChars rest)))
+
+dropWordChars cs =
+  case cs
+    (Nil -> Nil)
+    (Cons c rest -> if (c == ' ') rest (dropWordChars rest))
+
+// -------------------- Event decoding --------------------
+
+parseEvent line = parseEventWords (splitWords line)
+
+parseEventWords ws =
+  case ws
+    (Nil -> NoInput)
+    (Cons tag rest -> parseEventTag tag rest)
+
+parseEventTag tag rest =
+  if (strEqual tag "MouseDown") (MouseDown (parseEventPt rest))
+  (if (strEqual tag "MouseUp") (MouseUp (parseEventPt rest))
+  (if (strEqual tag "MouseDragged") (MouseDragged (parseEventPt rest))
+  (if (strEqual tag "MouseDoubleClick") (MouseDoubleClick (parseEventPt rest))
+  (if (strEqual tag "KeyIn") (KeyIn (parseEventKey rest))
+  NoInput))))
+
+parseEventPt ws =
+  case ws
+    (Nil -> Pt 0.0 0.0)
+    (Cons xs rest -> parseEventPtY xs rest)
+
+parseEventPtY xs rest =
+  case rest
+    (Nil -> Pt (atof xs) 0.0)
+    (Cons ys rest2 -> Pt (atof xs) (atof ys))
+
+parseEventKey ws =
+  case ws
+    (Nil -> 0)
+    (Cons cs rest -> ftoi (atof cs))
+
+// -------------------- Generic numeric decoding (mirrors floatChars/ptsChars) --------------------
+
+// Every word on the line, parsed as a float - handy for a demo whose
+// state is a fixed-size tuple of floats (see grafisch/convex.cfp).
+decodeFloatWords ws =
+  case ws
+    (Nil -> Nil)
+    (Cons w rest -> Cons (atof w) (decodeFloatWords rest))
+
+// A length-prefixed point list, `<n> x1 y1 x2 y2 ...` - the exact
+// inverse of pointsItemChars's point-list encoding, for a demo whose
+// state is a variable-length point list (see grafisch/bspline.cfp).
+decodePointList ws =
+  case ws
+    (Nil -> Nil)
+    (Cons nStr rest -> decodePoints (ftoi (atof nStr)) rest)
+
+decodePoints n ws = if (n <= 0) Nil (decodePointsStep n ws)
+
+decodePointsStep n ws =
+  case ws
+    (Nil -> Nil)
+    (Cons xs rest -> decodePointsStepY n xs rest)
+
+decodePointsStepY n xs rest =
+  case rest
+    (Nil -> Nil)
+    (Cons ys rest2 -> Cons (Pt (atof xs) (atof ys)) (decodePoints (n - 1) rest2))

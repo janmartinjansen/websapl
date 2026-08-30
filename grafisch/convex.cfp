@@ -91,4 +91,55 @@ renderCube phiX phiY phiZ =
   let rot = rotateScene phiX phiY phiZ cubeEdges in
   renderEdges rot
 
-start = forceGraphics (renderCube 0.5 0.7 0.2)
+// -------------------------------------------------------------
+// Interactive state: 3 rotation angles plus the last cursor position
+// (needed to turn MouseDragged's absolute point into a delta, since
+// ::Event only carries an absolute Pt, not a movement vector).
+// -------------------------------------------------------------
+
+::ConvexState = ConvexState !rotX !rotY !rotZ !lastX !lastY
+
+defaultConvexState = ConvexState 0.5 0.7 0.2 0.0 0.0
+
+decodeConvexState line = if (strEqual line "") defaultConvexState (convexStateFromFloats (decodeFloatWords (splitWords line)))
+
+convexStateFromFloats fs = case fs (Nil -> defaultConvexState) (Cons rx rest -> convexStateFromFloats2 rx rest)
+convexStateFromFloats2 rx rest = case rest (Nil -> defaultConvexState) (Cons ry rest2 -> convexStateFromFloats3 rx ry rest2)
+convexStateFromFloats3 rx ry rest2 = case rest2 (Nil -> defaultConvexState) (Cons rz rest3 -> convexStateFromFloats4 rx ry rz rest3)
+convexStateFromFloats4 rx ry rz rest3 = case rest3 (Nil -> defaultConvexState) (Cons lx rest4 -> convexStateFromFloats5 rx ry rz lx rest4)
+convexStateFromFloats5 rx ry rz lx rest4 = case rest4 (Nil -> defaultConvexState) (Cons ly rest5 -> ConvexState rx ry rz lx ly)
+
+encodeConvexState s = list2str (encodeConvexStateChars s)
+encodeConvexStateChars s = case s (ConvexState rx ry rz lx ly -> append (floatChars rx) (append (floatChars ry) (append (floatChars rz) (append (floatChars lx) (floatChars ly)))))
+
+tau = 6.28318
+
+wrapAngle a = if (a < 0.0) (a + tau) (if (a > tau) (a - tau) a)
+
+setLastPos state p = case state (ConvexState rx ry rz lx ly -> setLastPosXY rx ry rz p)
+setLastPosXY rx ry rz p = case p (Pt x y -> ConvexState rx ry rz x y)
+
+dragConvex state p = case state (ConvexState rx ry rz lx ly -> dragConvexHelper rx ry rz lx ly p)
+dragConvexHelper rx ry rz lx ly p =
+  case p
+    (Pt x y -> ConvexState (wrapAngle (rx - ((y - ly) * 2.5))) (wrapAngle (ry + ((x - lx) * 2.5))) rz x y)
+
+stepConvex state event =
+  case event
+    (MouseDown p -> setLastPos state p)
+    (MouseDragged p -> dragConvex state p)
+    (_ -> state)
+
+renderConvexState state = case state (ConvexState rx ry rz lx ly -> renderCube rx ry rz)
+
+// stateLine/eventLine must be forced (via <#>) before use - see
+// grafisch/boom.cfp's start for why an unforced readLine can silently
+// never fire.
+start =
+  let stateLine = readLine,
+      eventLine = readLine,
+      state0    = decodeConvexState stateLine,
+      event     = parseEvent eventLine,
+      state1    = stepConvex state0 event,
+      pic       = renderConvexState state1
+  in stateLine <#> eventLine <#> printString (encodeConvexState state1) <#> writeChar 1 10 <#> printString (graphicsout (forceGraphics pic)) <#> writeChar 1 10

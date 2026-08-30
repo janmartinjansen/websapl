@@ -46,12 +46,22 @@ genSplineSegments pts nSteps =
   case r3 (Nil -> Nil) (Cons p3 rest ->
     genSplineHelper p0 p1 p2 p3 r1 nSteps))))
 
-// Draw control point markers
-toDisc p = case p (Pt x y -> GraphDisc col_brightred (Pt (x - 0.02) (y - 0.02)) (Pt (x + 0.02) (y + 0.02)))
-drawControlDiscs pts = mapList toDisc pts
+// Draw control point markers - the selected one (dragged idx) larger
+// and in a different color, matching the old JS-side highlight.
+toDiscSel idx i p = case p (Pt x y -> toDiscSelXY idx i x y)
+toDiscSelXY idx i x y =
+  if (i == idx)
+    (GraphDisc col_yellow (Pt (x - 0.035) (y - 0.035)) (Pt (x + 0.035) (y + 0.035)))
+    (GraphDisc col_brightred (Pt (x - 0.025) (y - 0.025)) (Pt (x + 0.025) (y + 0.025)))
 
-// Example Control Points
-ctrlPoints = 
+drawControlDiscsSel pts idx = drawControlDiscsSelStep pts idx 0
+drawControlDiscsSelStep pts idx i =
+  case pts
+    (Nil -> Nil)
+    (Cons p rest -> Cons (toDiscSel idx i p) (drawControlDiscsSelStep rest idx (i + 1)))
+
+// Example / default Control Points
+ctrlPoints =
   let p1 = Pt (0.0 - 0.8) (0.0 - 0.5),
       p2 = Pt (0.0 - 0.5) 0.6,
       p3 = Pt (0.0 - 0.1) (0.0 - 0.6),
@@ -60,11 +70,78 @@ ctrlPoints =
       p6 = Pt 0.9 0.3
   in Cons p1 (Cons p2 (Cons p3 (Cons p4 (Cons p5 (Cons p6 Nil)))))
 
-renderBSpline nSteps = 
-  let poly = GraphPolyLine col_darkgray ctrlPoints,
-      discs = drawControlDiscs ctrlPoints,
-      curvePts = genSplineSegments ctrlPoints nSteps,
+renderBSplineFromPts pts idx nSteps =
+  let poly = GraphPolyLine col_darkgray pts,
+      discs = drawControlDiscsSel pts idx,
+      curvePts = genSplineSegments pts nSteps,
       curve = GraphPolyLine col_brightcyan curvePts
   in append (Cons poly discs) (Cons curve Nil)
 
-start = forceGraphics (renderBSpline 12)
+// -------------------------------------------------------------
+// Interactive state: the control-point list plus which index (if
+// any, -1 = none) is currently being dragged.
+// -------------------------------------------------------------
+
+::BsplineState = BsplineState !pts !selectedIdx
+
+defaultBsplineState = BsplineState ctrlPoints (0 - 1)
+
+decodeBsplineState line = if (strEqual line "") defaultBsplineState (decodeBsplineWords (splitWords line))
+decodeBsplineWords ws =
+  case ws
+    (Nil -> defaultBsplineState)
+    (Cons idxStr rest -> BsplineState (decodePointList rest) (ftoi (atof idxStr)))
+
+encodeBsplineState state = case state (BsplineState pts idx -> list2str (append (intChars idx) (append (intChars (lengthList pts)) (ptsChars pts))))
+
+nearestPointIdx pts p = nearestPointIdxStep pts p 0 (0 - 1) 0.08
+nearestPointIdxStep pts p i bestIdx bestDist =
+  case pts
+    (Nil -> bestIdx)
+    (Cons q rest -> nearestPointIdxCheck q rest p i bestIdx bestDist)
+nearestPointIdxCheck q rest p i bestIdx bestDist =
+  let d = distPt q p in
+  if (d < bestDist)
+    (nearestPointIdxStep rest p (i + 1) i d)
+    (nearestPointIdxStep rest p (i + 1) bestIdx bestDist)
+
+appendPoint pts p = append pts (Cons p Nil)
+
+replaceAt pts idx p = replaceAtStep pts idx p 0
+replaceAtStep pts idx p i =
+  case pts
+    (Nil -> Nil)
+    (Cons q rest -> if (i == idx) (Cons p (replaceAtStep rest idx p (i + 1))) (Cons q (replaceAtStep rest idx p (i + 1))))
+
+stepBsplineDown pts p =
+  let nearest = nearestPointIdx pts p in
+  if (nearest >= 0)
+    (BsplineState pts nearest)
+    (BsplineState (appendPoint pts p) (lengthList pts))
+
+stepBsplineDrag pts idx p =
+  if ((idx >= 0) /\ (idx < lengthList pts))
+    (BsplineState (replaceAt pts idx p) idx)
+    (BsplineState pts idx)
+
+stepBspline state event = case state (BsplineState pts idx -> stepBsplineFields pts idx event)
+stepBsplineFields pts idx event =
+  case event
+    (MouseDown p -> stepBsplineDown pts p)
+    (MouseDragged p -> stepBsplineDrag pts idx p)
+    (MouseUp p -> BsplineState pts (0 - 1))
+    (_ -> BsplineState pts idx)
+
+renderBsplineState state = case state (BsplineState pts idx -> renderBSplineFromPts pts idx 12)
+
+// stateLine/eventLine must be forced (via <#>) before use - see
+// grafisch/boom.cfp's start for why an unforced readLine can silently
+// never fire.
+start =
+  let stateLine = readLine,
+      eventLine = readLine,
+      state0    = decodeBsplineState stateLine,
+      event     = parseEvent eventLine,
+      state1    = stepBspline state0 event,
+      pic       = renderBsplineState state1
+  in stateLine <#> eventLine <#> printString (encodeBsplineState state1) <#> writeChar 1 10 <#> printString (graphicsout (forceGraphics pic)) <#> writeChar 1 10

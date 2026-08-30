@@ -1,17 +1,17 @@
 #import "grafisch/graphics.cfp"
 
-transLink p = verschuifPt (Pt 0.0 0.3) (draaiPt (0.0 - 0.6) (vergrootPt 0.7 p))
-transRechts p = verschuifPt (Pt 0.0 0.3) (draaiPt 0.6 (vergrootPt 0.7 p))
+transLink angle p = verschuifPt (Pt 0.0 0.3) (draaiPt (0.0 - angle) (vergrootPt 0.7 p))
+transRechts angle p = verschuifPt (Pt 0.0 0.3) (draaiPt angle (vergrootPt 0.7 p))
 
-mapLinkSeg seg = case seg (Nil -> Nil) (Cons p1 ps -> case ps (Nil -> Nil) (Cons p2 rest -> Cons (transLink p1) (Cons (transLink p2) Nil)))
-mapRechtSeg seg = case seg (Nil -> Nil) (Cons p1 ps -> case ps (Nil -> Nil) (Cons p2 rest -> Cons (transRechts p1) (Cons (transRechts p2) Nil)))
+mapLinkSeg angle seg = case seg (Nil -> Nil) (Cons p1 ps -> case ps (Nil -> Nil) (Cons p2 rest -> Cons (transLink angle p1) (Cons (transLink angle p2) Nil)))
+mapRechtSeg angle seg = case seg (Nil -> Nil) (Cons p1 ps -> case ps (Nil -> Nil) (Cons p2 rest -> Cons (transRechts angle p1) (Cons (transRechts angle p2) Nil)))
 
-mapLinks lines = case lines (Nil -> Nil) (Cons seg rest -> Cons (mapLinkSeg seg) (mapLinks rest))
-mapRechts lines = case lines (Nil -> Nil) (Cons seg rest -> Cons (mapRechtSeg seg) (mapRechts rest))
+mapLinks angle lines = case lines (Nil -> Nil) (Cons seg rest -> Cons (mapLinkSeg angle seg) (mapLinks angle rest))
+mapRechts angle lines = case lines (Nil -> Nil) (Cons seg rest -> Cons (mapRechtSeg angle seg) (mapRechts angle rest))
 
-boomStep n bnm1 = Cons (Cons (Pt 0.0 0.0) (Cons (Pt 0.0 0.3) Nil)) (append (mapLinks bnm1) (mapRechts bnm1))
+boomStep angle n bnm1 = Cons (Cons (Pt 0.0 0.0) (Cons (Pt 0.0 0.3) Nil)) (append (mapLinks angle bnm1) (mapRechts angle bnm1))
 
-boom n = if (n <= 0) Nil (boomStep n (boom (n - 1)))
+boom angle n = if (n <= 0) Nil (boomStep angle n (boom angle (n - 1)))
 
 shiftTreeSeg seg = case seg (Nil -> Nil) (Cons p1 ps -> case ps (Nil -> Nil) (Cons p2 rest -> Cons (verschuifPt (Pt 0.0 (0.0 - 0.7)) p1) (Cons (verschuifPt (Pt 0.0 (0.0 - 0.7)) p2) Nil)))
 
@@ -19,6 +19,46 @@ shiftTree lines = case lines (Nil -> Nil) (Cons seg rest -> Cons (shiftTreeSeg s
 
 tekenBoom lines col = case lines (Nil -> Nil) (Cons l ls -> Cons (GraphPolyLine col l) (tekenBoom ls (if (col == 14) 1 (col + 1))))
 
-demo n = forceGraphics (tekenBoom (shiftTree (boom n)) 2)
+demo angle n = forceGraphics (tekenBoom (shiftTree (boom angle n)) 2)
 
-start = demo 3
+// Named so websapl/graphics.html's depth slider can retarget it by
+// name (`boomDepth = N`) instead of a positional literal inside `demo
+// angle1 3`, which the slider can no longer match after `demo` grew a
+// second (state-derived) argument.
+boomDepth = 3
+
+// -------------------------------------------------------------
+// Interactive state: just the branch-bend angle. MouseDown/Dragged's
+// x-position maps directly to the angle (no accumulation needed, so
+// no extra state fields beyond the angle itself).
+// -------------------------------------------------------------
+
+defaultBendAngle = 0.6
+
+decodeBoomState line = if (strEqual line "") defaultBendAngle (atof line)
+encodeBoomState angle = ftoa angle
+
+clampBend a = if (a < 0.2) 0.2 (if (a > 1.2) 1.2 a)
+
+bendAngleFromP p = case p (Pt x y -> clampBend (0.6 + (x * 0.5)))
+
+stepBoom angle event =
+  case event
+    (MouseDown p -> bendAngleFromP p)
+    (MouseDragged p -> bendAngleFromP p)
+    (_ -> angle)
+
+// stateLine/eventLine MUST be forced (via <#>) before anything derived
+// from them is used: two unforced `readLine`s in one `let` have no
+// guaranteed relative order, and one may never fire its syscall at all
+// if the branch that's actually taken never demands its value (verified
+// empirically - dropping this forcing silently reads only one line and
+// misinterprets it as both state and event).
+start =
+  let stateLine = readLine,
+      eventLine = readLine,
+      angle0    = decodeBoomState stateLine,
+      event     = parseEvent eventLine,
+      angle1    = stepBoom angle0 event,
+      pic       = demo angle1 boomDepth
+  in stateLine <#> eventLine <#> printString (encodeBoomState angle1) <#> writeChar 1 10 <#> printString (graphicsout pic) <#> writeChar 1 10

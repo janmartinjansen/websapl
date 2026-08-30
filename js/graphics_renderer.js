@@ -311,97 +311,99 @@ class SaplGraphicsRenderer {
   }
 
   /**
-   * Parse S-Expression AST from JMVM constructor output
+   * Extracts the payload of the `(string: ...)` wrapper the VM prints
+   * around a top-level packed-array result (see printdebug.cpp's STR
+   * case) - i.e. the flat text `graphicsout` (grafisch/graphics.cfp)
+   * produced. Uses paren-counting, not indexOf(')'), because GraphText
+   * labels can themselves contain literal parens (e.g. "... (Logic
+   * Circuit)" in grafisch/hwdes.cfp).
    */
-  parseAST(text) {
-    if (!text || typeof text !== 'string') return null;
+  extractGraphicsOutContent(text) {
+    const resIdx = text.indexOf("res:");
+    const searchFrom = resIdx !== -1 ? resIdx + 4 : 0;
+    const strIdx = text.indexOf("(string:", searchFrom);
+    if (strIdx === -1) return null;
+    let i = strIdx + 8;
+    const start = i;
+    let pCount = 1;
+    while (i < text.length && pCount > 0) {
+      if (text[i] === '(') pCount++;
+      else if (text[i] === ')') pCount--;
+      i++;
+    }
+    return text.substring(start, i - 1).trim();
+  }
 
-    // Mask string literals to prevent parentheses in strings from breaking AST parsing
-    const stringTable = [];
-    let cleanText = "";
+  /**
+   * Tokenizes graphicsout's flat, space-separated protocol. A
+   * `"..."` run (a GraphText label) is kept as one 'text' token,
+   * spaces and all; everything else splits on whitespace.
+   */
+  tokenizeGraphicsOut(content) {
+    const tokens = [];
     let i = 0;
-    while (i < text.length) {
-      if (text.startsWith("(string:", i)) {
-        i += 8; // skip "(string:"
-        let start = i;
-        let pCount = 1;
-        while (i < text.length && pCount > 0) {
-          if (text[i] === '(') pCount++;
-          else if (text[i] === ')') pCount--;
-          i++;
-        }
-        const strContent = text.substring(start, i - 1).trim();
-        const slot = stringTable.length;
-        stringTable.push(strContent);
-        cleanText += ` (str_slot_${slot}) `;
+    while (i < content.length) {
+      while (i < content.length && /\s/.test(content[i])) i++;
+      if (i >= content.length) break;
+      if (content[i] === '"') {
+        const start = i + 1;
+        let j = start;
+        while (j < content.length && content[j] !== '"') j++;
+        tokens.push({ type: 'text', value: content.substring(start, j) });
+        i = j + 1;
       } else {
-        cleanText += text[i];
-        i++;
+        const start = i;
+        while (i < content.length && !/\s/.test(content[i])) i++;
+        tokens.push({ type: 'word', value: content.substring(start, i) });
       }
     }
+    return tokens;
+  }
 
-    const tokens = cleanText.replace(/\(/g, " ( ").replace(/\)/g, " ) ").replace(/\[/g, " [ ").replace(/\]/g, " ] ").trim().split(/\s+/);
+  /**
+   * Walks graphicsout's token stream and issues the matching draw
+   * call per item. Dispatch is on the REAL constructor name (e.g.
+   * "GraphPolyLine"), not a positional `constr_N` index - see
+   * grafisch/graphics.cfp's `graphicsout` for the producing side and
+   * why that matters.
+   */
+  drawGraphicsTokens(tokens) {
     let pos = 0;
+    const nextWord = () => tokens[pos++].value;
+    const nextNum = () => parseFloat(nextWord());
+    const nextPt = () => ({ x: nextNum(), y: nextNum() });
 
-    function parseExpr() {
-      if (pos >= tokens.length) return null;
-      const token = tokens[pos++];
-      if (token === "(") {
-        const items = [];
-        while (pos < tokens.length && tokens[pos] !== ")") {
-          items.push(parseExpr());
+    while (pos < tokens.length) {
+      const tag = nextWord();
+      if (tag === "GraphClear") {
+        this.clear();
+        this.drawGrid();
+      } else if (tag === "GraphPolyLine" || tag === "GraphPolygon") {
+        const color = nextNum();
+        const n = parseInt(nextWord(), 10) || 0;
+        const pts = [];
+        for (let k = 0; k < n; k++) pts.push(nextPt());
+        if (pts.length > 0) {
+          if (tag === "GraphPolyLine") this.drawPolyLine(color, pts);
+          else this.drawPolygon(color, pts, false);
         }
-        pos++; // skip ")"
-        return items;
-      } else if (token === "[") {
-        let depth = 1;
-        while (pos < tokens.length && depth > 0) {
-          if (tokens[pos] === "[") depth++;
-          else if (tokens[pos] === "]") depth--;
-          pos++;
-        }
-        return null;
-      } else if (token === ")") {
-        return null;
+      } else if (tag === "GraphRectangle" || tag === "GraphEllipse" || tag === "GraphDisc") {
+        const color = nextNum();
+        const p1 = nextPt();
+        const p2 = nextPt();
+        if (tag === "GraphRectangle") this.drawRectangle(color, p1, p2, false);
+        else if (tag === "GraphEllipse") this.drawEllipse(color, p1, p2, false);
+        else this.drawDisc(color, p1, p2);
+      } else if (tag === "GraphText") {
+        const color = nextNum();
+        const p = nextPt();
+        const txt = (tokens[pos] && tokens[pos].type === 'text') ? tokens[pos++].value : "";
+        this.drawText(color, p, txt);
       } else {
-        const m = token.match(/^str_slot_(\d+)$/);
-        if (m) {
-          return stringTable[parseInt(m[1], 10)] || "";
-        }
-        return token;
+        console.warn("Graphics render: unrecognized tag, stopping:", tag);
+        break;
       }
     }
-
-    const resIdx = tokens.indexOf("res:");
-    if (resIdx !== -1) pos = resIdx + 1;
-    return parseExpr();
-  }
-
-  extractList(node) {
-    const items = [];
-    let curr = node;
-    while (curr && Array.isArray(curr) && (curr[0] === "constr_1:" || curr[0] === "constr_1")) {
-      if (curr[1]) items.push(curr[1]);
-      curr = curr[2];
-    }
-    return items;
-  }
-
-  extractPt(node) {
-    if (Array.isArray(node) && (node[0] === "constr_0:" || node[0] === "constr_0")) {
-      return { x: parseFloat(node[1]) || 0, y: parseFloat(node[2]) || 0 };
-    }
-    return null;
-  }
-
-  extractPoints(node) {
-    const pts = [];
-    const list = this.extractList(node);
-    for (const item of list) {
-      const pt = this.extractPt(item);
-      if (pt) pts.push(pt);
-    }
-    return pts;
   }
 
   /**
@@ -415,51 +417,10 @@ class SaplGraphicsRenderer {
     if (!text || typeof text !== 'string') return;
 
     try {
-      const ast = this.parseAST(text);
-      if (!ast) return;
-
-      const items = this.extractList(ast);
-      for (const item of items) {
-        if (!Array.isArray(item)) continue;
-        const tag = item[0].replace(":", "");
-        if (tag === "constr_1" || tag === "GraphPolyLine") {
-          const color = parseFloat(item[1]) || 1;
-          const pts = this.extractPoints(item[2]);
-          if (pts.length > 0) this.drawPolyLine(color, pts);
-        } else if (tag === "constr_2" || tag === "GraphPolygon") {
-          const color = parseFloat(item[1]) || 2;
-          const pts = this.extractPoints(item[2]);
-          if (pts.length > 0) this.drawPolygon(color, pts, false);
-        } else if (tag === "constr_3" || tag === "GraphRectangle") {
-          const color = parseFloat(item[1]) || 4;
-          const p1 = this.extractPt(item[2]) || { x: 0, y: 0 };
-          const p2 = this.extractPt(item[3]) || { x: 0, y: 0 };
-          this.drawRectangle(color, p1, p2, false);
-        } else if (tag === "constr_4" || tag === "GraphEllipse") {
-          const color = parseFloat(item[1]) || 5;
-          const p1 = this.extractPt(item[2]) || { x: 0, y: 0 };
-          const p2 = this.extractPt(item[3]) || { x: 0, y: 0 };
-          this.drawEllipse(color, p1, p2, false);
-        } else if (tag === "constr_5" || tag === "GraphDisc") {
-          const color = parseFloat(item[1]) || 12;
-          const p1 = this.extractPt(item[2]) || { x: 0, y: 0 };
-          const p2 = this.extractPt(item[3]) || { x: 0, y: 0 };
-          this.drawDisc(color, p1, p2);
-        } else if (tag === "constr_0" || tag === "GraphText") {
-          const color = parseFloat(item[1]) || 15;
-          const p = this.extractPt(item[2]) || { x: 0, y: 0 };
-          let txt = "";
-          if (Array.isArray(item[3])) {
-            txt = item[3][0] || "";
-          } else if (item[3]) {
-            txt = String(item[3]);
-          }
-          this.drawText(color, p, txt);
-        } else if (tag === "constr_6" || tag === "GraphClear") {
-          this.clear();
-          this.drawGrid();
-        }
-      }
+      const content = this.extractGraphicsOutContent(text);
+      if (content === null) return;
+      const tokens = this.tokenizeGraphicsOut(content);
+      this.drawGraphicsTokens(tokens);
     } catch (err) {
       console.warn("Graphics render error:", err);
     }

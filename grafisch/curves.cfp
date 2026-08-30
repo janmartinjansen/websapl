@@ -79,4 +79,4 @@ dragon n =
   let d = dragonStep n dragonOrigin dragonEnd in
   toPolyLines col_brightgreen d
 
-start = forceGraphics (hilbert 2)
+start = graphicsout (forceGraphics (hilbert 2))

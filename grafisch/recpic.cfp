@@ -49,4 +49,4 @@ recPic n =
   let p = recPattern n baseTile in
   toPolyLines col_yellow p
 
-start = forceGraphics (recPic 2)
+start = graphicsout (forceGraphics (recPic 2))

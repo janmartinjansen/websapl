@@ -36,4 +36,4 @@ plotDemo =
       curves = Cons curve1 (Cons curve2 (Cons curve3 Nil))
   in append axes curves
 
-start = forceGraphics plotDemo
+start = graphicsout (forceGraphics plotDemo)
