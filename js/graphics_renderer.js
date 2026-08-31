@@ -37,6 +37,13 @@ class SaplGraphicsRenderer {
     this.isMouseDown = false;
     this.lastMousePos = { x: 0, y: 0 };
     this.eventCallbacks = [];
+    this.menuCallbacks = [];
+    this.promptCallbacks = [];
+    // Last menu structure this.renderOutput() saw - null until a run
+    // actually outputs a GraphMenu. onMenu callbacks fire with this same
+    // shape: [{ name, items: [string, ...] }, ...] (see the GraphMenu
+    // case in drawGraphicsTokens for the wire format it's parsed from).
+    this.lastMenu = null;
 
     this.setupHighDPI();
     window.addEventListener('resize', () => this.setupHighDPI());
@@ -104,6 +111,35 @@ class SaplGraphicsRenderer {
   emitEvent(event) {
     for (const cb of this.eventCallbacks) {
       cb(event);
+    }
+  }
+
+  // A GraphMenu is a UI widget (a DOM menu bar), not something drawn on
+  // the canvas - onMenu is the renderer's side of that split: the host
+  // page (graphics.html) subscribes here to build/update its own menu
+  // bar element whenever a run's output includes a GraphMenu, instead of
+  // this class reaching into page DOM it doesn't own.
+  onMenu(callback) {
+    this.menuCallbacks.push(callback);
+  }
+
+  emitMenu(cats) {
+    this.lastMenu = cats;
+    for (const cb of this.menuCallbacks) {
+      cb(cats);
+    }
+  }
+
+  // GraphPrompt is the other non-canvas widget (a text-input dialog) -
+  // same split as onMenu/emitMenu above: the host page owns the actual
+  // dialog DOM, this just hands it the (title, defaultText) pair.
+  onPrompt(callback) {
+    this.promptCallbacks.push(callback);
+  }
+
+  emitPrompt(title, deflt) {
+    for (const cb of this.promptCallbacks) {
+      cb(title, deflt);
     }
   }
 
@@ -407,6 +443,34 @@ class SaplGraphicsRenderer {
         const p = nextPt();
         const txt = (tokens[pos] && tokens[pos].type === 'text') ? tokens[pos++].value : "";
         this.drawText(color, p, txt);
+      } else if (tag === "GraphMenu") {
+        // A UI widget, not a canvas draw - see grafisch/graphics.cfp's
+        // menuCatsChars for the producing side: `<nCats> <"name">
+        // <nItems> <"item"> ...` per category, repeated. Handed off via
+        // emitMenu() instead of drawn; the host page owns the actual
+        // menu-bar DOM (onMenu subscriber in graphics.html).
+        const nCats = parseInt(nextWord(), 10) || 0;
+        const cats = [];
+        for (let c = 0; c < nCats; c++) {
+          const name = nextWord();
+          const nItems = parseInt(nextWord(), 10) || 0;
+          const items = [];
+          for (let k = 0; k < nItems; k++) items.push(nextWord());
+          cats.push({ name, items });
+        }
+        this.emitMenu(cats);
+      } else if (tag === "GraphPrompt") {
+        // Also a UI widget, not a canvas draw - grafisch/graphics.cfp's
+        // itemChars emits `<"title"> <"default">`; the host page's own
+        // dialog (onPrompt subscriber in graphics.html) sends the answer
+        // back as a RAW `PText <text>` stdin line (not through
+        // encodeEventForSapl/queueTick's usual space-joined-words shape
+        // - graphics.cfp's parseEvent special-cases PText to take the
+        // rest of the line verbatim, since prompt text may itself
+        // contain spaces).
+        const title = nextWord();
+        const deflt = nextWord();
+        this.emitPrompt(title, deflt);
       } else {
         console.warn("Graphics render: unrecognized tag, stopping:", tag);
         break;

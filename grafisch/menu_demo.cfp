@@ -1,0 +1,39 @@
+// Minimal end-to-end proof for the GraphMenu/MenuItem AND
+// GraphPrompt/PText wire protocols (docs/2026-08-31_
+// grafiek_tekenprogramma_plan.md fase 3): output a real menu bar once,
+// echo back whichever item was last clicked, and for "Other/Text" show a
+// real text-prompt dialog and echo back whatever was typed. Same
+// state-per-event protocol as grafisch/bspline.cfp (two stdin lines in,
+// two stdout lines out); state here is just "the label currently shown"
+// (empty string until the first click).
+#import "grafisch/graphics.cfp"
+
+demoMenu =
+  GraphMenu (Cons (MenuCat "File" (Cons "Open" (Cons "Save" (Cons "Quit" Nil))))
+            (Cons (MenuCat "Color" (Cons "Red" (Cons "Green" (Cons "Blue" Nil))))
+            (Cons (MenuCat "Other" (Cons "Text" Nil))
+            Nil)))
+
+labelGraphic item = GraphText 15 (Pt (0.0 - 0.5) 0.0) item
+
+// "Other/Text" doesn't echo an item name - it asks a real question via
+// GraphPrompt instead, keeping the CURRENT label on screen (`stateLine`
+// unchanged) until the matching PText event answers it. Every other menu
+// item echoes its own name immediately, same as before.
+respondMenuItem stateLine cat item =
+  if (strEqual cat "Other")
+    (printString stateLine <#> writeChar 1 10 <#>
+     printString (graphicsout (Cons GraphClear (Cons demoMenu (Cons (GraphPrompt "Typ iets" "hallo") (Cons (labelGraphic stateLine) Nil))))) <#> writeChar 1 10)
+    (printString item <#> writeChar 1 10 <#>
+     printString (graphicsout (Cons GraphClear (Cons demoMenu (Cons (labelGraphic item) Nil)))) <#> writeChar 1 10)
+
+respond stateLine ev =
+  case ev
+    (MenuItem cat item -> respondMenuItem stateLine cat item)
+    (PText txt -> printString txt <#> writeChar 1 10 <#> printString (graphicsout (Cons GraphClear (Cons demoMenu (Cons (labelGraphic txt) Nil)))) <#> writeChar 1 10)
+    (_ -> printString stateLine <#> writeChar 1 10 <#> printString (graphicsout (Cons GraphClear (Cons demoMenu (Cons (labelGraphic stateLine) Nil)))) <#> writeChar 1 10)
+
+start =
+  let !stateLine = readLine,
+      !evLine = readLine
+  in respond stateLine (parseEvent evLine)

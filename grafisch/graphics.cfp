@@ -1,7 +1,8 @@
 ::Point = Pt !x !y
 ::List = Nil | Cons !x !xs
-::Graphics = GraphText !c !p !txt | GraphPolyLine !c !pts | GraphPolygon !c !pts | GraphRectangle !c !p1 !p2 | GraphEllipse !c !p1 !p2 | GraphDisc !c !p1 !p2 | GraphClear
-::Event = KeyIn !c | MouseDown !p | MouseUp !p | MouseDragged !p | MouseDoubleClick !p | NoInput
+::MenuCat = MenuCat !name !items
+::Graphics = GraphText !c !p !txt | GraphPolyLine !c !pts | GraphPolygon !c !pts | GraphRectangle !c !p1 !p2 | GraphEllipse !c !p1 !p2 | GraphDisc !c !p1 !p2 | GraphClear | GraphMenu !cats | GraphPrompt !title !deflt
+::Event = KeyIn !c | MouseDown !p | MouseUp !p | MouseDragged !p | MouseDoubleClick !p | MenuItem !cat !item | PText !txt | NoInput
 
 // 16 VGA/EGA Colors
 col_black        = 0
@@ -55,9 +56,12 @@ forcePt p = case p (Pt x y -> Pt x y)
 
 forcePoints pts = case pts (Nil -> Nil) (Cons p ps -> Cons (forcePt p) (forcePoints ps))
 
-forceItem item = case item (GraphText c p txt -> GraphText c (forcePt p) txt) (GraphPolyLine c pts -> GraphPolyLine c (forcePoints pts)) (GraphPolygon c pts -> GraphPolygon c (forcePoints pts)) (GraphRectangle c p1 p2 -> GraphRectangle c (forcePt p1) (forcePt p2)) (GraphEllipse c p1 p2 -> GraphEllipse c (forcePt p1) (forcePt p2)) (GraphDisc c p1 p2 -> GraphDisc c (forcePt p1) (forcePt p2)) (GraphClear -> GraphClear)
+forceItem item = case item (GraphText c p txt -> GraphText c (forcePt p) txt) (GraphPolyLine c pts -> GraphPolyLine c (forcePoints pts)) (GraphPolygon c pts -> GraphPolygon c (forcePoints pts)) (GraphRectangle c p1 p2 -> GraphRectangle c (forcePt p1) (forcePt p2)) (GraphEllipse c p1 p2 -> GraphEllipse c (forcePt p1) (forcePt p2)) (GraphDisc c p1 p2 -> GraphDisc c (forcePt p1) (forcePt p2)) (GraphClear -> GraphClear) (GraphMenu cats -> GraphMenu (forceMenuCats cats)) (GraphPrompt title deflt -> GraphPrompt title deflt)
 
 forceGraphics g = case g (Nil -> Nil) (Cons item rest -> Cons (forceItem item) (forceGraphics rest))
+
+forceMenuCats cats = case cats (Nil -> Nil) (Cons c rest -> Cons (forceMenuCat c) (forceMenuCats rest))
+forceMenuCat c = case c (MenuCat name items -> MenuCat name items)
 
 // ============================================================
 // graphicsout: serializes a [Graphics] list into one flat string for
@@ -90,6 +94,29 @@ itemChars g =
     (GraphRectangle c p1 p2 -> pairItemChars g c p1 p2)
     (GraphEllipse c p1 p2 -> pairItemChars g c p1 p2)
     (GraphDisc c p1 p2 -> pairItemChars g c p1 p2)
+    (GraphMenu cats -> append (tagChars g) (menuCatsChars cats))
+    (GraphPrompt title deflt -> append (tagChars g) (append (quotedChars title) (quotedChars deflt)))
+
+// GraphMenu wire format: `<nCats> <cat1> <cat2> ...`, each category
+// `<"name"> <nItems> <"item1"> <"item2"> ...` - same length-prefixed,
+// no-end-sentinel style as ptsChars above, quoted like GraphText's txt
+// field (menu/item names are short identifiers, never containing a
+// literal '"' - same assumption quotedChars already documents).
+menuCatsChars cats = append (intChars (lengthList cats)) (menuCatsBody cats)
+
+menuCatsBody cats =
+  case cats
+    (Nil -> Nil)
+    (Cons c rest -> append (menuCatChars c) (menuCatsBody rest))
+
+menuCatChars c =
+  case c
+    (MenuCat name items -> append (quotedChars name) (append (intChars (lengthList items)) (menuItemsChars items)))
+
+menuItemsChars items =
+  case items
+    (Nil -> Nil)
+    (Cons it rest -> append (quotedChars it) (menuItemsChars rest))
 
 pairItemChars g c p1 p2 = append (tagChars g) (append (intChars c) (append (ptChars p1) (ptChars p2)))
 
@@ -166,7 +193,25 @@ dropWordChars cs =
 
 // -------------------- Event decoding --------------------
 
-parseEvent line = parseEventWords (splitWords line)
+// `PText` is the odd one out: its payload is free text that MAY contain
+// spaces (a filename, a "New Text" content string, ...), unlike every
+// other event's fields (a coordinate, a menu category/item - always
+// single words). splitWords would silently truncate it at the first
+// space, so PText is recognized on the RAW line, before word-splitting
+// - "PText " (6 chars) followed by the text verbatim, no quoting (this
+// is stdin from the JS side, not graphicsout's quoted OUTPUT protocol;
+// a literal '"' in the text is fine here, same non-general-purpose
+// assumption quotedChars documents for the other direction).
+startsWithPText line = (strlen line >= 6) /\ strEqualAt 0 "PText " line
+
+parseEvent line =
+  if (startsWithPText line) (PText (dropCharsFromStr 6 line))
+  (parseEventWords (splitWords line))
+
+dropCharsFromStr n s = list2str (dropChars n (str2list s))
+
+dropChars n cs = if (n <= 0) cs (dropChars1 n cs)
+dropChars1 n cs = case cs (Nil -> Nil) (Cons c rest -> dropChars (n - 1) rest)
 
 parseEventWords ws =
   case ws
@@ -179,7 +224,23 @@ parseEventTag tag rest =
   (if (strEqual tag "MouseDragged") (MouseDragged (parseEventPt rest))
   (if (strEqual tag "MouseDoubleClick") (MouseDoubleClick (parseEventPt rest))
   (if (strEqual tag "KeyIn") (KeyIn (parseEventKey rest))
-  NoInput))))
+  (if (strEqual tag "MenuItem") (parseMenuItemEvent rest)
+  NoInput)))))
+
+// `MenuItem <cat> <item>` - both single words (every GRAFIEK.AMA menu
+// item name is one word: "Open"/"Save"/"Select"/"Rect"/"black"/... - see
+// grafisch/GRAFIEK.AMA's own `menu` definition), so no quoting needed on
+// this side (unlike the OUTPUT-side quotedChars, which quotes for the
+// JS/canvas parser, not for parseEvent's own splitWords).
+parseMenuItemEvent ws =
+  case ws
+    (Nil -> NoInput)
+    (Cons cat rest2 -> parseMenuItemEventItem cat rest2)
+
+parseMenuItemEventItem cat rest2 =
+  case rest2
+    (Nil -> NoInput)
+    (Cons item rest3 -> MenuItem cat item)
 
 parseEventPt ws =
   case ws

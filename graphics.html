@@ -9,10 +9,54 @@
   <style>
     .graphics-container {
       display: grid;
-      grid-template-columns: 320px 1fr 500px;
+      grid-template-columns: 320px 1fr;
       height: calc(100vh - 56px);
       background: var(--bg-main);
       overflow: hidden;
+    }
+    .content-area {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .tab-strip {
+      display: flex;
+      gap: 2px;
+      padding: 8px 8px 0;
+      background: var(--bg-header);
+      border-bottom: 1px solid var(--border-color);
+      flex-shrink: 0;
+    }
+    .tab-btn {
+      appearance: none;
+      border: 1px solid var(--border-color);
+      border-bottom: none;
+      background: var(--bg-sidebar);
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 8px 18px;
+      border-radius: 6px 6px 0 0;
+      cursor: pointer;
+    }
+    .tab-btn.active {
+      background: var(--bg-main);
+      color: var(--text-primary);
+    }
+    .tab-panels {
+      flex: 1;
+      min-height: 0;
+      position: relative;
+    }
+    .tab-panel {
+      display: flex;
+      height: 100%;
+      min-height: 0;
+    }
+    .tab-panel[hidden] {
+      display: none;
     }
     .preset-list {
       background: var(--bg-sidebar);
@@ -59,7 +103,7 @@
     .editor-section {
       display: flex;
       flex-direction: column;
-      border-right: 1px solid var(--border-color);
+      flex: 1;
       height: 100%;
       min-width: 0;
       /* .graphics-container is a grid row; without this, a grid/flex item
@@ -88,6 +132,8 @@
     .canvas-section {
       display: flex;
       flex-direction: column;
+      flex: 1;
+      min-width: 0;
       background: #060913;
       padding: 14px;
       gap: 10px;
@@ -96,6 +142,8 @@
     .canvas-wrapper {
       position: relative;
       width: 100%;
+      max-width: min(900px, 90%);
+      margin: 0 auto;
       aspect-ratio: 1 / 1;
       background: #0a0f1d;
       border: 1px solid #1e293b;
@@ -138,6 +186,102 @@
       display: flex;
       align-items: center;
       gap: 6px;
+    }
+    .graph-menu-bar {
+      display: flex;
+      gap: 2px;
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      padding: 4px;
+    }
+    .graph-menu-cat {
+      position: relative;
+    }
+    .graph-menu-cat-btn {
+      appearance: none;
+      border: none;
+      background: transparent;
+      color: #cbd5e1;
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .graph-menu-cat-btn:hover, .graph-menu-cat.open .graph-menu-cat-btn {
+      background: #1e293b;
+      color: #f8fafc;
+    }
+    .graph-menu-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      z-index: 20;
+      min-width: 140px;
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      padding: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+    .graph-menu-item {
+      appearance: none;
+      border: none;
+      background: transparent;
+      color: #cbd5e1;
+      font-size: 12px;
+      text-align: left;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .graph-menu-item:hover {
+      background: #334155;
+      color: #f8fafc;
+    }
+    .prompt-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(2, 6, 23, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .prompt-overlay[hidden] {
+      display: none;
+    }
+    .prompt-dialog {
+      background: var(--bg-card, #0f172a);
+      border: 1px solid var(--border-color, #1e293b);
+      border-radius: 8px;
+      padding: 18px;
+      width: 320px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .prompt-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary, #f8fafc);
+    }
+    .prompt-input {
+      background: #0a0f1d;
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      color: #f8fafc;
+      padding: 8px 10px;
+      font-size: 13px;
+    }
+    .prompt-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
     }
     .event-pill {
       font-size: 11px;
@@ -231,72 +375,104 @@
         <div class="preset-title"><span>🔲</span> Recursieve Mozaïek</div>
         <div class="preset-desc">Escher-achtige geometrische tegelpatronen en kwartslagrotaties.</div>
       </div>
+
+      <div class="preset-card" data-file="menu_demo.cfp">
+        <div class="preset-title"><span>📋</span> Menubalk-demo</div>
+        <div class="preset-desc">Echte GraphMenu-menubalk + GraphPrompt-tekstdialoog, beide teruggestuurd naar de VM.</div>
+      </div>
     </aside>
 
-    <!-- Code Editor -->
-    <section class="editor-section">
-      <div class="editor-header">
-        <span id="editor-filename">bspline.cfp</span>
-        <span style="font-size: 11px; color: var(--text-muted);">Sapl Broncode</span>
-      </div>
-      <div class="editor-body">
-        <textarea id="code-editor"></textarea>
-      </div>
-    </section>
-
-    <!-- Canvas Preview & Live Controls -->
-    <section class="canvas-section">
-      <div class="interaction-hint" id="hint-box">
-        <span>💡</span> <span id="hint-text">Sleep de rode controlepunten met de muis of klik om een punt toe te voegen.</span>
+    <!-- Code / Canvas tabs -->
+    <div class="content-area">
+      <div class="tab-strip">
+        <button class="tab-btn" id="tab-btn-code" data-tab="code">💻 Code</button>
+        <button class="tab-btn active" id="tab-btn-canvas" data-tab="canvas">🖼️ Canvas</button>
       </div>
 
-      <div class="canvas-wrapper">
-        <canvas id="graphics-canvas" width="600" height="600"></canvas>
+      <div class="tab-panels">
+        <!-- Code Editor -->
+        <section class="editor-section tab-panel" id="tab-panel-code" hidden>
+          <div class="editor-header">
+            <span id="editor-filename">bspline.cfp</span>
+            <span style="font-size: 11px; color: var(--text-muted);">Sapl Broncode</span>
+          </div>
+          <div class="editor-body">
+            <textarea id="code-editor"></textarea>
+          </div>
+        </section>
+
+        <!-- Canvas Preview & Live Controls -->
+        <section class="canvas-section tab-panel" id="tab-panel-canvas">
+          <div class="interaction-hint" id="hint-box">
+            <span>💡</span> <span id="hint-text">Sleep de rode controlepunten met de muis of klik om een punt toe te voegen.</span>
+          </div>
+
+          <div class="graph-menu-bar" id="graph-menu-bar" hidden></div>
+
+          <div class="canvas-wrapper">
+            <canvas id="graphics-canvas" width="600" height="600"></canvas>
+          </div>
+
+          <div class="controls-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-weight: 600; font-size: 13px; color: var(--text-primary);">
+                Muis & Event Status
+              </span>
+              <span class="event-pill" id="event-display">NoInput</span>
+            </div>
+
+            <div class="slider-row" id="row-depth">
+              <span>Recursiediepte / Resolutie:</span>
+              <input type="range" id="param-depth" min="1" max="6" value="3" />
+              <span id="val-depth" style="font-weight: 600; width: 16px;">3</span>
+            </div>
+
+            <div class="slider-row" id="row-rot-x" style="display: none;">
+              <span>Rotatie X:</span>
+              <input type="range" id="param-rot-x" min="0" max="6.28" step="0.05" value="0.5" />
+            </div>
+            <div class="slider-row" id="row-rot-y" style="display: none;">
+              <span>Rotatie Y:</span>
+              <input type="range" id="param-rot-y" min="0" max="6.28" step="0.05" value="0.7" />
+            </div>
+            <div class="slider-row" id="row-rot-z" style="display: none;">
+              <span>Rotatie Z:</span>
+              <input type="range" id="param-rot-z" min="0" max="6.28" step="0.05" value="0.2" />
+            </div>
+
+            <div style="display: flex; gap: 8px; margin-top: 4px;">
+              <button class="btn" id="btn-reset-points" style="flex: 1;">Reset Punten</button>
+              <button class="btn" id="btn-clear-canvas" style="flex: 1;">Wissen</button>
+              <button class="btn" id="btn-export-png" style="flex: 1;">Exporteer PNG</button>
+            </div>
+
+            <div style="margin-top: 8px; border-top: 1px solid var(--border-color); padding-top: 8px; display: flex; flex-wrap: wrap; gap: 6px;">
+              <span class="metrics-tag" id="metric-fps">60 FPS</span>
+              <span class="metrics-tag" id="metric-exec-time">0.00 ms</span>
+              <span class="metrics-tag" id="metric-instr-count">0 instr</span>
+              <span class="metrics-tag" id="metric-coords">X: 0.00, Y: 0.00</span>
+            </div>
+          </div>
+        </section>
       </div>
-
-      <div class="controls-panel">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="font-weight: 600; font-size: 13px; color: var(--text-primary);">
-            Muis & Event Status
-          </span>
-          <span class="event-pill" id="event-display">NoInput</span>
-        </div>
-
-        <div class="slider-row" id="row-depth">
-          <span>Recursiediepte / Resolutie:</span>
-          <input type="range" id="param-depth" min="1" max="6" value="3" />
-          <span id="val-depth" style="font-weight: 600; width: 16px;">3</span>
-        </div>
-
-        <div class="slider-row" id="row-rot-x" style="display: none;">
-          <span>Rotatie X:</span>
-          <input type="range" id="param-rot-x" min="0" max="6.28" step="0.05" value="0.5" />
-        </div>
-        <div class="slider-row" id="row-rot-y" style="display: none;">
-          <span>Rotatie Y:</span>
-          <input type="range" id="param-rot-y" min="0" max="6.28" step="0.05" value="0.7" />
-        </div>
-        <div class="slider-row" id="row-rot-z" style="display: none;">
-          <span>Rotatie Z:</span>
-          <input type="range" id="param-rot-z" min="0" max="6.28" step="0.05" value="0.2" />
-        </div>
-
-        <div style="display: flex; gap: 8px; margin-top: 4px;">
-          <button class="btn" id="btn-reset-points" style="flex: 1;">Reset Punten</button>
-          <button class="btn" id="btn-clear-canvas" style="flex: 1;">Wissen</button>
-          <button class="btn" id="btn-export-png" style="flex: 1;">Exporteer PNG</button>
-        </div>
-
-        <div style="margin-top: 8px; border-top: 1px solid var(--border-color); padding-top: 8px; display: flex; flex-wrap: wrap; gap: 6px;">
-          <span class="metrics-tag" id="metric-fps">60 FPS</span>
-          <span class="metrics-tag" id="metric-exec-time">0.00 ms</span>
-          <span class="metrics-tag" id="metric-instr-count">0 instr</span>
-          <span class="metrics-tag" id="metric-coords">X: 0.00, Y: 0.00</span>
-        </div>
-      </div>
-    </section>
+    </div>
 
   </main>
+
+  <!-- GraphPrompt dialog: a UI widget the VM asks for, not a canvas draw
+       (see websapl/js/graphics_renderer.js's onPrompt/emitPrompt and
+       grafisch/graphics.cfp's GraphPrompt/PText). Fixed overlay so it
+       works regardless of which tab (Code/Canvas) is active. -->
+  <div class="prompt-overlay" id="prompt-overlay" hidden>
+    <div class="prompt-dialog">
+      <div class="prompt-title" id="prompt-title">Prompt</div>
+      <input type="text" class="prompt-input" id="prompt-input" />
+      <div class="prompt-actions">
+        <button class="btn" id="prompt-cancel">Annuleren</button>
+        <button class="btn btn-success" id="prompt-ok">OK</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Scripts -->
   <script src="js/codemirror.min.js"></script>
@@ -306,7 +482,7 @@
        Cache-Control: no-cache, so a stale ?v= silently keeps serving an old
        build (this bit us: the extractGraphicsOutContent fix landed in the
        file but the deployed page kept running the pre-fix version). -->
-  <script src="js/graphics_renderer.js?v=20260830_interactive_fix"></script>
+  <script src="js/graphics_renderer.js?v=20260831_graphprompt"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       const canvas = document.getElementById('graphics-canvas');
@@ -327,6 +503,38 @@
       let currentPreset = 'bspline.cfp';
       let autoRotateTimer = null;
       let depth = 3;
+      let lastOutputLine = null; // last stdout drawing line, for redraw after a tab switch resizes the canvas backing store
+
+      // --- Code / Canvas tabs ---
+      // Switching tabs only toggles visibility - no re-run. Two things DO
+      // need a nudge on becoming visible again, though: CodeMirror measures
+      // its own height at init time and renders at height 0 if it was
+      // inside a hidden element back then (needs .refresh()), and the
+      // canvas's backing-store resolution is sized from its CSS-rendered
+      // box (SaplGraphicsRenderer.setupHighDPI, see graphics_renderer.js) -
+      // going from a 0-size hidden panel to a much wider visible one means
+      // that resolution needs recomputing, which also clears the canvas,
+      // so the last drawing is reissued from lastOutputLine.
+      function activateTab(tab) {
+        const isCode = tab === 'code';
+        document.getElementById('tab-panel-code').hidden = !isCode;
+        document.getElementById('tab-panel-canvas').hidden = isCode;
+        document.getElementById('tab-btn-code').classList.toggle('active', isCode);
+        document.getElementById('tab-btn-canvas').classList.toggle('active', !isCode);
+        if (isCode) {
+          editor.refresh();
+        } else {
+          renderer.setupHighDPI();
+          if (lastOutputLine !== null) {
+            renderer.renderOutput(lastOutputLine);
+          } else {
+            renderer.clear();
+            renderer.drawGrid();
+          }
+        }
+      }
+      document.getElementById('tab-btn-code').addEventListener('click', () => activateTab('code'));
+      document.getElementById('tab-btn-canvas').addEventListener('click', () => activateTab('canvas'));
 
       // bspline.cfp / convex.cfp / boom.cfp drive their interactivity via a
       // real state-per-event round trip through the compiled Sapl program
@@ -336,7 +544,7 @@
       // returned (e.g. "rx ry rz lastX lastY" for convex, an idx+point-list
       // for bspline, a single float for boom) and is fed back verbatim as
       // stdin on the next event, so JS never needs to understand its shape.
-      const INTERACTIVE_PRESETS = ['bspline.cfp', 'convex.cfp', 'boom.cfp'];
+      const INTERACTIVE_PRESETS = ['bspline.cfp', 'convex.cfp', 'boom.cfp', 'menu_demo.cfp'];
       let interactiveState = '';   // '' = let the Sapl program supply its own default
       let compiledJmvm = null;     // cached bytecode for currentPreset, reused across ticks (no recompile per event)
       let pendingRunKind = 'normal'; // 'normal' (compile-triggered run) | 'tick' (interactive event round trip)
@@ -363,6 +571,7 @@
           } else {
             if (msg.output || (msg.metrics && msg.metrics.res)) {
               const out = msg.output || msg.metrics.res;
+              lastOutputLine = out;
               renderer.renderOutput(out);
             }
             if (msg.metrics) {
@@ -423,6 +632,7 @@
         const startIdx = lines.findIndex(l => l.indexOf('execution started') !== -1);
         if (startIdx !== -1 && lines.length > startIdx + 2) {
           interactiveState = lines[startIdx + 1];
+          lastOutputLine = lines[startIdx + 2];
           renderer.renderOutput(lines[startIdx + 2]);
           if (currentPreset === 'convex.cfp') syncConvexSliders();
         }
@@ -460,7 +670,8 @@
         'curves.cfp': 'Gebruik de recursiediepte slider (1-5) om de fijnheid van de Hilbert-curve te verhogen.',
         'grafiek.cfp': 'Beweeg de muis over het canvas om wiskundige functies te inspecteren met live coördinaten.',
         'hwdes.cfp': 'Bekijk de 2-to-1 Multiplexer schakeling met NOT-, AND- en OR-poorten.',
-        'recpic.cfp': 'Recursieve geometrische mozaïek met kwartslagrotaties.'
+        'recpic.cfp': 'Recursieve geometrische mozaïek met kwartslagrotaties.',
+        'menu_demo.cfp': 'Klik een menu-item hierboven - de VM stuurt het terug als tekst op het canvas. "Other → Text" toont een echte prompt-dialoog.'
       };
 
       // Direct JS implementations for the non-interactive demos' live
@@ -631,6 +842,14 @@
         document.getElementById('row-rot-z').style.display = is3D ? 'flex' : 'none';
         document.getElementById('btn-reset-points').style.display = name === 'bspline.cfp' ? 'inline-block' : 'none';
 
+        // Reset the menu bar on preset switch - a run whose output
+        // includes a GraphMenu repopulates it via renderer.onMenu below;
+        // one that doesn't (every preset except menu_demo.cfp today)
+        // should not keep showing a stale menu from the last preset.
+        const menuBarReset = document.getElementById('graph-menu-bar');
+        menuBarReset.hidden = true;
+        menuBarReset.innerHTML = '';
+
         // Set default depth per preset
         if (name === 'curves.cfp') depth = 2;
         else if (name === 'boom.cfp') depth = 3;
@@ -681,6 +900,107 @@
 
         if (!INTERACTIVE_PRESETS.includes(currentPreset)) return;
         queueTick(encodeEventForSapl(event));
+      });
+
+      // --- GraphMenu Bar ---
+      // A GraphMenu is a UI widget, not a canvas draw (see
+      // grafisch/graphics.cfp's ::Graphics/graphicsout and
+      // js/graphics_renderer.js's drawGraphicsTokens) - this builds the
+      // actual DOM menu bar whenever a run's output includes one, and
+      // routes a clicked item back through the SAME queueTick machinery
+      // every other event uses, as a `MenuItem <cat> <item>` line
+      // (grafisch/graphics.cfp's parseEvent decodes it on the Sapl side).
+      let openMenuCat = null;
+
+      function closeMenuDropdowns() {
+        openMenuCat = null;
+        document.querySelectorAll('.graph-menu-cat').forEach(el => {
+          el.classList.remove('open');
+          const dd = el.querySelector('.graph-menu-dropdown');
+          if (dd) dd.hidden = true;
+        });
+      }
+
+      renderer.onMenu((cats) => {
+        const bar = document.getElementById('graph-menu-bar');
+        bar.innerHTML = '';
+        bar.hidden = cats.length === 0;
+        cats.forEach((cat) => {
+          const catEl = document.createElement('div');
+          catEl.className = 'graph-menu-cat';
+
+          const btn = document.createElement('button');
+          btn.className = 'graph-menu-cat-btn';
+          btn.type = 'button';
+          btn.textContent = cat.name;
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const wasOpen = openMenuCat === cat.name;
+            closeMenuDropdowns();
+            if (!wasOpen) {
+              openMenuCat = cat.name;
+              catEl.classList.add('open');
+              dropdown.hidden = false;
+            }
+          });
+
+          const dropdown = document.createElement('div');
+          dropdown.className = 'graph-menu-dropdown';
+          dropdown.hidden = true;
+          cat.items.forEach((item) => {
+            const itemBtn = document.createElement('button');
+            itemBtn.className = 'graph-menu-item';
+            itemBtn.type = 'button';
+            itemBtn.textContent = item;
+            itemBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              closeMenuDropdowns();
+              document.getElementById('event-display').textContent = `MenuItem (${cat.name}, ${item})`;
+              if (INTERACTIVE_PRESETS.includes(currentPreset)) {
+                queueTick('MenuItem ' + cat.name + ' ' + item);
+              }
+            });
+            dropdown.appendChild(itemBtn);
+          });
+
+          catEl.appendChild(btn);
+          catEl.appendChild(dropdown);
+          bar.appendChild(catEl);
+        });
+      });
+
+      document.addEventListener('click', closeMenuDropdowns);
+
+      // --- GraphPrompt dialog ---
+      // A `PText <text>` line is sent RAW (not via encodeEventForSapl),
+      // because it can contain spaces - grafisch/graphics.cfp's
+      // parseEvent special-cases the "PText " prefix to take the rest
+      // of the stdin line verbatim instead of word-splitting it (see
+      // that file's own startsWithPText/dropCharsFromStr).
+      const promptOverlay = document.getElementById('prompt-overlay');
+      const promptTitleEl = document.getElementById('prompt-title');
+      const promptInputEl = document.getElementById('prompt-input');
+
+      function closePrompt(text) {
+        promptOverlay.hidden = true;
+        if (INTERACTIVE_PRESETS.includes(currentPreset)) {
+          queueTick('PText ' + text.replace(/[\r\n]/g, ' '));
+        }
+      }
+
+      renderer.onPrompt((title, deflt) => {
+        promptTitleEl.textContent = title;
+        promptInputEl.value = deflt;
+        promptOverlay.hidden = false;
+        promptInputEl.focus();
+        promptInputEl.select();
+      });
+
+      document.getElementById('prompt-ok').addEventListener('click', () => closePrompt(promptInputEl.value));
+      document.getElementById('prompt-cancel').addEventListener('click', () => closePrompt(''));
+      promptInputEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') closePrompt(promptInputEl.value);
+        else if (e.key === 'Escape') closePrompt('');
       });
 
       // Event Listeners
