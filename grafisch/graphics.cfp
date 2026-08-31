@@ -2,7 +2,7 @@
 ::List = Nil | Cons !x !xs
 ::MenuCat = MenuCat !name !items
 ::Graphics = GraphText !c !p !txt | GraphPolyLine !c !pts | GraphPolygon !c !pts | GraphRectangle !c !p1 !p2 | GraphEllipse !c !p1 !p2 | GraphDisc !c !p1 !p2 | GraphClear | GraphMenu !cats | GraphPrompt !title !deflt
-::Event = KeyIn !c | MouseDown !p | MouseUp !p | MouseDragged !p | MouseDoubleClick !p | MenuItem !cat !item | PText !txt | NoInput
+::Event = KeyIn !c | MouseDown !p | MouseUp !p | MouseDragged !p | MouseDoubleClick !p | MenuItem !cat !item | PText !txt | OpenFile !content | NoInput
 
 // 16 VGA/EGA Colors
 col_black        = 0
@@ -204,9 +204,18 @@ dropWordChars cs =
 // assumption quotedChars documents for the other direction).
 startsWithPText line = (strlen line >= 6) /\ strEqualAt 0 "PText " line
 
+// Fase 6 (Open/Save): "File → Open" is intercepted entirely in
+// websapl/graphics.html via a native file-picker (no GraphPrompt round
+// trip) -- once a file is chosen, its content (a `figListChars`-format
+// blob, itself space-separated) is sent back as ONE `OpenFile <content>`
+// stdin line. Same raw-line reasoning as PText: a VText figure's own
+// text may contain spaces, so this can't go through splitWords either.
+startsWithOpenFile line = (strlen line >= 9) /\ strEqualAt 0 "OpenFile " line
+
 parseEvent line =
   if (startsWithPText line) (PText (dropCharsFromStr 6 line))
-  (parseEventWords (splitWords line))
+  (if (startsWithOpenFile line) (OpenFile (dropCharsFromStr 9 line))
+  (parseEventWords (splitWords line)))
 
 dropCharsFromStr n s = list2str (dropChars n (str2list s))
 

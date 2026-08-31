@@ -44,6 +44,7 @@ class SaplGraphicsRenderer {
     // shape: [{ name, items: [string, ...] }, ...] (see the GraphMenu
     // case in drawGraphicsTokens for the wire format it's parsed from).
     this.lastMenu = null;
+    this._lastMenuSerialized = null; // dedup guard, see emitMenu below
 
     this.setupHighDPI();
     window.addEventListener('resize', () => this.setupHighDPI());
@@ -124,6 +125,24 @@ class SaplGraphicsRenderer {
   }
 
   emitMenu(cats) {
+    // grafisch/graphics.cfp's own interactive demos re-emit their WHOLE
+    // drawing (menu included) on every single tick, not just when
+    // something actually changed (see docs/2026-08-31_interactieve_
+    // grafische_architectuur.md's state-per-event protocol) - and a
+    // MouseDragged tick fires many times a second. Without this guard,
+    // every one of those ticks rebuilt the menu-bar DOM from scratch
+    // (graphics.html's onMenu subscriber does `bar.innerHTML = ''` and
+    // recreates every button), which reset any open dropdown's `hidden`
+    // state back to closed before the user could click an item inside
+    // it - the menu LOOKED like static, undraggable canvas art rather
+    // than a real clickable dropdown, because it effectively never
+    // stayed open. Skip the rebuild (and the onMenu callbacks) entirely
+    // when the menu's own content hasn't actually changed since last
+    // time; graphics.html's DOM keeps whatever open/closed state it
+    // already has.
+    const serialized = JSON.stringify(cats);
+    if (this._lastMenuSerialized === serialized) return;
+    this._lastMenuSerialized = serialized;
     this.lastMenu = cats;
     for (const cb of this.menuCallbacks) {
       cb(cats);

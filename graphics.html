@@ -227,6 +227,16 @@
       flex-direction: column;
       gap: 1px;
     }
+    /* `.graph-menu-dropdown`'s own `display: flex` above outranks the
+       browser's default `[hidden] { display: none }` UA rule (an
+       attribute selector loses to ANY same-or-later author rule that
+       sets `display` on the same element) - so `dropdown.hidden = true`
+       had NO visual effect at all and every dropdown showed permanently
+       expanded, regardless of open/closed state. Higher-specificity
+       `[hidden]` override wins back the intended behaviour. */
+    .graph-menu-dropdown[hidden] {
+      display: none;
+    }
     .graph-menu-item {
       appearance: none;
       border: none;
@@ -479,6 +489,12 @@
     </div>
   </div>
 
+  <!-- Fase 6 (Open/Save): "File → Open" (grafiek_paint_interactive.cfp)
+       is intercepted entirely in JS via this native file-picker instead
+       of a GraphPrompt round trip - see the click handler on the
+       GraphMenu item below. Hidden, triggered programmatically. -->
+  <input type="file" id="open-file-input" accept=".txt" hidden />
+
   <!-- Scripts -->
   <script src="js/codemirror.min.js"></script>
   <script src="js/sapl_mode.js"></script>
@@ -487,7 +503,7 @@
        Cache-Control: no-cache, so a stale ?v= silently keeps serving an old
        build (this bit us: the extractGraphicsOutContent fix landed in the
        file but the deployed page kept running the pre-fix version). -->
-  <script src="js/graphics_renderer.js?v=20260831_graphprompt"></script>
+  <script src="js/graphics_renderer.js?v=20260831_menudedup"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       const canvas = document.getElementById('graphics-canvas');
@@ -640,12 +656,38 @@
           lastOutputLine = lines[startIdx + 2];
           renderer.renderOutput(lines[startIdx + 2]);
           if (currentPreset === 'convex.cfp') syncConvexSliders();
+          // grafiek_paint_interactive.cfp only: two more ALWAYS-present
+          // lines (empty on every non-Save tick) after the normal
+          // (state, drawing) pair -- a save filename + its serialized
+          // content (docs/2026-08-31_grafiek_tekenprogramma_plan.md fase
+          // 6). Deliberately read here, once per actual tick completion,
+          // NOT inside renderer.renderOutput -- a tab switch replays
+          // renderOutput(lastOutputLine) without a new tick, which would
+          // silently re-trigger the download if it lived there instead.
+          if (lines.length > startIdx + 4 && lines[startIdx + 3]) {
+            triggerFileDownload(lines[startIdx + 3], lines[startIdx + 4]);
+          }
         }
         if (msg.metrics) {
           document.getElementById('metric-exec-time').textContent = (msg.durationMs || 1) + ' ms';
           document.getElementById('metric-instr-count').textContent = (msg.metrics.instr_executed || 0) + ' instr';
         }
         pumpTickQueue();
+      }
+
+      // Real browser download (this is a normal locally-served page, not
+      // a sandboxed artifact viewer -- a programmatic <a download> click
+      // works fine here).
+      function triggerFileDownload(filename, content) {
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
       }
 
       function syncConvexSliders() {
@@ -850,8 +892,19 @@
 
         // Reset the menu bar on preset switch - a run whose output
         // includes a GraphMenu repopulates it via renderer.onMenu below;
-        // one that doesn't (every preset except menu_demo.cfp today)
-        // should not keep showing a stale menu from the last preset.
+        // one that doesn't (every preset except menu_demo.cfp/
+        // grafiek_paint_interactive.cfp today) should not keep showing a
+        // stale menu from the last preset. renderer.emitMenu skips
+        // rebuilding the DOM when a tick's menu content is identical to
+        // the last one it saw (see graphics_renderer.js - without that
+        // guard, every MouseDragged tick tore down and rebuilt the menu
+        // bar, which reset any open dropdown before a click could land
+        // inside it) - so that dedup guard needs resetting here too,
+        // otherwise switching AWAY from a menu-preset and back would
+        // leave the just-cleared DOM empty forever (emitMenu would see
+        // the "new" menu as identical to the one from before the switch
+        // and skip rebuilding it).
+        renderer._lastMenuSerialized = null;
         const menuBarReset = document.getElementById('graph-menu-bar');
         menuBarReset.hidden = true;
         menuBarReset.innerHTML = '';
@@ -962,7 +1015,13 @@
               e.stopPropagation();
               closeMenuDropdowns();
               document.getElementById('event-display').textContent = `MenuItem (${cat.name}, ${item})`;
-              if (INTERACTIVE_PRESETS.includes(currentPreset)) {
+              if (cat.name === 'File' && item === 'Open') {
+                // No VM round trip for "which file" - the OS file dialog
+                // already does that job. openFileInput's change handler
+                // below sends the picked file's content as OpenFile.
+                openFileInput.value = '';
+                openFileInput.click();
+              } else if (INTERACTIVE_PRESETS.includes(currentPreset)) {
                 queueTick('MenuItem ' + cat.name + ' ' + item);
               }
             });
@@ -1007,6 +1066,25 @@
       promptInputEl.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') closePrompt(promptInputEl.value);
         else if (e.key === 'Escape') closePrompt('');
+      });
+
+      // --- Fase 6 (Open/Save): "File → Open" file-picker ---
+      // grafisch/graphics.cfp's parseEvent takes everything after
+      // "OpenFile " verbatim (same reasoning as PText: a loaded VText
+      // figure's own content may contain spaces), so this is sent RAW,
+      // not through encodeEventForSapl.
+      const openFileInput = document.getElementById('open-file-input');
+      openFileInput.addEventListener('change', () => {
+        const file = openFileInput.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          const content = String(reader.result).replace(/[\r\n]/g, ' ');
+          if (INTERACTIVE_PRESETS.includes(currentPreset)) {
+            queueTick('OpenFile ' + content);
+          }
+        };
+        reader.readAsText(file);
       });
 
       // Event Listeners
