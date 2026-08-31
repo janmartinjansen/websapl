@@ -1,0 +1,276 @@
+::__Tuple6 = __Tuple6 x0 x1 x2 x3 x4 x5
+::__Tuple2 = __Tuple2 x0 x1
+::__Tuple9 = __Tuple9 x0 x1 x2 x3 x4 x5 x6 x7 x8
+::Point = Pt !x0 !x1
+::List = Nil | Cons !x0 !x1
+::MenuCat = MenuCat !x0 !x1
+::Graphics = GraphText !x0 !x1 !x2 | GraphPolyLine !x0 !x1 | GraphPolygon !x0 !x1 | GraphRectangle !x0 !x1 !x2 | GraphEllipse !x0 !x1 !x2 | GraphDisc !x0 !x1 !x2 | GraphClear | GraphMenu !x0 | GraphPrompt !x0 !x1
+::Event = KeyIn !x0 | MouseDown !x0 | MouseUp !x0 | MouseDragged !x0 | MouseDoubleClick !x0 | MenuItem !x0 !x1 | PText !x0 | NoInput
+::View = SFig !x0 | VText !x0 | VGroup !x0 | VCurve !x0
+::Fig = Fig !x0 !x1 !x2 !x3 !x4 | NoFig | Marker !x0
+::TransfMode = UseSetpos | UseSetsize
+::Mode = NewFigMode | SelectingMode
+::PResult = PResult !x0 !x1
+col_black = 0
+col_blue = 1
+col_green = 2
+col_cyan = 3
+col_red = 4
+col_magenta = 5
+col_brown = 6
+col_lightgray = 7
+col_darkgray = 8
+col_brightblue = 9
+col_brightgreen = 10
+col_brightcyan = 11
+col_brightred = 12
+col_brightmagenta = 13
+col_yellow = 14
+col_white = 15
+pt __pat_0 __pat_1 = Pt __pat_0 __pat_1
+vergrootPt __pat_2 __pat_3 = case __pat_3 (Pt x y -> Pt (__pat_2 * x) (__pat_2 * y))
+draaiPt __pat_4 __pat_5 = __pat_6 __pat_4 __pat_5
+verschuifPt __pat_7 __pat_8 = case __pat_7 (Pt dx dy -> case __pat_8 (Pt x y -> Pt (x + dx) (y + dy)))
+addPt __pat_9 __pat_10 = case __pat_9 (Pt x1 y1 -> case __pat_10 (Pt x2 y2 -> Pt (x1 + x2) (y1 + y2)))
+subPt __pat_11 __pat_12 = case __pat_11 (Pt x1 y1 -> case __pat_12 (Pt x2 y2 -> Pt (x1 - x2) (y1 - y2)))
+scalePt __pat_13 __pat_14 = case __pat_14 (Pt x y -> Pt (__pat_13 * x) (__pat_13 * y))
+dotPt __pat_15 __pat_16 = case __pat_15 (Pt x1 y1 -> case __pat_16 (Pt x2 y2 -> (x1 * x2) + (y1 * y2)))
+distPtHelper __pat_17 __pat_18 __pat_19 __pat_20 = __pat_21 __pat_17 __pat_19 __pat_18 __pat_20
+distPt __pat_22 __pat_23 = case __pat_22 (Pt x1 y1 -> case __pat_23 (Pt x2 y2 -> distPtHelper x1 y1 x2 y2))
+append __pat_24 __pat_25 = case __pat_24 (Nil -> __pat_25) (Cons x rest -> Cons x (append rest __pat_25))
+revAppend __pat_26 __pat_27 = case __pat_26 (Nil -> __pat_27) (Cons x rest -> revAppend rest (Cons x __pat_27))
+reverseList __pat_28 = revAppend __pat_28 Nil
+mapList __pat_29 __pat_30 = case __pat_30 (Nil -> Nil) (Cons x rest -> Cons (__pat_29 x) (mapList __pat_29 rest))
+filterList __pat_31 __pat_32 = case __pat_32 (Nil -> Nil) (Cons x rest -> if (__pat_31 x) (Cons x (filterList __pat_31 rest)) (filterList __pat_31 rest))
+lengthList __pat_33 = case __pat_33 (Nil -> 0) (Cons x rest -> 1 + lengthList rest)
+forcePt __pat_34 = case __pat_34 (Pt x y -> Pt x y)
+forcePoints __pat_35 = case __pat_35 (Nil -> Nil) (Cons p ps -> Cons (forcePt p) (forcePoints ps))
+forceItem __pat_36 = case __pat_36 (GraphText c p txt -> GraphText c (forcePt p) txt) (GraphPolyLine c pts -> GraphPolyLine c (forcePoints pts)) (GraphPolygon c pts -> GraphPolygon c (forcePoints pts)) (GraphRectangle c p1 p2 -> GraphRectangle c (forcePt p1) (forcePt p2)) (GraphEllipse c p1 p2 -> GraphEllipse c (forcePt p1) (forcePt p2)) (GraphDisc c p1 p2 -> GraphDisc c (forcePt p1) (forcePt p2)) (GraphClear -> GraphClear) (GraphMenu cats -> GraphMenu (forceMenuCats cats)) (GraphPrompt title deflt -> GraphPrompt title deflt)
+forceGraphics __pat_37 = case __pat_37 (Nil -> Nil) (Cons item rest -> Cons (forceItem item) (forceGraphics rest))
+forceMenuCats __pat_38 = case __pat_38 (Nil -> Nil) (Cons c rest -> Cons (forceMenuCat c) (forceMenuCats rest))
+forceMenuCat __pat_39 = case __pat_39 (MenuCat name items -> MenuCat name items)
+graphicsout __pat_40 = list2str (graphicsoutChars __pat_40)
+graphicsoutChars __pat_41 = case __pat_41 (Nil -> Nil) (Cons g rest -> append (itemChars g) (graphicsoutChars rest))
+itemChars __pat_42 = case __pat_42 (GraphClear -> tagChars __pat_42) (GraphText c p txt -> append (tagChars __pat_42) (append (intChars c) (append (ptChars p) (quotedChars txt)))) (GraphPolyLine c pts -> pointsItemChars __pat_42 c pts) (GraphPolygon c pts -> pointsItemChars __pat_42 c pts) (GraphRectangle c p1 p2 -> pairItemChars __pat_42 c p1 p2) (GraphEllipse c p1 p2 -> pairItemChars __pat_42 c p1 p2) (GraphDisc c p1 p2 -> pairItemChars __pat_42 c p1 p2) (GraphMenu cats -> append (tagChars __pat_42) (menuCatsChars cats)) (GraphPrompt title deflt -> append (tagChars __pat_42) (append (quotedChars title) (quotedChars deflt)))
+menuCatsChars __pat_43 = append (intChars (lengthList __pat_43)) (menuCatsBody __pat_43)
+menuCatsBody __pat_44 = case __pat_44 (Nil -> Nil) (Cons c rest -> append (menuCatChars c) (menuCatsBody rest))
+menuCatChars __pat_45 = case __pat_45 (MenuCat name items -> append (quotedChars name) (append (intChars (lengthList items)) (menuItemsChars items)))
+menuItemsChars __pat_46 = case __pat_46 (Nil -> Nil) (Cons it rest -> append (quotedChars it) (menuItemsChars rest))
+pairItemChars __pat_47 __pat_48 __pat_49 __pat_50 = append (tagChars __pat_47) (append (intChars __pat_48) (append (ptChars __pat_49) (ptChars __pat_50)))
+pointsItemChars __pat_51 __pat_52 __pat_53 = append (tagChars __pat_51) (append (intChars __pat_52) (append (intChars (lengthList __pat_53)) (ptsChars __pat_53)))
+ptsChars __pat_54 = case __pat_54 (Nil -> Nil) (Cons p rest -> append (ptChars p) (ptsChars rest))
+ptChars __pat_55 = case __pat_55 (Pt x y -> append (floatChars x) (floatChars y))
+tagChars __pat_56 = append (str2list (constrName __pat_56)) (Cons 32 Nil)
+intChars __pat_57 = append (itoa __pat_57) (Cons 32 Nil)
+floatChars __pat_58 = append (str2list (ftoa __pat_58)) (Cons 32 Nil)
+quotedChars __pat_59 = Cons 34 (append (str2list __pat_59) (Cons 34 (Cons 32 Nil)))
+str2list __pat_60 = strls 0 __pat_60
+strls __pat_61 __pat_62 = if (__pat_61 < strlen __pat_62) (Cons (strat __pat_61 __pat_62) (strls (__pat_61 + 1) __pat_62)) Nil
+list2str __pat_63 = fillStr 0 __pat_63 (strcreate (lengthList __pat_63))
+fillStr __pat_64 __pat_65 __pat_66 = case __pat_65 (Nil -> __pat_66) (Cons c cs -> fillStr (__pat_64 + 1) cs (update c __pat_64 __pat_66))
+itoa __pat_67 = if (__pat_67 < 0) (Cons 45 (itoa (0 - __pat_67))) (if (__pat_67 < 10) (Cons (48 + __pat_67) Nil) (append (itoa (__pat_67 / 10)) (Cons (48 + (__pat_67 % 10)) Nil)))
+strEqual __pat_68 __pat_69 = (strlen __pat_68 == strlen __pat_69) /\ strEqualAt 0 __pat_68 __pat_69
+strEqualAt __pat_70 __pat_71 __pat_72 = if (__pat_70 >= strlen __pat_71) 1 (if (strat __pat_70 __pat_71 == strat __pat_70 __pat_72) (strEqualAt (__pat_70 + 1) __pat_71 __pat_72) 0)
+splitWords __pat_73 = splitWordsChars (str2list __pat_73)
+splitWordsChars __pat_74 = case __pat_74 (Nil -> Nil) (Cons c rest -> if (c == 32) (splitWordsChars rest) (splitWordsWord __pat_74))
+splitWordsWord __pat_75 = Cons (list2str (takeWordChars __pat_75)) (splitWordsChars (dropWordChars __pat_75))
+takeWordChars __pat_76 = case __pat_76 (Nil -> Nil) (Cons c rest -> if (c == 32) Nil (Cons c (takeWordChars rest)))
+dropWordChars __pat_77 = case __pat_77 (Nil -> Nil) (Cons c rest -> if (c == 32) rest (dropWordChars rest))
+startsWithPText __pat_78 = (strlen __pat_78 >= 6) /\ strEqualAt 0 "PText " __pat_78
+parseEvent __pat_79 = if (startsWithPText __pat_79) (PText (dropCharsFromStr 6 __pat_79)) (parseEventWords (splitWords __pat_79))
+dropCharsFromStr __pat_80 __pat_81 = list2str (dropChars __pat_80 (str2list __pat_81))
+dropChars __pat_82 __pat_83 = if (__pat_82 <= 0) __pat_83 (dropChars1 __pat_82 __pat_83)
+dropChars1 __pat_84 __pat_85 = case __pat_85 (Nil -> Nil) (Cons c rest -> dropChars (__pat_84 - 1) rest)
+parseEventWords __pat_86 = case __pat_86 (Nil -> NoInput) (Cons tag rest -> parseEventTag tag rest)
+parseEventTag __pat_87 __pat_88 = if (strEqual __pat_87 "MouseDown") (MouseDown (parseEventPt __pat_88)) (if (strEqual __pat_87 "MouseUp") (MouseUp (parseEventPt __pat_88)) (if (strEqual __pat_87 "MouseDragged") (MouseDragged (parseEventPt __pat_88)) (if (strEqual __pat_87 "MouseDoubleClick") (MouseDoubleClick (parseEventPt __pat_88)) (if (strEqual __pat_87 "KeyIn") (KeyIn (parseEventKey __pat_88)) (if (strEqual __pat_87 "MenuItem") (parseMenuItemEvent __pat_88) NoInput)))))
+parseMenuItemEvent __pat_89 = case __pat_89 (Nil -> NoInput) (Cons cat rest2 -> parseMenuItemEventItem cat rest2)
+parseMenuItemEventItem __pat_90 __pat_91 = case __pat_91 (Nil -> NoInput) (Cons item rest3 -> MenuItem __pat_90 item)
+parseEventPt __pat_92 = case __pat_92 (Nil -> Pt 0.0 0.0) (Cons xs rest -> parseEventPtY xs rest)
+parseEventPtY __pat_93 __pat_94 = case __pat_94 (Nil -> Pt (atof __pat_93) 0.0) (Cons ys rest2 -> Pt (atof __pat_93) (atof ys))
+parseEventKey __pat_95 = case __pat_95 (Nil -> 0) (Cons cs rest -> ftoi (atof cs))
+decodeFloatWords __pat_96 = case __pat_96 (Nil -> Nil) (Cons w rest -> Cons (atof w) (decodeFloatWords rest))
+decodePointList __pat_97 = case __pat_97 (Nil -> Nil) (Cons nStr rest -> decodePoints (ftoi (atof nStr)) rest)
+decodePoints __pat_98 __pat_99 = if (__pat_98 <= 0) Nil (decodePointsStep __pat_98 __pat_99)
+decodePointsStep __pat_100 __pat_101 = case __pat_101 (Nil -> Nil) (Cons xs rest -> decodePointsStepY __pat_100 xs rest)
+decodePointsStepY __pat_102 __pat_103 __pat_104 = case __pat_104 (Nil -> Nil) (Cons ys rest2 -> Cons (Pt (atof __pat_103) (atof ys)) (decodePoints (__pat_102 - 1) rest2))
+ptX __pat_105 = case __pat_105 (Pt x y -> x)
+ptY __pat_106 = case __pat_106 (Pt x y -> y)
+figId __pat_107 = case __pat_107 (Fig id p1 p2 k v -> id)
+figP1 __pat_108 = case __pat_108 (Fig id p1 p2 k v -> p1)
+figP2 __pat_109 = case __pat_109 (Fig id p1 p2 k v -> p2)
+figX __pat_110 = ptX (figP1 __pat_110)
+figY __pat_111 = ptY (figP1 __pat_111)
+figW __pat_112 = ptX (figP2 __pat_112)
+figH __pat_113 = ptY (figP2 __pat_113)
+minList __pat_114 = case __pat_114 (Cons __pat_115 __pat_116 -> case __pat_116 (Nil -> __pat_115) (_ -> __pat_117 __pat_116 __pat_115))
+maxList __pat_118 = case __pat_118 (Cons __pat_119 __pat_120 -> case __pat_120 (Nil -> __pat_119) (_ -> __pat_121 __pat_120 __pat_119))
+concatLists __pat_122 = case __pat_122 (Nil -> Nil) (Cons __pat_123 __pat_124 -> append __pat_123 (concatLists __pat_124))
+memberFig __pat_125 __pat_126 = case __pat_126 (Nil -> 0) (Cons __pat_127 __pat_128 -> if (figId __pat_125 == figId __pat_127) 1 (memberFig __pat_125 __pat_128))
+removeFig __pat_129 __pat_130 = case __pat_130 (Nil -> Nil) (Cons __pat_131 __pat_132 -> if (figId __pat_129 == figId __pat_131) __pat_132 (Cons __pat_131 (removeFig __pat_129 __pat_132)))
+frameP1 __pat_133 = Pt (minList (mapList ptX __pat_133)) (maxList (mapList ptY __pat_133))
+frameP2 __pat_134 = Pt (maxList (mapList ptX __pat_134)) (minList (mapList ptY __pat_134))
+figCorners __pat_135 = case __pat_135 (Nil -> Nil) (Cons __pat_136 __pat_137 -> Cons (figP1 __pat_136) (Cons (figP2 __pat_136) (figCorners __pat_137)))
+makeGroup __pat_138 __pat_139 = __pat_140 __pat_138 __pat_139
+ungroup __pat_141 = case __pat_141 (Fig __pat_142 __pat_143 __pat_144 __pat_145 __pat_146 -> case __pat_146 (VGroup __pat_147 -> __pat_147) (_ -> Cons __pat_141 Nil)) (_ -> Cons __pat_141 Nil)
+translatePt __pat_148 __pat_149 __pat_150 = __pat_151 __pat_150 __pat_148 __pat_149
+setpos __pat_152 __pat_153 = case __pat_153 (Fig __pat_154 __pat_155 __pat_156 __pat_157 __pat_158 -> __pat_159 __pat_155 __pat_156 __pat_154 __pat_152 __pat_157 __pat_158)
+setposChild __pat_160 __pat_161 __pat_162 = setpos (Pt (figX __pat_162 + __pat_160) (figY __pat_162 + __pat_161)) __pat_162
+scalePtAround __pat_163 __pat_164 __pat_165 __pat_166 __pat_167 = __pat_168 __pat_167 __pat_165 __pat_163 __pat_166 __pat_164
+setsize __pat_169 __pat_170 = case __pat_170 (Fig __pat_171 __pat_172 __pat_173 __pat_174 __pat_175 -> __pat_176 __pat_173 __pat_171 __pat_172 __pat_169 __pat_174 __pat_175)
+setsizeChild __pat_177 __pat_178 __pat_179 __pat_180 __pat_181 = __pat_182 __pat_179 __pat_177 __pat_180 __pat_178 __pat_181
+within __pat_183 __pat_184 = case __pat_184 (Marker __pat_185 -> __pat_186 __pat_183 __pat_185)
+selectMove __pat_187 __pat_188 = within __pat_187 (Marker (figP1 __pat_188))
+selectRes __pat_189 __pat_190 = within __pat_189 (Marker (figP2 __pat_190))
+findMatch __pat_191 __pat_192 __pat_193 = case __pat_193 (Nil -> NoFig) (Cons __pat_194 __pat_195 -> if (__pat_192 __pat_191 __pat_194) __pat_194 (findMatch __pat_191 __pat_192 __pat_195))
+findFig __pat_196 __pat_197 __pat_198 __pat_199 = __pat_200 __pat_197 __pat_196 __pat_199 __pat_198
+isNoFig __pat_201 = case __pat_201 (NoFig -> 1) (_ -> 0)
+replaceIn __pat_202 __pat_203 __pat_204 = case __pat_204 (Nil -> Nil) (Cons __pat_205 __pat_206 -> if (figId __pat_205 == figId __pat_202) (Cons __pat_203 __pat_206) (Cons __pat_205 (replaceIn __pat_202 __pat_203 __pat_206)))
+replaceFs __pat_207 __pat_208 __pat_209 = if (isNoFig __pat_207) __pat_209 (replaceIn __pat_207 __pat_208 __pat_209)
+replaceSfs __pat_210 __pat_211 __pat_212 = if (isNoFig __pat_210) __pat_212 (replaceIn __pat_210 __pat_211 __pat_212)
+makeselFs __pat_213 __pat_214 __pat_215 = if (memberFig __pat_213 __pat_214) (removeFig __pat_213 __pat_214) (if (memberFig __pat_213 __pat_215) (Cons __pat_213 __pat_214) __pat_214)
+makeselSfs __pat_216 __pat_217 __pat_218 = if (memberFig __pat_216 __pat_217) (Cons __pat_216 __pat_218) (if (memberFig __pat_216 __pat_218) (removeFig __pat_216 __pat_218) __pat_218)
+draw __pat_219 = case __pat_219 (NoFig -> Nil) (Marker __pat_220 -> Nil) (Fig __pat_221 __pat_222 __pat_223 __pat_224 __pat_225 -> case __pat_225 (VGroup __pat_226 -> concatLists (mapList draw __pat_226)) (VCurve __pat_227 -> Cons (GraphPolyLine __pat_224 __pat_227) Nil) (VText __pat_228 -> Cons (GraphText __pat_224 (Pt (ptX __pat_222 + 0.02) (ptY __pat_222)) __pat_228) Nil) (SFig __pat_229 -> drawSFig __pat_224 __pat_229 (ptX __pat_222) (ptY __pat_222) (ptX __pat_223) (ptY __pat_223)))
+drawSFig __pat_230 __pat_231 __pat_232 __pat_233 __pat_234 __pat_235 = if (strEqual __pat_231 "Rect") (Cons (GraphPolyLine __pat_230 (Cons (Pt __pat_232 __pat_233) (Cons (Pt __pat_234 __pat_233) (Cons (Pt __pat_234 __pat_235) (Cons (Pt __pat_232 __pat_235) (Cons (Pt __pat_232 __pat_233) Nil)))))) Nil) (if (strEqual __pat_231 "Line") (Cons (GraphPolyLine __pat_230 (Cons (Pt __pat_232 __pat_233) (Cons (Pt __pat_234 __pat_235) Nil))) Nil) (if (strEqual __pat_231 "Ellipse") (Cons (GraphEllipse __pat_230 (Pt __pat_232 __pat_233) (Pt __pat_234 __pat_235)) Nil) (if (strEqual __pat_231 "Oval") (Cons (GraphDisc __pat_230 (Pt __pat_232 __pat_233) (Pt __pat_234 __pat_235)) Nil) (if (strEqual __pat_231 "Bar") (Cons (GraphRectangle __pat_230 (Pt __pat_232 __pat_233) (Pt __pat_234 __pat_235)) Nil) Nil))))
+withId __pat_236 __pat_237 = case __pat_237 (Fig __pat_238 __pat_239 __pat_240 __pat_241 __pat_242 -> Fig __pat_236 __pat_239 __pat_240 __pat_241 __pat_242)
+startFromTmpl __pat_243 __pat_244 __pat_245 = case __pat_245 (Fig __pat_246 __pat_247 __pat_248 __pat_249 __pat_250 -> case __pat_250 (VCurve __pat_251 -> Fig __pat_243 __pat_247 __pat_248 __pat_249 (VCurve (Cons __pat_244 Nil))) (_ -> setpos __pat_244 (withId __pat_243 __pat_245))) (_ -> setpos __pat_244 (withId __pat_243 __pat_245))
+appendPt __pat_252 __pat_253 = append __pat_252 (Cons __pat_253 Nil)
+dragActive __pat_254 __pat_255 = case __pat_255 (Fig __pat_256 __pat_257 __pat_258 __pat_259 __pat_260 -> case __pat_260 (VCurve __pat_261 -> Fig __pat_256 __pat_257 __pat_258 __pat_259 (VCurve (appendPt __pat_261 __pat_254))) (_ -> setsize __pat_254 __pat_255)) (_ -> setsize __pat_254 __pat_255)
+finalizeActive __pat_262 __pat_263 = case __pat_263 (Fig __pat_264 __pat_265 __pat_266 __pat_267 __pat_268 -> case __pat_268 (VCurve __pat_269 -> __pat_270 __pat_269 __pat_262 __pat_264 __pat_267) (_ -> __pat_263)) (_ -> __pat_263)
+stepNewDown __pat_271 __pat_272 __pat_273 __pat_274 = if (isNoFig __pat_274) (__Tuple2 (startFromTmpl __pat_271 __pat_272 __pat_273) (__pat_271 + 1)) (__Tuple2 __pat_274 __pat_271)
+stepNewDrag __pat_275 __pat_276 = if (isNoFig __pat_276) __pat_276 (dragActive __pat_275 __pat_276)
+stepNewUpSfs __pat_277 __pat_278 __pat_279 = if (isNoFig __pat_279) __pat_278 (Cons (finalizeActive __pat_277 __pat_279) __pat_278)
+stepNewUpActive __pat_280 __pat_281 = if (isNoFig __pat_281) __pat_281 NoFig
+applyTransf __pat_282 __pat_283 __pat_284 = case __pat_282 (UseSetpos -> setpos __pat_283 __pat_284) (UseSetsize -> setsize __pat_283 __pat_284)
+pickSel __pat_285 __pat_286 __pat_287 = __pat_288 __pat_285 __pat_286 __pat_287
+pickSelResize __pat_289 __pat_290 __pat_291 = __pat_292 __pat_289 __pat_290 __pat_291
+stepSelDown __pat_293 __pat_294 __pat_295 = pickSel __pat_293 __pat_294 __pat_295
+stepSelDrag __pat_296 __pat_297 __pat_298 = if (isNoFig __pat_297) __pat_297 (applyTransf __pat_298 __pat_296 __pat_297)
+stepSelDragFlag __pat_299 = if (isNoFig __pat_299) 0 1
+stepSelUp __pat_300 __pat_301 __pat_302 __pat_303 = if (isNoFig __pat_300) (__Tuple2 __pat_302 __pat_303) (if (__pat_301 == 1) (__Tuple2 (replaceFs __pat_300 __pat_300 __pat_302) (replaceSfs __pat_300 __pat_300 __pat_303)) (__Tuple2 (makeselFs __pat_300 __pat_302 __pat_303) (makeselSfs __pat_300 __pat_302 __pat_303)))
+renderState __pat_304 __pat_305 __pat_306 = Cons GraphClear (Cons paintMenu (append (concatLists (mapList draw __pat_304)) (append (concatLists (mapList draw __pat_305)) (draw __pat_306))))
+paintMenu = GraphMenu (Cons (MenuCat "File" (Cons "Open" (Cons "Save" (Cons "Preview" (Cons "Quit" Nil))))) (Cons (MenuCat "Edit" (Cons "Select" (Cons "Del" (Cons "Copy" (Cons "Group" (Cons "Ungroup" Nil)))))) (Cons (MenuCat "New" (Cons "Line" (Cons "Ellipse" (Cons "Oval" (Cons "Rect" (Cons "Bar" Nil)))))) (Cons (MenuCat "Other" (Cons "Curve" (Cons "Text" Nil))) (Cons (MenuCat "Color" (Cons "black" (Cons "blue" (Cons "white" (Cons "yellow" (Cons "red" (Cons "green" Nil))))))) Nil)))))
+setcolor __pat_307 = if (strEqual __pat_307 "black") col_black (if (strEqual __pat_307 "blue") col_blue (if (strEqual __pat_307 "white") col_white (if (strEqual __pat_307 "yellow") col_yellow (if (strEqual __pat_307 "red") col_red (if (strEqual __pat_307 "green") col_green col_black)))))
+freshShapeTmpl __pat_308 __pat_309 = Fig 0 (Pt 1.0 (0.0 - 1.0)) (Pt 1.01 (0.0 - 1.01)) __pat_309 (SFig __pat_308)
+freshCurveTmpl __pat_310 = Fig 0 (Pt 1.0 (0.0 - 1.0)) (Pt 1.01 (0.0 - 1.01)) __pat_310 (VCurve Nil)
+freshTextTmpl __pat_311 __pat_312 = Fig 0 (Pt 1.0 (0.0 - 1.0)) (Pt 1.01 (0.0 - 1.01)) __pat_311 (VText __pat_312)
+newToolTmpl __pat_313 __pat_314 = if (strEqual __pat_313 "Curve") (freshCurveTmpl __pat_314) (if (strEqual __pat_313 "Text") (freshTextTmpl __pat_314 "Tekst") (freshShapeTmpl __pat_313 __pat_314))
+stepMenuNew __pat_315 __pat_316 __pat_317 __pat_318 __pat_319 __pat_320 = __Tuple6 __pat_315 NewFigMode __pat_317 __pat_318 (newToolTmpl __pat_316 __pat_320) __pat_320
+stepMenuColor __pat_321 __pat_322 __pat_323 __pat_324 __pat_325 __pat_326 __pat_327 = __Tuple6 __pat_321 __pat_322 __pat_324 __pat_325 __pat_326 (setcolor __pat_323)
+isEmptyList __pat_328 = case __pat_328 (Nil -> 1) (_ -> 0)
+appendExpanded __pat_329 __pat_330 = append __pat_329 (concatLists (mapList ungroup __pat_330))
+copyFigsWithFreshIds __pat_331 __pat_332 = case __pat_332 (Nil -> __Tuple2 Nil __pat_331) (Cons __pat_333 __pat_334 -> __pat_335 __pat_334 __pat_331 __pat_333)
+copyOneFigWithFreshId __pat_336 __pat_337 __pat_338 = copyOneFigWithFreshId__let __pat_338 __pat_336 __pat_337 __pat_338
+stepEditCopy __pat_339 __pat_340 __pat_341 __pat_342 __pat_343 __pat_344 = stepEditCopy__let (copyFigsWithFreshIds __pat_339 __pat_342) __pat_339 __pat_340 __pat_341 __pat_342 __pat_343 __pat_344
+stepEditGroup __pat_345 __pat_346 __pat_347 __pat_348 __pat_349 __pat_350 = if (isEmptyList __pat_348) (__Tuple6 __pat_345 __pat_346 __pat_347 __pat_348 __pat_349 __pat_350) (stepEditGroupNonEmpty __pat_345 __pat_346 __pat_347 __pat_348 __pat_349 __pat_350)
+stepEditGroupNonEmpty __pat_351 __pat_352 __pat_353 __pat_354 __pat_355 __pat_356 = __pat_357 __pat_354 __pat_351 __pat_352 __pat_353 __pat_355 __pat_356
+stepMenuEdit __pat_358 __pat_359 __pat_360 __pat_361 __pat_362 __pat_363 __pat_364 = if (strEqual __pat_360 "Select") (__Tuple6 __pat_358 SelectingMode __pat_361 __pat_362 __pat_363 __pat_364) (if (strEqual __pat_360 "Del") (__Tuple6 __pat_358 __pat_359 __pat_361 Nil __pat_363 __pat_364) (if (strEqual __pat_360 "Copy") (stepEditCopy __pat_358 __pat_359 __pat_361 __pat_362 __pat_363 __pat_364) (if (strEqual __pat_360 "Group") (stepEditGroup __pat_358 __pat_359 __pat_361 __pat_362 __pat_363 __pat_364) (if (strEqual __pat_360 "Ungroup") (__Tuple6 __pat_358 __pat_359 (appendExpanded __pat_361 __pat_362) Nil __pat_363 __pat_364) (__Tuple6 __pat_358 __pat_359 __pat_361 __pat_362 __pat_363 __pat_364)))))
+stepMenu __pat_365 __pat_366 __pat_367 __pat_368 __pat_369 __pat_370 __pat_371 __pat_372 = if (strEqual __pat_367 "New") (stepMenuNew __pat_365 __pat_368 __pat_369 __pat_370 __pat_371 __pat_372) (if (strEqual __pat_367 "Other") (stepMenuNew __pat_365 __pat_368 __pat_369 __pat_370 __pat_371 __pat_372) (if (strEqual __pat_367 "Color") (stepMenuColor __pat_365 __pat_366 __pat_368 __pat_369 __pat_370 __pat_371 __pat_372) (if (strEqual __pat_367 "Edit") (stepMenuEdit __pat_365 __pat_366 __pat_368 __pat_369 __pat_370 __pat_371 __pat_372) (__Tuple6 __pat_365 __pat_366 __pat_369 __pat_370 __pat_371 __pat_372))))
+strcat2 __pat_373 __pat_374 = list2str (append (str2list __pat_373) (str2list __pat_374))
+figChars __pat_375 = case __pat_375 (NoFig -> str2list "NoFig ") (Marker p -> append (str2list "Marker ") (ptChars p)) (Fig id p1 p2 k v -> append (str2list "Fig ") (append (intChars id) (append (ptChars p1) (append (ptChars p2) (append (intChars k) (viewChars v))))))
+viewChars __pat_376 = case __pat_376 (SFig name -> append (str2list "SFig ") (append (str2list name) (Cons 32 Nil))) (VText text -> append (str2list "VText ") (append (str2list text) (str2list " EndText "))) (VCurve pts -> append (str2list "VCurve ") (append (intChars (lengthList pts)) (ptsChars pts))) (VGroup figs -> append (str2list "VGroup ") (append (intChars (lengthList figs)) (figsChars figs)))
+figsChars __pat_377 = case __pat_377 (Nil -> Nil) (Cons f rest -> append (figChars f) (figsChars rest))
+figListChars __pat_378 = append (intChars (lengthList __pat_378)) (figsChars __pat_378)
+readIntWord __pat_379 = PResult (ftoi (atof (hdOf __pat_379))) (tlOf __pat_379)
+readPtWords __pat_380 = __pat_381 __pat_380
+readFig __pat_382 = readFigTag (hdOf __pat_382) (tlOf __pat_382)
+readFigTag __pat_383 __pat_384 = if (strEqual __pat_383 "NoFig") (PResult NoFig __pat_384) (if (strEqual __pat_383 "Marker") (readMarkerBody __pat_384) (readFigBody __pat_384))
+readMarkerBody __pat_385 = readMarkerBodyPt (readPtWords __pat_385)
+readMarkerBodyPt __pat_386 = case __pat_386 (PResult __pat_387 __pat_388 -> PResult (Marker __pat_387) __pat_388)
+readFigBody __pat_389 = readFigBodyId (readIntWord __pat_389)
+readFigBodyId __pat_390 = case __pat_390 (PResult __pat_391 __pat_392 -> readFigBodyP1 __pat_391 (readPtWords __pat_392))
+readFigBodyP1 __pat_393 __pat_394 = case __pat_394 (PResult __pat_395 __pat_396 -> readFigBodyP2 __pat_393 __pat_395 (readPtWords __pat_396))
+readFigBodyP2 __pat_397 __pat_398 __pat_399 = case __pat_399 (PResult __pat_400 __pat_401 -> readFigBodyK __pat_397 __pat_398 __pat_400 (readIntWord __pat_401))
+readFigBodyK __pat_402 __pat_403 __pat_404 __pat_405 = case __pat_405 (PResult __pat_406 __pat_407 -> readView __pat_402 __pat_403 __pat_404 __pat_406 __pat_407)
+readView __pat_408 __pat_409 __pat_410 __pat_411 __pat_412 = readViewTag __pat_408 __pat_409 __pat_410 __pat_411 (hdOf __pat_412) (tlOf __pat_412)
+readViewTag __pat_413 __pat_414 __pat_415 __pat_416 __pat_417 __pat_418 = if (strEqual __pat_417 "SFig") (readSFigBody __pat_413 __pat_414 __pat_415 __pat_416 __pat_418) (if (strEqual __pat_417 "VText") (readVTextBody __pat_413 __pat_414 __pat_415 __pat_416 __pat_418) (if (strEqual __pat_417 "VCurve") (readVCurveBody __pat_413 __pat_414 __pat_415 __pat_416 __pat_418) (readVGroupBody __pat_413 __pat_414 __pat_415 __pat_416 __pat_418)))
+readSFigBody __pat_419 __pat_420 __pat_421 __pat_422 __pat_423 = PResult (Fig __pat_419 __pat_420 __pat_421 __pat_422 (SFig (hdOf __pat_423))) (tlOf __pat_423)
+readVTextBody __pat_424 __pat_425 __pat_426 __pat_427 __pat_428 = readVTextBodyText __pat_424 __pat_425 __pat_426 __pat_427 (readTextWords __pat_428)
+readVTextBodyText __pat_429 __pat_430 __pat_431 __pat_432 __pat_433 = case __pat_433 (PResult __pat_434 __pat_435 -> PResult (Fig __pat_429 __pat_430 __pat_431 __pat_432 (VText __pat_434)) __pat_435)
+readTextWords __pat_436 = readTextWordsAcc "" __pat_436
+readTextWordsAcc __pat_437 __pat_438 = readTextWordsAccTag __pat_437 (hdOf __pat_438) (tlOf __pat_438)
+readTextWordsAccTag __pat_439 __pat_440 __pat_441 = if (strEqual __pat_440 "EndText") (PResult __pat_439 __pat_441) (readTextWordsAcc (joinWord __pat_439 __pat_440) __pat_441)
+joinWord __pat_442 __pat_443 = if (strEqual __pat_442 "") __pat_443 (strcat2 (strcat2 __pat_442 " ") __pat_443)
+readVCurveBody __pat_444 __pat_445 __pat_446 __pat_447 __pat_448 = readVCurveBodyN __pat_444 __pat_445 __pat_446 __pat_447 (readIntWord __pat_448)
+readVCurveBodyN __pat_449 __pat_450 __pat_451 __pat_452 __pat_453 = case __pat_453 (PResult __pat_454 __pat_455 -> readVCurveBodyPts __pat_449 __pat_450 __pat_451 __pat_452 (readNPoints __pat_454 __pat_455))
+readVCurveBodyPts __pat_456 __pat_457 __pat_458 __pat_459 __pat_460 = case __pat_460 (PResult __pat_461 __pat_462 -> PResult (Fig __pat_456 __pat_457 __pat_458 __pat_459 (VCurve __pat_461)) __pat_462)
+readNPoints __pat_463 __pat_464 = if (__pat_463 <= 0) (PResult Nil __pat_464) (readNPointsStep __pat_463 __pat_464)
+readNPointsStep __pat_465 __pat_466 = readNPointsStepP (readPtWords __pat_466) __pat_465
+readNPointsStepP __pat_467 __pat_468 = case __pat_467 (PResult __pat_469 __pat_470 -> readNPointsStepRest __pat_469 __pat_468 (readNPoints (__pat_468 - 1) __pat_470))
+readNPointsStepRest __pat_471 __pat_472 __pat_473 = case __pat_473 (PResult __pat_474 __pat_475 -> PResult (Cons __pat_471 __pat_474) __pat_475)
+readVGroupBody __pat_476 __pat_477 __pat_478 __pat_479 __pat_480 = readVGroupBodyN __pat_476 __pat_477 __pat_478 __pat_479 (readIntWord __pat_480)
+readVGroupBodyN __pat_481 __pat_482 __pat_483 __pat_484 __pat_485 = case __pat_485 (PResult __pat_486 __pat_487 -> readVGroupBodyFigs __pat_481 __pat_482 __pat_483 __pat_484 (readNFigs __pat_486 __pat_487))
+readVGroupBodyFigs __pat_488 __pat_489 __pat_490 __pat_491 __pat_492 = case __pat_492 (PResult __pat_493 __pat_494 -> PResult (Fig __pat_488 __pat_489 __pat_490 __pat_491 (VGroup __pat_493)) __pat_494)
+readNFigs __pat_495 __pat_496 = if (__pat_495 <= 0) (PResult Nil __pat_496) (readNFigsStep __pat_495 __pat_496)
+readNFigsStep __pat_497 __pat_498 = readNFigsStepF (readFig __pat_498) __pat_497
+readNFigsStepF __pat_499 __pat_500 = case __pat_499 (PResult __pat_501 __pat_502 -> readNFigsStepRest __pat_501 __pat_500 (readNFigs (__pat_500 - 1) __pat_502))
+readNFigsStepRest __pat_503 __pat_504 __pat_505 = case __pat_505 (PResult __pat_506 __pat_507 -> PResult (Cons __pat_503 __pat_506) __pat_507)
+readFigList __pat_508 = readFigListN (readIntWord __pat_508)
+readFigListN __pat_509 = case __pat_509 (PResult __pat_510 __pat_511 -> readNFigs __pat_510 __pat_511)
+modeChars __pat_512 = case __pat_512 (NewFigMode -> str2list "NewFigMode ") (SelectingMode -> str2list "SelectingMode ")
+readMode __pat_513 = readModeTag (hdOf __pat_513) (tlOf __pat_513)
+readModeTag __pat_514 __pat_515 = if (strEqual __pat_514 "NewFigMode") (PResult NewFigMode __pat_515) (PResult SelectingMode __pat_515)
+transfModeChars __pat_516 = case __pat_516 (UseSetpos -> str2list "UseSetpos ") (UseSetsize -> str2list "UseSetsize ")
+readTransfMode __pat_517 = readTransfModeTag (hdOf __pat_517) (tlOf __pat_517)
+readTransfModeTag __pat_518 __pat_519 = if (strEqual __pat_518 "UseSetpos") (PResult UseSetpos __pat_519) (PResult UseSetsize __pat_519)
+writeState __pat_520 __pat_521 __pat_522 __pat_523 __pat_524 __pat_525 __pat_526 __pat_527 __pat_528 = list2str (append (modeChars __pat_520) (append (figListChars __pat_521) (append (figListChars __pat_522) (append (figChars __pat_523) (append (figChars __pat_524) (append (transfModeChars __pat_525) (append (intChars __pat_526) (append (intChars __pat_527) (intChars __pat_528)))))))))
+defaultTmpl = freshShapeTmpl "Rect" col_black
+defaultState = __Tuple9 NewFigMode Nil Nil defaultTmpl NoFig UseSetpos 0 col_black 1
+readState __pat_529 = if (strlen __pat_529 == 0) defaultState (readStateWords (splitWords __pat_529))
+readStateWords __pat_530 = readState1 (readMode __pat_530)
+readState1 __pat_531 = case __pat_531 (PResult __pat_532 __pat_533 -> readState2 __pat_532 (readFigList __pat_533))
+readState2 __pat_534 __pat_535 = case __pat_535 (PResult __pat_536 __pat_537 -> readState3 __pat_534 __pat_536 (readFigList __pat_537))
+readState3 __pat_538 __pat_539 __pat_540 = case __pat_540 (PResult __pat_541 __pat_542 -> readState4 __pat_538 __pat_539 __pat_541 (readFig __pat_542))
+readState4 __pat_543 __pat_544 __pat_545 __pat_546 = case __pat_546 (PResult __pat_547 __pat_548 -> readState5 __pat_543 __pat_544 __pat_545 __pat_547 (readFig __pat_548))
+readState5 __pat_549 __pat_550 __pat_551 __pat_552 __pat_553 = case __pat_553 (PResult __pat_554 __pat_555 -> readState6 __pat_549 __pat_550 __pat_551 __pat_552 __pat_554 (readTransfMode __pat_555))
+readState6 __pat_556 __pat_557 __pat_558 __pat_559 __pat_560 __pat_561 = case __pat_561 (PResult __pat_562 __pat_563 -> readState7 __pat_556 __pat_557 __pat_558 __pat_559 __pat_560 __pat_562 (readIntWord __pat_563))
+readState7 __pat_564 __pat_565 __pat_566 __pat_567 __pat_568 __pat_569 __pat_570 = case __pat_570 (PResult __pat_571 __pat_572 -> readState8 __pat_564 __pat_565 __pat_566 __pat_567 __pat_568 __pat_569 __pat_571 (readIntWord __pat_572))
+readState8 __pat_573 __pat_574 __pat_575 __pat_576 __pat_577 __pat_578 __pat_579 __pat_580 = case __pat_580 (PResult __pat_581 __pat_582 -> readState9 __pat_573 __pat_574 __pat_575 __pat_576 __pat_577 __pat_578 __pat_579 __pat_581 (readIntWord __pat_582))
+readState9 __pat_583 __pat_584 __pat_585 __pat_586 __pat_587 __pat_588 __pat_589 __pat_590 __pat_591 = case __pat_591 (PResult __pat_592 __pat_593 -> __Tuple9 __pat_583 __pat_584 __pat_585 __pat_586 __pat_587 __pat_588 __pat_589 __pat_590 __pat_592)
+isNewFigMode __pat_594 = case __pat_594 (NewFigMode -> 1) (_ -> 0)
+isSelectingMode __pat_595 = case __pat_595 (SelectingMode -> 1) (_ -> 0)
+isUseSetsize __pat_596 = case __pat_596 (UseSetsize -> 1) (_ -> 0)
+figColor __pat_597 = case __pat_597 (Fig __pat_598 __pat_599 __pat_600 __pat_601 __pat_602 -> __pat_601)
+curveViewPts __pat_603 = case __pat_603 (Fig __pat_604 __pat_605 __pat_606 __pat_607 __pat_608 -> case __pat_608 (VCurve __pat_609 -> __pat_609))
+textViewContent __pat_610 = case __pat_610 (Fig __pat_611 __pat_612 __pat_613 __pat_614 __pat_615 -> case __pat_615 (VText __pat_616 -> __pat_616))
+hdOf __pat_617 = case __pat_617 (Cons __pat_618 __pat_619 -> __pat_618)
+tlOf __pat_620 = case __pat_620 (Cons __pat_621 __pat_622 -> __pat_622)
+step __pat_623 __pat_624 __pat_625 __pat_626 __pat_627 __pat_628 __pat_629 __pat_630 __pat_631 __pat_632 = case __pat_623 (MouseDown p -> handleDown p __pat_624 __pat_625 __pat_626 __pat_627 __pat_628 __pat_629 __pat_630 __pat_631 __pat_632) (MouseDragged p -> handleDrag p __pat_624 __pat_625 __pat_626 __pat_627 __pat_628 __pat_629 __pat_630 __pat_631 __pat_632) (MouseUp p -> handleUp p __pat_624 __pat_625 __pat_626 __pat_627 __pat_628 __pat_629 __pat_630 __pat_631 __pat_632) (MenuItem cat item -> handleMenuItem cat item __pat_624 __pat_625 __pat_626 __pat_627 __pat_628 __pat_629 __pat_630 __pat_631 __pat_632) (_ -> __Tuple9 __pat_624 __pat_625 __pat_626 __pat_627 __pat_628 __pat_629 __pat_630 __pat_631 __pat_632)
+handleDown __pat_633 __pat_634 __pat_635 __pat_636 __pat_637 __pat_638 __pat_639 __pat_640 __pat_641 __pat_642 = if (isNewFigMode __pat_634) (handleDownNew __pat_633 __pat_635 __pat_636 __pat_637 __pat_638 __pat_639 __pat_640 __pat_641 __pat_642) (handleDownSel __pat_633 __pat_635 __pat_636 __pat_637 __pat_638 __pat_639 __pat_640 __pat_641 __pat_642)
+handleDownNew __pat_643 __pat_644 __pat_645 __pat_646 __pat_647 __pat_648 __pat_649 __pat_650 __pat_651 = handleDownNew__let (stepNewDown __pat_651 __pat_643 __pat_646 __pat_647) __pat_643 __pat_644 __pat_645 __pat_646 __pat_647 __pat_648 __pat_649 __pat_650 __pat_651
+handleDownSel __pat_652 __pat_653 __pat_654 __pat_655 __pat_656 __pat_657 __pat_658 __pat_659 __pat_660 = if (isNoFig __pat_656) (handleDownSelStart __pat_652 __pat_653 __pat_654 __pat_655 __pat_659 __pat_660) (__Tuple9 SelectingMode __pat_653 __pat_654 __pat_655 __pat_656 __pat_657 __pat_658 __pat_659 __pat_660)
+handleDownSelStart __pat_661 __pat_662 __pat_663 __pat_664 __pat_665 __pat_666 = handleDownSelStart__let (pickSel __pat_661 __pat_662 __pat_663) __pat_661 __pat_662 __pat_663 __pat_664 __pat_665 __pat_666
+handleDrag __pat_667 __pat_668 __pat_669 __pat_670 __pat_671 __pat_672 __pat_673 __pat_674 __pat_675 __pat_676 = if (isNewFigMode __pat_668) (__Tuple9 __pat_668 __pat_669 __pat_670 __pat_671 (stepNewDrag __pat_667 __pat_672) __pat_673 __pat_674 __pat_675 __pat_676) (__Tuple9 __pat_668 __pat_669 __pat_670 __pat_671 (stepSelDrag __pat_667 __pat_672 __pat_673) __pat_673 (stepSelDragFlag __pat_672) __pat_675 __pat_676)
+handleUp __pat_677 __pat_678 __pat_679 __pat_680 __pat_681 __pat_682 __pat_683 __pat_684 __pat_685 __pat_686 = if (isNewFigMode __pat_678) (__Tuple9 __pat_678 __pat_679 (stepNewUpSfs __pat_677 __pat_680 __pat_682) __pat_681 (stepNewUpActive __pat_677 __pat_682) __pat_683 __pat_684 __pat_685 __pat_686) (handleUpSel __pat_677 __pat_678 __pat_679 __pat_680 __pat_681 __pat_682 __pat_683 __pat_684 __pat_685 __pat_686)
+handleUpSel __pat_687 __pat_688 __pat_689 __pat_690 __pat_691 __pat_692 __pat_693 __pat_694 __pat_695 __pat_696 = handleUpSel__let (stepSelUp __pat_692 __pat_694 __pat_689 __pat_690) __pat_687 __pat_688 __pat_689 __pat_690 __pat_691 __pat_692 __pat_693 __pat_694 __pat_695 __pat_696
+handleMenuItem __pat_697 __pat_698 __pat_699 __pat_700 __pat_701 __pat_702 __pat_703 __pat_704 __pat_705 __pat_706 __pat_707 = __pat_708 __pat_707 __pat_699 __pat_697 __pat_698 __pat_700 __pat_701 __pat_702 __pat_706 __pat_703 __pat_704 __pat_705
+handleMenuItemResult __pat_709 __pat_710 __pat_711 __pat_712 = case __pat_712 (__Tuple6 __pat_713 __pat_714 __pat_715 __pat_716 __pat_717 __pat_718 -> __Tuple9 __pat_714 __pat_715 __pat_716 __pat_717 __pat_709 __pat_710 __pat_711 __pat_718 __pat_713)
+respond __pat_719 __pat_720 = respondDecoded (readState __pat_719) (parseEvent __pat_720)
+respondDecoded __pat_721 __pat_722 = respondDecodedState __pat_721 __pat_722
+respondDecodedState __pat_723 __pat_724 = case __pat_723 (__Tuple9 __pat_725 __pat_726 __pat_727 __pat_728 __pat_729 __pat_730 __pat_731 __pat_732 __pat_733 -> respondNewState (step __pat_724 __pat_725 __pat_726 __pat_727 __pat_728 __pat_729 __pat_730 __pat_731 __pat_732 __pat_733))
+respondNewState __pat_734 = case __pat_734 (__Tuple9 __pat_735 __pat_736 __pat_737 __pat_738 __pat_739 __pat_740 __pat_741 __pat_742 __pat_743 -> ((printString (writeState __pat_735 __pat_736 __pat_737 __pat_738 __pat_739 __pat_740 __pat_741 __pat_742 __pat_743) <#> writeChar 1 10) <#> printString (graphicsout (forceGraphics (renderState __pat_736 __pat_737 __pat_739)))) <#> writeChar 1 10)
+start = __pat_744
+copyOneFigWithFreshId__let __pat_745 __pat_746 __pat_747 __pat_748 = case __pat_745 (__Tuple2 __pat_749 __pat_750 -> __Tuple2 (Cons (withId __pat_746 (setpos (Pt (figX __pat_747 + 0.1) (figY __pat_747 + 0.1)) __pat_747)) __pat_749) __pat_750)
+stepEditCopy__let __pat_751 __pat_752 __pat_753 __pat_754 __pat_755 __pat_756 __pat_757 = case __pat_751 (__Tuple2 __pat_758 __pat_759 -> __Tuple6 __pat_759 __pat_753 (append (append __pat_754 __pat_755) __pat_758) Nil __pat_756 __pat_757)
+handleDownNew__let __pat_760 __pat_761 __pat_762 __pat_763 __pat_764 __pat_765 __pat_766 __pat_767 __pat_768 __pat_769 = case __pat_760 (__Tuple2 __pat_770 __pat_771 -> __Tuple9 NewFigMode __pat_762 __pat_763 __pat_764 __pat_770 __pat_766 __pat_767 __pat_768 __pat_771)
+handleDownSelStart__let __pat_772 __pat_773 __pat_774 __pat_775 __pat_776 __pat_777 __pat_778 = case __pat_772 (__Tuple2 __pat_779 __pat_780 -> __Tuple9 SelectingMode __pat_774 __pat_775 __pat_776 __pat_779 __pat_780 0 __pat_777 __pat_778)
+handleUpSel__let __pat_781 __pat_782 __pat_783 __pat_784 __pat_785 __pat_786 __pat_787 __pat_788 __pat_789 __pat_790 __pat_791 = case __pat_781 (__Tuple2 __pat_792 __pat_793 -> __Tuple9 __pat_783 __pat_792 __pat_793 __pat_786 NoFig __pat_788 0 __pat_790 __pat_791)
+__pat_744 = let !stateLine = readLine, !evLine = readLine in respond stateLine evLine
+__pat_708 __pat_707 __pat_699 __pat_697 __pat_698 __pat_700 __pat_701 __pat_702 __pat_706 __pat_703 __pat_704 __pat_705 = let stepResult = stepMenu __pat_707 __pat_699 __pat_697 __pat_698 __pat_700 __pat_701 __pat_702 __pat_706 in handleMenuItemResult __pat_703 __pat_704 __pat_705 stepResult
+__pat_381 __pat_380 = let xw = hdOf __pat_380, ws2 = tlOf __pat_380, yw = hdOf ws2, ws3 = tlOf ws2 in PResult (Pt (atof xw) (atof yw)) ws3
+__pat_357 __pat_354 __pat_351 __pat_352 __pat_353 __pat_355 __pat_356 = let grp = makeGroup __pat_351 __pat_354 in __Tuple6 (__pat_351 + 1) __pat_352 (Cons grp __pat_353) Nil __pat_355 __pat_356
+__pat_335 __pat_334 __pat_331 __pat_333 = let restResult = copyFigsWithFreshIds (__pat_331 + 1) __pat_334 in copyOneFigWithFreshId __pat_331 __pat_333 restResult
+__pat_292 __pat_289 __pat_290 __pat_291 = let cfr = findFig __pat_289 __pat_290 __pat_291 selectRes in __Tuple2 cfr UseSetsize
+__pat_288 __pat_285 __pat_286 __pat_287 = let cfm = findFig __pat_285 __pat_286 __pat_287 selectMove in if (isNoFig cfm) (pickSelResize __pat_285 __pat_286 __pat_287) (__Tuple2 cfm UseSetpos)
+__pat_270 __pat_269 __pat_262 __pat_264 __pat_267 = let ps2 = appendPt __pat_269 __pat_262 in Fig __pat_264 (frameP1 ps2) (frameP2 ps2) __pat_267 (VCurve ps2)
+__pat_200 __pat_197 __pat_196 __pat_199 __pat_198 = let m = findMatch __pat_196 __pat_199 __pat_197 in if (isNoFig m) (findMatch __pat_196 __pat_199 __pat_198) m
+__pat_186 __pat_183 __pat_185 = let a = ptX __pat_183, b = ptY __pat_183, x = ptX __pat_185, y = ptY __pat_185 in (((a >= (x - 0.02)) /\ (a <= (x + 0.02))) /\ (b >= (y - 0.02))) /\ (b <= (y + 0.02))
+__pat_182 __pat_179 __pat_177 __pat_180 __pat_178 __pat_181 = let ox = figX __pat_181, oy = figY __pat_181, ow = figW __pat_181, oh = figH __pat_181, movedP1 = Pt (__pat_177 + (__pat_179 * (ox - __pat_177))) (__pat_178 + (__pat_180 * (oy - __pat_178))), movedP2 = Pt (__pat_177 + (__pat_179 * (ow - __pat_177))) (__pat_178 + (__pat_180 * (oh - __pat_178))), moved = setpos movedP1 __pat_181 in setsize movedP2 moved
+__pat_176 __pat_173 __pat_171 __pat_172 __pat_169 __pat_174 __pat_175 = let a = ptX __pat_172, b = ptY __pat_172, c = ptX __pat_173, d = ptY __pat_173, x = ptX __pat_169, y = ptY __pat_169, sx = (x - a) / (c - a), sy = (y - b) / (d - b) in case __pat_175 (VGroup fs -> Fig __pat_171 __pat_172 __pat_169 __pat_174 (VGroup (mapList (setsizeChild a b sx sy) fs))) (VCurve ps -> Fig __pat_171 __pat_172 __pat_169 __pat_174 (VCurve (mapList (scalePtAround a b sx sy) ps))) (VText s -> Fig __pat_171 __pat_172 __pat_173 __pat_174 (VText s)) (_ -> Fig __pat_171 __pat_172 __pat_169 __pat_174 __pat_175)
+__pat_168 __pat_167 __pat_165 __pat_163 __pat_166 __pat_164 = let x = ptX __pat_167, y = ptY __pat_167 in Pt (__pat_163 + (__pat_165 * (x - __pat_163))) (__pat_164 + (__pat_166 * (y - __pat_164)))
+__pat_159 __pat_155 __pat_156 __pat_154 __pat_152 __pat_157 __pat_158 = let ax = ptX __pat_155, ay = ptY __pat_155, nx = ptX __pat_152, ny = ptY __pat_152, dx = nx - ax, dy = ny - ay, newp2 = translatePt dx dy __pat_156 in case __pat_158 (VGroup fs -> Fig __pat_154 __pat_152 newp2 __pat_157 (VGroup (mapList (setposChild dx dy) fs))) (VCurve ps -> Fig __pat_154 __pat_152 newp2 __pat_157 (VCurve (mapList (translatePt dx dy) ps))) (_ -> Fig __pat_154 __pat_152 newp2 __pat_157 __pat_158)
+__pat_151 __pat_150 __pat_148 __pat_149 = let x = ptX __pat_150, y = ptY __pat_150 in Pt (x + __pat_148) (y + __pat_149)
+__pat_140 __pat_138 __pat_139 = let corners = figCorners __pat_139 in Fig __pat_138 (frameP1 corners) (frameP2 corners) 0 (VGroup __pat_139)
+__pat_121 __pat_120 __pat_119 = let m = maxList __pat_120 in if (__pat_119 > m) __pat_119 m
+__pat_117 __pat_116 __pat_115 = let m = minList __pat_116 in if (__pat_115 < m) __pat_115 m
+__pat_21 __pat_17 __pat_19 __pat_18 __pat_20 = let dx = __pat_17 - __pat_19, dy = __pat_18 - __pat_20 in sqrt ((dx * dx) + (dy * dy))
+__pat_6 __pat_4 __pat_5 = let c = cos __pat_4, s = sin __pat_4 in case __pat_5 (Pt x y -> Pt ((c * x) + (s * y)) ((0.0 - (s * x)) + (c * y)))

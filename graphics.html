@@ -380,6 +380,11 @@
         <div class="preset-title"><span>📋</span> Menubalk-demo</div>
         <div class="preset-desc">Echte GraphMenu-menubalk + GraphPrompt-tekstdialoog, beide teruggestuurd naar de VM.</div>
       </div>
+
+      <div class="preset-card" data-file="grafiek_paint_interactive.cfp">
+        <div class="preset-title"><span>🖌️</span> Tekenprogramma (GRAFIEK.AMA-poort)</div>
+        <div class="preset-desc">Kies een vorm via "New", sleep 'm op het canvas; "Edit → Select" om bestaande vormen te verslepen.</div>
+      </div>
     </aside>
 
     <!-- Code / Canvas tabs -->
@@ -544,7 +549,7 @@
       // returned (e.g. "rx ry rz lastX lastY" for convex, an idx+point-list
       // for bspline, a single float for boom) and is fed back verbatim as
       // stdin on the next event, so JS never needs to understand its shape.
-      const INTERACTIVE_PRESETS = ['bspline.cfp', 'convex.cfp', 'boom.cfp', 'menu_demo.cfp'];
+      const INTERACTIVE_PRESETS = ['bspline.cfp', 'convex.cfp', 'boom.cfp', 'menu_demo.cfp', 'grafiek_paint_interactive.cfp'];
       let interactiveState = '';   // '' = let the Sapl program supply its own default
       let compiledJmvm = null;     // cached bytecode for currentPreset, reused across ticks (no recompile per event)
       let pendingRunKind = 'normal'; // 'normal' (compile-triggered run) | 'tick' (interactive event round trip)
@@ -671,7 +676,8 @@
         'grafiek.cfp': 'Beweeg de muis over het canvas om wiskundige functies te inspecteren met live coördinaten.',
         'hwdes.cfp': 'Bekijk de 2-to-1 Multiplexer schakeling met NOT-, AND- en OR-poorten.',
         'recpic.cfp': 'Recursieve geometrische mozaïek met kwartslagrotaties.',
-        'menu_demo.cfp': 'Klik een menu-item hierboven - de VM stuurt het terug als tekst op het canvas. "Other → Text" toont een echte prompt-dialoog.'
+        'menu_demo.cfp': 'Klik een menu-item hierboven - de VM stuurt het terug als tekst op het canvas. "Other → Text" toont een echte prompt-dialoog.',
+        'grafiek_paint_interactive.cfp': 'Klik "New" en een vorm (bijv. Ellipse), sleep dan op het canvas om te tekenen. "Edit → Select" schakelt naar verslepen van bestaande vormen.'
       };
 
       // Direct JS implementations for the non-interactive demos' live
