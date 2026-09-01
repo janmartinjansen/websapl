@@ -7,6 +7,20 @@
   <link rel="stylesheet" href="css/codemirror.min.css" />
   <link rel="stylesheet" href="css/workbench.css" />
   <style>
+    /* This page's own rules below reference --bg-main/--bg-header/
+       --bg-sidebar/--bg-card/--bg-card-hover, which css/workbench.css
+       never defines (it only has --bg-primary/-secondary/-tertiary/-hover) -
+       so every var() using them silently fell back to nothing (transparent),
+       which is why this page never actually followed the site's dark/light
+       toggle. Aliasing them onto the real tokens here makes them theme-aware
+       for free, without renaming every usage below. */
+    :root {
+      --bg-main: var(--bg-primary);
+      --bg-header: var(--bg-secondary);
+      --bg-sidebar: var(--bg-secondary);
+      --bg-card: var(--bg-tertiary);
+      --bg-card-hover: var(--bg-hover);
+    }
     .graphics-container {
       display: grid;
       grid-template-columns: 320px 1fr;
@@ -80,7 +94,7 @@
     }
     .preset-card:hover {
       border-color: var(--accent);
-      background: var(--bg-card-hover, #1e293b);
+      background: var(--bg-card-hover);
       transform: translateY(-1px);
     }
     .preset-card.active {
@@ -134,17 +148,34 @@
       flex-direction: column;
       flex: 1;
       min-width: 0;
-      background: #060913;
-      padding: 14px;
-      gap: 10px;
+      background: var(--bg-main);
+      padding: 10px;
+      gap: 6px;
       overflow-y: auto;
     }
     .canvas-wrapper {
       position: relative;
       width: 100%;
-      max-width: min(900px, 90%);
+      /* also capped in vh: .canvas-wrapper is a column-flex child of
+         .canvas-section alongside the hint box, menu bar and controls
+         panel, so without a vh cap a width-only max-width could ask for
+         more height than the column has room for - flex-shrink:0 below
+         then stops the browser from squashing that overflow back into a
+         short rectangle (breaking the 1:1 aspect-ratio) instead of
+         scrolling via .canvas-section's overflow-y:auto. Raised from 60vh
+         to 74vh (2026-09-02, user request: canvas felt small next to the
+         hint/menu/controls chrome) now that panel/gap is tighter too, so
+         the freed-up vertical room actually goes to the canvas. */
+      max-width: min(900px, 90%, 74vh);
+      flex-shrink: 0;
       margin: 0 auto;
       aspect-ratio: 1 / 1;
+      /* Background itself deliberately NOT theme-linked: it mirrors
+         SaplGraphicsRenderer's own this.bgColor (graphics_renderer.js),
+         which the "Canvas" swatches below select and JS also mirrors onto
+         this element's inline style - so the wrapper never shows a
+         mismatched flash behind the canvas during a resize. The default
+         (this literal #0a0f1d) is only the pre-JS/no-JS fallback. */
       background: #0a0f1d;
       border: 1px solid #1e293b;
       border-radius: 8px;
@@ -157,14 +188,30 @@
       height: 100%;
       display: block;
     }
+    .bg-swatch {
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--border-color);
+      cursor: pointer;
+      padding: 0;
+    }
+    .bg-swatch:hover {
+      border-color: var(--border-focus);
+    }
+    .bg-swatch.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.35);
+    }
     .controls-panel {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
       border-radius: 8px;
-      padding: 12px;
+      padding: 8px 10px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 6px;
     }
     .slider-row {
       display: flex;
@@ -178,9 +225,9 @@
     }
     .interaction-hint {
       font-size: 12px;
-      color: #38bdf8;
-      background: rgba(56, 189, 248, 0.1);
-      border: 1px solid rgba(56, 189, 248, 0.2);
+      color: var(--accent);
+      background: rgba(var(--accent-rgb), 0.1);
+      border: 1px solid rgba(var(--accent-rgb), 0.2);
       border-radius: 6px;
       padding: 6px 10px;
       display: flex;
@@ -190,8 +237,8 @@
     .graph-menu-bar {
       display: flex;
       gap: 2px;
-      background: #0f172a;
-      border: 1px solid #1e293b;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
       border-radius: 6px;
       padding: 4px;
     }
@@ -202,15 +249,15 @@
       appearance: none;
       border: none;
       background: transparent;
-      color: #cbd5e1;
+      color: var(--text-secondary);
       font-size: 12px;
       padding: 6px 12px;
       border-radius: 4px;
       cursor: pointer;
     }
     .graph-menu-cat-btn:hover, .graph-menu-cat.open .graph-menu-cat-btn {
-      background: #1e293b;
-      color: #f8fafc;
+      background: var(--bg-card-hover);
+      color: var(--text-primary);
     }
     .graph-menu-dropdown {
       position: absolute;
@@ -218,8 +265,8 @@
       left: 0;
       z-index: 20;
       min-width: 140px;
-      background: #0f172a;
-      border: 1px solid #1e293b;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
       border-radius: 6px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.5);
       padding: 4px;
@@ -241,7 +288,7 @@
       appearance: none;
       border: none;
       background: transparent;
-      color: #cbd5e1;
+      color: var(--text-secondary);
       font-size: 12px;
       text-align: left;
       padding: 6px 10px;
@@ -249,8 +296,8 @@
       cursor: pointer;
     }
     .graph-menu-item:hover {
-      background: #334155;
-      color: #f8fafc;
+      background: var(--bg-card-hover);
+      color: var(--text-primary);
     }
     .prompt-overlay {
       position: fixed;
@@ -265,8 +312,8 @@
       display: none;
     }
     .prompt-dialog {
-      background: var(--bg-card, #0f172a);
-      border: 1px solid var(--border-color, #1e293b);
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
       border-radius: 8px;
       padding: 18px;
       width: 320px;
@@ -278,13 +325,13 @@
     .prompt-title {
       font-size: 13px;
       font-weight: 600;
-      color: var(--text-primary, #f8fafc);
+      color: var(--text-primary);
     }
     .prompt-input {
-      background: #0a0f1d;
-      border: 1px solid #1e293b;
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
       border-radius: 6px;
-      color: #f8fafc;
+      color: var(--text-primary);
       padding: 8px 10px;
       font-size: 13px;
     }
@@ -296,16 +343,16 @@
     .event-pill {
       font-size: 11px;
       font-family: monospace;
-      color: #a78bfa;
-      background: #1e1b4b;
+      color: var(--purple);
+      background: rgba(var(--purple-rgb), 0.15);
       padding: 3px 8px;
       border-radius: 4px;
-      border: 1px solid rgba(167, 139, 250, 0.3);
+      border: 1px solid rgba(var(--purple-rgb), 0.3);
     }
     .metrics-tag {
       font-size: 11px;
-      color: #94a3b8;
-      background: #0f172a;
+      color: var(--text-secondary);
+      background: var(--bg-card);
       padding: 4px 8px;
       border-radius: 4px;
       font-family: monospace;
@@ -339,6 +386,9 @@
         <span class="status-dot ready" id="status-dot"></span>
         <span id="status-text">WASM Ready</span>
       </div>
+      <button class="btn" id="btn-theme-toggle">
+        ☀️ Light
+      </button>
     </div>
   </header>
 
@@ -429,43 +479,42 @@
           </div>
 
           <div class="controls-panel">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-weight: 600; font-size: 13px; color: var(--text-primary);">
-                Muis & Event Status
-              </span>
+            <!-- 2026-09-01 (user request): the recursion-depth slider
+                 (boom/curves/recpic) and the 3D rotation sliders
+                 (convex) are gone - depth is now menu-driven per
+                 grafisch program (see e.g. boom.cfp's own GraphMenu),
+                 and convex.cfp's mouse-drag already covers rotation. -->
+
+            <!-- 2026-09-02 (user request, compactness): the "Muis & Event
+                 Status" heading row and the metrics row used to be two
+                 separate rows (with a border-top divider) purely for a
+                 section title - merged into one flex-wrap row, all tags
+                 are already self-labeling ("60 FPS", "X: 0.00, Y: 0.00",
+                 ...) so the heading wasn't carrying information a
+                 standalone row was worth the height of. -->
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 6px;">
               <span class="event-pill" id="event-display">NoInput</span>
+              <span class="metrics-tag" id="metric-fps">60 FPS</span>
+              <span class="metrics-tag" id="metric-exec-time">0.00 ms</span>
+              <span class="metrics-tag" id="metric-instr-count">0 instr</span>
+              <span class="metrics-tag" id="metric-coords">X: 0.00, Y: 0.00</span>
             </div>
 
-            <div class="slider-row" id="row-depth">
-              <span>Recursiediepte / Resolutie:</span>
-              <input type="range" id="param-depth" min="1" max="6" value="3" />
-              <span id="val-depth" style="font-weight: 600; width: 16px;">3</span>
-            </div>
-
-            <div class="slider-row" id="row-rot-x" style="display: none;">
-              <span>Rotatie X:</span>
-              <input type="range" id="param-rot-x" min="0" max="6.28" step="0.05" value="0.5" />
-            </div>
-            <div class="slider-row" id="row-rot-y" style="display: none;">
-              <span>Rotatie Y:</span>
-              <input type="range" id="param-rot-y" min="0" max="6.28" step="0.05" value="0.7" />
-            </div>
-            <div class="slider-row" id="row-rot-z" style="display: none;">
-              <span>Rotatie Z:</span>
-              <input type="range" id="param-rot-z" min="0" max="6.28" step="0.05" value="0.2" />
-            </div>
-
-            <div style="display: flex; gap: 8px; margin-top: 4px;">
+            <div style="display: flex; gap: 8px;">
               <button class="btn" id="btn-reset-points" style="flex: 1;">Reset Punten</button>
               <button class="btn" id="btn-clear-canvas" style="flex: 1;">Wissen</button>
               <button class="btn" id="btn-export-png" style="flex: 1;">Exporteer PNG</button>
             </div>
 
-            <div style="margin-top: 8px; border-top: 1px solid var(--border-color); padding-top: 8px; display: flex; flex-wrap: wrap; gap: 6px;">
-              <span class="metrics-tag" id="metric-fps">60 FPS</span>
-              <span class="metrics-tag" id="metric-exec-time">0.00 ms</span>
-              <span class="metrics-tag" id="metric-instr-count">0 instr</span>
-              <span class="metrics-tag" id="metric-coords">X: 0.00, Y: 0.00</span>
+            <!-- 2026-09-02 (user request): canvas backdrop swatches -
+                 SaplGraphicsRenderer.bgColor, independent of the page's
+                 own dark/light theme toggle (see the .canvas-wrapper
+                 comment above for why). -->
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 11px; color: var(--text-muted);">Canvas:</span>
+              <button class="bg-swatch active" data-bg="#0a0f1d" title="Donker (standaard)" style="background: #0a0f1d;"></button>
+              <button class="bg-swatch" data-bg="#52525b" title="Grijs" style="background: #52525b;"></button>
+              <button class="bg-swatch" data-bg="#d4d4d8" title="Lichtgrijs" style="background: #d4d4d8;"></button>
             </div>
           </div>
         </section>
@@ -503,13 +552,33 @@
        Cache-Control: no-cache, so a stale ?v= silently keeps serving an old
        build (this bit us: the extractGraphicsOutContent fix landed in the
        file but the deployed page kept running the pre-fix version). -->
-  <script src="js/graphics_renderer.js?v=20260831_menudedup"></script>
+  <script src="js/graphics_renderer.js?v=20260902_bgswatch"></script>
   <script>
+    // Dark/light toggle, shared with the Workbench IDE via the same
+    // "websapl_theme" localStorage key as js/app.js's applyTheme (so
+    // switching here or there stays in sync across "Naar Workbench IDE" /
+    // "Graphics Studio" navigation). Runs at top level, not inside
+    // DOMContentLoaded below: this <script> tag is already at the end of
+    // <body>, so the header (and its #btn-theme-toggle) is parsed and in
+    // the DOM by the time this line runs - waiting for DOMContentLoaded
+    // would just add a visible flash of the wrong theme.
+    (function () {
+      function applyTheme(themeName) {
+        document.documentElement.setAttribute('data-theme', themeName);
+        localStorage.setItem('websapl_theme', themeName);
+        const btn = document.getElementById('btn-theme-toggle');
+        if (btn) btn.textContent = themeName === 'dark' ? '☀️ Light' : '🌙 Dark';
+      }
+      applyTheme(localStorage.getItem('websapl_theme') || 'dark');
+      document.getElementById('btn-theme-toggle').addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme');
+        applyTheme(current === 'dark' ? 'light' : 'dark');
+      });
+    })();
+
     document.addEventListener('DOMContentLoaded', async () => {
       const canvas = document.getElementById('graphics-canvas');
       const renderer = new SaplGraphicsRenderer(canvas);
-      renderer.clear();
-      renderer.drawGrid();
 
       // Setup CodeMirror Editor
       const editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
@@ -523,8 +592,29 @@
       // Interactive State
       let currentPreset = 'bspline.cfp';
       let autoRotateTimer = null;
-      let depth = 3;
       let lastOutputLine = null; // last stdout drawing line, for redraw after a tab switch resizes the canvas backing store
+
+      // --- Canvas backdrop swatches (2026-09-02, user request: a choice
+      // of grays alongside the default dark backdrop). Independent of the
+      // page's own dark/light theme toggle above - see the .canvas-wrapper
+      // CSS comment for why. Also does the FIRST clear()/drawGrid() (no
+      // separate initial call needed), so the very first paint already
+      // reflects a stored preference instead of flashing dark-then-gray.
+      const bgSwatches = Array.from(document.querySelectorAll('.bg-swatch'));
+      function applyCanvasBg(color) {
+        renderer.setBgColor(color);
+        document.querySelector('.canvas-wrapper').style.background = color;
+        localStorage.setItem('websapl_canvas_bg', color);
+        bgSwatches.forEach(el => el.classList.toggle('active', el.dataset.bg === color));
+        if (lastOutputLine !== null) {
+          renderer.renderOutput(lastOutputLine);
+        } else {
+          renderer.clear();
+          renderer.drawGrid();
+        }
+      }
+      bgSwatches.forEach(el => el.addEventListener('click', () => applyCanvasBg(el.dataset.bg)));
+      applyCanvasBg(localStorage.getItem('websapl_canvas_bg') || '#0a0f1d');
 
       // --- Code / Canvas tabs ---
       // Switching tabs only toggles visibility - no re-run. Two things DO
@@ -565,7 +655,7 @@
       // returned (e.g. "rx ry rz lastX lastY" for convex, an idx+point-list
       // for bspline, a single float for boom) and is fed back verbatim as
       // stdin on the next event, so JS never needs to understand its shape.
-      const INTERACTIVE_PRESETS = ['bspline.cfp', 'convex.cfp', 'boom.cfp', 'menu_demo.cfp', 'grafiek_paint_interactive.cfp'];
+      const INTERACTIVE_PRESETS = ['bspline.cfp', 'convex.cfp', 'boom.cfp', 'curves.cfp', 'recpic.cfp', 'menu_demo.cfp', 'grafiek_paint_interactive.cfp'];
       let interactiveState = '';   // '' = let the Sapl program supply its own default
       let compiledJmvm = null;     // cached bytecode for currentPreset, reused across ticks (no recompile per event)
       let pendingRunKind = 'normal'; // 'normal' (compile-triggered run) | 'tick' (interactive event round trip)
@@ -655,7 +745,6 @@
           interactiveState = lines[startIdx + 1];
           lastOutputLine = lines[startIdx + 2];
           renderer.renderOutput(lines[startIdx + 2]);
-          if (currentPreset === 'convex.cfp') syncConvexSliders();
           // grafiek_paint_interactive.cfp only: two more ALWAYS-present
           // lines (empty on every non-Save tick) after the normal
           // (state, drawing) pair -- a save filename + its serialized
@@ -664,8 +753,23 @@
           // NOT inside renderer.renderOutput -- a tab switch replays
           // renderOutput(lastOutputLine) without a new tick, which would
           // silently re-trigger the download if it lived there instead.
-          if (lines.length > startIdx + 4 && lines[startIdx + 3]) {
-            triggerFileDownload(lines[startIdx + 3], lines[startIdx + 4]);
+          // The VM only supplies a DEFAULT name ("tekening.txt") -- the
+          // actual choice belongs to the browser side, so ask here; an
+          // empty/cancelled prompt skips the download (same "empty
+          // filename = cancel" convention GRAFIEK.AMA's own Save used).
+          //
+          // MUST be gated on the preset: every OTHER interactive preset's
+          // real output is only 2 lines (state, drawing), so
+          // lines[startIdx + 3] there is the VM's own trailing "res: 1"
+          // diagnostic text, not an empty save-filename -- without this
+          // gate, switching to ANY interactive preset's tick popped the
+          // filename prompt (found via user testing, 2026-09-01).
+          if (currentPreset === 'grafiek_paint_interactive.cfp' &&
+              lines.length > startIdx + 4 && lines[startIdx + 3]) {
+            const chosenName = window.prompt('Bestandsnaam om op te slaan:', lines[startIdx + 3]);
+            if (chosenName) {
+              triggerFileDownload(chosenName, lines[startIdx + 4]);
+            }
           }
         }
         if (msg.metrics) {
@@ -690,13 +794,6 @@
         URL.revokeObjectURL(url);
       }
 
-      function syncConvexSliders() {
-        const parts = interactiveState.trim().split(/\s+/).map(Number);
-        if (parts.length < 3 || parts.some(isNaN)) return;
-        document.getElementById('param-rot-x').value = parts[0];
-        document.getElementById('param-rot-y').value = parts[1];
-      }
-
       function encodeEventForSapl(event) {
         const p = event.p;
         switch (event.type) {
@@ -713,56 +810,27 @@
       const hints = {
         'bspline.cfp': 'Sleep de rode controlepunten met de muis of klik om een punt toe te voegen.',
         'convex.cfp': 'Sleep met de muis over het canvas om de 3D-polyhedron vrij in 3D te roteren.',
-        'boom.cfp': 'Beweeg de muis horizontaal over het canvas om de takbuigingshoek live aan te passen.',
-        'curves.cfp': 'Gebruik de recursiediepte slider (1-5) om de fijnheid van de Hilbert-curve te verhogen.',
+        'boom.cfp': 'Beweeg de muis horizontaal over het canvas om de takbuigingshoek live aan te passen. Kies de recursiediepte (1-10) via het "Depth"-menu boven het canvas.',
+        'curves.cfp': 'Kies de recursiediepte (1-6) via het "Depth"-menu boven het canvas om de fijnheid van de Hilbert-curve te verhogen.',
         'grafiek.cfp': 'Beweeg de muis over het canvas om wiskundige functies te inspecteren met live coördinaten.',
         'hwdes.cfp': 'Bekijk de 2-to-1 Multiplexer schakeling met NOT-, AND- en OR-poorten.',
-        'recpic.cfp': 'Recursieve geometrische mozaïek met kwartslagrotaties.',
+        'recpic.cfp': 'Kies de recursiediepte (1-6) via het "Depth"-menu boven het canvas.',
         'menu_demo.cfp': 'Klik een menu-item hierboven - de VM stuurt het terug als tekst op het canvas. "Other → Text" toont een echte prompt-dialoog.',
         'grafiek_paint_interactive.cfp': 'Klik "New" en een vorm (bijv. Ellipse), sleep dan op het canvas om te tekenen. "Edit → Select" schakelt naar verslepen van bestaande vormen.'
       };
 
       // Direct JS implementations for the non-interactive demos' live
-      // preview (recursion-depth slider, initial load). bspline.cfp,
-      // convex.cfp and boom.cfp are NOT handled here any more - they are
-      // driven entirely by the real Sapl program via the state-per-event
-      // tick machinery above (queueTick/handleTickComplete), so what's on
-      // screen for them always comes straight from grafisch/graphics.cfp's
+      // preview (initial load only - no depth slider drives these any
+      // more). bspline.cfp, convex.cfp, boom.cfp, curves.cfp and
+      // recpic.cfp are NOT handled here - they are driven entirely by
+      // the real Sapl program via the state-per-event tick machinery
+      // above (queueTick/handleTickComplete), so what's on screen for
+      // them always comes straight from grafisch/graphics.cfp's
       // graphicsout, never a JS reimplementation of the geometry.
       function renderInteractiveDirect() {
         const name = currentPreset;
-        const d = depth;
 
-        if (name === 'curves.cfp') {
-          renderer.clear();
-          renderer.drawGrid();
-          function rotPt(m, p) {
-            const mod = ((m % 4) + 4) % 4;
-            if (mod === 0) return { x: p.x, y: p.y };
-            if (mod === 1) return { x: -p.y, y: p.x };
-            if (mod === 2) return { x: -p.x, y: -p.y };
-            return { x: p.y, y: -p.x };
-          }
-          function scaleP(sx, sy, p) { return { x: p.x * sx, y: p.y * sy }; }
-          function shiftP(dx, dy, p) { return { x: p.x + dx, y: p.y + dy }; }
-          function hilbSize(n) { return n <= 0 ? 0 : 2 * hilbSize(n - 1) + 1; }
-
-          function hilb(n) {
-            if (n <= 0) return [{ x: 0, y: 0 }];
-            const nm1 = hilb(n - 1);
-            const afm = hilbSize(n - 1);
-            const p1 = nm1.map(p => scaleP(-1, 1, rotPt(1, p)));
-            const p2 = nm1.map(p => shiftP(afm + 1, 0, p));
-            const p3 = nm1.map(p => shiftP(afm + 1, afm + 1, p));
-            const p4 = nm1.map(p => shiftP(afm, 2 * afm + 1, scaleP(1, -1, rotPt(1, p))));
-            return [...p1, ...p2, ...p3, ...p4];
-          }
-
-          const h = hilb(d);
-          const fn = hilbSize(d);
-          const scaled = h.map(p => shiftP(-0.8, -0.8, scaleP(1.6 / fn, 1.6 / fn, p)));
-          renderer.drawPolyLine(11, scaled);
-        } else if (name === 'grafiek.cfp') {
+        if (name === 'grafiek.cfp') {
           renderer.clear();
           renderer.drawGrid();
           const sinPts = [];
@@ -815,65 +883,16 @@
           renderer.drawPolyLine(14, [{ x: 0.17, y: -0.15 }, { x: 0.28, y: -0.15 }, { x: 0.28, y: 0.04 }, { x: 0.40, y: 0.04 }]);
           renderer.drawPolyLine(14, [{ x: 0.60, y: 0.10 }, { x: 0.72, y: 0.10 }]);
           renderer.drawDisc(11, { x: -0.465, y: 0.085 }, { x: -0.435, y: 0.115 });
-        } else if (name === 'recpic.cfp') {
-          renderer.clear();
-          renderer.drawGrid();
-          function getBaseTile() {
-            const p0 = { x: -0.5, y: -0.5 }, p1 = { x: 0.5, y: -0.5 }, p2 = { x: 0.5, y: 0.5 }, p3 = { x: -0.5, y: 0.5 };
-            return [
-              [p0, p1, p2, p3, p0],
-              [p0, p2],
-              [p1, p3]
-            ];
-          }
-          function rotPt(m, p) {
-            const mod = ((m % 4) + 4) % 4;
-            if (mod === 0) return { x: p.x, y: p.y };
-            if (mod === 1) return { x: -p.y, y: p.x };
-            if (mod === 2) return { x: -p.x, y: -p.y };
-            return { x: p.y, y: -p.x };
-          }
-          function rotPic(m, pic) {
-            return pic.map(line => line.map(p => rotPt(m, p)));
-          }
-          function transformPic(sx, sy, dx, dy, pic) {
-            return pic.map(line => line.map(p => ({ x: p.x * sx + dx, y: p.y * sy + dy })));
-          }
-          function fourTiles(tl, tr, bl, br) {
-            const stl = transformPic(0.5, 0.5, -0.5, 0.5, tl);
-            const str = transformPic(0.5, 0.5, 0.5, 0.5, tr);
-            const sbl = transformPic(0.5, 0.5, -0.5, -0.5, bl);
-            const sbr = transformPic(0.5, 0.5, 0.5, -0.5, br);
-            return [...stl, ...str, ...sbl, ...sbr];
-          }
-          function recPattern(n, tile) {
-            if (n <= 0) return tile;
-            const prev = recPattern(n - 1, tile);
-            return fourTiles(prev, rotPic(1, prev), rotPic(3, prev), rotPic(2, prev));
-          }
-          const lines = recPattern(d, getBaseTile());
-          lines.forEach(l => renderer.drawPolyLine(14, l));
         }
       }
 
       function updateSourceWithParams() {
-        let code = presets[currentPreset] || editor.getValue();
-        if (currentPreset === 'boom.cfp') {
-          // Bend angle is no longer literal source text - it lives in
-          // interactiveState and round-trips through the VM per event (see
-          // grafisch/boom.cfp). Only the recursion depth is still a source
-          // constant the slider can retarget.
-          code = code.replace(/boomDepth\s*=\s*\d+/, `boomDepth = ${depth}`);
-        } else if (currentPreset === 'curves.cfp') {
-          code = code.replace(/hilbert\s+\d+/, `hilbert ${depth}`);
-          code = code.replace(/sierpinski\s+\d+/, `sierpinski ${depth}`);
-          code = code.replace(/dragon\s+\d+/, `dragon ${depth}`);
-        } else if (currentPreset === 'recpic.cfp') {
-          code = code.replace(/recPic\s+\d+/, `recPic ${depth}`);
-        }
-        // convex.cfp / bspline.cfp no longer have any source-level
-        // parameters to substitute - their rotation/control-points live
-        // entirely in interactiveState now.
+        // convex.cfp / bspline.cfp / boom.cfp / curves.cfp / recpic.cfp no
+        // longer have any source-level parameters to substitute - their
+        // rotation/control-points/recursion-depth all live entirely in
+        // interactiveState now, picked via mouse drag or a GraphMenu
+        // instead of a slider (2026-09-01).
+        const code = presets[currentPreset] || editor.getValue();
         editor.setValue(code);
         return code;
       }
@@ -883,11 +902,6 @@
         document.getElementById('editor-filename').textContent = name;
         document.getElementById('hint-text').textContent = hints[name] || '';
         
-        // Show/hide 3D sliders
-        const is3D = name === 'convex.cfp';
-        document.getElementById('row-rot-x').style.display = is3D ? 'flex' : 'none';
-        document.getElementById('row-rot-y').style.display = is3D ? 'flex' : 'none';
-        document.getElementById('row-rot-z').style.display = is3D ? 'flex' : 'none';
         document.getElementById('btn-reset-points').style.display = name === 'bspline.cfp' ? 'inline-block' : 'none';
 
         // Reset the menu bar on preset switch - a run whose output
@@ -908,14 +922,6 @@
         const menuBarReset = document.getElementById('graph-menu-bar');
         menuBarReset.hidden = true;
         menuBarReset.innerHTML = '';
-
-        // Set default depth per preset
-        if (name === 'curves.cfp') depth = 2;
-        else if (name === 'boom.cfp') depth = 3;
-        else if (name === 'recpic.cfp') depth = 2;
-        else depth = 3;
-        document.getElementById('param-depth').value = depth;
-        document.getElementById('val-depth').textContent = depth;
 
         if (!presets[name]) {
           try {
@@ -938,7 +944,6 @@
       }
 
       async function runGraphics() {
-        depth = parseInt(document.getElementById('param-depth').value, 10);
         if (!INTERACTIVE_PRESETS.includes(currentPreset)) renderInteractiveDirect();
 
         if (!workerReady) return;
@@ -1098,30 +1103,6 @@
 
       document.getElementById('btn-run-graphics').addEventListener('click', runGraphics);
 
-      document.getElementById('param-depth').addEventListener('input', (e) => {
-        depth = parseInt(e.target.value, 10);
-        document.getElementById('val-depth').textContent = depth;
-        updateSourceWithParams();
-        runGraphics();
-      });
-
-      // Rotation sliders edit interactiveState's rx/ry/rz fields directly
-      // and re-tick with NoInput - no recompile needed, matches how a
-      // canvas drag updates the same state (see grafisch/convex.cfp).
-      ['param-rot-x', 'param-rot-y', 'param-rot-z'].forEach(id => {
-        document.getElementById(id).addEventListener('input', () => {
-          if (currentPreset !== 'convex.cfp') return;
-          const rx = parseFloat(document.getElementById('param-rot-x').value);
-          const ry = parseFloat(document.getElementById('param-rot-y').value);
-          const rz = parseFloat(document.getElementById('param-rot-z').value);
-          const parts = interactiveState.trim().split(/\s+/);
-          const lx = parts[3] || '0';
-          const ly = parts[4] || '0';
-          interactiveState = `${rx} ${ry} ${rz} ${lx} ${ly}`;
-          queueTick('NoInput');
-        });
-      });
-
       // 3D Auto Rotate Toggle
       document.getElementById('btn-auto-rotate').addEventListener('click', (e) => {
         if (autoRotateTimer) {
@@ -1143,8 +1124,6 @@
             const nrx = (rx + 0.02) % 6.28318;
             const nry = (ry + 0.05) % 6.28318;
             interactiveState = `${nrx} ${nry} ${rz} ${lx} ${ly}`;
-            document.getElementById('param-rot-x').value = nrx;
-            document.getElementById('param-rot-y').value = nry;
             queueTick('NoInput');
           }, 40);
         }

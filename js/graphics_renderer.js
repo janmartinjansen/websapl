@@ -46,6 +46,12 @@ class SaplGraphicsRenderer {
     this.lastMenu = null;
     this._lastMenuSerialized = null; // dedup guard, see emitMenu below
 
+    // Canvas backdrop, independent of the page's dark/light UI theme (the
+    // figure palette above is tuned for contrast against a dark-ish
+    // backdrop, see graphics.html's .canvas-wrapper comment) - selectable
+    // via the swatches in graphics.html's controls-panel.
+    this.bgColor = '#0a0f1d';
+
     this.setupHighDPI();
     window.addEventListener('resize', () => this.setupHighDPI());
     this.initEventListeners();
@@ -224,7 +230,11 @@ class SaplGraphicsRenderer {
     });
   }
 
-  clear(bgColor = '#0a0f1d') {
+  setBgColor(color) {
+    this.bgColor = color;
+  }
+
+  clear(bgColor = this.bgColor) {
     this.ctx.save();
     this.ctx.fillStyle = bgColor;
     this.ctx.fillRect(0, 0, this.displayWidth, this.displayHeight);

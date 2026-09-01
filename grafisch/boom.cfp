@@ -19,34 +19,68 @@ shiftTree lines = case lines (Nil -> Nil) (Cons seg rest -> Cons (shiftTreeSeg s
 
 tekenBoom lines col = case lines (Nil -> Nil) (Cons l ls -> Cons (GraphPolyLine col l) (tekenBoom ls (if (col == 14) 1 (col + 1))))
 
-demo angle n = forceGraphics (tekenBoom (shiftTree (boom angle n)) 2)
+// The depth-choice GraphMenu (2026-09-01: replaces websapl/graphics.html's
+// depth SLIDER, per user request - a menu the user picks 1-10 from,
+// instead of a source-substitution-triggered recompile). GraphMenu/
+// MenuCat are UI widgets, not canvas draws - same mechanism grafisch/
+// grafiek_paint.spp's own menu bar uses (its header comment explains why
+// this doesn't need its own `GraphClear`: graphics_renderer.js's
+// renderOutput unconditionally clears before drawing each tick).
+depthItems = Cons "1" (Cons "2" (Cons "3" (Cons "4" (Cons "5" (Cons "6" (Cons "7" (Cons "8" (Cons "9" (Cons "10" Nil)))))))))
+depthMenu = GraphMenu (Cons (MenuCat "Depth" depthItems) Nil)
 
-// Named so websapl/graphics.html's depth slider can retarget it by
-// name (`boomDepth = N`) instead of a positional literal inside `demo
-// angle1 3`, which the slider can no longer match after `demo` grew a
-// second (state-derived) argument.
-boomDepth = 3
+demo angle n = forceGraphics (Cons depthMenu (tekenBoom (shiftTree (boom angle n)) 2))
 
 // -------------------------------------------------------------
-// Interactive state: just the branch-bend angle. MouseDown/Dragged's
-// x-position maps directly to the angle (no accumulation needed, so
-// no extra state fields beyond the angle itself).
+// Interactive state: the branch-bend angle (MouseDown/Dragged's
+// x-position maps directly to it) AND the recursion depth (menu-
+// selected). No tuples in plain Sapl (CLAUDE.md/sapl_programmeer_
+// regels.md) - a tiny ADT threads both through instead.
 // -------------------------------------------------------------
+
+::BoomState = BoomState !angle !depth
+
+// Plain .cfp (unlike the preprocessed .spp files under this same
+// grafisch/ directory - see grafisch/grafiek_paint.spp) has NO
+// clause-head constructor-pattern flattening (that's patcompile.cfp's
+// job, Sapl+-only): `f (Cons x xs) = x` fails to parse here with a
+// content-free "unexpected newline" - every constructor pattern below
+// goes through `case` instead, same as this file's own pre-existing
+// `bendAngleFromP`.
+hdOf xs = case xs (Cons x rest -> x)
+tlOf xs = case xs (Cons x rest -> rest)
 
 defaultBendAngle = 0.6
+defaultDepth = 3
 
-decodeBoomState line = if (strEqual line "") defaultBendAngle (atof line)
-encodeBoomState angle = ftoa angle
+decodeBoomState line =
+  if (strEqual line "") (BoomState defaultBendAngle defaultDepth)
+  (decodeBoomStateWords (splitWords line))
+
+decodeBoomStateWords ws = BoomState (atof (hdOf ws)) (ftoi (atof (hdOf (tlOf ws))))
+
+encodeBoomState state =
+  case state (BoomState angle depth -> list2str (append (str2list (ftoa angle)) (Cons ' ' (itoa depth))))
 
 clampBend a = if (a < 0.2) 0.2 (if (a > 1.2) 1.2 a)
+clampDepth d = if (d < 1) 1 (if (d > 10) 10 d)
 
 bendAngleFromP p = case p (Pt x y -> clampBend (0.6 + (x * 0.5)))
+depthFromMenuItem item = clampDepth (ftoi (atof item))
 
-stepBoom angle event =
+stepBoom state event = case state (BoomState angle depth -> stepBoomEvent angle depth event)
+
+stepBoomEvent angle depth event =
   case event
-    (MouseDown p -> bendAngleFromP p)
-    (MouseDragged p -> bendAngleFromP p)
-    (_ -> angle)
+    (MouseDown p -> BoomState (bendAngleFromP p) depth)
+    (MouseDragged p -> BoomState (bendAngleFromP p) depth)
+    (MenuItem cat item -> stepBoomMenu cat item angle depth)
+    (_ -> BoomState angle depth)
+
+stepBoomMenu cat item angle depth =
+  if (strEqual cat "Depth") (BoomState angle (depthFromMenuItem item)) (BoomState angle depth)
+
+picFromState state = case state (BoomState angle depth -> demo angle depth)
 
 // stateLine/eventLine MUST be forced (via <#>) before anything derived
 // from them is used: two unforced `readLine`s in one `let` have no
@@ -57,8 +91,8 @@ stepBoom angle event =
 start =
   let stateLine = readLine,
       eventLine = readLine,
-      angle0    = decodeBoomState stateLine,
+      state0    = decodeBoomState stateLine,
       event     = parseEvent eventLine,
-      angle1    = stepBoom angle0 event,
-      pic       = demo angle1 boomDepth
-  in stateLine <#> eventLine <#> printString (encodeBoomState angle1) <#> writeChar 1 10 <#> printString (graphicsout pic) <#> writeChar 1 10
+      state1    = stepBoom state0 event,
+      pic       = picFromState state1
+  in stateLine <#> eventLine <#> printString (encodeBoomState state1) <#> writeChar 1 10 <#> printString (graphicsout pic) <#> writeChar 1 10

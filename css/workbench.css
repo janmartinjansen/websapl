@@ -22,6 +22,7 @@
   --warning: #fbbf24;
   --error: #f87171;
   --purple: #c084fc;
+  --purple-rgb: 192, 132, 252;
   --orange: #fb923c;
   
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -55,6 +56,7 @@
   --warning: #b45309;
   --error: #dc2626;
   --purple: #7e22ce;
+  --purple-rgb: 126, 34, 206;
   --orange: #c2410c;
 }
 

@@ -79,4 +79,49 @@ dragon n =
   let d = dragonStep n dragonOrigin dragonEnd in
   toPolyLines col_brightgreen d
 
-start = graphicsout (forceGraphics (hilbert 2))
+// -------------------------------------------------------------
+// 2026-09-01 (user request): recursiediepte via een GraphMenu i.p.v.
+// websapl/graphics.html's depth-slider - zelfde ontwerp als
+// grafisch/boom.cfp kreeg. Depth blijft 1-6 (niet 1-10 zoals boom.cfp):
+// hilb/sier groeien exponentieel (4^n punten), en de oude slider had om
+// diezelfde reden ook al max=6.
+// -------------------------------------------------------------
+
+::CurvesState = CurvesState !depth
+
+defaultCurvesDepth = 2
+
+decodeCurvesState line =
+  if (strEqual line "") (CurvesState defaultCurvesDepth) (CurvesState (ftoi (atof line)))
+
+encodeCurvesState state = case state (CurvesState depth -> list2str (itoa depth))
+
+clampCurvesDepth d = if (d < 1) 1 (if (d > 6) 6 d)
+depthFromMenuItem item = clampCurvesDepth (ftoi (atof item))
+
+stepCurves state event = case state (CurvesState depth -> stepCurvesEvent depth event)
+
+stepCurvesEvent depth event =
+  case event
+    (MenuItem cat item -> stepCurvesMenu cat item depth)
+    (_ -> CurvesState depth)
+
+stepCurvesMenu cat item depth =
+  if (strEqual cat "Depth") (CurvesState (depthFromMenuItem item)) (CurvesState depth)
+
+depthItems = Cons "1" (Cons "2" (Cons "3" (Cons "4" (Cons "5" (Cons "6" Nil)))))
+depthMenu = GraphMenu (Cons (MenuCat "Depth" depthItems) Nil)
+
+picFromState state = case state (CurvesState depth -> Cons depthMenu (hilbert depth))
+
+// stateLine/eventLine must be forced (via <#>) before use - see
+// grafisch/boom.cfp's start for why an unforced readLine can silently
+// never fire.
+start =
+  let stateLine = readLine,
+      eventLine = readLine,
+      state0    = decodeCurvesState stateLine,
+      event     = parseEvent eventLine,
+      state1    = stepCurves state0 event,
+      pic       = picFromState state1
+  in stateLine <#> eventLine <#> printString (encodeCurvesState state1) <#> writeChar 1 10 <#> printString (graphicsout (forceGraphics pic)) <#> writeChar 1 10
