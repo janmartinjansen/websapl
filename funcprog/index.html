@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Implementing Functional Languages — Educational Course Demos</title>
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --emerald: #10b981;
+      --emerald-hover: #059669;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 900px;
+      width: 100%;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      padding: 0.3rem 0.8rem;
+      border-radius: 9999px;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 0.8rem;
+      background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    p.subtitle {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    @media (min-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.8rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      border-color: #475569;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-tag {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #38bdf8;
+      margin-bottom: 0.5rem;
+    }
+
+    .card h2 {
+      font-size: 1.4rem;
+      margin-bottom: 0.8rem;
+      color: #ffffff;
+    }
+
+    .card p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-bottom: 1.2rem;
+    }
+
+    .features-list {
+      list-style: none;
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+      color: #cbd5e1;
+    }
+
+    .features-list li {
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.25rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+
+    .btn-vitepress {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-vitepress:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-astro {
+      background: #7c3aed;
+      color: white;
+    }
+
+    .btn-astro:hover {
+      background: #6d28d9;
+    }
+
+    .back-link {
+      text-align: center;
+      margin-top: 1rem;
+    }
+
+    .back-link a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.95rem;
+      transition: color 0.2s;
+    }
+
+    .back-link a:hover {
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <span class="badge">IFL 2026 Educational Course</span>
+      <h1>Implementing Functional Languages</h1>
+      <p class="subtitle">
+        Explore and compare both educational website prototypes for the Sap(+) & JMVM compiler & VM course.
+      </p>
+    </header>
+
+    <div class="grid">
+      <!-- VitePress Demo Card -->
+      <div class="card">
+        <div>
+          <div class="card-tag">Prototype A • Vue 3 & Vite</div>
+          <h2>VitePress Demo</h2>
+          <p>
+            Pure Markdown documentation with embedded reactive Vue components. Lightning fast, zero-import component tags, and native KaTeX formulas.
+          </p>
+          <ul class="features-list">
+            <li>✨ Native <code>.md</code> authoring</li>
+            <li>⚡ Embedded <code>&lt;SaplPlayground /&gt;</code></li>
+            <li>📐 LaTeX math formula rendering</li>
+            <li>🔍 Fast client search & clean UI</li>
+          </ul>
+        </div>
+        <a href="vitepress/" class="btn btn-vitepress">
+          Launch VitePress Demo →
+        </a>
+      </div>
+
+      <!-- Astro Starlight Demo Card -->
+      <div class="card">
+        <div>
+          <div class="card-tag">Prototype B • Astro & MDX</div>
+          <h2>Astro + Starlight Demo</h2>
+          <p>
+            MDX-driven architecture with modular content collections, full component flexibility (Vue/React/Svelte), and built-in Pagefind search.
+          </p>
+          <ul class="features-list">
+            <li>📝 <code>.mdx</code> format support</li>
+            <li>🧩 Multi-framework component hydration</li>
+            <li>📚 Starlight doc layout & cards</li>
+            <li>🔍 Built-in Pagefind static search</li>
+          </ul>
+        </div>
+        <a href="astro/" class="btn btn-astro">
+          Launch Astro Demo →
+        </a>
+      </div>
+    </div>
+
+    <div class="back-link">
+      <a href="../">← Back to WebSapl IDE Workbench</a>
+    </div>
+  </div>
+</body>
+</html>
