@@ -496,7 +496,7 @@ async function preprocessSpp(source, srcPath) {
 /**
  * Execute a compiled .jmvm file on JMVM WASM
  */
-async function executeJmvm(contentOrPath, isPath = false, customStdin = "") {
+async function executeJmvm(contentOrPath, isPath = false, customStdin = "", runId = null) {
   if (!isInitialized) throw new Error("JMVM engine is not initialized.");
 
   isExecuting = true;
@@ -592,6 +592,7 @@ async function executeJmvm(contentOrPath, isPath = false, customStdin = "") {
   isExecuting = false;
   postMessage({
     type: "RUN_COMPLETE",
+    id: runId,
     metrics,
     output: rawOutput,
     durationMs: totalTimeMs
@@ -667,11 +668,12 @@ self.onmessage = async function (e) {
 
     case "RUN":
       try {
-        await executeJmvm(msg.contentOrPath, msg.isPath, msg.stdin || "");
+        await executeJmvm(msg.contentOrPath, msg.isPath, msg.stdin || "", msg.id);
       } catch (err) {
         postMessage({ type: "STDERR", text: `VM Error: ${err.message}\n` });
         postMessage({
           type: "RUN_COMPLETE",
+          id: msg.id,
           metrics: { res: "Error", elapsed_time: "0", instr_executed: 0, calls: 0, creates: 0, gc_count: 0 },
           output: err.message
         });
