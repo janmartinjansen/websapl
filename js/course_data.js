@@ -17,7 +17,7 @@ hero:
   actions:
     - theme: brand
       text: Start Learning
-      link: /guide/01-lazy-evaluation
+      link: /guide/01_introduction
     - theme: alt
       text: View Roadmap
       link: ../roadmap.md
