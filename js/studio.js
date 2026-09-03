@@ -185,29 +185,59 @@ document.addEventListener("DOMContentLoaded", () => {
     switch (msg.type) {
       case "INIT_DONE":
         state.workerReady = true;
+        console.log("✓ JMVM WebAssembly worker ready in Course Studio.");
+        break;
+
+      case "STDOUT":
+        if (el.codeConsole) {
+          el.codeConsole.textContent += msg.text;
+        }
+        break;
+
+      case "STDERR":
+        if (el.codeConsole) {
+          el.codeConsole.textContent += msg.text;
+        }
         break;
 
       case "COMPILE_COMPLETE":
         if (msg.success && state.pendingRuns.has(msg.id)) {
           const item = state.pendingRuns.get(msg.id);
+          const jmvmFile = (msg.files && msg.files.length > 0) ? (msg.files.find(f => f.stage === "jmvm") || msg.files[0]) : null;
+          const bytecode = jmvmFile ? jmvmFile.content : "";
+          item.bytecode = bytecode;
+
+          if (el.codeConsole) {
+            el.codeConsole.textContent += `✓ Compiled successfully (${msg.durationMs || 0}ms).\nRunning on VM...\n`;
+          }
+
+          // Send RUN command with compiled bytecode content
           state.worker.postMessage({
             type: "RUN",
-            id: msg.id,
-            bytecode: msg.bytecode,
-            path: item.path
+            contentOrPath: bytecode,
+            isPath: false,
+            stdin: ""
           });
         } else if (!msg.success && state.pendingRuns.has(msg.id)) {
           const item = state.pendingRuns.get(msg.id);
           state.pendingRuns.delete(msg.id);
-          if (item.onError) item.onError(msg.error || "Compilation failed");
+          if (item.onError) {
+            item.onError(msg.stderr || msg.error || "Compilation failed");
+          }
         }
         break;
 
       case "RUN_COMPLETE":
-        if (state.pendingRuns.has(msg.id)) {
-          const item = state.pendingRuns.get(msg.id);
-          state.pendingRuns.delete(msg.id);
-          if (item.onSuccess) item.onSuccess(msg);
+        // Deliver to the current active pending run
+        for (const [runId, item] of state.pendingRuns.entries()) {
+          state.pendingRuns.delete(runId);
+          if (item.onSuccess) {
+            item.onSuccess({
+              ...msg,
+              bytecode: item.bytecode
+            });
+          }
+          break;
         }
         break;
 
@@ -558,10 +588,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
           const metrics = msg.metrics || {};
           resVal.textContent = metrics.res || msg.res || "WHNF Reached";
-          mTime.textContent = (metrics.timeMs || "0.38") + " ms";
-          mSteps.textContent = (metrics.reductions || metrics.calls || "34") + " steps";
-          mCreates.textContent = (metrics.creates || "0") + " nodes";
-          mGc.textContent = metrics.gcCount || "0";
+          mTime.textContent = metrics.elapsed_time ? `${(parseFloat(metrics.elapsed_time)*1000).toFixed(1)} ms` : `${msg.durationMs || 0.4} ms`;
+          mSteps.textContent = `${metrics.calls || metrics.instr_executed || 0} calls`;
+          mCreates.textContent = `${metrics.creates || 0} nodes`;
+          mGc.textContent = `${metrics.gc_count || 0}`;
 
           if (msg.bytecode) {
             bytecodeArea.querySelector('code').textContent = msg.bytecode;
@@ -620,10 +650,18 @@ document.addEventListener("DOMContentLoaded", () => {
           path: "/workspace/" + file.name,
           onSuccess: (msg) => {
             const m = msg.metrics || {};
-            el.codeConsole.textContent = `[SUCCESS]\nResult: ${m.res || msg.res || 'Done'}\nTime: ${m.timeMs || '0.4'} ms\nCalls: ${m.calls || m.reductions || 0}\nHeap Creates: ${m.creates || 0}\nGC Cycles: ${m.gcCount || 0}`;
+            const timeStr = m.elapsed_time ? `${(parseFloat(m.elapsed_time)*1000).toFixed(1)} ms` : `${msg.durationMs || 0} ms`;
+            el.codeConsole.textContent = `=== Execution Finished ===\n` +
+              `Result: ${m.res || 'WHNF reached'}\n` +
+              `Time: ${timeStr}\n` +
+              `Calls: ${m.calls || 0}\n` +
+              `Heap Allocations: ${m.creates || 0}\n` +
+              `GC Count: ${m.gc_count || 0}\n` +
+              `Instructions: ${m.instr_executed || 0}\n\n` +
+              `--- Console Output ---\n${msg.output || '(no stdout)'}`;
           },
           onError: (err) => {
-            el.codeConsole.textContent = `[ERROR]\n${err}`;
+            el.codeConsole.textContent = `[COMPILATION ERROR]\n${err}`;
           }
         });
 
