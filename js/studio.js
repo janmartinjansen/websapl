@@ -1,17 +1,20 @@
 /**
  * Course Studio — Interactive Authoring Application for Sap(+) & JMVM
+ * Features: Local Storage, Live Student Preview, WASM Code Execution, GitHub Token Auth & 1-Click Publishing
  */
 document.addEventListener("DOMContentLoaded", () => {
   // State
   const state = {
     course: null,
-    activeModuleId: null,
-    activeFileName: null,
+    activeModuleId: null, // "home" or moduleId
+    activeFileName: null, // "index.md" or filename
     editor: null,
     worker: null,
     workerReady: false,
     previewDebounce: null,
-    pendingRuns: new Map() // widgetId -> callback
+    pendingRuns: new Map(),
+    githubUser: null,
+    githubToken: localStorage.getItem("websapl_github_token") || ""
   };
 
   // DOM Elements
@@ -22,6 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
     toolbarMd: document.getElementById("toolbar-markdown"),
     toolbarCode: document.getElementById("toolbar-code"),
     btnSave: document.getElementById("btn-save"),
+    btnPublish: document.getElementById("btn-publish"),
     btnExportZip: document.getElementById("btn-export-zip"),
     btnReset: document.getElementById("btn-reset"),
     btnTheme: document.getElementById("btn-theme-toggle"),
@@ -31,7 +35,9 @@ document.addEventListener("DOMContentLoaded", () => {
     btnInsertPlayground: document.getElementById("btn-insert-playground"),
     codeOutputPanel: document.getElementById("code-output-panel"),
     codeConsole: document.getElementById("code-console"),
-    codeMetrics: document.getElementById("code-metrics")
+    authContainer: document.getElementById("auth-modal-overlay"),
+    authStatusUser: document.getElementById("auth-status-user"),
+    btnLogout: document.getElementById("btn-logout")
   };
 
   // --- INITIALIZATION ---
@@ -41,11 +47,70 @@ document.addEventListener("DOMContentLoaded", () => {
     initCodeMirror();
     initTheme();
     setupEventListeners();
+    checkAuth();
     renderTree();
 
-    // Select first file by default
-    if (state.course.modules.length > 0 && state.course.modules[0].files.length > 0) {
-      selectFile(state.course.modules[0].id, state.course.modules[0].files[0].name);
+    // Select Home (index.md) by default
+    selectFile("home", "index.md");
+  }
+
+  // --- AUTHENTICATION (GITHUB TOKEN / LOCK SCREEN) ---
+  async function checkAuth() {
+    if (!state.githubToken) {
+      showAuthModal();
+      return;
+    }
+
+    try {
+      const res = await fetch("https://api.github.com/user", {
+        headers: {
+          "Authorization": `token ${state.githubToken}`,
+          "Accept": "application/vnd.github.v3+json"
+        }
+      });
+
+      if (res.ok) {
+        state.githubUser = await res.json();
+        updateAuthUI();
+        hideAuthModal();
+      } else {
+        console.warn("Invalid GitHub token");
+        showAuthModal("Invalid GitHub Token. Please check token permissions.");
+      }
+    } catch (e) {
+      console.warn("Could not verify GitHub token:", e);
+      // If offline, allow access if token string exists
+      hideAuthModal();
+    }
+  }
+
+  function showAuthModal(errMsg = "") {
+    if (!el.authContainer) return;
+    el.authContainer.style.display = "flex";
+    const errEl = document.getElementById("auth-error-msg");
+    if (errEl) {
+      errEl.textContent = errMsg;
+      errEl.style.display = errMsg ? "block" : "none";
+    }
+  }
+
+  function hideAuthModal() {
+    if (el.authContainer) {
+      el.authContainer.style.display = "none";
+    }
+  }
+
+  function updateAuthUI() {
+    if (el.authStatusUser && state.githubUser) {
+      el.authStatusUser.innerHTML = `
+        <span style="display:inline-flex; align-items:center; gap:6px; font-size:0.8rem; color:var(--text-secondary);">
+          <img src="${state.githubUser.avatar_url}" style="width:18px; height:18px; border-radius:50%;" />
+          <strong>${state.githubUser.login}</strong>
+        </span>
+      `;
+    }
+    if (el.btnLogout) {
+      el.btnLogout.style.display = state.githubToken ? "inline-flex" : "none";
     }
   }
 
@@ -61,7 +126,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (!state.course || !state.course.modules) {
-      state.course = JSON.parse(JSON.stringify(window.DEFAULT_COURSE_DATA || { title: "Course", modules: [] }));
+      state.course = JSON.parse(JSON.stringify(window.DEFAULT_COURSE_DATA || { title: "Course", home: {}, modules: [] }));
+    }
+
+    if (!state.course.home) {
+      state.course.home = {
+        name: "index.md",
+        type: "markdown",
+        content: window.DEFAULT_COURSE_DATA.home ? window.DEFAULT_COURSE_DATA.home.content : "# Course Title\n"
+      };
     }
   }
 
@@ -69,10 +142,10 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       localStorage.setItem("websapl_course_studio_data", JSON.stringify(state.course));
       if (el.saveIndicator) {
-        el.saveIndicator.textContent = "✓ Saved";
+        el.saveIndicator.textContent = "✓ Saved (Draft)";
         el.saveIndicator.style.color = "var(--success)";
         setTimeout(() => {
-          if (el.saveIndicator) el.saveIndicator.textContent = "Auto-saved";
+          if (el.saveIndicator) el.saveIndicator.textContent = "Draft Auto-saved";
         }, 2000);
       }
     } catch (e) {
@@ -112,13 +185,11 @@ document.addEventListener("DOMContentLoaded", () => {
     switch (msg.type) {
       case "INIT_DONE":
         state.workerReady = true;
-        console.log("JMVM WASM Worker initialized for Course Studio.");
         break;
 
       case "COMPILE_COMPLETE":
         if (msg.success && state.pendingRuns.has(msg.id)) {
           const item = state.pendingRuns.get(msg.id);
-          // Auto run bytecode
           state.worker.postMessage({
             type: "RUN",
             id: msg.id,
@@ -176,7 +247,28 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderTree() {
     el.treeContainer.innerHTML = "";
 
-    state.course.modules.forEach((mod, modIdx) => {
+    // 1. Home / Startpagina Section (Top Level)
+    const homeModEl = document.createElement("div");
+    homeModEl.className = "tree-module";
+
+    const isHomeActive = (state.activeModuleId === "home");
+    homeModEl.innerHTML = `
+      <div class="module-header" style="color: #60a5fa;">
+        <span>🏠 COURSE OVERVIEW</span>
+      </div>
+      <div class="module-items">
+        <div class="tree-item ${isHomeActive ? 'active' : ''}" id="tree-item-home">
+          <span class="icon">✨</span>
+          <span class="name">index.md (Homepage)</span>
+        </div>
+      </div>
+    `;
+
+    homeModEl.querySelector("#tree-item-home").onclick = () => selectFile("home", "index.md");
+    el.treeContainer.appendChild(homeModEl);
+
+    // 2. Course Modules
+    state.course.modules.forEach((mod) => {
       const modEl = document.createElement("div");
       modEl.className = "tree-module";
 
@@ -218,6 +310,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function getActiveFile() {
+    if (state.activeModuleId === "home") {
+      return state.course.home;
+    }
     if (!state.activeModuleId || !state.activeFileName) return null;
     const mod = state.course.modules.find(m => m.id === state.activeModuleId);
     if (!mod) return null;
@@ -232,7 +327,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!file) return;
 
     if (el.activeFileTitle) {
-      el.activeFileTitle.textContent = file.name;
+      el.activeFileTitle.textContent = (moduleId === "home") ? "index.md (Homepage)" : file.name;
     }
 
     // Switch toolbars and modes
@@ -271,6 +366,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const file = getActiveFile();
     if (!file || file.type !== "markdown") return;
 
+    // Homepage Preview Special Handling
+    if (state.activeModuleId === "home") {
+      renderHomePreview(file.content || "");
+      return;
+    }
+
     let rawMarkdown = file.content || "";
 
     // Replace custom <SaplPlayground ... /> tags with placeholder divs before parsing markdown
@@ -304,6 +405,48 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function renderHomePreview(content) {
+    // Simple visual hero rendering for index.md frontmatter
+    let heroName = "Implementing Functional Languages";
+    let heroTagline = "From Sap(+) to JMVM — Interactive Educational Course";
+    let features = [];
+
+    if (content.includes("name:")) {
+      const m = content.match(/name:\s*["']?([^"'\n]+)["']?/);
+      if (m) heroName = m[1];
+    }
+    if (content.includes("tagline:")) {
+      const m = content.match(/tagline:\s*["']?([^"'\n]+)["']?/);
+      if (m) heroTagline = m[1];
+    }
+
+    el.previewContent.innerHTML = `
+      <div style="text-align:center; padding: 2rem 1rem; background: linear-gradient(180deg, rgba(56,189,248,0.1) 0%, transparent 100%); border-radius:12px; margin-bottom: 2rem;">
+        <span style="font-size:0.8rem; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.05em; background:rgba(56,189,248,0.15); padding:4px 10px; border-radius:999px;">IFL 2026 Educational Site</span>
+        <h1 style="font-size:2.2rem; margin:1rem 0 0.5rem; border:none; padding:0;">${escapeHtml(heroName)}</h1>
+        <p style="font-size:1.1rem; color:var(--text-secondary); max-width:600px; margin:0 auto 1.5rem;">${escapeHtml(heroTagline)}</p>
+        <div style="display:flex; justify-content:center; gap:10px;">
+          <button class="toolbar-btn btn-accent" style="padding:8px 16px; font-size:0.9rem;">Start Course →</button>
+          <button class="toolbar-btn" style="padding:8px 16px; font-size:0.9rem;">View Roadmap</button>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem;">
+        <div class="metric-box" style="padding:1rem;">
+          <h4 style="color:#38bdf8; margin-bottom:4px;">⚡ Lazy Graph Reduction</h4>
+          <p style="font-size:0.82rem; color:var(--text-secondary);">Explore thunks, sharing, and graph overwriting step-by-step.</p>
+        </div>
+        <div class="metric-box" style="padding:1rem;">
+          <h4 style="color:#34d399; margin-bottom:4px;">🛠️ Compiler Pipeline</h4>
+          <p style="font-size:0.82rem; color:var(--text-secondary);">Learn lambda lifting, strictness analysis, and bytecode codegen.</p>
+        </div>
+        <div class="metric-box" style="padding:1rem;">
+          <h4 style="color:#c084fc; margin-bottom:4px;">🎮 In-Browser WASM VM</h4>
+          <p style="font-size:0.82rem; color:var(--text-secondary);">Direct interactive execution on JMVM without any setup.</p>
+        </div>
+      </div>
+    `;
+  }
+
   function parseAttributes(attrStr) {
     const attrs = {};
     const regex = /(\w+)=["']([^"']*)["']/g;
@@ -322,7 +465,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const title = attrs.title || (attrs.file ? `Code: ${attrs.file}` : "Interactive Code Playground");
     const lang = attrs.lang || "Sapl";
 
-    // Resolve code content from file attribute if available
     let initialCode = attrs.initialCode || "";
     if (attrs.file) {
       const targetFile = findCourseFileByName(attrs.file);
@@ -421,7 +563,6 @@ document.addEventListener("DOMContentLoaded", () => {
           mCreates.textContent = (metrics.creates || "0") + " nodes";
           mGc.textContent = metrics.gcCount || "0";
 
-          // Update bytecode area
           if (msg.bytecode) {
             bytecodeArea.querySelector('code').textContent = msg.bytecode;
           }
@@ -434,7 +575,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
 
-      // Send compile request
       state.worker.postMessage({
         type: "COMPILE",
         id: runId,
@@ -457,9 +597,9 @@ document.addEventListener("DOMContentLoaded", () => {
     return null;
   }
 
-  // --- TOOLBAR INSERT ACTIONS (MARKDOWN) ---
+  // --- TOOLBAR & EVENT HANDLERS ---
   function setupEventListeners() {
-    // Toolbar Markdown Quick Inserts
+    // Quick Insert Buttons
     document.querySelectorAll("[data-insert]").forEach(btn => {
       btn.addEventListener("click", () => {
         const type = btn.getAttribute("data-insert");
@@ -467,7 +607,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
-    // Run Code button (for code file view)
+    // Run Code button (Code file view)
     if (el.btnRunCode) {
       el.btnRunCode.addEventListener("click", () => {
         const file = getActiveFile();
@@ -498,14 +638,14 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // Insert as Playground button (from code view)
+    // Insert as Playground Tag
     if (el.btnInsertPlayground) {
       el.btnInsertPlayground.addEventListener("click", () => {
         const file = getActiveFile();
         if (!file) return;
         const tag = `<SaplPlayground file="${file.name}" title="${file.name.replace('.cfp', '')}" />`;
         navigator.clipboard.writeText(tag).then(() => {
-          alert(`Copied to clipboard:\n${tag}\n\nPaste this in any Markdown lesson!`);
+          alert(`Copied to clipboard:\n${tag}\n\nPaste this into your Markdown lesson!`);
         });
       });
     }
@@ -514,8 +654,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (el.btnSave) {
       el.btnSave.addEventListener("click", () => {
         saveCourseData();
-        alert("Course content saved successfully!");
+        alert("Course draft saved in browser!");
       });
+    }
+
+    // Publish to Live Site (GitHub API)
+    if (el.btnPublish) {
+      el.btnPublish.addEventListener("click", promptPublishToGitHub);
     }
 
     // Export ZIP
@@ -526,13 +671,24 @@ document.addEventListener("DOMContentLoaded", () => {
     // Reset Template
     if (el.btnReset) {
       el.btnReset.addEventListener("click", () => {
-        if (confirm("Reset course to default IFL template? All custom changes in browser will be restored to defaults.")) {
+        if (confirm("Reset course to default IFL template? All custom changes in browser will be restored.")) {
           state.course = JSON.parse(JSON.stringify(window.DEFAULT_COURSE_DATA));
           saveCourseData();
           renderTree();
-          if (state.course.modules.length > 0 && state.course.modules[0].files.length > 0) {
-            selectFile(state.course.modules[0].id, state.course.modules[0].files[0].name);
-          }
+          selectFile("home", "index.md");
+        }
+      });
+    }
+
+    // Logout
+    if (el.btnLogout) {
+      el.btnLogout.addEventListener("click", () => {
+        if (confirm("Log out from Course Studio on this device?")) {
+          localStorage.removeItem("websapl_github_token");
+          state.githubToken = "";
+          state.githubUser = null;
+          updateAuthUI();
+          showAuthModal();
         }
       });
     }
@@ -545,6 +701,29 @@ document.addEventListener("DOMContentLoaded", () => {
         document.documentElement.setAttribute("data-theme", next);
         localStorage.setItem("websapl_theme", next);
         updateThemeButton(next);
+      });
+    }
+
+    // Auth Login Modal Button
+    const btnAuthSubmit = document.getElementById("btn-auth-submit");
+    if (btnAuthSubmit) {
+      btnAuthSubmit.addEventListener("click", async () => {
+        const tokenInput = document.getElementById("auth-token-input");
+        const tokenVal = tokenInput ? tokenInput.value.trim() : "";
+        if (!tokenVal) {
+          showAuthModal("Please enter your GitHub Personal Access Token.");
+          return;
+        }
+
+        btnAuthSubmit.disabled = true;
+        btnAuthSubmit.textContent = "Verifying...";
+
+        state.githubToken = tokenVal;
+        localStorage.setItem("websapl_github_token", tokenVal);
+
+        await checkAuth();
+        btnAuthSubmit.disabled = false;
+        btnAuthSubmit.textContent = "Unlock Course Studio";
       });
     }
   }
@@ -590,7 +769,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function showPlaygroundInsertModal(doc, cursor) {
-    // Collect all available code files in course
     const codeFiles = [];
     state.course.modules.forEach(m => {
       m.files.filter(f => f.type === "code").forEach(f => {
@@ -608,11 +786,11 @@ document.addEventListener("DOMContentLoaded", () => {
     modal.innerHTML = `
       <div class="studio-modal">
         <div class="modal-header">
-          <span>Insert Code Playground Component</span>
+          <span>Embed Code Playground</span>
           <button class="sidebar-btn" onclick="this.closest('.studio-modal-overlay').remove()">×</button>
         </div>
         <div class="modal-body">
-          <label style="display:block; margin-bottom:6px; font-weight:600;">Select Code File to Embed:</label>
+          <label style="display:block; margin-bottom:6px; font-weight:600;">Select Code File:</label>
           <select id="modal-select-file" style="width:100%; padding:6px; background:var(--bg-primary); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; margin-bottom:12px;">
             ${optionsHtml}
           </select>
@@ -638,6 +816,120 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
+  // --- 1-CLICK PUBLISH TO GITHUB & LIVE SITE ---
+  async function promptPublishToGitHub() {
+    if (!state.githubToken) {
+      showAuthModal("Please authenticate with your GitHub Token to publish.");
+      return;
+    }
+
+    const commitMsg = prompt("Publish to Live Website:\nEnter commit message:", "Update course content via Course Studio");
+    if (!commitMsg) return;
+
+    const btn = el.btnPublish;
+    btn.disabled = true;
+    btn.innerHTML = "<span>⏳ Publishing to GitHub...</span>";
+
+    try {
+      // 1. Prepare files map (Path -> Content)
+      const filesToPush = {};
+
+      // Home index.md
+      filesToPush["funcprog/vitepress-demo/index.md"] = state.course.home.content || "";
+
+      // Guide files & Code examples
+      state.course.modules.forEach((mod, modIdx) => {
+        const modSlug = String(modIdx + 1).padStart(2, "0") + "_" + mod.id.replace(/[^a-zA-Z0-9_]/g, "");
+        mod.files.forEach(file => {
+          if (file.type === "markdown") {
+            filesToPush[`funcprog/vitepress-demo/guide/${file.name}`] = file.content || "";
+          } else {
+            filesToPush[`funcprog/vitepress-demo/examples/${file.name}`] = file.content || "";
+          }
+        });
+      });
+
+      // Full JSON course manifest
+      filesToPush["funcprog/course_content.json"] = JSON.stringify(state.course, null, 2);
+
+      // 2. Perform atomic Git Tree Commit via GitHub REST API
+      const repoOwner = "janmartinjansen";
+      const repoName = "Sapl";
+      const branch = "main";
+      const headers = {
+        "Authorization": `token ${state.githubToken}`,
+        "Accept": "application/vnd.github.v3+json",
+        "Content-Type": "application/json"
+      };
+
+      // Get latest commit SHA on main
+      const refRes = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/git/ref/heads/${branch}`, { headers });
+      if (!refRes.ok) throw new Error("Could not fetch latest git branch reference.");
+      const refData = await refRes.json();
+      const latestCommitSha = refData.object.sha;
+
+      // Get commit tree
+      const commitRes = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/git/commits/${latestCommitSha}`, { headers });
+      if (!commitRes.ok) throw new Error("Could not fetch commit tree.");
+      const commitData = await commitRes.json();
+      const baseTreeSha = commitData.tree.sha;
+
+      // Create Blobs & Tree Entries
+      const treeEntries = [];
+      for (const [path, content] of Object.entries(filesToPush)) {
+        treeEntries.push({
+          path: path,
+          mode: "100644",
+          type: "blob",
+          content: content
+        });
+      }
+
+      // Create new Tree
+      const treeRes = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/git/trees`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          base_tree: baseTreeSha,
+          tree: treeEntries
+        })
+      });
+      if (!treeRes.ok) throw new Error("Failed to create Git Tree.");
+      const treeData = await treeRes.json();
+
+      // Create Commit
+      const newCommitRes = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/git/commits`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          message: commitMsg,
+          tree: treeData.sha,
+          parents: [latestCommitSha]
+        })
+      });
+      if (!newCommitRes.ok) throw new Error("Failed to create Git Commit.");
+      const newCommitData = await newCommitRes.json();
+
+      // Update Ref (Push)
+      const updateRefRes = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/git/refs/heads/${branch}`, {
+        method: "PATCH",
+        headers,
+        body: JSON.stringify({
+          sha: newCommitData.sha,
+          force: false
+        })
+      });
+      if (!updateRefRes.ok) throw new Error("Failed to update branch reference.");
+
+      alert(`🎉 Successfully Published!\n\nCommit SHA: ${newCommitData.sha.substring(0, 7)}\nGitHub Actions is now rebuilding the course. The live website will update in ~60 seconds.`);
+    } catch (err) {
+      alert(`Publish Error:\n${err.message}`);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = "<span>🚀 Publish Live</span>";
+    }
+  }
+
   // --- EXPORT COURSE ZIP ---
   function exportCourseZip() {
     if (!window.SimpleZip) {
@@ -647,7 +939,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const zip = new window.SimpleZip();
 
-    // Add course manifest
+    // Add homepage & manifest
+    if (state.course.home) {
+      zip.addFile("index.md", state.course.home.content || "");
+    }
     zip.addFile("course.json", JSON.stringify(state.course, null, 2));
 
     // Add all markdown files under guide/ and code under examples/
@@ -705,10 +1000,26 @@ document.addEventListener("DOMContentLoaded", () => {
       saveCourseData();
       renderTree();
       if (state.activeFileName === fileName) {
-        if (mod.files.length > 0) {
-          selectFile(moduleId, mod.files[0].name);
-        }
+        selectFile("home", "index.md");
       }
+    },
+
+    promptAddModule: (title) => {
+      const id = "mod_" + Date.now();
+      state.course.modules.push({
+        id: id,
+        title: title,
+        files: [
+          {
+            name: "01_intro.md",
+            type: "markdown",
+            content: `# ${title}\n\nLesson introduction...\n`
+          }
+        ]
+      });
+      saveCourseData();
+      renderTree();
+      selectFile(id, "01_intro.md");
     },
 
     promptDeleteModule: (moduleId) => {
@@ -717,9 +1028,7 @@ document.addEventListener("DOMContentLoaded", () => {
       state.course.modules = state.course.modules.filter(m => m.id !== moduleId);
       saveCourseData();
       renderTree();
-      if (state.course.modules.length > 0 && state.course.modules[0].files.length > 0) {
-        selectFile(state.course.modules[0].id, state.course.modules[0].files[0].name);
-      }
+      selectFile("home", "index.md");
     }
   };
 

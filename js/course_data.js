@@ -4,6 +4,37 @@
 window.DEFAULT_COURSE_DATA = {
   version: "1.0",
   title: "Implementing Functional Languages with Sap(+) & JMVM",
+  home: {
+    name: "index.md",
+    type: "markdown",
+    content: `---
+layout: home
+
+hero:
+  name: "Implementing Functional Languages"
+  text: "From Sap(+) to JMVM"
+  tagline: "An interactive educational course based on the IFL 2026 research paper."
+  actions:
+    - theme: brand
+      text: Start Learning
+      link: /guide/01-lazy-evaluation
+    - theme: alt
+      text: View Roadmap
+      link: ../roadmap.md
+
+features:
+  - icon: ⚡
+    title: "Lazy Graph Reduction"
+    details: "Understand how thunks, sharing, and graph updates work under the hood in a minimal virtual machine."
+  - icon: 🛠️
+    title: "The Compilation Pipeline"
+    details: "Step through lambda lifting, strictness inference, and bytecode generation from Sapl source code."
+  - icon: 🎮
+    title: "Interactive WebAssembly Engine"
+    details: "Experiment directly in your browser with editable code blocks and instant runtime metrics."
+---
+`
+  },
   modules: [
     {
       id: "mod1_foundations",
