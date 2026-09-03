@@ -84,7 +84,7 @@ In Sapl, the exclamation mark (\`!n\`) instructs the compiler that \`n\` is stri
 
 Without strictness annotations, intermediate multiplications must be suspended into thunks:
 
-<SaplPlayground file="fac_lazy.cfp" title="Lazy Factorial (02_facl.cfp)" />
+<SaplPlayground file="fac_lazy.cfp" title="Lazy Factorial (02_facl.cfp)" strictness="false" />
 `
         },
         {

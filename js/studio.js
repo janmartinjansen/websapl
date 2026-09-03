@@ -508,10 +508,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const widgetId = "widget_" + Math.random().toString(36).substring(2, 9);
 
+    const isStrictnessEnabled = (attrs.strictness !== "false" && attrs.infer !== "false" && attrs.strictness !== false);
+
     container.innerHTML = `
       <div class="widget-header">
         <div class="widget-title">
-          <span class="widget-badge">${escapeHtml(lang)}</span>
+          <span class="widget-badge" style="${isStrictnessEnabled ? '' : 'background: #8b5cf6;'}">${isStrictnessEnabled ? escapeHtml(lang) : 'Lazy (No Infer)'}</span>
           <span>${escapeHtml(title)}</span>
         </div>
         <div class="widget-tabs">
@@ -536,7 +538,7 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
         <div class="widget-metrics">
           <div class="metric-box"><div class="label">Time</div><div class="val m-time">- ms</div></div>
-          <div class="metric-box"><div class="label">Reductions</div><div class="val m-steps">- steps</div></div>
+          <div class="metric-box"><div class="label">Calls</div><div class="val m-steps">- calls</div></div>
           <div class="metric-box"><div class="label">Heap Allocations</div><div class="val m-creates">- creates</div></div>
           <div class="metric-box"><div class="label">GC Cycles</div><div class="val m-gc">0</div></div>
         </div>
@@ -610,7 +612,7 @@ document.addEventListener("DOMContentLoaded", () => {
         id: runId,
         source: sourceCode,
         path: "/workspace/temp.cfp",
-        strictness: true,
+        strictness: isStrictnessEnabled,
         backend: "saplcomp"
       });
     };
@@ -665,12 +667,14 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         });
 
+        const isStrictChecked = document.getElementById("chk-code-strictness") ? document.getElementById("chk-code-strictness").checked : true;
+
         state.worker.postMessage({
           type: "COMPILE",
           id: runId,
           source: file.content,
           path: "/workspace/" + file.name,
-          strictness: true,
+          strictness: isStrictChecked,
           backend: "saplcomp"
         });
       });
@@ -833,7 +837,11 @@ document.addEventListener("DOMContentLoaded", () => {
             ${optionsHtml}
           </select>
           <label style="display:block; margin-bottom:6px; font-weight:600;">Widget Title:</label>
-          <input id="modal-widget-title" type="text" placeholder="e.g. Strict Factorial Example" style="width:100%; padding:6px; background:var(--bg-primary); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; box-sizing:border-box;" />
+          <input id="modal-widget-title" type="text" placeholder="e.g. Strict Factorial Example" style="width:100%; padding:6px; background:var(--bg-primary); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; box-sizing:border-box; margin-bottom:12px;" />
+          <label style="display:inline-flex; align-items:center; gap:6px; font-size:0.85rem; color:var(--text-secondary); cursor:pointer; user-select:none;">
+            <input type="checkbox" id="modal-chk-strict" checked style="cursor:pointer;" />
+            <span>Enable Strictness Inference (Automatic ! optimization)</span>
+          </label>
         </div>
         <div class="modal-footer">
           <button class="toolbar-btn" onclick="this.closest('.studio-modal-overlay').remove()">Cancel</button>
@@ -847,7 +855,9 @@ document.addEventListener("DOMContentLoaded", () => {
     modal.querySelector("#modal-btn-insert").onclick = () => {
       const selectedFile = modal.querySelector("#modal-select-file").value;
       const title = modal.querySelector("#modal-widget-title").value || selectedFile;
-      const tag = `\n<SaplPlayground file="${selectedFile}" title="${title}" />\n\n`;
+      const isStrict = modal.querySelector("#modal-chk-strict") ? modal.querySelector("#modal-chk-strict").checked : true;
+      const strictAttr = isStrict ? '' : ' strictness="false"';
+      const tag = `\n<SaplPlayground file="${selectedFile}" title="${title}"${strictAttr} />\n\n`;
       doc.replaceRange(tag, cursor);
       modal.remove();
       state.editor.focus();

@@ -104,6 +104,12 @@
           <button class="toolbar-btn btn-success" id="btn-run-code" title="Compile and Run on JMVM WebAssembly">
             <span>▶ Run on JMVM</span>
           </button>
+          <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-secondary); cursor: pointer; margin-left: 8px; user-select: none;">
+            <input type="checkbox" id="chk-code-strictness" checked style="cursor: pointer;" />
+            <span>Strictness Inference (Optimization)</span>
+          </label>
+        </div>
+        <div class="toolbar-group">
           <button class="toolbar-btn btn-accent" id="btn-insert-playground" title="Copy & Insert this Code snippet into active Lesson">
             <span>🔗 Copy &lt;SaplPlayground /&gt; Tag</span>
           </button>
