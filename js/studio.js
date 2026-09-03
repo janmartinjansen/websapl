@@ -508,7 +508,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const widgetId = "widget_" + Math.random().toString(36).substring(2, 9);
 
-    const isStrictnessEnabled = (attrs.strictness !== "false" && attrs.infer !== "false" && attrs.strictness !== false);
+    const isStrictnessEnabled = (attrs.strictness !== "false" && attrs.infer !== "false" && attrs.strictness !== false && attrs.file !== "fac_lazy.cfp");
 
     container.innerHTML = `
       <div class="widget-header">
@@ -526,7 +526,7 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
       <div class="widget-editor">
         <textarea class="widget-code-area" rows="6" spellcheck="false">${escapeHtml(initialCode)}</textarea>
-        <pre class="widget-bytecode-area" style="display: none; margin: 0; padding: 6px 8px; font-size: 0.8rem; background: #0d1117; color: #58a6ff; border-radius: 4px;"><code>// Bytecode generated on run</code></pre>
+        <pre class="widget-bytecode-area" style="display: none; margin: 0; padding: 6px 8px; font-size: 0.8rem; background: #0d1117; color: #58a6ff; border-radius: 4px; overflow-x: auto; max-height: 220px;"><code>// Click 'JMVM Bytecode' or 'Run' to compile...</code></pre>
       </div>
       <div class="widget-output" id="${widgetId}_output" style="display: none;">
         <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -539,7 +539,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="widget-metrics">
           <div class="metric-box"><div class="label">Time</div><div class="val m-time">- ms</div></div>
           <div class="metric-box"><div class="label">Calls</div><div class="val m-steps">- calls</div></div>
-          <div class="metric-box"><div class="label">Heap Allocations</div><div class="val m-creates">- creates</div></div>
+          <div class="metric-box"><div class="label">Heap Allocations</div><div class="val m-creates" style="${isStrictnessEnabled ? '' : 'color: #8b5cf6; font-weight: bold;'}">- creates</div></div>
           <div class="metric-box"><div class="label">GC Cycles</div><div class="val m-gc">0</div></div>
         </div>
       </div>
@@ -563,6 +563,32 @@ document.addEventListener("DOMContentLoaded", () => {
       btnCodeTab.classList.remove("active");
       codeArea.style.display = "none";
       bytecodeArea.style.display = "block";
+
+      // Trigger compilation to show live bytecode
+      const sourceCode = codeArea.value;
+      const compileId = "comp_" + Math.random().toString(36).substring(2, 9);
+      bytecodeArea.querySelector('code').textContent = "// Compiling via WebAssembly saplcomp...";
+
+      state.pendingRuns.set(compileId, {
+        path: "/workspace/temp.cfp",
+        onSuccess: (msg) => {
+          if (msg.bytecode) {
+            bytecodeArea.querySelector('code').textContent = msg.bytecode;
+          }
+        },
+        onError: (err) => {
+          bytecodeArea.querySelector('code').textContent = "// Compilation Error:\n" + err;
+        }
+      });
+
+      state.worker.postMessage({
+        type: "COMPILE",
+        id: compileId,
+        source: sourceCode,
+        path: "/workspace/temp.cfp",
+        strictness: isStrictnessEnabled,
+        backend: "saplcomp"
+      });
     };
 
     // Run Handler
