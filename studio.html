@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Course Studio — Authoring & Curriculum for Functional Languages</title>
+  
+  <link rel="stylesheet" href="css/codemirror.min.css" />
+  <link rel="stylesheet" href="css/workbench.css" />
+  <link rel="stylesheet" href="css/studio.css" />
+</head>
+<body>
+
+  <!-- Top App Header -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-icon" style="background: linear-gradient(135deg, #10b981, #059669);">📚</div>
+      <span>Course Studio</span>
+      <span class="brand-badge" style="background: rgba(16,185,129,0.2); color: #34d399; border-color: rgba(16,185,129,0.4);">Curriculum Authoring</span>
+    </div>
+
+    <!-- Center Status / Active File Info -->
+    <div class="header-actions">
+      <span style="font-size: 0.85rem; color: var(--text-secondary);">Editing:</span>
+      <strong id="active-file-title" style="font-size: 0.85rem; color: var(--accent);">-</strong>
+      <span id="save-indicator" style="font-size: 0.75rem; color: var(--text-muted); margin-left: 8px;">Auto-saved</span>
+    </div>
+
+    <!-- Header Actions -->
+    <div class="header-actions">
+      <button class="btn" id="btn-save" title="Save All Changes (Cmd+S / Ctrl+S)">
+        <span>💾</span> Save
+      </button>
+      <button class="btn" id="btn-export-zip" title="Download Complete Course Bundle as ZIP">
+        <span>📥</span> Export Course ZIP
+      </button>
+      <button class="btn" id="btn-reset" title="Reset to Default Template" style="color: var(--text-muted);">
+        <span>🔄</span> Reset Template
+      </button>
+      <a href="funcprog/vitepress/" target="_blank" class="btn" style="text-decoration: none; background: rgba(59, 130, 246, 0.2); border-color: rgba(59, 130, 246, 0.4); color: #60a5fa;" title="View Live VitePress Site">
+        <span>🚀</span> View Site
+      </a>
+      <a href="index.html" class="btn" style="text-decoration: none;" title="Back to WebSapl IDE">
+        <span>←</span> Workbench
+      </a>
+      <button class="btn" id="btn-theme-toggle">
+        ☀️ Light
+      </button>
+    </div>
+  </header>
+
+  <!-- Main 3-Pane Container -->
+  <div class="studio-container">
+    
+    <!-- Left Sidebar: Modules & Files -->
+    <aside class="studio-sidebar">
+      <div class="sidebar-header">
+        <span>COURSE MODULES</span>
+        <button class="sidebar-btn" id="btn-add-module" onclick="const t = prompt('Enter Module Title:'); if (t) { window.Studio.promptAddModule ? window.Studio.promptAddModule(t) : null; }" title="Create New Module">+ Module</button>
+      </div>
+      <div class="tree-view" id="tree-container">
+        <!-- Rendered by studio.js -->
+      </div>
+    </aside>
+
+    <!-- Center: Editor Section -->
+    <section class="editor-section">
+      
+      <!-- Markdown Specific Toolbar -->
+      <div class="studio-toolbar" id="toolbar-markdown">
+        <div class="toolbar-group">
+          <button class="toolbar-btn" data-insert="h1" title="Heading 1"><b>H1</b></button>
+          <button class="toolbar-btn" data-insert="h2" title="Heading 2"><b>H2</b></button>
+          <button class="toolbar-btn" data-insert="bold" title="Bold"><b>B</b></button>
+          <button class="toolbar-btn" data-insert="code" title="Inline Code"><code>`code`</code></button>
+        </div>
+
+        <div class="toolbar-group">
+          <button class="toolbar-btn btn-accent" data-insert="playground" title="Embed an Interactive Sapl Code Playground in this Lesson">
+            <span>⚡ + Code Playground</span>
+          </button>
+          <button class="toolbar-btn" data-insert="paper" title="Insert Paper Reference Callout Box">
+            <span>📖 + Paper Insight</span>
+          </button>
+          <button class="toolbar-btn" data-insert="math" title="Insert LaTeX Formula">
+            <span>📐 + Math Formula</span>
+          </button>
+          <button class="toolbar-btn" data-insert="challenge" title="Insert Student Challenge / Exercise">
+            <span>💡 + Challenge</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Code Specific Toolbar (when viewing .cfp / .spp) -->
+      <div class="studio-toolbar" id="toolbar-code" style="display: none;">
+        <div class="toolbar-group">
+          <button class="toolbar-btn btn-success" id="btn-run-code" title="Compile and Run on JMVM WebAssembly">
+            <span>▶ Run on JMVM</span>
+          </button>
+          <button class="toolbar-btn btn-accent" id="btn-insert-playground" title="Copy & Insert this Code snippet into active Lesson">
+            <span>🔗 Copy &lt;SaplPlayground /&gt; Tag</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- CodeMirror Editor Instance -->
+      <div class="editor-wrapper" id="editor-wrapper"></div>
+    </section>
+
+    <!-- Right: Student Live Preview & Output Section -->
+    <section class="preview-section">
+      
+      <!-- Live Preview for Markdown Lessons -->
+      <div class="preview-header">
+        <span>👁️ LIVE STUDENT PREVIEW (INTERACTIVE)</span>
+        <span style="font-size: 0.72rem; color: var(--text-muted);">Real-time markdown & WASM evaluation</span>
+      </div>
+      <div class="preview-content" id="preview-content">
+        <!-- Live rendered Markdown & Playgrounds -->
+      </div>
+
+      <!-- Output Panel for Code (.cfp) Files -->
+      <div id="code-output-panel" style="display: none; flex-direction: column; height: 100%; padding: 16px; background: var(--bg-primary);">
+        <h3 style="font-size: 0.95rem; margin-bottom: 8px; color: var(--text-secondary);">JMVM WASM Execution Console</h3>
+        <pre id="code-console" style="flex: 1; margin: 0; padding: 12px; font-family: var(--font-mono); font-size: 0.85rem; background: var(--terminal-bg); color: var(--terminal-text); border: 1px solid var(--border-color); border-radius: 6px; overflow-y: auto;">Click '▶ Run on JMVM' to execute this code...</pre>
+      </div>
+
+    </section>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/codemirror.min.js"></script>
+  <script src="js/matchbrackets.min.js"></script>
+  <script src="js/closebrackets.min.js"></script>
+  <script src="js/clike_mode.js"></script>
+  <script src="js/sapl_mode.js"></script>
+  <script src="js/marked.min.js"></script>
+  
+  <script src="js/stdlib_data.js"></script>
+  <script src="js/course_data.js"></script>
+  <script src="js/zip_helper.js"></script>
+  <script src="js/studio.js"></script>
+
+</body>
+</html>
