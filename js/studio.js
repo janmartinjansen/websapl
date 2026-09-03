@@ -404,6 +404,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let rawMarkdown = file.content || "";
 
+    // Render LaTeX Math with KaTeX ($$ ... $$ and $ ... $)
+    if (typeof katex !== "undefined") {
+      // Display Math: $$ ... $$
+      rawMarkdown = rawMarkdown.replace(/\$\$([\s\S]+?)\$\$/g, (match, expr) => {
+        try {
+          return `\n\n<div class="katex-display-wrapper" style="text-align:center; margin:1.2rem 0; overflow-x:auto;">${katex.renderToString(expr.trim(), { displayMode: true, throwOnError: false })}</div>\n\n`;
+        } catch (e) {
+          return match;
+        }
+      });
+
+      // Inline Math: $ ... $
+      rawMarkdown = rawMarkdown.replace(/(^|[^\\])\$([^\$\n]+?)\$/g, (match, prefix, expr) => {
+        try {
+          return prefix + katex.renderToString(expr.trim(), { displayMode: false, throwOnError: false });
+        } catch (e) {
+          return match;
+        }
+      });
+    }
+
     // Replace custom <SaplPlayground ... /> tags with placeholder divs before parsing markdown
     const playgrounds = [];
     const processedMarkdown = rawMarkdown.replace(/<SaplPlayground\s+([^>]*)\/?>/g, (match, attrsStr) => {
