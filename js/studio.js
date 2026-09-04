@@ -410,10 +410,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let rawMarkdown = file.content || "";
 
+    // Support GitHub alerts / callouts (> [!NOTE], > [!TIP], > [!IMPORTANT], > [!WARNING])
+    rawMarkdown = rawMarkdown.replace(/^>\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*(.*)$/gim, (match, type, title) => {
+      return `> **[${type.toUpperCase()}]** ${title}`;
+    });
+
+    let processedMarkdown = rawMarkdown;
+
     // Render LaTeX Math with KaTeX ($$ ... $$ and $ ... $)
     if (typeof katex !== "undefined") {
       // Display Math: $$ ... $$
-      rawMarkdown = rawMarkdown.replace(/\$\$([\s\S]+?)\$\$/g, (match, expr) => {
+      processedMarkdown = processedMarkdown.replace(/\$\$([\s\S]+?)\$\$/g, (match, expr) => {
         try {
           return `\n\n<div class="katex-display-wrapper" style="text-align:center; margin:1.2rem 0; overflow-x:auto;">${katex.renderToString(expr.trim(), { displayMode: true, throwOnError: false })}</div>\n\n`;
         } catch (e) {
@@ -422,7 +429,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       // Inline Math: $ ... $
-      rawMarkdown = rawMarkdown.replace(/(^|[^\\])\$([^\$\n]+?)\$/g, (match, prefix, expr) => {
+      processedMarkdown = processedMarkdown.replace(/(^|[^\\])\$([^\$\n]+?)\$/g, (match, prefix, expr) => {
         try {
           return prefix + katex.renderToString(expr.trim(), { displayMode: false, throwOnError: false });
         } catch (e) {
