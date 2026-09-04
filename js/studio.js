@@ -136,6 +136,12 @@ document.addEventListener("DOMContentLoaded", () => {
         content: window.DEFAULT_COURSE_DATA.home ? window.DEFAULT_COURSE_DATA.home.content : "# Course Title\n"
       };
     }
+
+    // Auto-migrate any stale link from early prototypes
+    if (state.course.home && state.course.home.content && state.course.home.content.includes("/guide/01-lazy-evaluation")) {
+      state.course.home.content = state.course.home.content.replace(/\/guide\/01-lazy-evaluation/g, "/guide/01_introduction");
+      saveCourseData();
+    }
   }
 
   function saveCourseData() {
@@ -930,7 +936,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const filesToPush = {};
 
       // Home index.md
-      filesToPush["funcprog/vitepress-demo/index.md"] = state.course.home.content || "";
+      let homeContent = (state.course.home && state.course.home.content) ? state.course.home.content : "";
+      if (homeContent.includes("/guide/01-lazy-evaluation")) {
+        homeContent = homeContent.replace(/\/guide\/01-lazy-evaluation/g, "/guide/01_introduction");
+        if (state.course.home) state.course.home.content = homeContent;
+      }
+      filesToPush["funcprog/vitepress-demo/index.md"] = homeContent;
 
       // Guide files & Code examples
       state.course.modules.forEach((mod, modIdx) => {
