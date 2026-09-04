@@ -799,7 +799,7 @@ ireturn`
         <div style="background:rgba(15,23,42,0.85); padding:3px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.08);"><span style="color:#94a3b8; font-weight:600;">Steps</span> <strong id="${widgetId}_steps" style="color:#38bdf8;">0</strong></div>
         <div style="background:rgba(15,23,42,0.85); padding:3px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.08);"><span style="color:#94a3b8; font-weight:600;">Status</span> <strong id="${widgetId}_status" style="color:#38bdf8;">READY</strong></div>
       </div>
-      <div style="display:grid; grid-template-columns: 1.25fr 1fr 1.35fr; gap:1px; background:rgba(255,255,255,0.06); min-height:280px; max-height:380px; box-sizing:border-box;">
+      <div style="display:grid; grid-template-columns: 1.3fr 1fr 1.35fr; gap:1px; background:rgba(255,255,255,0.08); min-height:440px; max-height:480px; box-sizing:border-box;">
         <div style="background:#0b1120; display:flex; flex-direction:column; overflow:hidden;">
           <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 12px; background:#162238; font-size:0.78rem; font-weight:700; color:#cbd5e1; border-bottom:1px solid rgba(255,255,255,0.06);">
             <span>Bytecode Instructions</span>
@@ -822,7 +822,7 @@ ireturn`
           <div id="${widgetId}_heap_items" style="flex:1; overflow-y:auto; padding:8px; box-sizing:border-box;"></div>
         </div>
       </div>
-      <div id="${widgetId}_log" style="display:flex; align-items:center; gap:8px; padding:8px 16px; background:#080d19; border-top:1px solid rgba(255,255,255,0.08); font-size:0.8rem; color:#38bdf8; line-height:1.4;">
+      <div id="${widgetId}_log" style="display:flex; align-items:center; gap:10px; padding:10px 16px; background:#060a14; border-top:1px solid rgba(56,189,248,0.25); font-size:0.82rem; color:#38bdf8; line-height:1.45; min-height:44px; box-sizing:border-box; position:relative; z-index:2;">
         <span>💡</span> <span id="${widgetId}_log_text">JMVM geïnitialiseerd.</span>
       </div>
     `;
@@ -1158,7 +1158,15 @@ ireturn`
         }).join("");
 
         const activeEl = elCode.querySelector(`#${widgetId}_line_${vm.pc}`);
-        if (activeEl) activeEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        if (activeEl) {
+          const top = activeEl.offsetTop - elCode.offsetTop;
+          const bottom = top + activeEl.offsetHeight;
+          if (top < elCode.scrollTop) {
+            elCode.scrollTop = Math.max(0, top - 8);
+          } else if (bottom > elCode.scrollTop + elCode.clientHeight) {
+            elCode.scrollTop = bottom - elCode.clientHeight + 8;
+          }
+        }
       }
 
       // Stack
