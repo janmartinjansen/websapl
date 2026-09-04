@@ -433,11 +433,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Replace custom <SaplPlayground ... /> tags with placeholder divs before parsing markdown
     const playgrounds = [];
-    const processedMarkdown = rawMarkdown.replace(/<SaplPlayground\s+([^>]*)\/?>/g, (match, attrsStr) => {
+    processedMarkdown = processedMarkdown.replace(/<SaplPlayground\s+([^>]*)\/?>/g, (match, attrsStr) => {
       const idx = playgrounds.length;
       const attrs = parseAttributes(attrsStr);
       playgrounds.push(attrs);
       return `\n\n<div class="sapl-playground-placeholder" data-idx="${idx}"></div>\n\n`;
+    });
+
+    // Replace custom <JmvmStepper ... /> tags with placeholder divs
+    const steppers = [];
+    processedMarkdown = processedMarkdown.replace(/<JmvmStepper\s*([^>]*)\/?>/g, (match, attrsStr) => {
+      const idx = steppers.length;
+      const attrs = parseAttributes(attrsStr || "");
+      steppers.push(attrs);
+      return `\n\n<div class="jmvm-stepper-placeholder" data-idx="${idx}"></div>\n\n`;
     });
 
     // Parse Markdown with marked.js
@@ -450,13 +459,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
     el.previewContent.innerHTML = htmlOutput;
 
-    // Render interactive widgets into placeholders
+    // Render interactive playground widgets into placeholders
     const placeholders = el.previewContent.querySelectorAll(".sapl-playground-placeholder");
     placeholders.forEach(ph => {
       const idx = parseInt(ph.getAttribute("data-idx"), 10);
       const attrs = playgrounds[idx];
       if (attrs) {
         const widget = createPlaygroundWidget(attrs);
+        ph.replaceWith(widget);
+      }
+    });
+
+    // Render interactive stepper widgets into placeholders
+    const stepperPlaceholders = el.previewContent.querySelectorAll(".jmvm-stepper-placeholder");
+    stepperPlaceholders.forEach(ph => {
+      const idx = parseInt(ph.getAttribute("data-idx"), 10);
+      const attrs = steppers[idx];
+      if (attrs) {
+        const widget = createStepperWidget(attrs);
         ph.replaceWith(widget);
       }
     });
@@ -673,6 +693,225 @@ document.addEventListener("DOMContentLoaded", () => {
     return container;
   }
 
+  // --- STEPPER WIDGET GENERATION & SIMULATION ---
+  function createStepperWidget(attrs) {
+    const container = document.createElement("div");
+    container.className = "live-stepper-widget";
+    container.style.cssText = "margin: 1.5rem 0; border-radius: 10px; background: #0f172a; border: 1px solid rgba(56,189,248,0.25); color: #f8fafc; font-family: ui-monospace, monospace; overflow: hidden;";
+
+    const title = attrs.title || "Interactive Graph & Stack Stepper";
+    const defaultBytecode = `ALLOC facl_1, 2    ; Thunk allocation for multiplication
+PUSH_INT 10
+PUSH_GLOBAL facl
+CALL facl, 1        ; Call lazy facl with thunk
+HALT
+
+LABEL facl
+PUSH_VAR 0          ; Load arg n
+PUSH_INT 0
+EQ                  ; n == 0?
+BRANCH_IF_FALSE lb1
+PUSH_INT 1          ; Base case 0 -> 1
+RETURN
+
+LABEL lb1
+PUSH_VAR 0          ; n
+PUSH_VAR 0
+PUSH_INT 1
+SUB                 ; n - 1
+ALLOC facl_1, 2     ; Suspension of (n * facl(n-1))
+RETURN`;
+
+    const widgetId = "stepper_" + Math.random().toString(36).substring(2, 9);
+
+    container.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; padding: 10px 14px; background:#1e293b; border-bottom:1px solid rgba(255,255,255,0.08);">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="background: linear-gradient(135deg, #0ea5e9, #0284c7); color:white; font-size:0.72rem; font-weight:700; padding:2px 7px; border-radius:4px; text-transform:uppercase;">JMVM Stepper</span>
+          <strong style="font-size:0.88rem; color:#e2e8f0;">${escapeHtml(title)}</strong>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button id="${widgetId}_reset" style="background:#334155; color:white; border:none; padding:4px 10px; border-radius:4px; font-size:0.78rem; font-weight:600; cursor:pointer;">⏮ Reset</button>
+          <button id="${widgetId}_step" style="background:#0284c7; color:white; border:none; padding:4px 10px; border-radius:4px; font-size:0.78rem; font-weight:600; cursor:pointer;">⏯ Step</button>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; padding:6px 14px; background:#131d31; border-bottom:1px solid rgba(255,255,255,0.05); font-size:0.78rem;">
+        <div><span style="color:#94a3b8;">PC:</span> <strong id="${widgetId}_pc" style="color:#38bdf8;">0</strong></div>
+        <div><span style="color:#94a3b8;">Stack:</span> <strong id="${widgetId}_sp" style="color:#38bdf8;">0</strong></div>
+        <div><span style="color:#94a3b8;">Heap:</span> <strong id="${widgetId}_hp" style="color:#a78bfa;">0 nodes</strong></div>
+        <div><span style="color:#94a3b8;">Status:</span> <strong id="${widgetId}_status" style="color:#10b981;">READY</strong></div>
+      </div>
+      <div style="display:grid; grid-template-columns: 1.2fr 1fr 1.3fr; gap:1px; background:rgba(255,255,255,0.06); min-height:220px; font-size:0.78rem;">
+        <div style="background:#0f172a; padding:8px; overflow-y:auto; max-height:260px;">
+          <div style="font-weight:700; color:#cbd5e1; margin-bottom:6px; font-size:0.72rem; text-transform:uppercase;">Bytecode</div>
+          <div id="${widgetId}_code_lines"></div>
+        </div>
+        <div style="background:#0f172a; padding:8px; overflow-y:auto; max-height:260px;">
+          <div style="font-weight:700; color:#cbd5e1; margin-bottom:6px; font-size:0.72rem; text-transform:uppercase;">Stack (Top First)</div>
+          <div id="${widgetId}_stack_items" style="display:flex; flex-direction:column; gap:4px;"></div>
+        </div>
+        <div style="background:#0f172a; padding:8px; overflow-y:auto; max-height:260px;">
+          <div style="font-weight:700; color:#cbd5e1; margin-bottom:6px; font-size:0.72rem; text-transform:uppercase;">Heap Graph Nodes</div>
+          <div id="${widgetId}_heap_items" style="display:flex; flex-direction:column; gap:6px;"></div>
+        </div>
+      </div>
+      <div id="${widgetId}_log" style="padding:6px 14px; background:#090e1a; font-size:0.78rem; color:#38bdf8; border-top:1px solid rgba(255,255,255,0.08);">
+        💡 Klik op 'Step' om de VM instructie voor instructie uit te voeren.
+      </div>
+    `;
+
+    // Parse instructions
+    const rawLines = (attrs.bytecode || defaultBytecode).split("\n");
+    const instrs = [];
+    rawLines.forEach(l => {
+      l = l.trim();
+      if (!l || l.startsWith(";") || l.startsWith("||")) return;
+      let comment = "";
+      if (l.includes(";")) {
+        const p = l.split(";");
+        l = p[0].trim();
+        comment = p.slice(1).join(";").trim();
+      }
+      const parts = l.split(/[\s,]+/).filter(t => t.length > 0);
+      if (parts.length > 0) {
+        instrs.push({ op: parts[0], args: parts.slice(1), comment, raw: l });
+      }
+    });
+
+    let simPc = 0;
+    let simStack = [];
+    let simHeap = [];
+    let simHalted = false;
+
+    function renderStepperUI(msg = "") {
+      const elPc = container.querySelector(`#${widgetId}_pc`);
+      const elSp = container.querySelector(`#${widgetId}_sp`);
+      const elHp = container.querySelector(`#${widgetId}_hp`);
+      const elStatus = container.querySelector(`#${widgetId}_status`);
+      const elCode = container.querySelector(`#${widgetId}_code_lines`);
+      const elStack = container.querySelector(`#${widgetId}_stack_items`);
+      const elHeap = container.querySelector(`#${widgetId}_heap_items`);
+      const elLog = container.querySelector(`#${widgetId}_log`);
+
+      if (elPc) elPc.textContent = simPc;
+      if (elSp) elSp.textContent = simStack.length;
+      if (elHp) elHp.textContent = `${simHeap.length} nodes`;
+      if (elStatus) {
+        elStatus.textContent = simHalted ? "HALTED" : "STEPPING";
+        elStatus.style.color = simHalted ? "#f43f5e" : "#10b981";
+      }
+      if (elLog && msg) elLog.textContent = "💡 " + msg;
+
+      // Instructions render
+      if (elCode) {
+        elCode.innerHTML = instrs.map((ins, idx) => {
+          const isActive = (idx === simPc);
+          const isPassed = (idx < simPc);
+          return `<div style="padding:2px 4px; border-radius:3px; background:${isActive ? 'rgba(56,189,248,0.2)' : 'transparent'}; border-left:${isActive ? '3px solid #38bdf8' : 'none'}; opacity:${isPassed ? 0.45 : 1};">
+            <span style="color:#64748b; font-size:0.7rem;">${String(idx).padStart(2, '0')}</span>
+            <span style="color:#38bdf8; font-weight:600; margin-left:4px;">${ins.op}</span>
+            <span style="color:#f1f5f9;">${ins.args.join(', ')}</span>
+          </div>`;
+        }).join("");
+      }
+
+      // Stack render
+      if (elStack) {
+        if (simStack.length === 0) {
+          elStack.innerHTML = '<span style="color:#64748b; font-style:italic;">Stack is leeg</span>';
+        } else {
+          elStack.innerHTML = [...simStack].reverse().map((item, idx) => {
+            const isRef = (typeof item === 'object' && item && item.ref !== undefined);
+            const valStr = isRef ? `<span style="background:#8b5cf6; padding:1px 5px; border-radius:3px; font-weight:bold;">@Node ${item.ref}</span>` : `<span style="background:#0ea5e9; padding:1px 5px; border-radius:3px; font-weight:bold;">${item}</span>`;
+            return `<div style="display:flex; justify-content:space-between; align-items:center; background:#1e293b; padding:3px 6px; border-radius:4px; border:1px solid rgba(255,255,255,0.08);">
+              <span style="color:#94a3b8; font-size:0.7rem;">SP[${simStack.length - 1 - idx}]</span>
+              ${valStr}
+            </div>`;
+          }).join("");
+        }
+      }
+
+      // Heap render
+      if (elHeap) {
+        if (simHeap.length === 0) {
+          elHeap.innerHTML = '<span style="color:#64748b; font-style:italic;">Geen heap nodes</span>';
+        } else {
+          elHeap.innerHTML = simHeap.map(n => `
+            <div style="background:#1a2234; border:1px solid rgba(255,255,255,0.08); border-radius:4px; padding:4px 6px; font-size:0.72rem;">
+              <div style="display:flex; justify-content:space-between;">
+                <strong style="color:#a78bfa;">@Node ${n.id}</strong>
+                <span style="background:#8b5cf6; color:white; padding:0 4px; border-radius:2px; font-weight:bold;">${n.tag}</span>
+              </div>
+              <div style="color:#cbd5e1; margin-top:2px;">Func: <code>${n.func}</code></div>
+              <div style="color:#cbd5e1;">Args: [${(n.args||[]).map(a => (a && a.ref ? '@Node '+a.ref : a)).join(', ')}]</div>
+            </div>
+          `).join("");
+        }
+      }
+    }
+
+    container.querySelector(`#${widgetId}_step`).onclick = () => {
+      if (simHalted || simPc >= instrs.length) {
+        simHalted = true;
+        renderStepperUI("Programma voltooid.");
+        return;
+      }
+      const cur = instrs[simPc];
+      const op = cur.op.toUpperCase();
+      const args = cur.args;
+
+      if (op === "PUSH_INT" || op === "PUSH") {
+        simStack.push(parseInt(args[0], 10) || 0);
+        simPc++;
+        renderStepperUI(`PUSH ${args[0]} op de stack.`);
+      } else if (op === "PUSH_GLOBAL") {
+        simStack.push(args[0]);
+        simPc++;
+        renderStepperUI(`PUSH globale functie '${args[0]}'.`);
+      } else if (op === "ALLOC") {
+        const arity = parseInt(args[1], 10) || 1;
+        const nodeArgs = [];
+        for (let i = 0; i < arity; i++) {
+          if (simStack.length > 0) nodeArgs.unshift(simStack.pop());
+        }
+        const newNodeId = simHeap.length + 1;
+        simHeap.push({ id: newNodeId, tag: "THUNK", func: args[0], arity: arity, args: nodeArgs });
+        simStack.push({ ref: newNodeId });
+        simPc++;
+        renderStepperUI(`ALLOC: Thunk Node @${newNodeId} aangemaakt voor '${args[0]}'.`);
+      } else if (op === "ADD" || op === "SUB" || op === "MUL" || op === "EQ" || op === "LT") {
+        const b = simStack.pop();
+        const a = simStack.pop();
+        let res = 0;
+        if (op === "ADD") res = (a||0) + (b||0);
+        else if (op === "SUB") res = (a||0) - (b||0);
+        else if (op === "MUL") res = (a||0) * (b||0);
+        else if (op === "EQ") res = (a === b) ? 1 : 0;
+        else if (op === "LT") res = (a < b) ? 1 : 0;
+        simStack.push(res);
+        simPc++;
+        renderStepperUI(`${op}: ${a} ${op} ${b} = ${res}`);
+      } else if (op === "HALT" || op === "STOP") {
+        simHalted = true;
+        renderStepperUI(`HALT: Programma gestopt. Resultaat: ${JSON.stringify(simStack[simStack.length - 1])}`);
+      } else {
+        simPc++;
+        renderStepperUI(`Instructie: ${cur.raw}`);
+      }
+    };
+
+    container.querySelector(`#${widgetId}_reset`).onclick = () => {
+      simPc = 0;
+      simStack = [];
+      simHeap = [];
+      simHalted = false;
+      renderStepperUI("Simulatie gereset naar instructie 0.");
+    };
+
+    setTimeout(() => renderStepperUI(), 50);
+    return container;
+  }
+
   function findCourseFileByName(name) {
     for (let mod of state.course.modules) {
       for (let file of mod.files) {
@@ -849,6 +1088,9 @@ document.addEventListener("DOMContentLoaded", () => {
         break;
       case "challenge":
         textToInsert = `\n### 💡 Student Challenge\nTry modifying the function above to compute fibonacci numbers.\n\n<details>\n<summary>View Solution</summary>\n\n\`\`\`sapl\nfib !n = case n of 0 -> 0; 1 -> 1; _ -> fib (n - 1) + fib (n - 2)\n\`\`\`\n</details>\n\n`;
+        break;
+      case "stepper":
+        textToInsert = `\n<JmvmStepper title="Graph Reduction & Thunk Allocation" />\n\n`;
         break;
       case "playground":
         showPlaygroundInsertModal(doc, cursor);
