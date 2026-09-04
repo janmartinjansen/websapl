@@ -697,218 +697,569 @@ document.addEventListener("DOMContentLoaded", () => {
   function createStepperWidget(attrs) {
     const container = document.createElement("div");
     container.className = "live-stepper-widget";
-    container.style.cssText = "margin: 1.5rem 0; border-radius: 10px; background: #0f172a; border: 1px solid rgba(56,189,248,0.25); color: #f8fafc; font-family: ui-monospace, monospace; overflow: hidden;";
+    container.style.cssText = "margin: 1.5rem 0; border-radius: 12px; background: #0b1120; border: 1px solid rgba(56,189,248,0.25); color: #f8fafc; font-family: ui-monospace, SFMono-Regular, monospace; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.45);";
 
-    const title = attrs.title || "Interactive Graph & Stack Stepper";
-    const defaultBytecode = `ALLOC facl_1, 2    ; Thunk allocation for multiplication
-PUSH_INT 10
-PUSH_GLOBAL facl
-CALL facl, 1        ; Call lazy facl with thunk
-HALT
+    const presetBytecode = {
+      fac_strict: `; Strict Factorial in authentic JMVM bytecode
+; Berekent fac(3) direct op de evaluatiestack
+bipush 3
+call 1, fac
+stop
 
-LABEL facl
-PUSH_VAR 0          ; Load arg n
-PUSH_INT 0
-EQ                  ; n == 0?
-BRANCH_IF_FALSE lb1
-PUSH_INT 1          ; Base case 0 -> 1
-RETURN
+fac:
+load 0
+ifeq lb_zero
+load 0
+load 0
+bipush 1
+isub
+call 1, fac
+imult
+ireturn
 
-LABEL lb1
-PUSH_VAR 0          ; n
-PUSH_VAR 0
-PUSH_INT 1
-SUB                 ; n - 1
-ALLOC facl_1, 2     ; Suspension of (n * facl(n-1))
-RETURN`;
+lb_zero:
+bipush 1
+ireturn`,
 
+      fac_lazy: `; Lazy Factorial in authentic JMVM bytecode
+; Berekent facl(3) met heap thunks en suspensies
+pushfuncnr facl_1, 2
+bipush 3
+pushfuncnr facl, 1
+create 2, closure
+call 1, facl
+stop
+
+facl:
+load 0
+eval
+ifeq lb_zero
+load 0
+load 0
+bipush 1
+isub
+pushfuncnr facl, 1
+create 2, closure
+pushfuncnr facl_1, 2
+create 3, closure
+ireturn
+
+lb_zero:
+bipush 1
+ireturn
+
+facl_1:
+load 0
+eval
+load 1
+eval
+imult
+ireturn`
+    };
+
+    let activeMode = attrs.mode || "fac_strict";
+    let activeCode = attrs.initialBytecode || attrs.bytecode || "";
+    if (!activeCode && presetBytecode[activeMode]) {
+      activeCode = presetBytecode[activeMode];
+    } else if (!activeCode) {
+      activeCode = presetBytecode.fac_strict;
+    }
+
+    const title = attrs.title || (activeMode === "fac_strict" ? "Strict Factorial (fac 3)" : (activeMode === "fac_lazy" ? "Lazy Factorial (facl 3)" : "JMVM Bytecode Visualizer"));
     const widgetId = "stepper_" + Math.random().toString(36).substring(2, 9);
 
     container.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; padding: 10px 14px; background:#1e293b; border-bottom:1px solid rgba(255,255,255,0.08);">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding: 10px 16px; background:#1e293b; border-bottom:1px solid rgba(255,255,255,0.08); flex-wrap:wrap; gap:8px;">
         <div style="display:flex; align-items:center; gap:8px;">
-          <span style="background: linear-gradient(135deg, #0ea5e9, #0284c7); color:white; font-size:0.72rem; font-weight:700; padding:2px 7px; border-radius:4px; text-transform:uppercase;">JMVM Stepper</span>
-          <strong style="font-size:0.88rem; color:#e2e8f0;">${escapeHtml(title)}</strong>
+          <span style="background: linear-gradient(135deg, #0ea5e9, #0284c7); color:white; font-size:0.72rem; font-weight:700; padding:3px 8px; border-radius:4px; text-transform:uppercase; letter-spacing:0.5px;">JMVM Stepper</span>
+          <strong style="font-size:0.9rem; color:#e2e8f0;">${escapeHtml(title)}</strong>
         </div>
-        <div style="display:flex; gap:6px;">
-          <button id="${widgetId}_reset" style="background:#334155; color:white; border:none; padding:4px 10px; border-radius:4px; font-size:0.78rem; font-weight:600; cursor:pointer;">⏮ Reset</button>
-          <button id="${widgetId}_step" style="background:#0284c7; color:white; border:none; padding:4px 10px; border-radius:4px; font-size:0.78rem; font-weight:600; cursor:pointer;">⏯ Step</button>
-        </div>
-      </div>
-      <div style="display:flex; gap:10px; padding:6px 14px; background:#131d31; border-bottom:1px solid rgba(255,255,255,0.05); font-size:0.78rem;">
-        <div><span style="color:#94a3b8;">PC:</span> <strong id="${widgetId}_pc" style="color:#38bdf8;">0</strong></div>
-        <div><span style="color:#94a3b8;">Stack:</span> <strong id="${widgetId}_sp" style="color:#38bdf8;">0</strong></div>
-        <div><span style="color:#94a3b8;">Heap:</span> <strong id="${widgetId}_hp" style="color:#a78bfa;">0 nodes</strong></div>
-        <div><span style="color:#94a3b8;">Status:</span> <strong id="${widgetId}_status" style="color:#10b981;">READY</strong></div>
-      </div>
-      <div style="display:grid; grid-template-columns: 1.2fr 1fr 1.3fr; gap:1px; background:rgba(255,255,255,0.06); min-height:220px; font-size:0.78rem;">
-        <div style="background:#0f172a; padding:8px; overflow-y:auto; max-height:260px;">
-          <div style="font-weight:700; color:#cbd5e1; margin-bottom:6px; font-size:0.72rem; text-transform:uppercase;">Bytecode</div>
-          <div id="${widgetId}_code_lines"></div>
-        </div>
-        <div style="background:#0f172a; padding:8px; overflow-y:auto; max-height:260px;">
-          <div style="font-weight:700; color:#cbd5e1; margin-bottom:6px; font-size:0.72rem; text-transform:uppercase;">Stack (Top First)</div>
-          <div id="${widgetId}_stack_items" style="display:flex; flex-direction:column; gap:4px;"></div>
-        </div>
-        <div style="background:#0f172a; padding:8px; overflow-y:auto; max-height:260px;">
-          <div style="font-weight:700; color:#cbd5e1; margin-bottom:6px; font-size:0.72rem; text-transform:uppercase;">Heap Graph Nodes</div>
-          <div id="${widgetId}_heap_items" style="display:flex; flex-direction:column; gap:6px;"></div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <select id="${widgetId}_mode" style="background:#0f172a; color:#38bdf8; border:1px solid rgba(56,189,248,0.3); padding:4px 8px; border-radius:6px; font-size:0.78rem; font-weight:600; cursor:pointer;">
+            <option value="fac_strict" ${activeMode === 'fac_strict' ? 'selected' : ''}>Strict: fac(3)</option>
+            <option value="fac_lazy" ${activeMode === 'fac_lazy' ? 'selected' : ''}>Lazy: facl(3)</option>
+          </select>
+          <button id="${widgetId}_reset" style="background:#334155; color:#f8fafc; border:1px solid rgba(255,255,255,0.1); padding:5px 12px; border-radius:6px; font-size:0.8rem; font-weight:600; cursor:pointer;">⏮ Reset</button>
+          <button id="${widgetId}_step" style="background:#0284c7; color:#f8fafc; border:1px solid #38bdf8; padding:5px 12px; border-radius:6px; font-size:0.8rem; font-weight:600; cursor:pointer;">⏯ Step</button>
+          <button id="${widgetId}_play" style="background:#059669; color:#f8fafc; border:none; padding:5px 12px; border-radius:6px; font-size:0.8rem; font-weight:600; cursor:pointer;">▶ Auto Run</button>
         </div>
       </div>
-      <div id="${widgetId}_log" style="padding:6px 14px; background:#090e1a; font-size:0.78rem; color:#38bdf8; border-top:1px solid rgba(255,255,255,0.08);">
-        💡 Klik op 'Step' om de VM instructie voor instructie uit te voeren.
+      <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:8px 16px; background:#111c30; border-bottom:1px solid rgba(255,255,255,0.06); font-size:0.78rem;">
+        <div style="background:rgba(15,23,42,0.85); padding:3px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.08);"><span style="color:#94a3b8; font-weight:600;">PC</span> <strong id="${widgetId}_pc" style="color:#38bdf8;">0</strong></div>
+        <div style="background:rgba(15,23,42,0.85); padding:3px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.08);"><span style="color:#94a3b8; font-weight:600;">HV (Frame)</span> <strong id="${widgetId}_hv" style="color:#38bdf8;">0</strong></div>
+        <div style="background:rgba(15,23,42,0.85); padding:3px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.08);"><span style="color:#94a3b8; font-weight:600;">Stack</span> <strong id="${widgetId}_sp" style="color:#38bdf8;">0</strong></div>
+        <div style="background:rgba(15,23,42,0.85); padding:3px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.08);"><span style="color:#94a3b8; font-weight:600;">Heap</span> <strong id="${widgetId}_hp" style="color:#a78bfa;">0 nodes</strong></div>
+        <div style="background:rgba(15,23,42,0.85); padding:3px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.08);"><span style="color:#94a3b8; font-weight:600;">Steps</span> <strong id="${widgetId}_steps" style="color:#38bdf8;">0</strong></div>
+        <div style="background:rgba(15,23,42,0.85); padding:3px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.08);"><span style="color:#94a3b8; font-weight:600;">Status</span> <strong id="${widgetId}_status" style="color:#38bdf8;">READY</strong></div>
+      </div>
+      <div style="display:grid; grid-template-columns: 1.25fr 1fr 1.35fr; gap:1px; background:rgba(255,255,255,0.06); min-height:280px; max-height:380px; box-sizing:border-box;">
+        <div style="background:#0b1120; display:flex; flex-direction:column; overflow:hidden;">
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 12px; background:#162238; font-size:0.78rem; font-weight:700; color:#cbd5e1; border-bottom:1px solid rgba(255,255,255,0.06);">
+            <span>Bytecode Instructions</span>
+            <span id="${widgetId}_code_count" style="font-size:0.68rem; background:rgba(255,255,255,0.1); padding:1px 6px; border-radius:999px; color:#94a3b8;">0 lines</span>
+          </div>
+          <div id="${widgetId}_code_lines" style="flex:1; overflow-y:auto; padding:8px; box-sizing:border-box;"></div>
+        </div>
+        <div style="background:#0b1120; display:flex; flex-direction:column; overflow:hidden;">
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 12px; background:#162238; font-size:0.78rem; font-weight:700; color:#cbd5e1; border-bottom:1px solid rgba(255,255,255,0.06);">
+            <span>Evaluation Stack</span>
+            <span id="${widgetId}_sp_top" style="font-size:0.68rem; background:rgba(255,255,255,0.1); padding:1px 6px; border-radius:999px; color:#94a3b8;">SP: 0</span>
+          </div>
+          <div id="${widgetId}_stack_items" style="flex:1; overflow-y:auto; padding:8px; box-sizing:border-box;"></div>
+        </div>
+        <div style="background:#0b1120; display:flex; flex-direction:column; overflow:hidden;">
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 12px; background:#162238; font-size:0.78rem; font-weight:700; color:#cbd5e1; border-bottom:1px solid rgba(255,255,255,0.06);">
+            <span>Heap Graph Memory</span>
+            <span id="${widgetId}_heap_count" style="font-size:0.68rem; background:rgba(255,255,255,0.1); padding:1px 6px; border-radius:999px; color:#94a3b8;">0 Nodes</span>
+          </div>
+          <div id="${widgetId}_heap_items" style="flex:1; overflow-y:auto; padding:8px; box-sizing:border-box;"></div>
+        </div>
+      </div>
+      <div id="${widgetId}_log" style="display:flex; align-items:center; gap:8px; padding:8px 16px; background:#080d19; border-top:1px solid rgba(255,255,255,0.08); font-size:0.8rem; color:#38bdf8; line-height:1.4;">
+        <span>💡</span> <span id="${widgetId}_log_text">JMVM geïnitialiseerd.</span>
       </div>
     `;
 
-    // Parse instructions
-    const rawLines = (attrs.bytecode || defaultBytecode).split("\n");
-    const instrs = [];
-    rawLines.forEach(l => {
-      l = l.trim();
-      if (!l || l.startsWith(";") || l.startsWith("||")) return;
-      let comment = "";
-      if (l.includes(";")) {
-        const p = l.split(";");
-        l = p[0].trim();
-        comment = p.slice(1).join(";").trim();
+    // Authentic JMVM Interpreter Implementation inside Studio
+    class StudioJmvm {
+      constructor(codeText) {
+        this.instructions = [];
+        this.labels = new Map();
+        this.pc = 0;
+        this.stack = [];
+        this.hv = 0;
+        this.heap = [];
+        this.callStack = [];
+        this.isHalted = false;
+        this.steps = 0;
+        this.lastMessage = "VM gereed.";
+        this.load(codeText);
       }
-      const parts = l.split(/[\s,]+/).filter(t => t.length > 0);
-      if (parts.length > 0) {
-        instrs.push({ op: parts[0], args: parts.slice(1), comment, raw: l });
+
+      load(text) {
+        this.instructions = [];
+        this.labels.clear();
+        const lines = text.split("\n");
+        let idx = 0;
+        for (let rawLine of lines) {
+          let line = rawLine.trim();
+          if (!line || line.startsWith(";") || line.startsWith("||")) continue;
+          let comment = "";
+          if (line.includes(";")) {
+            const p = line.split(";");
+            line = p[0].trim();
+            comment = p.slice(1).join(";").trim();
+          }
+          if (line.includes(":")) {
+            const colonIdx = line.indexOf(":");
+            const beforeColon = line.substring(0, colonIdx).trim();
+            if (beforeColon && !beforeColon.includes(" ")) {
+              this.labels.set(beforeColon.toLowerCase(), idx);
+              this.instructions.push({ isLabel: true, labelName: beforeColon, comment: "", raw: beforeColon + ":" });
+              idx++;
+              line = line.substring(colonIdx + 1).trim();
+              if (!line) continue;
+            }
+          }
+          const tokens = line.split(/[\s,]+/).filter(t => t.length > 0);
+          if (tokens.length === 0) continue;
+          let op = tokens[0].toUpperCase();
+          let args = tokens.slice(1);
+          if (op === "LABEL") {
+            this.labels.set(args[0].toLowerCase(), idx);
+            this.instructions.push({ isLabel: true, labelName: args[0], comment, raw: rawLine.trim() });
+            idx++;
+            continue;
+          }
+          this.instructions.push({ isLabel: false, op, args, comment, raw: rawLine.trim() });
+          idx++;
+        }
+        this.reset();
       }
-    });
 
-    let simPc = 0;
-    let simStack = [];
-    let simHeap = [];
-    let simHalted = false;
+      reset() {
+        this.pc = 0;
+        this.stack = [];
+        this.hv = 0;
+        this.heap = [];
+        this.callStack = [];
+        this.isHalted = false;
+        this.steps = 0;
+        this.lastMessage = "Simulatie gereset naar instructie 0.";
+        this.skipLabels();
+      }
 
-    function renderStepperUI(msg = "") {
+      skipLabels() {
+        while (this.pc < this.instructions.length && this.instructions[this.pc] && this.instructions[this.pc].isLabel) {
+          this.pc++;
+        }
+        if (this.pc >= this.instructions.length) this.isHalted = true;
+      }
+
+      isHeapRef(v) { return typeof v === "object" && v !== null && v.ref !== undefined; }
+      isFuncObj(v) { return typeof v === "object" && v !== null && v.isFunc; }
+
+      resolveTarget(target) {
+        if (!target) return -1;
+        const clean = target.toLowerCase();
+        if (this.labels.has(clean)) return this.labels.get(clean);
+        const p = parseInt(target, 10);
+        return isNaN(p) ? -1 : p;
+      }
+
+      step() {
+        if (this.isHalted || this.pc >= this.instructions.length) {
+          this.isHalted = true;
+          this.lastMessage = "Programma voltooid.";
+          return false;
+        }
+        const instr = this.instructions[this.pc];
+        if (instr.isLabel) {
+          this.pc++;
+          this.skipLabels();
+          return true;
+        }
+        this.steps++;
+        const op = instr.op;
+        const args = instr.args;
+
+        switch (op) {
+          case "BIPUSH":
+          case "PUSH": {
+            const val = parseInt(args[0], 10) || 0;
+            this.stack.push(val);
+            this.lastMessage = `bipush ${val}: Waarde ${val} op de evaluatiestack geplaatst.`;
+            this.pc++;
+            break;
+          }
+          case "LOAD": {
+            const offset = parseInt(args[0], 10) || 0;
+            const targetIdx = this.hv + offset;
+            const val = this.stack[targetIdx] !== undefined ? this.stack[targetIdx] : 0;
+            this.stack.push(val);
+            const valRepr = this.isHeapRef(val) ? `@Node ${val.ref}` : (this.isFuncObj(val) ? `λ ${val.func}` : val);
+            this.lastMessage = `load ${offset}: Argument op stack[hv + ${offset}] (${valRepr}) naar top gekopieerd.`;
+            this.pc++;
+            break;
+          }
+          case "STORE": {
+            const offset = parseInt(args[0], 10) || 0;
+            const val = this.stack.pop();
+            this.stack[this.hv + offset] = val;
+            this.lastMessage = `store ${offset}: Top van stack opgeslagen in stack[hv + ${offset}].`;
+            this.pc++;
+            break;
+          }
+          case "IADD":
+          case "ADD": {
+            const b = this.stack.pop();
+            const a = this.stack.pop();
+            const res = (a || 0) + (b || 0);
+            this.stack.push(res);
+            this.lastMessage = `iadd: ${a} + ${b} = ${res}`;
+            this.pc++;
+            break;
+          }
+          case "ISUB":
+          case "SUB": {
+            const b = this.stack.pop();
+            const a = this.stack.pop();
+            const res = (a || 0) - (b || 0);
+            this.stack.push(res);
+            this.lastMessage = `isub: ${a} - ${b} = ${res}`;
+            this.pc++;
+            break;
+          }
+          case "IMULT":
+          case "MUL": {
+            const b = this.stack.pop();
+            const a = this.stack.pop();
+            const res = (a || 0) * (b || 0);
+            this.stack.push(res);
+            this.lastMessage = `imult: ${a} * ${b} = ${res}`;
+            this.pc++;
+            break;
+          }
+          case "IFEQ": {
+            const val = this.stack.pop();
+            const target = this.resolveTarget(args[0]);
+            if (val === 0 || val === false) {
+              this.pc = target;
+              this.lastMessage = `ifeq ${args[0]}: Waarde is 0 (waar) -> Spring naar ${args[0]} (regel ${target}).`;
+            } else {
+              this.pc++;
+              this.lastMessage = `ifeq ${args[0]}: Waarde is ${val} (!= 0) -> Geen sprong.`;
+            }
+            break;
+          }
+          case "CALL": {
+            const nrargs = parseInt(args[0], 10) || 1;
+            const targetLabel = args[1] || "";
+            const target = this.resolveTarget(targetLabel);
+            const oldHv = this.hv;
+            const newHv = this.stack.length - nrargs;
+            this.callStack.push({ returnPc: this.pc + 1, oldHv: oldHv });
+            this.hv = newHv;
+            this.pc = target;
+            this.lastMessage = `call ${nrargs}, ${targetLabel}: Call Frame aangemaakt op stack[${newHv}], spring naar ${targetLabel}.`;
+            break;
+          }
+          case "IRETURN": {
+            const retVal = this.stack.pop();
+            if (this.callStack.length > 0) {
+              const frame = this.callStack.pop();
+              while (this.stack.length > this.hv) this.stack.pop();
+              this.hv = frame.oldHv;
+              this.pc = frame.returnPc;
+              this.stack.push(retVal);
+              const retRepr = this.isHeapRef(retVal) ? `@Node ${retVal.ref}` : retVal;
+              this.lastMessage = `ireturn: Resultaat ${retRepr} teruggegeven naar regel ${frame.returnPc}.`;
+            } else {
+              this.stack.push(retVal);
+              this.isHalted = true;
+              this.lastMessage = `ireturn: Hoofdfunctie geretourneerd met waarde ${JSON.stringify(retVal)}.`;
+            }
+            break;
+          }
+          case "PUSHFUNCNR": {
+            this.stack.push({ isFunc: true, func: args[0] || "func", nrargs: parseInt(args[1], 10) || 1 });
+            this.lastMessage = `pushfuncnr ${args[0]}, ${args[1]}: Functie-object op stack geplaatst.`;
+            this.pc++;
+            break;
+          }
+          case "CREATE": {
+            const size = parseInt(args[0], 10) || 1;
+            const typeStr = (args[1] || "CLOSURE").toUpperCase();
+            const nodeElements = [];
+            for (let i = 0; i < size; i++) {
+              if (this.stack.length > 0) nodeElements.unshift(this.stack.pop());
+            }
+            const nodeId = this.heap.length + 1;
+            let funcName = "Thunk";
+            let funcArgs = nodeElements;
+            if (nodeElements.length > 0 && nodeElements[0] && nodeElements[0].isFunc) {
+              funcName = nodeElements[0].func;
+              funcArgs = nodeElements.slice(1);
+            }
+            this.heap.push({ id: nodeId, type: typeStr, func: funcName, size: size, args: funcArgs, isEvaluated: false });
+            this.stack.push({ ref: nodeId });
+            this.lastMessage = `create ${size}, ${typeStr}: Nieuwe Thunk Node @${nodeId} op heap gecreëerd voor '${funcName}'.`;
+            this.pc++;
+            break;
+          }
+          case "UPDATE": {
+            const targetRef = this.stack.pop();
+            const resultVal = this.stack[this.stack.length - 1];
+            if (this.isHeapRef(targetRef)) {
+              const node = this.heap.find(n => n.id === targetRef.ref);
+              if (node) {
+                node.type = "VALUE";
+                node.value = resultVal;
+                node.isEvaluated = true;
+                this.lastMessage = `update: Thunk @Node ${targetRef.ref} geüpdatet met waarde ${JSON.stringify(resultVal)}.`;
+              }
+            }
+            this.pc++;
+            break;
+          }
+          case "EVAL": {
+            const top = this.stack[this.stack.length - 1];
+            if (this.isHeapRef(top)) {
+              const node = this.heap.find(n => n.id === top.ref);
+              if (node && node.isEvaluated && node.value !== undefined) {
+                this.stack.pop();
+                this.stack.push(node.value);
+                this.lastMessage = `eval: Node @${top.ref} was al berekend -> ${node.value}.`;
+              } else if (node) {
+                this.lastMessage = `eval: Start evaluatie van Thunk Node @${top.ref} (${node.func}).`;
+              }
+            } else {
+              this.lastMessage = `eval: Reeds in WHNF.`;
+            }
+            this.pc++;
+            break;
+          }
+          case "STOP":
+          case "HALT": {
+            this.isHalted = true;
+            const finalVal = this.stack.length > 0 ? this.stack[this.stack.length - 1] : "OK";
+            const valRepr = this.isHeapRef(finalVal) ? `@Node ${finalVal.ref}` : JSON.stringify(finalVal);
+            this.lastMessage = `stop: JMVM executie beëindigd. Eindresultaat: ${valRepr}`;
+            return false;
+          }
+          default: {
+            this.lastMessage = `Instructie '${instr.raw}' uitgevoerd.`;
+            this.pc++;
+            break;
+          }
+        }
+        this.skipLabels();
+        return true;
+      }
+    }
+
+    let vm = new StudioJmvm(activeCode);
+    let runTimer = null;
+
+    function renderUI() {
       const elPc = container.querySelector(`#${widgetId}_pc`);
+      const elHv = container.querySelector(`#${widgetId}_hv`);
       const elSp = container.querySelector(`#${widgetId}_sp`);
       const elHp = container.querySelector(`#${widgetId}_hp`);
+      const elSteps = container.querySelector(`#${widgetId}_steps`);
       const elStatus = container.querySelector(`#${widgetId}_status`);
+      const elCodeCount = container.querySelector(`#${widgetId}_code_count`);
+      const elSpTop = container.querySelector(`#${widgetId}_sp_top`);
+      const elHeapCount = container.querySelector(`#${widgetId}_heap_count`);
       const elCode = container.querySelector(`#${widgetId}_code_lines`);
       const elStack = container.querySelector(`#${widgetId}_stack_items`);
       const elHeap = container.querySelector(`#${widgetId}_heap_items`);
-      const elLog = container.querySelector(`#${widgetId}_log`);
+      const elLogText = container.querySelector(`#${widgetId}_log_text`);
 
-      if (elPc) elPc.textContent = simPc;
-      if (elSp) elSp.textContent = simStack.length;
-      if (elHp) elHp.textContent = `${simHeap.length} nodes`;
+      if (elPc) elPc.textContent = vm.pc;
+      if (elHv) elHv.textContent = vm.hv;
+      if (elSp) elSp.textContent = vm.stack.length;
+      if (elHp) elHp.textContent = `${vm.heap.length} nodes`;
+      if (elSteps) elSteps.textContent = vm.steps;
       if (elStatus) {
-        elStatus.textContent = simHalted ? "HALTED" : "STEPPING";
-        elStatus.style.color = simHalted ? "#f43f5e" : "#10b981";
+        elStatus.textContent = vm.isHalted ? "HALTED" : (runTimer ? "RUNNING" : "READY");
+        elStatus.style.color = vm.isHalted ? "#f43f5e" : (runTimer ? "#10b981" : "#38bdf8");
       }
-      if (elLog && msg) elLog.textContent = "💡 " + msg;
+      if (elCodeCount) elCodeCount.textContent = `${vm.instructions.length} lines`;
+      if (elSpTop) elSpTop.textContent = `SP: ${vm.stack.length > 0 ? vm.stack.length - 1 : 0}`;
+      if (elHeapCount) elHeapCount.textContent = `${vm.heap.length} Nodes`;
+      if (elLogText) elLogText.textContent = vm.lastMessage;
 
-      // Instructions render
+      // Instructions
       if (elCode) {
-        elCode.innerHTML = instrs.map((ins, idx) => {
-          const isActive = (idx === simPc);
-          const isPassed = (idx < simPc);
-          return `<div style="padding:2px 4px; border-radius:3px; background:${isActive ? 'rgba(56,189,248,0.2)' : 'transparent'}; border-left:${isActive ? '3px solid #38bdf8' : 'none'}; opacity:${isPassed ? 0.45 : 1};">
-            <span style="color:#64748b; font-size:0.7rem;">${String(idx).padStart(2, '0')}</span>
-            <span style="color:#38bdf8; font-weight:600; margin-left:4px;">${ins.op}</span>
+        elCode.innerHTML = vm.instructions.map((ins, idx) => {
+          if (ins.isLabel) {
+            return `<div style="padding:4px 6px 2px 6px; margin-top:4px; border-top:1px dashed rgba(255,255,255,0.08); color:#a78bfa; font-weight:700; font-size:0.78rem;">
+              <span style="color:#64748b; font-size:0.7rem; display:inline-block; width:20px;">${String(idx).padStart(2, '0')}</span>
+              ${ins.labelName}:
+            </div>`;
+          }
+          const isActive = (idx === vm.pc);
+          const isPassed = (idx < vm.pc);
+          return `<div id="${widgetId}_line_${idx}" style="display:flex; align-items:center; padding:3px 6px; border-radius:4px; font-size:0.8rem; background:${isActive ? 'rgba(56,189,248,0.18)' : 'transparent'}; border-left:${isActive ? '3px solid #38bdf8' : 'none'}; opacity:${isPassed ? 0.4 : 1}; white-space:nowrap; gap:6px;">
+            <span style="color:#64748b; font-size:0.7rem; width:20px; flex-shrink:0;">${String(idx).padStart(2, '0')}</span>
+            <span style="width:14px; font-size:0.75rem; flex-shrink:0;">${isActive ? '👉' : ''}</span>
+            <span style="color:#38bdf8; font-weight:600;">${ins.op.toLowerCase()}</span>
             <span style="color:#f1f5f9;">${ins.args.join(', ')}</span>
+            ${ins.comment ? `<span style="color:#64748b; font-style:italic; font-size:0.72rem; margin-left:auto; padding-left:8px;">; ${ins.comment}</span>` : ''}
           </div>`;
         }).join("");
+
+        const activeEl = elCode.querySelector(`#${widgetId}_line_${vm.pc}`);
+        if (activeEl) activeEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       }
 
-      // Stack render
+      // Stack
       if (elStack) {
-        if (simStack.length === 0) {
-          elStack.innerHTML = '<span style="color:#64748b; font-style:italic;">Stack is leeg</span>';
+        if (vm.stack.length === 0) {
+          elStack.innerHTML = '<div style="text-align:center; color:#64748b; font-size:0.76rem; padding:24px 8px; font-style:italic;">Stack is leeg</div>';
         } else {
-          elStack.innerHTML = [...simStack].reverse().map((item, idx) => {
-            const isRef = (typeof item === 'object' && item && item.ref !== undefined);
-            const valStr = isRef ? `<span style="background:#8b5cf6; padding:1px 5px; border-radius:3px; font-weight:bold;">@Node ${item.ref}</span>` : `<span style="background:#0ea5e9; padding:1px 5px; border-radius:3px; font-weight:bold;">${item}</span>`;
-            return `<div style="display:flex; justify-content:space-between; align-items:center; background:#1e293b; padding:3px 6px; border-radius:4px; border:1px solid rgba(255,255,255,0.08);">
-              <span style="color:#94a3b8; font-size:0.7rem;">SP[${simStack.length - 1 - idx}]</span>
-              ${valStr}
+          elStack.innerHTML = [...vm.stack].reverse().map((item, idx) => {
+            const origIdx = vm.stack.length - 1 - idx;
+            const isHv = (origIdx === vm.hv);
+            const isTop = (idx === 0);
+            let valHtml = '';
+            if (vm.isHeapRef(item)) {
+              valHtml = `<span style="background:#8b5cf6; color:white; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:700;">@Node ${item.ref}</span>`;
+            } else if (vm.isFuncObj(item)) {
+              valHtml = `<span style="background:#ec4899; color:white; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:700;">λ ${item.func}/${item.nrargs}</span>`;
+            } else {
+              valHtml = `<span style="background:#0ea5e9; color:white; padding:2px 6px; border-radius:4px; font-size:0.75rem; font-weight:700;">${item}</span>`;
+            }
+
+            return `<div style="display:flex; justify-content:space-between; align-items:center; background:#1a253a; border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:5px 8px; margin-bottom:4px; font-size:0.8rem; ${isTop ? 'border-color:#38bdf8; background:rgba(56,189,248,0.12);' : ''} ${isHv ? 'border-left:3px solid #a78bfa;' : ''}">
+              <div style="display:flex; align-items:center; gap:4px;">
+                <span style="color:#94a3b8; font-size:0.7rem;">SP[${origIdx}]</span>
+                ${isHv ? '<span style="background:#7c3aed; color:white; font-size:0.62rem; font-weight:800; padding:1px 4px; border-radius:3px;">HV</span>' : ''}
+              </div>
+              <div>${valHtml}</div>
+              ${isTop ? '<div style="background:#38bdf8; color:#0b1120; font-size:0.62rem; font-weight:800; padding:1px 4px; border-radius:3px;">TOP</div>' : ''}
             </div>`;
           }).join("");
         }
       }
 
-      // Heap render
+      // Heap
       if (elHeap) {
-        if (simHeap.length === 0) {
-          elHeap.innerHTML = '<span style="color:#64748b; font-style:italic;">Geen heap nodes</span>';
+        if (vm.heap.length === 0) {
+          elHeap.innerHTML = `<div style="text-align:center; color:#64748b; font-size:0.76rem; padding:24px 10px; line-height:1.4;">
+            <span style="font-size:1.1rem; display:block; margin-bottom:4px;">⚡</span>
+            Geen heap nodes. Alle operaties worden direct op de stack geëvalueerd (0 heap allocaties).
+          </div>`;
         } else {
-          elHeap.innerHTML = simHeap.map(n => `
-            <div style="background:#1a2234; border:1px solid rgba(255,255,255,0.08); border-radius:4px; padding:4px 6px; font-size:0.72rem;">
-              <div style="display:flex; justify-content:space-between;">
+          elHeap.innerHTML = vm.heap.map(n => `
+            <div style="background:#162238; border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:7px; margin-bottom:6px; font-size:0.76rem; border-left:3px solid ${n.type === 'CLOSURE' ? '#8b5cf6' : (n.type === 'CONSTR' ? '#10b981' : '#0ea5e9')};">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
                 <strong style="color:#a78bfa;">@Node ${n.id}</strong>
-                <span style="background:#8b5cf6; color:white; padding:0 4px; border-radius:2px; font-weight:bold;">${n.tag}</span>
+                <span style="background:${n.type === 'CLOSURE' ? '#8b5cf6' : (n.type === 'CONSTR' ? '#10b981' : '#0ea5e9')}; color:white; font-size:0.62rem; padding:1px 5px; border-radius:3px; font-weight:700; text-transform:uppercase;">${n.type}</span>
               </div>
-              <div style="color:#cbd5e1; margin-top:2px;">Func: <code>${n.func}</code></div>
-              <div style="color:#cbd5e1;">Args: [${(n.args||[]).map(a => (a && a.ref ? '@Node '+a.ref : a)).join(', ')}]</div>
+              <div style="color:#cbd5e1; margin-top:2px;"><span style="color:#94a3b8; font-size:0.7rem;">Func:</span> <code>${n.func}</code> (size: ${n.size})</div>
+              ${n.args && n.args.length > 0 ? `<div style="color:#cbd5e1; margin-top:2px; display:flex; gap:4px; align-items:center; flex-wrap:wrap;"><span style="color:#94a3b8; font-size:0.7rem;">Args:</span> ${(n.args||[]).map(a => `<span style="background:#1e293b; border:1px solid rgba(255,255,255,0.1); padding:1px 5px; border-radius:3px; font-size:0.7rem;">${a && a.ref ? '<span style=\"color:#a78bfa; font-weight:600;\">@Node ' + a.ref + '</span>' : (a && a.isFunc ? 'λ ' + a.func : a)}</span>`).join('')}</div>` : ''}
+              ${n.value !== undefined ? `<div style="margin-top:2px;"><span style="color:#94a3b8; font-size:0.7rem;">Value:</span> <strong style="color:#38bdf8;">${n.value}</strong></div>` : ''}
             </div>
           `).join("");
         }
       }
     }
 
-    container.querySelector(`#${widgetId}_step`).onclick = () => {
-      if (simHalted || simPc >= instrs.length) {
-        simHalted = true;
-        renderStepperUI("Programma voltooid.");
-        return;
-      }
-      const cur = instrs[simPc];
-      const op = cur.op.toUpperCase();
-      const args = cur.args;
+    const stepBtn = container.querySelector(`#${widgetId}_step`);
+    const resetBtn = container.querySelector(`#${widgetId}_reset`);
+    const playBtn = container.querySelector(`#${widgetId}_play`);
+    const modeSelect = container.querySelector(`#${widgetId}_mode`);
 
-      if (op === "PUSH_INT" || op === "PUSH") {
-        simStack.push(parseInt(args[0], 10) || 0);
-        simPc++;
-        renderStepperUI(`PUSH ${args[0]} op de stack.`);
-      } else if (op === "PUSH_GLOBAL") {
-        simStack.push(args[0]);
-        simPc++;
-        renderStepperUI(`PUSH globale functie '${args[0]}'.`);
-      } else if (op === "ALLOC") {
-        const arity = parseInt(args[1], 10) || 1;
-        const nodeArgs = [];
-        for (let i = 0; i < arity; i++) {
-          if (simStack.length > 0) nodeArgs.unshift(simStack.pop());
-        }
-        const newNodeId = simHeap.length + 1;
-        simHeap.push({ id: newNodeId, tag: "THUNK", func: args[0], arity: arity, args: nodeArgs });
-        simStack.push({ ref: newNodeId });
-        simPc++;
-        renderStepperUI(`ALLOC: Thunk Node @${newNodeId} aangemaakt voor '${args[0]}'.`);
-      } else if (op === "ADD" || op === "SUB" || op === "MUL" || op === "EQ" || op === "LT") {
-        const b = simStack.pop();
-        const a = simStack.pop();
-        let res = 0;
-        if (op === "ADD") res = (a||0) + (b||0);
-        else if (op === "SUB") res = (a||0) - (b||0);
-        else if (op === "MUL") res = (a||0) * (b||0);
-        else if (op === "EQ") res = (a === b) ? 1 : 0;
-        else if (op === "LT") res = (a < b) ? 1 : 0;
-        simStack.push(res);
-        simPc++;
-        renderStepperUI(`${op}: ${a} ${op} ${b} = ${res}`);
-      } else if (op === "HALT" || op === "STOP") {
-        simHalted = true;
-        renderStepperUI(`HALT: Programma gestopt. Resultaat: ${JSON.stringify(simStack[simStack.length - 1])}`);
+    stepBtn.onclick = () => {
+      if (vm.isHalted) return;
+      vm.step();
+      renderUI();
+    };
+
+    resetBtn.onclick = () => {
+      if (runTimer) { clearInterval(runTimer); runTimer = null; playBtn.textContent = "▶ Auto Run"; playBtn.style.background = "#059669"; }
+      vm.reset();
+      renderUI();
+    };
+
+    playBtn.onclick = () => {
+      if (runTimer) {
+        clearInterval(runTimer);
+        runTimer = null;
+        playBtn.textContent = "▶ Auto Run";
+        playBtn.style.background = "#059669";
+        renderUI();
       } else {
-        simPc++;
-        renderStepperUI(`Instructie: ${cur.raw}`);
+        if (vm.isHalted) return;
+        playBtn.textContent = "⏸ Pause";
+        playBtn.style.background = "#e11d48";
+        renderUI();
+        runTimer = setInterval(() => {
+          if (!vm.step() || vm.isHalted) {
+            clearInterval(runTimer);
+            runTimer = null;
+            playBtn.textContent = "▶ Auto Run";
+            playBtn.style.background = "#059669";
+          }
+          renderUI();
+        }, 350);
       }
     };
 
-    container.querySelector(`#${widgetId}_reset`).onclick = () => {
-      simPc = 0;
-      simStack = [];
-      simHeap = [];
-      simHalted = false;
-      renderStepperUI("Simulatie gereset naar instructie 0.");
-    };
+    if (modeSelect) {
+      modeSelect.onchange = (e) => {
+        const newMode = e.target.value;
+        if (presetBytecode[newMode]) {
+          if (runTimer) { clearInterval(runTimer); runTimer = null; playBtn.textContent = "▶ Auto Run"; playBtn.style.background = "#059669"; }
+          vm = new StudioJmvm(presetBytecode[newMode]);
+          renderUI();
+        }
+      };
+    }
 
-    setTimeout(() => renderStepperUI(), 50);
+    setTimeout(() => renderUI(), 50);
     return container;
   }
 
