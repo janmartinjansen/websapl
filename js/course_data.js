@@ -64,6 +64,14 @@ $$\\text{fac}(n) = \\begin{cases} 1 & \\text{if } n = 0 \\\\ n \\times \\text{fa
 Here is a first interactive example in **Sapl**. Click **\`▶ Run on JMVM\`** to compile and execute it live in WebAssembly:
 
 <SaplPlayground file="fac_strict.cfp" title="Strict Factorial Example (fac_strict.cfp)" />
+
+---
+
+## Step-by-Step JMVM Execution
+
+In the visual stepper below, you can follow the exact execution of the **strict factorial** bytecode step-by-step. Notice how all recursive calls and intermediate results are evaluated directly on the **Evaluation Stack** with **0 heap allocations**:
+
+<JmvmStepper title="Strict Factorial Step-by-Step (fac 3)" mode="fac_strict" />
 `
         },
         {
