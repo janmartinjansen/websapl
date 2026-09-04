@@ -58,6 +58,12 @@ Functional programming languages treat computation as the mathematical evaluatio
 ## The Core Concept
 
 Unlike stack-based imperative languages that push primitive values directly, a lazy virtual machine manages an **expression graph** that is rewritten step-by-step (*graph reduction*).
+
+$$\\text{fac}(n) = \\begin{cases} 1 & \\text{if } n = 0 \\\\ n \\times \\text{fac}(n - 1) & \\text{otherwise} \\end{cases}$$
+
+Here is a first interactive example in **Sapl**. Click **\`▶ Run on JMVM\`** to compile and execute it live in WebAssembly:
+
+<SaplPlayground file="fac_strict.cfp" title="Strict Factorial Example (fac_strict.cfp)" />
 `
         },
         {
