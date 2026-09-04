@@ -941,19 +941,19 @@ ireturn`
           }
           case "LOAD": {
             const offset = parseInt(args[0], 10) || 0;
-            const targetIdx = this.hv + offset;
+            const targetIdx = this.hv - offset;
             const val = this.stack[targetIdx] !== undefined ? this.stack[targetIdx] : 0;
             this.stack.push(val);
             const valRepr = this.isHeapRef(val) ? `@Node ${val.ref}` : (this.isFuncObj(val) ? `λ ${val.func}` : val);
-            this.lastMessage = `load ${offset}: Argument op stack[hv + ${offset}] (${valRepr}) naar top gekopieerd.`;
+            this.lastMessage = `load ${offset}: Argument op stack[hv - ${offset}] (${valRepr}) naar top gekopieerd.`;
             this.pc++;
             break;
           }
           case "STORE": {
             const offset = parseInt(args[0], 10) || 0;
             const val = this.stack.pop();
-            this.stack[this.hv + offset] = val;
-            this.lastMessage = `store ${offset}: Top van stack opgeslagen in stack[hv + ${offset}].`;
+            this.stack[this.hv - offset] = val;
+            this.lastMessage = `store ${offset}: Top van stack opgeslagen in stack[hv - ${offset}].`;
             this.pc++;
             break;
           }
@@ -1004,18 +1004,19 @@ ireturn`
             const targetLabel = args[1] || "";
             const target = this.resolveTarget(targetLabel);
             const oldHv = this.hv;
-            const newHv = this.stack.length - nrargs;
-            this.callStack.push({ returnPc: this.pc + 1, oldHv: oldHv });
+            const newHv = this.stack.length - 1;
+            this.callStack.push({ returnPc: this.pc + 1, oldHv: oldHv, nrargs: nrargs });
             this.hv = newHv;
             this.pc = target;
-            this.lastMessage = `call ${nrargs}, ${targetLabel}: Call Frame aangemaakt op stack[${newHv}], spring naar ${targetLabel}.`;
+            this.lastMessage = `call ${nrargs}, ${targetLabel}: Call Frame aangemaakt op stack[hv=${newHv}], spring naar ${targetLabel}.`;
             break;
           }
           case "IRETURN": {
             const retVal = this.stack.pop();
             if (this.callStack.length > 0) {
               const frame = this.callStack.pop();
-              while (this.stack.length > this.hv) this.stack.pop();
+              const cleanTo = this.hv - frame.nrargs + 1;
+              while (this.stack.length >= cleanTo && this.stack.length > 0) this.stack.pop();
               this.hv = frame.oldHv;
               this.pc = frame.returnPc;
               this.stack.push(retVal);
