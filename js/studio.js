@@ -116,32 +116,54 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- COURSE DATA STORAGE ---
   function loadCourseData() {
+    let saved = null;
     try {
-      const saved = localStorage.getItem("websapl_course_studio_data");
-      if (saved) {
-        state.course = JSON.parse(saved);
+      const savedStr = localStorage.getItem("websapl_course_studio_data");
+      if (savedStr) {
+        saved = JSON.parse(savedStr);
       }
     } catch (e) {
       console.warn("Failed to load saved course data:", e);
     }
 
-    if (!state.course || !state.course.modules) {
-      state.course = JSON.parse(JSON.stringify(window.DEFAULT_COURSE_DATA || { title: "Course", home: {}, modules: [] }));
+    const defaultData = window.DEFAULT_COURSE_DATA || { version: "1.2", title: "Course", home: {}, modules: [] };
+
+    if (!saved || !saved.modules || saved.modules.length === 0) {
+      state.course = JSON.parse(JSON.stringify(defaultData));
+    } else {
+      // Merge missing modules from defaultData so new curriculum (twice, primes, hamming) is always available
+      defaultData.modules.forEach(defMod => {
+        const existingMod = saved.modules.find(m => m.id === defMod.id);
+        if (!existingMod) {
+          saved.modules.push(JSON.parse(JSON.stringify(defMod)));
+        } else {
+          // Merge missing files inside existing module
+          defMod.files.forEach(defFile => {
+            const existingFile = existingMod.files.find(f => f.name === defFile.name);
+            if (!existingFile) {
+              existingMod.files.push(JSON.parse(JSON.stringify(defFile)));
+            }
+          });
+        }
+      });
+      saved.version = defaultData.version;
+      state.course = saved;
     }
 
     if (!state.course.home) {
       state.course.home = {
         name: "index.md",
         type: "markdown",
-        content: window.DEFAULT_COURSE_DATA.home ? window.DEFAULT_COURSE_DATA.home.content : "# Course Title\n"
+        content: defaultData.home ? defaultData.home.content : "# Course Title\n"
       };
     }
 
     // Auto-migrate any stale link from early prototypes
     if (state.course.home && state.course.home.content && state.course.home.content.includes("/guide/01-lazy-evaluation")) {
       state.course.home.content = state.course.home.content.replace(/\/guide\/01-lazy-evaluation/g, "/guide/01_introduction");
-      saveCourseData();
     }
+
+    saveCourseData();
   }
 
   function saveCourseData() {
@@ -762,6 +784,129 @@ load 1
 eval
 imult
 ireturn`
+    ,
+      twice_hof: `; Higher-Order Function: twice inc 5 = 7
+; Demonstreert f (f 5) = inc (inc 5) met luie thunk & closures
+start_lazy start twice_lazy twice inc_lazy inc #
+call 1
+print 4
+stop
+0           jmp 1
+1           push 5
+            pushfunc 1 6
+            create 1 7
+            call 5
+            eval
+            return 0
+4           jmp 5
+5           load 1
+            load 0
+            create 2 7
+            load 0
+            eval
+            return 2
+6           load 0
+            eval
+            store 0
+7           loadadd 0 1
+            return 1`,
+
+      primes_stream: `; Lazy Stream Sieve: 3e priemgetal (el 2 primes = 5)
+; Oneindige luie lijsten, filtering en in-place memoization
+start el_lazy el lb1 lb2 lb3 take_lazy take lb5 lb7 lb8 nmz_lazy nmz lb9 filter_lazy filter lb11 lb12 lb13 from from_1 sieve_lazy sieve lb15 lb16 primes printlist_lazy printlist lb17 lb18 #
+call 0
+print 4
+stop
+0           call 25
+            push 2
+            tailcall 0 2
+1           load 1
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+2           load 1
+            jmpt 2 3 4
+3           debug 1
+            return 2
+4           load 2
+            ifneq 5
+            load 0
+            return 4
+5           load 1
+            eval
+            loadadd 2 -1
+            tailcall 4 2
+11          load 1
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+12          load 1
+            load 0
+            mod
+            ifeq 13
+            return_const 2 1
+13          return_const 2 0
+14          load 1
+            eval
+            store 1
+15          load 1
+            jmpt 2 16 17
+16          ccreatet 0 11 5 0
+            return 2
+17          load 0
+            load 2
+            eval
+            ifeq 18
+            load 1
+            load 2
+            pushfunc 2 14
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 4
+18          load 1
+            eval
+            load 2
+            tailcall 4 15
+19          load 0
+            pushfunc 1 20
+            create 2 3
+            pushfunc 1 19
+            create 2 3
+            load 0
+            eval
+            ccreatet 2 11 5 1
+            return 1
+20          load 0
+            eval
+            push 1
+            add
+            return 1
+21          load 0
+            eval
+            store 0
+22          load 0
+            jmpt 2 23 24
+23          debug 1
+            return 1
+24          load 1
+            load 0
+            pushfunc 2 11
+            create 2 7
+            pushfunc 2 14
+            create 3 3
+            pushfunc 1 21
+            create 2 3
+            load 0
+            ccreatet 2 11 5 1
+            return 3
+25          push 2
+            call 19
+            tailcall 0 22`
     };
 
     let activeMode = attrs.mode || "fac_strict";
@@ -772,19 +917,21 @@ ireturn`
       activeCode = presetBytecode.fac_strict;
     }
 
-    const title = attrs.title || (activeMode === "fac_strict" ? "Strict Factorial (fac 3)" : (activeMode === "fac_lazy" ? "Lazy Factorial (facl 3)" : "JMVM Bytecode Visualizer"));
+    const title = attrs.title || (activeMode === "fac_strict" ? "Strict Factorial (fac 3)" : (activeMode === "fac_lazy" ? "Lazy Factorial (facl 3)" : (activeMode === "twice_hof" ? "Higher-Order Function (twice inc 5)" : (activeMode === "primes_stream" ? "Lazy Sieve Stream (primes)" : "JMVM Bytecode Visualizer"))));
     const widgetId = "stepper_" + Math.random().toString(36).substring(2, 9);
 
     container.innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:center; padding: 10px 16px; background:#1e293b; border-bottom:1px solid rgba(255,255,255,0.08); flex-wrap:wrap; gap:8px;">
         <div style="display:flex; align-items:center; gap:8px;">
           <span style="background: linear-gradient(135deg, #0ea5e9, #0284c7); color:white; font-size:0.72rem; font-weight:700; padding:3px 8px; border-radius:4px; text-transform:uppercase; letter-spacing:0.5px;">JMVM Stepper</span>
-          <strong style="font-size:0.9rem; color:#e2e8f0;">${escapeHtml(title)}</strong>
+          <strong id="${widgetId}_title" style="font-size:0.9rem; color:#e2e8f0;">${escapeHtml(title)}</strong>
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
           <select id="${widgetId}_mode" style="background:#0f172a; color:#38bdf8; border:1px solid rgba(56,189,248,0.3); padding:4px 8px; border-radius:6px; font-size:0.78rem; font-weight:600; cursor:pointer;">
             <option value="fac_strict" ${activeMode === 'fac_strict' ? 'selected' : ''}>Strict: fac(3)</option>
             <option value="fac_lazy" ${activeMode === 'fac_lazy' ? 'selected' : ''}>Lazy: facl(3)</option>
+            <option value="twice_hof" ${activeMode === 'twice_hof' ? 'selected' : ''}>Hogere-orde: twice inc 5</option>
+            <option value="primes_stream" ${activeMode === 'primes_stream' ? 'selected' : ''}>Luie Stream: 3e priem (5)</option>
           </select>
           <button id="${widgetId}_reset" style="background:#334155; color:#f8fafc; border:1px solid rgba(255,255,255,0.1); padding:5px 12px; border-radius:6px; font-size:0.8rem; font-weight:600; cursor:pointer;">⏮ Reset</button>
           <button id="${widgetId}_step" style="background:#0284c7; color:#f8fafc; border:1px solid #38bdf8; padding:5px 12px; border-radius:6px; font-size:0.8rem; font-weight:600; cursor:pointer;">⏯ Step</button>
@@ -827,11 +974,12 @@ ireturn`
       </div>
     `;
 
-    // Authentic JMVM Interpreter Implementation inside Studio
+    // Authentic JMVM Interpreter Implementation inside Studio (100% simtypes.h / vm.cpp compatible)
     class StudioJmvm {
       constructor(codeText) {
         this.instructions = [];
         this.labels = new Map();
+        this.labelNames = [];
         this.pc = 0;
         this.stack = [];
         this.hv = 0;
@@ -839,6 +987,7 @@ ireturn`
         this.callStack = [];
         this.isHalted = false;
         this.steps = 0;
+        this.output = [];
         this.lastMessage = "VM gereed.";
         this.load(codeText);
       }
@@ -846,17 +995,68 @@ ireturn`
       load(text) {
         this.instructions = [];
         this.labels.clear();
+        this.labelNames = [];
+        this.output = [];
+
         const lines = text.split("\n");
+        let firstLine = "";
+        const codeLines = [];
+
+        for (let l of lines) {
+          let trimmed = l.trim();
+          if (!trimmed || trimmed.startsWith(";") || trimmed.startsWith("//")) continue;
+          if (
+            trimmed.startsWith(".metadata") ||
+            trimmed.startsWith("types ") ||
+            trimmed.startsWith("type ") ||
+            trimmed.startsWith("constr ") ||
+            trimmed.startsWith("functions ") ||
+            trimmed.startsWith("func ") ||
+            trimmed.startsWith(".endmetadata")
+          ) {
+            continue;
+          }
+          if (!firstLine && trimmed.endsWith("#")) {
+            firstLine = trimmed.slice(0, -1).trim();
+            continue;
+          }
+          codeLines.push(l);
+        }
+
+        if (firstLine) {
+          this.labelNames = firstLine.split(/\s+/).filter(x => x.length > 0);
+          for (let i = 0; i < this.labelNames.length; i++) {
+            this.labels.set(String(i), -1);
+            this.labels.set(this.labelNames[i].toLowerCase(), -1);
+          }
+        }
+
         let idx = 0;
-        for (let rawLine of lines) {
+        for (let rawLine of codeLines) {
           let line = rawLine.trim();
           if (!line || line.startsWith(";") || line.startsWith("||")) continue;
           let comment = "";
-          if (line.includes(";")) {
+          if (line.includes("||")) {
+            const p = line.split("||");
+            line = p[0].trim();
+            comment = p.slice(1).join("||").trim();
+          } else if (line.includes(";")) {
             const p = line.split(";");
             line = p[0].trim();
             comment = p.slice(1).join(";").trim();
           }
+
+          const matchNumLabel = line.match(/^(\d+)\s+(.*)$/);
+          if (matchNumLabel) {
+            const labelNum = matchNumLabel[1];
+            this.labels.set(labelNum, idx);
+            const labelNumInt = parseInt(labelNum, 10);
+            if (this.labelNames[labelNumInt]) {
+              this.labels.set(this.labelNames[labelNumInt].toLowerCase(), idx);
+            }
+            line = matchNumLabel[2].trim();
+          }
+
           if (line.includes(":")) {
             const colonIdx = line.indexOf(":");
             const beforeColon = line.substring(0, colonIdx).trim();
@@ -892,6 +1092,7 @@ ireturn`
         this.callStack = [];
         this.isHalted = false;
         this.steps = 0;
+        this.output = [];
         this.lastMessage = "Simulatie gereset naar instructie 0.";
         this.skipLabels();
       }
@@ -907,10 +1108,11 @@ ireturn`
       isFuncObj(v) { return typeof v === "object" && v !== null && v.isFunc; }
 
       resolveTarget(target) {
-        if (!target) return -1;
-        const clean = target.toLowerCase();
+        if (target === undefined || target === null || target === "") return -1;
+        const clean = String(target).toLowerCase();
         if (this.labels.has(clean)) return this.labels.get(clean);
         const p = parseInt(target, 10);
+        if (!isNaN(p) && this.labels.has(String(p))) return this.labels.get(String(p));
         return isNaN(p) ? -1 : p;
       }
 
@@ -921,6 +1123,10 @@ ireturn`
           return false;
         }
         const instr = this.instructions[this.pc];
+        if (!instr) {
+          this.isHalted = true;
+          return false;
+        }
         if (instr.isLabel) {
           this.pc++;
           this.skipLabels();
@@ -935,7 +1141,7 @@ ireturn`
           case "PUSH": {
             const val = parseInt(args[0], 10) || 0;
             this.stack.push(val);
-            this.lastMessage = `bipush ${val}: Waarde ${val} op de evaluatiestack geplaatst.`;
+            this.lastMessage = `bipush ${val}: Waarde ${val} op de stack geplaatst.`;
             this.pc++;
             break;
           }
@@ -944,7 +1150,7 @@ ireturn`
             const targetIdx = this.hv - offset;
             const val = this.stack[targetIdx] !== undefined ? this.stack[targetIdx] : 0;
             this.stack.push(val);
-            const valRepr = this.isHeapRef(val) ? `@Node ${val.ref}` : (this.isFuncObj(val) ? `λ ${val.func}` : val);
+            const valRepr = this.isHeapRef(val) ? `@Node ${val.ref}` : (this.isFuncObj(val) ? `λ ${val.name || val.func}` : val);
             this.lastMessage = `load ${offset}: Argument op stack[hv - ${offset}] (${valRepr}) naar top gekopieerd.`;
             this.pc++;
             break;
@@ -954,6 +1160,40 @@ ireturn`
             const val = this.stack.pop();
             this.stack[this.hv - offset] = val;
             this.lastMessage = `store ${offset}: Top van stack opgeslagen in stack[hv - ${offset}].`;
+            this.pc++;
+            break;
+          }
+          case "LOADADD": {
+            const offset = parseInt(args[0], 10) || 0;
+            const addVal = parseInt(args[1], 10) || 0;
+            const val = (this.stack[this.hv - offset] || 0) + addVal;
+            this.stack.push(val);
+            this.lastMessage = `loadadd ${offset}, ${addVal}: stack[hv - ${offset}] + ${addVal} = ${val} op stack geduwd.`;
+            this.pc++;
+            break;
+          }
+          case "DUP": {
+            const top = this.stack[this.stack.length - 1];
+            this.stack.push(top);
+            this.lastMessage = `dup: Top van stack gedupliceerd.`;
+            this.pc++;
+            break;
+          }
+          case "SWAP": {
+            if (this.stack.length >= 2) {
+              const a = this.stack[this.stack.length - 1];
+              const b = this.stack[this.stack.length - 2];
+              this.stack[this.stack.length - 1] = b;
+              this.stack[this.stack.length - 2] = a;
+            }
+            this.lastMessage = `swap: Bovenste 2 stack-elementen omgewisseld.`;
+            this.pc++;
+            break;
+          }
+          case "POP": {
+            const count = parseInt(args[0], 10) || 1;
+            for (let i = 0; i < count; i++) this.stack.pop();
+            this.lastMessage = `pop ${count}: ${count} element(en) van stack verwijderd.`;
             this.pc++;
             break;
           }
@@ -987,103 +1227,300 @@ ireturn`
             this.pc++;
             break;
           }
+          case "IDIV":
+          case "DIV": {
+            const b = this.stack.pop();
+            const a = this.stack.pop();
+            const res = Math.floor((a || 0) / (b || 1));
+            this.stack.push(res);
+            this.lastMessage = `idiv: ${a} / ${b} = ${res}`;
+            this.pc++;
+            break;
+          }
+          case "IMOD":
+          case "MOD": {
+            const b = this.stack.pop();
+            const a = this.stack.pop();
+            const res = (a || 0) % (b || 1);
+            this.stack.push(res);
+            this.lastMessage = `imod: ${a} % ${b} = ${res}`;
+            this.pc++;
+            break;
+          }
           case "IFEQ": {
             const val = this.stack.pop();
             const target = this.resolveTarget(args[0]);
             if (val === 0 || val === false) {
               this.pc = target;
-              this.lastMessage = `ifeq ${args[0]}: Waarde is 0 (waar) -> Spring naar ${args[0]} (regel ${target}).`;
+              this.lastMessage = `ifeq ${args[0]}: Waarde is 0 -> Sprong naar regel ${target}.`;
             } else {
               this.pc++;
               this.lastMessage = `ifeq ${args[0]}: Waarde is ${val} (!= 0) -> Geen sprong.`;
             }
             break;
           }
-          case "CALL": {
-            const nrargs = parseInt(args[0], 10) || 1;
-            const targetLabel = args[1] || "";
-            const target = this.resolveTarget(targetLabel);
-            const oldHv = this.hv;
-            const newHv = this.stack.length - 1;
-            this.callStack.push({ returnPc: this.pc + 1, oldHv: oldHv, nrargs: nrargs });
-            this.hv = newHv;
-            this.pc = target;
-            this.lastMessage = `call ${nrargs}, ${targetLabel}: Call Frame aangemaakt op stack[hv=${newHv}], spring naar ${targetLabel}.`;
-            break;
-          }
-          case "IRETURN": {
-            const retVal = this.stack.pop();
-            if (this.callStack.length > 0) {
-              const frame = this.callStack.pop();
-              const cleanTo = this.hv - frame.nrargs + 1;
-              while (this.stack.length >= cleanTo && this.stack.length > 0) this.stack.pop();
-              this.hv = frame.oldHv;
-              this.pc = frame.returnPc;
-              this.stack.push(retVal);
-              const retRepr = this.isHeapRef(retVal) ? `@Node ${retVal.ref}` : retVal;
-              this.lastMessage = `ireturn: Resultaat ${retRepr} teruggegeven naar regel ${frame.returnPc}.`;
+          case "IFNEQ": {
+            const val = this.stack.pop();
+            const target = this.resolveTarget(args[0]);
+            if (val !== 0 && val !== false) {
+              this.pc = target;
+              this.lastMessage = `ifneq ${args[0]}: Waarde is niet 0 -> Sprong naar regel ${target}.`;
             } else {
-              this.stack.push(retVal);
-              this.isHalted = true;
-              this.lastMessage = `ireturn: Hoofdfunctie geretourneerd met waarde ${JSON.stringify(retVal)}.`;
+              this.pc++;
+              this.lastMessage = `ifneq ${args[0]}: Waarde is 0 -> Geen sprong.`;
             }
             break;
           }
-          case "PUSHFUNCNR": {
-            this.stack.push({ isFunc: true, func: args[0] || "func", nrargs: parseInt(args[1], 10) || 1 });
-            this.lastMessage = `pushfuncnr ${args[0]}, ${args[1]}: Functie-object op stack geplaatst.`;
+          case "JMP": {
+            const target = this.resolveTarget(args[0]);
+            this.pc = target;
+            this.lastMessage = `jmp ${args[0]}: Direct gesprongen naar regel ${target}.`;
+            break;
+          }
+          case "CALL": {
+            let nrargs = 1;
+            let targetLabel = "";
+            if (args.length >= 2) {
+              nrargs = parseInt(args[0], 10) || 1;
+              targetLabel = args[1] || "";
+            } else {
+              targetLabel = args[0] || "";
+            }
+            const target = this.resolveTarget(targetLabel);
+            const oldHv = this.hv;
+            const newHv = this.stack.length - 1;
+            this.callStack.push({ returnPc: this.pc + 1, oldHv: oldHv, callerSp: newHv, nrargs: nrargs, isBoxValue: false });
+            this.hv = newHv;
+            this.pc = target;
+            this.lastMessage = `call ${targetLabel}: Call Frame op stack[hv=${newHv}], spring naar regel ${target}.`;
+            break;
+          }
+          case "TAILCALL": {
+            let popCount = 1;
+            let targetLabel = "";
+            if (args.length >= 2) {
+              popCount = parseInt(args[0], 10) || 0;
+              targetLabel = args[1] || "";
+            } else {
+              targetLabel = args[0] || "";
+            }
+            const target = this.resolveTarget(targetLabel);
+            const na = this.stack.length - 1 - this.hv;
+            const newArgs = this.stack.slice(this.stack.length - na);
+            this.stack.splice(this.stack.length - (popCount + na), popCount + na);
+            for (let a of newArgs) this.stack.push(a);
+            this.hv = this.stack.length - 1;
+            this.pc = target;
+            this.lastMessage = `tailcall ${popCount}, ${targetLabel}: Staartaanroep uitgevoerd (Call Frame hergebruikt).`;
+            break;
+          }
+          case "RETURN":
+          case "IRETURN": {
+            const popCount = parseInt(args[0], 10) || 1;
+            const retVal = this.stack.pop();
+            if (this.callStack.length > 0) {
+              const frame = this.callStack.pop();
+              if (frame.isBoxValue && frame.boxTargetNode) {
+                frame.boxTargetNode.type = "BOXED";
+                frame.boxTargetNode.value = retVal;
+                frame.boxTargetNode.isEvaluated = true;
+                const cleanTo = frame.callerSp;
+                this.stack.length = cleanTo;
+                this.hv = frame.oldHv;
+                this.pc = frame.returnPc;
+                this.stack.push(retVal);
+              } else {
+                const cleanTo = Math.max(0, this.hv - popCount + 1);
+                this.stack.length = cleanTo;
+                this.hv = frame.oldHv;
+                this.pc = frame.returnPc;
+                this.stack.push(retVal);
+              }
+              const retRepr = this.isHeapRef(retVal) ? `@Node ${retVal.ref}` : JSON.stringify(retVal);
+              this.lastMessage = `return ${popCount}: Resultaat ${retRepr} teruggegeven naar regel ${frame.returnPc}.`;
+            } else {
+              this.stack.push(retVal);
+              this.isHalted = true;
+              this.lastMessage = `return: Programma voltooid met ${JSON.stringify(retVal)}.`;
+            }
+            break;
+          }
+          case "RETURN_CONST":
+          case "IRETURN_CONST": {
+            let popCount = 1;
+            let constVal = 0;
+            if (args.length >= 2) {
+              popCount = parseInt(args[0], 10) || 1;
+              constVal = parseInt(args[1], 10) || 0;
+            } else {
+              constVal = parseInt(args[0], 10) || 0;
+            }
+            if (this.callStack.length > 0) {
+              const frame = this.callStack.pop();
+              if (frame.isBoxValue && frame.boxTargetNode) {
+                frame.boxTargetNode.type = "BOXED";
+                frame.boxTargetNode.value = constVal;
+                frame.boxTargetNode.isEvaluated = true;
+                const cleanTo = frame.callerSp;
+                this.stack.length = cleanTo;
+                this.hv = frame.oldHv;
+                this.pc = frame.returnPc;
+                this.stack.push(constVal);
+              } else {
+                const cleanTo = Math.max(0, this.hv - popCount + 1);
+                this.stack.length = cleanTo;
+                this.hv = frame.oldHv;
+                this.pc = frame.returnPc;
+                this.stack.push(constVal);
+              }
+              this.lastMessage = `return_const ${constVal}: Constante geretourneerd naar regel ${frame.returnPc}.`;
+            } else {
+              this.stack.push(constVal);
+              this.isHalted = true;
+              this.lastMessage = `return_const: Programma voltooid met ${constVal}.`;
+            }
+            break;
+          }
+          case "PUSHFUNCNR":
+          case "PUSHFUNC": {
+            let funcName = "func";
+            let nrargs = 1;
+            let targetPc = 0;
+            if (args.length >= 2) {
+              nrargs = parseInt(args[0], 10) || 1;
+              const labelTarget = args[1];
+              targetPc = this.resolveTarget(labelTarget);
+              funcName = (this.labelNames[parseInt(labelTarget, 10)] || labelTarget);
+            } else {
+              funcName = args[0] || "func";
+              targetPc = this.resolveTarget(funcName);
+            }
+            this.stack.push({ isFunc: true, func: funcName, name: funcName, nrargs: nrargs, targetPc: targetPc });
+            this.lastMessage = `pushfunc ${funcName}, ${nrargs}: Functie-descriptor '${funcName}' op stack geduwd.`;
             this.pc++;
             break;
           }
           case "CREATE": {
             const size = parseInt(args[0], 10) || 1;
-            const typeStr = (args[1] || "CLOSURE").toUpperCase();
-            const nodeElements = [];
+            const typeArg = args[1] || "3";
+            const typeId = parseInt(typeArg, 10) || 3;
+            const elems = [];
             for (let i = 0; i < size; i++) {
-              if (this.stack.length > 0) nodeElements.unshift(this.stack.pop());
+              if (this.stack.length > 0) elems.unshift(this.stack.pop());
             }
             const nodeId = this.heap.length + 1;
-            let funcName = "Thunk";
-            let funcArgs = nodeElements;
-            if (nodeElements.length > 0 && nodeElements[0] && nodeElements[0].isFunc) {
-              funcName = nodeElements[0].func;
-              funcArgs = nodeElements.slice(1);
-            }
-            this.heap.push({ id: nodeId, type: typeStr, func: funcName, size: size, args: funcArgs, isEvaluated: false });
-            this.stack.push({ ref: nodeId });
-            this.lastMessage = `create ${size}, ${typeStr}: Nieuwe Thunk Node @${nodeId} op heap gecreëerd voor '${funcName}'.`;
+            const funcDesc = elems[elems.length - 1];
+            const funcName = funcDesc && (funcDesc.name || funcDesc.func) ? (funcDesc.name || funcDesc.func) : "Thunk";
+            const node = { id: nodeId, type: typeId === 7 ? "CURRIED" : "CLOSURE", typeId, func: funcName, elems, isEvaluated: false };
+            this.heap.push(node);
+            this.stack.push({ ref: nodeId, node: node });
+            this.lastMessage = `create ${size}, ${typeId}: Thunk Node @${nodeId} gealloceerd op heap.`;
             this.pc++;
             break;
           }
-          case "UPDATE": {
-            const targetRef = this.stack.pop();
-            const resultVal = this.stack[this.stack.length - 1];
-            if (this.isHeapRef(targetRef)) {
-              const node = this.heap.find(n => n.id === targetRef.ref);
-              if (node) {
-                node.type = "VALUE";
-                node.value = resultVal;
-                node.isEvaluated = true;
-                this.lastMessage = `update: Thunk @Node ${targetRef.ref} geüpdatet met waarde ${JSON.stringify(resultVal)}.`;
-              }
+          case "CCREATE":
+          case "CCREATET": {
+            const size = parseInt(args[0], 10) || 2;
+            const typeId = parseInt(args[1], 10) || 11;
+            const type_id = parseInt(args[2], 10) || 5;
+            const constr_aux = parseInt(args[3], 10) || (size === 0 ? 0 : 1);
+            const elems = [];
+            for (let i = 0; i < size; i++) {
+              if (this.stack.length > 0) elems.unshift(this.stack.pop());
             }
+            const nodeId = this.heap.length + 1;
+            const constrName = constr_aux === 1 ? "Cons" : (constr_aux === 0 && size === 0 ? "Nil" : `Constr_${constr_aux}`);
+            const node = { id: nodeId, type: "CONSTR", typeId, type_id, aux: constr_aux, constrName, func: constrName, elems, isEvaluated: true };
+            this.heap.push(node);
+            this.stack.push({ ref: nodeId, node: node });
+            this.lastMessage = `ccreatet ${size}, ${constrName}: Constructor Node @${nodeId} (${constrName}) gealloceerd op heap.`;
             this.pc++;
+            break;
+          }
+          case "JMPT": {
+            const targets = args.slice(1).map(x => this.resolveTarget(x));
+            const top = this.stack[this.stack.length - 1];
+            const node = top && top.node ? top.node : (top && top.ref ? this.heap.find(n => n.id === top.ref) : null);
+            if (!node) throw new Error(`jmpt on non-node op pc=${this.pc}: ${JSON.stringify(top)}`);
+            const aux = node.aux !== undefined ? node.aux : 0;
+            const targetPc = targets[aux] !== undefined ? targets[aux] : targets[0];
+            this.stack.pop();
+            if (node.elems) {
+              for (let e of node.elems) this.stack.push(e);
+            }
+            this.hv = this.stack.length - 1;
+            this.pc = targetPc;
+            this.lastMessage = `jmpt: Constructor ${node.constrName || node.func} (aux=${aux}) ontleed -> sprong naar regel ${targetPc}.`;
             break;
           }
           case "EVAL": {
             const top = this.stack[this.stack.length - 1];
-            if (this.isHeapRef(top)) {
-              const node = this.heap.find(n => n.id === top.ref);
-              if (node && node.isEvaluated && node.value !== undefined) {
+            if (typeof top === "number") {
+              this.lastMessage = `eval: Waarde ${top} is reeds gereduceerd.`;
+              this.pc++;
+            } else if (top) {
+              const node = top.node ? top.node : (top.ref ? this.heap.find(n => n.id === top.ref) : null);
+              if (!node) { this.pc++; break; }
+              if (node.type === "CONSTR") {
+                this.lastMessage = `eval: Constructor @${node.id} (${node.constrName || node.func}) is in WHNF.`;
+                this.pc++;
+              } else if (node.type === "BOXED") {
                 this.stack.pop();
                 this.stack.push(node.value);
-                this.lastMessage = `eval: Node @${top.ref} was al berekend -> ${node.value}.`;
-              } else if (node) {
-                this.lastMessage = `eval: Start evaluatie van Thunk Node @${top.ref} (${node.func}).`;
+                this.lastMessage = `eval: Node @${node.id} was gememoiseerd met ${JSON.stringify(node.value)}.`;
+              } else if (node.type === "CLOSURE") {
+                const func = node.elems[node.elems.length - 1];
+                const boundArgs = node.elems.slice(0, -1);
+                this.callStack.push({ returnPc: this.pc + 1, oldHv: this.hv, callerSp: this.stack.length - 1, isBoxValue: true, boxTargetNode: node });
+                for (let a of boundArgs) this.stack.push(a);
+                this.hv = this.stack.length - 1;
+                this.pc = func.targetPc !== undefined ? func.targetPc : this.resolveTarget(func.name || func.func);
+                this.lastMessage = `eval: Start reductie van Thunk @${node.id} (${func.name || func.func}).`;
+              } else if (node.type === "CURRIED") {
+                const boundArgs = [];
+                let func = null;
+                const unpack = (n) => {
+                  const nd = n && n.node ? n.node : (n && n.ref ? this.heap.find(x => x.id === n.ref) : (n && n.typeId ? n : null));
+                  if (nd && nd.type === "CURRIED" && nd.elems) {
+                    for (let i = 0; i < nd.elems.length - 1; i++) {
+                      boundArgs.push(nd.elems[i]);
+                    }
+                    unpack(nd.elems[nd.elems.length - 1]);
+                  } else if (n && n.isFunc) {
+                    func = n;
+                  } else if (nd && nd.elems && nd.elems.length > 0) {
+                    unpack(nd.elems[nd.elems.length - 1]);
+                  } else {
+                    func = n;
+                  }
+                };
+                unpack(node);
+                this.stack.pop();
+                for (let a of boundArgs) this.stack.push(a);
+                this.callStack.push({ returnPc: this.pc + 1, oldHv: this.hv, callerSp: this.stack.length - 1, isBoxValue: false });
+                this.hv = this.stack.length - 1;
+                this.pc = (func && func.targetPc !== undefined) ? func.targetPc : this.resolveTarget(func ? (func.name || func.func || func) : 0);
+                this.lastMessage = `eval: Partiële functie @${node.id} (${func ? (func.name || func.func) : 'func'}) aangeroepen met ${boundArgs.length} argument(en).`;
+              } else {
+                this.pc++;
               }
             } else {
-              this.lastMessage = `eval: Reeds in WHNF.`;
+              this.pc++;
             }
+            break;
+          }
+          case "PRINT": {
+            const mode = parseInt(args[0], 10) || 0;
+            const val = this.stack.pop();
+            const display = (typeof val === "object" && val && (val.node || val.ref))
+              ? (val.node && val.node.value !== undefined ? val.node.value : (val.node && val.node.constrName ? val.node.constrName : `@Node ${val.ref}`))
+              : val;
+            this.lastMessage = `print ${mode}: ${display}`;
+            this.pc++;
+            break;
+          }
+          case "DEBUG": {
+            this.lastMessage = `debug: Breakpoint bereikt.`;
             this.pc++;
             break;
           }
@@ -1092,7 +1529,7 @@ ireturn`
             this.isHalted = true;
             const finalVal = this.stack.length > 0 ? this.stack[this.stack.length - 1] : "OK";
             const valRepr = this.isHeapRef(finalVal) ? `@Node ${finalVal.ref}` : JSON.stringify(finalVal);
-            this.lastMessage = `stop: JMVM executie beëindigd. Eindresultaat: ${valRepr}`;
+            this.lastMessage = `stop: JMVM executie beëindigd. Resultaat: ${valRepr}`;
             return false;
           }
           default: {
@@ -1269,6 +1706,16 @@ ireturn`
         const newMode = e.target.value;
         if (presetBytecode[newMode]) {
           if (runTimer) { clearInterval(runTimer); runTimer = null; playBtn.textContent = "▶ Auto Run"; playBtn.style.background = "#059669"; }
+          const titleEl = container.querySelector(`#${widgetId}_title`);
+          if (titleEl) {
+            const titleMap = {
+              fac_strict: "Strict Factorial (fac 3)",
+              fac_lazy: "Lazy Factorial (facl 3)",
+              twice_hof: "Higher-Order Function (twice inc 5)",
+              primes_stream: "Lazy Sieve Stream (3e priem = 5)"
+            };
+            titleEl.textContent = titleMap[newMode] || "JMVM Stepper";
+          }
           vm = new StudioJmvm(presetBytecode[newMode]);
           renderUI();
         }
@@ -1457,8 +1904,8 @@ ireturn`
         textToInsert = `\n### 💡 Student Challenge\nTry modifying the function above to compute fibonacci numbers.\n\n<details>\n<summary>View Solution</summary>\n\n\`\`\`sapl\nfib !n = case n of 0 -> 0; 1 -> 1; _ -> fib (n - 1) + fib (n - 2)\n\`\`\`\n</details>\n\n`;
         break;
       case "stepper":
-        textToInsert = `\n<JmvmStepper title="Graph Reduction & Thunk Allocation" />\n\n`;
-        break;
+        showStepperInsertModal(doc, cursor);
+        return;
       case "playground":
         showPlaygroundInsertModal(doc, cursor);
         return;
@@ -1470,6 +1917,49 @@ ireturn`
       doc.replaceRange(textToInsert, cursor);
       state.editor.focus();
     }
+  }
+
+  function showStepperInsertModal(doc, cursor) {
+    const modal = document.createElement("div");
+    modal.className = "studio-modal-overlay";
+    modal.innerHTML = `
+      <div class="studio-modal">
+        <div class="modal-header">
+          <span>Embed JMVM Stepper</span>
+          <button class="sidebar-btn" onclick="this.closest('.studio-modal-overlay').remove()">×</button>
+        </div>
+        <div class="modal-body">
+          <label style="display:block; margin-bottom:6px; font-weight:600;">Default Benchmark / Programma:</label>
+          <select id="modal-stepper-mode" style="width:100%; padding:6px; background:var(--bg-primary); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; margin-bottom:12px;">
+            <option value="fac_strict">Strict Factorial: fac(3)</option>
+            <option value="fac_lazy">Lazy Factorial: facl(3)</option>
+            <option value="twice_hof">Hogere-orde: twice inc 5</option>
+            <option value="primes_stream">Luie Stream: 3e priem (5)</option>
+          </select>
+          <label style="display:block; margin-bottom:6px; font-weight:600;">Widget Title (optioneel):</label>
+          <input id="modal-stepper-title" type="text" placeholder="bv. Higher-Order Twice Stepper" style="width:100%; padding:6px; background:var(--bg-primary); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; box-sizing:border-box; margin-bottom:12px;" />
+          <p style="font-size:0.78rem; color:var(--text-muted); margin:0;">
+            💡 Studenten kunnen in de les via het keuzemenu altijd vrij wisselen tussen alle presets.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button class="toolbar-btn" onclick="this.closest('.studio-modal-overlay').remove()">Cancel</button>
+          <button class="toolbar-btn btn-accent" id="modal-stepper-btn-insert">Insert Stepper</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    modal.querySelector("#modal-stepper-btn-insert").onclick = () => {
+      const mode = modal.querySelector("#modal-stepper-mode").value;
+      const title = modal.querySelector("#modal-stepper-title").value;
+      const titleAttr = title ? ` title="${title}"` : '';
+      const tag = `\n<JmvmStepper mode="${mode}"${titleAttr} />\n\n`;
+      doc.replaceRange(tag, cursor);
+      modal.remove();
+      state.editor.focus();
+    };
   }
 
   function showPlaygroundInsertModal(doc, cursor) {

@@ -2,7 +2,7 @@
  * Default Course Content & Modules for Course Studio
  */
 window.DEFAULT_COURSE_DATA = {
-  version: "1.0",
+  version: "1.2",
   title: "Implementing Functional Languages with Sap(+) & JMVM",
   home: {
     name: "index.md",
@@ -144,6 +144,14 @@ In functional programming, functions can accept other functions as arguments and
 $$\\text{twice } f\\ x = f\\ (f\\ x)$$
 
 <SaplPlayground file="twice.cfp" title="Higher-Order Twice (03_twice.cfp)" />
+
+---
+
+## Step-by-Step Stepper: \`twice inc 5\`
+
+Follow how \`twice\` constructs partial applications (\`CURRIED\` nodes) and evaluates the nested call \`inc (inc 5)\`:
+
+<JmvmStepper mode="twice_hof" />
 `
         },
         {
@@ -182,6 +190,14 @@ main = twicex`
 Because evaluation is lazy, we can define infinite data structures without running into an infinite loop. Elements are computed on demand as the list is consumed.
 
 <SaplPlayground file="primes.cfp" title="Infinite Primes Stream (06_primes.cfp)" />
+
+---
+
+## Step-by-Step Stepper: Sieve of Eratosthenes
+
+Inspect how constructor cells (\`Cons\`), filtering suspensions, and memoized values interact on the heap to extract the 3rd prime number ($5$):
+
+<JmvmStepper mode="primes_stream" />
 `
         },
         {
