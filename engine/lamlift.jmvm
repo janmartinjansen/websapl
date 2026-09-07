@@ -1,5 +1,5 @@
-readStream lb1 readStream_1 writeStream_lazy writeStream lb3 lb4 str2list_lazy str2list strls_lazy strls lb5 strEqual_lazy strEqual lb7 strEqualAt_lazy strEqualAt lb9 lb11 list2str_lazy list2str fillStr_lazy fillStr lb13 lb14 strcat_lazy strcat toUpperChar_lazy toUpperChar lb15 code_lazy code decode_lazy decode strUpper_lazy strUpper substr_lazy substr itoa_lazy itoa lb18 lb17 itoa_2 length_lazy length lb19 lb20 map_lazy map lb21 lb22 filter_lazy filter lb23 lb24 lb25 foldl_lazy foldl lb27 lb28 foldr_lazy foldr lb29 lb30 append_lazy append lb31 lb32 take_lazy take lb33 lb34 lb35 take_3 drop_lazy drop lb37 lb38 lb39 drop_4 reverse_lazy reverse rev_lazy rev lb41 lb42 cat2_lazy cat2 cat3_lazy cat3 cat4_lazy cat4 cat5_lazy cat5 cat6_lazy cat6 cat7_lazy cat7 cat8_lazy cat8 cat9_lazy cat9 nameEq_lazy nameEq lb43 lb45 lb46 lb44 lb47 lb48 lb49 nameIn_lazy nameIn lb51 lb52 lb53 namesMinus_lazy namesMinus lam_notIn_lazy lam_notIn lb55 namesIntersectDistinct_lazy namesIntersectDistinct lam_inScope_lazy lam_inScope distinctNames_lazy distinctNames lb57 lb58 lb59 kw_lazy kw kwIf kwCase kwLet kwIn kwTrue kwFalse kwNomatch kwUnderscore isDigit_lazy isDigit lb61 isAlphaC_lazy isAlphaC lb65 lb67 lb63 isIdentStart_lazy isIdentStart lb69 isIdentCont_lazy isIdentCont lb71 isSpaceC_lazy isSpaceC lb73 isNewlineC_lazy isNewlineC lb75 tokenize_lazy tokenize lexSkip_lazy lexSkip lb77 lb78 lexSkipHere_lazy lexSkipHere lb81 lb79 lexSkipSlash_lazy lexSkipSlash lb83 lb84 lb85 dropLine_lazy dropLine lb87 lb88 lb89 lexToken_lazy lexToken lb91 lb92 lexTokenHere_lazy lexTokenHere lb93 lb95 lb97 lb99 lb101 lb103 lb105 lb107 lb109 lb111 lb113 lb115 lb117 lb119 lb121 lb123 lb125 lb127 lb129 lexBad lexNumber ndVal_lazy ndVal lb131 ndRest_lazy ndRest lb132 lexDigits_lazy lexDigits lb133 lb134 lb135 lexDigits_5 lexIdent idRes_lazy idRes lb137 idRestOf_lazy idRestOf lb138 lexIdentChars_lazy lexIdentChars lb139 lb140 lb141 lexIdentMore identToken_lazy identToken lb143 lb145 lb147 lb149 lexString lexStringChars_lazy lexStringChars lb151 lb152 lb153 lexStringMore lexChar_lazy lexChar lb155 lb156 lexCharClose_lazy lexCharClose lb157 lb158 lexBackslash_lazy lexBackslash lb159 lb160 lb161 lexMinus_lazy lexMinus lb163 lb164 lb165 lexLess_lazy lexLess lb167 lb168 lexLessNext_lazy lexLessNext lb169 lb171 lexSeq_lazy lexSeq lb173 lb174 lb175 lexGreater_lazy lexGreater lb177 lb178 lb179 lexEquals_lazy lexEquals lb181 lb182 lb183 lexBang_lazy lexBang lb185 lb186 lb187 lexSlash_lazy lexSlash lb189 lb190 lb191 psToks_lazy psToks lb193 psCounter_lazy psCounter lb194 psDefs_lazy psDefs lb195 psWithToks_lazy psWithToks lb196 psAddDef_lazy psAddDef lb197 resExpr_lazy resExpr lb198 resState_lazy resState lb199 rlExprs_lazy rlExprs lb200 rlState_lazy rlState lb201 freshLiftName freshLiftName_7 freshLiftName_6 isTRParen_lazy isTRParen lb202 lb203 lb204 lb205 lb206 lb207 lb208 lb209 lb210 lb211 lb212 lb213 lb214 lb215 lb216 isTComma_lazy isTComma lb217 lb218 lb219 lb220 lb221 lb222 lb223 lb224 lb225 lb226 lb227 lb228 lb229 lb230 lb231 isTArrow_lazy isTArrow lb232 lb233 lb234 lb235 lb236 lb237 lb238 lb239 lb240 lb241 lb242 lb243 lb244 lb245 lb246 isTIn_lazy isTIn lb247 lb248 lb249 lb250 lb251 lb252 lb253 lb254 lb255 lb256 lb257 lb258 lb259 lb260 lb261 isTEq_lazy isTEq lb262 lb263 lb264 lb265 lb266 lb267 lb268 lb269 lb270 lb271 lb272 lb273 lb274 lb275 lb276 isTBang_lazy isTBang lb277 lb278 lb279 lb280 lb281 lb282 lb283 lb284 lb285 lb286 lb287 lb288 lb289 lb290 lb291 isTLParen_lazy isTLParen lb292 lb293 lb294 lb295 lb296 lb297 lb298 lb299 lb300 lb301 lb302 lb303 lb304 lb305 lb306 peekTok_lazy peekTok lb307 lb308 peekIsRParen_lazy peekIsRParen lb309 lb310 peekIsComma_lazy peekIsComma lb311 lb312 dropTok_lazy dropTok lb313 lb314 canStartAtom_lazy canStartAtom lb315 lb316 canStartAtomTok_lazy canStartAtomTok lb317 lb318 lb319 lb320 lb321 lb322 lb323 lb324 lb325 lb326 lb327 lb328 lb329 lb330 lb331 combineApp_lazy combineApp lb332 lb333 lb334 lb335 lb336 lb337 lb338 combineApp_8 parseAtom_lazy parseAtom lb339 lb340 parseAtomTok_lazy parseAtomTok lb341 lb342 lb343 lb344 lb345 lb346 lb347 lb348 lb349 lb350 lb351 lb352 lb353 lb354 lb355 parseIdentAtom_lazy parseIdentAtom lb356 lb358 parseParenAtom expectRParen expectRParenTok_lazy expectRParenTok lb360 lb361 lb362 lb363 lb364 lb365 lb366 lb367 lb368 lb369 lb370 lb371 lb372 lb373 lb374 parseApp parseAppRest_lazy parseAppRest lb375 parseAppRestMore expectArrowSkip_lazy expectArrowSkip expectArrowSkipTok_lazy expectArrowSkipTok lb377 lb378 lb379 lb380 lb381 lb382 lb383 lb384 lb385 lb386 lb387 lb388 lb389 lb390 lb391 expectLParenSkip_lazy expectLParenSkip expectLParenSkipTok_lazy expectLParenSkipTok lb392 lb393 lb394 lb395 lb396 lb397 lb398 lb399 lb400 lb401 lb402 lb403 lb404 lb405 lb406 expectRParenSkip_lazy expectRParenSkip expectRParenSkipTok_lazy expectRParenSkipTok lb407 lb408 lb409 lb410 lb411 lb412 lb413 lb414 lb415 lb416 lb417 lb418 lb419 lb420 lb421 expectEqSkip_lazy expectEqSkip expectEqSkipTok_lazy expectEqSkipTok lb422 lb423 lb424 lb425 lb426 lb427 lb428 lb429 lb430 lb431 lb432 lb433 lb434 lb435 lb436 expectInSkip_lazy expectInSkip expectInSkipTok_lazy expectInSkipTok lb437 lb438 lb439 lb440 lb441 lb442 lb443 lb444 lb445 lb446 lb447 lb448 lb449 lb450 lb451 moMatched_lazy moMatched lb452 moOp_lazy moOp lb453 moRest_lazy moRest lb454 matchOp_lazy matchOp lb455 lb456 matchOpTok_lazy matchOpTok lb457 lb458 lb459 lb460 lb472 lb461 lb462 lb463 lb464 lb465 lb466 lb467 lb468 lb469 lb470 lb471 opsOrAnd opsOrAnd_9 opsCompare opsCompare_14 opsCompare_13 opsCompare_12 opsCompare_11 opsCompare_10 opsCons opsAddSub opsAddSub_16 opsAddSub_15 opsMulDiv opsMulDiv_18 opsMulDiv_17 opsPow chainLeftBin chainLeftBinRest chainLeftBinStep_lazy chainLeftBinStep lb474 chainLeftBinMore chainLeftBinMore_19 chainRightBin chainRightBinRest chainRightBinStep_lazy chainRightBinStep lb476 chainRightBinMore parseExpr0 parseCompareLevel parseConsLevel parseAddSubLevel parseMulDivLevel parsePowLevel ilNames_lazy ilNames lb478 ilRest_lazy ilRest lb479 parseIdentList_lazy parseIdentList lb480 lb481 parseIdentListTok_lazy parseIdentListTok lb482 lb483 lb484 lb485 lb486 lb487 lb488 lb489 lb490 lb491 lb492 lb493 lb494 lb495 lb496 parseIdentListMore parseIf parseCase peekIsLParenOrNoMatch_lazy peekIsLParenOrNoMatch lb497 lb498 peekIsLParenOrNoMatchTok_lazy peekIsLParenOrNoMatchTok lb499 lb500 lb501 lb502 lb503 lb504 lb505 lb506 lb507 lb508 lb509 lb510 lb511 lb512 lb513 parseBranches_lazy parseBranches lb514 parseBranchesMore parseBranch parseBranchTok_lazy parseBranchTok lb516 lb517 lb518 lb519 lb520 lb521 lb522 lb523 lb524 lb525 lb526 lb527 lb528 lb529 lb530 parseBranchMaybeNoMatch_lazy parseBranchMaybeNoMatch lb531 parseBranchParen parseBranchPat_lazy parseBranchPat lb533 lb534 lb535 lb536 lb537 lb538 lb539 lb540 lb541 lb542 lb543 lb544 lb545 lb546 lb547 parseBranchPatIdent_lazy parseBranchPatIdent lb548 parseBranchWild parseBranchCon psnNames_lazy psnNames lb550 psnToks_lazy psnToks lb551 prescanBindNamesAt prescanBindNamesTok_lazy prescanBindNamesTok lb552 prescanOneBind prescanOneBindName_lazy prescanOneBindName lb554 lb555 lb556 lb557 lb558 lb559 lb560 lb561 lb562 lb563 lb564 lb565 lb566 lb567 lb568 prescanOneBindNameGo skipOptionalBang_lazy skipOptionalBang lb569 skipExprToSep skipExprToSepTok_lazy skipExprToSepTok lb571 lb573 lb577 lb575 skipExprToSepTok_20 skipExprToSepTok_21 prescanContinue prescanContinueTok_lazy prescanContinueTok lb579 prescanContinueMore parseLet parseBindListReal parseBindListRealCont_lazy parseBindListRealCont lb581 parseBindListRealContMore parseOneBindReal parseOneBindBang_lazy parseOneBindBang lb583 parseOneBindName parseOneBindNameTok_lazy parseOneBindNameTok lb585 lb586 lb587 lb588 lb589 lb590 lb591 lb592 lb593 lb594 lb595 lb596 lb597 lb598 lb599 parseOneBindNameGo bindName_lazy bindName lb600 concatLists_lazy concatLists concatMap_lazy concatMap collectVars_lazy collectVars cvName_lazy cvName lb601 collectVarsEx_lazy collectVarsEx lb603 lb604 lb605 lb606 lb607 lb608 lb609 lam_cve_lazy lam_cve lam_cvb_lazy lam_cvb collectVarsLet_lazy collectVarsLet lam_cvbind_lazy lam_cvbind lb610 collectVarsBranch_lazy collectVarsBranch lb611 lb612 lb613 lam_mkParam parseLambda lam_mkVarExpr needsParens_lazy needsParens lb614 lb615 lb616 lb617 lb618 lb619 lb620 needsParensApp_lazy needsParensApp lb621 lb622 emitAtomArg_lazy emitAtomArg lb623 emitAtomArg_22 emitExpr_lazy emitExpr lb625 lb626 lb627 lb628 lb629 lb630 lb631 emitExpr_23 emitExpr_24 emitExpr_25 emitExpr_26 emitExpr_27 emitExpr_28 emitExpr_29 emitApp_lazy emitApp lb632 lb633 emitApp_30 emitArgs_lazy emitArgs lb634 lb635 emitArgsGo_lazy emitArgsGo lb636 lb637 emitArgsGo_31 emitECase emitECase_32 emitBranchList_lazy emitBranchList lb638 lb639 emitBranchListGo_lazy emitBranchListGo lb640 lb641 emitBranchListGo_33 emitBranch_lazy emitBranch lb642 lb643 lb644 emitBranch_34 emitBranch_35 emitBranch_36 emitConHead_lazy emitConHead lb645 lb646 emitConHead_37 emitNames_lazy emitNames lb647 lb648 emitNamesGo_lazy emitNamesGo lb649 lb650 emitNamesGo_38 emitBang_lazy emitBang lb651 emitELet emitELet_39 emitBinds_lazy emitBinds lb653 lb654 emitBindsGo_lazy emitBindsGo lb655 lb656 emitBindsGo_40 emitBind_lazy emitBind lb657 emitBind_41 emitParam_lazy emitParam lb658 emitParams_lazy emitParams lb659 lb660 emitParamsGo_lazy emitParamsGo lb661 lb662 emitParamsGo_42 emitFDef_lazy emitFDef lb663 emitFDef_43 emitFDef_44 splitLines_lazy splitLines splitLinesAcc_lazy splitLinesAcc lb664 lb665 splitLinesAccChar_lazy splitLinesAccChar lb666 isBlankOrIndented_lazy isBlankOrIndented lb668 lb669 lb670 ccLines_lazy ccLines lb672 ccRest_lazy ccRest lb673 takeContinuation_lazy takeContinuation lb674 lb675 takeContinuationLine_lazy takeContinuationLine lb676 takeContinuationMore joinLines_lazy joinLines lb678 lb679 joinLinesGo_lazy joinLinesGo lb680 lb681 groupIntoChunks_lazy groupIntoChunks lb682 lb683 groupChunksStart isAdtChunk_lazy isAdtChunk lb684 lb685 isAdtChunkC1_lazy isAdtChunkC1 lb686 isAdtChunkC2_lazy isAdtChunkC2 lb688 lb689 lb690 hpParams_lazy hpParams lb692 hpToks_lazy hpToks lb693 parseHeadParams parseHeadParamsTok_lazy parseHeadParamsTok lb694 parseHeadParamsBang_lazy parseHeadParamsBang lb696 parseHeadParamsName parseHeadParamsNameTok_lazy parseHeadParamsNameTok lb698 lb699 lb700 lb701 lb702 lb703 lb704 lb705 lb706 lb707 lb708 lb709 lb710 lb711 lb712 parseHeadParamsMore paramName_lazy paramName lb713 frFdef_lazy frFdef lb714 frState_lazy frState lb715 parseFuncChunk parseFuncChunkName_lazy parseFuncChunkName lb716 lb717 lb718 lb719 lb720 lb721 lb722 lb723 lb724 lb725 lb726 lb727 lb728 lb729 lb730 parseFuncChunkGo parseFuncChunkGo_45 prOutputs_lazy prOutputs lb731 prState_lazy prState lb732 processChunks_lazy processChunks lb733 lb734 processChunksOne_lazy processChunksOne lb735 processChunksAdt processChunksFunc joinParts_lazy joinParts lb737 lb738 joinPartsGo_lazy joinPartsGo lb739 lb740 joinPartsGo_46 preprocessLfp preprocessFile preprocessFile_47 start tokKind_lazy tokKind lb741 lb742 lb743 lb744 lb745 lb746 lb747 lb748 lb749 lb750 lb751 lb752 lb753 lb754 lb755 printKinds_lazy printKinds lb756 lb757 lift_case_0 lift_case_1  #
-            call 1170                                || start
+readStream lb1 readStream_1 writeStream_lazy writeStream lb3 lb4 str2list_lazy str2list strls_lazy strls lb5 strEqual_lazy strEqual lb7 strEqualAt_lazy strEqualAt lb9 lb11 list2str_lazy list2str fillStr_lazy fillStr lb13 lb14 strcat_lazy strcat toUpperChar_lazy toUpperChar lb15 code_lazy code decode_lazy decode strUpper_lazy strUpper substr_lazy substr itoa_lazy itoa lb18 lb17 itoa_2 length_lazy length lb19 lb20 map_lazy map lb21 lb22 filter_lazy filter lb23 lb24 lb25 foldl_lazy foldl lb27 lb28 foldr_lazy foldr lb29 lb30 append_lazy append lb31 lb32 take_lazy take lb33 lb34 lb35 take_3 drop_lazy drop lb37 lb38 lb39 drop_4 reverse_lazy reverse rev_lazy rev lb41 lb42 cat2_lazy cat2 cat3_lazy cat3 cat4_lazy cat4 cat5_lazy cat5 cat6_lazy cat6 cat7_lazy cat7 cat8_lazy cat8 cat9_lazy cat9 nameEq_lazy nameEq lb43 lb45 lb46 lb44 lb47 lb48 lb49 nameIn_lazy nameIn lb51 lb52 lb53 namesMinus_lazy namesMinus lam_notIn_lazy lam_notIn lb55 namesIntersectDistinct_lazy namesIntersectDistinct lam_inScope_lazy lam_inScope distinctNames_lazy distinctNames lb57 lb58 lb59 kw_lazy kw kwIf kwCase kwLet kwIn kwTrue kwFalse kwNomatch kwUnderscore isDigit_lazy isDigit lb61 isAlphaC_lazy isAlphaC lb65 lb67 lb63 isIdentStart_lazy isIdentStart lb69 isIdentCont_lazy isIdentCont lb71 isSpaceC_lazy isSpaceC lb73 isNewlineC_lazy isNewlineC lb75 tokenize_lazy tokenize lexSkip_lazy lexSkip lb77 lb78 lexSkipHere_lazy lexSkipHere lb81 lb79 lexSkipSlash_lazy lexSkipSlash lb83 lb84 lb85 dropLine_lazy dropLine lb87 lb88 lb89 lexToken_lazy lexToken lb91 lb92 lexTokenHere_lazy lexTokenHere lb93 lb95 lb97 lb99 lb101 lb103 lb105 lb107 lb109 lb111 lb113 lb115 lb117 lb119 lb121 lb123 lb125 lb127 lb129 lexBad lexNumber ndVal_lazy ndVal lb131 ndRest_lazy ndRest lb132 lexDigits_lazy lexDigits lb133 lb134 lb135 lexDigits_5 lexIdent idRes_lazy idRes lb137 idRestOf_lazy idRestOf lb138 lexIdentChars_lazy lexIdentChars lb139 lb140 lb141 lexIdentMore identToken_lazy identToken lb143 lb145 lb147 lb149 lexString lexStringChars_lazy lexStringChars lb151 lb152 lb153 lexStringMore lexChar_lazy lexChar lb155 lb156 lexCharClose_lazy lexCharClose lb157 lb158 lexBackslash_lazy lexBackslash lb159 lb160 lb161 lexMinus_lazy lexMinus lb163 lb164 lb165 lexLess_lazy lexLess lb167 lb168 lexLessNext_lazy lexLessNext lb169 lb171 lexSeq_lazy lexSeq lb173 lb174 lb175 lexGreater_lazy lexGreater lb177 lb178 lb179 lexEquals_lazy lexEquals lb181 lb182 lb183 lexBang_lazy lexBang lb185 lb186 lb187 lexSlash_lazy lexSlash lb189 lb190 lb191 psToks_lazy psToks lb193 psCounter_lazy psCounter lb194 psDefs_lazy psDefs lb195 psWithToks_lazy psWithToks lb196 psAddDef_lazy psAddDef lb197 resExpr_lazy resExpr lb198 resState_lazy resState lb199 rlExprs_lazy rlExprs lb200 rlState_lazy rlState lb201 freshLiftName freshLiftName_7 freshLiftName_6 isTRParen_lazy isTRParen lb202 lb203 lb204 lb205 lb206 lb207 lb208 lb209 lb210 lb211 lb212 lb213 lb214 lb215 lb216 isTComma_lazy isTComma lb217 lb218 lb219 lb220 lb221 lb222 lb223 lb224 lb225 lb226 lb227 lb228 lb229 lb230 lb231 isTArrow_lazy isTArrow lb232 lb233 lb234 lb235 lb236 lb237 lb238 lb239 lb240 lb241 lb242 lb243 lb244 lb245 lb246 isTIn_lazy isTIn lb247 lb248 lb249 lb250 lb251 lb252 lb253 lb254 lb255 lb256 lb257 lb258 lb259 lb260 lb261 isTEq_lazy isTEq lb262 lb263 lb264 lb265 lb266 lb267 lb268 lb269 lb270 lb271 lb272 lb273 lb274 lb275 lb276 isTBang_lazy isTBang lb277 lb278 lb279 lb280 lb281 lb282 lb283 lb284 lb285 lb286 lb287 lb288 lb289 lb290 lb291 isTLParen_lazy isTLParen lb292 lb293 lb294 lb295 lb296 lb297 lb298 lb299 lb300 lb301 lb302 lb303 lb304 lb305 lb306 peekTok_lazy peekTok lb307 lb308 peekIsRParen_lazy peekIsRParen lb309 lb310 peekIsComma_lazy peekIsComma lb311 lb312 dropTok_lazy dropTok lb313 lb314 canStartAtom_lazy canStartAtom lb315 lb316 canStartAtomTok_lazy canStartAtomTok lb317 lb318 lb319 lb320 lb321 lb322 lb323 lb324 lb325 lb326 lb327 lb328 lb329 lb330 lb331 combineApp_lazy combineApp lb332 lb333 lb334 lb335 lb336 lb337 lb338 combineApp_8 parseAtom_lazy parseAtom lb339 lb340 parseAtomTok_lazy parseAtomTok lb341 lb342 lb343 lb344 lb345 lb346 lb347 lb348 lb349 lb350 lb351 lb352 lb353 lb354 lb355 parseIdentAtom_lazy parseIdentAtom lb356 lb358 parseParenAtom expectRParen expectRParenTok_lazy expectRParenTok lb360 lb361 lb362 lb363 lb364 lb365 lb366 lb367 lb368 lb369 lb370 lb371 lb372 lb373 lb374 parseApp parseAppRest_lazy parseAppRest lb375 parseAppRestMore expectArrowSkip_lazy expectArrowSkip expectArrowSkipTok_lazy expectArrowSkipTok lb377 lb378 lb379 lb380 lb381 lb382 lb383 lb384 lb385 lb386 lb387 lb388 lb389 lb390 lb391 expectLParenSkip_lazy expectLParenSkip expectLParenSkipTok_lazy expectLParenSkipTok lb392 lb393 lb394 lb395 lb396 lb397 lb398 lb399 lb400 lb401 lb402 lb403 lb404 lb405 lb406 expectRParenSkip_lazy expectRParenSkip expectRParenSkipTok_lazy expectRParenSkipTok lb407 lb408 lb409 lb410 lb411 lb412 lb413 lb414 lb415 lb416 lb417 lb418 lb419 lb420 lb421 expectEqSkip_lazy expectEqSkip expectEqSkipTok_lazy expectEqSkipTok lb422 lb423 lb424 lb425 lb426 lb427 lb428 lb429 lb430 lb431 lb432 lb433 lb434 lb435 lb436 expectInSkip_lazy expectInSkip expectInSkipTok_lazy expectInSkipTok lb437 lb438 lb439 lb440 lb441 lb442 lb443 lb444 lb445 lb446 lb447 lb448 lb449 lb450 lb451 moMatched_lazy moMatched lb452 moOp_lazy moOp lb453 moRest_lazy moRest lb454 matchOp_lazy matchOp lb455 lb456 matchOpTok_lazy matchOpTok lb457 lb458 lb459 lb460 lb472 lb461 lb462 lb463 lb464 lb465 lb466 lb467 lb468 lb469 lb470 lb471 opsOrAnd opsOrAnd_9 opsCompare opsCompare_14 opsCompare_13 opsCompare_12 opsCompare_11 opsCompare_10 opsCons opsAddSub opsAddSub_16 opsAddSub_15 opsMulDiv opsMulDiv_18 opsMulDiv_17 opsPow chainLeftBin chainLeftBinRest chainLeftBinStep_lazy chainLeftBinStep lb474 chainLeftBinMore chainLeftBinMore_19 chainRightBin chainRightBinRest chainRightBinStep_lazy chainRightBinStep lb476 chainRightBinMore parseExpr0 parseCompareLevel parseConsLevel parseAddSubLevel parseMulDivLevel parsePowLevel ilNames_lazy ilNames lb478 ilRest_lazy ilRest lb479 parseIdentList_lazy parseIdentList lb480 lb481 parseIdentListTok_lazy parseIdentListTok lb482 lb483 lb484 lb485 lb486 lb487 lb488 lb489 lb490 lb491 lb492 lb493 lb494 lb495 lb496 parseIdentListMore parseIf parseCase peekIsLParenOrNoMatch_lazy peekIsLParenOrNoMatch lb497 lb498 peekIsLParenOrNoMatchTok_lazy peekIsLParenOrNoMatchTok lb499 lb500 lb501 lb502 lb503 lb504 lb505 lb506 lb507 lb508 lb509 lb510 lb511 lb512 lb513 parseBranches_lazy parseBranches lb514 parseBranchesMore parseBranch parseBranchTok_lazy parseBranchTok lb516 lb517 lb518 lb519 lb520 lb521 lb522 lb523 lb524 lb525 lb526 lb527 lb528 lb529 lb530 parseBranchMaybeNoMatch_lazy parseBranchMaybeNoMatch lb531 parseBranchParen parseBranchPat_lazy parseBranchPat lb533 lb534 lb535 lb536 lb537 lb538 lb539 lb540 lb541 lb542 lb543 lb544 lb545 lb546 lb547 parseBranchPatIdent_lazy parseBranchPatIdent lb548 parseBranchWild parseBranchCon psnNames_lazy psnNames lb550 psnToks_lazy psnToks lb551 prescanBindNamesAt prescanBindNamesTok_lazy prescanBindNamesTok lb552 prescanOneBind prescanOneBindName_lazy prescanOneBindName lb554 lb555 lb556 lb557 lb558 lb559 lb560 lb561 lb562 lb563 lb564 lb565 lb566 lb567 lb568 prescanOneBindNameGo skipOptionalBang_lazy skipOptionalBang lb569 skipExprToSep skipExprToSepTok_lazy skipExprToSepTok lb571 lb573 lb577 lb575 skipExprToSepTok_20 skipExprToSepTok_21 prescanContinue prescanContinueTok_lazy prescanContinueTok lb579 prescanContinueMore parseLet parseBindListReal parseBindListRealCont_lazy parseBindListRealCont lb581 parseBindListRealContMore parseOneBindReal parseOneBindBang_lazy parseOneBindBang lb583 parseOneBindName parseOneBindNameTok_lazy parseOneBindNameTok lb585 lb586 lb587 lb588 lb589 lb590 lb591 lb592 lb593 lb594 lb595 lb596 lb597 lb598 lb599 parseOneBindNameGo bindName_lazy bindName lb600 concatLists_lazy concatLists concatMap_lazy concatMap collectVars_lazy collectVars cvName_lazy cvName lb601 collectVarsEx_lazy collectVarsEx lb603 lb604 lb605 lb606 lb607 lb608 lb609 lam_cve_lazy lam_cve lam_cvb_lazy lam_cvb collectVarsLet_lazy collectVarsLet lam_cvbind_lazy lam_cvbind lb610 collectVarsBranch_lazy collectVarsBranch lb611 lb612 lb613 lam_mkParam parseLambda lam_mkVarExpr needsParens_lazy needsParens lb614 lb615 lb616 lb617 lb618 lb619 lb620 needsParensApp_lazy needsParensApp lb621 lb622 emitAtomArg_lazy emitAtomArg lb623 emitAtomArg_22 emitExpr_lazy emitExpr lb625 lb626 lb627 lb628 lb629 lb630 lb631 emitExpr_23 emitExpr_24 emitExpr_25 emitExpr_26 emitExpr_27 emitExpr_28 emitExpr_29 emitApp_lazy emitApp lb632 lb633 emitApp_30 emitArgs_lazy emitArgs lb634 lb635 emitArgsGo_lazy emitArgsGo lb636 lb637 emitArgsGo_31 emitECase emitECase_32 emitBranchList_lazy emitBranchList lb638 lb639 emitBranchListGo_lazy emitBranchListGo lb640 lb641 emitBranchListGo_33 emitBranch_lazy emitBranch lb642 lb643 lb644 emitBranch_34 emitBranch_35 emitBranch_36 emitConHead_lazy emitConHead lb645 lb646 emitConHead_37 emitNames_lazy emitNames lb647 lb648 emitNamesGo_lazy emitNamesGo lb649 lb650 emitNamesGo_38 emitBang_lazy emitBang lb651 emitELet emitELet_39 emitBinds_lazy emitBinds lb653 lb654 emitBindsGo_lazy emitBindsGo lb655 lb656 emitBindsGo_40 emitBind_lazy emitBind lb657 emitBind_41 emitParam_lazy emitParam lb658 emitParams_lazy emitParams lb659 lb660 emitParamsGo_lazy emitParamsGo lb661 lb662 emitParamsGo_42 emitFDef_lazy emitFDef lb663 emitFDef_43 emitFDef_44 splitLines_lazy splitLines splitLinesAcc_lazy splitLinesAcc lb664 lb665 splitLinesAccChar_lazy splitLinesAccChar lb666 isBlankOrIndented_lazy isBlankOrIndented lb668 lb669 lb670 ccLines_lazy ccLines lb672 ccRest_lazy ccRest lb673 takeContinuation_lazy takeContinuation lb674 lb675 takeContinuationLine_lazy takeContinuationLine lb676 takeContinuationMore joinLines_lazy joinLines lb678 lb679 joinLinesGo_lazy joinLinesGo lb680 lb681 groupIntoChunks_lazy groupIntoChunks lb682 lb683 groupChunksStart isAdtChunk_lazy isAdtChunk lb684 lb685 isAdtChunkC1_lazy isAdtChunkC1 lb686 isAdtChunkC2_lazy isAdtChunkC2 lb688 lb689 lb690 isCommentChunk_lazy isCommentChunk lb692 lb693 isCommentChunkC1_lazy isCommentChunkC1 lb694 isCommentChunkC2_lazy isCommentChunkC2 lb696 lb697 lb698 hpParams_lazy hpParams lb700 hpToks_lazy hpToks lb701 parseHeadParams parseHeadParamsTok_lazy parseHeadParamsTok lb702 parseHeadParamsBang_lazy parseHeadParamsBang lb704 parseHeadParamsName parseHeadParamsNameTok_lazy parseHeadParamsNameTok lb706 lb707 lb708 lb709 lb710 lb711 lb712 lb713 lb714 lb715 lb716 lb717 lb718 lb719 lb720 parseHeadParamsMore paramName_lazy paramName lb721 frFdef_lazy frFdef lb722 frState_lazy frState lb723 parseFuncChunk parseFuncChunkName_lazy parseFuncChunkName lb724 lb725 lb726 lb727 lb728 lb729 lb730 lb731 lb732 lb733 lb734 lb735 lb736 lb737 lb738 parseFuncChunkGo parseFuncChunkGo_45 prOutputs_lazy prOutputs lb739 prState_lazy prState lb740 processChunks_lazy processChunks lb741 lb742 processChunksOne_lazy processChunksOne lb743 processChunksAdt processChunksFunc joinParts_lazy joinParts lb745 lb746 joinPartsGo_lazy joinPartsGo lb747 lb748 joinPartsGo_46 preprocessLfp preprocessFile preprocessFile_47 start tokKind_lazy tokKind lb749 lb750 lb751 lb752 lb753 lb754 lb755 lb756 lb757 lb758 lb759 lb760 lb761 lb762 lb763 printKinds_lazy printKinds lb764 lb765 lift_case_0 lift_case_1  #
+            call 1182                                || start
             print 4
             stop
 0           updsp 1                                  || readStream
@@ -2356,11 +2356,11 @@ readStream lb1 readStream_1 writeStream_lazy writeStream lb3 lb4 str2list_lazy s
             store 0
 650         load 0                                   || matchOpTok
             jmpt 15 651 652 653 654 656 657 658 659 660 661 662 663 664 665 666 || lbs
-651         call 1192                                || lift_case_0 || lb457
+651         call 1204                                || lift_case_0 || lb457
             return 4
-652         call 1192                                || lift_case_0 || lb458
+652         call 1204                                || lift_case_0 || lb458
             return 4
-653         call 1192                                || lift_case_0 || lb459
+653         call 1204                                || lift_case_0 || lb459
             return 4
 654         load 3                                   || lb460
             eval
@@ -2378,27 +2378,27 @@ readStream lb1 readStream_1 writeStream_lazy writeStream lb3 lb4 str2list_lazy s
             push 0
             ccreatet 3 11 17 0
             return 4
-656         call 1192                                || lift_case_0 || lb461
+656         call 1204                                || lift_case_0 || lb461
             return 3
-657         call 1192                                || lift_case_0 || lb462
+657         call 1204                                || lift_case_0 || lb462
             return 3
-658         call 1192                                || lift_case_0 || lb463
+658         call 1204                                || lift_case_0 || lb463
             return 3
-659         call 1192                                || lift_case_0 || lb464
+659         call 1204                                || lift_case_0 || lb464
             return 3
-660         call 1192                                || lift_case_0 || lb465
+660         call 1204                                || lift_case_0 || lb465
             return 3
-661         call 1192                                || lift_case_0 || lb466
+661         call 1204                                || lift_case_0 || lb466
             return 3
-662         call 1192                                || lift_case_0 || lb467
+662         call 1204                                || lift_case_0 || lb467
             return 3
-663         call 1192                                || lift_case_0 || lb468
+663         call 1204                                || lift_case_0 || lb468
             return 3
-664         call 1192                                || lift_case_0 || lb469
+664         call 1204                                || lift_case_0 || lb469
             return 3
-665         call 1192                                || lift_case_0 || lb470
+665         call 1204                                || lift_case_0 || lb470
             return 3
-666         call 1192                                || lift_case_0 || lb471
+666         call 1204                                || lift_case_0 || lb471
             return 3
 667         pushfunc 0 668                           || opsOrAnd_9 || opsOrAnd
             create 1 3
@@ -2737,33 +2737,33 @@ readStream lb1 readStream_1 writeStream_lazy writeStream lb3 lb4 str2list_lazy s
             load 0
             tailcall 4 729                           || parseIdentListMore
 715         load 3                                   || lb483
-            tailcall 4 1193                          || lift_case_1
+            tailcall 4 1205                          || lift_case_1
 716         load 3                                   || lb484
-            tailcall 4 1193                          || lift_case_1
+            tailcall 4 1205                          || lift_case_1
 717         load 3                                   || lb485
-            tailcall 4 1193                          || lift_case_1
+            tailcall 4 1205                          || lift_case_1
 718         load 2                                   || lb486
-            tailcall 3 1193                          || lift_case_1
+            tailcall 3 1205                          || lift_case_1
 719         load 2                                   || lb487
-            tailcall 3 1193                          || lift_case_1
+            tailcall 3 1205                          || lift_case_1
 720         load 2                                   || lb488
-            tailcall 3 1193                          || lift_case_1
+            tailcall 3 1205                          || lift_case_1
 721         load 2                                   || lb489
-            tailcall 3 1193                          || lift_case_1
+            tailcall 3 1205                          || lift_case_1
 722         load 2                                   || lb490
-            tailcall 3 1193                          || lift_case_1
+            tailcall 3 1205                          || lift_case_1
 723         load 2                                   || lb491
-            tailcall 3 1193                          || lift_case_1
+            tailcall 3 1205                          || lift_case_1
 724         load 2                                   || lb492
-            tailcall 3 1193                          || lift_case_1
+            tailcall 3 1205                          || lift_case_1
 725         load 2                                   || lb493
-            tailcall 3 1193                          || lift_case_1
+            tailcall 3 1205                          || lift_case_1
 726         load 2                                   || lb494
-            tailcall 3 1193                          || lift_case_1
+            tailcall 3 1205                          || lift_case_1
 727         load 2                                   || lb495
-            tailcall 3 1193                          || lift_case_1
+            tailcall 3 1205                          || lift_case_1
 728         load 2                                   || lb496
-            tailcall 3 1193                          || lift_case_1
+            tailcall 3 1205                          || lift_case_1
 729         updsp 1                                  || parseIdentListMore
             load 2
             pushfunc 1 708                           || parseIdentList_lazy
@@ -4511,21 +4511,53 @@ readStream lb1 readStream_1 writeStream_lazy writeStream lb3 lb4 str2list_lazy s
             ifneq 1081                               || lb690
             return_const 3 1
 1081        return_const 3 0                         || lb690
-1082        load 0                                   || hpParams_lazy
+1082        load 0                                   || isCommentChunk_lazy
             eval
             store 0
-1083        load 0                                   || hpParams
-            jmpt 1 1084                              || lbs
-1084        load 0                                   || lb692
-            return 3
-1085        load 0                                   || hpToks_lazy
+1083        load 0                                   || isCommentChunk
+            jmpt 2 1084 1085                         || lbs
+1084        return_const 1 0                         || lb692
+1085        load 1                                   || lb693
+            load 0
+            tailcall 3 1087                          || isCommentChunkC1
+1086        load 0                                   || isCommentChunkC1_lazy
             eval
             store 0
-1086        load 0                                   || hpToks
-            jmpt 1 1087                              || lbs
-1087        load 1                                   || lb693
+1087        load 0                                   || isCommentChunkC1
+            push '/'
+            sub
+            ifneq 1088                               || lb694
+            load 1
+            eval
+            tailcall 2 1090                          || isCommentChunkC2
+1088        return_const 2 0                         || lb694
+1089        load 0                                   || isCommentChunkC2_lazy
+            eval
+            store 0
+1090        load 0                                   || isCommentChunkC2
+            jmpt 2 1091 1092                         || lbs
+1091        return_const 1 0                         || lb696
+1092        load 0                                   || lb697
+            push '/'
+            sub
+            ifneq 1093                               || lb698
+            return_const 3 1
+1093        return_const 3 0                         || lb698
+1094        load 0                                   || hpParams_lazy
+            eval
+            store 0
+1095        load 0                                   || hpParams
+            jmpt 1 1096                              || lbs
+1096        load 0                                   || lb700
             return 3
-1088        updsp 1                                  || parseHeadParams
+1097        load 0                                   || hpToks_lazy
+            eval
+            store 0
+1098        load 0                                   || hpToks
+            jmpt 1 1099                              || lbs
+1099        load 1                                   || lb701
+            return 3
+1100        updsp 1                                  || parseHeadParams
             load 1
             pushfunc 1 445                           || peekTok_lazy
             create 2 3
@@ -4533,36 +4565,36 @@ readStream lb1 readStream_1 writeStream_lazy writeStream lb3 lb4 str2list_lazy s
             load 1
             load 0
             eval
-            tailcall 2 1090                          || parseHeadParamsTok
-1089        load 0                                   || parseHeadParamsTok_lazy
+            tailcall 2 1102                          || parseHeadParamsTok
+1101        load 0                                   || parseHeadParamsTok_lazy
             eval
             store 0
-1090        load 0                                   || parseHeadParamsTok
+1102        load 0                                   || parseHeadParamsTok
             call 395                                 || isTEq
-            ifeq 1091                                || lb694
+            ifeq 1103                                || lb702
             load 1
             eval
             ccreatet 0 11 5 0
             ccreatet 2 11 21 0
             return 2
-1091        load 1                                   || lb694
+1103        load 1                                   || lb702
             load 0
-            tailcall 2 1093                          || parseHeadParamsBang
-1092        load 0                                   || parseHeadParamsBang_lazy
+            tailcall 2 1105                          || parseHeadParamsBang
+1104        load 0                                   || parseHeadParamsBang_lazy
             eval
             store 0
-1093        load 0                                   || parseHeadParamsBang
+1105        load 0                                   || parseHeadParamsBang
             call 412                                 || isTBang
-            ifeq 1094                                || lb696
+            ifeq 1106                                || lb704
             push 1
             load 1
             pushfunc 1 457                           || dropTok_lazy
             create 2 3
-            tailcall 2 1095                          || parseHeadParamsName
-1094        push 0                                   || lb696
+            tailcall 2 1107                          || parseHeadParamsName
+1106        push 0                                   || lb704
             load 1
-            tailcall 2 1095                          || parseHeadParamsName
-1095        updsp 1                                  || parseHeadParamsName
+            tailcall 2 1107                          || parseHeadParamsName
+1107        updsp 1                                  || parseHeadParamsName
             load 1
             pushfunc 1 445                           || peekTok_lazy
             create 2 3
@@ -4571,58 +4603,58 @@ readStream lb1 readStream_1 writeStream_lazy writeStream lb3 lb4 str2list_lazy s
             load 1
             load 0
             eval
-            tailcall 3 1097                          || parseHeadParamsNameTok
-1096        load 0                                   || parseHeadParamsNameTok_lazy
+            tailcall 3 1109                          || parseHeadParamsNameTok
+1108        load 0                                   || parseHeadParamsNameTok_lazy
             eval
             store 0
-1097        load 0                                   || parseHeadParamsNameTok
-            jmpt 15 1098 1099 1100 1101 1102 1103 1104 1105 1106 1107 1108 1109 1110 1111 1112 || lbs
-1098        load 2                                   || lb698
+1109        load 0                                   || parseHeadParamsNameTok
+            jmpt 15 1110 1111 1112 1113 1114 1115 1116 1117 1118 1119 1120 1121 1122 1123 1124 || lbs
+1110        load 2                                   || lb706
             load 3
             load 0
-            tailcall 4 1113                          || parseHeadParamsMore
-1099        debug 1                                  || lb699
+            tailcall 4 1125                          || parseHeadParamsMore
+1111        debug 1                                  || lb707
             return 3
-1100        debug 1                                  || lb700
+1112        debug 1                                  || lb708
             return 3
-1101        debug 1                                  || lb701
+1113        debug 1                                  || lb709
             return 3
-1102        debug 1                                  || lb702
+1114        debug 1                                  || lb710
             return 3
-1103        debug 1                                  || lb703
+1115        debug 1                                  || lb711
             return 3
-1104        debug 1                                  || lb704
+1116        debug 1                                  || lb712
             return 3
-1105        debug 1                                  || lb705
+1117        debug 1                                  || lb713
             return 3
-1106        debug 1                                  || lb706
+1118        debug 1                                  || lb714
             return 3
-1107        debug 1                                  || lb707
+1119        debug 1                                  || lb715
             return 3
-1108        debug 1                                  || lb708
+1120        debug 1                                  || lb716
             return 3
-1109        debug 1                                  || lb709
+1121        debug 1                                  || lb717
             return 3
-1110        debug 1                                  || lb710
+1122        debug 1                                  || lb718
             return 3
-1111        debug 1                                  || lb711
+1123        debug 1                                  || lb719
             return 3
-1112        debug 1                                  || lb712
+1124        debug 1                                  || lb720
             return 3
-1113        updsp 2                                  || parseHeadParamsMore
+1125        updsp 2                                  || parseHeadParamsMore
             load 4
             pushfunc 1 457                           || dropTok_lazy
             create 2 3
             dup
             store 0
-            pushfunc 1 1088                          || parseHeadParams
+            pushfunc 1 1100                          || parseHeadParams
             create 2 3
             dup
             store 1
             eval
-            call 1086                                || hpToks
+            call 1098                                || hpToks
             load 1
-            pushfunc 1 1082                          || hpParams_lazy
+            pushfunc 1 1094                          || hpParams_lazy
             create 2 3
             load 3
             eval
@@ -4632,28 +4664,28 @@ readStream lb1 readStream_1 writeStream_lazy writeStream lb3 lb4 str2list_lazy s
             ccreatet 2 11 5 1
             ccreatet 2 11 21 0
             return 5
-1114        load 0                                   || paramName_lazy
+1126        load 0                                   || paramName_lazy
             eval
             store 0
-1115        load 0                                   || paramName
-            jmpt 1 1116                              || lbs
-1116        load 0                                   || lb713
+1127        load 0                                   || paramName
+            jmpt 1 1128                              || lbs
+1128        load 0                                   || lb721
             return 3
-1117        load 0                                   || frFdef_lazy
+1129        load 0                                   || frFdef_lazy
             eval
             store 0
-1118        load 0                                   || frFdef
-            jmpt 1 1119                              || lbs
-1119        load 0                                   || lb714
+1130        load 0                                   || frFdef
+            jmpt 1 1131                              || lbs
+1131        load 0                                   || lb722
             return 3
-1120        load 0                                   || frState_lazy
+1132        load 0                                   || frState_lazy
             eval
             store 0
-1121        load 0                                   || frState
-            jmpt 1 1122                              || lbs
-1122        load 1                                   || lb715
+1133        load 0                                   || frState
+            jmpt 1 1134                              || lbs
+1134        load 1                                   || lb723
             return 3
-1123        updsp 2                                  || parseFuncChunk
+1135        updsp 2                                  || parseFuncChunk
             load 2
             pushfunc 1 160                           || tokenize_lazy
             create 2 3
@@ -4666,59 +4698,59 @@ readStream lb1 readStream_1 writeStream_lazy writeStream lb3 lb4 str2list_lazy s
             load 0
             load 1
             eval
-            tailcall 4 1125                          || parseFuncChunkName
-1124        load 0                                   || parseFuncChunkName_lazy
+            tailcall 4 1137                          || parseFuncChunkName
+1136        load 0                                   || parseFuncChunkName_lazy
             eval
             store 0
-1125        load 0                                   || parseFuncChunkName
-            jmpt 15 1126 1127 1128 1129 1130 1131 1132 1133 1134 1135 1136 1137 1138 1139 1140 || lbs
-1126        load 3                                   || lb716
+1137        load 0                                   || parseFuncChunkName
+            jmpt 15 1138 1139 1140 1141 1142 1143 1144 1145 1146 1147 1148 1149 1150 1151 1152 || lbs
+1138        load 3                                   || lb724
             load 2
             load 0
-            tailcall 4 1141                          || parseFuncChunkGo
-1127        debug 1                                  || lb717
+            tailcall 4 1153                          || parseFuncChunkGo
+1139        debug 1                                  || lb725
             return 3
-1128        debug 1                                  || lb718
+1140        debug 1                                  || lb726
             return 3
-1129        debug 1                                  || lb719
+1141        debug 1                                  || lb727
             return 3
-1130        debug 1                                  || lb720
+1142        debug 1                                  || lb728
             return 3
-1131        debug 1                                  || lb721
+1143        debug 1                                  || lb729
             return 3
-1132        debug 1                                  || lb722
+1144        debug 1                                  || lb730
             return 3
-1133        debug 1                                  || lb723
+1145        debug 1                                  || lb731
             return 3
-1134        debug 1                                  || lb724
+1146        debug 1                                  || lb732
             return 3
-1135        debug 1                                  || lb725
+1147        debug 1                                  || lb733
             return 3
-1136        debug 1                                  || lb726
+1148        debug 1                                  || lb734
             return 3
-1137        debug 1                                  || lb727
+1149        debug 1                                  || lb735
             return 3
-1138        debug 1                                  || lb728
+1150        debug 1                                  || lb736
             return 3
-1139        debug 1                                  || lb729
+1151        debug 1                                  || lb737
             return 3
-1140        debug 1                                  || lb730
+1152        debug 1                                  || lb738
             return 3
-1141        updsp 8                                  || parseFuncChunkGo
+1153        updsp 8                                  || parseFuncChunkGo
             load 9
             pushfunc 1 457                           || dropTok_lazy
             create 2 3
             dup
             store 0
-            pushfunc 1 1088                          || parseHeadParams
+            pushfunc 1 1100                          || parseHeadParams
             create 2 3
             dup
             store 1
-            pushfunc 1 1082                          || hpParams_lazy
+            pushfunc 1 1094                          || hpParams_lazy
             create 2 3
             store 2
             load 1
-            pushfunc 1 1085                          || hpToks_lazy
+            pushfunc 1 1097                          || hpToks_lazy
             create 2 3
             dup
             store 3
@@ -4726,14 +4758,14 @@ readStream lb1 readStream_1 writeStream_lazy writeStream lb3 lb4 str2list_lazy s
             create 2 3
             store 4
             load 2
-            pushfunc 1 1114                          || paramName_lazy
+            pushfunc 1 1126                          || paramName_lazy
             create 1 7
             pushfunc 2 47                            || map_lazy
             create 3 3
             store 5
             load 10
             load 4
-            pushfunc 2 1142                          || parseFuncChunkGo_45
+            pushfunc 2 1154                          || parseFuncChunkGo_45
             create 3 3
             store 6
             load 5
@@ -4754,7 +4786,7 @@ readStream lb1 readStream_1 writeStream_lazy writeStream lb3 lb4 str2list_lazy s
             ccreatet 3 11 16 0
             ccreatet 2 11 22 0
             return 11
-1142        load 1                                   || parseFuncChunkGo_45
+1154        load 1                                   || parseFuncChunkGo_45
             eval
             call 303                                 || psDefs
             load 1
@@ -4764,128 +4796,131 @@ readStream lb1 readStream_1 writeStream_lazy writeStream lb3 lb4 str2list_lazy s
             eval
             ccreatet 3 11 13 0
             return 2
-1143        load 0                                   || prOutputs_lazy
+1155        load 0                                   || prOutputs_lazy
             eval
             store 0
-1144        load 0                                   || prOutputs
-            jmpt 1 1145                              || lbs
-1145        load 0                                   || lb731
+1156        load 0                                   || prOutputs
+            jmpt 1 1157                              || lbs
+1157        load 0                                   || lb739
             return 3
-1146        load 0                                   || prState_lazy
+1158        load 0                                   || prState_lazy
             eval
             store 0
-1147        load 0                                   || prState
-            jmpt 1 1148                              || lbs
-1148        load 1                                   || lb732
+1159        load 0                                   || prState
+            jmpt 1 1160                              || lbs
+1160        load 1                                   || lb740
             return 3
-1149        load 0                                   || processChunks_lazy
+1161        load 0                                   || processChunks_lazy
             eval
             store 0
-1150        load 0                                   || processChunks
-            jmpt 2 1151 1152                         || lbs
-1151        load 1                                   || lb733
+1162        load 0                                   || processChunks
+            jmpt 2 1163 1164                         || lbs
+1163        load 1                                   || lb741
             eval
             ccreatet 0 11 5 0
             ccreatet 2 11 23 0
             return 2
-1152        load 3                                   || lb734
+1164        load 3                                   || lb742
             load 1
             load 0
-            tailcall 4 1154                          || processChunksOne
-1153        load 0                                   || processChunksOne_lazy
+            tailcall 4 1166                          || processChunksOne
+1165        load 0                                   || processChunksOne_lazy
             eval
             store 0
-1154        load 0                                   || processChunksOne
+1166        load 0                                   || processChunksOne
             call 1071                                || isAdtChunk
-            ifeq 1155                                || lb735
+            ifneq 1167                               || lb743
+            load 0
+            call 1083                                || isCommentChunk
+            ifneq 1167                               || lb743
             load 2
             load 1
             load 0
-            tailcall 3 1156                          || processChunksAdt
-1155        load 2                                   || lb735
+            tailcall 3 1169                          || processChunksFunc
+1167        load 2                                   || lb743
             load 1
             load 0
-            tailcall 3 1157                          || processChunksFunc
-1156        updsp 1                                  || processChunksAdt
+            tailcall 3 1168                          || processChunksAdt
+1168        updsp 1                                  || processChunksAdt
             load 3
             load 2
-            pushfunc 2 1149                          || processChunks_lazy
+            pushfunc 2 1161                          || processChunks_lazy
             create 3 3
             dup
             store 0
             eval
-            call 1147                                || prState
+            call 1159                                || prState
             load 0
-            pushfunc 1 1143                          || prOutputs_lazy
+            pushfunc 1 1155                          || prOutputs_lazy
             create 2 3
             load 1
             eval
             ccreatet 2 11 5 1
             ccreatet 2 11 23 0
             return 4
-1157        updsp 3                                  || processChunksFunc
+1169        updsp 3                                  || processChunksFunc
             load 5
             load 3
-            pushfunc 2 1123                          || parseFuncChunk
+            pushfunc 2 1135                          || parseFuncChunk
             create 3 3
             dup
             store 0
-            pushfunc 1 1117                          || frFdef_lazy
+            pushfunc 1 1129                          || frFdef_lazy
             create 2 3
             pushfunc 1 1024                          || emitFDef_lazy
             create 2 3
             store 1
             load 0
-            pushfunc 1 1120                          || frState_lazy
+            pushfunc 1 1132                          || frState_lazy
             create 2 3
             load 4
-            pushfunc 2 1149                          || processChunks_lazy
+            pushfunc 2 1161                          || processChunks_lazy
             create 3 3
             dup
             store 2
             eval
-            call 1147                                || prState
+            call 1159                                || prState
             load 2
-            pushfunc 1 1143                          || prOutputs_lazy
+            pushfunc 1 1155                          || prOutputs_lazy
             create 2 3
             load 1
             eval
             ccreatet 2 11 5 1
             ccreatet 2 11 23 0
             return 6
-1158        load 0                                   || joinParts_lazy
+1170        load 0                                   || joinParts_lazy
             eval
             store 0
-1159        load 0                                   || joinParts
-            jmpt 2 1160 1161                         || lbs
-1160        ccreatet 0 11 5 0                        || lb737
+1171        load 0                                   || joinParts
+            jmpt 2 1172 1173                         || lbs
+1172        ccreatet 0 11 5 0                        || lb745
             return 1
-1161        load 1                                   || lb738
+1173        load 1                                   || lb746
             eval
             load 0
-            tailcall 3 1163                          || joinPartsGo
-1162        load 1                                   || joinPartsGo_lazy
+            tailcall 3 1175                          || joinPartsGo
+1174        load 1                                   || joinPartsGo_lazy
             eval
             store 1
             load 0
             eval
             store 0
-1163        load 1                                   || joinPartsGo
-            jmpt 2 1164 1165                         || lbs
-1164        load 0                                   || lb739
+1175        load 1                                   || joinPartsGo
+            jmpt 2 1176 1177                         || lbs
+1176        load 0                                   || lb747
             return 2
-1165        load 3                                   || lb740
-            pushfunc 1 1159                          || joinParts
+1177        load 3                                   || lb748
+            pushfunc 1 1171                          || joinParts
             create 2 3
-            pushfunc 0 1166                          || joinPartsGo_46
+            pushfunc 0 1178                          || joinPartsGo_46
             create 1 3
             pushfunc 1 130                           || kw_lazy
             create 2 3
             load 2
             tailcall 4 89                            || cat3
-1166        push "\n\n"                              || joinPartsGo_46
+1178        push "\n\n"                              || joinPartsGo_46
             return 0
-1167        updsp 6                                  || preprocessLfp
+1179        updsp 6                                  || preprocessLfp
             load 6
             pushfunc 1 1029                          || splitLines_lazy
             create 2 3
@@ -4899,11 +4934,11 @@ readStream lb1 readStream_1 writeStream_lazy writeStream lb3 lb4 str2list_lazy s
             dup
             store 1
             load 0
-            pushfunc 2 1149                          || processChunks_lazy
+            pushfunc 2 1161                          || processChunks_lazy
             create 3 3
             dup
             store 2
-            pushfunc 1 1146                          || prState_lazy
+            pushfunc 1 1158                          || prState_lazy
             create 2 3
             pushfunc 1 302                           || psDefs_lazy
             create 2 3
@@ -4916,37 +4951,37 @@ readStream lb1 readStream_1 writeStream_lazy writeStream lb3 lb4 str2list_lazy s
             dup
             store 4
             load 2
-            pushfunc 1 1143                          || prOutputs_lazy
+            pushfunc 1 1155                          || prOutputs_lazy
             create 2 3
             pushfunc 2 64                            || append_lazy
             create 3 3
             dup
             store 5
             eval
-            tailcall 7 1159                          || joinParts
-1168        load 0                                   || preprocessFile
-            pushfunc 1 1169                          || preprocessFile_47
+            tailcall 7 1171                          || joinParts
+1180        load 0                                   || preprocessFile
+            pushfunc 1 1181                          || preprocessFile_47
             create 2 3
             pushfunc 1 7                             || str2list_lazy
             create 2 3
-            call 1167                                || preprocessLfp
+            call 1179                                || preprocessLfp
             call 20                                  || list2str
             load 1
             eval
             syscall 1
             return 2
-1169        load 0                                   || preprocessFile_47
+1181        load 0                                   || preprocessFile_47
             eval
             syscall 0
             return 1
-1170        updsp 2                                  || start
+1182        updsp 2                                  || start
             syscall 2
             store 0
             syscall 2
             dup
             store 1
             load 0
-            call 1168                                || preprocessFile
+            call 1180                                || preprocessFile
             push "lamlift: wrote "
             syscall 3
             load 1
@@ -4955,50 +4990,50 @@ readStream lb1 readStream_1 writeStream_lazy writeStream lb3 lb4 str2list_lazy s
             push 1
             syscall 7
             return 2
-1171        load 0                                   || tokKind_lazy
+1183        load 0                                   || tokKind_lazy
             eval
             store 0
-1172        load 0                                   || tokKind
-            jmpt 15 1173 1174 1175 1176 1177 1178 1179 1180 1181 1182 1183 1184 1185 1186 1187 || lbs
-1173        return_const 2 1                         || lb741
-1174        return_const 2 2                         || lb742
-1175        return_const 2 3                         || lb743
-1176        return_const 2 4                         || lb744
-1177        return_const 1 5                         || lb745
-1178        return_const 1 6                         || lb746
-1179        return_const 1 7                         || lb747
-1180        return_const 1 8                         || lb748
-1181        return_const 1 9                         || lb749
-1182        return_const 1 10                        || lb750
-1183        return_const 1 11                        || lb751
-1184        return_const 1 12                        || lb752
-1185        return_const 1 13                        || lb753
-1186        return_const 1 14                        || lb754
-1187        return_const 1 15                        || lb755
-1188        load 0                                   || printKinds_lazy
+1184        load 0                                   || tokKind
+            jmpt 15 1185 1186 1187 1188 1189 1190 1191 1192 1193 1194 1195 1196 1197 1198 1199 || lbs
+1185        return_const 2 1                         || lb749
+1186        return_const 2 2                         || lb750
+1187        return_const 2 3                         || lb751
+1188        return_const 2 4                         || lb752
+1189        return_const 1 5                         || lb753
+1190        return_const 1 6                         || lb754
+1191        return_const 1 7                         || lb755
+1192        return_const 1 8                         || lb756
+1193        return_const 1 9                         || lb757
+1194        return_const 1 10                        || lb758
+1195        return_const 1 11                        || lb759
+1196        return_const 1 12                        || lb760
+1197        return_const 1 13                        || lb761
+1198        return_const 1 14                        || lb762
+1199        return_const 1 15                        || lb763
+1200        load 0                                   || printKinds_lazy
             eval
             store 0
-1189        load 0                                   || printKinds
-            jmpt 2 1190 1191                         || lbs
-1190        push 10                                  || lb756
+1201        load 0                                   || printKinds
+            jmpt 2 1202 1203                         || lbs
+1202        push 10                                  || lb764
             push 1
             syscall 7
             return 1
-1191        load 0                                   || lb757
-            call 1172                                || tokKind
+1203        load 0                                   || lb765
+            call 1184                                || tokKind
             print 0
             push " "
             syscall 3
             load 1
             eval
-            call 1189                                || printKinds
+            call 1201                                || printKinds
             return 3
-1192        ccreatet 0 11 5 0                        || lift_case_0
+1204        ccreatet 0 11 5 0                        || lift_case_0
             ccreatet 0 11 5 0
             push 0
             ccreatet 3 11 17 0
             return 0
-1193        load 0                                   || lift_case_1
+1205        load 0                                   || lift_case_1
             eval
             ccreatet 0 11 5 0
             ccreatet 2 11 18 0
@@ -5067,7 +5102,7 @@ type 22 FuncResult 1
   constr 0 FuncResult 2
 type 23 ProcessResult 1
   constr 0 ProcessResult 2
-functions 477
+functions 483
   func 0 readStream 1 00
   func 4 writeStream 2 010
   func 3 writeStream 2 010
@@ -5501,48 +5536,54 @@ functions 477
   func 1074 isAdtChunkC1 2 100
   func 1078 isAdtChunkC2 1 10
   func 1077 isAdtChunkC2 1 10
-  func 1083 hpParams 1 10
-  func 1082 hpParams 1 10
-  func 1086 hpToks 1 10
-  func 1085 hpToks 1 10
-  func 1088 parseHeadParams 1 00
-  func 1090 parseHeadParamsTok 2 100
-  func 1089 parseHeadParamsTok 2 100
-  func 1093 parseHeadParamsBang 2 100
-  func 1092 parseHeadParamsBang 2 100
-  func 1095 parseHeadParamsName 2 000
-  func 1097 parseHeadParamsNameTok 3 1000
-  func 1096 parseHeadParamsNameTok 3 1000
-  func 1113 parseHeadParamsMore 3 0000
-  func 1115 paramName 1 10
-  func 1114 paramName 1 10
-  func 1118 frFdef 1 10
-  func 1117 frFdef 1 10
-  func 1121 frState 1 10
-  func 1120 frState 1 10
-  func 1123 parseFuncChunk 2 000
-  func 1125 parseFuncChunkName 3 1000
-  func 1124 parseFuncChunkName 3 1000
-  func 1141 parseFuncChunkGo 3 0000
-  func 1144 prOutputs 1 10
-  func 1143 prOutputs 1 10
-  func 1147 prState 1 10
-  func 1146 prState 1 10
-  func 1150 processChunks 2 100
-  func 1149 processChunks 2 100
-  func 1154 processChunksOne 3 1000
-  func 1153 processChunksOne 3 1000
-  func 1156 processChunksAdt 3 0000
-  func 1157 processChunksFunc 3 0000
-  func 1159 joinParts 1 10
-  func 1158 joinParts 1 10
-  func 1163 joinPartsGo 2 110
-  func 1162 joinPartsGo 2 110
-  func 1167 preprocessLfp 1 00
-  func 1168 preprocessFile 2 000
-  func 1170 start 0 0
-  func 1172 tokKind 1 10
-  func 1171 tokKind 1 10
-  func 1189 printKinds 1 10
-  func 1188 printKinds 1 10
+  func 1083 isCommentChunk 1 10
+  func 1082 isCommentChunk 1 10
+  func 1087 isCommentChunkC1 2 100
+  func 1086 isCommentChunkC1 2 100
+  func 1090 isCommentChunkC2 1 10
+  func 1089 isCommentChunkC2 1 10
+  func 1095 hpParams 1 10
+  func 1094 hpParams 1 10
+  func 1098 hpToks 1 10
+  func 1097 hpToks 1 10
+  func 1100 parseHeadParams 1 00
+  func 1102 parseHeadParamsTok 2 100
+  func 1101 parseHeadParamsTok 2 100
+  func 1105 parseHeadParamsBang 2 100
+  func 1104 parseHeadParamsBang 2 100
+  func 1107 parseHeadParamsName 2 000
+  func 1109 parseHeadParamsNameTok 3 1000
+  func 1108 parseHeadParamsNameTok 3 1000
+  func 1125 parseHeadParamsMore 3 0000
+  func 1127 paramName 1 10
+  func 1126 paramName 1 10
+  func 1130 frFdef 1 10
+  func 1129 frFdef 1 10
+  func 1133 frState 1 10
+  func 1132 frState 1 10
+  func 1135 parseFuncChunk 2 000
+  func 1137 parseFuncChunkName 3 1000
+  func 1136 parseFuncChunkName 3 1000
+  func 1153 parseFuncChunkGo 3 0000
+  func 1156 prOutputs 1 10
+  func 1155 prOutputs 1 10
+  func 1159 prState 1 10
+  func 1158 prState 1 10
+  func 1162 processChunks 2 100
+  func 1161 processChunks 2 100
+  func 1166 processChunksOne 3 1000
+  func 1165 processChunksOne 3 1000
+  func 1168 processChunksAdt 3 0000
+  func 1169 processChunksFunc 3 0000
+  func 1171 joinParts 1 10
+  func 1170 joinParts 1 10
+  func 1175 joinPartsGo 2 110
+  func 1174 joinPartsGo 2 110
+  func 1179 preprocessLfp 1 00
+  func 1180 preprocessFile 2 000
+  func 1182 start 0 0
+  func 1184 tokKind 1 10
+  func 1183 tokKind 1 10
+  func 1201 printKinds 1 10
+  func 1200 printKinds 1 10
 .endmetadata
