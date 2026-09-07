@@ -1,0 +1,32 @@
+::List = Nil | Cons !x !xs
+
+sq x = x * x
+
+t1 = let a = sq 5, b = a + 1 in a + b
+
+t2 = let f = \x -> x * x in f 6
+
+t3 =
+  let go = \n -> if (n == 0) (0) (1 + go (n - 1))
+  in go 5
+
+classify l = case l
+  (Nil -> 0)
+  (Cons x xs -> (\y -> x + y) 100)
+
+pickdef d = if (d == 0) (999) (d * d)
+
+nomatchtest l = case l
+  (Cons x xs -> 111)
+  nomatch
+
+conslist = Cons 2 (Cons 3 Nil)
+firstOf l = case l (Cons x xs -> x) (Nil -> 0)
+
+start = print t1 <#> printString " " <#>
+        print t2 <#> printString " " <#>
+        print t3 <#> printString " " <#>
+        print (classify (Cons 1 Nil)) <#> printString " " <#>
+        print (pickdef 4) <#> printString " " <#>
+        print (nomatchtest (Cons 9 Nil)) <#> printString " " <#>
+        print (firstOf conslist) <#> writeChar 1 10

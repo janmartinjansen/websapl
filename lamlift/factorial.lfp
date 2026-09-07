@@ -1,0 +1,3 @@
+fac n = if (n == 0) (1) (n * fac (n - 1))
+
+start = print (fac 5) <#> writeChar 1 10

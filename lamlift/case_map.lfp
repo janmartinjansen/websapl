@@ -1,0 +1,13 @@
+::List = Nil | Cons !x !xs
+
+sumList l = case l
+  (Nil -> 0)
+  (Cons x xs -> x + sumList xs)
+
+mapL f l = case l
+  (Nil -> Nil)
+  (Cons x xs -> Cons (f x) (mapL f xs))
+
+myList = Cons 1 (Cons 2 (Cons 3 Nil))
+
+start = print (sumList (mapL (\x -> x * 2) myList)) <#> writeChar 1 10

@@ -1,0 +1,3 @@
+mk x = \x -> x + x
+
+start = print ((mk 10) 5) <#> writeChar 1 10

@@ -1,0 +1,1 @@
+start = print ((\c -> c c) (\x -> x)) <#> writeChar 1 10

@@ -12,6 +12,7 @@ let stdlibContent = "";
 let saplcompBytecode = null;
 let retagcompBytecode = null;
 let driverBytecode = null;
+let lamliftBytecode = null;
 // #import dependencies driver.jmvm's own expandImports (preprocess/
 // importexpand.cfp) needs on disk to preprocess the bundled Sapl+ examples
 // (websapl/benchmarks_saplplus/, websapl/parser_combinators/):
@@ -152,6 +153,18 @@ async function initEngine(data = {}) {
       if (res.ok) {
         const buf = await res.arrayBuffer();
         driverBytecode = new Uint8Array(buf);
+      }
+    } catch (_) {}
+  }
+
+  if (data.lamliftBase64) {
+    lamliftBytecode = base64ToUint8Array(data.lamliftBase64);
+  } else {
+    try {
+      const res = await fetch("./lamlift.jmvm?v=" + Date.now());
+      if (res.ok) {
+        const buf = await res.arrayBuffer();
+        lamliftBytecode = new Uint8Array(buf);
       }
     } catch (_) {}
   }
@@ -494,6 +507,78 @@ async function preprocessSpp(source, srcPath) {
 }
 
 /**
+ * Preprocess a .lfp source (Sapl + kale, onbeperkte lambda's) into plain
+ * Sapl (.cfp) text, using lamlift/lamlift.jmvm -- same self-hosted-Sapl-
+ * program pattern as preprocessSpp above, just a different bytecode file.
+ * Unlike driver.jmvm, lamlift.cfp's own preprocessFile does no runtime
+ * #import expansion on its input (its own #import "lib/stdlib.cfp" was
+ * already resolved at COMPILE time, when lamlift.cfp was built into
+ * lamlift.jmvm) -- so no dependency-mounting step is needed here, just the
+ * input file itself.
+ */
+async function preprocessLfp(source, srcPath) {
+  if (!isInitialized) throw new Error("JMVM engine is not initialized.");
+  if (!lamliftBytecode) throw new Error(".lfp preprocessor (lamlift.jmvm) kon niet geladen worden.");
+
+  const startTime = performance.now();
+  const baseName = srcPath.split("/").pop().replace(/\.lfp$/, "");
+  const outPath = `/tmp/${baseName}.cfp`;
+
+  let compilerOutput = [];
+  let stdinBuffer = `/tmp/in.lfp\n${outPath}\n`.split("");
+  let stdinIndex = 0;
+
+  const instance = await createJMVMModule({
+    noInitialRun: true,
+    locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm" : (prefix || "") + p),
+    stdin: () => {
+      if (stdinIndex < stdinBuffer.length) {
+        return stdinBuffer[stdinIndex++].charCodeAt(0);
+      }
+      return null;
+    },
+    stdout: (charCode) => {
+      compilerOutput.push(String.fromCharCode(charCode));
+    },
+    stderr: (charCode) => {
+      compilerOutput.push(String.fromCharCode(charCode));
+    }
+  });
+
+  instance.FS.writeFile("/lamlift.jmvm", lamliftBytecode);
+  instance.FS.writeFile("/tmp/in.lfp", source);
+
+  try {
+    instance.callMain(["/lamlift.jmvm"]);
+  } catch (e) {
+    // normal VM exit throws in Emscripten
+  }
+
+  const durationMs = Math.round(performance.now() - startTime);
+  const outExists = instance.FS.analyzePath(outPath).exists;
+  let content = "";
+
+  if (outExists) {
+    content = instance.FS.readFile(outPath, { encoding: "utf8" });
+    jmvmModule.FS.writeFile(outPath, content);
+  }
+
+  return {
+    success: outExists,
+    files: outExists ? [{
+      stage: "cfp",
+      name: `${baseName}.cfp`,
+      path: outPath,
+      content: content,
+      size: content.length
+    }] : [],
+    durationMs: durationMs,
+    stdout: compilerOutput.join(""),
+    stderr: outExists ? "" : "Lambda-lifting (.lfp -> .cfp) mislukt -- zie uitvoer hierboven."
+  };
+}
+
+/**
  * Execute a compiled .jmvm file on JMVM WASM
  */
 async function executeJmvm(contentOrPath, isPath = false, customStdin = "", runId = null) {
@@ -649,7 +734,9 @@ self.onmessage = async function (e) {
 
     case "PREPROCESS":
       try {
-        const result = await preprocessSpp(msg.source, msg.path);
+        const result = msg.kind === "lfp"
+          ? await preprocessLfp(msg.source, msg.path)
+          : await preprocessSpp(msg.source, msg.path);
         postMessage({
           type: "COMPILE_COMPLETE",
           id: msg.id,

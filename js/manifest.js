@@ -361,6 +361,406 @@ window.WEBSAPL_TREE = [
     "_expanded": false
   },
   {
+    "name": "funcprog",
+    "path": "funcprog",
+    "type": "directory",
+    "children": [
+      {
+        "name": "vitepress",
+        "path": "funcprog/vitepress",
+        "type": "directory",
+        "children": [
+          {
+            "name": "assets",
+            "path": "funcprog/vitepress/assets",
+            "type": "directory",
+            "children": [
+              {
+                "name": "chunks",
+                "path": "funcprog/vitepress/assets/chunks",
+                "type": "directory",
+                "children": [
+                  {
+                    "name": "framework.6oV4R8Up.js",
+                    "path": "funcprog/vitepress/assets/chunks/framework.6oV4R8Up.js",
+                    "type": "file",
+                    "ext": ".js",
+                    "size": 107202,
+                    "isBinary": false
+                  },
+                  {
+                    "name": "theme.CF62wCXe.js",
+                    "path": "funcprog/vitepress/assets/chunks/theme.CF62wCXe.js",
+                    "type": "file",
+                    "ext": ".js",
+                    "size": 94134,
+                    "isBinary": false
+                  }
+                ],
+                "_expanded": false
+              },
+              {
+                "name": "app.DKo-Wkwc.js",
+                "path": "funcprog/vitepress/assets/app.DKo-Wkwc.js",
+                "type": "file",
+                "ext": ".js",
+                "size": 1352,
+                "isBinary": false
+              },
+              {
+                "name": "guide_01_higher_order_functions.md.Dr0he3pg.js",
+                "path": "funcprog/vitepress/assets/guide_01_higher_order_functions.md.Dr0he3pg.js",
+                "type": "file",
+                "ext": ".js",
+                "size": 10794,
+                "isBinary": false
+              },
+              {
+                "name": "guide_01_higher_order_functions.md.Dr0he3pg.lean.js",
+                "path": "funcprog/vitepress/assets/guide_01_higher_order_functions.md.Dr0he3pg.lean.js",
+                "type": "file",
+                "ext": ".js",
+                "size": 2371,
+                "isBinary": false
+              },
+              {
+                "name": "guide_01_infinite_primes.md.BS9LwdTj.js",
+                "path": "funcprog/vitepress/assets/guide_01_infinite_primes.md.BS9LwdTj.js",
+                "type": "file",
+                "ext": ".js",
+                "size": 3488,
+                "isBinary": false
+              },
+              {
+                "name": "guide_01_infinite_primes.md.BS9LwdTj.lean.js",
+                "path": "funcprog/vitepress/assets/guide_01_infinite_primes.md.BS9LwdTj.lean.js",
+                "type": "file",
+                "ext": ".js",
+                "size": 3488,
+                "isBinary": false
+              },
+              {
+                "name": "guide_01_intro.md.CkPrXIIO.js",
+                "path": "funcprog/vitepress/assets/guide_01_intro.md.CkPrXIIO.js",
+                "type": "file",
+                "ext": ".js",
+                "size": 1401,
+                "isBinary": false
+              },
+              {
+                "name": "guide_01_intro.md.CkPrXIIO.lean.js",
+                "path": "funcprog/vitepress/assets/guide_01_intro.md.CkPrXIIO.lean.js",
+                "type": "file",
+                "ext": ".js",
+                "size": 1401,
+                "isBinary": false
+              },
+              {
+                "name": "guide_01_introduction.md.Dv9tznS0.js",
+                "path": "funcprog/vitepress/assets/guide_01_introduction.md.Dv9tznS0.js",
+                "type": "file",
+                "ext": ".js",
+                "size": 21171,
+                "isBinary": false
+              },
+              {
+                "name": "guide_01_introduction.md.Dv9tznS0.lean.js",
+                "path": "funcprog/vitepress/assets/guide_01_introduction.md.Dv9tznS0.lean.js",
+                "type": "file",
+                "ext": ".js",
+                "size": 3210,
+                "isBinary": false
+              },
+              {
+                "name": "guide_01_tie_the_knot.md.D_RltMba.js",
+                "path": "funcprog/vitepress/assets/guide_01_tie_the_knot.md.D_RltMba.js",
+                "type": "file",
+                "ext": ".js",
+                "size": 1207,
+                "isBinary": false
+              },
+              {
+                "name": "guide_01_tie_the_knot.md.D_RltMba.lean.js",
+                "path": "funcprog/vitepress/assets/guide_01_tie_the_knot.md.D_RltMba.lean.js",
+                "type": "file",
+                "ext": ".js",
+                "size": 1207,
+                "isBinary": false
+              },
+              {
+                "name": "guide_02_strict_vs_lazy.md.i2XDoZw0.js",
+                "path": "funcprog/vitepress/assets/guide_02_strict_vs_lazy.md.i2XDoZw0.js",
+                "type": "file",
+                "ext": ".js",
+                "size": 2064,
+                "isBinary": false
+              },
+              {
+                "name": "guide_02_strict_vs_lazy.md.i2XDoZw0.lean.js",
+                "path": "funcprog/vitepress/assets/guide_02_strict_vs_lazy.md.i2XDoZw0.lean.js",
+                "type": "file",
+                "ext": ".js",
+                "size": 1056,
+                "isBinary": false
+              },
+              {
+                "name": "index.md.BHDFB2Ua.js",
+                "path": "funcprog/vitepress/assets/index.md.BHDFB2Ua.js",
+                "type": "file",
+                "ext": ".js",
+                "size": 1147,
+                "isBinary": false
+              },
+              {
+                "name": "index.md.BHDFB2Ua.lean.js",
+                "path": "funcprog/vitepress/assets/index.md.BHDFB2Ua.lean.js",
+                "type": "file",
+                "ext": ".js",
+                "size": 1147,
+                "isBinary": false
+              },
+              {
+                "name": "inter-italic-cyrillic-ext.r48I6akx.woff2",
+                "path": "funcprog/vitepress/assets/inter-italic-cyrillic-ext.r48I6akx.woff2",
+                "type": "file",
+                "ext": ".woff2",
+                "size": 43112,
+                "isBinary": false
+              },
+              {
+                "name": "inter-italic-cyrillic.By2_1cv3.woff2",
+                "path": "funcprog/vitepress/assets/inter-italic-cyrillic.By2_1cv3.woff2",
+                "type": "file",
+                "ext": ".woff2",
+                "size": 31300,
+                "isBinary": false
+              },
+              {
+                "name": "inter-italic-greek-ext.1u6EdAuj.woff2",
+                "path": "funcprog/vitepress/assets/inter-italic-greek-ext.1u6EdAuj.woff2",
+                "type": "file",
+                "ext": ".woff2",
+                "size": 17404,
+                "isBinary": false
+              },
+              {
+                "name": "inter-italic-greek.DJ8dCoTZ.woff2",
+                "path": "funcprog/vitepress/assets/inter-italic-greek.DJ8dCoTZ.woff2",
+                "type": "file",
+                "ext": ".woff2",
+                "size": 32564,
+                "isBinary": false
+              },
+              {
+                "name": "inter-italic-latin-ext.CN1xVJS-.woff2",
+                "path": "funcprog/vitepress/assets/inter-italic-latin-ext.CN1xVJS-.woff2",
+                "type": "file",
+                "ext": ".woff2",
+                "size": 120840,
+                "isBinary": false
+              },
+              {
+                "name": "inter-italic-latin.C2AdPX0b.woff2",
+                "path": "funcprog/vitepress/assets/inter-italic-latin.C2AdPX0b.woff2",
+                "type": "file",
+                "ext": ".woff2",
+                "size": 74784,
+                "isBinary": false
+              },
+              {
+                "name": "inter-italic-vietnamese.BSbpV94h.woff2",
+                "path": "funcprog/vitepress/assets/inter-italic-vietnamese.BSbpV94h.woff2",
+                "type": "file",
+                "ext": ".woff2",
+                "size": 14884,
+                "isBinary": false
+              },
+              {
+                "name": "inter-roman-cyrillic-ext.BBPuwvHQ.woff2",
+                "path": "funcprog/vitepress/assets/inter-roman-cyrillic-ext.BBPuwvHQ.woff2",
+                "type": "file",
+                "ext": ".woff2",
+                "size": 40488,
+                "isBinary": false
+              },
+              {
+                "name": "inter-roman-cyrillic.C5lxZ8CY.woff2",
+                "path": "funcprog/vitepress/assets/inter-roman-cyrillic.C5lxZ8CY.woff2",
+                "type": "file",
+                "ext": ".woff2",
+                "size": 29164,
+                "isBinary": false
+              },
+              {
+                "name": "inter-roman-greek-ext.CqjqNYQ-.woff2",
+                "path": "funcprog/vitepress/assets/inter-roman-greek-ext.CqjqNYQ-.woff2",
+                "type": "file",
+                "ext": ".woff2",
+                "size": 16272,
+                "isBinary": false
+              },
+              {
+                "name": "inter-roman-greek.BBVDIX6e.woff2",
+                "path": "funcprog/vitepress/assets/inter-roman-greek.BBVDIX6e.woff2",
+                "type": "file",
+                "ext": ".woff2",
+                "size": 29920,
+                "isBinary": false
+              },
+              {
+                "name": "inter-roman-latin-ext.4ZJIpNVo.woff2",
+                "path": "funcprog/vitepress/assets/inter-roman-latin-ext.4ZJIpNVo.woff2",
+                "type": "file",
+                "ext": ".woff2",
+                "size": 110160,
+                "isBinary": false
+              },
+              {
+                "name": "inter-roman-latin.Di8DUHzh.woff2",
+                "path": "funcprog/vitepress/assets/inter-roman-latin.Di8DUHzh.woff2",
+                "type": "file",
+                "ext": ".woff2",
+                "size": 67792,
+                "isBinary": false
+              },
+              {
+                "name": "inter-roman-vietnamese.BjW4sHH5.woff2",
+                "path": "funcprog/vitepress/assets/inter-roman-vietnamese.BjW4sHH5.woff2",
+                "type": "file",
+                "ext": ".woff2",
+                "size": 14072,
+                "isBinary": false
+              },
+              {
+                "name": "style.ClskwkZE.css",
+                "path": "funcprog/vitepress/assets/style.ClskwkZE.css",
+                "type": "file",
+                "ext": ".css",
+                "size": 119483,
+                "isBinary": false
+              }
+            ],
+            "_expanded": false
+          },
+          {
+            "name": "guide",
+            "path": "funcprog/vitepress/guide",
+            "type": "directory",
+            "children": [
+              {
+                "name": "01_higher_order_functions.html",
+                "path": "funcprog/vitepress/guide/01_higher_order_functions.html",
+                "type": "file",
+                "ext": ".html",
+                "size": 28583,
+                "isBinary": false
+              },
+              {
+                "name": "01_infinite_primes.html",
+                "path": "funcprog/vitepress/guide/01_infinite_primes.html",
+                "type": "file",
+                "ext": ".html",
+                "size": 21592,
+                "isBinary": false
+              },
+              {
+                "name": "01_intro.html",
+                "path": "funcprog/vitepress/guide/01_intro.html",
+                "type": "file",
+                "ext": ".html",
+                "size": 16173,
+                "isBinary": false
+              },
+              {
+                "name": "01_introduction.html",
+                "path": "funcprog/vitepress/guide/01_introduction.html",
+                "type": "file",
+                "ext": ".html",
+                "size": 38548,
+                "isBinary": false
+              },
+              {
+                "name": "01_tie_the_knot.html",
+                "path": "funcprog/vitepress/guide/01_tie_the_knot.html",
+                "type": "file",
+                "ext": ".html",
+                "size": 15754,
+                "isBinary": false
+              },
+              {
+                "name": "02_strict_vs_lazy.html",
+                "path": "funcprog/vitepress/guide/02_strict_vs_lazy.html",
+                "type": "file",
+                "ext": ".html",
+                "size": 17211,
+                "isBinary": false
+              }
+            ],
+            "_expanded": false
+          },
+          {
+            "name": "lib",
+            "path": "funcprog/vitepress/lib",
+            "type": "directory",
+            "children": [
+              {
+                "name": "stdlib.cfp",
+                "path": "funcprog/vitepress/lib/stdlib.cfp",
+                "type": "file",
+                "ext": ".cfp",
+                "size": 2790,
+                "isBinary": false
+              }
+            ],
+            "_expanded": false
+          },
+          {
+            "name": "404.html",
+            "path": "funcprog/vitepress/404.html",
+            "type": "file",
+            "ext": ".html",
+            "size": 2951,
+            "isBinary": false
+          },
+          {
+            "name": "hashmap.json",
+            "path": "funcprog/vitepress/hashmap.json",
+            "type": "file",
+            "ext": ".json",
+            "size": 260,
+            "isBinary": false
+          },
+          {
+            "name": "index.html",
+            "path": "funcprog/vitepress/index.html",
+            "type": "file",
+            "ext": ".html",
+            "size": 10101,
+            "isBinary": false
+          },
+          {
+            "name": "vp-icons.css",
+            "path": "funcprog/vitepress/vp-icons.css",
+            "type": "file",
+            "ext": ".css",
+            "size": 0,
+            "isBinary": false
+          }
+        ],
+        "_expanded": false
+      },
+      {
+        "name": "index.html",
+        "path": "funcprog/index.html",
+        "type": "file",
+        "ext": ".html",
+        "size": 6743,
+        "isBinary": false
+      }
+    ],
+    "_expanded": false
+  },
+  {
     "name": "grafisch",
     "path": "grafisch",
     "type": "directory",
@@ -370,7 +770,7 @@ window.WEBSAPL_TREE = [
         "path": "grafisch/boom.cfp",
         "type": "file",
         "ext": ".cfp",
-        "size": 1337,
+        "size": 5033,
         "isBinary": false
       },
       {
@@ -378,7 +778,7 @@ window.WEBSAPL_TREE = [
         "path": "grafisch/bspline.cfp",
         "type": "file",
         "ext": ".cfp",
-        "size": 2464,
+        "size": 5600,
         "isBinary": false
       },
       {
@@ -386,7 +786,7 @@ window.WEBSAPL_TREE = [
         "path": "grafisch/convex.cfp",
         "type": "file",
         "ext": ".cfp",
-        "size": 2590,
+        "size": 5264,
         "isBinary": false
       },
       {
@@ -394,7 +794,15 @@ window.WEBSAPL_TREE = [
         "path": "grafisch/curves.cfp",
         "type": "file",
         "ext": ".cfp",
-        "size": 2998,
+        "size": 4889,
+        "isBinary": false
+      },
+      {
+        "name": "grafiek_paint_interactive.cfp",
+        "path": "grafisch/grafiek_paint_interactive.cfp",
+        "type": "file",
+        "ext": ".cfp",
+        "size": 47257,
         "isBinary": false
       },
       {
@@ -402,7 +810,7 @@ window.WEBSAPL_TREE = [
         "path": "grafisch/grafiek.cfp",
         "type": "file",
         "ext": ".cfp",
-        "size": 1270,
+        "size": 1284,
         "isBinary": false
       },
       {
@@ -410,7 +818,7 @@ window.WEBSAPL_TREE = [
         "path": "grafisch/graphics.cfp",
         "type": "file",
         "ext": ".cfp",
-        "size": 2676,
+        "size": 12340,
         "isBinary": false
       },
       {
@@ -418,7 +826,15 @@ window.WEBSAPL_TREE = [
         "path": "grafisch/hwdes.cfp",
         "type": "file",
         "ext": ".cfp",
-        "size": 4902,
+        "size": 4916,
+        "isBinary": false
+      },
+      {
+        "name": "menu_demo.cfp",
+        "path": "grafisch/menu_demo.cfp",
+        "type": "file",
+        "ext": ".cfp",
+        "size": 2106,
         "isBinary": false
       },
       {
@@ -426,7 +842,71 @@ window.WEBSAPL_TREE = [
         "path": "grafisch/recpic.cfp",
         "type": "file",
         "ext": ".cfp",
-        "size": 2003,
+        "size": 3902,
+        "isBinary": false
+      }
+    ],
+    "_expanded": false
+  },
+  {
+    "name": "lamlift",
+    "path": "lamlift",
+    "type": "directory",
+    "children": [
+      {
+        "name": "case_map.lfp",
+        "path": "lamlift/case_map.lfp",
+        "type": "file",
+        "ext": ".lfp",
+        "size": 277,
+        "isBinary": false
+      },
+      {
+        "name": "factorial.lfp",
+        "path": "lamlift/factorial.lfp",
+        "type": "file",
+        "ext": ".lfp",
+        "size": 84,
+        "isBinary": false
+      },
+      {
+        "name": "feature_coverage.lfp",
+        "path": "lamlift/feature_coverage.lfp",
+        "type": "file",
+        "ext": ".lfp",
+        "size": 774,
+        "isBinary": false
+      },
+      {
+        "name": "README.md",
+        "path": "lamlift/README.md",
+        "type": "file",
+        "ext": ".md",
+        "size": 2543,
+        "isBinary": false
+      },
+      {
+        "name": "self_application.lfp",
+        "path": "lamlift/self_application.lfp",
+        "type": "file",
+        "ext": ".lfp",
+        "size": 57,
+        "isBinary": false
+      },
+      {
+        "name": "shadowing.lfp",
+        "path": "lamlift/shadowing.lfp",
+        "type": "file",
+        "ext": ".lfp",
+        "size": 65,
+        "isBinary": false
+      },
+      {
+        "name": "tromp.lfp",
+        "path": "lamlift/tromp.lfp",
+        "type": "file",
+        "ext": ".lfp",
+        "size": 345,
         "isBinary": false
       }
     ],
@@ -658,7 +1138,7 @@ window.WEBSAPL_TREE = [
         "path": "sapl_plus_demo/README.md",
         "type": "file",
         "ext": ".md",
-        "size": 4483,
+        "size": 4735,
         "isBinary": false
       },
       {
@@ -666,7 +1146,7 @@ window.WEBSAPL_TREE = [
         "path": "sapl_plus_demo/sapl_plus_showcase.spp",
         "type": "file",
         "ext": ".spp",
-        "size": 1597,
+        "size": 1554,
         "isBinary": false
       }
     ],
@@ -678,6 +1158,14 @@ window.WEBSAPL_TREE = [
     "type": "file",
     "ext": ".md",
     "size": 4221,
+    "isBinary": false
+  },
+  {
+    "name": "studio.html",
+    "path": "studio.html",
+    "type": "file",
+    "ext": ".html",
+    "size": 9752,
     "isBinary": false
   }
 ];

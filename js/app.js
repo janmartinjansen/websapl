@@ -424,7 +424,7 @@
       state.editor.setValue(tab.content);
       state.editor.clearHistory();
 
-      if (tab.ext === ".cfp" || tab.ext.startsWith(".cfp_") || tab.ext === ".spp") {
+      if (tab.ext === ".cfp" || tab.ext.startsWith(".cfp_") || tab.ext === ".spp" || tab.ext === ".lfp") {
         state.editor.setOption("mode", "sapl");
       } else if ([".c", ".cpp", ".cc", ".cxx", ".h", ".hpp", ".hh", ".hxx"].includes(tab.ext)) {
         state.editor.setOption("mode", "clike");
@@ -647,6 +647,23 @@
       if (el.sectionStrictness) el.sectionStrictness.style.display = "none";
       if (el.sectionStages) el.sectionStages.style.display = "none";
       if (el.sectionEngine) el.sectionEngine.style.display = "none";
+    } else if (tab.ext === ".lfp") {
+      // .lfp source: Sapl + kale, onbeperkte lambda's -- preprocess to plain
+      // .cfp first (lamlift/lamlift.jmvm, zelf een gewoon gecompileerd Sapl-
+      // programma), niet direct compileerbaar door saplcomp/retagcomp -- zie
+      // worker.js's preprocessLfp.
+      if (el.btnCompile) {
+        el.btnCompile.style.display = "inline-flex";
+        el.btnCompile.innerHTML = "<span>λ</span> Preprocess (.lfp → .cfp)";
+      }
+      if (el.btnCompileRun) el.btnCompileRun.style.display = "none";
+      if (el.btnRun) el.btnRun.style.display = "none";
+      if (el.sectionStageInfo) el.sectionStageInfo.style.display = "none";
+
+      if (el.sectionCompilerBackend) el.sectionCompilerBackend.style.display = "none";
+      if (el.sectionStrictness) el.sectionStrictness.style.display = "none";
+      if (el.sectionStages) el.sectionStages.style.display = "none";
+      if (el.sectionEngine) el.sectionEngine.style.display = "none";
     } else if (tab.ext === ".cfp") {
       // Original source file
       if (el.lblCompilerSapl) el.lblCompilerSapl.style.display = "flex";
@@ -749,21 +766,26 @@
     }
   }
 
-  // Sapl+ (.spp) -> plain Sapl (.cfp): runs preprocess/driver.jmvm (itself
-  // an ordinary compiled Sapl program, see worker.js's preprocessSpp) and
-  // opens the resulting .cfp in a new tab -- from there, compileActiveFile
-  // (the regular "Compileer"/"Compileer & Run" buttons) takes over exactly
-  // as for any hand-written .cfp source.
+  // Sapl+ (.spp) -> plain Sapl (.cfp): runs preprocess/driver.jmvm; .lfp
+  // (Sapl + kale, onbeperkte lambda's) -> plain Sapl (.cfp): runs
+  // lamlift/lamlift.jmvm (see worker.js's preprocessSpp/preprocessLfp).
+  // Both are ordinary compiled Sapl programs, run on the same WASM VM, and
+  // both open the resulting .cfp in a new tab -- from there,
+  // compileActiveFile (the regular "Compileer"/"Compileer & Run" buttons)
+  // takes over exactly as for any hand-written .cfp source.
   async function preprocessActiveFile() {
     const activeTab = getActiveTab();
-    if (!activeTab || activeTab.ext !== ".spp") return;
+    if (!activeTab || (activeTab.ext !== ".spp" && activeTab.ext !== ".lfp")) return;
     if (state.isCompiling) return;
     state.isCompiling = true;
+
+    const kind = activeTab.ext === ".lfp" ? "lfp" : "spp";
+    const engineLabel = kind === "lfp" ? "lamlift.jmvm" : "driver.jmvm";
 
     activeTab.content = state.editor.getValue();
 
     toggleTerminal(true);
-    logTerminal(`\n=== Preprocessen: ${activeTab.path} (Sapl+ -> Sapl, WebAssembly driver.jmvm) ===\n`, "info");
+    logTerminal(`\n=== Preprocessen: ${activeTab.path} (${kind} -> Sapl, WebAssembly ${engineLabel}) ===\n`, "info");
     setStatus("busy", "Bezig met preprocessen...");
 
     const compileId = ++state.compileSeq;
@@ -774,7 +796,7 @@
 
       if (data.success && data.files && data.files.length > 0) {
         setStatus("ready", `Voorverwerkt (${data.durationMs}ms)`);
-        logTerminal(`✓ .spp → .cfp voorverwerkt in ${data.durationMs}ms\n`, "success");
+        logTerminal(`✓ ${activeTab.ext} → .cfp voorverwerkt in ${data.durationMs}ms\n`, "success");
 
         openGeneratedFiles(data.files);
         setActiveTab(data.files[0].path);
@@ -787,6 +809,7 @@
 
     state.worker.postMessage({
       type: "PREPROCESS",
+      kind: kind,
       id: compileId,
       source: activeTab.content,
       path: activeTab.path
@@ -797,7 +820,7 @@
     const activeTab = getActiveTab();
     if (!activeTab) return;
 
-    if (activeTab.ext === ".spp") {
+    if (activeTab.ext === ".spp" || activeTab.ext === ".lfp") {
       preprocessActiveFile();
       return;
     }
@@ -1016,6 +1039,7 @@
     switch (ext) {
       case ".cfp": return { icon: "λ", className: "file-icon-cfp" };
       case ".spp": return { icon: "λ+", className: "file-icon-cfp" };
+      case ".lfp": return { icon: "λ", className: "file-icon-cfp" };
       case ".jmvm": return { icon: "⚙", className: "file-icon-jmvm" };
       case ".md": return { icon: "📖", className: "file-icon-md" };
       case ".pdf": return { icon: "📕", className: "file-icon-pdf" };

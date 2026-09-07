@@ -1,0 +1,8 @@
+tromp = (\c -> c c) (\c d s -> s (\f t -> t) ((\f -> c c f ((\g -> g g) (\g -> f (g g)))) (\f g h s -> s g (h (d f))))) (\c d e r -> r (\f t -> f) (e c))
+
+markerToInt h = h 0 1
+
+takeCons n h t = print (markerToInt h) <#> printString " " <#> takeN (n - 1) t
+takeN n l = if (n == 0) (9) (l (takeCons n))
+
+start = takeN 10 tromp <#> writeChar 1 10
