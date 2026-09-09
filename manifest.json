@@ -826,7 +826,15 @@
           "path": "grafisch/hwdes.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 4916,
+          "size": 75523,
+          "isBinary": false
+        },
+        {
+          "name": "hwdes.jmvm",
+          "path": "grafisch/hwdes.jmvm",
+          "type": "file",
+          "ext": ".jmvm",
+          "size": 350923,
           "isBinary": false
         },
         {
@@ -1157,7 +1165,7 @@
       "path": "README.md",
       "type": "file",
       "ext": ".md",
-      "size": 4221,
+      "size": 4853,
       "isBinary": false
     },
     {
@@ -1165,7 +1173,7 @@
       "path": "studio.html",
       "type": "file",
       "ext": ".html",
-      "size": 9752,
+      "size": 9759,
       "isBinary": false
     }
   ]

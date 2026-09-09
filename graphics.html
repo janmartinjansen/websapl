@@ -427,8 +427,8 @@
       </div>
 
       <div class="preset-card" data-file="hwdes.cfp">
-        <div class="preset-title"><span>🔌</span> Hardware Designer</div>
-        <div class="preset-desc">Digitale logische poorten (AND, OR, NOT) en 2-to-1 Multiplexer schema.</div>
+        <div class="preset-title"><span>🔌</span> Hardware Designer (HWDES.AMA)</div>
+        <div class="preset-desc">Interactieve logica-simulator: poorten, latches, bedrading, Booleaanse formules &amp; bestandsbeheer.</div>
       </div>
 
       <div class="preset-card" data-file="recpic.cfp">
@@ -655,7 +655,7 @@
       // returned (e.g. "rx ry rz lastX lastY" for convex, an idx+point-list
       // for bspline, a single float for boom) and is fed back verbatim as
       // stdin on the next event, so JS never needs to understand its shape.
-      const INTERACTIVE_PRESETS = ['bspline.cfp', 'convex.cfp', 'boom.cfp', 'curves.cfp', 'recpic.cfp', 'menu_demo.cfp', 'grafiek_paint_interactive.cfp'];
+      const INTERACTIVE_PRESETS = ['bspline.cfp', 'convex.cfp', 'boom.cfp', 'curves.cfp', 'recpic.cfp', 'menu_demo.cfp', 'grafiek_paint_interactive.cfp', 'hwdes.cfp'];
       let interactiveState = '';   // '' = let the Sapl program supply its own default
       let compiledJmvm = null;     // cached bytecode for currentPreset, reused across ticks (no recompile per event)
       let pendingRunKind = 'normal'; // 'normal' (compile-triggered run) | 'tick' (interactive event round trip)
@@ -764,7 +764,7 @@
           // diagnostic text, not an empty save-filename -- without this
           // gate, switching to ANY interactive preset's tick popped the
           // filename prompt (found via user testing, 2026-09-01).
-          if (currentPreset === 'grafiek_paint_interactive.cfp' &&
+          if ((currentPreset === 'grafiek_paint_interactive.cfp' || currentPreset === 'hwdes.cfp') &&
               lines.length > startIdx + 4 && lines[startIdx + 3]) {
             const chosenName = window.prompt('Bestandsnaam om op te slaan:', lines[startIdx + 3]);
             if (chosenName) {
@@ -813,7 +813,7 @@
         'boom.cfp': 'Beweeg de muis horizontaal over het canvas om de takbuigingshoek live aan te passen. Kies de recursiediepte (1-10) via het "Depth"-menu boven het canvas.',
         'curves.cfp': 'Kies de recursiediepte (1-6) via het "Depth"-menu boven het canvas om de fijnheid van de Hilbert-curve te verhogen.',
         'grafiek.cfp': 'Beweeg de muis over het canvas om wiskundige functies te inspecteren met live coördinaten.',
-        'hwdes.cfp': 'Bekijk de 2-to-1 Multiplexer schakeling met NOT-, AND- en OR-poorten.',
+        'hwdes.cfp': 'Interactieve logica-ontwerper: klik op poorten/inputs om te wisselen (Change), plaats nieuwe cellen (Cell), verplaats (Move), verbind pinnen (Connect), of bereken Booleaanse formules (Calc).',
         'recpic.cfp': 'Kies de recursiediepte (1-6) via het "Depth"-menu boven het canvas.',
         'menu_demo.cfp': 'Klik een menu-item hierboven - de VM stuurt het terug als tekst op het canvas. "Other → Text" toont een echte prompt-dialoog.',
         'grafiek_paint_interactive.cfp': 'Klik "New" en een vorm (bijv. Ellipse), sleep dan op het canvas om te tekenen. "Edit → Select" schakelt naar verslepen van bestaande vormen.'
@@ -846,43 +846,6 @@
           renderer.drawPolyLine(11, sinPts);
           renderer.drawPolyLine(14, cosPts);
           renderer.drawPolyLine(12, polyPts);
-        } else if (name === 'hwdes.cfp') {
-          renderer.clear();
-          renderer.drawGrid();
-          renderer.drawText(14, { x: -0.75, y: 0.82 }, "2-to-1 Multiplexer (Logic Circuit)");
-          renderer.drawText(8, { x: -0.75, y: 0.75 }, "Boolean Logic: Y = (A and not S) or (B and S)");
-          renderer.drawText(11, { x: -0.85, y: 0.40 }, "A");
-          renderer.drawText(11, { x: -0.85, y: 0.10 }, "S");
-          renderer.drawText(11, { x: -0.85, y: -0.20 }, "B");
-          renderer.drawText(14, { x: 0.75, y: 0.10 }, "Y");
-          // NOT Gate
-          renderer.drawPolyLine(10, [{ x: -0.39, y: 0.19 }, { x: -0.39, y: 0.31 }, { x: -0.28, y: 0.25 }, { x: -0.39, y: 0.19 }]);
-          renderer.drawDisc(12, { x: -0.28, y: 0.235 }, { x: -0.25, y: 0.265 });
-          renderer.drawText(15, { x: -0.37, y: 0.235 }, "NOT");
-          // AND 1 Gate
-          renderer.drawPolyLine(10, [{ x: -0.01, y: 0.29 }, { x: -0.01, y: 0.47 }, { x: 0.08, y: 0.47 }, { x: 0.08, y: 0.29 }, { x: -0.01, y: 0.29 }]);
-          renderer.drawEllipse(10, { x: -0.01, y: 0.29 }, { x: 0.17, y: 0.47 });
-          renderer.drawText(15, { x: 0.04, y: 0.36 }, "AND");
-          // AND 2 Gate
-          renderer.drawPolyLine(10, [{ x: -0.01, y: -0.24 }, { x: -0.01, y: -0.06 }, { x: 0.08, y: -0.06 }, { x: 0.08, y: -0.24 }, { x: -0.01, y: -0.24 }]);
-          renderer.drawEllipse(10, { x: -0.01, y: -0.24 }, { x: 0.17, y: -0.06 });
-          renderer.drawText(15, { x: 0.04, y: -0.17 }, "AND");
-          // OR Gate
-          renderer.drawPolyLine(10, [{ x: 0.40, y: 0.20 }, { x: 0.52, y: 0.18 }, { x: 0.60, y: 0.10 }]);
-          renderer.drawPolyLine(10, [{ x: 0.40, y: 0.00 }, { x: 0.52, y: 0.02 }, { x: 0.60, y: 0.10 }]);
-          renderer.drawPolyLine(10, [{ x: 0.40, y: 0.00 }, { x: 0.44, y: 0.10 }, { x: 0.40, y: 0.20 }]);
-          renderer.drawText(15, { x: 0.47, y: 0.08 }, "OR");
-          // Wires
-          renderer.drawPolyLine(11, [{ x: -0.80, y: 0.43 }, { x: -0.01, y: 0.43 }]);
-          renderer.drawPolyLine(11, [{ x: -0.80, y: 0.10 }, { x: -0.45, y: 0.10 }]);
-          renderer.drawPolyLine(11, [{ x: -0.45, y: 0.10 }, { x: -0.45, y: 0.25 }, { x: -0.39, y: 0.25 }]);
-          renderer.drawPolyLine(11, [{ x: -0.45, y: 0.10 }, { x: -0.01, y: 0.10 }, { x: -0.01, y: -0.10 }]);
-          renderer.drawPolyLine(14, [{ x: -0.25, y: 0.25 }, { x: -0.15, y: 0.25 }, { x: -0.01, y: 0.33 }]);
-          renderer.drawPolyLine(11, [{ x: -0.80, y: -0.20 }, { x: -0.01, y: -0.20 }]);
-          renderer.drawPolyLine(14, [{ x: 0.17, y: 0.38 }, { x: 0.28, y: 0.38 }, { x: 0.28, y: 0.16 }, { x: 0.40, y: 0.16 }]);
-          renderer.drawPolyLine(14, [{ x: 0.17, y: -0.15 }, { x: 0.28, y: -0.15 }, { x: 0.28, y: 0.04 }, { x: 0.40, y: 0.04 }]);
-          renderer.drawPolyLine(14, [{ x: 0.60, y: 0.10 }, { x: 0.72, y: 0.10 }]);
-          renderer.drawDisc(11, { x: -0.465, y: 0.085 }, { x: -0.435, y: 0.115 });
         }
       }
 
