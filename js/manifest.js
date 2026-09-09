@@ -198,6 +198,14 @@ window.WEBSAPL_TREE = [
     "type": "directory",
     "children": [
       {
+        "name": "lokale_tools_niet_in_websapl.md",
+        "path": "docs/lokale_tools_niet_in_websapl.md",
+        "type": "file",
+        "ext": ".md",
+        "size": 2705,
+        "isBinary": false
+      },
+      {
         "name": "main.pdf",
         "path": "docs/main.pdf",
         "type": "file",
