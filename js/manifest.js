@@ -894,11 +894,19 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
+        "name": "lam25.lfp",
+        "path": "lamlift/lam25.lfp",
+        "type": "file",
+        "ext": ".lfp",
+        "size": 3304,
+        "isBinary": false
+      },
+      {
         "name": "README.md",
         "path": "lamlift/README.md",
         "type": "file",
         "ext": ".md",
-        "size": 2543,
+        "size": 3252,
         "isBinary": false
       },
       {

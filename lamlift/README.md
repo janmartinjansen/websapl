@@ -35,6 +35,7 @@ van `lamlift/lamlift.cfp`.
 | `case_map.lfp` | `case`/ADT-dispatch gecombineerd met een lambda als argument (`map (\x -> x*2) lijst`) |
 | `shadowing.lfp` | Bewijst dat een geneste lambda-parameter die een buitenste naam schaduwt geen (onterechte) closure-capture oplevert |
 | `feature_coverage.lfp` | Bredere dekkingstest: multi-binding en zelfrecursieve `let`, lambda binnen een `let`-binding, lambda binnen een `case`-tak die de pattern-variabele capturet, `nomatch` als kale tak |
+| `lam25.lfp` | **Belangrijk voorbeeld**: port van `saplsimple_num/lam25.fp`, een self-interpreter voor uitgebreide lambda calculus. Codeert expressies Scott-encoded (`Var`/`App`/`Abs`/`Lit`) en interpreteert ze generiek via `seval`/`makeLam` — inclusief een zelf-geïnterpreteerde faculteitsfunctie (`res: 120`). Laat zien hoe een bare operator (`eq`/`sub`/`mult`) als eersteklas-DATA in een gecodeerde AST via een genoemde wrapper (`eqOp`/`subOp`/`multOp`) moet, omdat Sapl operatoren niet rechtstreeks als waarde toestaat (`docs/sapl_programmeer_regels.md` #6) — zie `docs/programmas_overzicht.md`'s `lamlift/`-sectie voor de volledige uitleg, inclusief de `lamlift.cfp`-bug die deze port blootlegde |
 
 Alleen de `.lfp`-bronbestanden staan hier — de `.cfp`/`.jmvm`-output wordt
 in de browser gegenereerd (zie de root `lamlift/`-map in de repo voor de

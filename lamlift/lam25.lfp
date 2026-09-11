@@ -1,0 +1,79 @@
+// lam25.lfp -- port of saplsimple_num/lam25.fp: a self-interpreter for
+// extended lambda calculus (named functions + numbers), originally written
+// in saplsimple_num's own pure lambda-calculus dialect (`\x y. body`,
+// booleans as 2-argument selector functions built directly into the
+// reducer's eval() for EQ/TRUE/FALSE -- see REDUCT.CPP). Ported to .lfp
+// syntax (`\x y -> body`) with two adaptations required by ordinary Sapl
+// semantics (docs/sapl_programmeer_regels.md #6: no bare operator as a
+// first-class value):
+//   - `eq`/`sub`/`mult` used directly for control flow (in `el`, `fac`,
+//     `makeSel`) become native Sapl `if`/`==`/`-`/`*`.
+//   - `eq`/`sub`/`mult` used as literal DATA inside the Scott-encoded
+//     program (`lit eq`, `lit sub`, `lit mult` in vbfac/efacvb/vb7/vbsub)
+//     become the named wrapper functions eqOp/subOp/multOp below, since a
+//     bare Sapl operator can't be stored/passed as a value but an ordinary
+//     named function can. eqOp reproduces REDUCT.CPP's TRUE/FALSE node
+//     behaviour explicitly: it returns the two-argument selector `tru` or
+//     `fls`, so `(eqOp a b) x y` selects `x` or `y` exactly like the
+//     original `(eq a b) x y` did in saplsimple_num's own reducer.
+
+tru a b = a
+fls a b = b
+eqOp a b = if (a == b) (tru) (fls)
+subOp a b = a - b
+multOp a b = a * b
+
+// hulp functies: bv lijsten
+cons h t f = f h t
+nil = 0
+
+el n ls = ls (\h t -> if (n == 1) (h) (el (n - 1) t))
+
+// Scott-encoding van datastructuur voor lambda expressies: expr ::= Var s | App expr expr | Abs expr | Lit e
+// Lit is toegevoegd voor letterlijke encoding, bv getallen en operaties erop worden als zichzelf gecodeerd
+// makeSel n maakt van n een functie die het n-de element in een lijst selecteert (ipv el gebruiken)
+var n f g h k = f (makeSel n)
+app a b f g h k = g a b
+abs t f g h k = h t
+lit e f g h k = k e
+
+// seval maakt van een representatie de functie die de representatie representeert!
+// een variabele selecteert het bijbehorende element uit de bindings
+// een applicatie wordt omgezet naar een applicatie van de elementen
+// een abstractie wordt omgezet naar een functie, waarbij het argument in de bindings wordt gezet
+seval f = makeLam f nil
+makeLam e bs = e (\n -> n bs) (\a b -> (makeLam a bs) (makeLam b bs)) (\t -> addBind t bs) (\f -> f)
+addBind t bs = \x -> makeLam t (cons x bs)
+
+// voorbeelden
+vb1 = abs (var 1)
+vb2 = abs (abs (app (var 2) (var 1)))
+vb3 = app (abs (var 1)) (abs (var 1))
+vb4 = abs (abs (abs (app (var 1) (app (var 2) (var 3)))))
+vb5 = abs (abs (abs (app (app (var 1) (var 2)) (var 3))))
+vb6 = app (var 1) (var 2)
+vb7 = abs (abs (app (app (lit subOp) (var 2)) (var 1)))
+
+vbsub = abs (abs (app (app (lit subOp) (var 2)) (var 1)))
+vbsub2 = app vbsub (lit 5)
+
+// een uitgebreider voorbeeld: de faculteits functie, zijn codering en de test of het klopt
+fac = \n -> if (n == 0) (1) (n * fac (n - 1))
+
+vbfac = abs (app (app (app (app (lit eqOp) (var 1)) (lit 0)) (lit 1)) efacvb)
+efacvb = app (app (lit multOp) (var 1)) (app vbfac (app (app (lit subOp) (var 1)) (lit 1)))
+
+testfac = seval vbfac
+
+test = testfac 5
+
+lst = cons 1 (cons 2 (cons 3 (cons 4 nil)))
+
+i f xs = xs (\h t -> f t)
+s1 xs = xs (\h t -> h)
+s2 = i s1
+s3 = i s2
+
+makeSel n = if (n == 1) (s1) (i (makeSel (n - 1)))
+
+start = print test <#> writeChar 1 10
