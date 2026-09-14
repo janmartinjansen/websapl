@@ -44,6 +44,9 @@
       <button class="btn-toggle-panel active" id="btn-toggle-settings" title="Compiler instellingen tonen/verbergen">
         <span>◨</span> Instellingen
       </button>
+      <button class="btn" id="btn-open-repl" title="Open de Sapl+ REPL">
+        <span>⌨️</span> REPL
+      </button>
       <a href="graphics.html" class="btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: rgba(59, 130, 246, 0.2); border-color: rgba(59, 130, 246, 0.4);" title="Open Grafische Studio">
         <span>🎨</span> Graphics Studio
       </a>
@@ -106,12 +109,44 @@
       <!-- Editor & Settings Area -->
       <div class="editor-and-settings">
         
-        <!-- Editor Content (CodeMirror or Rendered Markdown or PDF) -->
+        <!-- Editor Content (CodeMirror or Rendered Markdown or PDF or REPL) -->
         <div class="editor-container">
           <div id="editor-container" style="flex: 1; height: 100%;"></div>
           <div id="markdown-preview" class="markdown-preview" style="display: none;"></div>
           <div id="pdf-preview" class="pdf-preview" style="display: none;">
             <iframe id="pdf-frame" src="" title="PDF Document"></iframe>
+          </div>
+
+          <!-- REPL-tab: client-side poort van sapl_compiler/tools/
+               repl_retag.py (zie docs/2026-09-13_repl_gebruik.md), hier
+               volledig via engine/worker.js's WASM-VM-instanties i.p.v.
+               een los proces -- geen Start/Stop nodig, de engine is al
+               klaar zodra "WebAssembly JMVM Engine gereed" in de
+               terminal verschijnt. -->
+          <div id="repl-panel" class="tool-panel" style="display: none;">
+            <div class="tool-panel-header">
+              <span class="tool-panel-title">⌨️ Sapl+ REPL</span>
+              <span class="tool-panel-sub">Typ een expressie, of <code>:def naam ... = ...</code> voor een eigen functie/ADT. Achtergrond: docs/2026-09-13_repl_gebruik.md</span>
+            </div>
+            <div class="tool-panel-controls">
+              <button class="btn" id="btn-repl-history" title=":history — toon de hele sessie">📜 Historie</button>
+              <button class="btn" id="btn-repl-undo" title=":undo — maak de laatste wijziging ongedaan">↩ Undo</button>
+              <button class="btn" id="btn-repl-funcs" title=":funcs — namen, ariteit en strictheid van je eigen functies">ƒ Functies</button>
+              <button class="btn" id="btn-repl-reset" title=":reset — lege sessie, begin opnieuw">🗑 Reset</button>
+            </div>
+            <div class="tool-panel-controls">
+              <input type="text" id="txt-repl-load" class="text-input" style="flex: 1;" placeholder="bv. workspace/mijn_functies.cfp" />
+              <button class="btn" id="btn-repl-load" title=":load — elke top-level definitie uit dit bestand toevoegen">📂 Load</button>
+              <input type="text" id="txt-repl-save" class="text-input" style="flex: 1;" placeholder="bv. workspace/mijn_sessie.cfp" />
+              <button class="btn" id="btn-repl-save" title=":save — sessie als nieuw tabblad openen, dan zelf Opslaan">💾 Save</button>
+            </div>
+            <div class="tool-panel-status" id="repl-status">Bezig met initialiseren...</div>
+            <pre class="tool-panel-log repl-log" id="repl-log"></pre>
+            <div class="tool-panel-controls">
+              <span style="color: var(--accent); font-weight: 700; font-family: var(--font-mono);">repl&gt;</span>
+              <input type="text" id="txt-repl-input" class="text-input" style="flex: 1; font-family: var(--font-mono);" placeholder="Typ een expressie of :def ..." disabled />
+              <button class="btn btn-primary" id="btn-repl-send" disabled>▶ Uitvoeren</button>
+            </div>
           </div>
         </div>
 
@@ -149,6 +184,40 @@
                 <input type="radio" name="compiler" id="compiler-retag" value="retag" />
                 <span><strong>retagcomp</strong> (Stage-4 Retag → JMVM)</span>
               </label>
+              <label class="control-label" id="lbl-compiler-modules">
+                <input type="radio" name="compiler" id="compiler-modules" value="modules" />
+                <span><strong>modules</strong> (apart compileren + linken)</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Modulegewijs compileren -->
+          <div class="settings-section" id="section-modules-backend" style="display: none;">
+            <span class="settings-heading">Modules: manifest</span>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div>
+                <span style="font-size: 11px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Manifestbestand (virtueel pad, module: dep1 dep2 ...):</span>
+                <input type="text" id="txt-modules-manifest" class="text-input" placeholder="bv. workspace/manifest.txt" />
+              </div>
+              <div>
+                <span style="font-size: 11px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Entry-functie:</span>
+                <input type="text" id="txt-modules-entry-func" class="text-input" value="start" />
+              </div>
+
+              <div style="border-top: 1px solid var(--border-color); margin-top: 4px; padding-top: 8px;">
+                <span class="settings-heading" style="display: block; margin-bottom: 4px;">Hulp bij het manifest</span>
+                <span style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 6px;">
+                  Heuristische SUGGESTIE (tekstuele naam-scan, geen call-graph-analyse) — een startpunt om te controleren en aan te vullen, geen afgeleide waarheid.
+                </span>
+                <span style="font-size: 11px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Scope-map (kandidaat-modules, niet-recursief):</span>
+                <input type="text" id="txt-modules-scope" class="text-input" placeholder="bv. map van het entry-bestand" style="margin-bottom: 6px;" />
+                <button class="btn" id="btn-modules-suggest" style="justify-content: center; width: 100%;">
+                  <span>🧩</span> Genereer suggestie
+                </button>
+                <span style="font-size: 10px; color: var(--text-muted); display: block; margin-top: 4px;">
+                  Opent de suggestie als nieuw, nog niet opgeslagen tabblad op het manifestpad hierboven — controleer/bewerk en klik daarna gewoon Opslaan.
+                </span>
+              </div>
             </div>
           </div>
 

@@ -19,7 +19,12 @@
     isCompiling: false,
     isRunning: false,
     pendingCompileCallbacks: new Map(),
-    compileSeq: 0
+    compileSeq: 0,
+
+    // REPL panel (zie openReplTab/sendReplLine)
+    replInitStarted: false,
+    replReady: false,
+    replBusy: false
   };
 
   // DOM Elements
@@ -65,7 +70,23 @@
     btnCompileRun: document.getElementById("btn-compile-run"),
     btnTheme: document.getElementById("btn-theme-toggle"),
     btnRefreshTree: document.getElementById("btn-refresh-tree"),
-    
+
+    // REPL panel (client-side poort van repl_retag.py, zie engine/worker.js)
+    btnOpenRepl: document.getElementById("btn-open-repl"),
+    replPanel: document.getElementById("repl-panel"),
+    replLog: document.getElementById("repl-log"),
+    replStatus: document.getElementById("repl-status"),
+    txtReplInput: document.getElementById("txt-repl-input"),
+    btnReplSend: document.getElementById("btn-repl-send"),
+    btnReplHistory: document.getElementById("btn-repl-history"),
+    btnReplUndo: document.getElementById("btn-repl-undo"),
+    btnReplFuncs: document.getElementById("btn-repl-funcs"),
+    btnReplReset: document.getElementById("btn-repl-reset"),
+    txtReplLoad: document.getElementById("txt-repl-load"),
+    btnReplLoad: document.getElementById("btn-repl-load"),
+    txtReplSave: document.getElementById("txt-repl-save"),
+    btnReplSave: document.getElementById("btn-repl-save"),
+
     // Intermediate Stage Info Section
     sectionStageInfo: document.getElementById("section-stage-info"),
     txtStageInfoBadge: document.getElementById("txt-stage-info-badge"),
@@ -79,8 +100,17 @@
 
     compilerSapl: document.getElementById("compiler-sapl"),
     compilerRetag: document.getElementById("compiler-retag"),
+    compilerModules: document.getElementById("compiler-modules"),
     lblCompilerSapl: document.getElementById("lbl-compiler-sapl"),
     lblCompilerRetag: document.getElementById("lbl-compiler-retag"),
+    lblCompilerModules: document.getElementById("lbl-compiler-modules"),
+
+    // Modules (build_modules.py port) Section
+    sectionModulesBackend: document.getElementById("section-modules-backend"),
+    txtModulesManifest: document.getElementById("txt-modules-manifest"),
+    txtModulesEntryFunc: document.getElementById("txt-modules-entry-func"),
+    txtModulesScope: document.getElementById("txt-modules-scope"),
+    btnModulesSuggest: document.getElementById("btn-modules-suggest"),
     chkStrictness: document.getElementById("chk-strictness"),
     chkStages: {
       parse: document.getElementById("stage-parse"),
@@ -171,6 +201,15 @@
             cb(msg);
           }
           break;
+
+        case "REPL_RESULT": {
+          const replCb = state.pendingCompileCallbacks.get(msg.id);
+          if (replCb) {
+            state.pendingCompileCallbacks.delete(msg.id);
+            replCb(msg);
+          }
+          break;
+        }
 
         case "RUN_COMPLETE":
           state.isRunning = false;
@@ -293,6 +332,14 @@
     return state.openTabs.find(t => t.path === state.activeTabPath);
   }
 
+  // De REPL-tab is een synthetische entry in openTabs, zonder backend-
+  // bestand -- elke bestand-georiënteerde actie (compileren/opslaan/
+  // draaien) moet zich hiertegen wapenen, net als Workbench's Linter/
+  // Debugger/REPL-tool-tabs (zie workbench/js/app.js's isToolTab).
+  function isToolTab(tab) {
+    return !!tab && !!tab.kind;
+  }
+
   async function openFile(filePath, options = {}) {
     const isPreview = (options.preview === true);
 
@@ -383,6 +430,23 @@
       return;
     }
 
+    if (isToolTab(tab)) {
+      // Tool-tab (REPL): geen backend-bestand -- editor/markdown/pdf-
+      // wisseling en updateCompilerConfigForFile overslaan.
+      el.fileBreadcrumb.textContent = tab.name;
+      setStatus("ready", "Klaar");
+      if (el.editorContainer) el.editorContainer.style.display = "none";
+      if (el.markdownPreview) el.markdownPreview.style.display = "none";
+      if (el.pdfPreview) el.pdfPreview.style.display = "none";
+      if (el.viewToggleBtn) el.viewToggleBtn.style.display = "none";
+      if (el.replPanel) {
+        el.replPanel.style.display = tab.kind === "repl" ? "flex" : "none";
+        if (tab.kind === "repl") scrollReplLogToBottom();
+      }
+      return;
+    }
+    if (el.replPanel) el.replPanel.style.display = "none";
+
     el.fileBreadcrumb.textContent = tab.path;
     setStatus("ready", tab.isDirty ? "Aangepast" : "Klaar");
 
@@ -456,6 +520,7 @@
         state.editor.setValue("");
         if (el.markdownPreview) el.markdownPreview.innerHTML = "";
         if (el.pdfPreview) el.pdfPreview.style.display = "none";
+        if (el.replPanel) el.replPanel.style.display = "none";
         if (el.editorContainer) el.editorContainer.style.display = "block";
       }
     }
@@ -472,7 +537,7 @@
         (tab.isPreview ? " preview" : "");
       tabEl.dataset.path = tab.path;
 
-      const iconInfo = getFileIcon(tab.name, tab.ext);
+      const iconInfo = isToolTab(tab) ? { icon: "⌨️", className: "file-icon-tool" } : getFileIcon(tab.name, tab.ext);
       const icon = document.createElement("span");
       icon.className = `tab-icon ${iconInfo.className}`;
       icon.textContent = iconInfo.icon;
@@ -668,7 +733,20 @@
       // Original source file
       if (el.lblCompilerSapl) el.lblCompilerSapl.style.display = "flex";
       if (el.lblCompilerRetag) el.lblCompilerRetag.style.display = "none";
-      if (el.compilerSapl) el.compilerSapl.checked = true;
+      if (el.lblCompilerModules) el.lblCompilerModules.style.display = "flex";
+      if (el.compilerSapl && !el.compilerModules.checked) el.compilerSapl.checked = true;
+
+      // Modules-hulp: scope-map/manifest-veld defaulten op de map van dit
+      // bestand -- een module in dit spoor IS gewoon een .cfp-bestand
+      // (het HUIDIGE tabblad is altijd de entry, geen apart entry-veld
+      // nodig zoals in de Workbench-poort: dat voorkwam daar juist een
+      // divergentie-risico tussen een handmatig ingevuld entry-veld en
+      // het bestand dat je daadwerkelijk compileert).
+      if (el.txtModulesScope && !el.txtModulesScope.dataset.userEdited) el.txtModulesScope.value = pathDirname(tab.path);
+      if (el.txtModulesManifest && !el.txtModulesManifest.dataset.userEdited) {
+        const dir = pathDirname(tab.path);
+        el.txtModulesManifest.value = (dir ? dir + "/" : "") + "manifest.txt";
+      }
 
       if (el.btnCompile) {
         el.btnCompile.style.display = "inline-flex";
@@ -705,12 +783,25 @@
       if (el.sectionStages) el.sectionStages.style.display = "none";
       if (el.sectionEngine) el.sectionEngine.style.display = "none";
     }
+
+    updateModulesSectionVisibility();
+  }
+
+  // Zichtbaarheid van de "Modules: manifest"-sectie hangt af van welke
+  // compiler-radio gekozen is EN of de Compiler Backend-sectie zelf
+  // sowieso zichtbaar is voor dit bestandstype -- centraal hier i.p.v.
+  // in elke branch hierboven gedupliceerd, ook aangeroepen vanuit de
+  // radio-change-listener zelf (zie setupEventListeners).
+  function updateModulesSectionVisibility() {
+    const backendVisible = el.sectionCompilerBackend && el.sectionCompilerBackend.style.display !== "none";
+    const show = !!(el.compilerModules && el.compilerModules.checked && backendVisible);
+    if (el.sectionModulesBackend) el.sectionModulesBackend.style.display = show ? "block" : "none";
   }
 
   // --- ACTIONS: SAVE, COMPILE, RUN ---
   function saveActiveFile() {
     const activeTab = getActiveTab();
-    if (!activeTab) return;
+    if (!activeTab || isToolTab(activeTab)) return;
 
     activeTab.content = state.editor.getValue();
     activeTab.originalContent = activeTab.content;
@@ -818,7 +909,7 @@
 
   async function compileActiveFile(andRun = false) {
     const activeTab = getActiveTab();
-    if (!activeTab) return;
+    if (!activeTab || isToolTab(activeTab)) return;
 
     if (activeTab.ext === ".spp" || activeTab.ext === ".lfp") {
       preprocessActiveFile();
@@ -836,6 +927,11 @@
 
     if (activeTab.ext.startsWith(".cfp_") && !activeTab.name.endsWith(".cfp_retag") && !activeTab.name.endsWith(".cfp_decompiled")) {
       logTerminal(`ℹ️ ${activeTab.name} is een tussenformaat. Selecteer het bronbestand (${activeTab.name.split(".cfp_")[0]}.cfp) om te compileren.\n`, "info");
+      return;
+    }
+
+    if (activeTab.ext === ".cfp" && el.compilerModules && el.compilerModules.checked) {
+      await buildModulesFromActiveFile(andRun);
       return;
     }
 
@@ -898,13 +994,607 @@
     });
   }
 
+  // --- MODULES: apart compileren + linken (build_modules.py-poort) ---
+  //
+  // Achtergrond: docs/2026-09-13_modules_compileren_en_linken_gebruik.md,
+  // de Workbench-versie van deze feature (workbench/server.js's
+  // "modules"-backend, wraapt sapl_compiler/tools/build_modules.py als
+  // los proces). Hier is er geen los proces/bestandssysteem beschikbaar
+  // -- worker.js's buildModules() (nieuw, zie engine/worker.js) doet
+  // dezelfde orkestratie maar rechtstreeks tegen de WASM-VM-instanties,
+  // en deze functies hier verzamelen de daarvoor benodigde bestandsinhoud
+  // uit de bestandsboom/tabs/localStorage vóórdat de boodschap naar de
+  // worker gaat (de worker heeft immers geen eigen toegang tot de
+  // gebruiker se bestanden, alleen tot compiler-artefacten in zijn eigen
+  // gedeelde VFS).
+  //
+  // BEWUST geen aparte "force herbouw"-optie zoals de CLI/Workbench-versie
+  // heeft: er is geen persistente "laatst gebouwde versie" tussen
+  // paginaherladingen om tegen te vergelijken, dus elke build herbouwt
+  // hier altijd alles (zie worker.js's buildModules-toelichting).
+
+  // Leest de inhoud van een bestand op zijn VFS-achtige projectpad --
+  // eerst de al-bekende bronnen (open tab/fileMap, dan localStorage se
+  // eigen bestanden), pas als laatste een echte fetch (voor een
+  // bronbestand dat nog nooit geopend is in deze sessie). Gedeeld door
+  // zowel de manifest-suggestie als de daadwerkelijke build hieronder.
+  async function getFileContentForPath(filePath) {
+    const openTab = state.openTabs.find((t) => t.path === filePath);
+    if (openTab) return openTab.content;
+    const cached = state.fileMap.get(filePath);
+    if (cached && cached.content !== undefined && cached.content !== null) return cached.content;
+    try {
+      const userFiles = JSON.parse(localStorage.getItem("websapl_user_files") || "{}");
+      if (userFiles[filePath] !== undefined) return userFiles[filePath];
+    } catch (_) {}
+    try {
+      const res = await fetch(filePath);
+      if (res.ok) return await res.text();
+    } catch (_) {}
+    return null;
+  }
+
+  // Alle module-namen die ergens in een manifest genoemd worden (als
+  // sleutel of als afhankelijkheid) -- een lossere, foutentolerante scan
+  // dan een echte parse (die zit in worker.js's parseManifestText, met
+  // de echte topologische sortering/cyclus-detectie); hier alleen nodig
+  // om te weten WELKE bestanden vooraf opgehaald moeten worden.
+  function extractManifestModuleNames(text) {
+    const names = new Set();
+    for (const raw of text.split("\n")) {
+      const line = raw.split("#")[0].trim();
+      if (!line) continue;
+      const idx = line.indexOf(":");
+      if (idx === -1) continue;
+      names.add(line.slice(0, idx).trim());
+      const rest = line.slice(idx + 1).trim();
+      if (rest) rest.split(/\s+/).forEach((n) => names.add(n));
+    }
+    return [...names];
+  }
+
+  async function buildModulesFromActiveFile(andRun) {
+    const activeTab = getActiveTab();
+    if (!activeTab) return;
+    if (state.isCompiling) return;
+
+    const manifestPath = (el.txtModulesManifest.value || "").trim();
+    const entryFunc = (el.txtModulesEntryFunc.value || "").trim() || "start";
+    if (!manifestPath) {
+      alert("Geef eerst een manifestbestand op (of genereer een suggestie hieronder).");
+      return;
+    }
+
+    state.isCompiling = true;
+    activeTab.content = state.editor.getValue();
+
+    toggleTerminal(true);
+    logTerminal(`\n=== Modulegewijs compileren: ${activeTab.path} (manifest: ${manifestPath}) ===\n`, "info");
+    setStatus("busy", "Bezig met modulegewijs compileren...");
+
+    try {
+      const manifestText = await getFileContentForPath(manifestPath);
+      if (manifestText === null) {
+        throw new Error(`manifest niet gevonden: ${manifestPath}`);
+      }
+
+      const manifestDir = pathDirname(manifestPath);
+      const entryModule = pathRelative(manifestDir, activeTab.path);
+
+      // Elke naam in het manifest -- sleutel of afhankelijkheid -- vooraf
+      // ophalen als broncode, relatief aan de manifest-map (zelfde
+      // resolutie als build_modules.py's eigen resolve()). Een naam die
+      // niet als bestand bestaat wordt hier stil overgeslagen; de
+      // worker se buildModules() geeft daar zelf een duidelijke fout
+      // over als die naam ECHT nodig blijkt (transitief vanaf de entry).
+      const names = extractManifestModuleNames(manifestText);
+      const moduleSources = {};
+      for (const name of names) {
+        const resolved = pathJoinNormalize(manifestDir, name);
+        const content = await getFileContentForPath(resolved);
+        if (content !== null) moduleSources[name] = content;
+      }
+      // De entry zelf staat mogelijk nog niet opgeslagen (actief bewerkt) --
+      // altijd de editor se HUIDIGE inhoud gebruiken, niet een eventueel
+      // stalere versie uit fileMap/localStorage.
+      moduleSources[entryModule] = activeTab.content;
+
+      const compileId = ++state.compileSeq;
+      state.pendingCompileCallbacks.set(compileId, (data) => {
+        if (data.stdout) logTerminal(data.stdout, "normal");
+        if (data.stderr) logTerminal(data.stderr, "warning");
+
+        if (data.success && data.files && data.files.length > 0) {
+          setStatus("ready", `Gecompileerd (${data.durationMs}ms)`);
+          logTerminal(`✓ Succesvol modulegewijs gecompileerd in ${data.durationMs}ms\n`, "success");
+
+          openGeneratedFiles(data.files);
+          const jmvmFile = data.files.find((f) => f.stage === "jmvm") || data.files[data.files.length - 1];
+          if (jmvmFile) setActiveTab(jmvmFile.path);
+          renderTabs();
+
+          if (andRun && jmvmFile) runJmvmFile(jmvmFile.path);
+        } else {
+          setStatus("error", "Modulegewijs compileren mislukt");
+          logTerminal(`✗ Modulegewijs compileren mislukt.\n`, "error");
+        }
+      });
+
+      const outPath = "/tmp/" + pathBasename(activeTab.path).replace(/\.cfp$/, "") + ".jmvm";
+      state.worker.postMessage({
+        type: "BUILD_MODULES",
+        id: compileId,
+        manifest: manifestText,
+        entryModule: entryModule,
+        entryFunc: entryFunc,
+        moduleSources: moduleSources,
+        outPath: outPath
+      });
+    } catch (err) {
+      state.isCompiling = false;
+      setStatus("error", "Fout");
+      logTerminal(`✗ Fout bij modulegewijs compileren: ${err.message}\n`, "error");
+    }
+  }
+
+  // --- Manifest-hulp: suggest_manifest.py's heuristiek in kale JS ---
+  //
+  // Zelfde ontwerp als de Python-versie (sapl_compiler/tools/
+  // suggest_manifest.py): een kandidaat-bestand "biedt" een naam aan
+  // (top-level functienaam, of ADT-constructornaam), een module
+  // "gebruikt" een naam als die letterlijk (heel woord, buiten
+  // commentaar) in zijn brontekst voorkomt. GEEN call-graph-analyse (zie
+  // dat script se docstring voor de twee blokkades die dat onoplosbaar
+  // maken zonder scope-tracking) -- een startpunt, geen afgeleide
+  // waarheid. Bewust NIET hergebruikt via de worker (dit heeft geen VM
+  // nodig, puur string-werk, dus rechtstreeks hier in de hoofdthread).
+
+  function stripCommentsJs(text) {
+    const outLines = [];
+    for (const line of text.split("\n")) {
+      let inString = false;
+      let cut = line.length;
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (c === '"' && (i === 0 || line[i - 1] !== "\\")) {
+          inString = !inString;
+        } else if (!inString && c === "/" && line[i + 1] === "/") {
+          cut = i;
+          break;
+        }
+      }
+      outLines.push(line.slice(0, cut));
+    }
+    return outLines.join("\n");
+  }
+
+  function splitDefinitionsJs(text) {
+    // Zelfde heuristiek als repl_retag.py's split_definitions/parser.cfp's
+    // mergeContinuations: een niet-ingesprongen regel begint een nieuwe
+    // top-level definitie. Onverwachte inspringing zonder voorgaande
+    // regel wordt hier stil genegeerd (i.p.v. een fout te gooien zoals
+    // de Python-versie) -- dit is een best-effort suggestie, één rommelig
+    // bestand mag de rest niet blokkeren.
+    const defs = [];
+    let current = null;
+    for (const raw of text.split("\n")) {
+      const stripped = raw.trim();
+      if (stripped === "" || stripped.startsWith("//")) continue;
+      const indented = raw.length > 0 && (raw[0] === " " || raw[0] === "\t");
+      if (!indented) {
+        if (current !== null) defs.push(current);
+        current = raw;
+      } else if (current !== null) {
+        current += "\n" + raw;
+      }
+    }
+    if (current !== null) defs.push(current);
+    return defs;
+  }
+
+  function extractDefNameJs(text) {
+    const stripped = text.trim();
+    let m = stripped.match(/^::\s*([A-Za-z_][A-Za-z0-9_]*)/);
+    if (m) return "::" + m[1];
+    m = stripped.match(/^([A-Za-z_][A-Za-z0-9_]*)/);
+    return m ? m[1] : null;
+  }
+
+  function extractConstructorNamesJs(defText) {
+    const stripped = defText.trim();
+    const eqIdx = stripped.indexOf("=");
+    if (!stripped.startsWith("::") || eqIdx === -1) return [];
+    const rhs = stripped.slice(eqIdx + 1);
+    const names = [];
+    for (const alt of rhs.split("|")) {
+      const m = alt.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)/);
+      if (m) names.push(m[1]);
+    }
+    return names;
+  }
+
+  // Vindt een directory-node in state.treeData op zijn pad (lege string
+  // = root); geeft `{ children: [...] }` terug zodat de aanroeper altijd
+  // gewoon `.children` kan lezen.
+  function findTreeDir(nodes, targetPath) {
+    if (!targetPath) return { children: nodes };
+    for (const n of nodes) {
+      if (n.type === "directory") {
+        if (n.path === targetPath) return n;
+        const found = findTreeDir(n.children || [], targetPath);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+
+  function listCfpSiblings(scopeDir) {
+    const dirNode = findTreeDir(state.treeData, scopeDir);
+    if (!dirNode) return [];
+    return (dirNode.children || [])
+      .filter((n) => n.type === "file" && n.ext === ".cfp")
+      .map((n) => n.path);
+  }
+
+  async function buildManifestSuggestion(entryPath, scopeDir, manifestDir) {
+    const candidatePaths = listCfpSiblings(scopeDir);
+    if (!candidatePaths.includes(entryPath)) candidatePaths.push(entryPath);
+
+    const bodies = {};
+    const index = {}; // naam -> Set(paden)
+    for (const p of candidatePaths) {
+      const content = await getFileContentForPath(p);
+      if (content === null) continue; // onleesbaar, overslaan (net als de Python-versie)
+      bodies[p] = stripCommentsJs(content);
+      for (const d of splitDefinitionsJs(content)) {
+        const name = extractDefNameJs(d);
+        if (!name) continue;
+        if (name.startsWith("::")) {
+          for (const cname of extractConstructorNamesJs(d)) {
+            (index[cname] = index[cname] || new Set()).add(p);
+          }
+        } else {
+          (index[name] = index[name] || new Set()).add(p);
+        }
+      }
+    }
+
+    const deps = {};
+    const ambiguous = {};
+    const queue = [entryPath];
+    const processed = new Set();
+    while (queue.length) {
+      const f = queue.shift();
+      if (processed.has(f)) continue;
+      processed.add(f);
+      if (!(f in bodies)) {
+        deps[f] = new Set();
+        continue;
+      }
+      const body = bodies[f];
+      // Een naam die `f` ZELF ook aanbiedt volledig genegeerd, niet
+      // alleen als kandidaat-provider -- zelfde fix als in
+      // suggest_manifest.py (anders matcht bv. elk bestand se eigen
+      // `start` tegen een ander bestand dat toevallig hetzelfde biedt).
+      const ownNames = new Set(Object.keys(index).filter((n) => index[n].has(f)));
+      const candidateNames = Object.keys(index).filter((n) => !ownNames.has(n));
+      const ownDeps = new Set();
+      const ownAmbiguous = [];
+      if (candidateNames.length > 0) {
+        const escaped = candidateNames.map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+        const pattern = new RegExp("(?<![A-Za-z0-9_])(" + escaped.join("|") + ")(?![A-Za-z0-9_])", "g");
+        const used = new Set(body.match(pattern) || []);
+        for (const name of [...used].sort()) {
+          const providers = index[name];
+          if (providers.size === 1) {
+            ownDeps.add([...providers][0]);
+          } else {
+            ownAmbiguous.push([name, [...providers].sort()]);
+          }
+        }
+      }
+      deps[f] = ownDeps;
+      if (ownAmbiguous.length) ambiguous[f] = ownAmbiguous;
+      for (const d of ownDeps) if (!processed.has(d)) queue.push(d);
+    }
+
+    const rel = (p) => pathRelative(manifestDir, p);
+    const order = [entryPath, ...Object.keys(deps).filter((m) => m !== entryPath).sort()];
+    const lines = [
+      "# Automatisch gegenereerde SUGGESTIE -- geen afgeleide waarheid, controleer/vul",
+      "# aan voor gebruik (heuristische naam-scan, geen call-graph-analyse)."
+    ];
+    for (const mod of order) {
+      const depLine = [...deps[mod]].map(rel).sort().join(" ");
+      lines.push(`${rel(mod)}: ${depLine}`.trimEnd());
+      for (const [name, providers] of (ambiguous[mod] || [])) {
+        lines.push(`#   WAARSCHUWING: '${name}' komt voor in meerdere kandidaten (${providers.map(rel).join(", ")}) -- kies er zelf een en voeg toe aan de regel hierboven.`);
+      }
+    }
+    return lines.join("\n") + "\n";
+  }
+
+  async function suggestModulesManifest() {
+    const activeTab = getActiveTab();
+    if (!activeTab || activeTab.ext !== ".cfp") {
+      alert("Open eerst een .cfp-bestand.");
+      return;
+    }
+    const manifestPath = (el.txtModulesManifest.value || "").trim();
+    if (!manifestPath) {
+      alert("Geef eerst een manifestpad op.");
+      return;
+    }
+    const scopeDir = (el.txtModulesScope.value || "").trim() || pathDirname(activeTab.path);
+    const manifestDir = pathDirname(manifestPath);
+
+    toggleTerminal(true);
+    logTerminal(`\n=== Manifest-suggestie (heuristiek, geen afgeleide waarheid) ===\n`, "info");
+    logTerminal(`Entry: ${activeTab.path}\nScope-map: ${scopeDir}\nManifest-map: ${manifestDir}\n`, "normal");
+    setStatus("busy", "Suggestie genereren...");
+
+    try {
+      const manifestText = await buildManifestSuggestion(activeTab.path, scopeDir, manifestDir);
+
+      // Suggestie als NIEUW, nog niet opgeslagen tabblad openen op het
+      // manifestpad -- hergebruikt zo de bestaande, al werkende editor +
+      // "Opslaan"-knop i.p.v. een aparte schrijf-route te bouwen. Bewust
+      // isDirty:true: dit is een suggestie, geen al-opgeslagen bestand.
+      const existingIdx = state.openTabs.findIndex((t) => t.path === manifestPath);
+      const tabData = {
+        path: manifestPath,
+        name: pathBasename(manifestPath),
+        ext: pathExt(manifestPath),
+        content: manifestText,
+        originalContent: "",
+        isDirty: true,
+        viewMode: "edit"
+      };
+      if (existingIdx >= 0) state.openTabs[existingIdx] = tabData;
+      else state.openTabs.push(tabData);
+      setActiveTab(manifestPath);
+      renderTabs();
+
+      setStatus("ready", "Suggestie geopend -- controleer/bewerk en klik Opslaan");
+      logTerminal(`✓ Suggestie geopend als tabblad (${manifestPath}) -- controleer/bewerk vóór opslaan.\n`, "success");
+    } catch (err) {
+      setStatus("error", "Fout");
+      logTerminal(`✗ Fout bij suggestie: ${err.message}\n`, "error");
+    }
+  }
+
+  // --- REPL: Sapl+ REPL, client-side poort van sapl_compiler/tools/
+  // repl_retag.py (docs/2026-09-13_repl_gebruik.md) ---
+  //
+  // Alle sessie-logica (naam-tabel, atomische kandidaat-dan-promoveer-
+  // rebuild, prelude-/reserved-name-botsingen) zit in engine/worker.js's
+  // replXxx()-functies, hergebruikt van dezelfde vijf WASM-primitieven
+  // als de "modules"-backend hierboven. Hier alleen: commando's parsen
+  // (dezelfde `:def`/`:history`/`:undo`/`:reset`/`:load`/`:save`/`:funcs`-
+  // syntax als de terminal-versies), `:load`/`:save`'s bestandstoegang
+  // (getFileContentForPath/nieuw-tabblad-openen, al gebouwd voor de
+  // modules-hulp hierboven), en het logvenster.
+
+  function replCall(cmd, extra) {
+    return new Promise((resolve) => {
+      const id = ++state.compileSeq;
+      state.pendingCompileCallbacks.set(id, resolve);
+      state.worker.postMessage({ type: "REPL_EVAL", id, cmd, ...extra });
+    });
+  }
+
+  function replInitCall() {
+    return new Promise((resolve) => {
+      const id = ++state.compileSeq;
+      state.pendingCompileCallbacks.set(id, resolve);
+      state.worker.postMessage({ type: "REPL_INIT", id });
+    });
+  }
+
+  function scrollReplLogToBottom() {
+    if (el.replLog) el.replLog.scrollTop = el.replLog.scrollHeight;
+  }
+
+  function replAppendLog(text, cssClass) {
+    if (!el.replLog || !text) return;
+    if (cssClass) {
+      const span = document.createElement("span");
+      span.className = cssClass;
+      span.textContent = text;
+      el.replLog.appendChild(span);
+    } else {
+      el.replLog.appendChild(document.createTextNode(text));
+    }
+    scrollReplLogToBottom();
+  }
+
+  function setReplBusy(busy) {
+    state.replBusy = busy;
+    const idle = state.replReady && !busy;
+    [el.txtReplInput, el.btnReplSend, el.btnReplHistory, el.btnReplUndo,
+      el.btnReplFuncs, el.btnReplReset, el.txtReplLoad, el.btnReplLoad,
+      el.txtReplSave, el.btnReplSave].forEach((node) => { if (node) node.disabled = !idle; });
+  }
+
+  async function openReplTab() {
+    const existing = state.openTabs.find((t) => t.path === "__repl__");
+    if (!existing) state.openTabs.push({ path: "__repl__", name: "REPL", kind: "repl" });
+    setActiveTab("__repl__");
+
+    if (state.replInitStarted) return;
+    state.replInitStarted = true;
+
+    if (el.replStatus) {
+      el.replStatus.textContent = "Bezig met initialiseren...";
+      el.replStatus.className = "tool-panel-status busy";
+    }
+    try {
+      // Wacht op de WASM-engine zelf (dezelfde compileSapl/compileRetag
+      // gebruiken 'm ook al, maar die worden pas na een gebruikersactie
+      // aangeroepen -- de REPL-tab kan potentieel eerder geopend worden).
+      if (!state.workerReady) {
+        await new Promise((resolve) => {
+          const check = () => { if (state.workerReady) resolve(); else setTimeout(check, 100); };
+          check();
+        });
+      }
+      const r = await replInitCall();
+      if (!r.success) throw new Error(r.error);
+      state.replReady = true;
+      if (el.replStatus) {
+        el.replStatus.textContent = "Klaar.";
+        el.replStatus.className = "tool-panel-status ok";
+      }
+      setReplBusy(false);
+      replAppendLog("Sapl+ REPL klaar. Typ een expressie, of ':def naam ... = ...' voor een eigen functie/ADT.\n");
+      if (el.txtReplInput) el.txtReplInput.focus();
+    } catch (err) {
+      if (el.replStatus) {
+        el.replStatus.textContent = `Fout: ${err.message}`;
+        el.replStatus.className = "tool-panel-status crashed";
+      }
+      replAppendLog(`fout bij initialiseren: ${err.message}\n`, "repl-line-error");
+    }
+  }
+
+  // :load <pad> -- zelfde .jmvm->.cfp-terugval en identiek-aan-de-
+  // prelude-tolerantie als repl_retag.py/vm.cpp's REPL_HOST, hier alleen
+  // het BESTANDSTOEGANG-deel (de sessie-logica zit in worker.js's
+  // replLoadContent) via getFileContentForPath, dezelfde resolver als de
+  // modules-backend hierboven.
+  async function replHandleLoad(pathArg) {
+    if (!pathArg) throw new Error(":load heeft een bestandspad nodig, bv. ':load mijn_functies.cfp'");
+    const ext = pathExt(pathArg);
+    let usePath = pathArg;
+    if (ext !== ".cfp" && ext !== ".spp") {
+      const base = ext ? pathArg.slice(0, -ext.length) : pathArg;
+      const sibling = base + ".cfp";
+      const siblingContent = await getFileContentForPath(sibling);
+      if (siblingContent !== null) {
+        replAppendLog(`'${pathArg}' is geen Sapl-broncode (${ext}) -- '${sibling}' geladen in plaats daarvan.\n`);
+        usePath = sibling;
+      } else {
+        throw new Error(`:load verwacht Sapl-broncode (.cfp/.spp), geen '${ext}'-bestand (${pathArg}). Ook geen '${sibling}' gevonden om in plaats daarvan te laden.`);
+      }
+    }
+    const content = await getFileContentForPath(usePath);
+    if (content === null) throw new Error(`bestand niet gevonden: ${usePath}`);
+    const r = await replCall("load", { content });
+    if (!r.success) throw new Error(r.error);
+    for (const note of r.notes) replAppendLog(note + "\n");
+    replAppendLog(r.names.length
+      ? `geladen: ${r.names.join(", ")}\n`
+      : "geladen: (niets nieuws -- alles was al gereserveerd of stond al in de prelude)\n");
+  }
+
+  // :save <pad> -- opent de sessie (zonder prelude) als nieuw, nog niet
+  // opgeslagen tabblad, zelfde patroon als de modules-manifest-suggestie:
+  // websapl heeft geen los "schrijf naar willekeurig pad"-endpoint zoals
+  // de Workbench's /api/save, dus de bestaande editor+Opslaan-knop is de
+  // aangewezen weg -- vandaar de tekst hieronder ("klik op Opslaan") i.p.v.
+  // simpelweg "opgeslagen" te claimen zoals de terminal-REPL's dat doen
+  // (die schrijven wél meteen echt naar schijf).
+  async function replHandleSave(pathArg) {
+    if (!pathArg) throw new Error(":save heeft een bestandspad nodig, bv. ':save mijn_sessie.cfp'");
+    const r = await replCall("save");
+    if (!r.success) throw new Error(r.error);
+    const existingIdx = state.openTabs.findIndex((t) => t.path === pathArg);
+    const tabData = {
+      path: pathArg,
+      name: pathBasename(pathArg),
+      ext: pathExt(pathArg),
+      content: r.content,
+      originalContent: "",
+      isDirty: true,
+      viewMode: "edit"
+    };
+    if (existingIdx >= 0) state.openTabs[existingIdx] = tabData;
+    else state.openTabs.push(tabData);
+    renderTabs();
+    replAppendLog(`sessie geopend als nieuw tabblad (${pathArg}) -- klik op dat tabblad en dan op Opslaan om te bewaren.\n`);
+  }
+
+  // Zelfde dispatch-structuur als repl_retag.py's dispatch()/vm.cpp's
+  // dispatchH -- elke tak drukt exact dezelfde meldingen af als de
+  // terminal-versies, zodat het logvenster hier identiek leesbaar is.
+  async function sendReplLine(line) {
+    if (!line.trim() || !state.replReady || state.replBusy) return;
+    replAppendLog(`repl> ${line}\n`, "repl-line-typed");
+    setReplBusy(true);
+    if (el.replStatus) { el.replStatus.textContent = "Bezig..."; el.replStatus.className = "tool-panel-status busy"; }
+
+    try {
+      if (line.startsWith(":def")) {
+        const text = line.slice(4).trim();
+        if (!text) throw new Error(":def heeft een clausule/ADT-declaratie nodig, bv. ':def double x = x * 2'");
+        const r = await replCall("def", { text });
+        if (!r.success) throw new Error(r.error);
+        replAppendLog(`gedefinieerd: ${r.name}\n`);
+      } else if (line === ":list" || line === ":history") {
+        const r = await replCall("history");
+        if (!r.success) throw new Error(r.error);
+        if (r.entries.length === 0) replAppendLog("  (lege sessie)\n");
+        for (const entry of r.entries) replAppendLog(`  ${entry.name}: ${entry.text}\n`);
+      } else if (line === ":undo") {
+        const r = await replCall("undo");
+        if (!r.success) throw new Error(r.error);
+        replAppendLog("ongedaan gemaakt\n");
+      } else if (line === ":reset") {
+        const r = await replCall("reset");
+        if (!r.success) throw new Error(r.error);
+        replAppendLog("sessie geleegd\n");
+      } else if (line.startsWith(":load")) {
+        await replHandleLoad(line.slice(5).trim());
+      } else if (line.startsWith(":save")) {
+        await replHandleSave(line.slice(5).trim());
+      } else if (line === ":funcs") {
+        const r = await replCall("funcs");
+        if (!r.success) throw new Error(r.error);
+        if (r.funcs.length === 0) replAppendLog("  (geen functies)\n");
+        for (const f of r.funcs) replAppendLog(`  ${f}\n`);
+      } else {
+        const r = await replCall("eval", { line });
+        if (!r.success) throw new Error(r.error);
+        replAppendLog(`${r.output}\n  (${r.name})\n`);
+      }
+      if (el.replStatus) { el.replStatus.textContent = "Klaar."; el.replStatus.className = "tool-panel-status ok"; }
+    } catch (err) {
+      replAppendLog(`fout: ${err.message}\n`, "repl-line-error");
+      if (el.replStatus) { el.replStatus.textContent = `Fout: ${err.message}`; el.replStatus.className = "tool-panel-status crashed"; }
+    }
+    setReplBusy(false);
+    if (el.txtReplInput) el.txtReplInput.focus();
+  }
+
+  function sendReplInputLine() {
+    if (!el.txtReplInput) return;
+    const line = el.txtReplInput.value;
+    if (!line.trim()) return;
+    el.txtReplInput.value = "";
+    sendReplLine(line);
+  }
+
+  function sendReplLoad() {
+    if (!el.txtReplLoad) return;
+    const target = el.txtReplLoad.value.trim();
+    if (!target) return;
+    sendReplLine(`:load ${target}`);
+  }
+
+  function sendReplSave() {
+    if (!el.txtReplSave) return;
+    const target = el.txtReplSave.value.trim();
+    if (!target) return;
+    sendReplLine(`:save ${target}`);
+  }
+
   async function runJmvmFile(filePath, customStdin = "") {
     const activeTab = getActiveTab();
     let targetPath = filePath;
     let targetContent = "";
 
     if (!targetPath) {
-      if (!activeTab) return;
+      if (!activeTab || isToolTab(activeTab)) return;
       if (activeTab.ext === ".jmvm") {
         targetPath = activeTab.path;
         targetContent = activeTab.content;
@@ -1138,6 +1828,37 @@
     el.btnClearTerminal.onclick = () => showWelcomeMessage();
     el.treeSearch.oninput = () => renderTree();
 
+    // Modules-backend: welke van de drie compiler-radio's ook wisselt,
+    // "Modules: manifest" toont/verbergt zich alleen op basis van of
+    // "modules" nu gekozen is (zie updateModulesSectionVisibility).
+    for (const radio of [el.compilerSapl, el.compilerRetag, el.compilerModules]) {
+      if (radio) radio.addEventListener("change", updateModulesSectionVisibility);
+    }
+    // Eenmaal handmatig bewerkt onthoudt het veld dat (dataset.userEdited),
+    // zodat updateCompilerConfigForFile een volgend .cfp-bestand niet
+    // stilzwijgend over een bewuste eigen invoer heen schrijft.
+    for (const input of [el.txtModulesScope, el.txtModulesManifest]) {
+      if (input) input.addEventListener("input", () => { input.dataset.userEdited = "1"; });
+    }
+    if (el.btnModulesSuggest) el.btnModulesSuggest.onclick = () => suggestModulesManifest();
+
+    // REPL panel
+    if (el.btnOpenRepl) el.btnOpenRepl.onclick = () => openReplTab();
+    if (el.btnReplHistory) el.btnReplHistory.onclick = () => sendReplLine(":history");
+    if (el.btnReplUndo) el.btnReplUndo.onclick = () => sendReplLine(":undo");
+    if (el.btnReplFuncs) el.btnReplFuncs.onclick = () => sendReplLine(":funcs");
+    if (el.btnReplReset) {
+      el.btnReplReset.onclick = () => {
+        if (confirm("Sessie legen? (kan met Undo weer teruggezet worden)")) sendReplLine(":reset");
+      };
+    }
+    if (el.btnReplLoad) el.btnReplLoad.onclick = () => sendReplLoad();
+    if (el.btnReplSave) el.btnReplSave.onclick = () => sendReplSave();
+    if (el.btnReplSend) el.btnReplSend.onclick = () => sendReplInputLine();
+    if (el.txtReplInput) el.txtReplInput.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); sendReplInputLine(); } };
+    if (el.txtReplLoad) el.txtReplLoad.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); sendReplLoad(); } };
+    if (el.txtReplSave) el.txtReplSave.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); sendReplSave(); } };
+
     // Context Menu Handlers
     if (el.ctxCloseTab) el.ctxCloseTab.onclick = () => { if (state.contextMenuTabPath) closeTab(state.contextMenuTabPath); hideTabContextMenu(); };
     if (el.ctxCloseOthers) el.ctxCloseOthers.onclick = () => { if (state.contextMenuTabPath) closeOtherTabs(state.contextMenuTabPath); hideTabContextMenu(); };
@@ -1201,6 +1922,43 @@
     const base = pathBasename(p);
     const idx = base.lastIndexOf(".");
     return idx >= 0 ? base.substring(idx) : "";
+  }
+  function pathDirname(p) {
+    const idx = p.lastIndexOf("/");
+    return idx >= 0 ? p.substring(0, idx) : "";
+  }
+  // Kaal string-pad-join+normalize voor VFS-achtige paden (geen leidende
+  // '/', '/'-gescheiden, mag '..'/'.'-segmenten bevatten) -- dezelfde
+  // taak als Node's path.join+path.normalize, hier zelf gedaan omdat
+  // geen van beide beschikbaar is in dit browser-only bestand. Gebruikt
+  // om een manifest-regel (relatief aan de manifest-map) terug te
+  // vertalen naar een echt project-pad (zie buildModulesFromActiveFile).
+  function pathJoinNormalize(base, rel) {
+    const parts = (base ? base.split("/") : []).concat(rel.split("/"));
+    const stack = [];
+    for (const part of parts) {
+      if (part === "" || part === ".") continue;
+      if (part === "..") { if (stack.length) stack.pop(); }
+      else stack.push(part);
+    }
+    return stack.join("/");
+  }
+  // Kaal path.relative-equivalent voor VFS-achtige paden (geen leidende
+  // '/', beide slash-gescheiden): vindt het gemeenschappelijke
+  // mapvoorvoegsel, en '..'-t vervolgens uit de rest terug omlaag.
+  // Gebruikt om een manifest-sleutel (relatief aan de manifest-map, niet
+  // per se de map van het entry-bestand) te berekenen -- zie
+  // buildModulesFromActiveFile/suggestModulesManifest voor waarom dat
+  // onderscheid nodig is (build_modules.py resolvt paden relatief aan de
+  // manifest-LOCATIE, niet aan waar de modules zelf staan).
+  function pathRelative(fromDir, toPath) {
+    const fromParts = fromDir ? fromDir.split("/") : [];
+    const toParts = toPath.split("/");
+    let i = 0;
+    while (i < fromParts.length && i < toParts.length - 1 && fromParts[i] === toParts[i]) i++;
+    const ups = fromParts.length - i;
+    const downs = toParts.slice(i);
+    return Array(ups).fill("..").concat(downs).join("/");
   }
   function escapeHtml(text) {
     const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };

@@ -13,6 +13,8 @@
 - ⏱️ **Realtime Profiler**: Direct inzicht in executietijd (ms), aantal instructies, functiecalls, heapallocaties (`creates`) en garbage collecties, na elke run.
 - 📝 **Moderne Code Editor**: Syntax-highlighting voor Sapl (`.cfp`/`.spp`/`.lfp`), multi-tab beheer, auto-indentatie, tabulatie en foutmeldingen (via CodeMirror).
 - ✏️ **Bewerken & opslaan**: bestanden rechtstreeks in de browser bewerken; "Opslaan" bewaart je wijziging in `localStorage` van je eigen browser (blijft dus lokaal, wordt niet teruggeschreven naar de repo).
+- ⌨️ **Sapl+ REPL**: interactief expressies evalueren en eigen functies/ADT's
+  definiëren, zonder ergens te compileren — zie hieronder.
 
 ---
 
@@ -25,13 +27,13 @@
    ontstaat pas zodra je daarop klikt — dat houdt de boom overzichtelijk.
 2. **Een `.cfp`-bestand compileren** — open het bestand, kies rechts een
    **Compiler Backend** (`saplcomp`, de zelf-hostende Sapl-compiler in
-   WebAssembly; of `retagcomp` voor Stage-4 Retag-bestanden), zet eventueel
-   **Strictness Analyse** aan/uit, en kies welke **Tussenformaten (Stages)**
-   je wilt zien naast de uiteindelijke `.jmvm`-bytecode (bijv. `parse`,
-   `lift`, ...) — handig om de compiler-pipeline stap voor stap te
-   inspecteren. Klik dan **Compileer** (alleen bouwen), **Compileer & Run**
-   (bouwen en meteen uitvoeren), of **Run** (een reeds gecompileerd `.jmvm`
-   bestand draaien).
+   WebAssembly; `retagcomp` voor Stage-4 Retag-bestanden; of `modules`,
+   zie hieronder), zet eventueel **Strictness Analyse** aan/uit, en kies
+   welke **Tussenformaten (Stages)** je wilt zien naast de uiteindelijke
+   `.jmvm`-bytecode (bijv. `parse`, `lift`, ...) — handig om de compiler-
+   pipeline stap voor stap te inspecteren. Klik dan **Compileer** (alleen
+   bouwen), **Compileer & Run** (bouwen en meteen uitvoeren), of **Run**
+   (een reeds gecompileerd `.jmvm` bestand draaien).
 3. **Een `.spp`-bestand (Sapl+) gebruiken** — open het bestand en klik op
    **Preprocess (.spp → .cfp)**. Dat zet de Sapl+ syntax om naar gewone Sapl
    en opent het resultaat als nieuw `.cfp`-tabblad; vanaf daar werkt stap 2
@@ -46,6 +48,67 @@
    onderaan.
 6. **Graphics Studio** (rechtsboven) — een aparte pagina om de `.cfp`-
    programma's in `grafisch/` visueel te draaien.
+
+### Modulegewijs compileren (backend "modules")
+
+Een client-side poort van `sapl_compiler/tools/build_modules.py` (zie
+`docs/2026-09-13_modules_compileren_en_linken_gebruik.md`): compileert
+het geopende bestand (de entry-module) apart tegen alleen de gegenereerde
+defs/typedefs-signaturen van zijn afhankelijkheden, en linkt+snoeit dat
+daarna samen tot één `.jmvm`, allemaal via herhaalde, verse WASM-VM-
+instanties (`engine/worker.js`'s `buildModules()`) — geen los proces of
+echt bestandssysteem nodig, exact dezelfde `createJMVMModule()`/VFS-truc
+als de bestaande `saplcomp.jmvm`/`retagcomp.jmvm`-integratie.
+
+Kies `modules` als Compiler Backend en vul een **manifestbestand** in —
+een gewoon `.txt`-bestand (virtueel pad, bv. `workspace/manifest.txt`)
+met `<module>: <dep1> <dep2> ...` per regel, paden relatief aan de
+manifest-locatie. Het geopende bestand is altijd de entry-module (geen
+apart entry-veld — dat voorkomt dat het veld en het daadwerkelijk
+gecompileerde bestand uit elkaar kunnen lopen).
+
+**Hulp bij het manifest** ("Genereer suggestie"): een heuristische,
+tekstuele naam-scan (dezelfde aanpak als `sapl_compiler/tools/
+suggest_manifest.py`, hier zelfstandig in kale JS herschreven, geen
+call-graph-analyse) door de `.cfp`-bestanden in de opgegeven scope-map —
+een startpunt om te controleren en aan te vullen, geen afgeleide
+waarheid. Opent de suggestie als nieuw, nog niet opgeslagen tabblad op
+het manifestpad; controleer/bewerk en klik gewoon **Opslaan** zoals bij
+elk ander bestand.
+
+**Geen "force herbouw"-optie** (in tegenstelling tot de CLI/Workbench-
+versie): zonder een echt bestandssysteem is er geen persistente "laatst
+gebouwde versie" tussen paginaherladingen om tegen te vergelijken, dus
+elke build herbouwt hier altijd alle modules opnieuw.
+
+### Sapl+ REPL (⌨️ REPL)
+
+Client-side poort van [`sapl_compiler/tools/repl_retag.py`](../sapl_compiler/tools/repl_retag.py)
+(zie [`docs/2026-09-13_repl_gebruik.md`](../docs/2026-09-13_repl_gebruik.md)
+voor de volledige gebruikershandleiding, gedeeld met de terminal- en
+Workbench-versies) — de derde, gedrag-identieke implementatie van
+dezelfde sessie-logica, hier tegen `engine/worker.js`'s WASM-VM-
+instanties in plaats van een los proces of subprocessen. Hergebruikt
+dezelfde vijf primitieven als de "modules"-backend hierboven
+(`saplcomp.jmvm`, `saplcomp_module.jmvm`, `retaglink.jmvm`,
+`retagcomp.jmvm`, en de bestaande JMVM-uitvoerder).
+
+Klik **⌨️ REPL** in de kopbalk om het REPL-tabblad te openen. Typ een
+expressie (Enter of **Uitvoeren**) of `:def naam ... = ...` voor een
+eigen functie/ADT; de belangrijkste commando's hebben ook een eigen
+knop (**Historie**, **Undo**, **Functies**, **Reset**), plus `:load`/
+`:save` met een eigen padveld. Geen Start/Stop nodig — de sessie leeft
+zolang de pagina open blijft.
+
+**Twee verschillen met de terminal-/Workbench-versies**, allebei
+inherent aan het ontbreken van een echt bestandssysteem:
+- `:load <pad>` leest het bestand uit de bestandsboom/al-geopende
+  tabbladen/localStorage (dezelfde bestandsresolutie als de modules-hulp
+  hierboven), niet van schijf.
+- `:save <pad>` opent de sessie als nieuw, nog niet opgeslagen tabblad
+  op dat pad — klik daarna zelf op **Opslaan** om 'm echt te bewaren
+  (in `localStorage`), in plaats van meteen naar schijf te schrijven
+  zoals de terminal-versies.
 
 Zie ook `parser_combinators/README.md` voor meer over Sapl+ specifiek,
 `lamlift/README.md` voor `.lfp`, en `paper_examples/README.md` voor de

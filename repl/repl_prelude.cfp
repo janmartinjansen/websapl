@@ -1,0 +1,95 @@
+// repl_prelude.cfp -- de vaste prelude van sapl_compiler/tools/
+// repl_retag.py en vm.cpp's REPL_HOST (zie docs/2026-09-13_repl_gebruik.md
+// en docs/2026-09-13_repl_via_retag_linking_plan.md #6/showVal).
+//
+// BEWUST GEEN `#import "repl/stddyn.cfp"`: dat bestand doet zelf
+// `#import "lib/stdlib.cfp"`, wat de VOLLEDIGE stdlib meebrengt --
+// inclusief `take`/`filter`/`map`/`drop`/`reverse`/`foldl`/`foldr`, die
+// `showVal`/`printVal` helemaal niet nodig hebben (geverifieerd: hun
+// enige echte afhankelijkheden zijn `itoa`/`list2str`/`strcat`, en die
+// op hun beurt alleen `append`/`length`/`fillStr`/`strls`/`::list`). Elke
+// naam hier is voor `:load` een gereserveerde naam (§6 van het REPL-
+// gebruiksdoc, "prelude-collision"-check) -- en 10 van de 12
+// kernbenchmarks declareren zelf `::list`, en sommige (bv. `primes.cfp`)
+// hun eigen `take`. Met de volledige stdlib als prelude zou `:load` op
+// zulke, overigens heel normale, standalone `.cfp`-bestanden onnodig
+// vaak mislukken (gemeld: `:load benchmarks/primes.jmvm` gaf uiteindelijk
+// een botsing op `take`, een naam die `showVal` nooit gebruikt). Deze
+// file bevat daarom alleen wat `showVal`/`printVal` ECHT nodig hebben,
+// zelfstandig gekopieerd (niet ge-`#import`) uit `lib/stdlib.cfp` en
+// `repl/stddyn.cfp` -- geen wijziging aan die twee bestanden, want beide
+// hebben andere gebruikers (`repl/repl.cfp`, `reflection/serialize.cfp`,
+// `reflection/generic.cfp`, ...) die de volledige stdlib wél nodig hebben.
+
+::list = Nil | Cons !x xs
+
+append xs ys =
+  case xs
+    (Nil -> ys)
+    (Cons x xs -> Cons x (append xs ys))
+
+length xs =
+  case xs
+    (Nil -> 0)
+    (Cons x xs -> 1 + length xs)
+
+strls !n !s = if (n < strlen s) (Cons (strat n s) (strls (n+1) s)) Nil
+
+str2list !s = strls 0 s
+
+fillStr !i !xs !arr =
+  case xs
+    (Nil -> arr)
+    (Cons c cs -> fillStr (i+1) cs (update c i arr))
+
+list2str !cs = fillStr 0 cs (strcreate (length cs))
+
+strcat !s1 !s2 = list2str (append (str2list s1) (str2list s2))
+
+itoa n =
+  if (n < 0) (Cons '-' (itoa (0 - n)))
+  (if (n < 10) (Cons ('0' + n) Nil)
+  (append (itoa (n / 10)) (Cons ('0' + (n % 10)) Nil)))
+
+// --- vanaf hier: repl/stddyn.cfp's eigen showVal/printVal, ongewijzigd ---
+
+TYPE_INT    = 1
+TYPE_FLOAT  = 2
+TYPE_STRING = 3
+TYPE_FUNC   = 4
+
+isInt    !x = typeId x == TYPE_INT
+isFloat  !x = typeId x == TYPE_FLOAT
+isString !x = typeId x == TYPE_STRING
+isFunc   !x = typeId x == TYPE_FUNC
+isADT    !x = typeId x > TYPE_FUNC
+
+applyDynamicByName !name !args = applyDynamic (lookup name) args
+
+showVal x =
+  let tid = typeId x in if (tid > TYPE_FUNC) (showConstr x) (showValAux tid x)
+
+showValAux !tid !x =
+  if (tid == TYPE_INT) (list2str (itoa x))
+  (if (tid == TYPE_FLOAT) (ftoa x)
+  (if (tid == TYPE_STRING) x
+  (if (tid == TYPE_FUNC) (showFunc x)
+  (showConstr x))))
+
+showFunc !x = strcat "<fn:" (strcat (funcName x) (strcat "/" (strcat (list2str (itoa (funcArity x))) ">")))
+
+showConstr !x =
+  let name = constrName x, arity = getConstrArity x in
+  if (arity == 0) name (strcat name (strcat "(" (strcat (showFields x 0 arity) ")")))
+
+showFields !x !i !n =
+  if (i == n)
+    ""
+    (if (i == n - 1)
+       (showVal (getField x i))
+       (strcat (showVal (getField x i)) (strcat ", " (showFields x (i + 1) n))))
+
+getConstrArity !x =
+  let c = lookup (constrName x) in if (typeId c == TYPE_FUNC) (funcArity c) 0
+
+printVal !x = printString (showVal x)

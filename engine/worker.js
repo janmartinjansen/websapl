@@ -13,6 +13,13 @@ let saplcompBytecode = null;
 let retagcompBytecode = null;
 let driverBytecode = null;
 let lamliftBytecode = null;
+// Modulegewijs compileren (docs/2026-09-13_modules_compileren_en_linken_
+// gebruik.md, workbench's "modules"-backend): saplcomp_module.jmvm
+// compileert één module tegen de defs/typedefs van zijn afhankelijkheden,
+// retaglink.jmvm linkt+snoeit meerdere modules' retag-tekst samen vanaf
+// een entry-functie. Zie buildModules() verderop in dit bestand.
+let saplcompModuleBytecode = null;
+let retaglinkBytecode = null;
 // #import dependencies driver.jmvm's own expandImports (preprocess/
 // importexpand.cfp) needs on disk to preprocess the bundled Sapl+ examples
 // (websapl/benchmarks_saplplus/, websapl/parser_combinators/):
@@ -165,6 +172,30 @@ async function initEngine(data = {}) {
       if (res.ok) {
         const buf = await res.arrayBuffer();
         lamliftBytecode = new Uint8Array(buf);
+      }
+    } catch (_) {}
+  }
+
+  if (data.saplcompModuleBase64) {
+    saplcompModuleBytecode = base64ToUint8Array(data.saplcompModuleBase64);
+  } else {
+    try {
+      const res = await fetch("./saplcomp_module.jmvm?v=" + Date.now());
+      if (res.ok) {
+        const buf = await res.arrayBuffer();
+        saplcompModuleBytecode = new Uint8Array(buf);
+      }
+    } catch (_) {}
+  }
+
+  if (data.retaglinkBase64) {
+    retaglinkBytecode = base64ToUint8Array(data.retaglinkBase64);
+  } else {
+    try {
+      const res = await fetch("./retaglink.jmvm?v=" + Date.now());
+      if (res.ok) {
+        const buf = await res.arrayBuffer();
+        retaglinkBytecode = new Uint8Array(buf);
       }
     } catch (_) {}
   }
@@ -579,6 +610,290 @@ async function preprocessLfp(source, srcPath) {
 }
 
 /**
+ * Modulegewijs compileren (docs/2026-09-13_modules_compileren_en_linken_
+ * gebruik.md #"Bouwvolgorde automatiseren"): een JS-poort van
+ * sapl_compiler/tools/build_modules.py's orkestratie -- leest een
+ * expliciet manifest, sorteert topologisch, en roept per module in de
+ * juiste volgorde saplcomp.jmvm (--emit=defs/typedefs, via de al
+ * bestaande runCompilerStage hierboven -- een module heeft zelf geen
+ * #import-regels, dus resolveImports() overslaan is hier veilig/nodig)
+ * en saplcomp_module.jmvm (--emit=retag tegen de afhankelijkheden' defs/
+ * typedefs) aan, gevolgd door retaglink.jmvm (linken+snoeien vanaf de
+ * entry-functie) en retagcomp.jmvm (naar echte bytecode).
+ *
+ * BEWUST GEEN staleness/make-achtige overslaan-als-ongewijzigd zoals de
+ * CLI-versie (mtime-vergelijking tegen een bestaand .retag.txt) -- er is
+ * hier geen persistente "laatst gebouwde versie op schijf" tussen
+ * paginaherladingen, en elke module opnieuw bouwen is in WASM goedkoop
+ * genoeg voor de kleine, samenhorende module-mapjes waar dit spoor voor
+ * bedoeld is (zelfde schaal-aanname als suggest_manifest.py hieronder in
+ * de UI-laag). `moduleSources` (path -> broncode) komt van de hoofdthread
+ * mee -- de worker heeft geen eigen bestandssysteem met de gebruiker se
+ * bestanden, alleen de gedeelde `jmvmModule.FS` voor compiler-artefacten.
+ */
+function parseManifestText(text) {
+  const deps = {};
+  const lines = text.split("\n");
+  for (const raw of lines) {
+    const line = raw.split("#")[0].trim();
+    if (!line) continue;
+    const idx = line.indexOf(":");
+    if (idx === -1) throw new Error(`ongeldige manifestregel (geen ':' gevonden): ${raw}`);
+    const mod = line.slice(0, idx).trim();
+    const rest = line.slice(idx + 1).trim();
+    deps[mod] = rest ? rest.split(/\s+/) : [];
+  }
+  return deps;
+}
+
+function topoOrderModules(deps, entry) {
+  const order = [];
+  const visiting = new Set();
+  const visited = new Set();
+  function visit(mod, stack) {
+    if (visited.has(mod)) return;
+    if (visiting.has(mod)) {
+      throw new Error(`circulaire afhankelijkheid: ${stack.concat([mod]).join(" -> ")}`);
+    }
+    if (!(mod in deps)) {
+      throw new Error(`'${mod}' wordt als afhankelijkheid genoemd maar staat niet in het manifest`);
+    }
+    visiting.add(mod);
+    for (const dep of deps[mod]) visit(dep, stack.concat([mod]));
+    visiting.delete(mod);
+    visited.add(mod);
+    order.push(mod);
+  }
+  visit(entry, []);
+  return order;
+}
+
+/**
+ * Eén module compileren tegen de defs/typedefs van zijn afhankelijkheden
+ * (saplcomp_module.jmvm's 5-regelige stdin-protocol: bron, doel, stage,
+ * defs-paden (spatie-gescheiden), typedefs-paden). Elke afhankelijkheid'
+ * defs/typedefs-TEKST (al elders gegenereerd) wordt hier naar een eigen
+ * tijdelijk VFS-pad geschreven, puur om aan het protocol te voldoen --
+ * saplcomp_module.jmvm leest ze zelf weer in als gewone bestanden.
+ */
+async function runSaplcompModuleStage(moduleSource, stage, outPath, defsContents, typedefsContents) {
+  if (!saplcompModuleBytecode) throw new Error("saplcomp_module.jmvm kon niet geladen worden.");
+
+  const defsPaths = defsContents.map((_, i) => `/tmp/deps/d${i}.defs.txt`);
+  const typedefsPaths = typedefsContents.map((_, i) => `/tmp/deps/d${i}.typedefs.txt`);
+  const stdinText = `/tmp/mod_in.cfp\n${outPath}\n${stage}\n${defsPaths.join(" ")}\n${typedefsPaths.join(" ")}\n`;
+  let stdinBuffer = stdinText.split("");
+  let stdinIndex = 0;
+  let compilerOutput = [];
+
+  const instance = await createJMVMModule({
+    noInitialRun: true,
+    locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm" : (prefix || "") + p),
+    stdin: () => (stdinIndex < stdinBuffer.length ? stdinBuffer[stdinIndex++].charCodeAt(0) : null),
+    stdout: (c) => compilerOutput.push(String.fromCharCode(c)),
+    stderr: (c) => compilerOutput.push(String.fromCharCode(c))
+  });
+
+  instance.FS.writeFile("/saplcomp_module.jmvm", saplcompModuleBytecode);
+  instance.FS.writeFile("/tmp/mod_in.cfp", moduleSource);
+  try { if (!instance.FS.analyzePath("/tmp/deps").exists) instance.FS.mkdir("/tmp/deps"); } catch (_) {}
+  defsContents.forEach((c, i) => instance.FS.writeFile(defsPaths[i], c));
+  typedefsContents.forEach((c, i) => instance.FS.writeFile(typedefsPaths[i], c));
+
+  const outParts = outPath.split("/");
+  outParts.pop();
+  const outDir = outParts.join("/") || "/tmp";
+  try { if (!instance.FS.analyzePath(outDir).exists) instance.FS.mkdir(outDir); } catch (_) {}
+
+  try {
+    instance.callMain(["/saplcomp_module.jmvm"]);
+  } catch (e) {
+    // normal VM exit throws in Emscripten
+  }
+
+  const outExists = instance.FS.analyzePath(outPath).exists;
+  const content = outExists ? instance.FS.readFile(outPath, { encoding: "utf8" }) : "";
+  return { success: outExists, content, output: compilerOutput.join("") };
+}
+
+/**
+ * Meerdere modules' retag-tekst linken+snoeien vanaf een entry-functie
+ * (retaglink.jmvm's 3-regelige stdin-protocol: bestanden spatie-
+ * gescheiden, doelbestand, entry-naam).
+ */
+async function runRetagLinkStage(retagContents, outPath, entryFunc) {
+  if (!retaglinkBytecode) throw new Error("retaglink.jmvm kon niet geladen worden.");
+
+  const retagPaths = retagContents.map((_, i) => `/tmp/retag/m${i}.retag.txt`);
+  const stdinText = `${retagPaths.join(" ")}\n${outPath}\n${entryFunc || ""}\n`;
+  let stdinBuffer = stdinText.split("");
+  let stdinIndex = 0;
+  let compilerOutput = [];
+
+  const instance = await createJMVMModule({
+    noInitialRun: true,
+    locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm" : (prefix || "") + p),
+    stdin: () => (stdinIndex < stdinBuffer.length ? stdinBuffer[stdinIndex++].charCodeAt(0) : null),
+    stdout: (c) => compilerOutput.push(String.fromCharCode(c)),
+    stderr: (c) => compilerOutput.push(String.fromCharCode(c))
+  });
+
+  instance.FS.writeFile("/retaglink.jmvm", retaglinkBytecode);
+  try { if (!instance.FS.analyzePath("/tmp/retag").exists) instance.FS.mkdir("/tmp/retag"); } catch (_) {}
+  retagContents.forEach((c, i) => instance.FS.writeFile(retagPaths[i], c));
+
+  // Elke createJMVMModule()-aanroep krijgt zijn EIGEN, verse, lege VFS --
+  // een map die een eerdere instantie (bv. runCompilerStage/
+  // runSaplcompModuleStage hierboven, voor dezelfde outPath-boom) al
+  // aanmaakte bestaat hier dus niet vanzelf. Zonder deze aanmaak faalde
+  // `outPath` binnen een niet-standaard map (alles buiten kaal `/tmp`
+  // zelf, bv. `/tmp/mods/...`) stilzwijgend: retaglink.jmvm meldde zelf
+  // "success" op stdout, maar schreef feitelijk niets weg omdat de
+  // doelmap ontbrak (gevonden tijdens het testen, zie
+  // buildModules()'s eigen toelichting).
+  const outParts = outPath.split("/");
+  outParts.pop();
+  const outDir = outParts.join("/") || "/tmp";
+  try { if (!instance.FS.analyzePath(outDir).exists) instance.FS.mkdir(outDir); } catch (_) {}
+
+  try {
+    instance.callMain(["/retaglink.jmvm"]);
+  } catch (e) {
+    // normal VM exit throws in Emscripten
+  }
+
+  const outExists = instance.FS.analyzePath(outPath).exists;
+  const content = outExists ? instance.FS.readFile(outPath, { encoding: "utf8" }) : "";
+  return { success: outExists, content, output: compilerOutput.join("") };
+}
+
+/**
+ * Gelinkte retag-tekst naar echte .jmvm-bytecode (retagcomp.jmvm's
+ * 2-regelige stdin-protocol: bronbestand, doelbestand) -- zelfde
+ * onderliggende programma als compileRetag() hierboven, maar met een
+ * expliciete `outPath` (build_modules.py's derde CLI-argument) i.p.v.
+ * een van `srcPath` afgeleide bestandsnaam.
+ */
+async function runRetagCompStage(retagText, outPath) {
+  if (!retagcompBytecode) throw new Error("retagcomp.jmvm kon niet geladen worden.");
+
+  const stdinText = `/tmp/linked.retag.txt\n${outPath}\n`;
+  let stdinBuffer = stdinText.split("");
+  let stdinIndex = 0;
+  let compilerOutput = [];
+
+  const instance = await createJMVMModule({
+    noInitialRun: true,
+    locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm" : (prefix || "") + p),
+    stdin: () => (stdinIndex < stdinBuffer.length ? stdinBuffer[stdinIndex++].charCodeAt(0) : null),
+    stdout: (c) => compilerOutput.push(String.fromCharCode(c)),
+    stderr: (c) => compilerOutput.push(String.fromCharCode(c))
+  });
+
+  instance.FS.writeFile("/retagcomp.jmvm", retagcompBytecode);
+  instance.FS.writeFile("/tmp/linked.retag.txt", retagText);
+
+  // Zelfde reden als runRetagLinkStage hierboven: een verse VFS per
+  // instantie, dus de doelmap van een niet-standaard `outPath` bestaat
+  // hier niet vanzelf.
+  const outParts = outPath.split("/");
+  outParts.pop();
+  const outDir = outParts.join("/") || "/tmp";
+  try { if (!instance.FS.analyzePath(outDir).exists) instance.FS.mkdir(outDir); } catch (_) {}
+
+  try {
+    instance.callMain(["/retagcomp.jmvm"]);
+  } catch (e) {
+    // normal VM exit throws in Emscripten
+  }
+
+  const outExists = instance.FS.analyzePath(outPath).exists;
+  const content = outExists ? instance.FS.readFile(outPath, { encoding: "utf8" }) : "";
+  return { success: outExists, content, output: compilerOutput.join("") };
+}
+
+/**
+ * Orkestreert de volledige modulegewijze build -- de kern van
+ * build_modules.py, hierboven in JS herschreven (zie de toelichting bij
+ * parseManifestText/topoOrderModules).
+ */
+async function buildModules(manifestText, entryModule, entryFunc, moduleSources, outPath) {
+  if (!isInitialized) throw new Error("JMVM engine is not initialized.");
+
+  const startTime = performance.now();
+  const deps = parseManifestText(manifestText);
+  if (!(entryModule in deps)) {
+    throw new Error(`entry-module '${entryModule}' staat niet in het manifest`);
+  }
+  const order = topoOrderModules(deps, entryModule);
+
+  const defsCache = {};
+  const typedefsCache = {};
+  const retagCache = {};
+  let log = "";
+
+  for (let i = 0; i < order.length; i++) {
+    const mod = order[i];
+    const src = moduleSources[mod];
+    if (src === undefined) {
+      throw new Error(`geen broncode gevonden voor module '${mod}' -- is dat bestand geopend (of aanwezig) in de bestandsboom?`);
+    }
+    log += `build_modules: bouw ${mod} ...\n`;
+
+    const defsRes = await runCompilerStage(src, "defs", `/tmp/mods/${i}.defs.txt`);
+    if (!defsRes.success) throw new Error(`defs-extractie mislukt voor ${mod}:\n${defsRes.output}`);
+    defsCache[mod] = defsRes.content;
+
+    const typedefsRes = await runCompilerStage(src, "typedefs", `/tmp/mods/${i}.typedefs.txt`);
+    if (!typedefsRes.success) throw new Error(`typedefs-extractie mislukt voor ${mod}:\n${typedefsRes.output}`);
+    typedefsCache[mod] = typedefsRes.content;
+
+    const depMods = deps[mod];
+    const defsContents = depMods.map((d) => defsCache[d]);
+    const typedefsContents = depMods.map((d) => typedefsCache[d]);
+    const retagRes = await runSaplcompModuleStage(src, "retag", `/tmp/mods/${i}.retag.txt`, defsContents, typedefsContents);
+    log += retagRes.output;
+    if (!retagRes.success) throw new Error(`retag-compilatie mislukt voor ${mod}:\n${retagRes.output}`);
+    retagCache[mod] = retagRes.content;
+  }
+
+  log += `build_modules: linken (${order.length} module(s), entry-functie '${entryFunc}') ...\n`;
+  const retagContents = order.map((m) => retagCache[m]);
+  const linkRes = await runRetagLinkStage(retagContents, "/tmp/mods/_linked.retag.txt", entryFunc);
+  log += linkRes.output;
+  if (!linkRes.success) throw new Error(`linken mislukt:\n${linkRes.output}`);
+
+  const compRes = await runRetagCompStage(linkRes.content, outPath);
+  if (!compRes.success) throw new Error(`retagcomp mislukt:\n${compRes.output}`);
+  log += `build_modules: klaar -- ${outPath}\n`;
+
+  if (compRes.content) {
+    try {
+      const parts = outPath.split("/");
+      parts.pop();
+      const dir = parts.join("/") || "/tmp";
+      if (!jmvmModule.FS.analyzePath(dir).exists) jmvmModule.FS.mkdir(dir);
+      jmvmModule.FS.writeFile(outPath, compRes.content);
+    } catch (_) {}
+  }
+
+  const durationMs = Math.round(performance.now() - startTime);
+  return {
+    success: true,
+    files: [{
+      stage: "jmvm",
+      name: outPath.split("/").pop(),
+      path: outPath,
+      content: compRes.content,
+      size: compRes.content.length
+    }],
+    durationMs: durationMs,
+    stdout: log,
+    stderr: ""
+  };
+}
+
+/**
  * Execute a compiled .jmvm file on JMVM WASM
  */
 async function executeJmvm(contentOrPath, isPath = false, customStdin = "", runId = null) {
@@ -685,6 +1000,278 @@ async function executeJmvm(contentOrPath, isPath = false, customStdin = "", runI
 }
 
 /**
+ * Sapl+ REPL, client-side poort van sapl_compiler/tools/repl_retag.py
+ * (docs/2026-09-13_repl_gebruik.md/docs/2026-09-13_repl_via_retag_
+ * linking_plan.md) -- de C++-poort (vm.cpp's REPL_HOST/repl-host) was al
+ * een tweede, gedrag-identieke implementatie op dezelfde ontwerp; dit is
+ * een DERDE, met dezelfde sessie-logica maar dan tegen de WASM-VM-
+ * instanties hierboven i.p.v. een los resident proces of per-regel
+ * subprocessen. Elke turn hergebruikt precies de vijf primitieven die
+ * ook de "modules"-backend hierboven al gebruikt: runCompilerStage
+ * (defs/typedefs/retag van de VOLLEDIGE sessie, één plat bestand -- een
+ * sessie heeft geen aparte modules, dus GEEN saplcomp_module.jmvm
+ * hiervoor nodig), runSaplcompModuleStage (de éne turn-regel compileren
+ * TEGEN de sessie se defs/typedefs, alsof de sessie zijn enige
+ * afhankelijkheid is), runRetagLinkStage (sessie+turn retag-tekst
+ * samenvoegen vanaf "start"), runRetagCompStage (naar bytecode), en een
+ * nieuwe runJmvmCapture (de bytecode draaien en de volledige uitvoer in
+ * één keer teruggeven, i.p.v. executeJmvm's regel-voor-regel
+ * postMessage-streaming voor de "Run"-knop).
+ *
+ * BEWUST GEEN aparte "start"/"stop": de WASM-engine is hier altijd al
+ * klaar (initEngine() bij het laden van de pagina), dus er is geen los
+ * proces om te starten zoals Workbench's repl-host -- de sessie leeft
+ * gewoon in `replSession` hieronder, zolang het tabblad/de pagina open
+ * blijft.
+ */
+let replSession = null;
+
+const REPL_RESERVED_NAMES = new Set(["start"]);
+
+function replSplitDefinitions(text) {
+  const defs = [];
+  let current = null;
+  for (const raw of text.split("\n")) {
+    const stripped = raw.trim();
+    if (stripped === "" || stripped.startsWith("//")) continue;
+    const indented = raw.length > 0 && (raw[0] === " " || raw[0] === "\t");
+    if (!indented) {
+      if (current !== null) defs.push(current);
+      current = raw;
+    } else {
+      if (current === null) throw new Error(`onverwachte inspringing zonder voorgaande regel: ${raw}`);
+      current += "\n" + raw;
+    }
+  }
+  if (current !== null) defs.push(current);
+  return defs;
+}
+
+function replExtractDefName(text) {
+  const stripped = text.trim();
+  let m = stripped.match(/^::\s*([A-Za-z_][A-Za-z0-9_]*)/);
+  if (m) return "::" + m[1];
+  m = stripped.match(/^([A-Za-z_][A-Za-z0-9_]*)/);
+  if (m) return m[1];
+  throw new Error(`:def kon geen naam vinden in: ${JSON.stringify(text)}`);
+}
+
+// Zelfde normalisatie als repl_retag.py's normalize_for_compare/vm.cpp's
+// normalizeForCompareH: elke run witruimte plat tot precies één spatie
+// vóór de identiek-aan-de-prelude-vergelijking, zodat een louter
+// cosmetisch verschil (bv. dubbele spatie) een onterechte harde `:load`-
+// fout niet kan veroorzaken.
+function replNormalizeForCompare(text) {
+  return text.trim().replace(/\s+/g, " ");
+}
+
+function replJoinEntries(entries) {
+  return entries.map((e) => e.text).join("\n") + (entries.length ? "\n" : "");
+}
+
+async function replInit() {
+  if (replSession) return;
+  if (!isInitialized) throw new Error("JMVM engine is not initialized.");
+
+  // repl/repl_prelude.cfp is BEWUST zelfstandig (geen #import) gemaakt
+  // (zie dat bestand se eigen headercommentaar) precies om dit soort
+  // hergebruik triviaal te maken -- geen resolveImports() nodig zoals
+  // stdlib.cfp elders in dit bestand wél nodig heeft.
+  let prelude = "";
+  try {
+    const res = await fetch("../repl/repl_prelude.cfp?v=" + Date.now());
+    if (res.ok) prelude = await res.text();
+  } catch (_) {}
+  if (!prelude) throw new Error("kon repl/repl_prelude.cfp niet laden.");
+
+  const preludeDefs = {};
+  const preludeNames = new Set();
+  for (const d of replSplitDefinitions(prelude)) {
+    const name = replExtractDefName(d);
+    preludeDefs[name] = d;
+    preludeNames.add(name);
+  }
+
+  replSession = {
+    entries: [],
+    resCounter: 0,
+    history: [],
+    prelude,
+    preludeDefs,
+    preludeNames,
+    defs: "",
+    typedefs: "",
+    retag: ""
+  };
+
+  await replAtomicRebuild([], 0);
+}
+
+/**
+ * Bouwt en compileert `newEntries` (vóórafgegaan door de vaste prelude)
+ * als kandidaat-sessie; pas bij volledig succes wordt dat gepromoveerd.
+ * Zelfde alles-of-niets-garantie als repl_retag.py's
+ * Session._atomic_rebuild/vm.cpp's ReplSession::atomicRebuild -- een
+ * mislukte regel raakt de sessie dus nooit.
+ */
+async function replAtomicRebuild(newEntries, newResCounter) {
+  const oldSnapshot = { entries: replSession.entries, resCounter: replSession.resCounter };
+  const sessionText = replSession.prelude + "\n" + replJoinEntries(newEntries);
+
+  const defsRes = await runCompilerStage(sessionText, "defs", "/tmp/repl_session.defs.txt");
+  if (!defsRes.success) throw new Error(`sessie-defs mislukt:\n${defsRes.output}`);
+  const typedefsRes = await runCompilerStage(sessionText, "typedefs", "/tmp/repl_session.typedefs.txt");
+  if (!typedefsRes.success) throw new Error(`sessie-typedefs mislukt:\n${typedefsRes.output}`);
+  const retagRes = await runCompilerStage(sessionText, "retag", "/tmp/repl_session.retag.txt");
+  if (!retagRes.success) throw new Error(`sessie-retag mislukt:\n${retagRes.output}`);
+
+  replSession.history.push(oldSnapshot);
+  replSession.entries = newEntries;
+  replSession.resCounter = newResCounter;
+  replSession.defs = defsRes.content;
+  replSession.typedefs = typedefsRes.content;
+  replSession.retag = retagRes.content;
+}
+
+async function replSetEntries(updates, newResCounter) {
+  for (const [name] of updates) {
+    if (replSession.preludeNames.has(name)) {
+      throw new Error(`'${name}' is al gedefinieerd in de prelude -- kies een andere naam`);
+    }
+    if (REPL_RESERVED_NAMES.has(name)) {
+      throw new Error(`'${name}' is gereserveerd voor de REPL zelf (elke beurt se interne entry point) -- kies een andere naam`);
+    }
+  }
+  let newEntries = replSession.entries.slice();
+  for (const [name, text] of updates) {
+    newEntries = newEntries.filter((e) => e.name !== name);
+    newEntries.push({ name, text });
+  }
+  await replAtomicRebuild(newEntries, newResCounter === undefined ? replSession.resCounter : newResCounter);
+}
+
+async function replUndo() {
+  if (replSession.history.length === 0) throw new Error("niets om ongedaan te maken");
+  const prev = replSession.history.pop();
+  await replAtomicRebuild(prev.entries, prev.resCounter);
+}
+
+async function replReset() {
+  await replAtomicRebuild([], 0);
+}
+
+/**
+ * :load -- content/pad komen al opgehaald+eventueel op een .cfp-sibling
+ * teruggevallen mee van de hoofdthread (zie app.js's replLoad(), dat
+ * dezelfde bestandsresolutie hergebruikt als de "modules"-backend); hier
+ * alleen nog de sessie-logica: splitsen, prelude-botsingen (identiek-
+ * tekst: overslaan; anders: harde fout via replSetEntries), `start`
+ * altijd overslaan.
+ */
+async function replLoadContent(content, notes) {
+  const defs = replSplitDefinitions(content);
+  if (defs.length === 0) throw new Error(":load: geen top-level definities gevonden");
+
+  const updates = [];
+  for (const d of defs) {
+    const name = replExtractDefName(d);
+    if (REPL_RESERVED_NAMES.has(name)) {
+      notes.push(`'${name}' is gereserveerd voor de REPL zelf -- overgeslagen (roep de functies die je wil verkennen rechtstreeks aan).`);
+      continue;
+    }
+    if (replSession.preludeNames.has(name) && replNormalizeForCompare(d) === replNormalizeForCompare(replSession.preludeDefs[name])) {
+      notes.push(`'${name}' staat al (woordelijk gelijk) in de prelude -- overgeslagen.`);
+      continue;
+    }
+    updates.push([name, d]);
+  }
+  if (updates.length > 0) await replSetEntries(updates);
+  return updates.map(([name]) => name);
+}
+
+function replFuncs() {
+  if (!replSession.defs) return [];
+  return replSession.defs
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l && !replSession.preludeNames.has(l.split(" ")[0]));
+}
+
+/** Draait een gecompileerd .jmvm-programma en geeft de VOLLEDIGE stdout
+ * in één keer terug (geen live per-regel postMessage zoals executeJmvm,
+ * die is voor de "Run"-knop se terminal-streaming) -- nodig om printVal's
+ * eigen uitvoer achteraf uit de vaste vm.cpp-banner (`VM starting for
+ * .../execution started.../res: <code>/stop/...`) te kunnen isoleren. */
+async function runJmvmCapture(jmvmContent) {
+  let output = [];
+  const instance = await createJMVMModule({
+    noInitialRun: true,
+    locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm" : (prefix || "") + p),
+    stdin: () => null,
+    stdout: (c) => output.push(String.fromCharCode(c)),
+    stderr: (c) => output.push(String.fromCharCode(c))
+  });
+  instance.FS.writeFile("/tmp/repl_turn.jmvm", jmvmContent);
+  try {
+    instance.callMain(["/tmp/repl_turn.jmvm"]);
+  } catch (e) {
+    // normal VM exit throws in Emscripten
+  }
+  return output.join("");
+}
+
+// Vindt de door printVal geschreven tekst in de VOLLEDIGE callMain-output.
+// `callMain` gaat door de gewone main() (dezelfde als de native ./run-
+// binary), dus staat er EERST nog een vaste "VM starting for .../Reading
+// file .../execution started, progsize=..."-banner vóór het programma se
+// eigen uitvoer -- anders dan vm.cpp's REPL_HOST/repl-host, die run()
+// rechtstreeks aanroept zonder die wrapper. Zelfde twee-staps-aanpak als
+// repl_retag.py's extract_output (die via een echt `./run`-subprocess
+// loopt en dus dezelfde banner ziet): eerst alles vóór en op de vaste
+// "execution started"-regel overslaan, dan pas de LAATSTE letterlijke
+// `res: `-marker zoeken (printVal schrijft geen eigen afsluitende
+// newline, dus de weergegeven waarde staat zonder scheidingsteken vóór
+// `res: <code>`, bv. `Just(5)res: 0`).
+function replExtractOutput(out) {
+  const lines = out.split("\n");
+  const startIdx = lines.findIndex((l) => l.startsWith("execution started"));
+  if (startIdx === -1) return "";
+  const body = lines.slice(startIdx + 1).join("\n");
+  const markerIdx = body.lastIndexOf("res: ");
+  if (markerIdx === -1) return "";
+  return body.slice(0, markerIdx).trim();
+}
+
+async function replEvalLine(line) {
+  const turnSource = `start = printVal (${line})\n`;
+
+  const turnRes = await runSaplcompModuleStage(turnSource, "retag", "/tmp/repl_turn.retag.txt", [replSession.defs], [replSession.typedefs]);
+  if (!turnRes.success) throw new Error(turnRes.output);
+
+  const linkRes = await runRetagLinkStage([replSession.retag, turnRes.content], "/tmp/repl_linked.retag.txt", "start");
+  if (!linkRes.success) throw new Error(`retaglink.jmvm mislukt:\n${linkRes.output}`);
+
+  const compRes = await runRetagCompStage(linkRes.content, "/tmp/repl_linked.jmvm");
+  if (!compRes.success) throw new Error(`retagcomp.jmvm mislukt:\n${compRes.output}`);
+
+  const rawOutput = await runJmvmCapture(compRes.content);
+  const shown = replExtractOutput(rawOutput);
+  return shown || "(geen uitvoer)";
+}
+
+async function replCommit(line) {
+  const name = `res${replSession.resCounter}`;
+  await replSetEntries([[name, `${name} = ${line}`], ["it", `it = ${name}`]], replSession.resCounter + 1);
+  return name;
+}
+
+async function replDefine(defText) {
+  const name = replExtractDefName(defText);
+  await replSetEntries([[name, defText]]);
+  return name;
+}
+
+/**
  * Handle messages from the UI thread
  */
 self.onmessage = async function (e) {
@@ -753,6 +1340,26 @@ self.onmessage = async function (e) {
       }
       break;
 
+    case "BUILD_MODULES":
+      try {
+        const result = await buildModules(msg.manifest, msg.entryModule, msg.entryFunc || "start", msg.moduleSources || {}, msg.outPath);
+        postMessage({
+          type: "COMPILE_COMPLETE",
+          id: msg.id,
+          ...result
+        });
+      } catch (err) {
+        postMessage({
+          type: "COMPILE_COMPLETE",
+          id: msg.id,
+          success: false,
+          error: err.message,
+          stderr: err.message,
+          files: []
+        });
+      }
+      break;
+
     case "RUN":
       try {
         await executeJmvm(msg.contentOrPath, msg.isPath, msg.stdin || "", msg.id);
@@ -764,6 +1371,61 @@ self.onmessage = async function (e) {
           metrics: { res: "Error", elapsed_time: "0", instr_executed: 0, calls: 0, creates: 0, gc_count: 0 },
           output: err.message
         });
+      }
+      break;
+
+    case "REPL_INIT":
+      try {
+        await replInit();
+        postMessage({ type: "REPL_RESULT", id: msg.id, success: true, kind: "init" });
+      } catch (err) {
+        postMessage({ type: "REPL_RESULT", id: msg.id, success: false, error: err.message });
+      }
+      break;
+
+    case "REPL_EVAL":
+      try {
+        if (!replSession) await replInit();
+        let payload = {};
+        switch (msg.cmd) {
+          case "eval": {
+            const output = await replEvalLine(msg.line);
+            const name = await replCommit(msg.line);
+            payload = { output, name };
+            break;
+          }
+          case "def": {
+            const name = await replDefine(msg.text);
+            payload = { name };
+            break;
+          }
+          case "history":
+            payload = { entries: replSession.entries.map((e) => ({ name: e.name, text: e.text })) };
+            break;
+          case "undo":
+            await replUndo();
+            break;
+          case "reset":
+            await replReset();
+            break;
+          case "funcs":
+            payload = { funcs: replFuncs() };
+            break;
+          case "load": {
+            const notes = [];
+            const names = await replLoadContent(msg.content, notes);
+            payload = { names, notes };
+            break;
+          }
+          case "save":
+            payload = { content: replJoinEntries(replSession.entries) };
+            break;
+          default:
+            throw new Error(`onbekend REPL-commando: ${msg.cmd}`);
+        }
+        postMessage({ type: "REPL_RESULT", id: msg.id, success: true, cmd: msg.cmd, ...payload });
+      } catch (err) {
+        postMessage({ type: "REPL_RESULT", id: msg.id, success: false, cmd: msg.cmd, error: err.message });
       }
       break;
 
