@@ -135,7 +135,13 @@
               <button class="btn" id="btn-repl-reset" title=":reset — lege sessie, begin opnieuw">🗑 Reset</button>
             </div>
             <div class="tool-panel-controls">
-              <input type="text" id="txt-repl-load" class="text-input" style="flex: 1;" placeholder="bv. workspace/mijn_functies.cfp" />
+              <span style="font-size: 12px; color: var(--text-secondary); white-space: nowrap;">📁 Voorbeeld laden:</span>
+              <select id="sel-repl-example" class="text-input" style="flex: 1;">
+                <option value="">-- kies een voorbeeldbestand --</option>
+              </select>
+            </div>
+            <div class="tool-panel-controls">
+              <input type="text" id="txt-repl-load" class="text-input" style="flex: 1;" placeholder="of typ zelf een pad, bv. workspace/mijn_functies.cfp" />
               <button class="btn" id="btn-repl-load" title=":load — elke top-level definitie uit dit bestand toevoegen">📂 Load</button>
               <input type="text" id="txt-repl-save" class="text-input" style="flex: 1;" placeholder="bv. workspace/mijn_sessie.cfp" />
               <button class="btn" id="btn-repl-save" title=":save — sessie als nieuw tabblad openen, dan zelf Opslaan">💾 Save</button>

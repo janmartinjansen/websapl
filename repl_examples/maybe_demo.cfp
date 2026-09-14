@@ -1,0 +1,3 @@
+::Maybe = Nothing | Just !x
+
+safeDiv x y = if (y == 0) Nothing (Just (x / y))

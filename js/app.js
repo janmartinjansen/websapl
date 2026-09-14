@@ -82,6 +82,7 @@
     btnReplUndo: document.getElementById("btn-repl-undo"),
     btnReplFuncs: document.getElementById("btn-repl-funcs"),
     btnReplReset: document.getElementById("btn-repl-reset"),
+    selReplExample: document.getElementById("sel-repl-example"),
     txtReplLoad: document.getElementById("txt-repl-load"),
     btnReplLoad: document.getElementById("btn-repl-load"),
     txtReplSave: document.getElementById("txt-repl-save"),
@@ -1416,7 +1417,31 @@
       el.txtReplSave, el.btnReplSave].forEach((node) => { if (node) node.disabled = !idle; });
   }
 
+  // Vult de "Voorbeeld laden"-keuzelijst met de .cfp-bestanden in
+  // websapl/repl_examples/ (hergebruikt findTreeDir/listCfpSiblings,
+  // dezelfde tree-lookup als de modules-manifest-hulp hierboven) --
+  // een file-picker i.p.v. zelf een pad te typen, specifiek voor deze
+  // curated map met bekend-werkende REPL-demo's (allemaal al geverifieerd
+  // via :load, zie sapl_compiler/tools/repl_retag.py's eigen sweep-test
+  // over de kernbenchmarks). Idempotent: veilig opnieuw aan te roepen.
+  function populateReplExamplePicker() {
+    if (!el.selReplExample) return;
+    const files = listCfpSiblings("repl_examples").sort();
+    el.selReplExample.innerHTML = "";
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = files.length ? "-- kies een voorbeeldbestand --" : "(geen voorbeelden gevonden)";
+    el.selReplExample.appendChild(placeholder);
+    for (const p of files) {
+      const opt = document.createElement("option");
+      opt.value = p;
+      opt.textContent = pathBasename(p);
+      el.selReplExample.appendChild(opt);
+    }
+  }
+
   async function openReplTab() {
+    populateReplExamplePicker();
     const existing = state.openTabs.find((t) => t.path === "__repl__");
     if (!existing) state.openTabs.push({ path: "__repl__", name: "REPL", kind: "repl" });
     setActiveTab("__repl__");
@@ -1853,6 +1878,13 @@
       };
     }
     if (el.btnReplLoad) el.btnReplLoad.onclick = () => sendReplLoad();
+    if (el.selReplExample) {
+      el.selReplExample.onchange = () => {
+        const chosen = el.selReplExample.value;
+        el.selReplExample.value = "";
+        if (chosen) sendReplLine(`:load ${chosen}`);
+      };
+    }
     if (el.btnReplSave) el.btnReplSave.onclick = () => sendReplSave();
     if (el.btnReplSend) el.btnReplSend.onclick = () => sendReplInputLine();
     if (el.txtReplInput) el.txtReplInput.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); sendReplInputLine(); } };

@@ -1113,6 +1113,78 @@ window.WEBSAPL_TREE = [
     "_expanded": false
   },
   {
+    "name": "repl",
+    "path": "repl",
+    "type": "directory",
+    "children": [
+      {
+        "name": "repl_prelude.cfp",
+        "path": "repl/repl_prelude.cfp",
+        "type": "file",
+        "ext": ".cfp",
+        "size": 3388,
+        "isBinary": false
+      }
+    ],
+    "_expanded": false
+  },
+  {
+    "name": "repl_examples",
+    "path": "repl_examples",
+    "type": "directory",
+    "children": [
+      {
+        "name": "fib.cfp",
+        "path": "repl_examples/fib.cfp",
+        "type": "file",
+        "ext": ".cfp",
+        "size": 69,
+        "isBinary": false
+      },
+      {
+        "name": "hamming.cfp",
+        "path": "repl_examples/hamming.cfp",
+        "type": "file",
+        "ext": ".cfp",
+        "size": 941,
+        "isBinary": false
+      },
+      {
+        "name": "maybe_demo.cfp",
+        "path": "repl_examples/maybe_demo.cfp",
+        "type": "file",
+        "ext": ".cfp",
+        "size": 78,
+        "isBinary": false
+      },
+      {
+        "name": "primes.cfp",
+        "path": "repl_examples/primes.cfp",
+        "type": "file",
+        "ext": ".cfp",
+        "size": 550,
+        "isBinary": false
+      },
+      {
+        "name": "queens.cfp",
+        "path": "repl_examples/queens.cfp",
+        "type": "file",
+        "ext": ".cfp",
+        "size": 776,
+        "isBinary": false
+      },
+      {
+        "name": "twice.cfp",
+        "path": "repl_examples/twice.cfp",
+        "type": "file",
+        "ext": ".cfp",
+        "size": 281,
+        "isBinary": false
+      }
+    ],
+    "_expanded": false
+  },
+  {
     "name": "sapl_compiler",
     "path": "sapl_compiler",
     "type": "directory",
@@ -1181,7 +1253,7 @@ window.WEBSAPL_TREE = [
     "path": "README.md",
     "type": "file",
     "ext": ".md",
-    "size": 4853,
+    "size": 8380,
     "isBinary": false
   },
   {

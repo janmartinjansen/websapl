@@ -100,6 +100,19 @@ knop (**Historie**, **Undo**, **Functies**, **Reset**), plus `:load`/
 `:save` met een eigen padveld. Geen Start/Stop nodig — de sessie leeft
 zolang de pagina open blijft.
 
+**📁 Voorbeeld laden** — een keuzelijst boven het `:load`-padveld, gevuld
+met de `.cfp`-bestanden in [`repl_examples/`](../websapl/repl_examples/)
+(`primes.cfp`, `fib.cfp`, `hamming.cfp`, `queens.cfp`, `twice.cfp`,
+`maybe_demo.cfp`) — allemaal al geverifieerd te laden zonder botsingen.
+Kiezen laadt meteen (`:load repl_examples/<bestand>`), geen pad zelf
+hoeven te typen. Nieuw voorbeeld toevoegen: zet het `.cfp`-bestand in
+`websapl/repl_examples/` en draai `node websapl/tools/build_manifest.js`
+opnieuw (regenereert `manifest.json`/`js/manifest.js`, waar de keuzelijst
+zijn lijst uit haalt) — controleer wel eerst met `:load` in de terminal-
+REPL of het bestand schoon laadt (geen botsing met de prelude anders dan
+de getolereerde identieke-tekst-gevallen, zie
+`docs/2026-09-13_repl_gebruik.md`'s "Bekende beperkingen").
+
 **Twee verschillen met de terminal-/Workbench-versies**, allebei
 inherent aan het ontbreken van een echt bestandssysteem:
 - `:load <pad>` leest het bestand uit de bestandsboom/al-geopende

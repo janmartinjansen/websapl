@@ -1,0 +1,27 @@
+::list = Nil | Cons !x xs
+
+start =   rephamming 4000 1000
+
+tstart =   el 1000 (hamming 1)
+
+hamming n = let h = Cons n (merge (merge as bs) cs), as = map (mult 2)  h, bs = map (mult 3) h, cs = map (mult 5)  h  in h
+
+mult a b = a * b
+
+map f xs = case xs (Nil -> Nil) (Cons x xs -> Cons (f x) (map f xs))
+
+el n xs = case xs (Nil -> 666) (Cons x xs -> if (n == 0) x (el (n-1) xs))
+
+merge xs ys = case xs (Nil -> ys) (Cons a as -> case ys (Nil -> xs) (Cons b bs -> if (a == b) (Cons a (merge as bs)) (if (a < b) (Cons a (merge as ys)) (Cons b (merge xs bs)))))
+
+printlist xs = case xs (Nil -> 0) (Cons x xs -> print x <#> printlist xs)
+
+take n xs = if (n == 0) Nil (case xs (Nil -> Nil) (Cons x xs -> Cons x (take (n-1) xs)))
+
+rep n v = if (n ==  0) Nil (Cons v (rep (n - 1) v))
+
+sum xs = case xs (Nil -> 0) (Cons x xs -> x + sum xs)
+
+rephamming n m = sum (map hm (rep n m))
+ff k  = if (k % 2 == 0) 1  (k % 2)
+hm n = el n (hamming (ff n)) %  999
