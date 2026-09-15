@@ -1,0 +1,11 @@
+// Laad dit voorbeeld en typ daarna zelf een expressie, bv. "range 1 5" of
+// "double (range 1 3)" -- de REPL toont elk resultaat via showVal
+// (repl/repl_prelude.cfp), en die geeft een ::list-waarde sinds deze sessie
+// standaard als "[1, 2, 3, ...]" i.p.v. "Cons(1, Cons(2, ...))".
+
+range !lo !hi = if (lo > hi) Nil (Cons lo (range (lo + 1) hi))
+
+double !xs =
+  case xs
+    (Nil -> Nil)
+    (Cons x rest -> Cons (x * 2) (double rest))

@@ -78,9 +78,35 @@ showValAux !tid !x =
 
 showFunc !x = strcat "<fn:" (strcat (funcName x) (strcat "/" (strcat (list2str (itoa (funcArity x))) ">")))
 
+// Specialisatiehaak: een zelfgedefinieerde `show_<ConstrName> !x = ...`
+// (exact 1 parameter, retourneert een gepakte string) overschrijft de
+// generieke "Naam(veld1, ...)"-weergave voor die constructor -- bv. een
+// Cons-lijst als "[1, 2, 3]" in plaats van "Cons(1, Cons(2, ...))". Alleen
+// showVal/showConstr kijkt hiernaar; serialize/diff/genericMap doen dat
+// bewust niet (die moeten lossless/structureel blijven).
 showConstr !x =
-  let name = constrName x, arity = getConstrArity x in
+  let name = constrName x, h = lookup (strcat "show_" name) in
+  if (typeId h == TYPE_FUNC) (applyDynamic h (Cons x Nil)) (showConstrGeneric x name)
+
+showConstrGeneric !x !name =
+  let arity = getConstrArity x in
   if (arity == 0) name (strcat name (strcat "(" (strcat (showFields x 0 arity) ")")))
+
+// Standaard specialisatie: een ::list-waarde (Cons/Nil, hierboven) toont
+// showVal/printVal als "[1, 2, 3]" i.p.v. de generieke
+// "Cons(1, Cons(2, ...))" -- via dezelfde show_<ConstrName>-haak hierboven,
+// dus dit is de default voor elk programma dat deze module importeert. Een
+// eigen show_Cons/show_Nil in het eigen programma zou deze twee overschrijven
+// (in de zin van "opnieuw definiëren"; Sapl staat geen dubbele top-level-naam
+// toe, zie §5 sapl_programmeer_regels.md -- dus niet allebei definiëren).
+show_Nil !xs = "[]"
+
+show_Cons !xs = strcat "[" (strcat (showListItems xs) "]")
+
+showListItems !xs =
+  case xs
+    (Cons x rest -> case rest (Nil -> showVal x) (_ -> strcat (showVal x) (strcat ", " (showListItems rest))))
+    (_ -> "")
 
 showFields !x !i !n =
   if (i == n)

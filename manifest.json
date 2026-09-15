@@ -1122,7 +1122,7 @@
           "path": "repl/repl_prelude.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 3388,
+          "size": 4726,
           "isBinary": false
         }
       ],
@@ -1147,6 +1147,14 @@
           "type": "file",
           "ext": ".cfp",
           "size": 941,
+          "isBinary": false
+        },
+        {
+          "name": "lists_demo.cfp",
+          "path": "repl_examples/lists_demo.cfp",
+          "type": "file",
+          "ext": ".cfp",
+          "size": 438,
           "isBinary": false
         },
         {
@@ -1253,7 +1261,7 @@
       "path": "README.md",
       "type": "file",
       "ext": ".md",
-      "size": 8380,
+      "size": 9214,
       "isBinary": false
     },
     {
