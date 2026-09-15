@@ -37,6 +37,10 @@ strls !n !s = if (n < strlen s) (Cons (strat n s) (strls (n+1) s)) Nil
 
 str2list !s = strls 0 s
 
+strEqual !s1 !s2 = (strlen s1 == strlen s2) /\ strEqualAt 0 s1 s2
+
+strEqualAt !n !s1 !s2 = if (n >= strlen s1) 1 (if (strat n s1 == strat n s2) (strEqualAt (n+1) s1 s2) 0)
+
 fillStr !i !xs !arr =
   case xs
     (Nil -> arr)
@@ -78,27 +82,40 @@ showValAux !tid !x =
 
 showFunc !x = strcat "<fn:" (strcat (funcName x) (strcat "/" (strcat (list2str (itoa (funcArity x))) ">")))
 
-// Specialisatiehaak: een zelfgedefinieerde `show_<ConstrName> !x = ...`
-// (exact 1 parameter, retourneert een gepakte string) overschrijft de
-// generieke "Naam(veld1, ...)"-weergave voor die constructor -- bv. een
-// Cons-lijst als "[1, 2, 3]" in plaats van "Cons(1, Cons(2, ...))". Alleen
-// showVal/showConstr kijkt hiernaar; serialize/diff/genericMap doen dat
-// bewust niet (die moeten lossless/structureel blijven).
+// ::list (Cons/Nil) krijgt een STATISCHE aanroep naar show_Cons/show_Nil,
+// bewust niet via de lookup+applyDynamic-haak hieronder: een module-gelinkte
+// REPL (sapl_compiler/retaglink.cfp, gebruikt door zowel de websapl-REPL als
+// sapl_compiler/tools/repl_retag.py) snoeit elke functie die vanaf `start`
+// niet STATISCH bereikbaar is (sapl_compiler/reachability.cfp's calledNamesE
+// ziet alleen App/Ct-aanroepen, geen strcat-opgebouwde naam die pas via
+// `lookup` ten uitvoer komt) -- show_Cons/show_Nil zouden anders in precies
+// die context stilzwijgend gesnoeid worden en de lijst-default zou daar
+// onopgemerkt terugvallen op de generieke weergave. Zie
+// docs/2026-09-15_show_specialisatie_hook.md voor de volledige analyse.
+//
+// Specialisatiehaak voor ELKE ANDERE constructor: een zelfgedefinieerde
+// `show_<ConstrName> !x = ...` (exact 1 parameter, retourneert een gepakte
+// string) overschrijft de generieke "Naam(veld1, ...)"-weergave -- maar
+// ALLEEN via een plat `./compile`/`./compile-sapl`; in een module-gelinkte
+// REPL geldt dezelfde pruning-beperking als hierboven, dus daar wordt zo'n
+// haak stilzwijgend genegeerd (bekende, niet (nog) opgeloste beperking).
 showConstr !x =
-  let name = constrName x, h = lookup (strcat "show_" name) in
+  let name = constrName x in
+  if (strEqual name "Cons") (show_Cons x)
+  (if (strEqual name "Nil") (show_Nil x) (showConstrDynamic x name))
+
+showConstrDynamic !x !name =
+  let h = lookup (strcat "show_" name) in
   if (typeId h == TYPE_FUNC) (applyDynamic h (Cons x Nil)) (showConstrGeneric x name)
 
 showConstrGeneric !x !name =
   let arity = getConstrArity x in
   if (arity == 0) name (strcat name (strcat "(" (strcat (showFields x 0 arity) ")")))
 
-// Standaard specialisatie: een ::list-waarde (Cons/Nil, hierboven) toont
+// Lijst-default: een ::list-waarde (Cons/Nil, hierboven) toont
 // showVal/printVal als "[1, 2, 3]" i.p.v. de generieke
-// "Cons(1, Cons(2, ...))" -- via dezelfde show_<ConstrName>-haak hierboven,
-// dus dit is de default voor elk programma dat deze module importeert. Een
-// eigen show_Cons/show_Nil in het eigen programma zou deze twee overschrijven
-// (in de zin van "opnieuw definiëren"; Sapl staat geen dubbele top-level-naam
-// toe, zie §5 sapl_programmeer_regels.md -- dus niet allebei definiëren).
+// "Cons(1, Cons(2, ...))" -- statisch aangeroepen vanuit showConstr
+// hierboven, dus dit werkt overal, ook in een module-gelinkte REPL.
 show_Nil !xs = "[]"
 
 show_Cons !xs = strcat "[" (strcat (showListItems xs) "]")
