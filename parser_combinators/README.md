@@ -5,7 +5,7 @@ naar gewone Sapl (`.cfp`) vertaalt via een in Sapl geschreven pre-processor
 (`preprocess/`) — en de parser-combinatorbibliotheek in Sapl+ zelf, het
 eigenlijke doel van dat hele project ("een pre-processor bouwen met parser
 combinators als ultieme testcase"). Volledige uitleg, taalkenmerken en
-gebruik: `docs/spp_taal_en_parser_combinators.md` (repo-root).
+gebruik: `parser_combinators/spp_taal_en_parser_combinators.md` (repo-root).
 
 Alleen de `.spp`-bron zelf staat hier — bewust **geen** voorgecompileerde
 `.cfp` of `.jmvm` ernaast. **WebSapl herkent de `.spp`-extensie zelf.** Open
@@ -14,7 +14,7 @@ een `.spp`-bestand en klik op "Preprocess (.spp → .cfp)" — dat draait
 `.jmvm`-bytecode) rechtstreeks in de browser via WebAssembly, en opent het
 resultaat als nieuw `.cfp`-tabblad. Vanaf daar werkt alles zoals altijd:
 "Compileer" / "Compileer & Run" op die `.cfp` roept de normale Sapl-compiler
-aan. Dezelfde twee stappen als de CLI (`docs/spp_taal_en_parser_combinators.md`
+aan. Dezelfde twee stappen als de CLI (`parser_combinators/spp_taal_en_parser_combinators.md`
 sectie 2), nu ook zonder terminal.
 
 (De `.spp`-herschreven versies van 9 van de 12 kernbenchmarks staan niet

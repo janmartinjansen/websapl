@@ -78,6 +78,14 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
+        "name": "README.md",
+        "path": "benchmarks_sapl/README.md",
+        "type": "file",
+        "ext": ".md",
+        "size": 2192,
+        "isBinary": false
+      },
+      {
         "name": "sort.cfp",
         "path": "benchmarks_sapl/sort.cfp",
         "type": "file",
@@ -182,6 +190,14 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
+        "name": "README.md",
+        "path": "benchmarks_saplplus/README.md",
+        "type": "file",
+        "ext": ".md",
+        "size": 1741,
+        "isBinary": false
+      },
+      {
         "name": "sort.spp",
         "path": "benchmarks_saplplus/sort.spp",
         "type": "file",
@@ -212,6 +228,30 @@ window.WEBSAPL_TREE = [
         "ext": ".pdf",
         "size": 765115,
         "isBinary": true
+      },
+      {
+        "name": "README.md",
+        "path": "docs/README.md",
+        "type": "file",
+        "ext": ".md",
+        "size": 1874,
+        "isBinary": false
+      },
+      {
+        "name": "sapl_taalgids.md",
+        "path": "docs/sapl_taalgids.md",
+        "type": "file",
+        "ext": ".md",
+        "size": 8340,
+        "isBinary": false
+      },
+      {
+        "name": "veelgemaakte_fouten.md",
+        "path": "docs/veelgemaakte_fouten.md",
+        "type": "file",
+        "ext": ".md",
+        "size": 5906,
+        "isBinary": false
       }
     ],
     "_expanded": false
@@ -221,6 +261,14 @@ window.WEBSAPL_TREE = [
     "path": "examples",
     "type": "directory",
     "children": [
+      {
+        "name": "apply_demo.cfp",
+        "path": "examples/apply_demo.cfp",
+        "type": "file",
+        "ext": ".cfp",
+        "size": 244,
+        "isBinary": false
+      },
       {
         "name": "curryvb.cfp",
         "path": "examples/curryvb.cfp",
@@ -278,14 +326,6 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
-        "name": "lazy_io_test_test.cfp",
-        "path": "examples/lazy_io_test_test.cfp",
-        "type": "file",
-        "ext": ".cfp",
-        "size": 1373,
-        "isBinary": false
-      },
-      {
         "name": "lazy_io_test.cfp",
         "path": "examples/lazy_io_test.cfp",
         "type": "file",
@@ -306,15 +346,15 @@ window.WEBSAPL_TREE = [
         "path": "examples/print_primes.cfp",
         "type": "file",
         "ext": ".cfp",
-        "size": 470,
+        "size": 607,
         "isBinary": false
       },
       {
-        "name": "saplcomp_flattened.cfp",
-        "path": "examples/saplcomp_flattened.cfp",
+        "name": "README.md",
+        "path": "examples/README.md",
         "type": "file",
-        "ext": ".cfp",
-        "size": 141600,
+        "ext": ".md",
+        "size": 2439,
         "isBinary": false
       },
       {
@@ -331,14 +371,6 @@ window.WEBSAPL_TREE = [
         "type": "file",
         "ext": ".cfp",
         "size": 170,
-        "isBinary": false
-      },
-      {
-        "name": "test.cfp",
-        "path": "examples/test.cfp",
-        "type": "file",
-        "ext": ".cfp",
-        "size": 67,
         "isBinary": false
       },
       {
@@ -764,6 +796,14 @@ window.WEBSAPL_TREE = [
         "ext": ".html",
         "size": 6743,
         "isBinary": false
+      },
+      {
+        "name": "README.md",
+        "path": "funcprog/README.md",
+        "type": "file",
+        "ext": ".md",
+        "size": 622,
+        "isBinary": false
       }
     ],
     "_expanded": false
@@ -838,14 +878,6 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
-        "name": "hwdes.jmvm",
-        "path": "grafisch/hwdes.jmvm",
-        "type": "file",
-        "ext": ".jmvm",
-        "size": 350923,
-        "isBinary": false
-      },
-      {
         "name": "menu_demo.cfp",
         "path": "grafisch/menu_demo.cfp",
         "type": "file",
@@ -854,11 +886,35 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
+        "name": "README.md",
+        "path": "grafisch/README.md",
+        "type": "file",
+        "ext": ".md",
+        "size": 1866,
+        "isBinary": false
+      },
+      {
         "name": "recpic.cfp",
         "path": "grafisch/recpic.cfp",
         "type": "file",
         "ext": ".cfp",
         "size": 3902,
+        "isBinary": false
+      }
+    ],
+    "_expanded": false
+  },
+  {
+    "name": "io",
+    "path": "io",
+    "type": "directory",
+    "children": [
+      {
+        "name": "lazy_io_test_input.txt",
+        "path": "io/lazy_io_test_input.txt",
+        "type": "file",
+        "ext": ".txt",
+        "size": 215,
         "isBinary": false
       }
     ],
@@ -941,6 +997,14 @@ window.WEBSAPL_TREE = [
     "path": "lib",
     "type": "directory",
     "children": [
+      {
+        "name": "README.md",
+        "path": "lib/README.md",
+        "type": "file",
+        "ext": ".md",
+        "size": 1228,
+        "isBinary": false
+      },
       {
         "name": "stdlib.cfp",
         "path": "lib/stdlib.cfp",
@@ -1090,7 +1154,7 @@ window.WEBSAPL_TREE = [
         "path": "parser_combinators/README.md",
         "type": "file",
         "ext": ".md",
-        "size": 2820,
+        "size": 2848,
         "isBinary": false
       },
       {
@@ -1141,6 +1205,14 @@ window.WEBSAPL_TREE = [
     "path": "repl",
     "type": "directory",
     "children": [
+      {
+        "name": "README.md",
+        "path": "repl/README.md",
+        "type": "file",
+        "ext": ".md",
+        "size": 1133,
+        "isBinary": false
+      },
       {
         "name": "repl_prelude.cfp",
         "path": "repl/repl_prelude.cfp",
@@ -1206,6 +1278,14 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
+        "name": "README.md",
+        "path": "repl_examples/README.md",
+        "type": "file",
+        "ext": ".md",
+        "size": 1246,
+        "isBinary": false
+      },
+      {
         "name": "twice.cfp",
         "path": "repl_examples/twice.cfp",
         "type": "file",
@@ -1243,6 +1323,14 @@ window.WEBSAPL_TREE = [
         "type": "file",
         "ext": ".cfp",
         "size": 1021,
+        "isBinary": false
+      },
+      {
+        "name": "README.md",
+        "path": "sapl_compiler/README.md",
+        "type": "file",
+        "ext": ".md",
+        "size": 1425,
         "isBinary": false
       },
       {

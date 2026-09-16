@@ -1,4 +1,6 @@
-start = printLinesStart (readFile "benchmarks/primes.cfp")
+// readFile op een ander bestand in de bestandsboom -- druk elke regel af
+// met een streepje ervoor, i.p.v. gewoon de rauwe tekst.
+start = printLinesStart (readFile "benchmarks_sapl/primes.cfp")
 
 printLinesStart content = printLines 0 (strlen content) content 1 <#> 0
 

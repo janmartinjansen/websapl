@@ -1,0 +1,8 @@
+// Kleinst mogelijke hogere-orde-functie: `apply` neemt een functie als
+// argument en past hem toe -- de basis van elke hogere-orde-functie
+// verderop in deze map (maptest.cfp's `map`, enz.).
+apply f x = f x
+
+p5 n = n + 5
+
+start = apply p5 7

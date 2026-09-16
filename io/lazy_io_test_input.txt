@@ -1,0 +1,4 @@
+Hallo vanuit lazy_io_test.cfp!
+Deze tekst wordt karakter voor karakter gelezen (readChar) en teruggeschreven
+(writeChar) naar io/lazy_io_test_output.txt, lui, zonder het hele bestand
+eerst in het geheugen te laden.
