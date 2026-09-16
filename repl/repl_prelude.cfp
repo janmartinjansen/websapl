@@ -1,5 +1,5 @@
 // repl_prelude.cfp -- de vaste prelude van sapl_compiler/tools/
-// repl_retag.py en vm.cpp's REPL_HOST (zie docs/2026-09-13_repl_gebruik.md
+// repl_retag.py en vm.cpp's REPL_HOST (zie repl/README.md
 // en docs/2026-09-13_repl_via_retag_linking_plan.md #6/showVal).
 //
 // BEWUST GEEN `#import "repl/stddyn.cfp"`: dat bestand doet zelf

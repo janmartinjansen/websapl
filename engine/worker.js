@@ -1001,7 +1001,7 @@ async function executeJmvm(contentOrPath, isPath = false, customStdin = "", runI
 
 /**
  * Sapl+ REPL, client-side poort van sapl_compiler/tools/repl_retag.py
- * (docs/2026-09-13_repl_gebruik.md/docs/2026-09-13_repl_via_retag_
+ * (repl/README.md/docs/2026-09-13_repl_via_retag_
  * linking_plan.md) -- de C++-poort (vm.cpp's REPL_HOST/repl-host) was al
  * een tweede, gedrag-identieke implementatie op dezelfde ontwerp; dit is
  * een DERDE, met dezelfde sessie-logica maar dan tegen de WASM-VM-

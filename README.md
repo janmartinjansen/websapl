@@ -84,7 +84,7 @@ elke build herbouwt hier altijd alle modules opnieuw.
 ### Sapl+ REPL (⌨️ REPL)
 
 Client-side poort van [`sapl_compiler/tools/repl_retag.py`](../sapl_compiler/tools/repl_retag.py)
-(zie [`docs/2026-09-13_repl_gebruik.md`](../docs/2026-09-13_repl_gebruik.md)
+(zie [`../repl/README.md`](../repl/README.md)
 voor de volledige gebruikershandleiding, gedeeld met de terminal- en
 Workbench-versies) — de derde, gedrag-identieke implementatie van
 dezelfde sessie-logica, hier tegen `engine/worker.js`'s WASM-VM-
@@ -111,7 +111,7 @@ opnieuw (regenereert `manifest.json`/`js/manifest.js`, waar de keuzelijst
 zijn lijst uit haalt) — controleer wel eerst met `:load` in de terminal-
 REPL of het bestand schoon laadt (geen botsing met de prelude anders dan
 de getolereerde identieke-tekst-gevallen, zie
-`docs/2026-09-13_repl_gebruik.md`'s "Bekende beperkingen").
+`../repl/README.md`'s "Bekende beperkingen").
 
 **Twee verschillen met de terminal-/Workbench-versies**, allebei
 inherent aan het ontbreken van een echt bestandssysteem:

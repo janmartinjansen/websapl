@@ -1365,7 +1365,7 @@
   }
 
   // --- REPL: Sapl+ REPL, client-side poort van sapl_compiler/tools/
-  // repl_retag.py (docs/2026-09-13_repl_gebruik.md) ---
+  // repl_retag.py (repl/README.md) ---
   //
   // Alle sessie-logica (naam-tabel, atomische kandidaat-dan-promoveer-
   // rebuild, prelude-/reserved-name-botsingen) zit in engine/worker.js's
@@ -1591,10 +1591,66 @@
     if (el.txtReplInput) el.txtReplInput.focus();
   }
 
+  // REPL command history (persisted in localStorage, navigable via ArrowUp/ArrowDown)
+  const REPL_HISTORY_KEY = "sapl_websapl_repl_history";
+  let replHistory = [];
+  try {
+    const saved = localStorage.getItem(REPL_HISTORY_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) replHistory = parsed;
+    }
+  } catch (e) {}
+  let replHistoryCursor = replHistory.length;
+  let replDraft = "";
+
+  function pushReplHistory(line) {
+    if (!line || !line.trim()) return;
+    if (replHistory.length === 0 || replHistory[replHistory.length - 1] !== line) {
+      replHistory.push(line);
+      if (replHistory.length > 500) replHistory.shift();
+      try {
+        localStorage.setItem(REPL_HISTORY_KEY, JSON.stringify(replHistory));
+      } catch (e) {}
+    }
+    replHistoryCursor = replHistory.length;
+    replDraft = "";
+  }
+
+  function handleReplInputKeydown(e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      sendReplInputLine();
+    } else if (e.key === "ArrowUp") {
+      if (replHistory.length === 0) return;
+      e.preventDefault();
+      if (replHistoryCursor === replHistory.length) {
+        replDraft = el.txtReplInput.value;
+      }
+      if (replHistoryCursor > 0) {
+        replHistoryCursor--;
+        el.txtReplInput.value = replHistory[replHistoryCursor];
+        el.txtReplInput.selectionStart = el.txtReplInput.selectionEnd = el.txtReplInput.value.length;
+      }
+    } else if (e.key === "ArrowDown") {
+      if (replHistoryCursor < replHistory.length) {
+        e.preventDefault();
+        replHistoryCursor++;
+        if (replHistoryCursor === replHistory.length) {
+          el.txtReplInput.value = replDraft;
+        } else {
+          el.txtReplInput.value = replHistory[replHistoryCursor];
+        }
+        el.txtReplInput.selectionStart = el.txtReplInput.selectionEnd = el.txtReplInput.value.length;
+      }
+    }
+  }
+
   function sendReplInputLine() {
     if (!el.txtReplInput) return;
     const line = el.txtReplInput.value;
     if (!line.trim()) return;
+    pushReplHistory(line);
     el.txtReplInput.value = "";
     sendReplLine(line);
   }
@@ -1887,7 +1943,7 @@
     }
     if (el.btnReplSave) el.btnReplSave.onclick = () => sendReplSave();
     if (el.btnReplSend) el.btnReplSend.onclick = () => sendReplInputLine();
-    if (el.txtReplInput) el.txtReplInput.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); sendReplInputLine(); } };
+    if (el.txtReplInput) el.txtReplInput.onkeydown = handleReplInputKeydown;
     if (el.txtReplLoad) el.txtReplLoad.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); sendReplLoad(); } };
     if (el.txtReplSave) el.txtReplSave.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); sendReplSave(); } };
 
