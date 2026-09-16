@@ -1113,6 +1113,30 @@ window.WEBSAPL_TREE = [
     "_expanded": false
   },
   {
+    "name": "records",
+    "path": "records",
+    "type": "directory",
+    "children": [
+      {
+        "name": "README.md",
+        "path": "records/README.md",
+        "type": "file",
+        "ext": ".md",
+        "size": 5288,
+        "isBinary": false
+      },
+      {
+        "name": "records_showcase.spp",
+        "path": "records/records_showcase.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 2981,
+        "isBinary": false
+      }
+    ],
+    "_expanded": false
+  },
+  {
     "name": "repl",
     "path": "repl",
     "type": "directory",
@@ -1122,7 +1146,7 @@ window.WEBSAPL_TREE = [
         "path": "repl/repl_prelude.cfp",
         "type": "file",
         "ext": ".cfp",
-        "size": 4726,
+        "size": 5552,
         "isBinary": false
       }
     ],

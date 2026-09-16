@@ -1,0 +1,57 @@
+// records_showcase.spp -- Sapl+ records (`::Naam = { !veld : Type, ... }`),
+// zie README.md (in deze map) voor uitleg per stuk en de ECHTE
+// gegenereerde .cfp-tekst. Volledige achtergrond: preprocess/PLAN.md
+// sectie 20 (ontwerp/implementatie), docs/sapl_programmeer_regels.md #1
+// (de basisgrammatica-vermelding).
+#import "repl/stddyn.cfp"
+
+::Persoon = { !naam : String, !leeftijd : Int, !woonplaats : String }
+::Boek = { !titel : String, !prijs : Int }
+
+// 1. Veldextractie: de gegenereerde getter is gewoon een naamgegeven
+//    functie (`naam p`, `leeftijd p`, ...) -- geen `p.naam`-puntsyntax nog
+//    (die is bewust een latere stap, zie PLAN.md sectie 20's eigen noot).
+groet p = strcat "Hallo " (naam p)
+
+// 2. Functionele update via de gegenereerde setter: `verjaar` bouwt een
+//    NIEUWE Persoon, de rest van de velden blijft ongewijzigd.
+verjaar p = setLeeftijd p (leeftijd p + 1)
+
+verhuis p nieuweWoonplaats = setWoonplaats p nieuweWoonplaats
+
+// 3. `show_Persoon`/`show_Boek` zijn automatisch gegenereerd (alleen
+//    omdat dit bestand `repl/stddyn.cfp` importeert, zie README.md) en
+//    haken vanzelf in op `showVal`/`printVal` se bestaande
+//    `show_<ConstrName>`-dispatch -- geen aparte registratie nodig.
+printPersoon p = printString (show_Persoon p) <#> writeChar 1 10
+printAlle ps = case ps (Nil -> 0) (Cons p rest -> printPersoon p <#> printAlle rest)
+
+// 4. `__fields_Persoon`/`__fields_Boek`: een pure-data `[[naam,type], ...]`
+//    -lijst, bedoeld voor een TOEKOMSTIGE generieke consument (een
+//    autoForm, een JSON-serialisator) die veldnamen EN -typen nodig heeft
+//    zonder de statische Sapl-typen van dit bestand te kennen -- hier
+//    gedemonstreerd met een kleine, zelfgeschreven "beschrijf dit type"-
+//    functie, puur om te laten zien dat de tabel leesbaar is.
+// Een nesting als `Cons naam (Cons typ rest)` mag NIET als kale
+// `case`-tak (die zijn altijd plat, sapl_programmeer_regels.md #2) --
+// maar wél als clausulekop-patroon, via Sapl+'s decision-tree-compiler.
+describeField (Cons naam (Cons typ rest)) = strcat naam (strcat " : " typ)
+
+describeFieldsFrom fs = case fs (Nil -> "") (Cons f rest -> describeFieldsFromCons f rest)
+
+describeFieldsFromCons f rest = case rest (Nil -> describeField f) (_ -> strcat (describeField f) (strcat ", " (describeFieldsFrom rest)))
+
+printBeschrijving naam fs = printString naam <#> printString " { " <#> printString (describeFieldsFrom fs) <#> printString " }" <#> writeChar 1 10
+
+personen = Cons (Persoon "Jan" 42 "Utrecht") (Cons (Persoon "Marie" 35 "Amsterdam") Nil)
+
+start =
+  let jan = Persoon "Jan" 42 "Utrecht",
+      janJarig = verjaar jan,
+      janVerhuisd = verhuis janJarig "Rotterdam" in
+  printString (groet jan) <#> writeChar 1 10
+    <#> print (leeftijd jan) <#> print (leeftijd janJarig) <#> writeChar 1 10
+    <#> printPersoon janVerhuisd
+    <#> printAlle personen
+    <#> printBeschrijving "Persoon" __fields_Persoon
+    <#> printBeschrijving "Boek" __fields_Boek
