@@ -1,6 +1,6 @@
 # Sapl+ demo
 
-`sapl_plus_showcase.spp` laat vier van Sapl+'s belangrijkste
+`sapl_plus_showcase.spp` laat zes van Sapl+'s belangrijkste
 syntaxuitbreidingen zien t.o.v. kale Sapl, elk in een paar regels. Dit
 document legt per feature uit wat de syntax betekent en — het interessante
 deel — hoe de pre-processor (`preprocess/`, zelf in Sapl geschreven,
@@ -9,7 +9,7 @@ self-hosted) het daadwerkelijk afbeeldt op gewone Sapl vóórdat
 fragmenten hieronder zijn de ECHTE output (`sapl_plus_showcase.cfp`), met
 de auto-gegenereerde `__pat_N`-variabelen hernoemd naar iets leesbaars.
 Volledige taalgids, met alle randgevallen:
-`docs/spp_taal_en_parser_combinators.md`.
+`parser_combinators/spp_taal_en_parser_combinators.md`.
 
 Zelf proberen: `printf 'sapl_plus_demo/sapl_plus_showcase.spp\nuit.cfp\n' |
 ./run preprocess/driver.jmvm` (vanuit de repo-root), of open het bestand in
@@ -120,7 +120,71 @@ aan, ook al is het patroon al uitputtend.)
 `sumList`/`mapL` in dit bestand zijn dezelfde truc in zijn eenvoudigste
 vorm: twee clausules (`Nil` / `(x:xs)`) versmolten tot één `case`.
 
+## 5. F-strings
+
+```sapl
+naam = "Sapl+"
+versie = 2026
+groet = f"Hallo, {naam}! Editie {versie}."
+```
+
+Elke `{expr}` wordt bij het PARSEN al vervangen door een aanroep van een
+automatisch toegevoegde helper (`__fstrShow`, alleen toegevoegd als het
+bestand ergens een `f"..."` bevat) die op het runtime-TYPE van de waarde
+dispatcht — `Int`/`Float` worden omgezet naar tekst, een `String` blijft
+ongewijzigd, en al het andere valt terug op zijn kale constructornaam —
+en de stukken worden aaneengeregen met `strcat`:
+
+```sapl
+groet = strcat "Hallo, " (strcat (__fstrShow naam) (strcat "! Editie " (strcat (__fstrShow versie) ".")))
+
+__fstrShow x =
+  let tid = typeId x in
+  if (tid == 1) (list2str (itoa x))
+  (if (tid == 2) (ftoa x)
+  (if (tid == 3) x
+  (constrName x)))
+```
+
+(Vereenvoudigd voor de leesbaarheid: het echte gegenereerde bestand
+splitst `__fstrShow` in twee functies, omdat een `let`-body binnen een
+functieclausule door een bestaand, ongerelateerd mechanisme altijd naar
+een eigen top-level functie wordt getild — zie `preprocess/PLAN.md` §7.3.
+Logisch identiek.)
+
+Dit is de reden dat dit showcase-bestand, als enige van de zes, wél
+`#import "lib/stdlib.cfp"` nodig heeft: `strcat`/`itoa`/`list2str` komen
+daaruit, niet uit de VM zelf. Een bestand zonder interpolatie van
+niet-string-waarden (`f"gewoon tekst"`, of alleen `String`-velden
+interpoleren) heeft die import niet nodig.
+
+## 6. Pipeline-operator (`|>`)
+
+```sapl
+gepijplijnd =
+  [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    |> filter isEven
+    |> mapL double
+    |> sumList
+```
+
+`a |> f x` desugart naar `f x a` — de linkerkant wordt het LAATSTE
+argument aan de rechterkant, dezelfde predicaat/functie-eerst-lijst-
+laatst-volgorde die `filter`/`map` (`lib/stdlib.cfp`) en dit bestand se
+eigen `mapL` al hanteren, dus een keten van transformaties leest van
+links naar rechts i.p.v. van binnen naar buiten:
+
+```sapl
+gepijplijnd = sumList (mapL double (filter isEven (Cons 1 (Cons 2 (Cons 3 (Cons 4 (Cons 5 (Cons 6 (Cons 7 (Cons 8 (Cons 9 (Cons 10 Nil))))))))))))
+```
+
+`|>` bindt LOSSER dan elke ingebouwde operator (`1 + 2 |> double` is
+`(1 + 2) |> double`, nooit `1 + (2 |> double)`) en ketent
+links-associatief — beide bewust zo gekozen, zelfde precedentie als
+Elixir/F#'s eigen `|>`.
+
 ---
 
-Alle vier de resultaten (`res:`-waarden bij het draaien): `20`, `132`,
-`33`, `28` — zie `sumList`-aanroepen in `start`.
+Alle zes resultaten (`res:`-waarden bij het draaien): `20`, `132`, `33`,
+`28`, `"Hallo, Sapl+! Editie 2026."`, `60` — zie `sumList`-aanroepen
+resp. `printString`/`print` in `start`.

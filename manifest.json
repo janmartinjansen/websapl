@@ -1146,7 +1146,7 @@
           "path": "repl/repl_prelude.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 5552,
+          "size": 5535,
           "isBinary": false
         }
       ],
@@ -1266,7 +1266,7 @@
           "path": "sapl_plus_demo/README.md",
           "type": "file",
           "ext": ".md",
-          "size": 4735,
+          "size": 7073,
           "isBinary": false
         },
         {
@@ -1274,7 +1274,7 @@
           "path": "sapl_plus_demo/sapl_plus_showcase.spp",
           "type": "file",
           "ext": ".spp",
-          "size": 1554,
+          "size": 2891,
           "isBinary": false
         }
       ],
@@ -1285,7 +1285,7 @@
       "path": "README.md",
       "type": "file",
       "ext": ".md",
-      "size": 9214,
+      "size": 9169,
       "isBinary": false
     },
     {

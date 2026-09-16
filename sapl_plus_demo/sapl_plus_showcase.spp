@@ -2,10 +2,17 @@
 // syntaxuitbreidingen t.o.v. kale Sapl, elk in een paar regels. Zie
 // README.md (in deze map) voor uitleg per feature en hoe het wordt
 // afgebeeld op kale Sapl. Volledige taalgids:
-// docs/spp_taal_en_parser_combinators.md.
+// parser_combinators/spp_taal_en_parser_combinators.md.
+
+// F-strings (§5 hieronder) desugaren naar `strcat`/`itoa`/`list2str`-
+// aanroepen (lib/stdlib.cfp) -- vandaar deze import, waar de eerste vier
+// features zonder toe konden. `lib/stdlib.cfp` declareert zelf al
+// `::list`/`filter` (regel 1 resp. lib/stdlib.cfp's eigen definitie), dus
+// die staan hieronder NIET nog eens -- een dubbele topleveldefinitie is
+// stille corruptie (docs/sapl_programmeer_regels.md #5), geen no-op.
+#import "lib/stdlib.cfp"
 
 ::pair = Pair !a !b | NoPair
-::list = Nil | Cons !x xs
 
 sumList Nil     = 0
 sumList (x:xs)  = x + sumList xs
@@ -37,8 +44,32 @@ merge (x:xs) (y:ys)
 
 merged = merge [1, 3, 5, 7] [2, 4, 6]
 
+// 5. F-strings: `f"...{expr}..."` -- elke `{expr}` wordt automatisch
+//    gestringificeerd (Int/Float direct, String ongewijzigd, elk ander
+//    type via z'n kale constructornaam) en aaneengeregen met de
+//    letterlijke tekst ertussen.
+naam = "Sapl+"
+versie = 2026
+groet = f"Hallo, {naam}! Editie {versie}."
+
+// 6. Pipeline-operator: `a |> f x` is `f x a` -- de linkerwaarde wordt
+//    het LAATSTE argument, dus leest een keten transformaties van links
+//    naar rechts i.p.v. van binnen naar buiten. `filter` komt hier uit
+//    de zojuist geïmporteerde lib/stdlib.cfp (predicaat eerst, lijst
+//    laatst -- exact de signatuur die `|>` nodig heeft).
+isEven x = (x % 2) == 0
+double x = x * 2
+
+gepijplijnd =
+  [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    |> filter isEven
+    |> mapL double
+    |> sumList
+
 start =
   print (sumList doubled) <#> writeChar 1 10 <#>
   print (sumList pairs) <#> writeChar 1 10 <#>
   print (sumList pairSums) <#> writeChar 1 10 <#>
-  print (sumList merged) <#> writeChar 1 10
+  print (sumList merged) <#> writeChar 1 10 <#>
+  printString groet <#> writeChar 1 10 <#>
+  print gepijplijnd <#> writeChar 1 10
