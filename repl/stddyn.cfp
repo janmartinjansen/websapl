@@ -1,0 +1,91 @@
+#import "lib/stdlib.cfp"
+
+// ============================================================
+// stddyn.cfp  - Standaard bibliotheek voor dynamische reflectie in Sapl
+// Importeer dit bestand in je eigen programma met:  #import "repl/stddyn.cfp"
+// ============================================================
+
+// Type ID constanten
+TYPE_INT    = 1
+TYPE_FLOAT  = 2
+TYPE_STRING = 3
+TYPE_FUNC   = 4
+
+// Type predicaten
+isInt    !x = typeId x == TYPE_INT
+isFloat  !x = typeId x == TYPE_FLOAT
+isString !x = typeId x == TYPE_STRING
+isFunc   !x = typeId x == TYPE_FUNC
+isADT    !x = typeId x > TYPE_FUNC
+
+// Dynamische string-gebaseerde aanroep
+applyDynamicByName !name !args = applyDynamic (lookup name) args
+
+// Generieke pretty printer: showVal x -> print een waarde
+// als leesbare string-representatie
+showVal x =
+  let tid = typeId x in if (tid > TYPE_FUNC) (showConstr x) (showValAux tid x)
+
+showValAux !tid !x =
+  if (tid == TYPE_INT) (list2str (itoa x))
+  (if (tid == TYPE_FLOAT) (ftoa x)
+  (if (tid == TYPE_STRING) x
+  (if (tid == TYPE_FUNC) (showFunc x)
+  (showConstr x))))
+
+showFunc !x = strcat "<fn:" (strcat (funcName x) (strcat "/" (strcat (list2str (itoa (funcArity x))) ">")))
+
+// ::list (Cons/Nil) krijgt een STATISCHE aanroep naar show_Cons/show_Nil,
+// bewust niet via de lookup+applyDynamic-haak hieronder: een module-gelinkte
+// REPL (sapl_compiler/retaglink.cfp, gebruikt door zowel de websapl-REPL als
+// sapl_compiler/tools/repl_retag.py) snoeit elke functie die vanaf `start`
+// niet STATISCH bereikbaar is (sapl_compiler/reachability.cfp's calledNamesE
+// ziet alleen App/Ct-aanroepen, geen strcat-opgebouwde naam die pas via
+// `lookup` ten uitvoer komt) -- show_Cons/show_Nil zouden anders in precies
+// die context stilzwijgend gesnoeid worden en de lijst-default zou daar
+// onopgemerkt terugvallen op de generieke weergave. Zie
+// docs/2026-09-15_show_specialisatie_hook.md voor de volledige analyse.
+//
+// Specialisatiehaak voor ELKE ANDERE constructor: een zelfgedefinieerde
+// `show_<ConstrName> !x = ...` (exact 1 parameter, retourneert een gepakte
+// string) overschrijft de generieke "Naam(veld1, ...)"-weergave -- maar
+// ALLEEN via een plat `./compile`/`./compile-sapl`; in een module-gelinkte
+// REPL geldt dezelfde pruning-beperking als hierboven, dus daar wordt zo'n
+// haak stilzwijgend genegeerd (bekende, niet (nog) opgeloste beperking).
+showConstr !x =
+  let name = constrName x in
+  if (strEqual name "Cons") (show_Cons x)
+  (if (strEqual name "Nil") (show_Nil x) (showConstrDynamic x name))
+
+showConstrDynamic !x !name =
+  let h = lookup (strcat "show_" name) in
+  if (typeId h == TYPE_FUNC) (applyDynamic h (Cons x Nil)) (showConstrGeneric x name)
+
+showConstrGeneric !x !name =
+  let arity = getConstrArity x in
+  if (arity == 0) name (strcat name (strcat "(" (strcat (showFields x 0 arity) ")")))
+
+// Lijst-default: een ::list-waarde (Cons/Nil, lib/stdlib.cfp) toont
+// showVal/printVal als "[1, 2, 3]" i.p.v. de generieke
+// "Cons(1, Cons(2, ...))" -- statisch aangeroepen vanuit showConstr
+// hierboven, dus dit werkt overal, ook in een module-gelinkte REPL.
+show_Nil !xs = "[]"
+
+show_Cons !xs = strcat "[" (strcat (showListItems xs) "]")
+
+showListItems !xs =
+  case xs
+    (Cons x rest -> case rest (Nil -> showVal x) (_ -> strcat (showVal x) (strcat ", " (showListItems rest))))
+    (_ -> "")
+
+showFields !x !i !n =
+  if (i == n)
+    ""
+    (if (i == n - 1)
+       (showVal (getField x i))
+       (strcat (showVal (getField x i)) (strcat ", " (showFields x (i + 1) n))))
+
+getConstrArity !x =
+  let c = lookup (constrName x) in if (typeId c == TYPE_FUNC) (funcArity c) 0
+
+printVal !x = printString (showVal x)
