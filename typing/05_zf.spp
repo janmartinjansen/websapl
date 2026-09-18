@@ -1,0 +1,21 @@
+// 05_zf.spp -- ZF-comprehensies (list comprehensions). Generatoren
+// (`pat <- expr`) mogen een genest patroon hebben (parser.cfp bouwt dat
+// zelf op voor parallelle generatoren, zie de K=2/K=3-voorbeelden), in
+// tegenstelling tot een gewone case-tak.
+
+::pair = Pair !a !b
+
+single = [ a * 2 | a <- [1,2,3] ]
+
+// K=2 parallelle generator: `a,b <- as,bs` is sugar voor
+// `(a,b) <- __zip2 as bs`.
+parPairs = [ a + b | a,b <- [1,2,3],[10,20,30] ]
+
+// Filter + generator gemengd.
+gefilterd = [ x | x <- [1,2,3,4,5,6], x > 3 ]
+
+// Tuple-patroon als generator.
+tupleSom = [ a + b | (a, b) <- [(1,10), (2,20)] ]
+
+// Gebruikers-ADT-patroon als generator.
+mapPair f prs = [ f a b | (Pair a b) <- prs ]

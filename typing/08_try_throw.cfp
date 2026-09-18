@@ -1,0 +1,12 @@
+// 08_try_throw.cfp -- try/throw. `throw nr payload` "retourneert" nooit
+// normaal, dus legt GEEN type op de omringende context (zelfde behandeling
+// als nomatch); `try body handler` eist dat handler, toegepast op de
+// payload, hetzelfde type oplevert als body.
+
+safeDiv a b = if (b == 0) (throw 1 9999) (a / b)
+
+handler n err = if (n == 1) err 0
+
+calc offset a b = try (safeDiv a b) (handler offset)
+
+start = calc 1 10 2

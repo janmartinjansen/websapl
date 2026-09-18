@@ -1,0 +1,14 @@
+// 07_lambda.spp -- lambda-expressies. Lambda-parameters zijn kale namen
+// (geen SPat, anders dan clausulekoppen/case-takken/ZF-generatoren --
+// checkPattern wordt hier dus NIET gebruikt, de namen worden rechtstreeks
+// gebonden).
+
+addLam = \x y -> x + y
+
+myMap f xs = case xs
+  (Nil -> Nil)
+  (Cons h t -> Cons (f h) (myMap f t))
+
+verdubbeld xs = myMap (\x -> x * 2) xs
+
+makeAdder n = \x -> x + n

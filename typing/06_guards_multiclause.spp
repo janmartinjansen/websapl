@@ -1,0 +1,30 @@
+// 06_guards_multiclause.spp -- guards en multi-clause functies. Alle
+// clausules van een functie delen één resultaattype en één rijtje
+// parametertypen; elke clausule wordt er onafhankelijk tegenaan gecheckt
+// (met checkPattern, dus patronen mogen hier WEL genest zijn -- anders dan
+// een case-tak, zie typing/03_case.cfp).
+
+classify n
+  | n > 0 = 1
+  | n < 0 = 0 - 1
+  | otherwise = 0
+
+// Guard zonder otherwise (SGuardedOpen) -- bij runtime valt een niet-
+// matchende guard door naar de volgende clausule; voor het TYPE maakt dat
+// niets uit, elke guard-conditie/-body wordt hoe dan ook gecheckt.
+firstMatch n
+  | n > 10 = 100
+  | n > 5 = 50
+
+// Multi-clause met cons-patroon-sugar (`(x:xs)`).
+headOf (x:xs) = x
+headOf Nil = 999
+
+// Geneste patronen: het TWEEDE veld van de buitenste Cons is zelf weer
+// een Cons/Nil-patroon -- dit kan WEL in een clausulekop, in
+// tegenstelling tot een case-tak.
+nested (Cons a (x:xs)) = a + x
+nested (Cons a Nil) = a
+
+zipWith f (x:xs) (y:ys) = Cons (f x y) (zipWith f xs ys)
+zipWith f _ _ = Nil

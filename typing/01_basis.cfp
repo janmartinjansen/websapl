@@ -1,0 +1,15 @@
+// 01_basis.cfp -- getallen, if, rekenkundige/vergelijkingsoperatoren,
+// zelf-recursie, en veelgebruikers-toepassing (currying).
+//
+// Draai: echo "typing/01_basis.cfp" | ./run preprocess/typecheck.jmvm
+// (of via de Workbench-Typechecker-tab, zie typing/README.md)
+
+fac n = if (n == 0) 1 (n * fac (n - 1))
+
+isEven n = if (n == 0) 1 (isOdd (n - 1))
+isOdd n = if (n == 0) 0 (isEven (n - 1))
+
+add x y = x + y
+addFive = add 5
+
+max2 a b = if (a > b) a b

@@ -1,0 +1,18 @@
+// 02_lijsten.cfp -- Nil/Cons zijn gewone, polymorfe constructor-schema's
+// (geen speciaal geval): dezelfde lijst kan van Num, van Str, of van
+// eender welk ander type zijn, mits consistent binnen één gebruik.
+
+mylen xs = case xs
+  (Nil -> 0)
+  (Cons h t -> 1 + mylen t)
+
+sumList xs = case xs
+  (Nil -> 0)
+  (Cons h t -> h + sumList t)
+
+mkNums = Cons 1 (Cons 2 (Cons 3 Nil))
+
+// mylen is polymorf: dit bestand gebruikt het maar op één plek/type
+// (zie typing/10_beperkingen.cfp voor waarom TWEE verschillende typen
+// binnen hetzelfde bestand een valse foutmelding geeft).
+lengteVanNums = mylen mkNums

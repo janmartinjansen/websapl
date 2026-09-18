@@ -1,0 +1,19 @@
+// 04_adt.cfp -- gebruikers-ADT's. Elk veld krijgt een eigen verse
+// typevariabele (Sapl's ADT-syntax draagt geen typen, alleen strictness-
+// vlaggen per veld), en de constructor is polymorf per veld, precies zoals
+// Nil/Cons -- geen apart mechanisme, dezelfde schema-tabel.
+
+::Expr = Num !n | Add !a !b | Neg !a
+
+evalExpr e = case e
+  (Num n -> n)
+  (Add a b -> (evalExpr a) + (evalExpr b))
+  (Neg a -> 0 - (evalExpr a))
+
+::Tree = Leaf | Node !l !v !r
+
+sumTree t = case t
+  (Leaf -> 0)
+  (Node l v r -> (sumTree l) + (v + (sumTree r)))
+
+sample = Node Leaf 5 Leaf

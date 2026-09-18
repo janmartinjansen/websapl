@@ -13,6 +13,15 @@ let saplcompBytecode = null;
 let retagcompBytecode = null;
 let driverBytecode = null;
 let lamliftBytecode = null;
+// Hindley-Milner type-inferentie voor Sapl+ (typing/README.md), een
+// losstaande tool -- géén desugar/codegen-stap, dus géén #import-
+// afhankelijkheden van zichzelf nodig zoals driverBytecode hierboven
+// (preprocess/typecheck.cfp's eigen #imports zijn al bij het bouwen van
+// typecheck.jmvm ingebakken). Het GECHECKTE bestand kan uiteraard zelf wel
+// `#import "lib/stdlib.cfp"` gebruiken -- vandaar dat typecheckSource()
+// hieronder toch /lib/stdlib.cfp mount, dezelfde stdlibContent-string als
+// preprocessSpp hierboven.
+let typecheckBytecode = null;
 // Modulegewijs compileren (docs/2026-09-13_modules_compileren_en_linken_
 // gebruik.md, workbench's "modules"-backend): saplcomp_module.jmvm
 // compileert één module tegen de defs/typedefs van zijn afhankelijkheden,
@@ -172,6 +181,18 @@ async function initEngine(data = {}) {
       if (res.ok) {
         const buf = await res.arrayBuffer();
         lamliftBytecode = new Uint8Array(buf);
+      }
+    } catch (_) {}
+  }
+
+  if (data.typecheckBase64) {
+    typecheckBytecode = base64ToUint8Array(data.typecheckBase64);
+  } else {
+    try {
+      const res = await fetch("./typecheck.jmvm?v=" + Date.now());
+      if (res.ok) {
+        const buf = await res.arrayBuffer();
+        typecheckBytecode = new Uint8Array(buf);
       }
     } catch (_) {}
   }
@@ -607,6 +628,88 @@ async function preprocessLfp(source, srcPath) {
     durationMs: durationMs,
     stdout: compilerOutput.join(""),
     stderr: outExists ? "" : "Lambda-lifting (.lfp -> .cfp) mislukt -- zie uitvoer hierboven."
+  };
+}
+
+/**
+ * Hindley-Milner type-inferentie voor Sapl+ (preprocess/typecheck.jmvm,
+ * zie typing/README.md) tegen één bronbestand -- géén desugar/codegen,
+ * dus géén outputbestand: de uitvoer is puur het tekstuele rapport
+ * ("naam :: type" per topniveaufunctie, of "naam: FOUT: ..."). Zelfde
+ * fresh-instance/stdin-feed/stdout-capture patroon als preprocessSpp/
+ * preprocessLfp hierboven, maar zonder hun eigen #import-afhankelijkheden
+ * (typecheck.cfp's eigen #imports zijn al bij het bouwen van typecheck.jmvm
+ * ingebakken) -- alleen /lib/stdlib.cfp plus dezelfde vaste depDirs/sppDeps
+ * als preprocessSpp worden gemount, voor het geval het GECHECKTE bestand
+ * zelf #import-regels heeft.
+ */
+async function typecheckSource(source, srcPath) {
+  if (!isInitialized) throw new Error("JMVM engine is not initialized.");
+  if (!typecheckBytecode) throw new Error("Typechecker (typecheck.jmvm) kon niet geladen worden.");
+
+  const startTime = performance.now();
+
+  let compilerOutput = [];
+  let stdinBuffer = `/tmp/in.cfp\n`.split("");
+  let stdinIndex = 0;
+
+  const instance = await createJMVMModule({
+    noInitialRun: true,
+    locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm" : (prefix || "") + p),
+    stdin: () => {
+      if (stdinIndex < stdinBuffer.length) {
+        return stdinBuffer[stdinIndex++].charCodeAt(0);
+      }
+      return null;
+    },
+    stdout: (charCode) => {
+      compilerOutput.push(String.fromCharCode(charCode));
+    },
+    stderr: (charCode) => {
+      compilerOutput.push(String.fromCharCode(charCode));
+    }
+  });
+
+  instance.FS.writeFile("/typecheck.jmvm", typecheckBytecode);
+
+  const depDirs = ["/lib", "/sapl_compiler", "/parser_combinators", "/benchmarks_saplplus", "/repl"];
+  for (const d of depDirs) {
+    try {
+      if (!instance.FS.analyzePath(d).exists) instance.FS.mkdir(d);
+    } catch (_) {}
+  }
+  instance.FS.writeFile("/lib/stdlib.cfp", stdlibContent);
+  for (const [depPath, content] of Object.entries(sppDeps)) {
+    instance.FS.writeFile(depPath, content);
+  }
+
+  instance.FS.writeFile("/tmp/in.cfp", source);
+
+  try {
+    instance.callMain(["/typecheck.jmvm"]);
+  } catch (e) {
+    // normal VM exit throws in Emscripten
+  }
+
+  const durationMs = Math.round(performance.now() - startTime);
+  const rawOutput = compilerOutput.join("");
+
+  // Strip the JMVM runner's own startup/shutdown banner ("VM starting
+  // for...", "execution started, progsize=N", trailing "res: N"/"stop"/
+  // "Elapsed time:"/etc.) -- printed for every .jmvm run regardless of
+  // program, never part of the actual report. Same approach as
+  // workbench/server.js's extractJmvmReport.
+  const startMarker = rawOutput.match(/execution started, progsize=\d+\r?\n?/);
+  let report = startMarker ? rawOutput.slice(startMarker.index + startMarker[0].length) : rawOutput;
+  const endMarker = report.match(/\n(?:res: |stop\r?\n)/);
+  if (endMarker) report = report.slice(0, endMarker.index);
+  report = report.replace(/^\n+/, "").replace(/\n+$/, "");
+
+  return {
+    success: true,
+    report: report,
+    stdout: rawOutput,
+    durationMs: durationMs
   };
 }
 
@@ -1337,6 +1440,24 @@ self.onmessage = async function (e) {
           success: false,
           error: err.message,
           files: []
+        });
+      }
+      break;
+
+    case "TYPECHECK":
+      try {
+        const result = await typecheckSource(msg.source, msg.path);
+        postMessage({
+          type: "COMPILE_COMPLETE",
+          id: msg.id,
+          ...result
+        });
+      } catch (err) {
+        postMessage({
+          type: "COMPILE_COMPLETE",
+          id: msg.id,
+          success: false,
+          error: err.message
         });
       }
       break;

@@ -67,6 +67,7 @@
     btnSave: document.getElementById("btn-save"),
     btnCompile: document.getElementById("btn-compile"),
     btnRun: document.getElementById("btn-run"),
+    btnTypecheck: document.getElementById("btn-typecheck"),
     btnCompileRun: document.getElementById("btn-compile-run"),
     btnTheme: document.getElementById("btn-theme-toggle"),
     btnRefreshTree: document.getElementById("btn-refresh-tree"),
@@ -902,6 +903,53 @@
     state.worker.postMessage({
       type: "PREPROCESS",
       kind: kind,
+      id: compileId,
+      source: activeTab.content,
+      path: activeTab.path
+    });
+  }
+
+  // Hindley-Milner type-inferentie voor Sapl+ (preprocess/typecheck.jmvm,
+  // zie typing/README.md) tegen het actieve tabblad -- runs on the same
+  // WASM VM as preprocessActiveFile above, but produces a plain text
+  // report (no output file, so nothing to open as a new tab) logged
+  // straight to the terminal.
+  async function runTypecheck() {
+    const activeTab = getActiveTab();
+    if (!activeTab || isToolTab(activeTab)) return;
+    if (state.isCompiling) return;
+    state.isCompiling = true;
+
+    activeTab.content = state.editor.getValue();
+
+    toggleTerminal(true);
+    logTerminal(`\n=== Typechecken: ${activeTab.path} (WebAssembly typecheck.jmvm) ===\n`, "info");
+    setStatus("busy", "Bezig met typechecken...");
+
+    const compileId = ++state.compileSeq;
+
+    state.pendingCompileCallbacks.set(compileId, (data) => {
+      state.isCompiling = false;
+
+      if (!data.success) {
+        setStatus("error", "Typechecken mislukt");
+        logTerminal(`✗ Typechecken mislukt: ${data.error || "onbekende fout"}\n`, "error");
+        return;
+      }
+
+      const report = (data.report || "").trim();
+      if (report) {
+        logTerminal(report + "\n", "normal");
+      } else {
+        logTerminal("(geen uitvoer -- leeg bestand of geen topniveaufuncties?)\n", "info");
+      }
+      const hasFout = /FOUT:/.test(report);
+      setStatus(hasFout ? "ready" : "ready", `Typecheck klaar (${data.durationMs}ms)`);
+      logTerminal(`✓ Typecheck klaar in ${data.durationMs}ms${hasFout ? " -- zie meldingen hierboven" : ", geen meldingen"}.\n`, hasFout ? "warning" : "success");
+    });
+
+    state.worker.postMessage({
+      type: "TYPECHECK",
       id: compileId,
       source: activeTab.content,
       path: activeTab.path
@@ -1903,6 +1951,7 @@
     el.btnCompile.onclick = () => compileActiveFile(false);
     el.btnCompileRun.onclick = () => compileActiveFile(true);
     el.btnRun.onclick = () => runJmvmFile();
+    if (el.btnTypecheck) el.btnTypecheck.onclick = () => runTypecheck();
     el.btnTheme.onclick = () => applyTheme(state.theme === "dark" ? "light" : "dark");
     el.btnRefreshTree.onclick = async () => { await loadTreeData(); renderTree(); };
     el.viewToggleBtn.onclick = () => toggleViewMode();

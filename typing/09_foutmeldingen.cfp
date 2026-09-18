@@ -1,0 +1,34 @@
+// 09_foutmeldingen.cfp -- een galerij van opzettelijke fouten, één per
+// functie, met uitleg wat elke foutmelding betekent. Draai dit bestand
+// door de typechecker en vergelijk de uitvoer met de commentaren.
+
+// "kan niet unificeren: Num met [Num]" -- de twee takken van een if/case
+// (of hier: optellen bij een lijst) leveren aantoonbaar verschillende
+// typen op.
+mkNums = Cons 1 (Cons 2 Nil)
+badAdd x = x + mkNums
+
+// "onbekende constructor: Foo" -- Foo is nergens als ADT-constructor
+// gedeclareerd (ook niet Nil/Cons).
+unknownCon x = Foo x x
+
+// "case-tak: aantal veldnamen komt niet overeen met de constructor" --
+// Add heeft twee velden, deze tak geeft er maar één.
+::Expr = Num2 !n | Add2 !a !b
+badArity e = case e (Num2 n -> n) (Add2 a -> a)
+
+// "oneindig type: tN komt voor in [tN]" -- occurs-check: a zou zowel het
+// elementtype ALS de lijst zelf moeten zijn, dat kan niet (geen oneindige
+// typen).
+weird a = Cons a a
+
+// "onbekende functie: X" -- X wordt hier TOEGEPAST (met argumenten) maar
+// bestaat nergens als topniveaufunctie of constructor. Dit is ook de
+// melding die je te zien krijgt voor elke nog niet geregistreerde
+// VM-primitief (print, typeId, getField, ...) -- zie typing/README.md
+// "Bekende gaten".
+callsMissing x = helperDieNietBestaat x
+
+// "onbekende naam: X" -- zelfde soort fout als hierboven, maar dan een
+// KALE verwijzing (geen toepassing) naar een niet-bestaande naam.
+bareRef = helemaalNietGedefinieerd

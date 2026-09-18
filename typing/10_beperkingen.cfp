@@ -1,0 +1,34 @@
+// 10_beperkingen.cfp -- twee bekende, bewuste beperkingen van stap 1,
+// gedemonstreerd. Geen van beide geeft een crash of een stil verkeerd
+// resultaat -- ze zijn allebei veilig (te streng, niet te soepel).
+
+// == Beperking 1: geen let-polymorfie over topniveaufuncties ================
+// Alle topniveaufuncties in één bestand delen tijdens het infereren
+// monomorfe plekhouders (geen sterk-samenhangende-componenten/SCC-analyse
+// zoals een echte ML/Haskell-typechecker). Een niet-recursieve
+// hulpfunctie die op twee plekken met VERSCHILLENDE typen gebruikt wordt,
+// krijgt hier dus een valse foutmelding i.p.v. een correct polymorf type.
+//
+// Probeer dit bestand te typechecken: `identiteit` zelf krijgt een prima
+// type, maar `gebruikA`/`gebruikB` -- waarvan er ÉÉN Num en de ander een
+// lijst doorgeeft -- geven een "kan niet unificeren"-fout op de TWEEDE
+// (in tekstuele volgorde) gebruiksplek, ook al is er functioneel niets
+// mis met `identiteit` zelf.
+
+identiteit x = x
+
+gebruikA = identiteit 5
+gebruikB = identiteit (Cons 1 Nil)
+
+// == Beperking 2: foutmelding kan op de verkeerde (latere) functie landen ===
+// Wanneer de fout alleen zichtbaar wordt via een VOORUITVERWIJZING naar
+// een functie die verderop in het bestand staat, wordt de plekhouder van
+// die latere functie stilzwijgend vastgezet door de EERDERE (foute)
+// gebruiksplek -- de foutmelding verschijnt dan bij de latere functie
+// zelf, niet bij de plek waar de fout eigenlijk zit. Nog steeds veilig
+// (de fout wordt wel degelijk gevonden), alleen de toeschrijving klopt
+// niet altijd.
+
+vroegGebruik n = n + laatDefinieerd
+
+laatDefinieerd = Cons 1 Nil

@@ -1210,7 +1210,7 @@
           "path": "repl/README.md",
           "type": "file",
           "ext": ".md",
-          "size": 1133,
+          "size": 2546,
           "isBinary": false
         },
         {
@@ -1371,6 +1371,102 @@
           "type": "file",
           "ext": ".spp",
           "size": 2891,
+          "isBinary": false
+        }
+      ],
+      "_expanded": false
+    },
+    {
+      "name": "typing",
+      "path": "typing",
+      "type": "directory",
+      "children": [
+        {
+          "name": "01_basis.cfp",
+          "path": "typing/01_basis.cfp",
+          "type": "file",
+          "ext": ".cfp",
+          "size": 451,
+          "isBinary": false
+        },
+        {
+          "name": "02_lijsten.cfp",
+          "path": "typing/02_lijsten.cfp",
+          "type": "file",
+          "ext": ".cfp",
+          "size": 609,
+          "isBinary": false
+        },
+        {
+          "name": "03_case.cfp",
+          "path": "typing/03_case.cfp",
+          "type": "file",
+          "ext": ".cfp",
+          "size": 918,
+          "isBinary": false
+        },
+        {
+          "name": "04_adt.cfp",
+          "path": "typing/04_adt.cfp",
+          "type": "file",
+          "ext": ".cfp",
+          "size": 567,
+          "isBinary": false
+        },
+        {
+          "name": "05_zf.spp",
+          "path": "typing/05_zf.spp",
+          "type": "file",
+          "ext": ".spp",
+          "size": 696,
+          "isBinary": false
+        },
+        {
+          "name": "06_guards_multiclause.spp",
+          "path": "typing/06_guards_multiclause.spp",
+          "type": "file",
+          "ext": ".spp",
+          "size": 1045,
+          "isBinary": false
+        },
+        {
+          "name": "07_lambda.spp",
+          "path": "typing/07_lambda.spp",
+          "type": "file",
+          "ext": ".spp",
+          "size": 400,
+          "isBinary": false
+        },
+        {
+          "name": "08_try_throw.cfp",
+          "path": "typing/08_try_throw.cfp",
+          "type": "file",
+          "ext": ".cfp",
+          "size": 425,
+          "isBinary": false
+        },
+        {
+          "name": "09_foutmeldingen.cfp",
+          "path": "typing/09_foutmeldingen.cfp",
+          "type": "file",
+          "ext": ".cfp",
+          "size": 1459,
+          "isBinary": false
+        },
+        {
+          "name": "10_beperkingen.cfp",
+          "path": "typing/10_beperkingen.cfp",
+          "type": "file",
+          "ext": ".cfp",
+          "size": 1648,
+          "isBinary": false
+        },
+        {
+          "name": "README.md",
+          "path": "typing/README.md",
+          "type": "file",
+          "ext": ".md",
+          "size": 4911,
           "isBinary": false
         }
       ],

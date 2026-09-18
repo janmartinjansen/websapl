@@ -1,0 +1,25 @@
+// 03_case.cfp -- case-expressies: constructor-takken en wildcard (`_`).
+//
+// LET OP: een case-tak is PLAT (preprocess/parser.cfp's eigen "milestone
+// 1"-beperking) -- alleen "(Constructor veldnaam1 veldnaam2 -> body)" of
+// "(_ -> body)", geen geneste constructortoepassing in een veldpositie.
+// Voor iets dat twee niveaus diep moet destructureren zijn er twee opties:
+// geneste case-expressies (zoals secondOr hieronder, elke case in
+// staartpositie van de vorige), of een multi-clause FUNCTIE met een echt
+// genest patroon in de clausulekop (zie typing/06_guards_multiclause.spp
+// se `nested`) -- die twee zijn geen sugar voor elkaar, het zijn twee
+// aparte mechanismen met elk hun eigen (on)mogelijkheden.
+
+headOr d xs = case xs
+  (Nil -> d)
+  (Cons h t -> h)
+
+wildTest xs = case xs
+  (Nil -> 0)
+  (_ -> 1)
+
+secondOr d xs = case xs
+  (Nil -> d)
+  (Cons h t -> case t
+    (Nil -> d)
+    (Cons h2 t2 -> h2))
