@@ -209,6 +209,78 @@
       "_expanded": false
     },
     {
+      "name": "contracts",
+      "path": "contracts",
+      "type": "directory",
+      "children": [
+        {
+          "name": "contracts.cfp",
+          "path": "contracts/contracts.cfp",
+          "type": "file",
+          "ext": ".cfp",
+          "size": 4486,
+          "isBinary": false
+        },
+        {
+          "name": "phantom_types.cfp",
+          "path": "contracts/phantom_types.cfp",
+          "type": "file",
+          "ext": ".cfp",
+          "size": 1938,
+          "isBinary": false
+        },
+        {
+          "name": "README.md",
+          "path": "contracts/README.md",
+          "type": "file",
+          "ext": ".md",
+          "size": 6015,
+          "isBinary": false
+        },
+        {
+          "name": "voorbeeld_precondities_fout.cfp",
+          "path": "contracts/voorbeeld_precondities_fout.cfp",
+          "type": "file",
+          "ext": ".cfp",
+          "size": 450,
+          "isBinary": false
+        },
+        {
+          "name": "voorbeeld_precondities.cfp",
+          "path": "contracts/voorbeeld_precondities.cfp",
+          "type": "file",
+          "ext": ".cfp",
+          "size": 630,
+          "isBinary": false
+        },
+        {
+          "name": "voorbeeld_refine.cfp",
+          "path": "contracts/voorbeeld_refine.cfp",
+          "type": "file",
+          "ext": ".cfp",
+          "size": 555,
+          "isBinary": false
+        },
+        {
+          "name": "voorbeeld_safe_makeconstr_fout.cfp",
+          "path": "contracts/voorbeeld_safe_makeconstr_fout.cfp",
+          "type": "file",
+          "ext": ".cfp",
+          "size": 612,
+          "isBinary": false
+        },
+        {
+          "name": "voorbeeld_safe_makeconstr.cfp",
+          "path": "contracts/voorbeeld_safe_makeconstr.cfp",
+          "type": "file",
+          "ext": ".cfp",
+          "size": 602,
+          "isBinary": false
+        }
+      ],
+      "_expanded": false
+    },
+    {
       "name": "docs",
       "path": "docs",
       "type": "directory",

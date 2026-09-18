@@ -49,10 +49,21 @@ function base64ToUint8Array(base64) {
   return bytes;
 }
 
+function ensureDirFor(vfsPath) {
+  const dir = vfsPath.slice(0, vfsPath.lastIndexOf("/"));
+  if (!dir) return;
+  const parts = dir.split("/").filter(Boolean);
+  let cur = "";
+  for (const part of parts) {
+    cur += "/" + part;
+    if (!jmvmModule.FS.analyzePath(cur).exists) jmvmModule.FS.mkdir(cur);
+  }
+}
+
 /**
  * Preprocess #import recursively using VFS and strip || comments for saplcomp
  */
-function resolveImports(source, currentFile = "/workspace/main.cfp", seen = new Set()) {
+async function resolveImports(source, currentFile = "/workspace/main.cfp", seen = new Set()) {
   if (seen.has(currentFile)) return "";
   seen.add(currentFile);
 
@@ -100,13 +111,28 @@ function resolveImports(source, currentFile = "/workspace/main.cfp", seen = new 
             importedContent = jmvmModule.FS.readFile("/grafisch/graphics.cfp", { encoding: "utf8" });
           }
         } else {
-          throw new Error(`Imported file not found: ${importPath}`);
+          // Nog niet in de VFS: een project-eigen bestand (bv. een ander
+          // voorbeeld in dezelfde map) dat nooit apart geopend/gemount is.
+          // Eenmalig ophalen zoals app.js's getFileContentForPath() ook
+          // doet, en in de VFS cachen zodat een herhaalde #import (of een
+          // tweede compilatie) niet opnieuw hoeft te fetchen.
+          const fetchPath = importPath.startsWith("/") ? importPath.slice(1) : importPath;
+          const res = await fetch("../" + fetchPath);
+          if (res.ok) {
+            importedContent = await res.text();
+            if (jmvmModule) {
+              ensureDirFor(resolvedPath);
+              jmvmModule.FS.writeFile(resolvedPath, importedContent);
+            }
+          } else {
+            throw new Error(`Imported file not found: ${importPath}`);
+          }
         }
       } catch (err) {
         throw new Error(`Failed to resolve import "${importPath}": ${err.message}`);
       }
 
-      const inlined = resolveImports(importedContent, resolvedPath, seen);
+      const inlined = await resolveImports(importedContent, resolvedPath, seen);
       outputLines.push(inlined);
     } else {
       outputLines.push(line);
@@ -349,7 +375,7 @@ async function compileSapl(source, srcPath, stages, strictness) {
   const startTime = performance.now();
   let flattenedSource = "";
   try {
-    flattenedSource = resolveImports(source, srcPath);
+    flattenedSource = await resolveImports(source, srcPath);
   } catch (err) {
     return {
       success: false,

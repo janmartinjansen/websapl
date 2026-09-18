@@ -1,0 +1,17 @@
+#import "lib/stdlib.cfp"
+#import "contracts/contracts.cfp"
+
+// safeMakeConstr2 in actie -- goede kant. type_id ontdekken we via typeId
+// op een NORMAAL (veilig) gebouwde waarde, i.p.v. een fragiel hardgecodeerd
+// getal (zoals reflection/test_reflection_dynamic_make.cfp noodgedwongen
+// doet voor een stdlib-ADT) -- ::Box hier heeft precies één constructor,
+// dus aux=0 staat vast. Draai dit bestand: geeft 30 (10+20 via getField).
+
+::Box = MkBox !a !b
+
+sample = MkBox 1 2
+boxTypeId = typeId sample
+
+rebuilt = safeMakeConstr2 boxTypeId 0 10 20
+
+start = (getField rebuilt 0) + (getField rebuilt 1)

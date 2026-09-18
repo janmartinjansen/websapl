@@ -1,0 +1,83 @@
+#import "lib/stdlib.cfp"
+#import "repl/stddyn.cfp"
+
+// contracts.cfp -- "contracts als runtime-assertie", optie 1 uit
+// docs/2026-09-18_sapl_plus_typechecker_status.md se onderzoek naar
+// dependent-type-achtige functionaliteit: GEEN statisch bewijs (dat vraagt
+// een principieel andere checker dan de zojuist gebouwde unificatie-
+// gebaseerde typechecker, zie typing/README.md), wel een harde garantie
+// bij elke daadwerkelijke aanroep -- hetzelfde model als Racket's
+// contracts of Clojure's spec. Zie contracts/README.md voor de volledige
+// uitleg + wanneer dit wel/niet volstaat.
+
+// `label` is een PACKED string (dus een "..."-letterlijke, net als
+// strcat's eigen argumenten) -- geen ['...']-char-lijst, om dezelfde
+// list2str-valkuil te vermijden die printString/error elders in dit
+// project al kostte (zie preprocess/typecheck.cfp se eigen geschiedenis).
+
+require cond label body =
+  if cond body (error (strcat "Voorwaarde geschonden: " label))
+
+ensure cond label val =
+  if cond val (error (strcat "Postconditie geschonden: " label))
+
+// Bouwsteen voor "smart constructors": bouw een verfijnde waarde, of
+// crash meteen met een duidelijke reden i.p.v. een stil verkeerde waarde
+// verderop in het programma te laten rondslingeren.
+refine label pred val = require (pred val) label val
+
+// == safeMakeConstr0..3 ======================================================
+// makeConstr (vm.cpp) neemt zijn velden als LOSSE, positionele argumenten
+// vóór de arity/type_id/aux -- geen lijst -- dus is er geen ARITEIT-
+// ONAFHANKELIJKE wrapper in Sapl-brontekst te schrijven (geen spread/apply
+// op de syntax-laag). Vandaar per-ariteit varianten i.p.v. één generieke
+// functie; dat dekt de overgrote meerderheid van echte ADT's.
+//
+// Vervangt géén enkele hand-uitgeschreven makeConstr-aanroep automatisch --
+// de eerste, betere keus blijft `applyDynamic (lookup naam) velden`
+// (zie reflection/generic.cfp se setField, en repl/stddyn.cfp se eigen
+// getConstrArity hieronder, die exact dat patroon gebruikt). Deze wrappers
+// zijn voor de gevallen waar je toch met rauwe type_id/aux werkt (bijv.
+// gegenereerde/geserialiseerde code) en een DUIDELIJKE crash wilt bij een
+// verkeerd paar in plaats van stille tag-corruptie.
+//
+// De check is een echte, niet-tautologische ronde-trip: getConstrArity
+// leest de GEREGISTREERDE ariteit terug via constrName+lookup+funcArity
+// (repl/stddyn.cfp), niet het net-geconstrueerde admin.nrargs van het
+// resultaat zelf -- een type_id/aux-paar dat toevallig bij een ANDERE,
+// bestaande constructor met een ANDERE ariteit hoort wordt dus wel
+// degelijk gevangen. Geen garantie: een verkeerd paar dat toevallig naar
+// een constructor met DEZELFDE ariteit wijst glipt er nog steeds doorheen
+// -- dit is een contract, geen bewijs.
+
+// LET OP (zie ook contracts/README.md "Een echte vondst onderweg"): elke
+// arity-vergelijking hieronder wordt EERST aan een naam gebonden (`okN =
+// ...`) vóór 'm aan `ensure` door te geven. Dat is geen stijlkeuze: een
+// kale vergelijking die INLINE als aanroepargument wordt meegegeven,
+// compileert stil naar het omgekeerde antwoord (docs/sapl_programmeer_
+// regels.md §1 documenteert dit al voor `/\`/`\/`; empirisch gevonden dat
+// hetzelfde geldt voor `==`/`!=`/`>` -- zowel bij `compile` als
+// `compile_nostrict`, en ongeacht een `!`-strictheidsvlag op het
+// ontvangende parameter). Bind je zelf een vergelijking en geef die door
+// aan require/ensure/refine, doe dan hetzelfde: `let ok = (a == b) in
+// require ok "..." x`, nooit `require (a == b) "..." x`.
+
+safeMakeConstr0 tid conAux =
+  let result = makeConstr 0 tid conAux,
+      ok = (getConstrArity result) == 0 in
+  ensure ok "safeMakeConstr0: arity mismatch (type_id/aux hoort niet bij een 0-velden constructor)" result
+
+safeMakeConstr1 tid conAux f0 =
+  let result = makeConstr f0 1 tid conAux,
+      ok = (getConstrArity result) == 1 in
+  ensure ok "safeMakeConstr1: arity mismatch (type_id/aux hoort niet bij een 1-veld constructor)" result
+
+safeMakeConstr2 tid conAux f0 f1 =
+  let result = makeConstr f0 f1 2 tid conAux,
+      ok = (getConstrArity result) == 2 in
+  ensure ok "safeMakeConstr2: arity mismatch (type_id/aux hoort niet bij een 2-velden constructor)" result
+
+safeMakeConstr3 tid conAux f0 f1 f2 =
+  let result = makeConstr f0 f1 f2 3 tid conAux,
+      ok = (getConstrArity result) == 3 in
+  ensure ok "safeMakeConstr3: arity mismatch (type_id/aux hoort niet bij een 3-velden constructor)" result

@@ -1,0 +1,15 @@
+#import "lib/stdlib.cfp"
+#import "contracts/contracts.cfp"
+
+// Precondities via require: safeDiv weigert door 0 te delen met een
+// duidelijke foutmelding i.p.v. wat de VM's rauwe deel-opcode toevallig
+// doet. Draai dit bestand: geeft gewoon 5 (10/2).
+//
+// LET OP: `ok` wordt EERST aan een naam gebonden, dan pas aan require
+// doorgegeven -- `require (b != 0) ... (a/b)` (de vergelijking inline als
+// aanroepargument) compileert stil naar het OMGEKEERDE antwoord, zie
+// contracts/README.md "Een echte vondst onderweg".
+
+safeDiv a b = let ok = (b != 0) in require ok "safeDiv: b mag niet 0 zijn" (a / b)
+
+start = safeDiv 10 2

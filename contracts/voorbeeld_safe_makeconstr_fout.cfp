@@ -1,0 +1,16 @@
+#import "lib/stdlib.cfp"
+#import "contracts/contracts.cfp"
+
+// Zelfde ::Box, nu een aux die niet bij een 2-velden constructor hoort --
+// aux=99 bestaat niet, dus type_table's opzoeking faalt/wijst iets anders
+// aan; safeMakeConstr2's ronde-trip-check (getConstrArity result == 2)
+// hoort dit te vangen met een duidelijke crash i.p.v. stille corruptie.
+// Vergelijk dit met wat een RAUWE `makeConstr 10 20 2 boxTypeId 99` zou
+// doen (dat programma crasht NIET netjes -- geen contract, geen check).
+
+::Box = MkBox !a !b
+
+sample = MkBox 1 2
+boxTypeId = typeId sample
+
+start = safeMakeConstr2 boxTypeId 99 10 20

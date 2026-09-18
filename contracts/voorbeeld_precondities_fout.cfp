@@ -1,0 +1,11 @@
+#import "lib/stdlib.cfp"
+#import "contracts/contracts.cfp"
+
+// Zelfde safeDiv, nu met een schending: b = 0. Draai dit bestand en
+// vergelijk de foutmelding met "Voorwaarde geschonden: safeDiv: b mag
+// niet 0 zijn" i.p.v. een rauwe VM-fout of een stil verkeerd getal.
+// (Zie voorbeeld_precondities.cfp voor waarom `ok` eerst gebonden wordt.)
+
+safeDiv a b = let ok = (b != 0) in require ok "safeDiv: b mag niet 0 zijn" (a / b)
+
+start = safeDiv 10 0

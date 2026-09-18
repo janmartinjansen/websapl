@@ -1,0 +1,39 @@
+// phantom_types.cfp -- optie 2 uit docs/2026-09-18_sapl_plus_typechecker_
+// status.md se onderzoek naar dependent-type-achtige functionaliteit:
+// nominale scheiding tussen "vormelijk identieke" waarden (twee lengtes
+// in verschillende eenheden, een gesorteerde vs. ongesorteerde lijst),
+// GRATIS via het bestaande ADT-constructor-schema-mechanisme -- geen
+// nieuwe taalfeature, geen wijziging aan de typechecker. Een wrapper-ADT
+// met precies één constructor is puur een compile-time-onderscheid: de
+// typechecker (preprocess/typecheck.cfp) geeft twee VERSCHILLENDE,
+// onderling niet-uitwisselbare typen, en dat is precies waar dit voor
+// dient.
+//
+// Typecheck dit bestand (het is NIET bedoeld om te draaien -- mixUp
+// bestaat expres om een foutmelding te laten zien):
+//   echo "contracts/phantom_types.cfp" | ./run preprocess/typecheck.jmvm
+
+::Meters = Meters !n
+::Feet = Feet !n
+
+metersToFeet m = case m (Meters n -> Feet (n * 3))
+
+addMeters a b = case a (Meters x -> case b (Meters y -> Meters (x + y)))
+
+// Type-fout, met opzet: probeert een Feet-waarde te gebruiken waar een
+// Meters verwacht wordt. De typechecker moet dit vangen ("kan niet
+// unificeren: Feet met Meters" of vergelijkbaar) -- puur op basis van de
+// nominale ADT-namen, zonder dat er ooit een getal fout hoeft te gaan.
+mixUp a = addMeters a (Feet 10)
+
+// Nominaal onderscheid tussen "bewezen gesorteerd" en "onbekend" -- een
+// echte sorteerfunctie zou ::Sorted teruggeven, en downstream-functies die
+// een gesorteerde lijst NODIG hebben (bijv. binary search) zouden een
+// ::Sorted-argument eisen i.p.v. een kale lijst -- de typechecker
+// controleert dan dat je nergens per ongeluk een ongesorteerde lijst
+// doorgeeft, zonder ooit runtime te hoeven checken of hij ECHT gesorteerd
+// is (dat is precies het verschil met een refinement/contract-aanpak,
+// zie contracts/README.md).
+::Sorted = Sorted !a
+
+unwrapSorted s = case s (Sorted xs -> xs)

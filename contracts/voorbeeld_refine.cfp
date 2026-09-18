@@ -1,0 +1,16 @@
+#import "lib/stdlib.cfp"
+#import "contracts/contracts.cfp"
+
+// "Smart constructor": mkPositive bouwt een verfijnde waarde (een Num
+// waarvan je HIERNA overal in het programma kunt aannemen dat 'ie > 0
+// is, zonder dat de typechecker dat ooit bewijst -- de garantie zit 'm
+// in "als dit programma niet gecrasht is op de regel waar mkPositive
+// werd aangeroepen, is het waar"). Draai dit bestand: geeft 5.
+
+isPositive x = x > 0
+
+mkPositive n = refine "mkPositive: n moet > 0 zijn" isPositive n
+
+verdubbel n = n * 2
+
+start = verdubbel (mkPositive 5) / 2
