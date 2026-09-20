@@ -22,3 +22,23 @@ Browse het als naslagwerk om te zien wat er al klaarstaat vóór je zelf
 Alle overige ingebouwde functies (`readFile`, `typeId`, `lookup`,
 `applyDynamic`, `try`/`throw`, ...) zijn VM-primitieven, geen Sapl-code —
 die staan niet hier maar in `docs/sapl_taalgids.md` §8-10.
+
+# `lib/dict.cfp` — dict/hashmap (string-sleutel -> waarde)
+
+Een associatieve datastructuur (gebalanceerde binaire zoekboom), er was
+nog geen enkele in de standaardbibliotheek — alleen lijsten. API:
+`dictEmpty`, `dictSet`/`dictGet`/`dictGetOr`/`dictHas`/`dictRemove`,
+`dictSize`, `dictKeys`/`dictValues` (altijd gesorteerd),
+`dictToList`/`dictFromList`. Zie `dict/dict_basic.cfp` voor een werkend
+voorbeeld en `docs/2026-09-20_sapl_plus_dict.md` voor het ontwerp.
+
+# `lib/eqnum.spp` — handmatige `eqnum`/`neqnum`-ontsnappingsklep (infix)
+
+In Sapl+ vergelijken `==`/`!=` STRUCTUREEL (waarde, niet pointer) — zie
+`docs/2026-09-20_sapl_plus_structural_equality.md`. Dat kost een kleine
+overhead op strakke numerieke vergelijkingslussen; `preprocess/numsafe.cfp`
+neemt die automatisch weg waar het kan bewijzen dat beide kanten Num/Float
+zijn, en `eqnum`/`neqnum` (geen import nodig) plus dit bestand se infix-
+synoniemen `~~`/`<>` laten de programmeur het expliciet zeggen waar de
+automatische analyse het niet kan zien — dezelfde rol als een handmatige
+`!` naast automatische strictness-inferentie.

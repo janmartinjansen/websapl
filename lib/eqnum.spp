@@ -1,0 +1,36 @@
+// eqnum.spp -- optional infix synonyms for the eqnum/neqnum escape hatch
+// (see preprocess/eqrewrite.cfp's own "Handmatige ontsnappingsklep"
+// section): `x ~~ y` / `x <> y` instead of `eqnum x y` / `neqnum x y`.
+//
+// #import this file to get the infix form. `eqnum`/`neqnum` themselves
+// need NO import -- they're recognized directly by eqrewrite.cfp as a
+// bare, saturated 2-argument call, not real functions. This file's own
+// `(~~)`/`(<>)` bodies use `eqnum`/`neqnum` the same way, so they get
+// rewritten to a raw `==`/`!=` too (same near-zero cost, plus the one
+// ordinary function-call this wrapper itself adds).
+//
+// Sapl+-only (needs the driver.jmvm preprocessing step) -- meaningless to
+// #import into a hand-written .cfp compiled directly via ./compile.
+//
+// Symbol choice: Sapl+'s user-operator lexer (preprocess/lexer.cfp's
+// isUserOpCh) only accepts `+ - * / % < > & ~ ^ $` -- `=`/`!` are
+// deliberately excluded (they keep their single-char meaning always), so
+// a literal `=n=`/`!n=` (or anything mimicking `==`/`!=`'s own shape)
+// isn't lexable at all. `~~` (doubled tilde, "approximately/raw equals")
+// and `<>` (the classic Pascal/SQL "not equal") are both valid
+// isUserOpCh runs and don't collide with any reserved 2/3-char pair
+// (==, !=, <=, >=, /\, \/, ->, <-, :=, <#>).
+//
+// Deliberately declared at a LOW priority (3, matching the built-in `==`/
+// `!=`'s own conceptual level) -- though note preprocess/parser.cfp's own
+// `#operator` comment: a user-declared operator ALWAYS binds tighter than
+// every built-in regardless of the N you pick (userOpInternalPrio maps N
+// through `2000 - N`, so declared operators never interleave with
+// built-ins on priority alone) -- parenthesize if you mix `~~`/`<>` with
+// `==`/`+`/etc. in one expression.
+
+#operator l 3 ~~
+#operator l 3 <>
+
+(~~) a b = eqnum a b
+(<>) a b = neqnum a b

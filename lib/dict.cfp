@@ -1,0 +1,228 @@
+#import "lib/stdlib.cfp"
+
+// dict.cfp -- een associatieve datastructuur (string-sleutel -> waarde),
+// het tweede stuk van dezelfde "lichte, Python-achtige scripttaal"-vraag
+// als eqrewrite.cfp (zie docs/2026-09-20_sapl_plus_dict.md voor het
+// volledige verslag; `docs/2026-09-14_visie_sapl_als_functionele_python.md`
+// §4.3 noemt dit expliciet als een nog-niet-aangepakt punt). Bewust in
+// `lib/`, niet in `preprocess/`: een dict is een DATASTRUCTUUR + functies,
+// geen syntax-uitbreiding -- bruikbaar vanuit gewone Sapl (.cfp) net zo
+// goed als vanuit Sapl+ (.spp), zonder dat de preprocessor er iets van
+// hoeft te weten. Native `{ "k": v }`-letterlijke-syntax en `d["k"]`-
+// indexering (dezelfde §4.3) zijn een APARTE, latere stap (parser-syntax,
+// niet dit bestand) -- zie "Bewust nog niet gedaan" onderaan.
+//
+// Representatie: een gebalanceerde binaire zoekboom, sleutels vergeleken
+// via `strCompare` (lexicografisch op gepakte strings, via strlen/strat --
+// niet char-lijst-`charListCompare`, dat is voor een heel ANDER
+// representatietype). Zelfde constructieprincipe als
+// `sapl_compiler/ast_helpers.cfp`'s bewezen `nameset`-BST (mergesort +
+// splits-op-het-midden, dus GEGARANDEERD gebalanceerd ongeacht
+// invoegvolgorde -- dat is precies de klasse fout die dit project al
+// meermaals gemeten heeft: blockIndex, retag_parse's `member`-scan, en
+// deze sessie zelf nog (preprocess/eqrewrite.cfp's reachability-closure).
+// Een NAIEVE, ongebalanceerde BST-insert zou diezelfde fout gewoon opnieuw
+// introduceren; bewust vermeden.
+//
+// Schrijven (`dictSet`/`dictRemove`) herbouwt de balans elke keer opnieuw
+// vanaf een IN-ORDER-traversal van de bestaande boom (die traversal is al
+// gesorteerd, dus geen aparte sort-stap nodig) -- O(n) per schrijfactie,
+// i.p.v. een incrementele in-place-gebalanceerde-insert (AVL/rood-zwart)
+// bij te houden. Voor het verwachte scriptgebruik (config-achtige dicts,
+// tellers, kleine lookups -- zie het visiedocument se eigen 3-sleutel-
+// voorbeeld) is lezen (`dictGet`/`dictHas`, O(log n)) veel vaker de
+// bottleneck dan schrijven, en is dit ruim licht genoeg; een incrementele
+// gebalanceerde insert is een reële, maar pas nodig zodra iemand een
+// dict met duizenden entries in een hete lus opbouwt.
+
+::Dict = DLeaf | DNode !key !value !left !right
+::DictEntry = DictEntry !key !value
+
+deKey e = case e (DictEntry k v -> k)
+deValue e = case e (DictEntry k v -> v)
+
+// == Lexicografische vergelijking op gepakte strings (-1/0/1) ===============
+// Zelfde driewegs-eenpas-aanpak als ast_helpers.cfp's charListCompare,
+// maar voor gepakte strings (strlen/strat) i.p.v. char-lijsten -- dit is
+// een ANDER representatietype, geen duplicaat van die functie.
+
+strCompare s1 s2 = strCompareAt 0 (strlen s1) (strlen s2) s1 s2
+
+strCompareAt i l1 l2 s1 s2 =
+  if (i == l1) (strCompareEnd1 i l2)
+  (if (i == l2) 1 (strCompareChar i l1 l2 s1 s2))
+
+strCompareEnd1 i l2 = if (i == l2) 0 (0 - 1)
+
+strCompareChar i l1 l2 s1 s2 = strCompareCharCmp (strat i s1) (strat i s2) i l1 l2 s1 s2
+
+strCompareCharCmp c1 c2 i l1 l2 s1 s2 =
+  if (c1 == c2) (strCompareAt (i + 1) l1 l2 s1 s2) (if (c1 < c2) (0 - 1) 1)
+
+// == In-order traversal (altijd gesorteerd, boom is altijd gebalanceerd) ===
+
+dictToList d = dictToListAcc d Nil
+
+dictToListAcc d acc =
+  case d
+    (DLeaf -> acc)
+    (DNode k v l r -> dictToListAccNode k v l r acc)
+
+dictToListAccNode k v l r acc = dictToListAcc l (Cons (DictEntry k v) (dictToListAcc r acc))
+
+// == Gebalanceerd herbouwen vanaf een AL GESORTEERDE entry-lijst ============
+// Zelfde splits-op-het-midden-principe als ast_helpers.cfp's nsBuildN.
+
+buildBalanced entries = buildBalancedN entries (length entries)
+
+buildBalancedN entries n = if (n == 0) DLeaf (buildBalancedSplit entries n)
+
+buildBalancedSplit entries n =
+  let mid = n / 2,
+      leftEntries = take mid entries,
+      fromMid = drop mid entries in
+  buildBalancedNode leftEntries mid fromMid (n - mid - 1)
+
+buildBalancedNode leftEntries leftCount fromMid rightCount =
+  case fromMid
+    (Cons e rest -> buildBalancedNodeFinish e leftEntries leftCount rest rightCount)
+
+buildBalancedNodeFinish e leftEntries leftCount rest rightCount =
+  case e (DictEntry k v -> DNode k v (buildBalancedN leftEntries leftCount) (buildBalancedN rest rightCount))
+
+// == Sleutel invoegen/vervangen resp. verwijderen in een gesorteerde lijst ==
+
+sortedInsert key value entries =
+  case entries
+    (Nil -> Cons (DictEntry key value) Nil)
+    (Cons e rest -> sortedInsertStep key value e rest)
+
+sortedInsertStep key value e rest = sortedInsertCmp (strCompare key (deKey e)) key value e rest
+
+sortedInsertCmp c key value e rest =
+  if (c == 0) (Cons (DictEntry key value) rest)
+  (if (c < 0) (Cons (DictEntry key value) (Cons e rest)) (Cons e (sortedInsert key value rest)))
+
+sortedRemove key entries =
+  case entries
+    (Nil -> Nil)
+    (Cons e rest -> sortedRemoveStep key e rest)
+
+sortedRemoveStep key e rest = if (strEqual key (deKey e)) rest (Cons e (sortedRemove key rest))
+
+// == Publieke API =============================================================
+
+dictEmpty = DLeaf
+
+dictSize d =
+  case d
+    (DLeaf -> 0)
+    (DNode k v l r -> dictSizeNode l r)
+
+dictSizeNode l r = 1 + dictSize l + dictSize r
+
+dictSet key value d = buildBalanced (sortedInsert key value (dictToList d))
+
+dictRemove key d = buildBalanced (sortedRemove key (dictToList d))
+
+dictHas key d =
+  case d
+    (DLeaf -> 0)
+    (DNode k v l r -> dictHasAt (strCompare key k) key l r)
+
+dictHasAt c key l r = if (c == 0) 1 (if (c < 0) (dictHas key l) (dictHas key r))
+
+// Fout bij een ontbrekende sleutel, zelfde idioom als ast.cfp's headOf op
+// een lege lijst -- gebruik dictGetOr/dictHas als "misschien afwezig" een
+// verwacht geval is, niet een programmeerfout.
+dictGet key d =
+  case d
+    (DLeaf -> error "dictGet: sleutel niet gevonden")
+    (DNode k v l r -> dictGetAt (strCompare key k) key v l r)
+
+dictGetAt c key v l r = if (c == 0) v (if (c < 0) (dictGet key l) (dictGet key r))
+
+dictGetOr key defaultVal d =
+  case d
+    (DLeaf -> defaultVal)
+    (DNode k v l r -> dictGetOrAt (strCompare key k) key defaultVal v l r)
+
+dictGetOrAt c key defaultVal v l r =
+  if (c == 0) v (if (c < 0) (dictGetOr key defaultVal l) (dictGetOr key defaultVal r))
+
+dictKeys d = dictKeysOf (dictToList d)
+
+dictKeysOf entries =
+  case entries
+    (Nil -> Nil)
+    (Cons e rest -> Cons (deKey e) (dictKeysOf rest))
+
+dictValues d = dictValuesOf (dictToList d)
+
+dictValuesOf entries =
+  case entries
+    (Nil -> Nil)
+    (Cons e rest -> Cons (deValue e) (dictValuesOf rest))
+
+// == dictFromList: bouwen vanaf een ONgesorteerde, mogelijk-dubbele- ========
+// sleutels-lijst van DictEntry -- Python's `dict(paren)`-semantiek: bij een
+// dubbele sleutel wint de LAATSTE entry in de invoerlijst.
+
+mergeSortEntries es = mergeSortEntriesLen es (length es)
+
+mergeSortEntriesLen es n = if (n <= 1) es (mergeSortEntriesSplit es n)
+
+mergeSortEntriesSplit es n =
+  let mid = n / 2,
+      left = take mid es,
+      right = drop mid es in
+  mergeEntries (mergeSortEntriesLen left mid) (mergeSortEntriesLen right (n - mid))
+
+mergeEntries xs ys =
+  case xs
+    (Nil -> ys)
+    (Cons x xs2 -> mergeEntriesCons x xs2 ys)
+
+mergeEntriesCons x xs2 ys =
+  case ys
+    (Nil -> Cons x xs2)
+    (Cons y ys2 -> mergeEntriesBoth x xs2 y ys2)
+
+mergeEntriesBoth x xs2 y ys2 =
+  if (strCompare (deKey x) (deKey y) <= 0)
+    (Cons x (mergeEntries xs2 (Cons y ys2)))
+    (Cons y (mergeEntries (Cons x xs2) ys2))
+
+// Stabiele sort hierboven (bij gelijke sleutels wint de eerder-in-de-
+// oorspronkelijke-lijst-staande entry, `mergeEntriesBoth`'s `<=`) laat
+// gelijke sleutels ALTIJD in hun oorspronkelijke onderlinge volgorde
+// aangrenzend staan -- dedupKeepLast houdt daarna, per aangrenzend blok
+// gelijke sleutels, de LAATSTE over (dus per saldo: de laatste in de
+// oorspronkelijke lijst wint, zoals Python's dict(pairs)).
+dedupKeepLast entries =
+  case entries
+    (Nil -> Nil)
+    (Cons e rest -> dedupKeepLastStep e rest)
+
+dedupKeepLastStep e rest =
+  case rest
+    (Nil -> Cons e Nil)
+    (Cons e2 rest2 -> dedupKeepLastCmp e e2 rest2)
+
+dedupKeepLastCmp e e2 rest2 =
+  if (strEqual (deKey e) (deKey e2)) (dedupKeepLastStep e2 rest2) (Cons e (dedupKeepLastStep e2 rest2))
+
+dictFromList entries = buildBalanced (dedupKeepLast (mergeSortEntries entries))
+
+// == Bewust nog niet gedaan ===================================================
+// - Native `{ "k": v, ... }`-letterlijke syntax en `d["k"]`-indexering
+//   (visiedocument §4.3) -- vereist lexer/parser-uitbreiding in
+//   preprocess/lexer.cfp/parser.cfp, een aparte, grotere stap; dit
+//   bestand is de functionele basis waar die syntax later gewoon
+//   dictSet/dictGet/dictFromList voor zou aanroepen.
+// - Niet-string sleutels (Num/ADT) -- zou een generieke vergelijker nodig
+//   hebben (vergelijkbaar met preprocess/eqrewrite.cfp's __deepEq, maar
+//   dan met ORDENING, niet alleen gelijkheid) i.p.v. deze strCompare.
+// - dictMap/dictFilter (waarde-transformatie over de hele dict) -- niet
+//   essentieel voor een eerste versie, triviaal later toe te voegen via
+//   dictToList + dictFromList.

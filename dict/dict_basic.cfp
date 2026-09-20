@@ -1,0 +1,50 @@
+// dict_basic.cfp -- voorbeeld + regressietest voor lib/dict.cfp (een
+// gebalanceerde-BST associatieve datastructuur, string-sleutel -> Num).
+// Zie docs/2026-09-20_sapl_plus_dict.md voor het ontwerp.
+//
+// Draai: ./compile dict/dict_basic.cfp && ./run dict/dict_basic.jmvm
+// Verwacht (één regel): 9090 -1 1 0 2 1 1 1 20 99 2
+
+#import "lib/dict.cfp"
+
+geenSleutel = 0 - 1
+
+// dictSet overschrijft een bestaande sleutel i.p.v. 'm te verdubbelen.
+basis =
+  let d0 = dictEmpty,
+      d1 = dictSet "poort" 8080 d0,
+      d2 = dictSet "omgeving" 1 d1,
+      d3 = dictSet "poort" 9090 d2 in
+  print (dictGet "poort" d3) <#> writeChar 1 32 <#>
+  print (dictGetOr "ontbreekt" geenSleutel d3) <#> writeChar 1 32 <#>
+  print (dictHas "omgeving" d3) <#> writeChar 1 32 <#>
+  print (dictHas "weg" d3) <#> writeChar 1 32 <#>
+  print (dictSize d3) <#> writeChar 1 32 <#>
+  print (dictSize (dictRemove "poort" d3)) <#> writeChar 1 32
+
+// dictKeys komt altijd gesorteerd terug (in-order-traversal van een
+// gebalanceerde boom), ongeacht invoegvolgorde.
+gesorteerdeSleutels = dictSet "e" 5 (dictSet "d" 4 (dictSet "c" 3 (dictSet "b" 2 (dictSet "a" 1 dictEmpty))))
+sleutelsGesorteerd = strictOplopend (dictKeys gesorteerdeSleutels)
+strictOplopend ks = case ks (Nil -> 1) (Cons k rest -> strictOplopendStep k rest)
+strictOplopendStep k rest = case rest (Nil -> 1) (Cons k2 rest2 -> if (strCompare k k2 < 0) (strictOplopendStep k2 rest2) 0)
+
+// Grotere reeks sequentiële inserts blijft correct opzoekbaar (balans
+// blijft kloppen over veel schrijfacties heen, niet alleen een paar).
+sleutels20 = Cons "k01" (Cons "k02" (Cons "k03" (Cons "k04" (Cons "k05" (Cons "k06" (Cons "k07" (Cons "k08" (Cons "k09" (Cons "k10" (Cons "k11" (Cons "k12" (Cons "k13" (Cons "k14" (Cons "k15" (Cons "k16" (Cons "k17" (Cons "k18" (Cons "k19" (Cons "k20" Nil)))))))))))))))))))
+bouwOp ks i d = case ks (Nil -> d) (Cons k rest -> bouwOp rest (i + 1) (dictSet k i d))
+controleerAlles ks i d = case ks (Nil -> 1) (Cons k rest -> controleerEen k i rest d)
+controleerEen k i rest d = if (dictGet k d == i) (controleerAlles rest (i + 1) d) 0
+grotereDict = bouwOp sleutels20 1 dictEmpty
+
+// dictFromList: Python dict(paren)-semantiek, laatste entry wint bij een
+// dubbele sleutel.
+vanuitLijst = dictFromList (Cons (DictEntry "x" 1) (Cons (DictEntry "y" 2) (Cons (DictEntry "x" 99) Nil)))
+
+start =
+  basis <#>
+  print sleutelsGesorteerd <#> writeChar 1 32 <#>
+  print (controleerAlles sleutels20 1 grotereDict) <#> writeChar 1 32 <#>
+  print (dictSize grotereDict) <#> writeChar 1 32 <#>
+  print (dictGet "x" vanuitLijst) <#> writeChar 1 32 <#>
+  print (dictSize vanuitLijst) <#> writeChar 1 10

@@ -281,6 +281,30 @@
       "_expanded": false
     },
     {
+      "name": "dict",
+      "path": "dict",
+      "type": "directory",
+      "children": [
+        {
+          "name": "dict_basic.cfp",
+          "path": "dict/dict_basic.cfp",
+          "type": "file",
+          "ext": ".cfp",
+          "size": 2654,
+          "isBinary": false
+        },
+        {
+          "name": "dict_basic.jmvm",
+          "path": "dict/dict_basic.jmvm",
+          "type": "file",
+          "ext": ".jmvm",
+          "size": 62959,
+          "isBinary": false
+        }
+      ],
+      "_expanded": false
+    },
+    {
       "name": "docs",
       "path": "docs",
       "type": "directory",
@@ -1070,11 +1094,27 @@
       "type": "directory",
       "children": [
         {
+          "name": "dict.cfp",
+          "path": "lib/dict.cfp",
+          "type": "file",
+          "ext": ".cfp",
+          "size": 9123,
+          "isBinary": false
+        },
+        {
+          "name": "eqnum.spp",
+          "path": "lib/eqnum.spp",
+          "type": "file",
+          "ext": ".spp",
+          "size": 1871,
+          "isBinary": false
+        },
+        {
           "name": "README.md",
           "path": "lib/README.md",
           "type": "file",
           "ext": ".md",
-          "size": 1228,
+          "size": 2335,
           "isBinary": false
         },
         {
