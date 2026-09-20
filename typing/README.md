@@ -14,20 +14,27 @@ Het is een aanvulling op, geen vervanging voor, de compiler of de linter
 — dit hier is écht type-inferentie: het leidt typen af en meldt waar ze niet
 kunnen kloppen, zonder dat je zelf ooit een type hoeft op te schrijven.
 
-## Gebruik (in WebSapl)
+## Gebruik
 
-Open een van de bestanden hieronder (of je eigen `.cfp`/`.spp`) in de editor
-en klik op de **🧪 Typecheck**-knop in de werkbalk (naast Run). De
-typechecker (`preprocess/typecheck.jmvm`) draait, net als de compiler zelf,
-volledig client-side via WebAssembly (`engine/typecheck.jmvm`,
-`engine/worker.js`'s `typecheckSource()`) — geen server nodig. De uitvoer
-verschijnt in de terminal onderaan: één regel per topniveaufunctie —
-`naam :: type` bij succes, of `naam: FOUT: ...` bij een gevonden probleem.
+**Vanaf de command line**, vanuit de repo-root:
 
-Dit is dezelfde tool als `preprocess/typecheck.cfp` in de hoofdrepo (zie
-ook `typing/README.md` daar, en de Workbench-integratie via
-`workbench/workbench.sh`'s eigen 🧪 Typechecker-tab) — hier gewoon
-beschikbaar zonder dat je iets hoeft te compileren of installeren.
+```bash
+./compile preprocess/typecheck.cfp        # eenmalig, of na een wijziging aan typecheck.cfp
+echo "typing/01_basis.cfp" | ./run preprocess/typecheck.jmvm
+```
+
+Het protocol is bewust minimaal: precies één regel op stdin (het pad naar
+het te checken bestand, relatief aan de repo-root), en de uitvoer op stdout
+is één regel per topniveaufunctie — `naam :: type` bij succes, of
+`naam: FOUT: ...` bij een gevonden probleem.
+
+**Via de Workbench**: start `./workbench/workbench.sh` (of
+`node workbench/server.js <poort>` voor een aparte instantie naast een al
+draaiende Workbench), open het bestand dat je wilt checken in de editor, en
+klik op de **🧪 Typechecker**-knop in de werkbalk (naast Linter/Debugger).
+Dat opent een aparte tab met een doelbestand-veld (automatisch ingevuld met
+het laatst actieve bestand) en een "▶ Typecheck"-knop. De tab bouwt
+`preprocess/typecheck.jmvm` zelf als het nog ontbreekt.
 
 ## Scope
 
@@ -44,17 +51,41 @@ Gedekt (allemaal getest tegen zowel eigen voorbeelden als de bestaande
 | Guards, multi-clause functies, geneste patronen in clausulekoppen | `06_guards_multiclause.spp` |
 | Lambda-expressies | `07_lambda.spp` |
 | `try`/`throw` | `08_try_throw.cfp` |
+| VM-primitieven (float-wiskunde, IO, reflectie, generieke arrays, strings) | `11_vm_primitieven.cfp` |
 
 Booleans krijgen hier gewoon `Num` (geen apart `Bool`-type): Sapl+'s eigen
 parser herschrijft `True`/`False` al naar `1`/`0` vóórdat de typechecker de
 AST ooit ziet, dus er is geen onderscheid meer te maken.
 
+## VM-primitieven (`preprocess/typecheck.cfp`'s `primSchemes`)
+
+Elke naam uit `ast.cfp`'s `primNames` (findBuiltin's opcode-primitieven plus
+parser.ama's losse `predefs`-tabel: `strlen`/`strat`/`update`/`get`/
+`strappend`/`strslice`/`strcpy`) heeft een handgeschreven schema, zelfde
+mechanisme als Nil/Cons. Signaturen komen uit
+`docs/sapl_programmeer_regels.md` §7/§8/§10 (argumentvolgorde bij
+`getField`/`update`/`get`/`strat` is niet wat de naam doet vermoeden, zie
+daar) en uit echte call-sites elders in de repo.
+
+Twee bewuste ontwerpkeuzes, geen bug:
+- **`makeConstr` is intrinsiek variadisch** (ariteit = aantal velden,
+  verschilt per aanroepplaats) en krijgt daarom een kale verse `TVar` als
+  "functietype" — de gewone curry-machinerie (`applyArgs`) unificeert die bij
+  elk toegepast argument met een nieuwe pijl, dus elke aanroepplaats past
+  zich vanzelf aan zijn eigen argumentaantal aan. Resultaat: typet altijd,
+  maar controleert niets aan het aantal/de typen velden.
+- **Reflectieprimitieven op een willekeurige waarde** (`typeId`, `getField`,
+  `funcName`, ...) nemen een verse `TVar` voor die waarde — ze typen dus
+  altijd, maar controleren niet of de waarde er daadwerkelijk zo uitziet
+  (dat kan pas ten dele: `showValAux`-achtige code die op basis van een
+  `typeId`-uitkomst tussen `Num`/`Float`/`Str` dispatcht, geeft hier
+  onvermijdelijk een (over-strenge, veilige) foutmelding zodra zo'n waarde
+  ook via een concreet-getypeerde primitief als `ftoa`/`itoa` gebruikt
+  wordt — zie `repl/stddyn.cfp`'s `showValAux` voor een voorbeeld. Dat is
+  een fundamentele HM-beperking, geen los te maken bug in dit schema.)
+
 ## Bekende gaten (nog niet geregistreerd, geen ontwerpfout)
 
-- **VM-primitieven** (`print`, `typeId`, `getField`, `printString`, ...) zijn
-  nergens geregistreerd — elke aanroep geeft `onbekende functie: X`. Zelfde
-  fix-vorm als Nil/Cons destijds (een handgeschreven schema per primitief),
-  gewoon nog niet gedaan.
 - **`let`** en de rest van de kernexpressies zijn wél gedekt, maar zijn
   bewust **monomorf** binnen hun eigen scope (geen let-polymorfie over
   meerdere gebruiksplekken van dezelfde naam) — zie hieronder.

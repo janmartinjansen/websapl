@@ -1,0 +1,48 @@
+// 11_vm_primitieven.cfp -- dekt de handgeschreven schema's voor VM-
+// primitieven (preprocess/typecheck.cfp's primSchemes, punt 2 uit
+// docs/2026-09-18_sapl_plus_typechecker_status.md). Vóór die schema's gaf
+// ELKE aanroep hieronder "onbekende functie: X"; nu typen ze allemaal
+// echt. `badFloatArg` demonstreert dat een primitief-schema nu ook een
+// ECHTE fout kan vangen (een Str doorgegeven waar `fadd` een Float
+// verwacht) -- zie de foutmeldingen-galerij in 09_foutmeldingen.cfp voor
+// hetzelfde idee.
+//
+// NB: gewone `+`/`-`/`*`/`/`/`%` blijven hier bewust buiten beeld -- die
+// zijn in deze typechecker hardgecodeerd op Num (inferBinNum), los van
+// Float; de float-primitieven hieronder (fadd/fmult/...) zijn de enige
+// manier om hier iets met Float te typen.
+
+// Float-rekenkunde (concreet getypeerd, geen fresh TVar nodig)
+oppervlakteCirkel straal = fmult 3.14159 (fmult straal straal)
+naarFahrenheit celsius = fadd (fmult celsius 1.8) 32.0
+
+// Reflectie: elk van deze primitieven werkt op EENDER WELKE waarde (TVar),
+// maar heeft toch een concreet resultaattype.
+welkType x = typeId x
+naamVanFunctie f = funcName f
+eersteVeld paar = getField paar 0
+
+// applyDynamic verwacht een ECHTE Sapl-lijst als 2e argument (docs/
+// sapl_programmeer_regels.md #10), geen string -- vandaar TList i.p.v. een
+// kale TVar in het schema. Let op: "..." is hier een echte string-literal
+// (SStr, typet direct als Str) -- de ['...']-sugar desugart naar een
+// aanroep van str2list (lib/stdlib.cfp), die zonder een #import hier
+// onbekend zou zijn.
+opteller a b = a + b
+viaLookup = applyDynamic (lookup "opteller") (Cons 3 (Cons 4 Nil))
+
+// Generieke gepakte-array-primitieven (get/update): argumentvolgorde is
+// index-eerst resp. waarde-index-array, zie docs/sapl_programmeer_regels.md
+// #7 -- de schema's hieronder volgen exact die volgorde.
+bijgewerkteArray arr = update 99 0 arr
+opgehaaldeWaarde arr = get 0 arr
+
+// Stringprimitieven (strappend/strcpy/strslice zijn nog niet in de VM
+// geïmplementeerd -- zie #7 -- maar typechecken hier los daarvan gewoon
+// mee, want deze tool voert niets uit, hij infereert alleen typen op de
+// AST).
+samengevoegdeStrings s1 s2 = strappend s1 s2
+
+// Een primitief-schema kan nu ook een echte fout vangen: fadd verwacht
+// Float, niet Str.
+badFloatArg = fadd 1.0 "geen float"

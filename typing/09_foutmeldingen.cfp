@@ -23,10 +23,9 @@ badArity e = case e (Num2 n -> n) (Add2 a -> a)
 weird a = Cons a a
 
 // "onbekende functie: X" -- X wordt hier TOEGEPAST (met argumenten) maar
-// bestaat nergens als topniveaufunctie of constructor. Dit is ook de
-// melding die je te zien krijgt voor elke nog niet geregistreerde
-// VM-primitief (print, typeId, getField, ...) -- zie typing/README.md
-// "Bekende gaten".
+// bestaat nergens als topniveaufunctie, constructor, of geregistreerde
+// VM-primitief (zie typing/11_vm_primitieven.cfp voor die laatste
+// categorie -- print/typeId/getField/... zijn intussen wel bekend).
 callsMissing x = helperDieNietBestaat x
 
 // "onbekende naam: X" -- zelfde soort fout als hierboven, maar dan een
