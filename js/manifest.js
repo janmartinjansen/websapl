@@ -1522,7 +1522,7 @@ window.WEBSAPL_TREE = [
         "path": "typing/09_foutmeldingen.cfp",
         "type": "file",
         "ext": ".cfp",
-        "size": 1459,
+        "size": 1439,
         "isBinary": false
       },
       {
@@ -1530,7 +1530,15 @@ window.WEBSAPL_TREE = [
         "path": "typing/10_beperkingen.cfp",
         "type": "file",
         "ext": ".cfp",
-        "size": 1648,
+        "size": 2391,
+        "isBinary": false
+      },
+      {
+        "name": "11_vm_primitieven.cfp",
+        "path": "typing/11_vm_primitieven.cfp",
+        "type": "file",
+        "ext": ".cfp",
+        "size": 2328,
         "isBinary": false
       },
       {
@@ -1538,7 +1546,7 @@ window.WEBSAPL_TREE = [
         "path": "typing/README.md",
         "type": "file",
         "ext": ".md",
-        "size": 4911,
+        "size": 7126,
         "isBinary": false
       }
     ],
