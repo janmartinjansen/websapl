@@ -1,34 +1,43 @@
-// 10_beperkingen.cfp -- twee bekende, bewuste beperkingen van stap 1,
-// gedemonstreerd. Geen van beide geeft een crash of een stil verkeerd
-// resultaat -- ze zijn allebei veilig (te streng, niet te soepel).
+// 10_beperkingen.cfp -- oorspronkelijk (stap 1) een demonstratie van twee
+// bewuste beperkingen van de "alle topniveaufuncties in één grote
+// monomorfe groep"-aanpak. Sinds de SCC-gebaseerde generalisatie (stap 2,
+// zie docs/2026-09-20_scc_generalisatie.md) zijn BEIDE gefixt -- dit
+// bestand demonstreert nu dat de fix werkt, als regressie-anker.
 
-// == Beperking 1: geen let-polymorfie over topniveaufuncties ================
-// Alle topniveaufuncties in één bestand delen tijdens het infereren
-// monomorfe plekhouders (geen sterk-samenhangende-componenten/SCC-analyse
-// zoals een echte ML/Haskell-typechecker). Een niet-recursieve
-// hulpfunctie die op twee plekken met VERSCHILLENDE typen gebruikt wordt,
-// krijgt hier dus een valse foutmelding i.p.v. een correct polymorf type.
-//
-// Probeer dit bestand te typechecken: `identiteit` zelf krijgt een prima
-// type, maar `gebruikA`/`gebruikB` -- waarvan er ÉÉN Num en de ander een
-// lijst doorgeeft -- geven een "kan niet unificeren"-fout op de TWEEDE
-// (in tekstuele volgorde) gebruiksplek, ook al is er functioneel niets
-// mis met `identiteit` zelf.
+// == Voorheen beperking 1: geen let-polymorfie over topniveaufuncties ======
+// `identiteit` heeft geen enkele aanroep naar een andere topniveaufunctie,
+// dus vormt ze haar EIGEN, singleton component -- die wordt volledig
+// gegeneraliseerd (t0 -> t0) VOORDAT `gebruikA`/`gebruikB` worden gecheckt.
+// Elke gebruiksplek instantieert daarna een EIGEN verse kopie van dat
+// schema, dus Num en een lijst kunnen hier allebei, in hetzelfde bestand.
 
 identiteit x = x
 
 gebruikA = identiteit 5
 gebruikB = identiteit (Cons 1 Nil)
 
-// == Beperking 2: foutmelding kan op de verkeerde (latere) functie landen ===
-// Wanneer de fout alleen zichtbaar wordt via een VOORUITVERWIJZING naar
-// een functie die verderop in het bestand staat, wordt de plekhouder van
-// die latere functie stilzwijgend vastgezet door de EERDERE (foute)
-// gebruiksplek -- de foutmelding verschijnt dan bij de latere functie
-// zelf, niet bij de plek waar de fout eigenlijk zit. Nog steeds veilig
-// (de fout wordt wel degelijk gevonden), alleen de toeschrijving klopt
-// niet altijd.
+// == Voorheen beperking 2: foutmelding op de verkeerde (latere) functie ====
+// `laatDefinieerd` roept niets aan (een blad in de aanroepgraaf) en wordt
+// dus VOOR `vroegGebruik` verwerkt en gegeneraliseerd, ondanks dat ze LATER
+// in dit bestand staat -- verwerkingsvolgorde is nu de aanroepgraaf, niet
+// de bestandsvolgorde. Daardoor is `laatDefinieerd` zelf allang klaar
+// (en correct, [Num]) tegen de tijd dat `vroegGebruik` gecheckt wordt, en
+// de "Num + [Num]"-fout in `vroegGebruik`'s EIGEN body landt nu ook echt
+// op `vroegGebruik` -- niet meer op het onschuldige `laatDefinieerd`.
 
 vroegGebruik n = n + laatDefinieerd
 
 laatDefinieerd = Cons 1 Nil
+
+// == Resterende, bewuste beperking: een OVER-benaderde aanroepgraaf kan =====
+// twee logisch ongerelateerde functies te voorzichtig samenvoegen. De
+// aanroepgraaf-bouwer (preprocess/typecheck.cfp's callsInExpr) houdt geen
+// binders bij: een lokale naam die toevallig een topniveaufunctie schaduwt
+// (een lambda-parameter of patroonvariabele met dezelfde naam) levert een
+// OVERBODIGE edge op. Gevolg: als die overbodige edge toevallig een echte
+// cyclus sluit, worden twee functies die verder niets met elkaar te maken
+// hebben samen in één monomorfe component behandeld -- veilig (nooit een
+// gemiste fout), maar soms minder polymorf dan wiskundig mogelijk zou zijn.
+// Geen testgeval hieronder (vereist een specifiek geconstrueerde naams-
+// botsing om te forceren); zie het commentaar bij callsInExpr voor de
+// volledige afweging.

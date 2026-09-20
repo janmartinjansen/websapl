@@ -84,12 +84,6 @@ Twee bewuste ontwerpkeuzes, geen bug:
   wordt — zie `repl/stddyn.cfp`'s `showValAux` voor een voorbeeld. Dat is
   een fundamentele HM-beperking, geen los te maken bug in dit schema.)
 
-## Bekende gaten (nog niet geregistreerd, geen ontwerpfout)
-
-- **`let`** en de rest van de kernexpressies zijn wél gedekt, maar zijn
-  bewust **monomorf** binnen hun eigen scope (geen let-polymorfie over
-  meerdere gebruiksplekken van dezelfde naam) — zie hieronder.
-
 ## Foutmeldingen: een galerij
 
 `09_foutmeldingen.cfp` demonstreert, met uitleg per functie, elke soort
@@ -99,27 +93,40 @@ toepassing en in een case-tak/patroon), een arity-mismatch, en een
 onbekende naam/functie. Draai het bestand en vergelijk de uitvoer met de
 commentaren.
 
-## Bekende beperkingen (bewust, veilig — geen crash, geen stil verkeerd resultaat)
+## Let-polymorfie: SCC-gebaseerde generalisatie
 
-`10_beperkingen.cfp` demonstreert er twee, allebei een gevolg van dezelfde
-ontwerpkeuze: alle topniveaufuncties in één bestand worden tijdens het
-infereren als één grote, monomorfe, wederzijds-recursieve groep behandeld
-(geen sterk-samenhangende-componenten/SCC-analyse zoals een echte ML/
-Haskell-typechecker zou doen).
+Topniveaufuncties worden niet langer als één grote, monomorfe groep
+geïnfereerd. In plaats daarvan bouwt de checker een aanroepgraaf tussen
+topniveaufuncties, clustert die in sterk-samenhangende componenten (SCC's —
+een enkele niet-recursieve functie is typisch haar eigen singleton-
+component; wederzijds-recursieve functies vormen samen één component), en
+verwerkt de componenten in een volgorde waarin een component pas aan de
+beurt komt zodra alle andere componenten die ze aanroept al klaar EN
+gegeneraliseerd zijn ("callees vóór callers"). Dat is precies hoe een
+productie-ML/Haskell-typechecker `let`-polymorfie over topniveaubindingen
+implementeert. Zie `docs/2026-09-20_scc_generalisatie.md` voor het
+volledige ontwerp/verslag.
 
-1. **Geen let-polymorfie over topniveaufuncties.** Een niet-recursieve
-   hulpfunctie die op twee plekken met verschillende typen gebruikt wordt
-   (bijvoorbeeld `identiteit` eerst op een `Num`, dan op een lijst) krijgt
-   op de TWEEDE gebruiksplek een foutmelding, ook al is er met de functie
-   zelf niets mis.
-2. **Foutattributie kan op de verkeerde (latere) functie landen** wanneer
-   het probleem alleen zichtbaar wordt via een vooruitverwijzing: de
-   plekhouder van de latere functie wordt dan stilzwijgend vastgezet door
-   de eerdere, foute gebruiksplek, en de melding verschijnt bij die latere
-   functie in plaats van bij de plek waar de fout eigenlijk zit.
+`10_beperkingen.cfp` demonstreert de twee gevallen die hierdoor zijn
+opgelost (het bestand dateert van vóór deze stap, vandaar de naam):
 
-Beide zijn *te streng*, nooit te soepel — je krijgt in het slechtste geval
-een onterechte foutmelding op correcte code, nooit een gemiste fout op
-incorrecte code. De natuurlijke oplossing (SCC-gebaseerde generalisatie per
-groep, zoals een productie-Hindley-Milner-implementatie doet) is een
-vervolgstap, geen fundamentele blokkade.
+1. **Let-polymorfie over topniveaufuncties werkt nu.** Een niet-recursieve
+   hulpfunctie (`identiteit`) op twee plekken met verschillende typen
+   gebruiken (eerst een `Num`, dan een lijst) typet nu op BEIDE plekken
+   correct — ze wordt gegeneraliseerd in haar eigen component, vóórdat een
+   van beide gebruiksplekken wordt gecheckt.
+2. **Foutattributie landt nu op de juiste functie.** Een vooruitverwijzing
+   naar een latere, correcte functie (`laatDefinieerd`) misleidt de
+   foutmelding niet meer naar die latere functie — verwerkingsvolgorde is nu
+   de aanroepgraaf, niet de bestandsvolgorde, dus `laatDefinieerd` is allang
+   klaar (en correct) tegen de tijd dat de ECHTE fout (in `vroegGebruik`
+   zelf) wordt gerapporteerd.
+
+**Eén resterende, bewuste beperking:** de aanroepgraaf-bouwer
+(`callsInExpr`) houdt geen binders bij, dus een lokale naam die toevallig
+een topniveaufunctie schaduwt levert een overbodige edge op. In het
+zeldzame geval dat zo'n overbodige edge een echte cyclus sluit, worden twee
+verder ongerelateerde functies te voorzichtig in dezelfde monomorfe
+component behandeld — veilig (nooit een gemiste fout, hoogstens minder
+polymorfie dan wiskundig mogelijk), maar wel een compromis. Zie het
+commentaar bij `callsInExpr` in `preprocess/typecheck.cfp`.
