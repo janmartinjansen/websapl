@@ -1,0 +1,2763 @@
+readStream lb1 readStream_1 writeStream_lazy writeStream lb3 lb4 str2list_lazy str2list strls_lazy strls lb5 strEqual_lazy strEqual lb7 strEqualAt_lazy strEqualAt lb9 lb11 list2str_lazy list2str fillStr_lazy fillStr lb13 lb14 strcat_lazy strcat toUpperChar_lazy toUpperChar lb15 code_lazy code decode_lazy decode strUpper_lazy strUpper substr_lazy substr itoa_lazy itoa lb18 lb17 itoa_2 length_lazy length lb19 lb20 map_lazy map lb21 lb22 filter_lazy filter lb23 lb24 lb25 foldl_lazy foldl lb27 lb28 foldr_lazy foldr lb29 lb30 append_lazy append lb31 lb32 take_lazy take lb33 lb34 lb35 take_3 drop_lazy drop lb37 lb38 lb39 drop_4 reverse_lazy reverse rev_lazy rev lb41 lb42 isDigit_lazy isDigit lb43 isAlpha_lazy isAlpha lb47 lb49 lb45 isAlphaNum_lazy isAlphaNum lb51 isSpace_lazy isSpace lb53 lexNum_lazy lexNum lb55 lb56 lb57 lexNum_5 lexIdent_lazy lexIdent lb59 lb60 lb61 lexNumHelper_lazy lexNumHelper lb63 lexNumHelper_6 lexIdentHelper_lazy lexIdentHelper lb64 lexIdentHelper_7 lexer_lazy lexer lb65 lb66 lb67 lb69 lb71 lb73 showToken_lazy showToken lb75 lb76 lb77 lb78 showTokens_lazy showTokens lb79 lb80 showTokens_8 lb81 cons nil var app abs lit makeSel_lazy makeSel lb83 iLam i s1Lam_lazy s1Lam s1 seval makeLamA makeLamB makeLamC makeLamD_lazy makeLamD makeLam addBind eqFn_lazy eqFn lb85 subFn_lazy subFn multFn_lazy multFn nameEq_lazy nameEq lb87 lb88 nameEqNil_lazy nameEqNil lb89 lb90 nameEqCons_lazy nameEqCons lb91 lb92 lb93 eqName eqName_9 subName subName_11 subName_10 multName multName_14 multName_13 multName_12 isPrimName_lazy isPrimName lb95 isCh_lazy isCh lb97 lb98 lb99 lb100 isChS_lazy isChS lb101 lb102 lb103 lexAll_lazy lexAll dropNL_lazy dropNL lb105 lb106 dropNLTok_lazy dropNLTok lb107 lb108 lb109 lb110 findVarIndex_lazy findVarIndex lb111 lb112 findVarIndexTok_lazy findVarIndexTok lb113 bumpIndex_lazy bumpIndex lb115 parseExpr_lazy parseExpr lb117 lb118 parseExprTok_lazy parseExprTok lb119 parseExprTok_15 parseLambda_lazy parseLambda parseLambdaVars_lazy parseLambdaVars lb121 lb122 parseLambdaVarsTok_lazy parseLambdaVarsTok lb123 lb124 lb125 lb126 parseLambdaVarsTok_16 wrapLAbs_lazy wrapLAbs lb127 parseApp_lazy parseApp lb128 parseAppTail_lazy parseAppTail lb129 lb130 parseAppTailTok_lazy parseAppTailTok lb133 lb131 looksLikeAtomStart_lazy looksLikeAtomStart lb134 lb135 lb136 lb137 looksLikeAtomStartTerm_lazy looksLikeAtomStartTerm lb138 looksLikeAtomStartTerm_17 looksLikeAtomStartTerm_18 parseAtom_lazy parseAtom lb140 lb141 parseAtomTok_lazy parseAtomTok lb142 lb143 lb144 lb145 parseAtomTerm_lazy parseAtomTerm lb146 parseAtomTerm_19 parseAtomTermBackslash_lazy parseAtomTermBackslash lb148 parseAtomTermBackslash_20 parseParenExpr_lazy parseParenExpr lb150 dropCloseParen_lazy dropCloseParen lb151 lb152 parseAtomIdent_lazy parseAtomIdent parseAtomIdentIdx_lazy parseAtomIdentIdx lb153 parseAtomIdentFree_lazy parseAtomIdentFree lb155 parseAtomIdentBinding_lazy parseAtomIdentBinding lb157 parseFreeError parseFreshTop_lazy parseFreshTop lb159 toScott_lazy toScott lb160 lb161 lb162 lb163 lb164 toScottPrim_lazy toScottPrim lb165 lb167 shiftTerm_lazy shiftTerm lb169 lb174 lb170 lb171 lb172 lb173 shiftTerm_21 shiftTerm_22 substTerm_lazy substTerm lb176 lb177 lb178 lb179 lb180 substTerm_23 substVar_lazy substVar lb181 betaReduce_lazy betaReduce whnf_lazy whnf lb183 lb184 lb185 lb186 lb187 whnfApp_lazy whnfApp lb188 lb189 lb190 lb191 lb192 nf_lazy nf nfFrom_lazy nfFrom lb193 lb194 lb195 lb196 lb197 termToBlc_lazy termToBlc lb198 lb199 lb200 lb201 lb202 termToBlc_24 termToBlc_25 termToBlc_26 onesFor_lazy onesFor lb203 filterBits_lazy filterBits lb205 lb206 filterBitsTok_lazy filterBitsTok lb207 lb209 parseBlc_lazy parseBlc lb211 lb212 parseBlcTok_lazy parseBlcTok lb213 lb215 parseBlcVar_lazy parseBlcVar lb217 lb218 parseBlcVarTok_lazy parseBlcVarTok lb219 lb221 parseBlcVarTok_27 parseBlcZero_lazy parseBlcZero lb223 lb224 parseBlcZeroTok_lazy parseBlcZeroTok lb225 lb227 parseBlcAbs_lazy parseBlcAbs lb229 parseBlcApp_lazy parseBlcApp lb230 parseBlcAppL_lazy parseBlcAppL lb231 parseBlcTop_lazy parseBlcTop lb232 showTerm_lazy showTerm showTermD_lazy showTermD lb233 lb234 lb235 lb236 lb237 showTermD_28 showTermD_29 showTermD_30 varName wrapParen wrapParen_31 appendSp_lazy appendSp appendSp_32 wrapAbsShow wrapAbsShow_33 wrapAbsShow_34 printChars_lazy printChars lb238 lb239 hasBindingName_lazy hasBindingName lb240 lb241 hasBindingNameTok_lazy hasBindingNameTok lb242 lb243 lookupBindingTerm_lazy lookupBindingTerm lb245 lb246 lookupBindingTermTok_lazy lookupBindingTermTok lb247 lb248 startsWith_lazy startsWith lb250 lb251 startsWithTok_lazy startsWithTok lb252 lb253 lb254 nfPrefix sevalPrefix blcPrefix fromblcPrefix listPrefix repl readAndDispatch readAndDispatch_35 dispatchLine_lazy dispatchLine lb256 lb258 dispatchCs lb260 lb262 lb264 lb266 lb268 routeAssignOrEval_lazy routeAssignOrEval lb270 lb271 routeAssignOrEvalTok_lazy routeAssignOrEvalTok lb272 lb273 lb274 lb275 routeAssignCheck_lazy routeAssignCheck lb276 lb277 routeAssignCheck_36 routeAssignCheckTok_lazy routeAssignCheckTok lb278 routeAssignCheckTok_37 routeAssignCheckTok_38 cmdAssign cmdAssignShow cmdAssignShow_39 cmdEvalEcho cmdEvalEchoShow cmdNf cmdNfShow cmdSeval cmdSevalShow cmdBlc cmdBlcShow cmdFromBlc cmdFromBlcShow cmdList printBindingNames_lazy printBindingNames lb280 lb281 printBindingNamesTok_lazy printBindingNamesTok lb282 printBindingNamesRest_lazy printBindingNamesRest lb283 lb284 start lift_case_0 lift_case_1 lift_case_2 lift_case_2_40  #
+            call 540                                 || start
+            print 4
+            stop
+0           updsp 1                                  || readStream
+            load 1
+            pushfunc 1 2                             || readStream_1
+            create 2 3
+            dup
+            store 0
+            eval
+            push 0
+            dec
+            sub
+            ifneq 1                                  || lb1
+            ccreatet 0 11 5 0
+            return 2
+1           load 1                                   || lb1
+            pushfunc 1 0                             || readStream
+            create 2 3
+            load 0
+            eval
+            ccreatet 2 11 5 1
+            return 2
+2           load 0                                   || readStream_1
+            eval
+            syscall 6
+            return 1
+3           load 1                                   || writeStream_lazy
+            eval
+            store 1
+4           load 1                                   || writeStream
+            jmpt 2 5 6                               || lbs
+5           load 0                                   || lb3
+            eval
+            syscall 5
+            return 2
+6           load 0                                   || lb4
+            load 2
+            eval
+            syscall 7
+            load 1
+            eval
+            load 2
+            call 4                                   || writeStream
+            return 4
+7           load 0                                   || str2list_lazy
+            eval
+            store 0
+8           load 0                                   || str2list
+            push 0
+            tailcall 1 10                            || strls
+9           load 1                                   || strls_lazy
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+10          load 1                                   || strls
+            strop 2
+            load 0
+            sub
+            ifle 11                                  || lb5
+            load 1
+            loadadd 0 1
+            pushfunc 2 10                            || strls
+            create 3 3
+            load 1
+            load 0
+            strop 4
+            ccreatet 2 11 5 1
+            return 2
+11          ccreatet 0 11 5 0                        || lb5
+            return 2
+12          load 1                                   || strEqual_lazy
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+13          load 0                                   || strEqual
+            strop 2
+            load 1
+            strop 2
+            sub
+            ifneq 14                                 || lb7
+            load 1
+            load 0
+            push 0
+            call 16                                  || strEqualAt
+            ifeq 14                                  || lb7
+            return_const 2 1
+14          return_const 2 0                         || lb7
+15          load 2                                   || strEqualAt_lazy
+            eval
+            store 2
+            load 1
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+16          load 0                                   || strEqualAt
+            load 1
+            strop 2
+            sub
+            iflt 17                                  || lb9
+            return_const 3 1
+17          load 1                                   || lb9
+            load 0
+            strop 4
+            load 2
+            load 0
+            strop 4
+            sub
+            ifneq 18                                 || lb11
+            loadadd 0 1
+            store 0
+            jmp 16                                   || strEqualAt
+18          return_const 3 0                         || lb11
+19          load 0                                   || list2str_lazy
+            eval
+            store 0
+20          load 0                                   || list2str
+            call 44                                  || length
+            array_create_dynamic 1
+            load 0
+            push 0
+            tailcall 1 22                            || fillStr
+21          load 2                                   || fillStr_lazy
+            eval
+            store 2
+            load 1
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+22          load 1                                   || fillStr
+            jmpt 2 23 24                             || lbs
+23          load 2                                   || lb13
+            return 3
+24          load 4                                   || lb14
+            load 2
+            load 0
+            strop 3
+            load 1
+            eval
+            loadadd 2 1
+            tailcall 5 22                            || fillStr
+25          load 1                                   || strcat_lazy
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+26          load 1                                   || strcat
+            pushfunc 1 8                             || str2list
+            create 2 3
+            load 0
+            call 8                                   || str2list
+            call 65                                  || append
+            tailcall 2 20                            || list2str
+27          load 0                                   || toUpperChar_lazy
+            eval
+            store 0
+28          load 0                                   || toUpperChar
+            push 'a'
+            sub
+            iflt 29                                  || lb15
+            push 'z'
+            load 0
+            sub
+            iflt 29                                  || lb15
+            load 0
+            push 'a'
+            sub
+            push 'A'
+            add
+            return 1
+29          load 0                                   || lb15
+            return 1
+30          load 0                                   || code_lazy
+            eval
+            store 0
+31          load 0                                   || code
+            push '0'
+            sub
+            push 48
+            add
+            return 1
+32          load 0                                   || decode_lazy
+            eval
+            store 0
+33          push '0'                                 || decode
+            loadadd 0 -48
+            add
+            return 1
+34          load 0                                   || strUpper_lazy
+            eval
+            store 0
+35          load 0                                   || strUpper
+            call 8                                   || str2list
+            pushfunc 1 27                            || toUpperChar_lazy
+            create 1 7
+            call 48                                  || map
+            tailcall 1 20                            || list2str
+36          load 2                                   || substr_lazy
+            eval
+            store 2
+            load 1
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+37          load 0                                   || substr
+            call 8                                   || str2list
+            load 1
+            call 75                                  || drop
+            load 2
+            call 69                                  || take
+            tailcall 3 20                            || list2str
+38          load 0                                   || itoa_lazy
+            eval
+            store 0
+39          ifltlv 0 0 41                            || lb17 || itoa
+                        ifltlv 0 10 40                           || lb18
+            load 0
+            pushfunc 1 42                            || itoa_2
+            create 2 3
+            load 0
+            push 10
+            div
+            call 39                                  || itoa
+            tailcall 1 65                            || append
+40          ccreatet 0 11 5 0                        || lb18
+            push '0'
+            load 0
+            add
+            ccreatet 2 11 5 1
+            return 1
+41          push 0                                   || lb17
+            load 0
+            sub
+            pushfunc 1 39                            || itoa
+            create 2 3
+            push '-'
+            ccreatet 2 11 5 1
+            return 1
+42          ccreatet 0 11 5 0                        || itoa_2
+            push '0'
+            load 0
+            push 10
+            mod
+            add
+            ccreatet 2 11 5 1
+            return 1
+43          load 0                                   || length_lazy
+            eval
+            store 0
+44          load 0                                   || length
+            jmpt 2 45 46                             || lbs
+45          return_const 1 0                         || lb19
+46          push 1                                   || lb20
+            load 1
+            eval
+            call 44                                  || length
+            add
+            return 3
+47          load 1                                   || map_lazy
+            eval
+            store 1
+48          load 1                                   || map
+            jmpt 2 49 50                             || lbs
+49          ccreatet 0 11 5 0                        || lb21
+            return 2
+50          load 1                                   || lb22
+            load 2
+            pushfunc 2 47                            || map_lazy
+            create 3 3
+            load 0
+            load 2
+            eval
+            ccreatet 2 11 5 1
+            return 4
+51          load 1                                   || filter_lazy
+            eval
+            store 1
+52          load 1                                   || filter
+            jmpt 2 53 54                             || lbs
+53          ccreatet 0 11 5 0                        || lb23
+            return 2
+54          load 0                                   || lb24
+            load 2
+            eval
+            ifeq 55                                  || lb25
+            load 1
+            load 2
+            pushfunc 2 51                            || filter_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 4
+55          load 1                                   || lb25
+            eval
+            load 2
+            tailcall 4 52                            || filter
+56          load 2                                   || foldl_lazy
+            eval
+            store 2
+57          load 2                                   || foldl
+            jmpt 2 58 59                             || lbs
+58          load 1                                   || lb27
+            eval
+            return 3
+59          load 1                                   || lb28
+            eval
+            load 0
+            load 3
+            load 2
+            create 3 7
+            load 2
+            tailcall 5 57                            || foldl
+60          load 2                                   || foldr_lazy
+            eval
+            store 2
+61          load 2                                   || foldr
+            jmpt 2 62 63                             || lbs
+62          load 1                                   || lb29
+            eval
+            return 3
+63          load 1                                   || lb30
+            load 3
+            load 2
+            pushfunc 3 60                            || foldr_lazy
+            create 4 3
+            load 0
+            load 2
+            eval
+            return 5
+64          load 0                                   || append_lazy
+            eval
+            store 0
+65          load 0                                   || append
+            jmpt 2 66 67                             || lbs
+66          load 1                                   || lb31
+            eval
+            return 2
+67          load 3                                   || lb32
+            load 1
+            pushfunc 2 64                            || append_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 4
+68          load 1                                   || take_lazy
+            eval
+            store 1
+69          load 1                                   || take
+            jmpt 2 70 71                             || lbs
+70          ccreatet 0 11 5 0                        || lb33
+            return 2
+71          load 2                                   || lb34
+            eval
+            ifneq 72                                 || lb35
+            ccreatet 0 11 5 0
+            return 4
+72          load 1                                   || lb35
+            load 2
+            pushfunc 1 73                            || take_3
+            create 2 3
+            pushfunc 2 68                            || take_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 4
+73          load 0                                   || take_3
+            eval
+            push 1
+            sub
+            return 1
+74          load 1                                   || drop_lazy
+            eval
+            store 1
+75          load 1                                   || drop
+            jmpt 2 76 77                             || lbs
+76          ccreatet 0 11 5 0                        || lb37
+            return 2
+77          load 2                                   || lb38
+            eval
+            ifneq 78                                 || lb39
+            load 1
+            load 0
+            ccreatet 2 11 5 1
+            return 4
+78          load 1                                   || lb39
+            eval
+            load 2
+            pushfunc 1 79                            || drop_4
+            create 2 3
+            tailcall 4 75                            || drop
+79          load 0                                   || drop_4
+            eval
+            push 1
+            sub
+            return 1
+80          load 0                                   || reverse_lazy
+            eval
+            store 0
+81          ccreatet 0 11 5 0                        || reverse
+            load 0
+            tailcall 1 83                            || rev
+82          load 0                                   || rev_lazy
+            eval
+            store 0
+83          load 0                                   || rev
+            jmpt 2 84 85                             || lbs
+84          load 1                                   || lb41
+            eval
+            return 2
+85          load 3                                   || lb42
+            load 0
+            ccreatet 2 11 5 1
+            load 1
+            eval
+            tailcall 4 83                            || rev
+86          load 0                                   || isDigit_lazy
+            eval
+            store 0
+87          loadadd 0 -48                            || isDigit
+            iflt 88                                  || lb43
+            push 57
+            load 0
+            sub
+            iflt 88                                  || lb43
+            return_const 1 1
+88          return_const 1 0                         || lb43
+89          load 0                                   || isAlpha_lazy
+            eval
+            store 0
+90          loadadd 0 -65                            || isAlpha
+            iflt 91                                  || lb47
+            push 90
+            load 0
+            sub
+            iflt 91                                  || lb47
+            jmp 93                                   || lb45
+91          loadadd 0 -97                            || lb47
+            iflt 92                                  || lb49
+            push 122
+            load 0
+            sub
+            iflt 92                                  || lb49
+            jmp 93                                   || lb45
+92          load 0                                   || lb49
+            push 95
+            ifcmp 93                                 || lb45
+            return_const 1 0
+93          return_const 1 1                         || lb45
+94          load 0                                   || isAlphaNum_lazy
+            eval
+            store 0
+95          load 0                                   || isAlphaNum
+            call 90                                  || isAlpha
+            ifneq 96                                 || lb51
+            load 0
+            call 87                                  || isDigit
+            ifneq 96                                 || lb51
+            return_const 1 0
+96          return_const 1 1                         || lb51
+97          load 0                                   || isSpace_lazy
+            eval
+            store 0
+98          load 0                                   || isSpace
+            push 32
+            ifcmp 99                                 || lb53
+            load 0
+            push 9
+            ifcmp 99                                 || lb53
+            load 0
+            push 13
+            ifcmp 99                                 || lb53
+            return_const 1 0
+99          return_const 1 1                         || lb53
+100         load 1                                   || lexNum_lazy
+            eval
+            store 1
+101         load 1                                   || lexNum
+            jmpt 2 102 103                           || lbs
+102         ccreatet 0 11 5 0                        || lb55
+            load 0
+            ccreatet 1 11 6 2
+            ccreatet 2 11 7 0
+            return 2
+103         load 0                                   || lb56
+            call 87                                  || isDigit
+            ifeq 104                                 || lb57
+            load 1
+            eval
+            load 0
+            load 2
+            pushfunc 2 105                           || lexNum_5
+            create 3 3
+            tailcall 4 101                           || lexNum
+104         load 3                                   || lb57
+            load 2
+            ccreatet 1 11 6 2
+            ccreatet 2 11 7 0
+            return 4
+105         load 0                                   || lexNum_5
+            eval
+            push 10
+            mult
+            loadadd 1 -48
+            add
+            return 2
+106         load 1                                   || lexIdent_lazy
+            eval
+            store 1
+107         load 1                                   || lexIdent
+            jmpt 2 108 109                           || lbs
+108         ccreatet 0 11 5 0                        || lb59
+            load 0
+            pushfunc 1 80                            || reverse_lazy
+            create 2 3
+            ccreatet 1 11 6 1
+            ccreatet 2 11 7 0
+            return 2
+109         load 0                                   || lb60
+            call 95                                  || isAlphaNum
+            ifeq 110                                 || lb61
+            load 1
+            eval
+            load 2
+            load 0
+            ccreatet 2 11 5 1
+            tailcall 4 107                           || lexIdent
+110         load 3                                   || lb61
+            load 2
+            pushfunc 1 80                            || reverse_lazy
+            create 2 3
+            ccreatet 1 11 6 1
+            ccreatet 2 11 7 0
+            return 4
+111         load 1                                   || lexNumHelper_lazy
+            eval
+            store 1
+112         load 1                                   || lexNumHelper
+            load 0
+            pushfunc 1 114                           || lexNumHelper_6
+            create 2 3
+            call 101                                 || lexNum
+            jmpt 1 113                               || lbs
+113         load 1                                   || lb63
+            pushfunc 1 120                           || lexer
+            create 2 3
+            load 0
+            ccreatet 2 11 5 1
+            return 4
+114         load 0                                   || lexNumHelper_6
+            eval
+            push 48
+            sub
+            return 1
+115         load 1                                   || lexIdentHelper_lazy
+            eval
+            store 1
+116         load 1                                   || lexIdentHelper
+            load 0
+            pushfunc 1 118                           || lexIdentHelper_7
+            create 2 3
+            call 107                                 || lexIdent
+            jmpt 1 117                               || lbs
+117         load 1                                   || lb64
+            pushfunc 1 120                           || lexer
+            create 2 3
+            load 0
+            ccreatet 2 11 5 1
+            return 4
+118         ccreatet 0 11 5 0                        || lexIdentHelper_7
+            load 0
+            eval
+            ccreatet 2 11 5 1
+            return 1
+119         load 0                                   || lexer_lazy
+            eval
+            store 0
+120         load 0                                   || lexer
+            jmpt 2 121 122                           || lbs
+121         ccreatet 0 11 5 0                        || lb65
+            return 1
+122         loadadd 0 -10                            || lb66
+            ifneq 123                                || lb67
+            load 1
+            pushfunc 1 119                           || lexer_lazy
+            create 2 3
+            ccreatet 0 11 6 3
+            ccreatet 2 11 5 1
+            return 3
+123         load 0                                   || lb67
+            call 98                                  || isSpace
+            ifeq 124                                 || lb69
+            load 1
+            eval
+            tailcall 3 120                           || lexer
+124         load 0                                   || lb69
+            call 87                                  || isDigit
+            ifeq 125                                 || lb71
+            load 1
+            eval
+            load 0
+            tailcall 3 112                           || lexNumHelper
+125         load 0                                   || lb71
+            call 90                                  || isAlpha
+            ifeq 126                                 || lb73
+            load 1
+            eval
+            load 0
+            tailcall 3 116                           || lexIdentHelper
+126         load 1                                   || lb73
+            pushfunc 1 119                           || lexer_lazy
+            create 2 3
+            ccreatet 0 11 5 0
+            load 0
+            ccreatet 2 11 5 1
+            ccreatet 1 11 6 0
+            ccreatet 2 11 5 1
+            return 3
+127         load 0                                   || showToken_lazy
+            eval
+            store 0
+128         load 0                                   || showToken
+            jmpt 4 129 130 131 132                   || lbs
+129         load 0                                   || lb75
+            eval
+            return 2
+130         load 0                                   || lb76
+            eval
+            return 2
+131         load 0                                   || lb77
+            eval
+            tailcall 2 39                            || itoa
+132         ccreatet 0 11 5 0                        || lb78
+            push 10
+            ccreatet 2 11 5 1
+            return 1
+133         load 0                                   || showTokens_lazy
+            eval
+            store 0
+134         load 0                                   || showTokens
+            jmpt 2 135 136                           || lbs
+135         ccreatet 0 11 5 0                        || lb79
+            return 1
+136         load 1                                   || lb80
+            pushfunc 1 137                           || showTokens_8
+            create 2 3
+            load 0
+            call 128                                 || showToken
+            tailcall 3 65                            || append
+137         load 0                                   || showTokens_8
+            eval
+            call 44                                  || length
+            ifneq 138                                || lb81
+            ccreatet 0 11 5 0
+            return 1
+138         load 0                                   || lb81
+            pushfunc 1 133                           || showTokens_lazy
+            create 2 3
+            push ' '
+            ccreatet 2 11 5 1
+            return 1
+139         load 1                                   || cons
+            load 0
+            load 2
+            eval
+            return 3
+140         return_const 0 0                         || nil
+141         load 0                                   || var
+            pushfunc 1 145                           || makeSel_lazy
+            create 2 3
+            load 1
+            eval
+            return 5
+142         load 1                                   || app
+            load 0
+            load 3
+            eval
+            return 6
+143         load 0                                   || abs
+            load 3
+            eval
+            return 5
+144         load 0                                   || lit
+            load 4
+            eval
+            return 5
+145         load 0                                   || makeSel_lazy
+            eval
+            store 0
+146         loadadd 0 -1                             || makeSel
+            ifneq 147                                || lb83
+            pushfunc 1 152                           || s1
+            create 1 7
+            return 1
+147         loadadd 0 -1                             || lb83
+            pushfunc 1 146                           || makeSel
+            create 2 3
+            pushfunc 2 149                           || i
+            create 2 7
+            return 1
+148         load 2                                   || iLam
+            load 0
+            eval
+            return 3
+149         load 0                                   || i
+            pushfunc 3 148                           || iLam
+            create 2 7
+            load 1
+            eval
+            return 2
+150         load 0                                   || s1Lam_lazy
+            eval
+            store 0
+151         load 0                                   || s1Lam
+            return 2
+152         pushfunc 2 150                           || s1Lam_lazy || s1
+            create 1 7
+            load 0
+            eval
+            return 1
+153         pushfunc 0 140                           || nil || seval
+            create 1 3
+            load 0
+            tailcall 1 159                           || makeLam
+154         load 0                                   || makeLamA
+            load 1
+            eval
+            return 2
+155         updsp 2                                  || makeLamB
+            load 2
+            load 3
+            pushfunc 2 159                           || makeLam
+            create 3 3
+            store 0
+            load 2
+            load 4
+            pushfunc 2 159                           || makeLam
+            create 3 3
+            dup
+            store 1
+            load 0
+            eval
+            return 5
+156         load 0                                   || makeLamC
+            load 1
+            pushfunc 3 160                           || addBind
+            create 3 7
+            return 2
+157         load 0                                   || makeLamD_lazy
+            eval
+            store 0
+158         load 0                                   || makeLamD
+            return 1
+159         pushfunc 1 157                           || makeLamD_lazy || makeLam
+            create 1 7
+            load 1
+            pushfunc 2 156                           || makeLamC
+            create 2 7
+            load 1
+            pushfunc 3 155                           || makeLamB
+            create 2 7
+            load 1
+            pushfunc 2 154                           || makeLamA
+            create 2 7
+            load 0
+            eval
+            return 2
+160         load 1                                   || addBind
+            load 2
+            pushfunc 3 139                           || cons
+            create 3 7
+            load 0
+            tailcall 3 159                           || makeLam
+161         load 1                                   || eqFn_lazy
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+162         load 0                                   || eqFn
+            load 1
+            sub
+            ifneq 163                                || lb85
+            load 2
+            eval
+            return 4
+163         load 3                                   || lb85
+            eval
+            return 4
+164         load 1                                   || subFn_lazy
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+165         load 0                                   || subFn
+            load 1
+            sub
+            return 2
+166         load 1                                   || multFn_lazy
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+167         load 0                                   || multFn
+            load 1
+            mult
+            return 2
+168         load 1                                   || nameEq_lazy
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+169         load 0                                   || nameEq
+            jmpt 2 170 171                           || lbs
+170         load 1                                   || lb87
+            tailcall 2 173                           || nameEqNil
+171         load 3                                   || lb88
+            load 1
+            load 0
+            tailcall 4 177                           || nameEqCons
+172         load 0                                   || nameEqNil_lazy
+            eval
+            store 0
+173         load 0                                   || nameEqNil
+            jmpt 2 174 175                           || lbs
+174         return_const 1 1                         || lb89
+175         return_const 3 0                         || lb90
+176         load 2                                   || nameEqCons_lazy
+            eval
+            store 2
+177         load 2                                   || nameEqCons
+            jmpt 2 178 179                           || lbs
+178         return_const 3 0                         || lb91
+179         load 2                                   || lb92
+            eval
+            load 0
+            sub
+            ifneq 180                                || lb93
+            load 1
+            eval
+            load 3
+            eval
+            tailcall 5 169                           || nameEq
+180         return_const 5 0                         || lb93
+181         pushfunc 0 182                           || eqName_9 || eqName
+            create 1 3
+            push 'e'
+            ccreatet 2 11 5 1
+            return 0
+182         ccreatet 0 11 5 0                        || eqName_9
+            push 'q'
+            ccreatet 2 11 5 1
+            return 0
+183         pushfunc 0 185                           || subName_10 || subName
+            create 1 3
+            push 's'
+            ccreatet 2 11 5 1
+            return 0
+184         ccreatet 0 11 5 0                        || subName_11
+            push 'b'
+            ccreatet 2 11 5 1
+            return 0
+185         pushfunc 0 184                           || subName_11 || subName_10
+            create 1 3
+            push 'u'
+            ccreatet 2 11 5 1
+            return 0
+186         pushfunc 0 189                           || multName_12 || multName
+            create 1 3
+            push 'm'
+            ccreatet 2 11 5 1
+            return 0
+187         ccreatet 0 11 5 0                        || multName_14
+            push 't'
+            ccreatet 2 11 5 1
+            return 0
+188         pushfunc 0 187                           || multName_14 || multName_13
+            create 1 3
+            push 'l'
+            ccreatet 2 11 5 1
+            return 0
+189         pushfunc 0 188                           || multName_13 || multName_12
+            create 1 3
+            push 'u'
+            ccreatet 2 11 5 1
+            return 0
+190         load 0                                   || isPrimName_lazy
+            eval
+            store 0
+191         call 181                                 || eqName || isPrimName
+            load 0
+            call 169                                 || nameEq
+            ifneq 192                                || lb95
+            call 183                                 || subName
+            load 0
+            call 169                                 || nameEq
+            ifneq 192                                || lb95
+            call 186                                 || multName
+            load 0
+            call 169                                 || nameEq
+            ifneq 192                                || lb95
+            return_const 1 0
+192         return_const 1 1                         || lb95
+193         load 1                                   || isCh_lazy
+            eval
+            store 1
+194         load 1                                   || isCh
+            jmpt 4 195 196 197 198                   || lbs
+195         load 0                                   || lb97
+            eval
+            load 1
+            tailcall 3 200                           || isChS
+196         return_const 3 0                         || lb98
+197         return_const 3 0                         || lb99
+198         debug 1                                  || lb100
+            return 2
+199         load 1                                   || isChS_lazy
+            eval
+            store 1
+200         load 1                                   || isChS
+            jmpt 2 201 202                           || lbs
+201         return_const 2 0                         || lb101
+202         load 0                                   || lb102
+            load 2
+            eval
+            sub
+            ifneq 203                                || lb103
+            return_const 4 1
+203         return_const 4 0                         || lb103
+204         load 0                                   || lexAll_lazy
+            eval
+            store 0
+205         load 0                                   || lexAll
+            call 120                                 || lexer
+            tailcall 1 207                           || dropNL
+206         load 0                                   || dropNL_lazy
+            eval
+            store 0
+207         load 0                                   || dropNL
+            jmpt 2 208 209                           || lbs
+208         ccreatet 0 11 5 0                        || lb105
+            return 1
+209         load 1                                   || lb106
+            load 0
+            tailcall 3 211                           || dropNLTok
+210         load 0                                   || dropNLTok_lazy
+            eval
+            store 0
+211         load 0                                   || dropNLTok
+            jmpt 4 212 213 214 215                   || lbs
+212         load 2                                   || lb107
+            load 1
+            tailcall 3 541                           || lift_case_0
+213         load 2                                   || lb108
+            load 1
+            tailcall 3 541                           || lift_case_0
+214         load 2                                   || lb109
+            load 1
+            tailcall 3 541                           || lift_case_0
+215         load 1                                   || lb110
+            eval
+            tailcall 2 207                           || dropNL
+216         load 0                                   || findVarIndex_lazy
+            eval
+            store 0
+217         load 0                                   || findVarIndex
+            jmpt 2 218 219                           || lbs
+218         return_const 2 0                         || lb111
+219         load 3                                   || lb112
+            eval
+            load 1
+            load 0
+            tailcall 4 221                           || findVarIndexTok
+220         load 2                                   || findVarIndexTok_lazy
+            eval
+            store 2
+            load 0
+            eval
+            store 0
+221         load 2                                   || findVarIndexTok
+            load 0
+            call 169                                 || nameEq
+            ifeq 222                                 || lb113
+            return_const 3 1
+222         load 2                                   || lb113
+            load 1
+            eval
+            call 217                                 || findVarIndex
+            tailcall 3 224                           || bumpIndex
+223         load 0                                   || bumpIndex_lazy
+            eval
+            store 0
+224         load 0                                   || bumpIndex
+            ifneq 225                                || lb115
+            return_const 1 0
+225         loadadd 0 1                              || lb115
+            return 1
+226         load 2                                   || parseExpr_lazy
+            eval
+            store 2
+227         load 2                                   || parseExpr
+            jmpt 2 228 229                           || lbs
+228         debug 1                                  || lb117
+            return 3
+229         load 1                                   || lb118
+            load 0
+            load 3
+            load 2
+            tailcall 5 231                           || parseExprTok
+230         load 2                                   || parseExprTok_lazy
+            eval
+            store 2
+231         load 2                                   || parseExprTok
+            pushfunc 0 233                           || parseExprTok_15
+            create 1 3
+            call 194                                 || isCh
+            ifeq 232                                 || lb119
+            load 3
+            eval
+            load 1
+            load 0
+            tailcall 4 235                           || parseLambda
+232         load 3                                   || lb119
+            load 2
+            ccreatet 2 11 5 1
+            load 1
+            load 0
+            tailcall 4 251                           || parseApp
+233         push '\\'                                || parseExprTok_15
+            return 0
+234         load 2                                   || parseLambda_lazy
+            eval
+            store 2
+235         load 2                                   || parseLambda
+            load 1
+            load 0
+            tailcall 3 237                           || parseLambdaVars
+236         load 2                                   || parseLambdaVars_lazy
+            eval
+            store 2
+237         load 2                                   || parseLambdaVars
+            jmpt 2 238 239                           || lbs
+238         debug 1                                  || lb121
+            return 3
+239         load 1                                   || lb122
+            eval
+            load 0
+            load 3
+            load 2
+            tailcall 5 241                           || parseLambdaVarsTok
+240         load 3                                   || parseLambdaVarsTok_lazy
+            eval
+            store 3
+            load 2
+            eval
+            store 2
+241         load 2                                   || parseLambdaVarsTok
+            jmpt 4 242 243 244 245                   || lbs
+242         load 4                                   || lb123
+            load 2
+            load 1
+            tailcall 5 227                           || parseExpr
+243         load 4                                   || lb124
+            load 2
+            load 0
+            pushfunc 2 246                           || parseLambdaVarsTok_16
+            create 3 3
+            load 1
+            call 237                                 || parseLambdaVars
+            tailcall 5 248                           || wrapLAbs
+244         load 4                                   || lb125
+            load 2
+            load 1
+            tailcall 5 227                           || parseExpr
+245         load 3                                   || lb126
+            load 1
+            load 0
+            tailcall 4 227                           || parseExpr
+246         load 1                                   || parseLambdaVarsTok_16
+            load 0
+            eval
+            ccreatet 2 11 5 1
+            return 2
+247         load 0                                   || wrapLAbs_lazy
+            eval
+            store 0
+248         load 0                                   || wrapLAbs
+            jmpt 1 249                               || lbs
+249         load 1                                   || lb127
+            load 0
+            ccreatet 1 11 8 2
+            ccreatet 2 11 7 0
+            return 3
+250         load 2                                   || parseApp_lazy
+            eval
+            store 2
+251         load 2                                   || parseApp
+            load 1
+            load 0
+            call 273                                 || parseAtom
+            jmpt 1 252                               || lbs
+252         load 1                                   || lb128
+            load 0
+            load 3
+            load 2
+            tailcall 5 254                           || parseAppTail
+253         load 3                                   || parseAppTail_lazy
+            eval
+            store 3
+254         load 3                                   || parseAppTail
+            jmpt 2 255 256                           || lbs
+255         load 3                                   || lb129
+            load 2
+            eval
+            ccreatet 2 11 7 0
+            return 4
+256         load 1                                   || lb130
+            load 0
+            load 4
+            load 3
+            load 2
+            tailcall 6 258                           || parseAppTailTok
+257         load 3                                   || parseAppTailTok_lazy
+            eval
+            store 3
+258         load 3                                   || parseAppTailTok
+            call 262                                 || looksLikeAtomStart
+            ifeq 260                                 || lb131
+            load 4
+            load 3
+            ccreatet 2 11 5 1
+            load 1
+            load 0
+            call 273                                 || parseAtom
+            jmpt 1 259                               || lbs
+259         load 1                                   || lb133
+            load 0
+            load 4
+            ccreatet 2 11 8 1
+            load 3
+            load 2
+            tailcall 7 254                           || parseAppTail
+260         load 4                                   || lb131
+            load 3
+            ccreatet 2 11 5 1
+            load 2
+            eval
+            ccreatet 2 11 7 0
+            return 5
+261         load 0                                   || looksLikeAtomStart_lazy
+            eval
+            store 0
+262         load 0                                   || looksLikeAtomStart
+            jmpt 4 263 264 265 266                   || lbs
+263         load 0                                   || lb134
+            eval
+            tailcall 2 268                           || looksLikeAtomStartTerm
+264         return_const 2 1                         || lb135
+265         return_const 2 1                         || lb136
+266         debug 1                                  || lb137
+            return 1
+267         load 0                                   || looksLikeAtomStartTerm_lazy
+            eval
+            store 0
+268         load 0                                   || looksLikeAtomStartTerm
+            pushfunc 0 270                           || looksLikeAtomStartTerm_17
+            create 1 3
+            call 200                                 || isChS
+            ifneq 269                                || lb138
+            load 0
+            pushfunc 0 271                           || looksLikeAtomStartTerm_18
+            create 1 3
+            call 200                                 || isChS
+            ifneq 269                                || lb138
+            return_const 1 0
+269         return_const 1 1                         || lb138
+270         push '('                                 || looksLikeAtomStartTerm_17
+            return 0
+271         push '\\'                                || looksLikeAtomStartTerm_18
+            return 0
+272         load 2                                   || parseAtom_lazy
+            eval
+            store 2
+273         load 2                                   || parseAtom
+            jmpt 2 274 275                           || lbs
+274         debug 1                                  || lb140
+            return 3
+275         load 1                                   || lb141
+            load 0
+            load 3
+            load 2
+            tailcall 5 277                           || parseAtomTok
+276         load 2                                   || parseAtomTok_lazy
+            eval
+            store 2
+277         load 2                                   || parseAtomTok
+            jmpt 4 278 279 280 281                   || lbs
+278         load 4                                   || lb142
+            load 0
+            eval
+            load 2
+            load 1
+            tailcall 5 283                           || parseAtomTerm
+279         load 4                                   || lb143
+            load 0
+            load 2
+            eval
+            load 1
+            tailcall 5 298                           || parseAtomIdent
+280         load 4                                   || lb144
+            eval
+            load 0
+            ccreatet 1 11 8 3
+            ccreatet 2 11 7 0
+            return 5
+281         debug 1                                  || lb145
+            return 4
+282         load 2                                   || parseAtomTerm_lazy
+            eval
+            store 2
+283         load 2                                   || parseAtomTerm
+            pushfunc 0 285                           || parseAtomTerm_19
+            create 1 3
+            call 200                                 || isChS
+            ifeq 284                                 || lb146
+            load 3
+            eval
+            load 1
+            load 0
+            tailcall 4 291                           || parseParenExpr
+284         load 3                                   || lb146
+            load 2
+            load 1
+            load 0
+            tailcall 4 287                           || parseAtomTermBackslash
+285         push '('                                 || parseAtomTerm_19
+            return 0
+286         load 2                                   || parseAtomTermBackslash_lazy
+            eval
+            store 2
+287         load 2                                   || parseAtomTermBackslash
+            pushfunc 0 289                           || parseAtomTermBackslash_20
+            create 1 3
+            call 200                                 || isChS
+            ifeq 288                                 || lb148
+            load 3
+            eval
+            load 1
+            load 0
+            tailcall 4 235                           || parseLambda
+288         load 3                                   || lb148
+            eval
+            push 0
+            ccreatet 1 11 8 3
+            ccreatet 2 11 7 0
+            return 4
+289         push '\\'                                || parseAtomTermBackslash_20
+            return 0
+290         load 2                                   || parseParenExpr_lazy
+            eval
+            store 2
+291         load 2                                   || parseParenExpr
+            load 1
+            load 0
+            call 227                                 || parseExpr
+            jmpt 1 292                               || lbs
+292         load 1                                   || lb150
+            call 294                                 || dropCloseParen
+            load 0
+            ccreatet 2 11 7 0
+            return 5
+293         load 0                                   || dropCloseParen_lazy
+            eval
+            store 0
+294         load 0                                   || dropCloseParen
+            jmpt 2 295 296                           || lbs
+295         debug 1                                  || lb151
+            return 1
+296         load 1                                   || lb152
+            eval
+            return 3
+297         load 1                                   || parseAtomIdent_lazy
+            eval
+            store 1
+298         load 2                                   || parseAtomIdent
+            load 1
+            call 217                                 || findVarIndex
+            load 3
+            load 2
+            load 0
+            tailcall 4 300                           || parseAtomIdentIdx
+299         load 3                                   || parseAtomIdentIdx_lazy
+            eval
+            store 3
+300         load 3                                   || parseAtomIdentIdx
+            ifneq 301                                || lb153
+            load 2
+            load 1
+            eval
+            load 0
+            tailcall 4 303                           || parseAtomIdentFree
+301         load 2                                   || lb153
+            eval
+            load 3
+            ccreatet 1 11 8 0
+            ccreatet 2 11 7 0
+            return 4
+302         load 1                                   || parseAtomIdentFree_lazy
+            eval
+            store 1
+303         load 1                                   || parseAtomIdentFree
+            call 191                                 || isPrimName
+            ifeq 304                                 || lb155
+            load 2
+            eval
+            load 1
+            ccreatet 1 11 8 4
+            ccreatet 2 11 7 0
+            return 3
+304         load 2                                   || lb155
+            load 1
+            load 0
+            eval
+            tailcall 3 306                           || parseAtomIdentBinding
+305         load 0                                   || parseAtomIdentBinding_lazy
+            eval
+            store 0
+306         load 0                                   || parseAtomIdentBinding
+            load 1
+            call 453                                 || hasBindingName
+            ifeq 307                                 || lb157
+            load 2
+            eval
+            load 0
+            load 1
+            eval
+            call 461                                 || lookupBindingTerm
+            ccreatet 2 11 7 0
+            return 3
+307         load 1                                   || lb157
+            tailcall 3 308                           || parseFreeError
+308         push "onbekende of ongebonden variabele in lambda-expressie (geen primitief eq/sub/mult, geen omsluitende lambda)" || parseFreeError
+            syscall 3
+            stop
+            return 1
+309         load 1                                   || parseFreshTop_lazy
+            eval
+            store 1
+310         load 1                                   || parseFreshTop
+            ccreatet 0 11 5 0
+            load 0
+            call 227                                 || parseExpr
+            jmpt 1 311                               || lbs
+311         load 0                                   || lb159
+            return 4
+312         load 0                                   || toScott_lazy
+            eval
+            store 0
+313         load 0                                   || toScott
+            jmpt 5 314 315 316 317 318               || lbs
+314         load 0                                   || lb160
+            pushfunc 5 141                           || var
+            create 2 7
+            return 2
+315         load 1                                   || lb161
+            pushfunc 1 312                           || toScott_lazy
+            create 2 3
+            load 0
+            pushfunc 1 312                           || toScott_lazy
+            create 2 3
+            pushfunc 6 142                           || app
+            create 3 7
+            return 3
+316         load 0                                   || lb162
+            pushfunc 1 312                           || toScott_lazy
+            create 2 3
+            pushfunc 5 143                           || abs
+            create 2 7
+            return 2
+317         load 0                                   || lb163
+            pushfunc 5 144                           || lit
+            create 2 7
+            return 2
+318         load 0                                   || lb164
+            eval
+            tailcall 2 320                           || toScottPrim
+319         load 0                                   || toScottPrim_lazy
+            eval
+            store 0
+320         call 181                                 || eqName || toScottPrim
+            load 0
+            call 169                                 || nameEq
+            ifeq 321                                 || lb165
+            pushfunc 4 161                           || eqFn_lazy
+            create 1 7
+            pushfunc 5 144                           || lit
+            create 2 7
+            return 1
+321         call 183                                 || subName || lb165
+            load 0
+            call 169                                 || nameEq
+            ifeq 322                                 || lb167
+            pushfunc 2 164                           || subFn_lazy
+            create 1 7
+            pushfunc 5 144                           || lit
+            create 2 7
+            return 1
+322         pushfunc 2 166                           || multFn_lazy || lb167
+            create 1 7
+            pushfunc 5 144                           || lit
+            create 2 7
+            return 1
+323         load 2                                   || shiftTerm_lazy
+            eval
+            store 2
+324         load 2                                   || shiftTerm
+            jmpt 5 325 327 328 329 330               || lbs
+325         load 0                                   || lb169
+            eval
+            load 2
+            eval
+            sub
+            ifle 326                                 || lb174
+            load 1
+            load 0
+            pushfunc 2 331                           || shiftTerm_21
+            create 3 3
+            ccreatet 1 11 8 0
+            return 4
+326         load 0                                   || lb174
+            ccreatet 1 11 8 0
+            return 4
+327         load 1                                   || lb170
+            load 3
+            load 2
+            pushfunc 3 323                           || shiftTerm_lazy
+            create 4 3
+            load 0
+            load 3
+            load 2
+            pushfunc 3 323                           || shiftTerm_lazy
+            create 4 3
+            ccreatet 2 11 8 1
+            return 5
+328         load 0                                   || lb171
+            load 2
+            pushfunc 1 332                           || shiftTerm_22
+            create 2 3
+            load 1
+            pushfunc 3 323                           || shiftTerm_lazy
+            create 4 3
+            ccreatet 1 11 8 2
+            return 4
+329         load 0                                   || lb172
+            ccreatet 1 11 8 3
+            return 4
+330         load 0                                   || lb173
+            ccreatet 1 11 8 4
+            return 4
+331         load 0                                   || shiftTerm_21
+            eval
+            load 1
+            eval
+            add
+            return 2
+332         load 0                                   || shiftTerm_22
+            eval
+            push 1
+            add
+            return 1
+333         load 2                                   || substTerm_lazy
+            eval
+            store 2
+334         load 2                                   || substTerm
+            jmpt 5 335 336 337 338 339               || lbs
+335         load 0                                   || lb176
+            eval
+            load 2
+            load 1
+            eval
+            tailcall 4 342                           || substVar
+336         load 1                                   || lb177
+            load 3
+            load 2
+            pushfunc 3 333                           || substTerm_lazy
+            create 4 3
+            load 0
+            load 3
+            load 2
+            pushfunc 3 333                           || substTerm_lazy
+            create 4 3
+            ccreatet 2 11 8 1
+            return 5
+337         load 0                                   || lb178
+            load 2
+            push 0
+            push 1
+            pushfunc 3 323                           || shiftTerm_lazy
+            create 4 3
+            load 1
+            pushfunc 1 340                           || substTerm_23
+            create 2 3
+            pushfunc 3 333                           || substTerm_lazy
+            create 4 3
+            ccreatet 1 11 8 2
+            return 4
+338         load 0                                   || lb179
+            ccreatet 1 11 8 3
+            return 4
+339         load 0                                   || lb180
+            ccreatet 1 11 8 4
+            return 4
+340         load 0                                   || substTerm_23
+            eval
+            push 1
+            add
+            return 1
+341         load 2                                   || substVar_lazy
+            eval
+            store 2
+            load 0
+            eval
+            store 0
+342         load 2                                   || substVar
+            load 0
+            sub
+            ifneq 343                                || lb181
+            load 1
+            eval
+            return 3
+343         load 2                                   || lb181
+            ccreatet 1 11 8 0
+            return 3
+344         load 0                                   || betaReduce_lazy
+            eval
+            store 0
+345         load 0                                   || betaReduce
+            load 1
+            push 0
+            push 1
+            pushfunc 3 323                           || shiftTerm_lazy
+            create 4 3
+            push 1
+            call 334                                 || substTerm
+            push 0
+            push 0
+            dec
+            tailcall 2 324                           || shiftTerm
+346         load 0                                   || whnf_lazy
+            eval
+            store 0
+347         load 0                                   || whnf
+            jmpt 5 348 349 350 351 352               || lbs
+348         load 1                                   || lb183
+            return 2
+349         load 1                                   || lb184
+            load 0
+            eval
+            call 347                                 || whnf
+            tailcall 3 354                           || whnfApp
+350         load 1                                   || lb185
+            return 2
+351         load 1                                   || lb186
+            return 2
+352         load 1                                   || lb187
+            return 2
+353         load 0                                   || whnfApp_lazy
+            eval
+            store 0
+354         load 0                                   || whnfApp
+            jmpt 5 355 356 357 358 359               || lbs
+355         load 2                                   || lb188
+            load 1
+            tailcall 3 542                           || lift_case_1
+356         load 3                                   || lb189
+            load 2
+            tailcall 4 542                           || lift_case_1
+357         load 2                                   || lb190
+            load 0
+            eval
+            call 345                                 || betaReduce
+            tailcall 3 347                           || whnf
+358         load 2                                   || lb191
+            load 1
+            tailcall 3 542                           || lift_case_1
+359         load 2                                   || lb192
+            load 1
+            tailcall 3 542                           || lift_case_1
+360         load 0                                   || nf_lazy
+            eval
+            store 0
+361         load 0                                   || nf
+            call 347                                 || whnf
+            tailcall 1 363                           || nfFrom
+362         load 0                                   || nfFrom_lazy
+            eval
+            store 0
+363         load 0                                   || nfFrom
+            jmpt 5 364 365 366 367 368               || lbs
+364         load 0                                   || lb193
+            ccreatet 1 11 8 0
+            return 2
+365         load 1                                   || lb194
+            pushfunc 1 360                           || nf_lazy
+            create 2 3
+            load 0
+            pushfunc 1 360                           || nf_lazy
+            create 2 3
+            ccreatet 2 11 8 1
+            return 3
+366         load 0                                   || lb195
+            pushfunc 1 360                           || nf_lazy
+            create 2 3
+            ccreatet 1 11 8 2
+            return 2
+367         load 0                                   || lb196
+            ccreatet 1 11 8 3
+            return 2
+368         load 0                                   || lb197
+            ccreatet 1 11 8 4
+            return 2
+369         load 0                                   || termToBlc_lazy
+            eval
+            store 0
+370         load 0                                   || termToBlc
+            jmpt 5 371 372 373 374 375               || lbs
+371         pushfunc 0 376                           || termToBlc_24 || lb198
+            create 1 3
+            load 0
+            eval
+            call 380                                 || onesFor
+            tailcall 2 65                            || append
+372         load 1                                   || lb199
+            load 0
+            pushfunc 2 377                           || termToBlc_25
+            create 3 3
+            push '0'
+            ccreatet 2 11 5 1
+            return 3
+373         load 0                                   || lb200
+            pushfunc 1 378                           || termToBlc_26
+            create 2 3
+            push '0'
+            ccreatet 2 11 5 1
+            return 2
+374         push "BLC: een letterlijk getal heeft geen pure-LC-codering" || lb201
+            syscall 3
+            stop
+            return 2
+375         push "BLC: een primitief (eq/sub/mult) heeft geen pure-LC-codering" || lb202
+            syscall 3
+            stop
+            return 2
+376         ccreatet 0 11 5 0                        || termToBlc_24
+            push '0'
+            ccreatet 2 11 5 1
+            return 0
+377         load 1                                   || termToBlc_25
+            pushfunc 1 369                           || termToBlc_lazy
+            create 2 3
+            load 0
+            pushfunc 1 369                           || termToBlc_lazy
+            create 2 3
+            pushfunc 2 64                            || append_lazy
+            create 3 3
+            push '1'
+            ccreatet 2 11 5 1
+            return 2
+378         load 0                                   || termToBlc_26
+            pushfunc 1 369                           || termToBlc_lazy
+            create 2 3
+            push '0'
+            ccreatet 2 11 5 1
+            return 1
+379         load 0                                   || onesFor_lazy
+            eval
+            store 0
+380         load 0                                   || onesFor
+            ifneq 381                                || lb203
+            ccreatet 0 11 5 0
+            return 1
+381         loadadd 0 -1                             || lb203
+            pushfunc 1 380                           || onesFor
+            create 2 3
+            push '1'
+            ccreatet 2 11 5 1
+            return 1
+382         load 0                                   || filterBits_lazy
+            eval
+            store 0
+383         load 0                                   || filterBits
+            jmpt 2 384 385                           || lbs
+384         ccreatet 0 11 5 0                        || lb205
+            return 1
+385         load 1                                   || lb206
+            load 0
+            tailcall 3 387                           || filterBitsTok
+386         load 0                                   || filterBitsTok_lazy
+            eval
+            store 0
+387         load 0                                   || filterBitsTok
+            push '0'
+            sub
+            ifneq 388                                || lb207
+            load 1
+            pushfunc 1 382                           || filterBits_lazy
+            create 2 3
+            load 0
+            ccreatet 2 11 5 1
+            return 2
+388         load 0                                   || lb207
+            push '1'
+            sub
+            ifneq 389                                || lb209
+            load 1
+            pushfunc 1 382                           || filterBits_lazy
+            create 2 3
+            load 0
+            ccreatet 2 11 5 1
+            return 2
+389         load 1                                   || lb209
+            eval
+            tailcall 2 383                           || filterBits
+390         load 0                                   || parseBlc_lazy
+            eval
+            store 0
+391         load 0                                   || parseBlc
+            jmpt 2 392 393                           || lbs
+392         debug 1                                  || lb211
+            return 1
+393         load 1                                   || lb212
+            load 0
+            tailcall 3 395                           || parseBlcTok
+394         load 0                                   || parseBlcTok_lazy
+            eval
+            store 0
+395         load 0                                   || parseBlcTok
+            push '1'
+            sub
+            ifneq 396                                || lb213
+            load 1
+            eval
+            push 1
+            tailcall 2 399                           || parseBlcVar
+396         load 0                                   || lb213
+            push '0'
+            sub
+            ifneq 397                                || lb215
+            load 1
+            eval
+            tailcall 2 408                           || parseBlcZero
+397         push "ongeldige BLC-tekenreeks: verwacht \'0\' of \'1\'" || lb215
+            syscall 3
+            stop
+            return 2
+398         load 1                                   || parseBlcVar_lazy
+            eval
+            store 1
+399         load 1                                   || parseBlcVar
+            jmpt 2 400 401                           || lbs
+400         debug 1                                  || lb217
+            return 2
+401         load 1                                   || lb218
+            load 0
+            load 2
+            tailcall 4 403                           || parseBlcVarTok
+402         load 1                                   || parseBlcVarTok_lazy
+            eval
+            store 1
+403         load 1                                   || parseBlcVarTok
+            push '1'
+            sub
+            ifneq 404                                || lb219
+            load 2
+            eval
+            load 0
+            pushfunc 1 406                           || parseBlcVarTok_27
+            create 2 3
+            tailcall 3 399                           || parseBlcVar
+404         load 1                                   || lb219
+            push '0'
+            sub
+            ifneq 405                                || lb221
+            load 2
+            eval
+            load 0
+            ccreatet 1 11 8 0
+            ccreatet 2 11 7 0
+            return 3
+405         push "ongeldige BLC-tekenreeks in variabele" || lb221
+            syscall 3
+            stop
+            return 3
+406         load 0                                   || parseBlcVarTok_27
+            eval
+            push 1
+            add
+            return 1
+407         load 0                                   || parseBlcZero_lazy
+            eval
+            store 0
+408         load 0                                   || parseBlcZero
+            jmpt 2 409 410                           || lbs
+409         debug 1                                  || lb223
+            return 1
+410         load 1                                   || lb224
+            load 0
+            tailcall 3 412                           || parseBlcZeroTok
+411         load 0                                   || parseBlcZeroTok_lazy
+            eval
+            store 0
+412         load 0                                   || parseBlcZeroTok
+            push '0'
+            sub
+            ifneq 413                                || lb225
+            load 1
+            eval
+            tailcall 2 416                           || parseBlcAbs
+413         load 0                                   || lb225
+            push '1'
+            sub
+            ifneq 414                                || lb227
+            load 1
+            eval
+            tailcall 2 419                           || parseBlcApp
+414         push "ongeldige BLC-tekenreeks na \'0\'" || lb227
+            syscall 3
+            stop
+            return 2
+415         load 0                                   || parseBlcAbs_lazy
+            eval
+            store 0
+416         load 0                                   || parseBlcAbs
+            call 391                                 || parseBlc
+            jmpt 1 417                               || lbs
+417         load 1                                   || lb229
+            load 0
+            ccreatet 1 11 8 2
+            ccreatet 2 11 7 0
+            return 3
+418         load 0                                   || parseBlcApp_lazy
+            eval
+            store 0
+419         load 0                                   || parseBlcApp
+            call 391                                 || parseBlc
+            jmpt 1 420                               || lbs
+420         load 1                                   || lb230
+            load 0
+            tailcall 3 422                           || parseBlcAppL
+421         load 1                                   || parseBlcAppL_lazy
+            eval
+            store 1
+422         load 1                                   || parseBlcAppL
+            call 391                                 || parseBlc
+            jmpt 1 423                               || lbs
+423         load 1                                   || lb231
+            load 0
+            load 2
+            ccreatet 2 11 8 1
+            ccreatet 2 11 7 0
+            return 4
+424         load 0                                   || parseBlcTop_lazy
+            eval
+            store 0
+425         load 0                                   || parseBlcTop
+            call 391                                 || parseBlc
+            jmpt 1 426                               || lbs
+426         load 0                                   || lb232
+            return 3
+427         load 0                                   || showTerm_lazy
+            eval
+            store 0
+428         push 0                                   || showTerm
+            load 0
+            tailcall 1 430                           || showTermD
+429         load 0                                   || showTermD_lazy
+            eval
+            store 0
+430         load 0                                   || showTermD
+            jmpt 5 431 432 433 434 435               || lbs
+431         load 0                                   || lb233
+            load 2
+            pushfunc 2 436                           || showTermD_28
+            create 3 3
+            tailcall 3 439                           || varName
+432         load 3                                   || lb234
+            load 1
+            pushfunc 2 429                           || showTermD_lazy
+            create 3 3
+            load 3
+            load 0
+            pushfunc 2 429                           || showTermD_lazy
+            create 3 3
+            pushfunc 2 442                           || appendSp_lazy
+            create 3 3
+            tailcall 4 440                           || wrapParen
+433         load 2                                   || lb235
+            pushfunc 1 437                           || showTermD_29
+            create 2 3
+            load 0
+            pushfunc 2 429                           || showTermD_lazy
+            create 3 3
+            load 2
+            pushfunc 1 438                           || showTermD_30
+            create 2 3
+            pushfunc 1 439                           || varName
+            create 2 3
+            tailcall 3 445                           || wrapAbsShow
+434         load 0                                   || lb236
+            eval
+            tailcall 3 39                            || itoa
+435         load 0                                   || lb237
+            eval
+            return 3
+436         load 0                                   || showTermD_28
+            eval
+            load 1
+            eval
+            sub
+            inc
+            return 2
+437         load 0                                   || showTermD_29
+            eval
+            push 1
+            add
+            return 1
+438         load 0                                   || showTermD_30
+            eval
+            push 1
+            add
+            return 1
+439         load 0                                   || varName
+            pushfunc 1 38                            || itoa_lazy
+            create 2 3
+            push 'v'
+            ccreatet 2 11 5 1
+            return 1
+440         pushfunc 0 441                           || wrapParen_31 || wrapParen
+            create 1 3
+            pushfunc 1 7                             || str2list_lazy
+            create 2 3
+            load 0
+            pushfunc 2 64                            || append_lazy
+            create 3 3
+            push "("
+            call 8                                   || str2list
+            tailcall 1 65                            || append
+441         push ")"                                 || wrapParen_31
+            return 0
+442         load 0                                   || appendSp_lazy
+            eval
+            store 0
+443         load 1                                   || appendSp
+            pushfunc 0 444                           || appendSp_32
+            create 1 3
+            pushfunc 1 7                             || str2list_lazy
+            create 2 3
+            pushfunc 2 64                            || append_lazy
+            create 3 3
+            load 0
+            tailcall 2 65                            || append
+444         push " "                                 || appendSp_32
+            return 0
+445         pushfunc 0 446                           || wrapAbsShow_33 || wrapAbsShow
+            create 1 3
+            pushfunc 1 7                             || str2list_lazy
+            create 2 3
+            load 1
+            pushfunc 2 64                            || append_lazy
+            create 3 3
+            pushfunc 0 447                           || wrapAbsShow_34
+            create 1 3
+            pushfunc 1 7                             || str2list_lazy
+            create 2 3
+            pushfunc 2 64                            || append_lazy
+            create 3 3
+            load 0
+            pushfunc 2 64                            || append_lazy
+            create 3 3
+            push "(\\"
+            call 8                                   || str2list
+            tailcall 2 65                            || append
+446         push ")"                                 || wrapAbsShow_33
+            return 0
+447         push "."                                 || wrapAbsShow_34
+            return 0
+448         load 0                                   || printChars_lazy
+            eval
+            store 0
+449         load 0                                   || printChars
+            jmpt 2 450 451                           || lbs
+450         return_const 1 0                         || lb238
+451         load 0                                   || lb239
+            print 2
+            load 1
+            eval
+            call 449                                 || printChars
+            return 3
+452         load 1                                   || hasBindingName_lazy
+            eval
+            store 1
+453         load 1                                   || hasBindingName
+            jmpt 2 454 455                           || lbs
+454         return_const 2 0                         || lb240
+455         load 1                                   || lb241
+            load 0
+            load 2
+            eval
+            tailcall 4 457                           || hasBindingNameTok
+456         load 1                                   || hasBindingNameTok_lazy
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+457         load 1                                   || hasBindingNameTok
+            jmpt 1 458                               || lbs
+458         load 2                                   || lb242
+            load 0
+            call 169                                 || nameEq
+            ifeq 459                                 || lb243
+            return_const 5 1
+459         load 4                                   || lb243
+            eval
+            load 2
+            tailcall 5 453                           || hasBindingName
+460         load 1                                   || lookupBindingTerm_lazy
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+461         load 1                                   || lookupBindingTerm
+            jmpt 2 462 463                           || lbs
+462         debug 1                                  || lb245
+            return 2
+463         load 1                                   || lb246
+            load 0
+            load 2
+            tailcall 4 465                           || lookupBindingTermTok
+464         load 1                                   || lookupBindingTermTok_lazy
+            eval
+            store 1
+            load 0
+            eval
+            store 0
+465         load 1                                   || lookupBindingTermTok
+            jmpt 1 466                               || lbs
+466         load 2                                   || lb247
+            load 0
+            call 169                                 || nameEq
+            ifeq 467                                 || lb248
+            load 1
+            return 5
+467         load 4                                   || lb248
+            eval
+            load 2
+            tailcall 5 461                           || lookupBindingTerm
+468         load 0                                   || startsWith_lazy
+            eval
+            store 0
+469         load 0                                   || startsWith
+            jmpt 2 470 471                           || lbs
+470         return_const 2 1                         || lb250
+471         load 3                                   || lb251
+            eval
+            load 1
+            load 0
+            tailcall 4 473                           || startsWithTok
+472         load 2                                   || startsWithTok_lazy
+            eval
+            store 2
+473         load 2                                   || startsWithTok
+            jmpt 2 474 475                           || lbs
+474         return_const 3 0                         || lb252
+475         load 0                                   || lb253
+            load 2
+            eval
+            sub
+            ifneq 476                                || lb254
+            load 1
+            load 3
+            eval
+            tailcall 5 469                           || startsWith
+476         return_const 5 0                         || lb254
+477         push ":nf "                              || nfPrefix
+            tailcall 0 8                             || str2list
+478         push ":seval "                           || sevalPrefix
+            tailcall 0 8                             || str2list
+479         push ":blc "                             || blcPrefix
+            tailcall 0 8                             || str2list
+480         push ":fromblc "                         || fromblcPrefix
+            tailcall 0 8                             || str2list
+481         push ":list"                             || listPrefix
+            tailcall 0 8                             || str2list
+482         push "lc> "                              || repl
+            syscall 3
+            load 0
+            call 483                                 || readAndDispatch
+            return 1
+483         updsp 1                                  || readAndDispatch
+            pushfunc 0 484                           || readAndDispatch_35
+            create 1 3
+            dup
+            store 0
+            eval
+            load 1
+            tailcall 2 486                           || dispatchLine
+484         syscall 2                                || readAndDispatch_35
+            return 0
+485         load 1                                   || dispatchLine_lazy
+            eval
+            store 1
+486         push "quit"                              || dispatchLine
+            load 1
+            call 13                                  || strEqual
+            ifeq 487                                 || lb256
+            push "Tot ziens!\n"
+            syscall 3
+            return 2
+487         push "exit"                              || lb256
+            load 1
+            call 13                                  || strEqual
+            ifeq 488                                 || lb258
+            push "Tot ziens!\n"
+            syscall 3
+            return 2
+488         load 1                                   || lb258
+            pushfunc 1 8                             || str2list
+            create 2 3
+            load 0
+            tailcall 2 489                           || dispatchCs
+489         load 1                                   || dispatchCs
+            call 477                                 || nfPrefix
+            call 469                                 || startsWith
+            ifeq 490                                 || lb260
+            load 1
+            push 4
+            pushfunc 2 74                            || drop_lazy
+            create 3 3
+            pushfunc 1 204                           || lexAll_lazy
+            create 2 3
+            load 0
+            tailcall 2 520                           || cmdNf
+490         load 1                                   || lb260
+            call 478                                 || sevalPrefix
+            call 469                                 || startsWith
+            ifeq 491                                 || lb262
+            load 1
+            push 7
+            pushfunc 2 74                            || drop_lazy
+            create 3 3
+            pushfunc 1 204                           || lexAll_lazy
+            create 2 3
+            load 0
+            tailcall 2 522                           || cmdSeval
+491         load 1                                   || lb262
+            call 479                                 || blcPrefix
+            call 469                                 || startsWith
+            ifeq 492                                 || lb264
+            load 1
+            push 5
+            pushfunc 2 74                            || drop_lazy
+            create 3 3
+            pushfunc 1 204                           || lexAll_lazy
+            create 2 3
+            load 0
+            tailcall 2 524                           || cmdBlc
+492         load 1                                   || lb264
+            call 480                                 || fromblcPrefix
+            call 469                                 || startsWith
+            ifeq 493                                 || lb266
+            load 1
+            push 9
+            pushfunc 2 74                            || drop_lazy
+            create 3 3
+            pushfunc 1 382                           || filterBits_lazy
+            create 2 3
+            load 0
+            tailcall 2 526                           || cmdFromBlc
+493         load 1                                   || lb266
+            call 481                                 || listPrefix
+            call 469                                 || startsWith
+            ifeq 494                                 || lb268
+            load 0
+            tailcall 2 528                           || cmdList
+494         load 1                                   || lb268
+            eval
+            call 205                                 || lexAll
+            load 0
+            tailcall 2 496                           || routeAssignOrEval
+495         load 1                                   || routeAssignOrEval_lazy
+            eval
+            store 1
+496         load 1                                   || routeAssignOrEval
+            jmpt 2 497 498                           || lbs
+497         push ""                                  || lb270
+            syscall 3
+            load 0
+            call 482                                 || repl
+            return 2
+498         load 1                                   || lb271
+            load 0
+            load 2
+            tailcall 4 500                           || routeAssignOrEvalTok
+499         load 1                                   || routeAssignOrEvalTok_lazy
+            eval
+            store 1
+500         load 1                                   || routeAssignOrEvalTok
+            jmpt 4 501 502 503 504                   || lbs
+501         load 3                                   || lb272
+            load 2
+            load 1
+            tailcall 4 543                           || lift_case_2
+502         load 3                                   || lb273
+            eval
+            load 0
+            load 1
+            tailcall 4 506                           || routeAssignCheck
+503         load 3                                   || lb274
+            load 2
+            load 1
+            tailcall 4 543                           || lift_case_2
+504         load 2                                   || lb275
+            load 1
+            load 0
+            tailcall 3 543                           || lift_case_2
+505         load 2                                   || routeAssignCheck_lazy
+            eval
+            store 2
+506         load 2                                   || routeAssignCheck
+            jmpt 2 507 508                           || lbs
+507         load 1                                   || lb276
+            pushfunc 1 509                           || routeAssignCheck_36
+            create 2 3
+            load 0
+            tailcall 3 518                           || cmdEvalEcho
+508         load 1                                   || lb277
+            load 0
+            load 3
+            load 2
+            tailcall 5 511                           || routeAssignCheckTok
+509         ccreatet 0 11 5 0                        || routeAssignCheck_36
+            load 0
+            ccreatet 1 11 6 1
+            ccreatet 2 11 5 1
+            return 1
+510         load 2                                   || routeAssignCheckTok_lazy
+            eval
+            store 2
+511         load 2                                   || routeAssignCheckTok
+            pushfunc 0 513                           || routeAssignCheckTok_37
+            create 1 3
+            call 194                                 || isCh
+            ifeq 512                                 || lb278
+            load 3
+            load 1
+            load 0
+            tailcall 4 515                           || cmdAssign
+512         load 3                                   || lb278
+            load 2
+            load 1
+            pushfunc 3 514                           || routeAssignCheckTok_38
+            create 4 3
+            load 0
+            tailcall 4 518                           || cmdEvalEcho
+513         push '='                                 || routeAssignCheckTok_37
+            return 0
+514         load 2                                   || routeAssignCheckTok_38
+            load 1
+            ccreatet 2 11 5 1
+            load 0
+            ccreatet 1 11 6 1
+            ccreatet 2 11 5 1
+            return 3
+515         load 2                                   || cmdAssign
+            load 0
+            pushfunc 2 309                           || parseFreshTop_lazy
+            create 3 3
+            load 1
+            load 0
+            tailcall 3 516                           || cmdAssignShow
+516         load 1                                   || cmdAssignShow
+            push "gedefinieerd: "
+            call 8                                   || str2list
+            call 65                                  || append
+            call 449                                 || printChars
+            push 10
+            print 2
+            load 0
+            load 2
+            load 1
+            pushfunc 3 517                           || cmdAssignShow_39
+            create 4 3
+            call 482                                 || repl
+            return 3
+517         load 2                                   || cmdAssignShow_39
+            load 1
+            eval
+            load 0
+            eval
+            ccreatet 2 11 7 0
+            ccreatet 2 11 5 1
+            return 3
+518         load 1                                   || cmdEvalEcho
+            load 0
+            pushfunc 2 309                           || parseFreshTop_lazy
+            create 3 3
+            load 0
+            tailcall 2 519                           || cmdEvalEchoShow
+519         load 1                                   || cmdEvalEchoShow
+            eval
+            call 428                                 || showTerm
+            call 449                                 || printChars
+            push 10
+            print 2
+            load 0
+            call 482                                 || repl
+            return 2
+520         load 1                                   || cmdNf
+            load 0
+            pushfunc 2 309                           || parseFreshTop_lazy
+            create 3 3
+            pushfunc 1 360                           || nf_lazy
+            create 2 3
+            load 0
+            tailcall 2 521                           || cmdNfShow
+521         load 1                                   || cmdNfShow
+            eval
+            call 428                                 || showTerm
+            call 449                                 || printChars
+            push 10
+            print 2
+            load 0
+            call 482                                 || repl
+            return 2
+522         load 1                                   || cmdSeval
+            load 0
+            pushfunc 2 309                           || parseFreshTop_lazy
+            create 3 3
+            load 0
+            tailcall 2 523                           || cmdSevalShow
+523         load 1                                   || cmdSevalShow
+            pushfunc 1 312                           || toScott_lazy
+            create 2 3
+            call 153                                 || seval
+            print 0
+            push 10
+            print 2
+            load 0
+            call 482                                 || repl
+            return 2
+524         load 1                                   || cmdBlc
+            load 0
+            pushfunc 2 309                           || parseFreshTop_lazy
+            create 3 3
+            load 0
+            tailcall 2 525                           || cmdBlcShow
+525         load 1                                   || cmdBlcShow
+            eval
+            call 370                                 || termToBlc
+            call 449                                 || printChars
+            push 10
+            print 2
+            load 0
+            call 482                                 || repl
+            return 2
+526         load 1                                   || cmdFromBlc
+            pushfunc 1 424                           || parseBlcTop_lazy
+            create 2 3
+            load 0
+            tailcall 2 527                           || cmdFromBlcShow
+527         load 1                                   || cmdFromBlcShow
+            eval
+            call 428                                 || showTerm
+            call 449                                 || printChars
+            push 10
+            print 2
+            load 0
+            call 482                                 || repl
+            return 2
+528         load 0                                   || cmdList
+            eval
+            call 530                                 || printBindingNames
+            load 0
+            call 482                                 || repl
+            return 1
+529         load 0                                   || printBindingNames_lazy
+            eval
+            store 0
+530         load 0                                   || printBindingNames
+            jmpt 2 531 532                           || lbs
+531         push "(geen definities)\n"               || lb280
+            syscall 3
+            return 1
+532         load 1                                   || lb281
+            load 0
+            tailcall 3 534                           || printBindingNamesTok
+533         load 0                                   || printBindingNamesTok_lazy
+            eval
+            store 0
+534         load 0                                   || printBindingNamesTok
+            jmpt 1 535                               || lbs
+535         load 0                                   || lb282
+            call 449                                 || printChars
+            push 10
+            print 2
+            load 3
+            eval
+            call 537                                 || printBindingNamesRest
+            return 4
+536         load 0                                   || printBindingNamesRest_lazy
+            eval
+            store 0
+537         load 0                                   || printBindingNamesRest
+            jmpt 2 538 539                           || lbs
+538         return_const 1 0                         || lb283
+539         load 1                                   || lb284
+            load 0
+            tailcall 3 534                           || printBindingNamesTok
+540         push "Lambda-calculus REPL (self-interpreter-gebaseerd, zie lc_repl/README.md).\n" || start
+            syscall 3
+            push "Commando\'s: :nf <expr>, :seval <expr>, :blc <expr>, :fromblc <bits>, :list, naam = <expr>, quit.\n"
+            syscall 3
+            ccreatet 0 11 5 0
+            call 482                                 || repl
+            return 0
+541         load 1                                   || lift_case_0
+            pushfunc 1 206                           || dropNL_lazy
+            create 2 3
+            load 0
+            eval
+            ccreatet 2 11 5 1
+            return 2
+542         load 1                                   || lift_case_1
+            load 0
+            ccreatet 2 11 8 1
+            return 2
+543         load 2                                   || lift_case_2
+            load 1
+            pushfunc 2 544                           || lift_case_2_40
+            create 3 3
+            load 0
+            tailcall 3 518                           || cmdEvalEcho
+544         load 1                                   || lift_case_2_40
+            load 0
+            eval
+            ccreatet 2 11 5 1
+            return 2
+
+.metadata
+types 4
+type 5 list 2
+  constr 0 Nil 0
+  constr 1 Cons 2
+type 6 token 4
+  constr 0 Term 1
+  constr 1 Identifier 1
+  constr 2 Number 1
+  constr 3 NL 0
+type 7 pair 1
+  constr 0 Pair 2
+type 8 LTerm 5
+  constr 0 LVar 1
+  constr 1 LApp 2
+  constr 2 LAbs 1
+  constr 3 LLitNum 1
+  constr 4 LLitPrim 1
+functions 279
+  func 0 readStream 1 00
+  func 4 writeStream 2 010
+  func 3 writeStream 2 010
+  func 8 str2list 1 10
+  func 7 str2list 1 10
+  func 10 strls 2 110
+  func 9 strls 2 110
+  func 13 strEqual 2 110
+  func 12 strEqual 2 110
+  func 16 strEqualAt 3 1110
+  func 15 strEqualAt 3 1110
+  func 20 list2str 1 10
+  func 19 list2str 1 10
+  func 22 fillStr 3 1110
+  func 21 fillStr 3 1110
+  func 26 strcat 2 110
+  func 25 strcat 2 110
+  func 28 toUpperChar 1 10
+  func 27 toUpperChar 1 10
+  func 31 code 1 10
+  func 30 code 1 10
+  func 33 decode 1 10
+  func 32 decode 1 10
+  func 35 strUpper 1 10
+  func 34 strUpper 1 10
+  func 37 substr 3 1110
+  func 36 substr 3 1110
+  func 39 itoa 1 10
+  func 38 itoa 1 10
+  func 44 length 1 10
+  func 43 length 1 10
+  func 48 map 2 010
+  func 47 map 2 010
+  func 52 filter 2 010
+  func 51 filter 2 010
+  func 57 foldl 3 0010
+  func 56 foldl 3 0010
+  func 61 foldr 3 0010
+  func 60 foldr 3 0010
+  func 65 append 2 100
+  func 64 append 2 100
+  func 69 take 2 010
+  func 68 take 2 010
+  func 75 drop 2 010
+  func 74 drop 2 010
+  func 81 reverse 1 10
+  func 80 reverse 1 10
+  func 83 rev 2 100
+  func 82 rev 2 100
+  func 87 isDigit 1 10
+  func 86 isDigit 1 10
+  func 90 isAlpha 1 10
+  func 89 isAlpha 1 10
+  func 95 isAlphaNum 1 10
+  func 94 isAlphaNum 1 10
+  func 98 isSpace 1 10
+  func 97 isSpace 1 10
+  func 101 lexNum 2 010
+  func 100 lexNum 2 010
+  func 107 lexIdent 2 010
+  func 106 lexIdent 2 010
+  func 112 lexNumHelper 2 010
+  func 111 lexNumHelper 2 010
+  func 116 lexIdentHelper 2 010
+  func 115 lexIdentHelper 2 010
+  func 120 lexer 1 10
+  func 119 lexer 1 10
+  func 128 showToken 1 10
+  func 127 showToken 1 10
+  func 134 showTokens 1 10
+  func 133 showTokens 1 10
+  func 139 cons 3 0000
+  func 140 nil 0 0
+  func 141 var 5 000000
+  func 142 app 6 0000000
+  func 143 abs 5 000000
+  func 144 lit 5 000000
+  func 146 makeSel 1 10
+  func 145 makeSel 1 10
+  func 148 iLam 3 0000
+  func 149 i 2 000
+  func 151 s1Lam 2 100
+  func 150 s1Lam 2 100
+  func 152 s1 1 00
+  func 153 seval 1 00
+  func 154 makeLamA 2 000
+  func 155 makeLamB 3 0000
+  func 156 makeLamC 2 000
+  func 158 makeLamD 1 10
+  func 157 makeLamD 1 10
+  func 159 makeLam 2 000
+  func 160 addBind 3 0000
+  func 162 eqFn 4 11000
+  func 161 eqFn 4 11000
+  func 165 subFn 2 110
+  func 164 subFn 2 110
+  func 167 multFn 2 110
+  func 166 multFn 2 110
+  func 169 nameEq 2 110
+  func 168 nameEq 2 110
+  func 173 nameEqNil 1 10
+  func 172 nameEqNil 1 10
+  func 177 nameEqCons 3 0010
+  func 176 nameEqCons 3 0010
+  func 181 eqName 0 0
+  func 183 subName 0 0
+  func 186 multName 0 0
+  func 191 isPrimName 1 10
+  func 190 isPrimName 1 10
+  func 194 isCh 2 010
+  func 193 isCh 2 010
+  func 200 isChS 2 010
+  func 199 isChS 2 010
+  func 205 lexAll 1 10
+  func 204 lexAll 1 10
+  func 207 dropNL 1 10
+  func 206 dropNL 1 10
+  func 211 dropNLTok 2 100
+  func 210 dropNLTok 2 100
+  func 217 findVarIndex 2 100
+  func 216 findVarIndex 2 100
+  func 221 findVarIndexTok 3 1010
+  func 220 findVarIndexTok 3 1010
+  func 224 bumpIndex 1 10
+  func 223 bumpIndex 1 10
+  func 227 parseExpr 3 0010
+  func 226 parseExpr 3 0010
+  func 231 parseExprTok 4 00100
+  func 230 parseExprTok 4 00100
+  func 235 parseLambda 3 0010
+  func 234 parseLambda 3 0010
+  func 237 parseLambdaVars 3 0010
+  func 236 parseLambdaVars 3 0010
+  func 241 parseLambdaVarsTok 4 00110
+  func 240 parseLambdaVarsTok 4 00110
+  func 248 wrapLAbs 1 10
+  func 247 wrapLAbs 1 10
+  func 251 parseApp 3 0010
+  func 250 parseApp 3 0010
+  func 254 parseAppTail 4 00010
+  func 253 parseAppTail 4 00010
+  func 258 parseAppTailTok 5 000100
+  func 257 parseAppTailTok 5 000100
+  func 262 looksLikeAtomStart 1 10
+  func 261 looksLikeAtomStart 1 10
+  func 268 looksLikeAtomStartTerm 1 10
+  func 267 looksLikeAtomStartTerm 1 10
+  func 273 parseAtom 3 0010
+  func 272 parseAtom 3 0010
+  func 277 parseAtomTok 4 00100
+  func 276 parseAtomTok 4 00100
+  func 283 parseAtomTerm 4 00100
+  func 282 parseAtomTerm 4 00100
+  func 287 parseAtomTermBackslash 4 00100
+  func 286 parseAtomTermBackslash 4 00100
+  func 291 parseParenExpr 3 0010
+  func 290 parseParenExpr 3 0010
+  func 294 dropCloseParen 1 10
+  func 293 dropCloseParen 1 10
+  func 298 parseAtomIdent 4 01000
+  func 297 parseAtomIdent 4 01000
+  func 300 parseAtomIdentIdx 4 00010
+  func 299 parseAtomIdentIdx 4 00010
+  func 303 parseAtomIdentFree 3 0100
+  func 302 parseAtomIdentFree 3 0100
+  func 306 parseAtomIdentBinding 3 1000
+  func 305 parseAtomIdentBinding 3 1000
+  func 308 parseFreeError 1 00
+  func 310 parseFreshTop 2 010
+  func 309 parseFreshTop 2 010
+  func 313 toScott 1 10
+  func 312 toScott 1 10
+  func 320 toScottPrim 1 10
+  func 319 toScottPrim 1 10
+  func 324 shiftTerm 3 0010
+  func 323 shiftTerm 3 0010
+  func 334 substTerm 3 0010
+  func 333 substTerm 3 0010
+  func 342 substVar 3 1010
+  func 341 substVar 3 1010
+  func 345 betaReduce 2 100
+  func 344 betaReduce 2 100
+  func 347 whnf 1 10
+  func 346 whnf 1 10
+  func 354 whnfApp 2 100
+  func 353 whnfApp 2 100
+  func 361 nf 1 10
+  func 360 nf 1 10
+  func 363 nfFrom 1 10
+  func 362 nfFrom 1 10
+  func 370 termToBlc 1 10
+  func 369 termToBlc 1 10
+  func 380 onesFor 1 10
+  func 379 onesFor 1 10
+  func 383 filterBits 1 10
+  func 382 filterBits 1 10
+  func 387 filterBitsTok 2 100
+  func 386 filterBitsTok 2 100
+  func 391 parseBlc 1 10
+  func 390 parseBlc 1 10
+  func 395 parseBlcTok 2 100
+  func 394 parseBlcTok 2 100
+  func 399 parseBlcVar 2 010
+  func 398 parseBlcVar 2 010
+  func 403 parseBlcVarTok 3 0100
+  func 402 parseBlcVarTok 3 0100
+  func 408 parseBlcZero 1 10
+  func 407 parseBlcZero 1 10
+  func 412 parseBlcZeroTok 2 100
+  func 411 parseBlcZeroTok 2 100
+  func 416 parseBlcAbs 1 10
+  func 415 parseBlcAbs 1 10
+  func 419 parseBlcApp 1 10
+  func 418 parseBlcApp 1 10
+  func 422 parseBlcAppL 2 010
+  func 421 parseBlcAppL 2 010
+  func 425 parseBlcTop 1 10
+  func 424 parseBlcTop 1 10
+  func 428 showTerm 1 10
+  func 427 showTerm 1 10
+  func 430 showTermD 2 100
+  func 429 showTermD 2 100
+  func 439 varName 1 00
+  func 440 wrapParen 1 00
+  func 443 appendSp 2 100
+  func 442 appendSp 2 100
+  func 445 wrapAbsShow 2 000
+  func 449 printChars 1 10
+  func 448 printChars 1 10
+  func 453 hasBindingName 2 010
+  func 452 hasBindingName 2 010
+  func 457 hasBindingNameTok 3 1100
+  func 456 hasBindingNameTok 3 1100
+  func 461 lookupBindingTerm 2 110
+  func 460 lookupBindingTerm 2 110
+  func 465 lookupBindingTermTok 3 1100
+  func 464 lookupBindingTermTok 3 1100
+  func 469 startsWith 2 100
+  func 468 startsWith 2 100
+  func 473 startsWithTok 3 0010
+  func 472 startsWithTok 3 0010
+  func 477 nfPrefix 0 0
+  func 478 sevalPrefix 0 0
+  func 479 blcPrefix 0 0
+  func 480 fromblcPrefix 0 0
+  func 481 listPrefix 0 0
+  func 482 repl 1 00
+  func 483 readAndDispatch 1 00
+  func 486 dispatchLine 2 010
+  func 485 dispatchLine 2 010
+  func 489 dispatchCs 2 000
+  func 496 routeAssignOrEval 2 010
+  func 495 routeAssignOrEval 2 010
+  func 500 routeAssignOrEvalTok 3 0100
+  func 499 routeAssignOrEvalTok 3 0100
+  func 506 routeAssignCheck 3 0010
+  func 505 routeAssignCheck 3 0010
+  func 511 routeAssignCheckTok 4 00100
+  func 510 routeAssignCheckTok 4 00100
+  func 515 cmdAssign 3 0000
+  func 516 cmdAssignShow 3 0000
+  func 518 cmdEvalEcho 2 000
+  func 519 cmdEvalEchoShow 2 000
+  func 520 cmdNf 2 000
+  func 521 cmdNfShow 2 000
+  func 522 cmdSeval 2 000
+  func 523 cmdSevalShow 2 000
+  func 524 cmdBlc 2 000
+  func 525 cmdBlcShow 2 000
+  func 526 cmdFromBlc 2 000
+  func 527 cmdFromBlcShow 2 000
+  func 528 cmdList 1 00
+  func 530 printBindingNames 1 10
+  func 529 printBindingNames 1 10
+  func 534 printBindingNamesTok 2 100
+  func 533 printBindingNamesTok 2 100
+  func 537 printBindingNamesRest 1 10
+  func 536 printBindingNamesRest 1 10
+  func 540 start 0 0
+.endmetadata

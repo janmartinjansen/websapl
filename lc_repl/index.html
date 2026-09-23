@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lambda-Calculus REPL — Sapl Web Workbench</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,340..900;1,9..144,400..600&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F1F4EA;
+    --paper-band: #E1E9D5;
+    --paper-deep: #CBD8BB;
+    --ink: #1C2617;
+    --ink-soft: #52604A;
+    --ink-faint: #7C8B71;
+    --accent: #A9531A;
+    --accent-ink: #FFF9F2;
+    --accent-soft: #E9D2B3;
+    --code-bg: #12170E;
+    --code-line: #1B2314;
+    --code-text: #D3E6C4;
+    --code-soft: #839772;
+    --code-accent: #F0A868;
+    --err: #C0432A;
+    --rule: #C7D3B7;
+    --shadow: 0 1px 0 rgba(28,38,23,0.06);
+    --font-display: 'Fraunces', Georgia, 'Iowan Old Style', serif;
+    --font-mono: 'IBM Plex Mono', 'SF Mono', Consolas, 'Liberation Mono', monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #0F1409;
+      --paper-band: #191F12;
+      --paper-deep: #29331E;
+      --ink: #E7EEDB;
+      --ink-soft: #A9BC9A;
+      --ink-faint: #74856A;
+      --accent: #E3924A;
+      --accent-ink: #1A1006;
+      --accent-soft: #4A3320;
+      --code-bg: #0A0D07;
+      --code-line: #131A0D;
+      --code-text: #D3E6C4;
+      --code-soft: #7C9270;
+      --code-accent: #F5B372;
+      --err: #E2745C;
+      --rule: #2C3823;
+      --shadow: 0 1px 0 rgba(0,0,0,0.3);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--accent-soft); }
+  a { color: var(--accent); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .page { max-width: 900px; margin: 0 auto; padding: 1.75rem 1.5rem 3rem; }
+
+  .masthead {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+  }
+  .wordmark { font-family: var(--font-mono); font-size: 0.9rem; }
+  .wordmark b { color: var(--accent); font-weight: 600; }
+  .masthead-right { display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
+  .masthead-note { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-faint); }
+  .masthead-back {
+    font-family: var(--font-mono); font-size: 0.75rem; text-decoration: none;
+    border: 1px solid var(--rule); border-radius: 999px; padding: 0.3rem 0.75rem;
+  }
+  .masthead-back:hover { border-color: var(--accent); }
+
+  h1 { font-family: var(--font-display); font-weight: 600; font-size: 1.6rem; margin: 0 0 0.5rem; }
+  .intro { color: var(--ink-soft); max-width: 60ch; margin: 0 0 1.4rem; }
+  .intro code { font-family: var(--font-mono); font-size: 0.85em; background: var(--paper-band); padding: 0.08em 0.3em; border-radius: 2px; }
+
+  .shell {
+    background: var(--paper-band);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .shell-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.6rem 0.9rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .shell-title { font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink-soft); }
+  .status { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-faint); }
+  .reset-btn {
+    font-family: var(--font-mono); font-size: 0.72rem;
+    background: transparent; color: var(--ink-soft);
+    border: 1px solid var(--rule); border-radius: 999px;
+    padding: 0.25rem 0.6rem; cursor: pointer;
+  }
+  .reset-btn:hover { border-color: var(--accent); color: var(--ink); }
+
+  #terminal {
+    background: var(--code-bg); color: var(--code-text);
+    font-family: var(--font-mono); font-size: 0.82rem; line-height: 1.6;
+    padding: 0.9rem 1rem;
+    min-height: 16rem; max-height: 24rem; overflow-y: auto;
+    white-space: pre-wrap; word-break: break-word;
+  }
+
+  .input-row { display: flex; gap: 0.5rem; padding: 0.7rem 0.9rem; border-top: 1px solid var(--rule); }
+  .prompt-glyph { font-family: var(--font-mono); font-size: 0.9rem; color: var(--code-accent); align-self: center; }
+  #cmd-input {
+    flex: 1; min-width: 0;
+    background: var(--code-bg); color: var(--code-text);
+    font-family: var(--font-mono); font-size: 0.85rem;
+    border: 1px solid var(--code-line); border-radius: 2px; padding: 0.55rem 0.7rem;
+  }
+  #cmd-input::placeholder { color: var(--code-soft); }
+  #cmd-input:disabled { opacity: 0.5; }
+  .btn {
+    font-family: var(--font-mono); font-size: 0.78rem;
+    border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink);
+    padding: 0.5rem 0.9rem; border-radius: 2px; cursor: pointer;
+  }
+  .btn:hover { opacity: 0.85; }
+  .btn:disabled { opacity: 0.4; cursor: default; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0 0.9rem 0.9rem; }
+  .chip {
+    font-family: var(--font-mono); font-size: 0.72rem;
+    background: var(--paper); color: var(--ink-soft);
+    border: 1px solid var(--rule); border-radius: 999px;
+    padding: 0.3rem 0.65rem; cursor: pointer;
+  }
+  .chip:hover { border-color: var(--accent); color: var(--ink); }
+  .chip:disabled { opacity: 0.4; cursor: default; }
+
+  .commands { margin-top: 1.5rem; }
+  .commands h2 { font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; margin: 0 0 0.6rem; }
+  table.cmds { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+  table.cmds th, table.cmds td { text-align: left; padding: 0.35rem 0.6rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  table.cmds th { color: var(--ink-faint); font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  table.cmds td:first-child { font-family: var(--font-mono); font-size: 0.8rem; white-space: nowrap; }
+  table.cmds td { color: var(--ink-soft); }
+
+  footer {
+    margin-top: 2rem; padding-top: 1.2rem; border-top: 1px solid var(--rule);
+    font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-faint); line-height: 1.7;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="masthead">
+    <div class="wordmark"><b>lc</b>_repl — lambda-calculus REPL</div>
+    <div class="masthead-right">
+      <div class="masthead-note">Scott-encoded self-interpreter, WebAssembly</div>
+      <a class="masthead-back" href="../index.html">&larr; Sapl Workbench</a>
+    </div>
+  </div>
+
+  <h1>Lambda-calculus REPL</h1>
+  <p class="intro">
+    Een interactieve REPL voor pure lambda-calculus, gebouwd bovenop de
+    meta-circulaire Scott-encoded self-interpreter uit
+    <code>Scott_experiments/lam_self_interpreter.cfp</code>. Typ een regel en
+    druk op Enter &mdash; <code>:nf</code> reduceert tot bèta-normaalvorm,
+    <code>:seval</code> laat de self-interpreter zelf een term uitvoeren,
+    <code>:blc</code>/<code>:fromblc</code> converteren naar/van Tromp's
+    binaire notatie. Elke regel wordt bewaard in de sessie: een eerdere
+    <code>naam = ...</code>-binding mag later hergebruikt worden.
+  </p>
+
+  <div class="shell">
+    <div class="shell-head">
+      <span class="shell-title">terminal</span>
+      <div style="display:flex; align-items:center; gap:0.6rem;">
+        <span class="status" id="status">wordt geladen&hellip;</span>
+        <button class="reset-btn" id="reset-btn" type="button">reset sessie</button>
+      </div>
+    </div>
+    <div id="terminal" aria-live="polite">initialiseren&hellip;</div>
+    <div class="input-row">
+      <span class="prompt-glyph">&raquo;</span>
+      <input id="cmd-input" type="text" autocomplete="off" spellcheck="false" disabled
+             placeholder="bv. :nf (\x y.x) 1 2" aria-label="lc_repl-invoer">
+      <button class="btn" id="run-btn" type="button" disabled>voer uit</button>
+    </div>
+    <div class="chips" id="chips">
+      <button class="chip" type="button" data-cmd=":nf (\x y.x) 1 2">K-combinator</button>
+      <button class="chip" type="button" data-cmd="Y = \f.(\x. f (x x)) (\x. f (x x))">Y-combinator</button>
+      <button class="chip" type="button" data-cmd="fact = Y (\self n. eq n 0 1 (mult n (self (sub n 1))))">fact via Y</button>
+      <button class="chip" type="button" data-cmd=":seval fact 6">:seval fact 6</button>
+      <button class="chip" type="button" data-cmd=":blc \x y.x">:blc K</button>
+      <button class="chip" type="button" data-cmd=":list">:list</button>
+    </div>
+  </div>
+
+  <div class="commands">
+    <h2>Commando's</h2>
+    <table class="cmds">
+      <tr><th>commando</th><th>werking</th></tr>
+      <tr><td>&lt;expr&gt;</td><td>parse en toon de term terug (geen reductie)</td></tr>
+      <tr><td>naam = &lt;expr&gt;</td><td>bind een gesloten term aan een naam; later los of middenin een nieuwe expressie te gebruiken</td></tr>
+      <tr><td>:nf &lt;expr&gt;</td><td>reduceer tot bèta-normaalvorm (substitutie op de termdata, los van <code>seval</code>)</td></tr>
+      <tr><td>:seval &lt;expr&gt;</td><td>bouw de term en geef 'm aan de echte self-interpreter (<code>seval</code>)</td></tr>
+      <tr><td>:blc &lt;expr&gt;</td><td>codeer naar Tromp's binaire notatie (alleen pure termen, geen <code>eq</code>/<code>sub</code>/<code>mult</code>/getallen)</td></tr>
+      <tr><td>:fromblc &lt;bits&gt;</td><td>decodeer een binaire tekenreeks terug naar een term</td></tr>
+      <tr><td>:list</td><td>toon de namen van de huidige sessie-bindingen</td></tr>
+    </table>
+  </div>
+
+  <footer>
+    Draait op de echte JMVM (WebAssembly, hetzelfde <code>vm.cpp</code> als de
+    native VM) — elke ingetypte regel voegt zich toe aan de sessie, die bij
+    elke nieuwe regel in zijn geheel opnieuw wordt uitgevoerd (er bestaat geen
+    interactieve stdin-stream in deze WASM-opzet); bij de gemeten
+    instructieaantallen blijft dat onmerkbaar snel. Bron:
+    <a href="https://github.com/janmartinjansen/Sapl/tree/main/lc_repl" target="_blank" rel="noopener">lc_repl/</a>
+    in de repo, ontwerp/verslag in
+    <a href="https://github.com/janmartinjansen/Sapl/blob/main/docs/2026-09-23_lc_repl_via_self_interpreter_plan.md" target="_blank" rel="noopener">docs/2026-09-23_lc_repl_via_self_interpreter_plan.md</a>.
+  </footer>
+</div>
+
+<script src="driver.js"></script>
+</body>
+</html>
