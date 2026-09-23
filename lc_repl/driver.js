@@ -106,17 +106,27 @@
 
   worker.postMessage({ type: "INIT" });
 
-  function submitLine(text) {
+  // Een chip kan meerdere regels tegelijk indienen (\n-gescheiden in
+  // data-cmd) -- de "voer dit uit"-chips (":seval fact 6", ":seval
+  // priemzeef") nemen zo hun eigen voorwaarden (Y/fact resp.
+  // primes/add/Y/decodeAcc) mee, zodat ze ook werken als je ze als eerste
+  // klikt, zonder eerst de losse definitie-chips te hebben aangeklikt --
+  // anders krijg je precies lc_repl.cfp's eigen "onbekende of ongebonden
+  // variabele"-foutmelding voor een naam die simpelweg nog niet bestond in
+  // de sessie. Alle regels van één klik draaien in ÉÉN sessie-run, niet
+  // apart per regel.
+  function submitLines(text) {
     if (!ready || busy) return;
-    if (!text || !text.trim()) return;
-    lines.push(text);
+    var parts = (text || "").split("\n").filter(function (l) { return l.trim().length > 0; });
+    if (!parts.length) return;
+    parts.forEach(function (l) { lines.push(l); });
     runSession();
   }
 
   function submitFromInput() {
     var val = inputEl.value;
     inputEl.value = "";
-    submitLine(val);
+    submitLines(val);
   }
 
   runBtn.addEventListener("click", submitFromInput);
@@ -129,6 +139,6 @@
     runSession();
   });
   Array.prototype.forEach.call(chipsEl.querySelectorAll(".chip"), function (chip) {
-    chip.addEventListener("click", function () { submitLine(chip.getAttribute("data-cmd")); });
+    chip.addEventListener("click", function () { submitLines(chip.getAttribute("data-cmd")); });
   });
 })();

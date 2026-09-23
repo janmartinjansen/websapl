@@ -1353,7 +1353,13 @@ readStream lb1 readStream_1 writeStream_lazy writeStream lb3 lb4 str2list_lazy s
             return 3
 307         load 1                                   || lb157
             tailcall 3 308                           || parseFreeError
-308         push "onbekende of ongebonden variabele in lambda-expressie (geen primitief eq/sub/mult, geen omsluitende lambda)" || parseFreeError
+308         push " (geen primitief eq/sub/mult, geen omsluitende lambda, geen eerdere \"naam = ...\"-binding in deze sessie)" || parseFreeError
+            load 0
+            eval
+            call 20                                  || list2str
+            push "onbekende of ongebonden variabele: "
+            call 26                                  || strcat
+            call 26                                  || strcat
             syscall 3
             stop
             return 1

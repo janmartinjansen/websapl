@@ -203,14 +203,23 @@
       <button class="chip" type="button" data-cmd=":nf (\x y.x) 1 2">K-combinator</button>
       <button class="chip" type="button" data-cmd="Y = \f.(\x. f (x x)) (\x. f (x x))">Y-combinator</button>
       <button class="chip" type="button" data-cmd="fact = Y (\self n. eq n 0 1 (mult n (self (sub n 1))))">fact via Y</button>
-      <button class="chip" type="button" data-cmd=":seval fact 6">:seval fact 6</button>
+      <button class="chip" type="button" data-cmd="Y = \f.(\x. f (x x)) (\x. f (x x))
+fact = Y (\self n. eq n 0 1 (mult n (self (sub n 1))))
+:seval fact 6">:seval fact 6</button>
       <button class="chip" type="button" data-cmd=":blc \x y.x">:blc K</button>
       <button class="chip" type="button" data-cmd="primes = (\p.p p) (\p d c. c (\f t.t) ((\n. p p n ((\r.r r)(\r. n (r r)))) (\a. (\g k s c. c k (s g)) (d a)))) (\g k s c. c (\f t.f) (s g))">priemzeef (1-regel)</button>
       <button class="chip" type="button" data-cmd="add = \a b. sub a (sub 0 b)">add</button>
       <button class="chip" type="button" data-cmd="decodeAcc = Y (\self n ls acc. eq n 0 acc (ls (\h t. self (sub n 1) t (add (mult acc 10) (h 0 1)))))">decodeAcc</button>
-      <button class="chip" type="button" data-cmd=":seval decodeAcc 18 primes 0">:seval priemzeef</button>
+      <button class="chip" type="button" data-cmd="primes = (\p.p p) (\p d c. c (\f t.t) ((\n. p p n ((\r.r r)(\r. n (r r)))) (\a. (\g k s c. c k (s g)) (d a)))) (\g k s c. c (\f t.f) (s g))
+add = \a b. sub a (sub 0 b)
+Y = \f.(\x. f (x x)) (\x. f (x x))
+decodeAcc = Y (\self n ls acc. eq n 0 acc (ls (\h t. self (sub n 1) t (add (mult acc 10) (h 0 1)))))
+:seval decodeAcc 18 primes 0">:seval priemzeef</button>
       <button class="chip" type="button" data-cmd=":list">:list</button>
     </div>
+    <p style="font-family: var(--font-mono); font-size: 0.68rem; color: var(--ink-faint); padding: 0 0.9rem 0.9rem; margin: -0.4rem 0 0;">
+      de ":seval"-chips nemen hun eigen voorwaarden (Y/fact resp. primes/add/Y/decodeAcc) mee -- werken dus ook als eerste klik, zonder eerst de losse definitie-chips nodig te hebben
+    </p>
   </div>
 
   <div class="commands">
