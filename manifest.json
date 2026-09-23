@@ -1489,6 +1489,94 @@
       "_expanded": false
     },
     {
+      "name": "selfinter",
+      "path": "selfinter",
+      "type": "directory",
+      "children": [
+        {
+          "name": "examples",
+          "path": "selfinter/examples",
+          "type": "directory",
+          "children": [
+            {
+              "name": "list_demo.fp",
+              "path": "selfinter/examples/list_demo.fp",
+              "type": "file",
+              "ext": ".fp",
+              "size": 1693,
+              "isBinary": false
+            },
+            {
+              "name": "minimal_primes.fp",
+              "path": "selfinter/examples/minimal_primes.fp",
+              "type": "file",
+              "ext": ".fp",
+              "size": 3063,
+              "isBinary": false
+            },
+            {
+              "name": "README.md",
+              "path": "selfinter/examples/README.md",
+              "type": "file",
+              "ext": ".md",
+              "size": 3375,
+              "isBinary": false
+            },
+            {
+              "name": "self_interpreter.fp",
+              "path": "selfinter/examples/self_interpreter.fp",
+              "type": "file",
+              "ext": ".fp",
+              "size": 7070,
+              "isBinary": false
+            },
+            {
+              "name": "sieve.fp",
+              "path": "selfinter/examples/sieve.fp",
+              "type": "file",
+              "ext": ".fp",
+              "size": 877,
+              "isBinary": false
+            }
+          ],
+          "_expanded": false
+        },
+        {
+          "name": "driver.js",
+          "path": "selfinter/driver.js",
+          "type": "file",
+          "ext": ".js",
+          "size": 7278,
+          "isBinary": false
+        },
+        {
+          "name": "index.html",
+          "path": "selfinter/index.html",
+          "type": "file",
+          "ext": ".html",
+          "size": 13023,
+          "isBinary": false
+        },
+        {
+          "name": "README.md",
+          "path": "selfinter/README.md",
+          "type": "file",
+          "ext": ".md",
+          "size": 1433,
+          "isBinary": false
+        },
+        {
+          "name": "sapl.js",
+          "path": "selfinter/sapl.js",
+          "type": "file",
+          "ext": ".js",
+          "size": 94953,
+          "isBinary": false
+        }
+      ],
+      "_expanded": false
+    },
+    {
       "name": "typing",
       "path": "typing",
       "type": "directory",

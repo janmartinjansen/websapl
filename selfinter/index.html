@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saplsimple Werkbank — Self-Interpreter &amp; Reflectie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,340..900;1,9..144,400..600&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<script src="../js/marked.min.js"></script>
+<style>
+  :root {
+    --paper: #F1F4EA;
+    --paper-band: #E1E9D5;
+    --paper-deep: #CBD8BB;
+    --ink: #1C2617;
+    --ink-soft: #52604A;
+    --ink-faint: #7C8B71;
+    --accent: #A9531A;
+    --accent-ink: #FFF9F2;
+    --accent-soft: #E9D2B3;
+    --code-bg: #12170E;
+    --code-line: #1B2314;
+    --code-text: #D3E6C4;
+    --code-soft: #839772;
+    --code-accent: #F0A868;
+    --rule: #C7D3B7;
+    --shadow: 0 1px 0 rgba(28,38,23,0.06);
+    --font-display: 'Fraunces', Georgia, 'Iowan Old Style', serif;
+    --font-mono: 'IBM Plex Mono', 'SF Mono', Consolas, 'Liberation Mono', monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #0F1409;
+      --paper-band: #191F12;
+      --paper-deep: #29331E;
+      --ink: #E7EEDB;
+      --ink-soft: #A9BC9A;
+      --ink-faint: #74856A;
+      --accent: #E3924A;
+      --accent-ink: #1A1006;
+      --accent-soft: #4A3320;
+      --code-bg: #0A0D07;
+      --code-line: #131A0D;
+      --code-text: #D3E6C4;
+      --code-soft: #7C9270;
+      --code-accent: #F5B372;
+      --rule: #2C3823;
+      --shadow: 0 1px 0 rgba(0,0,0,0.3);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--accent-soft); }
+  a { color: var(--accent); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .page { max-width: 1180px; margin: 0 auto; padding: 1.75rem 1.5rem 3rem; }
+
+  .masthead {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .wordmark { font-family: var(--font-mono); font-size: 0.9rem; }
+  .wordmark b { color: var(--accent); font-weight: 600; }
+  .masthead-right { display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
+  .masthead-note {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--ink-faint);
+  }
+  .masthead-back {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    text-decoration: none;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    padding: 0.3rem 0.75rem;
+  }
+  .masthead-back:hover { border-color: var(--accent); }
+
+  /* ---------- app shell ---------- */
+  .shell {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    min-height: min(76vh, 720px);
+  }
+  @media (max-width: 780px) {
+    .shell { grid-template-columns: 1fr; min-height: 0; }
+  }
+
+  .sidebar {
+    background: var(--paper-band);
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .sidebar-head {
+    padding: 0.9rem 1rem 0.7rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-faint);
+  }
+  .filelist { display: flex; flex-direction: column; padding: 0 0.5rem; gap: 1px; overflow-y: auto; }
+  .filelist-label {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-faint);
+    padding: 0.9rem 0.6rem 0.3rem;
+  }
+  .file-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    padding: 0.55rem 0.6rem;
+    cursor: pointer;
+    font-family: var(--font-mono);
+  }
+  .file-item .file-name { display: block; font-size: 0.82rem; color: var(--ink); }
+  .file-item .file-desc { display: block; font-size: 0.72rem; color: var(--ink-faint); margin-top: 0.15rem; font-family: var(--font-display); font-style: italic; }
+  .file-item:hover { background: var(--paper-deep); }
+  .file-item.active { background: var(--code-bg); border-color: var(--code-line); }
+  .file-item.active .file-name { color: var(--code-accent); }
+  .file-item.active .file-desc { color: var(--code-soft); }
+
+  .sidebar-foot {
+    margin-top: auto;
+    padding: 0.9rem 1rem 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--ink-faint);
+    line-height: 1.6;
+    border-top: 1px solid var(--paper-deep);
+  }
+
+  .main { background: var(--paper); display: flex; flex-direction: column; min-width: 0; }
+  .topbar {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.8rem 1.1rem;
+    background: var(--paper-band);
+    border-bottom: 1px solid var(--rule);
+  }
+  .topbar .file-title { font-family: var(--font-mono); font-weight: 600; font-size: 0.85rem; }
+  .topbar .file-blurb { font-size: 0.82rem; color: var(--ink-soft); font-style: italic; text-align: right; }
+
+  /* ---------- readme view ---------- */
+  .readme-view { padding: 1.75rem 2rem; overflow-y: auto; max-width: 46rem; }
+  .readme-view h1 { font-family: var(--font-display); font-weight: 600; font-size: 1.7rem; margin: 0 0 1rem; }
+  .readme-view h2 { font-family: var(--font-display); font-weight: 600; font-size: 1.25rem; margin: 1.8rem 0 0.6rem; }
+  .readme-view h2:first-child { margin-top: 0; }
+  .readme-view p { color: var(--ink-soft); margin: 0 0 1rem; }
+  .readme-view code {
+    font-family: var(--font-mono); font-size: 0.85em;
+    background: var(--paper-band); padding: 0.08em 0.3em; border-radius: 2px;
+  }
+  .readme-view pre {
+    background: var(--code-bg); color: var(--code-text);
+    font-family: var(--font-mono); font-size: 0.8rem; line-height: 1.6;
+    border: 1px solid var(--code-line); border-radius: 2px;
+    padding: 0.9rem 1rem; overflow-x: auto; margin: 0 0 1.1rem;
+  }
+  .readme-view pre code { background: none; padding: 0; }
+  .readme-view ul { color: var(--ink-soft); padding-left: 1.3rem; margin: 0 0 1.1rem; }
+  .readme-view li { margin-bottom: 0.3rem; }
+  .readme-view strong { color: var(--ink); }
+  .readme-view hr { border: none; border-top: 1px solid var(--rule); margin: 1.6rem 0; }
+
+  /* ---------- example view ---------- */
+  .example-view { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+  .example-body {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 1px;
+    background: var(--rule);
+    flex: 1;
+    min-height: 0;
+  }
+  .pane { background: var(--paper); display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+  .pane-body { padding: 0.9rem; display: flex; flex-direction: column; gap: 0.65rem; flex: 1; min-height: 0; }
+
+  textarea#program {
+    width: 100%; flex: 1; min-height: 10rem; resize: vertical;
+    background: var(--code-bg); color: var(--code-text);
+    font-family: var(--font-mono); font-size: 0.78rem; line-height: 1.5;
+    border: 1px solid var(--code-line); border-radius: 2px; padding: 0.8rem;
+    tab-size: 2;
+  }
+
+  .btn {
+    font-family: var(--font-mono); font-size: 0.76rem; letter-spacing: 0.02em;
+    border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink);
+    padding: 0.5rem 0.85rem; border-radius: 2px; cursor: pointer;
+    align-self: flex-start; transition: opacity 0.12s ease;
+  }
+  .btn:hover { opacity: 0.85; }
+  .btn:active { opacity: 0.7; }
+
+  .console-log {
+    background: var(--code-bg); color: var(--code-text);
+    font-family: var(--font-mono); font-size: 0.78rem; line-height: 1.6;
+    border: 1px solid var(--code-line); border-radius: 2px; padding: 0.8rem;
+    flex: 1; min-height: 8rem; overflow-y: auto; white-space: pre-wrap; word-break: break-word;
+  }
+  .console-log .line.prompt { color: var(--code-accent); }
+  .console-log .line.sys { color: var(--code-soft); font-style: italic; }
+  .console-log .line.err { color: #E2745C; }
+
+  .expr-row { display: flex; gap: 0.5rem; }
+  input#expr {
+    flex: 1; min-width: 0;
+    background: var(--code-bg); color: var(--code-text);
+    font-family: var(--font-mono); font-size: 0.82rem;
+    border: 1px solid var(--code-line); border-radius: 2px; padding: 0.55rem 0.7rem;
+  }
+  input#expr::placeholder { color: var(--code-soft); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .chip {
+    font-family: var(--font-mono); font-size: 0.72rem;
+    background: var(--paper-band); color: var(--ink-soft);
+    border: 1px solid var(--rule); border-radius: 999px;
+    padding: 0.3rem 0.65rem; cursor: pointer;
+  }
+  .chip:hover { border-color: var(--accent); color: var(--ink); }
+
+  .stats { font-family: var(--font-mono); font-size: 0.7rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+
+  footer {
+    margin-top: 2rem; padding-top: 1.2rem; border-top: 1px solid var(--rule);
+    font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-faint); line-height: 1.7;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="masthead">
+    <div class="wordmark"><b>sapl</b>simple_direct — werkbank</div>
+    <div class="masthead-right">
+      <div class="masthead-note">broncode + README, live in WebAssembly</div>
+      <a class="masthead-back" href="../index.html">&larr; Sapl Workbench</a>
+    </div>
+  </div>
+
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="sidebar-head">bestanden</div>
+      <nav class="filelist" id="filelist">
+        <button class="file-item active" type="button" data-id="readme">
+          <span class="file-name">README.md</span>
+          <span class="file-desc">start hier</span>
+        </button>
+        <div class="filelist-label">examples/</div>
+        <button class="file-item" type="button" data-id="list_demo">
+          <span class="file-name">list_demo.fp</span>
+          <span class="file-desc">lijsten, rechtstreeks geprint</span>
+        </button>
+        <button class="file-item" type="button" data-id="sieve">
+          <span class="file-name">sieve.fp</span>
+          <span class="file-desc">de klassieke zeef van Eratosthenes</span>
+        </button>
+        <button class="file-item" type="button" data-id="self_interpreter">
+          <span class="file-name">self_interpreter.fp</span>
+          <span class="file-desc">interpreteert een lambda-term als functie</span>
+        </button>
+        <button class="file-item" type="button" data-id="minimal_primes">
+          <span class="file-name">minimal_primes.fp</span>
+          <span class="file-desc">priemzeef, pure zelftoepassing</span>
+        </button>
+      </nav>
+      <div class="sidebar-foot">1936 Church &middot; 1970 Scott<br>2009 C++ &middot; 2026 WASM</div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <span class="file-title" id="topbar-title">README.md</span>
+        <span class="file-blurb" id="topbar-blurb">start hier</span>
+      </div>
+
+      <div class="readme-view" id="readme-view">laden&hellip;</div>
+
+      <div class="example-view" id="example-view" style="display:none;">
+        <div class="example-body">
+          <div class="pane">
+            <div class="pane-body">
+              <textarea id="program" spellcheck="false" aria-label="Sapl-broncode"></textarea>
+              <button class="btn" id="load-btn" type="button">laad programma</button>
+            </div>
+          </div>
+          <div class="pane">
+            <div class="pane-body">
+              <div class="console-log" id="console" aria-live="polite">
+                <div class="line sys">initialiseren&hellip;</div>
+              </div>
+              <div class="expr-row">
+                <input id="expr" type="text" autocomplete="off" spellcheck="false" aria-label="Sapl-expressie" placeholder="expressie&hellip;">
+                <button class="btn" id="run-btn" type="button">run</button>
+              </div>
+              <div class="chips" id="chips"></div>
+              <div class="stats" id="stats">&mdash;</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <footer>
+    Zelf-interpreter voor de minimalistische reductor <code>saplsimple_direct</code>
+    (een paar honderd regels C++ uit 2009, JM Jansen) &mdash; ongewijzigd in zijn
+    reductielogica, hier gecompileerd naar WebAssembly met Emscripten. Bron:
+    <a href="https://github.com/janmartinjansen/Sapl/tree/main/saplsimple_direct" target="_blank" rel="noopener">saplsimple_direct/</a>
+    in de repo.
+  </footer>
+</div>
+
+<script src="sapl.js"></script>
+<script src="driver.js"></script>
+</body>
+</html>
