@@ -23,6 +23,7 @@
     --code-text: #D3E6C4;
     --code-soft: #839772;
     --code-accent: #F0A868;
+    --code-err: #F08A6E;
     --err: #C0432A;
     --rule: #C7D3B7;
     --shadow: 0 1px 0 rgba(28,38,23,0.06);
@@ -104,6 +105,18 @@
   }
   .shell-title { font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink-soft); }
   .status { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-faint); }
+  .status-ok { color: var(--ink-soft); }
+  .status-busy { color: var(--accent); }
+  .status-error { color: var(--err); }
+  .bindings {
+    font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-faint);
+    padding: 0.5rem 0.9rem; border-bottom: 1px solid var(--rule);
+  }
+  #terminal .t-banner { color: var(--code-soft); }
+  #terminal .t-prompt { color: var(--code-soft); }
+  #terminal .t-in { color: var(--code-accent); font-weight: 500; }
+  #terminal .t-err { color: var(--code-err); }
+  #terminal .t-skip { color: var(--code-soft); font-style: italic; }
   .reset-btn {
     font-family: var(--font-mono); font-size: 0.72rem;
     background: transparent; color: var(--ink-soft);
@@ -180,8 +193,11 @@
     druk op Enter &mdash; <code>:nf</code> reduceert tot bèta-normaalvorm,
     <code>:seval</code> laat de self-interpreter zelf een term uitvoeren,
     <code>:blc</code>/<code>:fromblc</code> converteren naar/van Tromp's
-    binaire notatie. Elke regel wordt bewaard in de sessie: een eerdere
-    <code>naam = ...</code>-binding mag later hergebruikt worden.
+    binaire notatie, en <code>:db</code>/<code>:scott</code> tonen hoe een
+    term intern gerepresenteerd is (de Bruijn-indices resp. de
+    Scott-encoded datastructuur). Een <code>naam = ...</code>-binding blijft
+    in de sessie en mag later hergebruikt worden; een regel die faalt laat
+    de sessie ongemoeid.
   </p>
 
   <div class="shell">
@@ -189,9 +205,11 @@
       <span class="shell-title">terminal</span>
       <div style="display:flex; align-items:center; gap:0.6rem;">
         <span class="status" id="status">wordt geladen&hellip;</span>
-        <button class="reset-btn" id="reset-btn" type="button">reset sessie</button>
+        <button class="reset-btn" id="list-btn" type="button" disabled>:list</button>
+        <button class="reset-btn" id="reset-btn" type="button" disabled>reset sessie</button>
       </div>
     </div>
+    <div class="bindings" id="bindings"></div>
     <div id="terminal" aria-live="polite">initialiseren&hellip;</div>
     <div class="input-row">
       <span class="prompt-glyph">&raquo;</span>
@@ -207,6 +225,10 @@
 fact = Y (\self n. eq n 0 1 (mult n (self (sub n 1))))
 :seval fact 6">:seval fact 6</button>
       <button class="chip" type="button" data-cmd=":blc \x y.x">:blc K</button>
+      <button class="chip" type="button" data-cmd=":db \f x. f (f x)">:db Church-2</button>
+      <button class="chip" type="button" data-cmd="Y = \f.(\x. f (x x)) (\x. f (x x))
+:db Y">:db Y</button>
+      <button class="chip" type="button" data-cmd=":scott \x y.x">:scott K</button>
       <button class="chip" type="button" data-cmd="primes = (\p.p p) (\p d c. c (\f t.t) ((\n. p p n ((\r.r r)(\r. n (r r)))) (\a. (\g k s c. c k (s g)) (d a)))) (\g k s c. c (\f t.f) (s g))">priemzeef (1-regel)</button>
       <button class="chip" type="button" data-cmd="add = \a b. sub a (sub 0 b)">add</button>
       <button class="chip" type="button" data-cmd="decodeAcc = Y (\self n ls acc. eq n 0 acc (ls (\h t. self (sub n 1) t (add (mult acc 10) (h 0 1)))))">decodeAcc</button>
@@ -215,7 +237,8 @@ add = \a b. sub a (sub 0 b)
 Y = \f.(\x. f (x x)) (\x. f (x x))
 decodeAcc = Y (\self n ls acc. eq n 0 acc (ls (\h t. self (sub n 1) t (add (mult acc 10) (h 0 1)))))
 :seval decodeAcc 18 primes 0">:seval priemzeef</button>
-      <button class="chip" type="button" data-cmd=":list">:list</button>
+      <button class="chip" type="button" data-cmd="primes = (\p.p p) (\p d c. c (\f t.t) ((\n. p p n ((\r.r r)(\r. n (r r)))) (\a. (\g k s c. c k (s g)) (d a)))) (\g k s c. c (\f t.f) (s g))
+:bits 100 primes">:bits 100 primes</button>
     </div>
     <p style="font-family: var(--font-mono); font-size: 0.68rem; color: var(--ink-faint); padding: 0 0.9rem 0.9rem; margin: -0.4rem 0 0;">
       de ":seval"-chips nemen hun eigen voorwaarden (Y/fact resp. primes/add/Y/decodeAcc) mee -- werken dus ook als eerste klik, zonder eerst de losse definitie-chips nodig te hebben
@@ -230,6 +253,9 @@ decodeAcc = Y (\self n ls acc. eq n 0 acc (ls (\h t. self (sub n 1) t (add (mult
       <tr><td>naam = &lt;expr&gt;</td><td>bind een gesloten term aan een naam; later los of middenin een nieuwe expressie te gebruiken</td></tr>
       <tr><td>:nf &lt;expr&gt;</td><td>reduceer tot bèta-normaalvorm (substitutie op de termdata, los van <code>seval</code>)</td></tr>
       <tr><td>:seval &lt;expr&gt;</td><td>bouw de term en geef 'm aan de echte self-interpreter (<code>seval</code>)</td></tr>
+      <tr><td>:bits N &lt;expr&gt;</td><td>als <code>:seval</code>, maar leest het resultaat als stream van booleans en print de eerste N als <code>1</code>/<code>0</code> (bv. <code>:bits 100 primes</code>)</td></tr>
+      <tr><td>:db &lt;expr&gt;</td><td>toon de term met de Bruijn-indices (1-based, zoals BLC); <code>\</code> per abstractie, letterlijke getallen als <code>#n</code></td></tr>
+      <tr><td>:scott &lt;expr&gt;</td><td>toon de Scott-encoded datastructuur die <code>seval</code> krijgt: eerst met de constructors <code>var</code>/<code>app</code>/<code>abs</code>/<code>lit</code>, dan uitgeschreven als lambda-term (<code>\f g h k.</code> &hellip;; de echte <code>var n</code> geeft een selector <code>makeSel n</code> door, hier als <code>n</code> getoond)</td></tr>
       <tr><td>:blc &lt;expr&gt;</td><td>codeer naar Tromp's binaire notatie (alleen pure termen, geen <code>eq</code>/<code>sub</code>/<code>mult</code>/getallen)</td></tr>
       <tr><td>:fromblc &lt;bits&gt;</td><td>decodeer een binaire tekenreeks terug naar een term</td></tr>
       <tr><td>:list</td><td>toon de namen van de huidige sessie-bindingen</td></tr>
@@ -238,16 +264,19 @@ decodeAcc = Y (\self n ls acc. eq n 0 acc (ls (\h t. self (sub n 1) t (add (mult
 
   <footer>
     Draait op de echte JMVM (WebAssembly, hetzelfde <code>vm.cpp</code> als de
-    native VM) — elke ingetypte regel voegt zich toe aan de sessie, die bij
-    elke nieuwe regel in zijn geheel opnieuw wordt uitgevoerd (er bestaat geen
-    interactieve stdin-stream in deze WASM-opzet); bij de gemeten
-    instructieaantallen blijft dat onmerkbaar snel. Bron:
+    native VM). Er is geen interactieve stdin-stream in deze WASM-opzet, dus
+    elke invoer is een verse run die eerst de sessie-bindingen opnieuw
+    afspeelt; eerdere uitvoer wordt niet opnieuw berekend. Een run die na
+    60&nbsp;s nog loopt (bv. <code>:nf</code> op een term zonder
+    normaalvorm) wordt gestopt.
+    Bron:
     <a href="https://github.com/janmartinjansen/Sapl/tree/main/lc_repl" target="_blank" rel="noopener">lc_repl/</a>
     in de repo, ontwerp/verslag in
     <a href="https://github.com/janmartinjansen/Sapl/blob/main/docs/2026-09-23_lc_repl_via_self_interpreter_plan.md" target="_blank" rel="noopener">docs/2026-09-23_lc_repl_via_self_interpreter_plan.md</a>.
   </footer>
 </div>
 
+<script src="transcript.js"></script>
 <script src="driver.js"></script>
 </body>
 </html>

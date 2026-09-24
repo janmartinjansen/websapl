@@ -30,6 +30,11 @@ const server = http.createServer((req, res) => {
   let reqPath = decodeURIComponent(req.url.split("?")[0]);
   if (reqPath === "/" || reqPath === "") {
     reqPath = "/index.html";
+  } else if (reqPath.endsWith("/")) {
+    // Subpagina-links op de startpagina (href="lc_repl/", "selfinter/")
+    // wijzen naar een map; serveer daar de index.html van, zoals een
+    // gewone statische host (GitHub Pages) dat ook doet.
+    reqPath += "index.html";
   }
 
   const filePath = path.join(BASE_DIR, reqPath);
