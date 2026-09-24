@@ -71,7 +71,7 @@ member names n =
 // found in a different file. Measured impact: retagcomp on saplcomp.cfp's
 // own 1053-line retag dump dropped from 1.86 miljard instructies (2.80s)
 // to well under what a straight linear-scan-per-reference would predict --
-// see docs/2026-09-12_modulariteit_en_linken_plan.md #5.4 for the full
+// see archive/docs/2026-09-12_modulariteit_en_linken_plan.md #5.4 for the full
 // measurement.
 ::nameset = NSLeaf | NSNode !name !left !right
 

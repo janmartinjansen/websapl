@@ -27,7 +27,7 @@
 // itself already tried this once -- pcomb.cfp (list-of-all-successes
 // combinators, ambiguous choice via `append`) blew up exponentially on
 // nested parens and was abandoned in favor of lexer2.cfp/parser.cfp's
-// hand-written, single-token-dispatch design (docs/bootstrapping_plan.md,
+// hand-written, single-token-dispatch design (archive/docs/bootstrapping_plan.md,
 // 9 aug 2026; lexer2.cfp's own header repeats the same story). This file
 // is safe from that failure mode for a structural reason, not a
 // performance trick: parsecomb.spp's `PRes` is `POk val rest | PErr msg

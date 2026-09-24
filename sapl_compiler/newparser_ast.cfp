@@ -2,7 +2,7 @@
 
 // newparser_ast.cfp - Sapl-tegenhanger van newparser/ast.ama's expr/func/adt-ADT's:
 // exact dezelfde constructornamen en -ariteit, alleen voor gebruik als brug naar
-// newparser's Amanda-backend (docs/bootstrapping_plan.md sectie 0). Veldnamen zijn
+// newparser's Amanda-backend (archive/docs/bootstrapping_plan.md sectie 0). Veldnamen zijn
 // puur cosmetisch (sapl_programmeer_regels.md sectie 1) en hoeven niet 1-op-1 met
 // ast.ama's veldnamen te matchen - alleen constructornaam + aantal velden telt,
 // dat is wat constrName/getConstrArity/getField gebruiken bij het serialiseren.

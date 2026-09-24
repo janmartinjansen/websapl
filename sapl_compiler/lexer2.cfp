@@ -1,7 +1,7 @@
 #import "lib/stdlib.cfp"
 
 // Direct Sapl port of newparser/lexer.ama (itself explicitly "geen parser
-// combinators", the design docs/bootstrapping_plan.md settled on after the
+// combinators", the design archive/docs/bootstrapping_plan.md settled on after the
 // combinator-based version -- sapl_compiler/lexer.cfp + pcomb.cfp -- turned
 // out to blow up exponentially on nested parens, see that document, 9 aug
 // 2026). Same token shape, same character-classification/lookahead logic;

@@ -3,7 +3,7 @@
 // dict.cfp -- een associatieve datastructuur (string-sleutel -> waarde),
 // het tweede stuk van dezelfde "lichte, Python-achtige scripttaal"-vraag
 // als eqrewrite.cfp (zie docs/2026-09-20_sapl_plus_dict.md voor het
-// volledige verslag; `docs/2026-09-14_visie_sapl_als_functionele_python.md`
+// volledige verslag; `archive/docs/2026-09-14_visie_sapl_als_functionele_python.md`
 // §4.3 noemt dit expliciet als een nog-niet-aangepakt punt). Bewust in
 // `lib/`, niet in `preprocess/`: een dict is een DATASTRUCTUUR + functies,
 // geen syntax-uitbreiding -- bruikbaar vanuit gewone Sapl (.cfp) net zo

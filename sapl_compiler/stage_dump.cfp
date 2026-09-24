@@ -296,7 +296,7 @@ dumpProgramToFile outfile fs adts =
 
 // == Definitiebestand: naam/ariteit/striktheid per functie, geen lichaam ==
 //
-// docs/2026-09-12_modulariteit_en_linken_plan.md #5.1: wat een module
+// archive/docs/2026-09-12_modulariteit_en_linken_plan.md #5.1: wat een module
 // nodig heeft om EEN ANDERE, apart gecompileerde module te kunnen
 // aanroepen tijdens zijn eigen strictness-inferentie/naamresolutie (§C.1/
 // §5) -- dezelfde drie velden die uiteindelijk toch in `.metadata`'s
@@ -322,7 +322,7 @@ dumpProgramToFile outfile fs adts =
 //
 // Bevat, net als de retag-dump zelf (dumpProgramToFile hierboven), ALLE
 // functies in `fs` -- inclusief tijdens lift ontstane hulpfuncties zoals
-// `el_1` (docs/2026-09-12_modulariteit_en_linken_plan.md #C.3's uitleg
+// `el_1` (archive/docs/2026-09-12_modulariteit_en_linken_plan.md #C.3's uitleg
 // waarom parser.ama deze wél mist maar sapl_compiler niet). Nog geen
 // export/zichtbaarheidsonderscheid (§6.3's ML/Go-stijl-alternatieven) --
 // "in eerste instantie" betekent hier: alles zichtbaar, net als Sapl
@@ -356,7 +356,7 @@ writeDefFile outfile fs =
   let fd = openFile outfile "w" in
   writeDefsStream fd fs <#> closeFile fd
 
-// Type-definitiebestand (docs/2026-09-12_modulariteit_en_linken_plan.md
+// Type-definitiebestand (archive/docs/2026-09-12_modulariteit_en_linken_plan.md
 // #5.6, gat 2): in tegenstelling tot een functie heeft een ADT-declaratie
 // geen lichaam om weg te laten -- `AdtCon !name !fields` (newparser_ast.cfp)
 // bevat sowieso alleen een naam en een `[Bool]` (strict-vlag per veld,

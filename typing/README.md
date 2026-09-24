@@ -104,7 +104,7 @@ verwerkt de componenten in een volgorde waarin een component pas aan de
 beurt komt zodra alle andere componenten die ze aanroept al klaar EN
 gegeneraliseerd zijn ("callees vóór callers"). Dat is precies hoe een
 productie-ML/Haskell-typechecker `let`-polymorfie over topniveaubindingen
-implementeert. Zie `docs/2026-09-20_scc_generalisatie.md` voor het
+implementeert. Zie `archive/docs/2026-09-20_scc_generalisatie.md` voor het
 volledige ontwerp/verslag.
 
 `10_beperkingen.cfp` demonstreert de twee gevallen die hierdoor zijn

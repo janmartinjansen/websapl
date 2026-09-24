@@ -1,7 +1,7 @@
 // 10_beperkingen.cfp -- oorspronkelijk (stap 1) een demonstratie van twee
 // bewuste beperkingen van de "alle topniveaufuncties in één grote
 // monomorfe groep"-aanpak. Sinds de SCC-gebaseerde generalisatie (stap 2,
-// zie docs/2026-09-20_scc_generalisatie.md) zijn BEIDE gefixt -- dit
+// zie archive/docs/2026-09-20_scc_generalisatie.md) zijn BEIDE gefixt -- dit
 // bestand demonstreert nu dat de fix werkt, als regressie-anker.
 
 // == Voorheen beperking 1: geen let-polymorfie over topniveaufuncties ======

@@ -1,6 +1,6 @@
 // 11_vm_primitieven.cfp -- dekt de handgeschreven schema's voor VM-
 // primitieven (preprocess/typecheck.cfp's primSchemes, punt 2 uit
-// docs/2026-09-18_sapl_plus_typechecker_status.md). Vóór die schema's gaf
+// archive/docs/2026-09-18_sapl_plus_typechecker_status.md). Vóór die schema's gaf
 // ELKE aanroep hieronder "onbekende functie: X"; nu typen ze allemaal
 // echt. `badFloatArg` demonstreert dat een primitief-schema nu ook een
 // ECHTE fout kan vangen (een Str doorgegeven waar `fadd` een Float

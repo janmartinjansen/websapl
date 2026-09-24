@@ -2,7 +2,7 @@
 #import "repl/stddyn.cfp"
 
 // contracts.cfp -- "contracts als runtime-assertie", optie 1 uit
-// docs/2026-09-18_sapl_plus_typechecker_status.md se onderzoek naar
+// archive/docs/2026-09-18_sapl_plus_typechecker_status.md se onderzoek naar
 // dependent-type-achtige functionaliteit: GEEN statisch bewijs (dat vraagt
 // een principieel andere checker dan de zojuist gebouwde unificatie-
 // gebaseerde typechecker, zie typing/README.md), wel een harde garantie

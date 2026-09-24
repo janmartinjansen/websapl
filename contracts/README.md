@@ -1,7 +1,7 @@
 # Contracts en fantoomtypen voor Sapl+
 
 Twee van de vijf opties uit het onderzoek naar dependent-type-achtige
-functionaliteit voor Sapl+ (zie `docs/2026-09-18_sapl_plus_typechecker_status.md`
+functionaliteit voor Sapl+ (zie `archive/docs/2026-09-18_sapl_plus_typechecker_status.md`
 in de hoofdrepo en het gesprek dat daaraan voorafging): beide vandaag al
 bruikbaar, zonder de typechecker of de compiler zelf aan te passen.
 

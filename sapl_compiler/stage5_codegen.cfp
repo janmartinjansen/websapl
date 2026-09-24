@@ -3,7 +3,7 @@
 #import "sapl_compiler/ast_helpers.cfp"
 
 // Direct Sapl port of newparser/stage5_codegen.ama -- see
-// docs/bootstrapping_plan.md section 0 step 3, same technique as the earlier
+// archive/docs/bootstrapping_plan.md section 0 step 3, same technique as the earlier
 // four stages. ast.ama's helpers this stage needs (including
 // predefArity/predefIndex/conTag/adtArity/exprConstrNameOf, first needed
 // here) now come from sapl_compiler/ast_helpers.cfp -- originally local
@@ -448,7 +448,7 @@ genTailVar prog adts fname args v =
 // getal, spring" tot één `ifltlv`-instructie (parser.ama:655, genif) i.p.v.
 // de vijf instructies (push/load/eval/sub/ifle) die genTailIf hieronder
 // anders zou genereren -- gevonden via de aggregated-stats-vergelijking in
-// docs/bootstrapping_plan.md (sessielog 12 augustus). `ifltlv` heeft
+// archive/docs/bootstrapping_plan.md (sessielog 12 augustus). `ifltlv` heeft
 // spring-als-WAAR-semantiek (vm.cpp:506-509), het omgekeerde van genCond's
 // overal-spring-als-ONWAAR-conventie -- past dus niet als drop-in in
 // genTailIf, vandaar een aparte tak hier, net als parser.ama's eigen
@@ -1127,7 +1127,7 @@ optimizeInstrsFrom i1 rest1 =
 // van 1, geen zorg hier: pure instructie-tekst-substitutie, net als
 // optimizeLoadPushAdd/optimizePushReturn hieronder al doen). Zie
 // newparser/stage5_codegen.ama's identieke toevoeging voor de volle
-// onderbouwing (fib/Ifltlv-sessielog, docs/bootstrapping_plan.md).
+// onderbouwing (fib/Ifltlv-sessielog, archive/docs/bootstrapping_plan.md).
 isOnePushI i = isNumPushI i /\ (pushNumOf i == 1)
 
 optimizeInstrsPair i1 i2 is =
