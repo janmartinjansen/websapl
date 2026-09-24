@@ -13,9 +13,10 @@ Volledige taalgids, met alle randgevallen:
 
 Zelf proberen: `printf 'sapl_plus_demo/sapl_plus_showcase.spp\nuit.cfp\n' |
 ./run preprocess/driver.jmvm` (vanuit de repo-root), of open het bestand in
-WebSapl/Workbench en klik op "Preprocess (.spp → .cfp)" — daarna opent het
-resultaat als gewoon `.cfp`-tabblad en werkt "Compileer"/"Compileer & Run"
-zoals altijd.
+WebSapl en klik op "Compileer & Run" — de vertaling naar `.cfp` gebeurt
+onderweg (zet onder Instellingen het tussenformaat "cfp" aan om die `.cfp`
+ook te zien). In de lokale Workbench: klik op "Preprocess (.spp → .cfp)",
+daarna opent het resultaat als gewoon `.cfp`-tabblad.
 
 ## 1. Lambda-expressies
 

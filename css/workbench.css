@@ -954,3 +954,29 @@ body {
 
 .file-icon-tool { font-size: 13px; }
 
+
+/* Header: knoppen nooit over twee regels; op smallere schermen eerst het
+   badge en de merknaam weg, daarna de tekst op de paneelknoppen (icoon +
+   tooltip blijven). */
+.app-header .btn,
+.app-header .btn-toggle-panel,
+.app-header .status-pill {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.app-header .brand { flex-shrink: 0; white-space: nowrap; }
+
+@media (max-width: 1500px) {
+  .app-header .brand-badge { display: none; }
+}
+@media (max-width: 1340px) {
+  .app-header .brand-name { display: none; }
+}
+@media (max-width: 1240px) {
+  .app-header .btn-toggle-panel .btn-label { display: none; }
+}
+@media (max-width: 1180px) {
+  .app-header .status-pill #status-text { display: none; }
+  .app-header { gap: 8px; padding: 0 10px; }
+  .app-header .header-actions { gap: 6px; }
+}

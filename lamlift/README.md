@@ -15,9 +15,11 @@ toepassing zijn op het moment dat een latere pass dat zou moeten afhandelen
 zelftoepassing (`(\c -> c c) (...)`), werkt hier gewoon, iets wat de
 Sapl+-preprocessor bewust weigert.
 
-Zelf proberen: open een van de bestanden hieronder in WebSapl/Workbench en
-klik op "Preprocess (.lfp → .cfp)" — daarna opent het resultaat als gewoon
-`.cfp`-tabblad en werkt "Compileer"/"Compileer & Run" zoals altijd. Vanaf
+Zelf proberen: open een van de bestanden hieronder in WebSapl en klik op
+"Compileer & Run" — de vertaling naar `.cfp` gebeurt onderweg (zet onder
+Instellingen het tussenformaat "cfp" aan om die `.cfp` ook te zien). In de
+lokale Workbench: klik op "Preprocess (.lfp → .cfp)", daarna opent het
+resultaat als gewoon `.cfp`-tabblad. Vanaf
 de repo-root kan het ook met
 `printf 'lamlift/tromp.lfp\nuit.cfp\n' | ./run lamlift/lamlift.jmvm`.
 

@@ -98,7 +98,7 @@
     sectionCompilerBackend: document.getElementById("section-compiler-backend"),
     sectionStrictness: document.getElementById("section-strictness"),
     sectionStages: document.getElementById("section-stages"),
-    sectionEngine: document.getElementById("section-engine"),
+    sectionSettingsEmpty: document.getElementById("section-settings-empty"),
 
     compilerSapl: document.getElementById("compiler-sapl"),
     compilerRetag: document.getElementById("compiler-retag"),
@@ -123,6 +123,10 @@
       retag: document.getElementById("stage-retag"),
       jmvm: document.getElementById("stage-jmvm")
     },
+    // .spp/.lfp: voorverwerkte .cfp als tabblad tonen (geen compiler-stage,
+    // dus bewust niet in chkStages hierboven)
+    chkStageCfp: document.getElementById("stage-cfp"),
+    lblStageCfp: document.getElementById("lbl-stage-cfp"),
     btnSelectAllStages: document.getElementById("btn-select-all-stages"),
     btnSelectJmvmOnly: document.getElementById("btn-select-jmvm-only"),
     
@@ -149,15 +153,23 @@
     initCodeMirror();
     setupEventListeners();
     initWorker();
+    try { if (localStorage.getItem("websapl_settings_open") === "1") toggleSettings(true); } catch (_) {}
     await loadTreeData();
     showWelcomeMessage();
     renderTree();
 
-    // Default: open the usage guide (README.md) so a first-time visitor
-    // sees how to use the editor before anything else, rather than landing
-    // straight in a random code example.
+    // Links from the start page (index.html): ide.html?file=<pad> opens
+    // that file, ide.html#repl opens the REPL panel. Otherwise, open the
+    // usage guide (README.md) so a first-time visitor sees how to use the
+    // editor before anything else, rather than landing straight in a
+    // random code example.
+    const requestedFile = new URLSearchParams(location.search).get("file");
     setTimeout(() => {
-      if (state.fileMap.has("README.md")) {
+      if (location.hash === "#repl") {
+        openReplTab();
+      } else if (requestedFile && state.fileMap.has(requestedFile)) {
+        openFile(requestedFile, { preview: false });
+      } else if (state.fileMap.has("README.md")) {
         openFile("README.md", { preview: false });
       } else if (state.fileMap.has("paper_examples/01_fac.cfp")) {
         openFile("paper_examples/01_fac.cfp", { preview: false });
@@ -653,6 +665,8 @@
   function updateCompilerConfigForFile(tab) {
     if (!tab) return;
 
+    if (el.btnTypecheck) el.btnTypecheck.style.display = (tab.ext === ".cfp" || tab.ext === ".spp") ? "inline-flex" : "none";
+
     if (tab.name.endsWith(".cfp_retag") || tab.name.endsWith(".cfp_decompiled")) {
       // Retag mode
       if (el.lblCompilerSapl) el.lblCompilerSapl.style.display = "none";
@@ -661,7 +675,7 @@
 
       if (el.btnCompile) {
         el.btnCompile.style.display = "inline-flex";
-        el.btnCompile.innerHTML = "<span>⚙️</span> Compileer (Retag → JMVM)";
+        el.btnCompile.innerHTML = "<span>⚙️</span> Compileer (Retag)";
       }
       if (el.btnCompileRun) {
         el.btnCompileRun.style.display = "inline-flex";
@@ -673,7 +687,6 @@
       if (el.sectionCompilerBackend) el.sectionCompilerBackend.style.display = "block";
       if (el.sectionStrictness) el.sectionStrictness.style.display = "none";
       if (el.sectionStages) el.sectionStages.style.display = "none";
-      if (el.sectionEngine) el.sectionEngine.style.display = "block";
     } else if (tab.ext.startsWith(".cfp_")) {
       // Intermediate inspection stage
       if (el.btnCompile) el.btnCompile.style.display = "none";
@@ -683,7 +696,6 @@
       if (el.sectionCompilerBackend) el.sectionCompilerBackend.style.display = "none";
       if (el.sectionStrictness) el.sectionStrictness.style.display = "none";
       if (el.sectionStages) el.sectionStages.style.display = "none";
-      if (el.sectionEngine) el.sectionEngine.style.display = "none";
 
       if (el.sectionStageInfo) {
         el.sectionStageInfo.style.display = "block";
@@ -698,45 +710,35 @@
         if (el.txtStageInfoBadge) el.txtStageInfoBadge.textContent = info.badge;
         if (el.txtStageInfoDesc) el.txtStageInfoDesc.textContent = info.desc;
       }
-    } else if (tab.ext === ".spp") {
-      // Sapl+ source: preprocess to plain .cfp first (preprocess/driver.jmvm,
-      // itself an ordinary compiled Sapl program), not directly compilable
-      // by saplcomp/retagcomp -- see worker.js's preprocessSpp.
+    } else if (tab.ext === ".spp" || tab.ext === ".lfp") {
+      // Sapl+ (.spp) of .lfp: Compileer/Run preprocessen eerst naar gewone
+      // Sapl (.cfp) en compileren die meteen door -- zie
+      // preprocessAndCompile. De tussenliggende .cfp opent alleen als
+      // tabblad als "cfp" bij de tussenformaten aanstaat, of bij een
+      // compilefout (de regelnummers van saplcomp verwijzen naar de .cfp).
       if (el.btnCompile) {
         el.btnCompile.style.display = "inline-flex";
-        el.btnCompile.innerHTML = "<span>🔤</span> Preprocess (.spp → .cfp)";
+        el.btnCompile.innerHTML = "<span>⚙️</span> Compileer";
       }
-      if (el.btnCompileRun) el.btnCompileRun.style.display = "none";
-      if (el.btnRun) el.btnRun.style.display = "none";
+      if (el.btnCompileRun) {
+        el.btnCompileRun.style.display = "inline-flex";
+        el.btnCompileRun.innerHTML = "<span>⚡</span> Compileer & Run";
+      }
+      if (el.btnRun) el.btnRun.style.display = "inline-flex";
       if (el.sectionStageInfo) el.sectionStageInfo.style.display = "none";
 
+      // Alleen saplcomp is hier van toepassing (retag/modules werken op .cfp)
       if (el.sectionCompilerBackend) el.sectionCompilerBackend.style.display = "none";
-      if (el.sectionStrictness) el.sectionStrictness.style.display = "none";
-      if (el.sectionStages) el.sectionStages.style.display = "none";
-      if (el.sectionEngine) el.sectionEngine.style.display = "none";
-    } else if (tab.ext === ".lfp") {
-      // .lfp source: Sapl + kale, onbeperkte lambda's -- preprocess to plain
-      // .cfp first (lamlift/lamlift.jmvm, zelf een gewoon gecompileerd Sapl-
-      // programma), niet direct compileerbaar door saplcomp/retagcomp -- zie
-      // worker.js's preprocessLfp.
-      if (el.btnCompile) {
-        el.btnCompile.style.display = "inline-flex";
-        el.btnCompile.innerHTML = "<span>λ</span> Preprocess (.lfp → .cfp)";
-      }
-      if (el.btnCompileRun) el.btnCompileRun.style.display = "none";
-      if (el.btnRun) el.btnRun.style.display = "none";
-      if (el.sectionStageInfo) el.sectionStageInfo.style.display = "none";
-
-      if (el.sectionCompilerBackend) el.sectionCompilerBackend.style.display = "none";
-      if (el.sectionStrictness) el.sectionStrictness.style.display = "none";
-      if (el.sectionStages) el.sectionStages.style.display = "none";
-      if (el.sectionEngine) el.sectionEngine.style.display = "none";
+      if (el.sectionStrictness) el.sectionStrictness.style.display = "block";
+      if (el.sectionStages) el.sectionStages.style.display = "block";
+      if (el.lblStageCfp) el.lblStageCfp.style.display = "flex";
     } else if (tab.ext === ".cfp") {
       // Original source file
       if (el.lblCompilerSapl) el.lblCompilerSapl.style.display = "flex";
       if (el.lblCompilerRetag) el.lblCompilerRetag.style.display = "none";
       if (el.lblCompilerModules) el.lblCompilerModules.style.display = "flex";
       if (el.compilerSapl && !el.compilerModules.checked) el.compilerSapl.checked = true;
+      if (el.lblStageCfp) el.lblStageCfp.style.display = "none";
 
       // Modules-hulp: scope-map/manifest-veld defaulten op de map van dit
       // bestand -- een module in dit spoor IS gewoon een .cfp-bestand
@@ -764,7 +766,6 @@
       if (el.sectionCompilerBackend) el.sectionCompilerBackend.style.display = "block";
       if (el.sectionStrictness) el.sectionStrictness.style.display = "block";
       if (el.sectionStages) el.sectionStages.style.display = "block";
-      if (el.sectionEngine) el.sectionEngine.style.display = "block";
     } else if (tab.ext === ".jmvm") {
       if (el.btnCompile) el.btnCompile.style.display = "none";
       if (el.btnCompileRun) el.btnCompileRun.style.display = "none";
@@ -774,7 +775,6 @@
       if (el.sectionCompilerBackend) el.sectionCompilerBackend.style.display = "none";
       if (el.sectionStrictness) el.sectionStrictness.style.display = "none";
       if (el.sectionStages) el.sectionStages.style.display = "none";
-      if (el.sectionEngine) el.sectionEngine.style.display = "block";
     } else {
       if (el.btnCompile) el.btnCompile.style.display = "none";
       if (el.btnCompileRun) el.btnCompileRun.style.display = "none";
@@ -783,10 +783,13 @@
       if (el.sectionCompilerBackend) el.sectionCompilerBackend.style.display = "none";
       if (el.sectionStrictness) el.sectionStrictness.style.display = "none";
       if (el.sectionStages) el.sectionStages.style.display = "none";
-      if (el.sectionEngine) el.sectionEngine.style.display = "none";
     }
 
     updateModulesSectionVisibility();
+
+    const anySection = [el.sectionStageInfo, el.sectionCompilerBackend, el.sectionStrictness, el.sectionStages]
+      .some((sec) => sec && sec.style.display !== "none");
+    if (el.sectionSettingsEmpty) el.sectionSettingsEmpty.style.display = anySection ? "none" : "block";
   }
 
   // Zichtbaarheid van de "Modules: manifest"-sectie hangt af van welke
@@ -826,7 +829,7 @@
     logTerminal(`✓ Opgeslagen: ${activeTab.path}\n`, "success");
   }
 
-  // Shared by compileActiveFile's and preprocessActiveFile's success
+  // Shared by compileSource's and preprocessAndCompile's success
   // callbacks: register each generated file in the file map and open (or
   // refresh) a tab for it.
   function openGeneratedFiles(files) {
@@ -862,11 +865,13 @@
   // Sapl+ (.spp) -> plain Sapl (.cfp): runs preprocess/driver.jmvm; .lfp
   // (Sapl + kale, onbeperkte lambda's) -> plain Sapl (.cfp): runs
   // lamlift/lamlift.jmvm (see worker.js's preprocessSpp/preprocessLfp).
-  // Both are ordinary compiled Sapl programs, run on the same WASM VM, and
-  // both open the resulting .cfp in a new tab -- from there,
-  // compileActiveFile (the regular "Compileer"/"Compileer & Run" buttons)
-  // takes over exactly as for any hand-written .cfp source.
-  async function preprocessActiveFile() {
+  // Both are ordinary compiled Sapl programs, run on the same WASM VM; the
+  // resulting .cfp goes straight on to compileSource (and optionally a
+  // run), exactly as for a hand-written .cfp. The .cfp itself is only
+  // opened as a tab when the "cfp" intermediate-format checkbox is on, or
+  // when compiling it fails -- saplcomp's error messages refer to its
+  // line numbers, not the .spp/.lfp ones.
+  async function preprocessAndCompile(andRun) {
     const activeTab = getActiveTab();
     if (!activeTab || (activeTab.ext !== ".spp" && activeTab.ext !== ".lfp")) return;
     if (state.isCompiling) return;
@@ -887,17 +892,36 @@
       if (data.stdout) logTerminal(data.stdout, "normal");
       if (data.stderr) logTerminal(data.stderr, "warning");
 
-      if (data.success && data.files && data.files.length > 0) {
-        setStatus("ready", `Voorverwerkt (${data.durationMs}ms)`);
-        logTerminal(`✓ ${activeTab.ext} → .cfp voorverwerkt in ${data.durationMs}ms\n`, "success");
-
-        openGeneratedFiles(data.files);
-        setActiveTab(data.files[0].path);
-        renderTabs();
-      } else {
+      if (!(data.success && data.files && data.files.length > 0)) {
         setStatus("error", "Preprocessen mislukt");
-        logTerminal(`✗ Preprocessen mislukt.\n`, "error");
+        logTerminal(`\n✗ Preprocessen mislukt.\n`, "error");
+        return;
       }
+
+      const cfpFile = data.files[0];
+      logTerminal(`✓ ${activeTab.ext} → .cfp voorverwerkt in ${data.durationMs}ms\n`, "success");
+
+      const showCfp = () => {
+        openGeneratedFiles([cfpFile]);
+        renderTabs();
+      };
+      // Ook verversen als de .cfp nog open staat van een eerdere mislukte
+      // compile -- anders blijft daar de oude, kapotte versie staan.
+      if ((el.chkStageCfp && el.chkStageCfp.checked) || state.openTabs.some((t) => t.path === cfpFile.path)) showCfp();
+
+      compileSource({
+        path: cfpFile.path,
+        content: cfpFile.content,
+        isRetag: false,
+        andRun: andRun,
+        onFailure: () => {
+          if (!(el.chkStageCfp && el.chkStageCfp.checked)) {
+            showCfp();
+            setActiveTab(cfpFile.path);
+            logTerminal(`ℹ️ De gegenereerde ${cfpFile.name} is geopend: de compilerfout hierboven gaat over dat bestand, niet over je eigen broncode.\n`, "info");
+          }
+        }
+      });
     });
 
     state.worker.postMessage({
@@ -911,7 +935,7 @@
 
   // Hindley-Milner type-inferentie voor Sapl+ (preprocess/typecheck.jmvm,
   // zie typing/README.md) tegen het actieve tabblad -- runs on the same
-  // WASM VM as preprocessActiveFile above, but produces a plain text
+  // WASM VM as preprocessAndCompile above, but produces a plain text
   // report (no output file, so nothing to open as a new tab) logged
   // straight to the terminal.
   async function runTypecheck() {
@@ -961,7 +985,7 @@
     if (!activeTab || isToolTab(activeTab)) return;
 
     if (activeTab.ext === ".spp" || activeTab.ext === ".lfp") {
-      preprocessActiveFile();
+      preprocessAndCompile(andRun);
       return;
     }
 
@@ -985,11 +1009,18 @@
     }
 
     if (state.isCompiling) return;
-    state.isCompiling = true;
 
     activeTab.content = state.editor.getValue();
 
     const isRetag = activeTab.name.endsWith(".cfp_retag") || activeTab.name.endsWith(".cfp_decompiled");
+    compileSource({ path: activeTab.path, content: activeTab.content, isRetag, andRun });
+  }
+
+  // Compiles one source text (a .cfp, or a Stage-4 retag file) with the
+  // current settings; shared by compileActiveFile and preprocessAndCompile.
+  // onFailure (optional) runs after a failed compile has been logged.
+  function compileSource({ path, content, isRetag, andRun, onFailure }) {
+    state.isCompiling = true;
     const strictness = el.chkStrictness ? el.chkStrictness.checked : true;
     
     const stages = [];
@@ -1003,7 +1034,7 @@
     }
 
     toggleTerminal(true);
-    logTerminal(`\n=== Compileren: ${activeTab.path} (WebAssembly saplcomp) ===\n`, "info");
+    logTerminal(`\n=== Compileren: ${path} (WebAssembly ${isRetag ? "retagcomp" : "saplcomp"}) ===\n`, "info");
     setStatus("busy", "Bezig met compileren...");
 
     const compileId = ++state.compileSeq;
@@ -1030,14 +1061,15 @@
       } else {
         setStatus("error", "Compilatie mislukt");
         logTerminal(`✗ Compilatie mislukt.\n`, "error");
+        if (onFailure) onFailure();
       }
     });
 
     state.worker.postMessage({
       type: isRetag ? "COMPILE_RETAG" : "COMPILE",
       id: compileId,
-      source: activeTab.content,
-      path: activeTab.path,
+      source: content,
+      path: path,
       stages: stages,
       strictness: strictness
     });
@@ -1727,8 +1759,10 @@
       if (activeTab.ext === ".jmvm") {
         targetPath = activeTab.path;
         targetContent = activeTab.content;
-      } else if (activeTab.ext === ".cfp") {
+      } else if (activeTab.ext === ".cfp" || activeTab.ext === ".spp" || activeTab.ext === ".lfp") {
         compileActiveFile(true);
+        return;
+      } else {
         return;
       }
     } else {
@@ -1936,6 +1970,7 @@
   function toggleSettings(forceState) {
     const isHidden = el.settingsPanel.classList.toggle("hidden", forceState === false ? true : (forceState === true ? false : undefined));
     el.btnToggleSettings.classList.toggle("active", !isHidden);
+    try { localStorage.setItem("websapl_settings_open", isHidden ? "0" : "1"); } catch (_) {}
     triggerEditorRefresh();
   }
 
@@ -2030,9 +2065,11 @@
 
     el.btnSelectAllStages.onclick = () => {
       for (const chk of Object.values(el.chkStages)) chk.checked = true;
+      if (el.chkStageCfp) el.chkStageCfp.checked = true;
     };
     el.btnSelectJmvmOnly.onclick = () => {
       for (const [k, chk] of Object.entries(el.chkStages)) chk.checked = (k === "jmvm");
+      if (el.chkStageCfp) el.chkStageCfp.checked = false;
     };
 
     // Keyboard Shortcuts

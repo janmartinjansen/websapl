@@ -8,8 +8,8 @@
 
 - 🚀 **100% Client-side Execution**: Zowel de JMVM interpreter als de Sapl compiler draaien volledig in de browser via WebAssembly (geen server/backend vereist voor het compileren/draaien zelf — `server.js` serveert alleen de statische bestanden).
 - 💾 **Virtueel Bestandssysteem (VFS & IndexedDB)**: Volwaardige ondersteuning voor Sapl File I/O (`readFile`, `writeFile`, `openFile`, `readChar`, etc.) *vanuit draaiende Sapl-programma's*. Bestanden die zo'n programma zelf wegschrijft, blijven via IndexedDB bewaard tussen sessies.
-- 🔤 **Sapl+ (`.spp`) preprocessing**: `.spp`-bestanden (een kleine Haskell/Clean-achtige uitbreiding — lambda's, guards, ZF-expressies, patroon-definities) worden met één knop naar gewone Sapl (`.cfp`) vertaald, zelf ook in de browser via WebAssembly.
-- λ **`.lfp` preprocessing**: `.lfp`-bestanden (Sapl met als enige uitbreiding kale, onbeperkte lambda's — inclusief directe toepassing zoals zelftoepassing, wat Sapl+'s eigen lifter weigert) worden net zo met één knop naar gewone Sapl (`.cfp`) vertaald (`lamlift/lamlift.jmvm`, zie `lamlift/README.md`).
+- 🔤 **Sapl+ (`.spp`) preprocessing**: `.spp`-bestanden (een kleine Haskell/Clean-achtige uitbreiding — lambda's, guards, ZF-expressies, patroon-definities) worden bij het compileren automatisch naar gewone Sapl (`.cfp`) vertaald, zelf ook in de browser via WebAssembly.
+- λ **`.lfp` preprocessing**: `.lfp`-bestanden (Sapl met als enige uitbreiding kale, onbeperkte lambda's — inclusief directe toepassing zoals zelftoepassing, wat Sapl+'s eigen lifter weigert) worden net zo automatisch naar gewone Sapl (`.cfp`) vertaald (`lamlift/lamlift.jmvm`, zie `lamlift/README.md`).
 - ⏱️ **Realtime Profiler**: Direct inzicht in executietijd (ms), aantal instructies, functiecalls, heapallocaties (`creates`) en garbage collecties, na elke run.
 - 📝 **Moderne Code Editor**: Syntax-highlighting voor Sapl (`.cfp`/`.spp`/`.lfp`), multi-tab beheer, auto-indentatie, tabulatie en foutmeldingen (via CodeMirror).
 - ✏️ **Bewerken & opslaan**: bestanden rechtstreeks in de browser bewerken; "Opslaan" bewaart je wijziging in `localStorage` van je eigen browser (blijft dus lokaal, wordt niet teruggeschreven naar de repo).
@@ -20,34 +20,48 @@
 
 ## Hoe te gebruiken
 
+WebSapl opent op een **beginpagina** (`index.html`) die kort uitlegt wat er
+is en naar de onderdelen verwijst: deze Workbench (`ide.html`), de Sapl+
+REPL, de Graphics Studio, de cursus, de self-interpreter, de
+lambda-calculus-REPL en (voor auteurs) de Course Studio. Elke pagina heeft
+linksboven een **← Start**-knop terug naar die beginpagina. Links van de
+beginpagina kunnen meteen een bestand openen (`ide.html?file=<pad>`) of de
+REPL (`ide.html#repl`).
+
+In de Workbench:
+
 1. **Bestandsverkenner (links)** — alle mappen staan bij het openen dicht; klik
    op een map om 'm uit te klappen, en op een bestand om het te openen. De
    originele bronbestanden (`.cfp`, `.spp`, `.lfp`) staan er altijd; alles wat je zelf
    kunt genereren door te compileren/preprocessen (`.jmvm`, tussenformaten)
    ontstaat pas zodra je daarop klikt — dat houdt de boom overzichtelijk.
-2. **Een `.cfp`-bestand compileren** — open het bestand, kies rechts een
-   **Compiler Backend** (`saplcomp`, de zelf-hostende Sapl-compiler in
-   WebAssembly; `retagcomp` voor Stage-4 Retag-bestanden; of `modules`,
-   zie hieronder), zet eventueel **Strictness Analyse** aan/uit, en kies
-   welke **Tussenformaten (Stages)** je wilt zien naast de uiteindelijke
-   `.jmvm`-bytecode (bijv. `parse`, `lift`, ...) — handig om de compiler-
-   pipeline stap voor stap te inspecteren. Klik dan **Compileer** (alleen
-   bouwen), **Compileer & Run** (bouwen en meteen uitvoeren), of **Run**
-   (een reeds gecompileerd `.jmvm` bestand draaien).
-3. **Een `.spp`-bestand (Sapl+) gebruiken** — open het bestand en klik op
-   **Preprocess (.spp → .cfp)**. Dat zet de Sapl+ syntax om naar gewone Sapl
-   en opent het resultaat als nieuw `.cfp`-tabblad; vanaf daar werkt stap 2
-   hierboven precies zoals altijd.
-4. **Een `.lfp`-bestand gebruiken** — hetzelfde idee, met **Preprocess
-   (.lfp → .cfp)** (`lamlift/lamlift.jmvm`); zie `lamlift/README.md` voor wat
-   `.lfp` toevoegt aan kale Sapl en waarom het (in tegenstelling tot
-   `.spp`) directe lambda-toepassing wél toestaat.
-5. **Terminal & metrieken (onder)** — toont compiler- en programma-uitvoer,
+2. **Compileren en draaien** — open een `.cfp`-, `.spp`- of `.lfp`-bestand en
+   klik **Compileer** (alleen bouwen), **Compileer & Run** (bouwen en meteen
+   uitvoeren) of **Run**. Een `.spp` (Sapl+) of `.lfp` wordt daarbij eerst
+   automatisch naar gewone Sapl (`.cfp`) vertaald — met
+   `preprocess/driver.jmvm` resp. `lamlift/lamlift.jmvm` — en meteen
+   doorgecompileerd. Die tussenliggende `.cfp` zie je normaal niet; hij
+   opent alleen als tabblad als je het tussenformaat **cfp** aanzet (zie
+   stap 3), of als het compileren ervan mislukt (de compilerfout gaat dan
+   over dat bestand, niet over je eigen broncode). Zie `lamlift/README.md`
+   voor wat `.lfp` toevoegt aan kale Sapl en waarom het (in tegenstelling
+   tot `.spp`) directe lambda-toepassing wél toestaat. **Typecheck**
+   (Hindley-Milner, zie `typing/README.md`) is beschikbaar bij `.cfp` en
+   `.spp`.
+3. **Instellingen (rechts, standaard verborgen)** — open ze met de knop
+   **Instellingen** bovenaan; de browser onthoudt of het paneel open of
+   dicht staat. Hier kies je bij een `.cfp` de **Compiler Backend**
+   (`saplcomp`, de zelf-hostende Sapl-compiler in WebAssembly; `retagcomp`
+   voor Stage-4 Retag-bestanden, automatisch; of `modules`, zie
+   hieronder), zet je **Strictness Analyse** aan/uit, en kies je welke
+   **Tussenformaten (Stages)** je naast de uiteindelijke `.jmvm`-bytecode
+   wilt zien (bijv. `parse`, `lift`, ...) — handig om de compiler-pipeline
+   stap voor stap te inspecteren. Bij `.spp`/`.lfp` staat daar ook **cfp**
+   (de voorverwerkte gewone Sapl).
+4. **Terminal & metrieken (onder)** — toont compiler- en programma-uitvoer,
    en na elke run de metrieken (`res`, tijd, instructies, calls, creates, gc).
    Programma's die stdin lezen kun je invoer sturen via de prompt-balk
    onderaan.
-6. **Graphics Studio** (rechtsboven) — een aparte pagina om de `.cfp`-
-   programma's in `grafisch/` visueel te draaien.
 
 ### Modulegewijs compileren (backend "modules")
 

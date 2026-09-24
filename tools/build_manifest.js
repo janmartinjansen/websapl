@@ -6,7 +6,7 @@ const WEBSAPL_DIR = path.resolve(__dirname, "..");
 // App-shell/tooling files at websapl's own root -- not Sapl content, so kept
 // out of the browsable tree (they're still served as real files, just not
 // listed as an entry). README.md stays visible on purpose.
-const ROOT_FILE_EXCLUDES = new Set(["index.html", "graphics.html", "manifest.json", "server.js"]);
+const ROOT_FILE_EXCLUDES = new Set(["index.html", "ide.html", "graphics.html", "studio.html", "manifest.json", "server.js"]);
 
 function scanDirectory(dirPath, relBase = "") {
   const items = [];

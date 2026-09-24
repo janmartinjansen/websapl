@@ -3,397 +3,194 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sapl Web Workbench — Online Compiler & VM</title>
-  <link rel="stylesheet" href="css/codemirror.min.css" />
-  <link rel="stylesheet" href="css/workbench.css" />
+  <title>WebSapl — luie functionele programmeertaal in de browser</title>
+  <script>
+    // Zelfde thema-keuze als de IDE (ide.html/js/app.js), vóór de eerste paint
+    try { document.documentElement.setAttribute("data-theme", localStorage.getItem("websapl_theme") || "dark"); } catch (_) {}
+  </script>
+  <style>
+    :root {
+      --bg: #12151c; --bg-card: #1a1e27; --bg-hover: #232834;
+      --border: #2e3546; --text: #e6edf3; --text-2: #9aa4b2; --muted: #647083;
+      --accent: #38bdf8; --purple: #c084fc;
+      --c-ide: #38bdf8; --c-repl: #34d399; --c-gfx: #3b82f6;
+      --c-course: #10b981; --c-self: #d97735; --c-lc: #e99642; --c-studio: #a855f7;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'Fira Code', 'SF Mono', Consolas, Monaco, monospace;
+    }
+    [data-theme="light"] {
+      --bg: #f8fafc; --bg-card: #ffffff; --bg-hover: #f1f5f9;
+      --border: #e2e8f0; --text: #0f172a; --text-2: #475569; --muted: #94a3b8;
+      --accent: #0284c7; --purple: #7e22ce;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font-family: var(--font-sans); font-size: 15px; line-height: 1.55;
+    }
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 40px 20px 64px; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .brand-icon {
+      width: 48px; height: 48px; border-radius: 10px; flex: none;
+      background: linear-gradient(135deg, var(--accent), var(--purple));
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-mono); font-size: 26px; font-weight: 700;
+    }
+    h1 { margin: 0; font-size: 28px; letter-spacing: -0.01em; }
+    .tagline { margin: 2px 0 0; color: var(--text-2); }
+    .theme-btn {
+      background: var(--bg-card); color: var(--text); border: 1px solid var(--border);
+      border-radius: 6px; padding: 6px 12px; font: inherit; font-size: 13px; cursor: pointer;
+    }
+    .intro { margin: 28px 0 8px; color: var(--text-2); max-width: 760px; }
+    .intro code, .card code { font-family: var(--font-mono); font-size: 0.9em; color: var(--text); }
+    h2 {
+      margin: 40px 0 4px; font-size: 13px; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--muted);
+    }
+    .section-note { margin: 0 0 14px; color: var(--text-2); font-size: 14px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; }
+    .card {
+      display: flex; flex-direction: column; gap: 6px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-top: 3px solid var(--card-color, var(--accent));
+      border-radius: 10px; padding: 16px 18px;
+      color: inherit; text-decoration: none;
+      transition: background 0.15s, transform 0.15s;
+    }
+    a.card:hover { background: var(--bg-hover); transform: translateY(-1px); }
+    .card-title { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; }
+    .card-icon { font-size: 20px; width: 24px; text-align: center; }
+    .card p { margin: 0; color: var(--text-2); font-size: 14px; }
+    .card .go { margin-top: auto; padding-top: 6px; font-size: 13px; font-weight: 600; color: var(--card-color, var(--accent)); }
+    .card.featured { grid-column: 1 / -1; }
+    .try { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .try a {
+      font-size: 13px; text-decoration: none; color: var(--text);
+      background: var(--bg-hover); border: 1px solid var(--border);
+      border-radius: 999px; padding: 3px 12px;
+    }
+    .try a:hover { border-color: var(--c-ide); }
+    .try a code { color: var(--text-2); }
+    footer { margin-top: 48px; color: var(--muted); font-size: 13px; }
+    footer a { color: var(--text-2); }
+  </style>
 </head>
 <body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="brand-icon">λ</div>
+        <div>
+          <h1>WebSapl</h1>
+          <p class="tagline">Sapl, een luie functionele programmeertaal, en de JMVM, volledig in je browser</p>
+        </div>
+      </div>
+      <button class="theme-btn" id="theme-btn"></button>
+    </header>
 
-  <!-- Top App Header -->
-  <header class="app-header">
-    <div class="brand">
-      <div class="brand-icon">λ</div>
-      <span>Sapl Workbench</span>
-      <span class="brand-badge">Web IDE (WASM)</span>
+    <p class="intro">
+      Alles hieronder draait lokaal in WebAssembly: de Sapl-compiler (zelf in Sapl
+      geschreven), de preprocessors en de virtuele machine. Er is geen server nodig
+      en je code verlaat je browser niet. Weet je niet waar je moet beginnen? Open
+      de <strong>Workbench</strong> en probeer een van de voorbeelden.
+    </p>
+
+    <h2>Programmeren</h2>
+    <p class="section-note">Zelf code schrijven, compileren en draaien.</p>
+    <div class="grid">
+      <div class="card featured" style="--card-color: var(--c-ide);">
+        <a href="ide.html" class="card-title" style="color: inherit; text-decoration: none;">
+          <span class="card-icon">💻</span> Sapl Workbench <span style="font-weight: 400; color: var(--muted); font-size: 13px;">(web-IDE)</span>
+        </a>
+        <p>
+          Een editor met bestandsverkenner, compiler en profiler. Schrijf Sapl (<code>.cfp</code>),
+          Sapl+ (<code>.spp</code>, met guards, lambda's en lijstcomprehensies) of <code>.lfp</code>
+          (Sapl met vrije lambda's) en klik op <em>Compileer &amp; Run</em>. Na elke run zie je
+          het resultaat, de tijd, het aantal instructies, heapallocaties en garbage collections.
+          Onder <em>Instellingen</em> kun je de tussenstappen van de compiler zichtbaar maken.
+        </p>
+        <div class="try">
+          <a href="ide.html?file=paper_examples/01_fac.cfp">Probeer: faculteit <code>.cfp</code></a>
+          <a href="ide.html?file=paper_examples/05_sieve.cfp">Zeef van Eratosthenes <code>.cfp</code></a>
+          <a href="ide.html?file=sapl_plus_demo/sapl_plus_showcase.spp">Sapl+ in vogelvlucht <code>.spp</code></a>
+          <a href="ide.html?file=lamlift/factorial.lfp">Lambda's <code>.lfp</code></a>
+          <a href="ide.html?file=docs/sapl_taalgids.md">Taalgids</a>
+        </div>
+        <a href="ide.html" class="go">Open de Workbench →</a>
+      </div>
+
+      <a class="card" href="ide.html#repl" style="--card-color: var(--c-repl);">
+        <span class="card-title"><span class="card-icon">⌨️</span> Sapl+ REPL</span>
+        <p>Typ een expressie en zie meteen het resultaat. Je kunt ook eigen functies en
+          datatypen definiëren, bestanden laden en je sessie opslaan. Er is geen
+          compileerstap nodig.</p>
+        <span class="go">Open de REPL →</span>
+      </a>
+
+      <a class="card" href="graphics.html" style="--card-color: var(--c-gfx);">
+        <span class="card-title"><span class="card-icon">🎨</span> Graphics Studio</span>
+        <p>Sapl-programma's die tekenen: bomen, B-splines, convexe omhullingen, grafieken
+          en interactieve demo's op een canvas.</p>
+        <span class="go">Open Graphics Studio →</span>
+      </a>
     </div>
 
-    <!-- Quick Action Buttons -->
-    <div class="header-actions">
-      <button class="btn" id="btn-save" title="Bestand opslaan (Cmd+S / Ctrl+S)">
-        <span>💾</span> Opslaan
-      </button>
-      <button class="btn btn-primary" id="btn-compile" title="Compileer (Cmd+B / Ctrl+B)">
-        <span>⚙️</span> Compileer
-      </button>
-      <button class="btn btn-success" id="btn-compile-run" title="Compileer & Draai meteen (Cmd+Enter / F5)">
-        <span>⚡</span> Compileer & Run
-      </button>
-      <button class="btn" id="btn-run" title="Draai bestand">
-        <span>▶</span> Run
-      </button>
-      <button class="btn" id="btn-typecheck" title="Typecheck dit bestand (preprocess/typecheck.jmvm, Hindley-Milner type-inferentie voor Sapl+)">
-        <span>🧪</span> Typecheck
-      </button>
-    </div>
+    <h2>Leren en verkennen</h2>
+    <p class="section-note">Uitleg met live voorbeelden, en kijkjes onder de motorkap.</p>
+    <div class="grid">
+      <a class="card" href="funcprog/" style="--card-color: var(--c-course);">
+        <span class="card-title"><span class="card-icon">📚</span> Cursus: Implementing Functional Languages</span>
+        <p>Hogere-orde functies, strict versus lazy, tie-the-knot en oneindige
+          datastructuren. Elk hoofdstuk heeft een ingebouwde speeltuin waarin je de
+          code direct uitvoert.</p>
+        <span class="go">Naar de cursus →</span>
+      </a>
 
-    <!-- Panel View Toggles -->
-    <div class="header-actions">
-      <button class="btn-toggle-panel active" id="btn-toggle-sidebar" title="Bestandsverkenner tonen/verbergen">
-        <span>◧</span> Bestanden
-      </button>
-      <button class="btn-toggle-panel active" id="btn-toggle-terminal" title="Terminal & Metrieken tonen/verbergen">
-        <span>⬓</span> Terminal
-      </button>
-      <button class="btn-toggle-panel active" id="btn-toggle-settings" title="Compiler instellingen tonen/verbergen">
-        <span>◨</span> Instellingen
-      </button>
-      <button class="btn" id="btn-open-repl" title="Open de Sapl+ REPL">
-        <span>⌨️</span> REPL
-      </button>
-      <a href="graphics.html" class="btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: rgba(59, 130, 246, 0.2); border-color: rgba(59, 130, 246, 0.4);" title="Open Grafische Studio">
-        <span>🎨</span> Graphics Studio
+      <a class="card" href="selfinter/" style="--card-color: var(--c-self);">
+        <span class="card-title"><span class="card-icon">🪞</span> Self-interpreter &amp; reflectie</span>
+        <p>Een Sapl-interpreter die in Sapl zelf geschreven is, met reflectie. Blader door
+          de voorbeelden en voer ze uit, elk met broncode en toelichting.</p>
+        <span class="go">Open de werkbank →</span>
       </a>
-      <a href="studio.html" class="btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: rgba(168, 85, 247, 0.2); border-color: rgba(168, 85, 247, 0.4);" title="Open Course Studio (Authoring)">
-        <span>✍️</span> Course Studio
-      </a>
-      <a href="funcprog/" class="btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.4);" title="Open Functional Programming Course (IFL 2026)">
-        <span>📚</span> Course Demos
-      </a>
-      <a href="selfinter/" class="btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: rgba(169, 83, 26, 0.2); border-color: rgba(169, 83, 26, 0.4);" title="Open Saplsimple Werkbank (self-interpreter & reflectie, WASM)">
-        <span>🪞</span> Self-Interpreter
-      </a>
-      <a href="lc_repl/" class="btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: rgba(233, 150, 66, 0.2); border-color: rgba(233, 150, 66, 0.4);" title="Open de Lambda-Calculus REPL (Scott-encoded self-interpreter, WASM)">
-        <span>λ</span> LC REPL
+
+      <a class="card" href="lc_repl/" style="--card-color: var(--c-lc);">
+        <span class="card-title"><span class="card-icon">λ</span> Lambda-calculus REPL</span>
+        <p>Pure lambda-calculus, geëvalueerd door een Scott-gecodeerde self-interpreter.
+          Hier zie je hoe weinig een taal eigenlijk nodig heeft.</p>
+        <span class="go">Open de LC REPL →</span>
       </a>
     </div>
 
-    <!-- Theme & Status -->
-    <div class="header-actions">
-      <div class="status-pill">
-        <span class="status-dot ready" id="status-dot"></span>
-        <span id="status-text">Klaar</span>
-      </div>
-      <button class="btn" id="btn-theme-toggle">
-        ☀️ Light
-      </button>
+    <h2>Voor docenten en auteurs</h2>
+    <div class="grid">
+      <a class="card" href="studio.html" style="--card-color: var(--c-studio);">
+        <span class="card-title"><span class="card-icon">✍️</span> Course Studio</span>
+        <p>Een omgeving om cursusmateriaal te schrijven en te beheren. Hiervoor moet je
+          eerst ontgrendelen.</p>
+        <span class="go">Open Course Studio →</span>
+      </a>
     </div>
-  </header>
 
-  <!-- Main App Layout -->
-  <div class="app-layout">
-
-    <!-- Left Sidebar: File Explorer -->
-    <aside class="app-sidebar" id="app-sidebar">
-      <div class="sidebar-header">
-        <div class="sidebar-title-row">
-          <span>Bestanden</span>
-          <div style="display: flex; gap: 4px;">
-            <button class="btn btn-icon-only" id="btn-refresh-tree" title="Ververs bestandsboom" style="padding: 2px 6px; font-size: 11px;">
-              🔄
-            </button>
-            <button class="panel-close-btn" id="btn-close-sidebar" title="Zijbalk inklappen">
-              ◀
-            </button>
-          </div>
-        </div>
-        <input type="text" id="tree-search" class="sidebar-search" placeholder="Zoek bestand..." />
-      </div>
-      <div class="file-tree" id="file-tree"></div>
-    </aside>
-
-    <!-- Center Workspace -->
-    <main class="workspace-center">
-      
-      <!-- Editor Header & Tabs -->
-      <div class="editor-header-bar">
-        <div class="tabs-bar" id="tabs-bar"></div>
-        <div class="editor-toolbar">
-          <span class="file-breadcrumb" id="file-breadcrumb">Geen bestand geopend</span>
-          <button class="btn" id="btn-view-toggle" style="display: none; padding: 2px 8px; font-size: 11px;">
-            📝 Broncode bewerken
-          </button>
-        </div>
-      </div>
-
-      <!-- Editor & Settings Area -->
-      <div class="editor-and-settings">
-        
-        <!-- Editor Content (CodeMirror or Rendered Markdown or PDF or REPL) -->
-        <div class="editor-container">
-          <div id="editor-container" style="flex: 1; height: 100%;"></div>
-          <div id="markdown-preview" class="markdown-preview" style="display: none;"></div>
-          <div id="pdf-preview" class="pdf-preview" style="display: none;">
-            <iframe id="pdf-frame" src="" title="PDF Document"></iframe>
-          </div>
-
-          <!-- REPL-tab: client-side poort van sapl_compiler/tools/
-               repl_retag.py (zie repl/README.md), hier
-               volledig via engine/worker.js's WASM-VM-instanties i.p.v.
-               een los proces -- geen Start/Stop nodig, de engine is al
-               klaar zodra "WebAssembly JMVM Engine gereed" in de
-               terminal verschijnt. -->
-          <div id="repl-panel" class="tool-panel" style="display: none;">
-            <div class="tool-panel-header">
-              <span class="tool-panel-title">⌨️ Sapl+ REPL</span>
-              <span class="tool-panel-sub">Typ een expressie, of <code>:def naam ... = ...</code> voor een eigen functie/ADT. Achtergrond: repl/README.md</span>
-            </div>
-            <div class="tool-panel-controls">
-              <button class="btn" id="btn-repl-history" title=":history — toon de hele sessie">📜 Historie</button>
-              <button class="btn" id="btn-repl-undo" title=":undo — maak de laatste wijziging ongedaan">↩ Undo</button>
-              <button class="btn" id="btn-repl-funcs" title=":funcs — namen, ariteit en strictheid van je eigen functies">ƒ Functies</button>
-              <button class="btn" id="btn-repl-reset" title=":reset — lege sessie, begin opnieuw">🗑 Reset</button>
-            </div>
-            <div class="tool-panel-controls">
-              <span style="font-size: 12px; color: var(--text-secondary); white-space: nowrap;">📁 Voorbeeld laden:</span>
-              <select id="sel-repl-example" class="text-input" style="flex: 1;">
-                <option value="">-- kies een voorbeeldbestand --</option>
-              </select>
-            </div>
-            <div class="tool-panel-controls">
-              <input type="text" id="txt-repl-load" class="text-input" style="flex: 1;" placeholder="of typ zelf een pad, bv. workspace/mijn_functies.cfp" />
-              <button class="btn" id="btn-repl-load" title=":load — elke top-level definitie uit dit bestand toevoegen">📂 Load</button>
-              <input type="text" id="txt-repl-save" class="text-input" style="flex: 1;" placeholder="bv. workspace/mijn_sessie.cfp" />
-              <button class="btn" id="btn-repl-save" title=":save — sessie als nieuw tabblad openen, dan zelf Opslaan">💾 Save</button>
-            </div>
-            <div class="tool-panel-status" id="repl-status">Bezig met initialiseren...</div>
-            <pre class="tool-panel-log repl-log" id="repl-log"></pre>
-            <div class="tool-panel-controls">
-              <span style="color: var(--accent); font-weight: 700; font-family: var(--font-mono);">repl&gt;</span>
-              <input type="text" id="txt-repl-input" class="text-input" style="flex: 1; font-family: var(--font-mono);" placeholder="Typ een expressie of :def ..." disabled />
-              <button class="btn btn-primary" id="btn-repl-send" disabled>▶ Uitvoeren</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Right Side: Compiler & Pipeline Settings -->
-        <aside class="settings-panel" id="settings-panel">
-          
-          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">
-            <span style="font-weight: 700; font-size: 12px; color: var(--text-primary);">COMPILER & OPTIES</span>
-            <button class="panel-close-btn" id="btn-close-settings" title="Instellingen inklappen">
-              ✕
-            </button>
-          </div>
-
-          <!-- Intermediate Stage Info Section (visible for .cfp_parse, .cfp_strictness, .cfp_bool, .cfp_lazytag, .cfp_lift) -->
-          <div class="settings-section" id="section-stage-info" style="display: none;">
-            <span class="settings-heading">Tussenformaat (Stage AST)</span>
-            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 11px; color: var(--text-secondary);">
-              <div style="background: var(--bg-tertiary); padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border-color);">
-                <span id="txt-stage-info-badge" style="color: var(--accent); font-weight: 700; display: block; margin-bottom: 2px;">Stage</span>
-                <span id="txt-stage-info-desc" style="font-size: 11px; color: var(--text-primary);">Gegenereerd tussenstadium van de compiler pipeline.</span>
-              </div>
-              <span style="font-size: 10px; color: var(--text-muted);">Tussenstadia zijn puur ter inspectie. Om te compileren, open het originele .cfp bestand.</span>
-            </div>
-          </div>
-
-          <!-- Compiler Backend -->
-          <div class="settings-section" id="section-compiler-backend">
-            <span class="settings-heading">Compiler Backend</span>
-            <div class="radio-group">
-              <label class="control-label" id="lbl-compiler-sapl">
-                <input type="radio" name="compiler" id="compiler-sapl" value="sapl" checked />
-                <span><strong>saplcomp</strong> (Self-hosted in WebAssembly)</span>
-              </label>
-              <label class="control-label" id="lbl-compiler-retag" style="display: none;">
-                <input type="radio" name="compiler" id="compiler-retag" value="retag" />
-                <span><strong>retagcomp</strong> (Stage-4 Retag → JMVM)</span>
-              </label>
-              <label class="control-label" id="lbl-compiler-modules">
-                <input type="radio" name="compiler" id="compiler-modules" value="modules" />
-                <span><strong>modules</strong> (apart compileren + linken)</span>
-              </label>
-            </div>
-          </div>
-
-          <!-- Modulegewijs compileren -->
-          <div class="settings-section" id="section-modules-backend" style="display: none;">
-            <span class="settings-heading">Modules: manifest</span>
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-              <div>
-                <span style="font-size: 11px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Manifestbestand (virtueel pad, module: dep1 dep2 ...):</span>
-                <input type="text" id="txt-modules-manifest" class="text-input" placeholder="bv. workspace/manifest.txt" />
-              </div>
-              <div>
-                <span style="font-size: 11px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Entry-functie:</span>
-                <input type="text" id="txt-modules-entry-func" class="text-input" value="start" />
-              </div>
-
-              <div style="border-top: 1px solid var(--border-color); margin-top: 4px; padding-top: 8px;">
-                <span class="settings-heading" style="display: block; margin-bottom: 4px;">Hulp bij het manifest</span>
-                <span style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 6px;">
-                  Heuristische SUGGESTIE (tekstuele naam-scan, geen call-graph-analyse) — een startpunt om te controleren en aan te vullen, geen afgeleide waarheid.
-                </span>
-                <span style="font-size: 11px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Scope-map (kandidaat-modules, niet-recursief):</span>
-                <input type="text" id="txt-modules-scope" class="text-input" placeholder="bv. map van het entry-bestand" style="margin-bottom: 6px;" />
-                <button class="btn" id="btn-modules-suggest" style="justify-content: center; width: 100%;">
-                  <span>🧩</span> Genereer suggestie
-                </button>
-                <span style="font-size: 10px; color: var(--text-muted); display: block; margin-top: 4px;">
-                  Opent de suggestie als nieuw, nog niet opgeslagen tabblad op het manifestpad hierboven — controleer/bewerk en klik daarna gewoon Opslaan.
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Strictness Inference -->
-          <div class="settings-section" id="section-strictness">
-            <span class="settings-heading">Strictness Analyse</span>
-            <label class="control-label">
-              <input type="checkbox" id="chk-strictness" checked />
-              <span>Automatische strictness analyse</span>
-            </label>
-            <span style="font-size: 10px; color: var(--text-muted); margin-top: 4px; display: block;">
-              Bepaalt automatisch welke functieparameters strikt geëvalueerd kunnen worden (met ! annotatie).
-            </span>
-          </div>
-
-          <!-- Intermediate Stages -->
-          <div class="settings-section" id="section-stages">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span class="settings-heading">Tussenformaten (Stages)</span>
-            </div>
-            <div style="display: flex; gap: 6px; margin-bottom: 6px;">
-              <button class="btn" id="btn-select-all-stages" style="padding: 2px 6px; font-size: 10px; flex: 1;">
-                Alles selecteren
-              </button>
-              <button class="btn" id="btn-select-jmvm-only" style="padding: 2px 6px; font-size: 10px; flex: 1;">
-                Alleen JMVM
-              </button>
-            </div>
-            <div class="stage-grid">
-              <label class="control-label">
-                <input type="checkbox" id="stage-parse" />
-                <span>parse</span>
-              </label>
-              <label class="control-label">
-                <input type="checkbox" id="stage-strictness" />
-                <span>strictness</span>
-              </label>
-              <label class="control-label">
-                <input type="checkbox" id="stage-bool" />
-                <span>bool (st. 1)</span>
-              </label>
-              <label class="control-label">
-                <input type="checkbox" id="stage-lazytag" />
-                <span>lazytag (st. 2)</span>
-              </label>
-              <label class="control-label">
-                <input type="checkbox" id="stage-lift" />
-                <span>lift (st. 3)</span>
-              </label>
-              <label class="control-label">
-                <input type="checkbox" id="stage-retag" />
-                <span>retag (st. 4)</span>
-              </label>
-              <label class="control-label" style="grid-column: span 2;">
-                <input type="checkbox" id="stage-jmvm" checked />
-                <span><strong>jmvm (bytecode)</strong></span>
-              </label>
-            </div>
-          </div>
-
-          <!-- VM Execution Engine -->
-          <div class="settings-section" id="section-engine">
-            <span class="settings-heading">VM Engine</span>
-            <div class="radio-group">
-              <label class="control-label">
-                <input type="radio" name="engine" id="engine-wasm" value="wasm" checked />
-                <span><strong>WebAssembly JMVM</strong> (WASM Runtime)</span>
-              </label>
-            </div>
-          </div>
-
-        </aside>
-      </div>
-
-      <!-- Bottom Panel: Metrics & Terminal Output -->
-      <div class="bottom-panel" id="bottom-panel">
-        <div class="bottom-header">
-          <div class="metrics-bar">
-            <div class="metric-tag">
-              <span class="metric-label">Res:</span>
-              <span class="metric-value res" id="metric-res">-</span>
-            </div>
-            <div class="metric-tag">
-              <span class="metric-label">Tijd:</span>
-              <span class="metric-value" id="metric-time">-</span>
-            </div>
-            <div class="metric-tag">
-              <span class="metric-label">Instructies:</span>
-              <span class="metric-value" id="metric-instr">-</span>
-            </div>
-            <div class="metric-tag">
-              <span class="metric-label">Creates:</span>
-              <span class="metric-value" id="metric-creates">-</span>
-            </div>
-            <div class="metric-tag">
-              <span class="metric-label">Calls:</span>
-              <span class="metric-value" id="metric-calls">-</span>
-            </div>
-            <div class="metric-tag">
-              <span class="metric-label">GC:</span>
-              <span class="metric-value" id="metric-gc">-</span>
-            </div>
-          </div>
-          <div style="display: flex; gap: 6px; align-items: center;">
-            <button class="btn" id="btn-clear-terminal" style="padding: 2px 8px; font-size: 11px;">
-              Wissen
-            </button>
-            <button class="panel-close-btn" id="btn-close-terminal" title="Terminal inklappen">
-              ▼
-            </button>
-          </div>
-        </div>
-        <div class="terminal-content" id="terminal-content"></div>
-        
-        <!-- Interactive Terminal Prompt -->
-        <div class="terminal-prompt-bar" id="terminal-prompt-bar">
-          <span class="terminal-prompt-label" id="terminal-prompt-label">Stdin &gt;</span>
-          <input type="text" id="terminal-input" class="terminal-input" placeholder="Typ invoer en druk op Enter..." />
-          <button class="btn btn-primary" id="btn-terminal-send" style="padding: 2px 10px; font-size: 11px;">
-            Versturen
-          </button>
-        </div>
-      </div>
-
-    </main>
+    <footer>
+      Meer achtergrond: <a href="ide.html?file=README.md">gebruikshandleiding van de Workbench</a> ·
+      <a href="ide.html?file=docs/veelgemaakte_fouten.md">veelgemaakte fouten</a>
+    </footer>
   </div>
 
-  <!-- Tab Context Menu (Right-click on Tab) -->
-  <div id="tab-context-menu" class="context-menu" style="display: none;">
-    <div class="context-menu-item" id="ctx-close-tab">
-      <span class="ctx-icon">✕</span>
-      <span>Sluit tab</span>
-    </div>
-    <div class="context-menu-item" id="ctx-close-others">
-      <span class="ctx-icon">⇥</span>
-      <span>Sluit andere tabs</span>
-    </div>
-    <div class="context-menu-item" id="ctx-close-right">
-      <span class="ctx-icon">➔</span>
-      <span>Sluit tabs naar rechts</span>
-    </div>
-    <div class="context-menu-item" id="ctx-close-all">
-      <span class="ctx-icon">🗑️</span>
-      <span>Sluit alle tabs</span>
-    </div>
-    <div class="context-menu-separator" id="ctx-sep-pin"></div>
-    <div class="context-menu-item" id="ctx-keep-open">
-      <span class="ctx-icon">📌</span>
-      <span>Houd geopend (Vastmaken)</span>
-    </div>
-  </div>
-
-  <!-- Scripts -->
-  <script src="js/marked.min.js"></script>
-  <script src="js/codemirror.min.js"></script>
-  <script src="js/matchbrackets.min.js"></script>
-  <script src="js/closebrackets.min.js"></script>
-  <script src="js/sapl_mode.js"></script>
-  <script src="js/clike_mode.js"></script>
-  <script src="js/stdlib_data.js"></script>
-  <script src="js/manifest.js"></script>
-  <script src="js/app.js"></script>
+  <script>
+    (function () {
+      const btn = document.getElementById("theme-btn");
+      const label = () => { btn.textContent = document.documentElement.getAttribute("data-theme") === "dark" ? "☀️ Light" : "🌙 Dark"; };
+      btn.onclick = () => {
+        const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+        document.documentElement.setAttribute("data-theme", next);
+        try { localStorage.setItem("websapl_theme", next); } catch (_) {}
+        label();
+      };
+      label();
+    })();
+  </script>
 </body>
 </html>
