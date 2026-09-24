@@ -1,0 +1,1444 @@
+#import "lib/stdlib.cfp"
+#import "sapl_compiler/newparser_ast.cfp"
+#import "sapl_compiler/ast_helpers.cfp"
+
+// Direct Sapl port of newparser/stage5_codegen.ama -- see
+// docs/bootstrapping_plan.md section 0 step 3, same technique as the earlier
+// four stages. ast.ama's helpers this stage needs (including
+// predefArity/predefIndex/conTag/adtArity/exprConstrNameOf, first needed
+// here) now come from sapl_compiler/ast_helpers.cfp -- originally local
+// copies here, moved out once the driver needed to #import every
+// stageN_*.cfp together (see ast_helpers.cfp's own header). `funcName`/
+// `funcArity` renamed `funcNameOf`/`funcArityOf` (built-in reflection
+// primitive collision, docs/sapl_programmeer_regels.md #10). Amanda's
+// `where` clauses become named `let`-as-whole-body helper functions
+// (docs/sapl_programmeer_regels.md #4/#5) -- this file has by far the most
+// of any stage (genLet alone threads twelve). Amanda's `hd`/`tl`-based
+// exact-arity checks (`if (# as = 1) ... (hd as) ...`) become a nested
+// `case` matching the exact list shape (`Cons a Nil` vs. anything else)
+// instead of a length check plus a separate head accessor -- more idiomatic
+// in Sapl and avoids needing a generic `hd`. String-building
+// (`"push " ++ itoa n`) becomes nested `append` over char-list literals; the
+// escape-table (`escapeStrChar`) needed real char literals with backslash
+// escapes (`'\n'`, `'\\'`, `'"'`, `'\''`) rather than `['...']` bracket
+// syntax, since that syntax does no escape processing at all (confirmed
+// empirically while porting parser.cfp itself) -- Sapl's ordinary quoted
+// char literal `'\n'` DOES support the standard escapes, confirmed with a
+// throwaway two-line probe before writing this. No `/\`/`\/` used as an
+// inline call argument anywhere below (the two boolean-connective chains
+// here, `isPredefCall`/`isComparisonOp`, are each a function's own whole
+// body, the confirmed-safe shape -- see the bug found while porting stage3,
+// docs/sapl_programmeer_regels.md #1).
+
+// == instr/block/gencode ==
+
+::Instr = Instr !text !target | InstrMulti !text !targets
+::Block = Block !name !is
+::Gencode = Gencode !is !bs
+
+blockName b = case b (Block n is -> n)
+blockInstrs b = case b (Block n is -> is)
+gcInstrs g = case g (Gencode is bs -> is)
+gcBlocks g = case g (Gencode is bs -> bs)
+
+mkI text = Instr text Nil
+mkJ text target = Instr text target
+mkJM text targets = InstrMulti text targets
+
+hasStrictArg args =
+  case args
+    (Nil -> False)
+    (Cons a as -> if (argStrict a) True (hasStrictArg as))
+
+slotOf v args = slotOfAt v args 0
+
+slotOfAt v args i =
+  case args
+    (Nil -> error (list2str (append ['slotOf: unknown variable '] v)))
+    (Cons a as -> if (charListEq (argNameOf a) v) i (slotOfAt v as (i+1)))
+
+isStrictVar v args =
+  case args
+    (Nil -> False)
+    (Cons a as -> if (charListEq (argNameOf a) v) (argStrict a) (isStrictVar v as))
+
+evalIfLazy v args = if (isStrictVar v args) Nil (Cons (mkI ['eval']) Nil)
+
+primInstr op =
+  if (charListEq op ['*']) ['mult']
+  (if (charListEq op ['-']) ['sub']
+  (if (charListEq op ['+']) ['add']
+  (if (charListEq op ['%']) ['mod']
+  (if (charListEq op ['/']) ['div']
+  (error "primInstr: unsupported operator")))))
+
+// Arguments of a call/create (App, Thunk, Closure, Ct) are pushed in
+// REVERSED source order -- the last-named source argument goes first, so
+// the FIRST source argument ends up on top of the stack (where `load 0`
+// reads it, since `load 0` picks up the most-recently-pushed value at call
+// time). This does NOT apply to Prim (arithmetic): those stay in source
+// order (empirically confirmed already at fac/facl, see genValue's Prim
+// case).
+genCallArgs prog adts args as = concatAll (map (genValue prog adts args) (reverse as))
+
+genPrintCall prog adts args as =
+  case as
+    (Cons a rest -> genPrintCallRest prog adts args a rest)
+    (Nil -> error "genValue: print verwacht precies 1 argument")
+
+genPrintCallRest prog adts args a rest =
+  case rest
+    (Nil -> append (genValue prog adts args a) (Cons (mkI ['print 0']) Nil))
+    (Cons x xs -> error "genValue: print verwacht precies 1 argument")
+
+genPrintCCall prog adts args as =
+  case as
+    (Cons a rest -> genPrintCCallRest prog adts args a rest)
+    (Nil -> error "genValue: printC verwacht precies 1 argument")
+
+genPrintCCallRest prog adts args a rest =
+  case rest
+    (Nil -> append (genValue prog adts args a) (Cons (mkI ['print 2']) Nil))
+    (Cons x xs -> error "genValue: printC verwacht precies 1 argument")
+
+// `printS` (ast_helpers.cfp's isPrintSCall): third member of the print
+// family, same instruction but typecode 3 (parser.ama:557: `[Print 3]`).
+genPrintSCall prog adts args as =
+  case as
+    (Cons a rest -> genPrintSCallRest prog adts args a rest)
+    (Nil -> error "genValue: printS verwacht precies 1 argument")
+
+genPrintSCallRest prog adts args a rest =
+  case rest
+    (Nil -> append (genValue prog adts args a) (Cons (mkI ['print 3']) Nil))
+    (Cons x xs -> error "genValue: printS verwacht precies 1 argument")
+
+genPredefCall prog adts args n as =
+  if (length as == predefArity n)
+    (append (genCallArgs prog adts args as) (Cons (mkI (append ['strop '] (itoa (predefIndex n)))) Nil))
+    (error "genValue: predef arity mismatch")
+
+// Float builtins and generic floatop: `floatop <index>`
+genFloatOpCall prog adts args n as =
+  if (length as == floatOpArity n)
+    (append (genCallArgs prog adts args as) (Cons (mkI (append ['floatop '] (itoa (floatOpIndex n)))) Nil))
+    (error "genValue: floatop arity mismatch")
+
+// I/O syscalls (ast_helpers.cfp's isSyscallCall) -- same shape as
+// genPredefCall, but a different instruction family: `syscall <index>`
+// instead of `strop <index>`.
+genSyscallCall prog adts args n as =
+  if (length as == syscallArity n)
+    (append (genCallArgs prog adts args as) (Cons (mkI (append ['syscall '] (itoa (syscallIndex n)))) Nil))
+    (error "genValue: syscall arity mismatch")
+
+// `strcreate` -> `array_create_dynamic 1`, arity always 1.
+genStrcreateCall prog adts args as =
+  case as
+    (Cons a rest -> genStrcreateCallRest prog adts args a rest)
+    (Nil -> error "genValue: strcreate verwacht precies 1 argument")
+
+genStrcreateCallRest prog adts args a rest =
+  case rest
+    (Nil -> append (genValue prog adts args a) (Cons (mkI ['array_create_dynamic 1']) Nil))
+    (Cons x xs -> error "genValue: strcreate verwacht precies 1 argument")
+
+// Dynamic/reflection primitives (ast_helpers.cfp's isReflectionCall: typeId/
+// constrName/getField/makeConstr/funcName/funcArity/funcRemaining/
+// applyDynamic/lookup). IMPORTANT: arguments pushed in SOURCE order (NOT via
+// genCallArgs, which reverses -- the predef/syscall convention), so the LAST
+// argument ends up on top of the stack. That's what vm.cpp's multi-arg
+// opcodes expect: `GetField` reads `idx` from sp (top) and the object from
+// sp-1 (so `getField obj idx` -> obj first/deep, idx last/top),
+// `ApplyDynamic` reads the argument list from sp and the function from sp-1
+// (`applyDynamic f argsList`), and `MakeConstr` expects exactly
+// `[field_0..field_N-1, N, type_id, constr_aux]` with constr_aux on top --
+// source order throughout. Mirrors parser.ama:588-596's `generate (App
+// (GetTypeIdE:as)) = accum (map generate as) <++> return [GetTypeId]` (no
+// `reverse` there, unlike the predef branch). Direct port of newparser/
+// stage5_codegen.ama's genReflectionCall (13 August 2026) -- found there via
+// an empirical "GetField called on non-pointer!" VM crash with the reversed
+// order. No arity check: see ast_helpers.cfp's isReflectionCall comment for
+// why (makeConstr has no fixed arity, and parser.ama doesn't check either).
+genReflectionCall prog adts args n as =
+  append (concatAll (map (genValue prog adts args) as)) (Cons (mkI (reflectionOpcode n)) Nil)
+
+genErrorCall prog adts args as =
+  case as
+    (Cons a rest -> genErrorCallRest prog adts args a rest)
+    (Nil -> error "genValue: error verwacht precies 1 argument")
+
+genErrorCallRest prog adts args a rest =
+  case rest
+    (Nil -> append (genValue prog adts args a) (Cons (mkI ['syscall 3']) (Cons (mkI ['stop']) Nil)))
+    (Cons x xs -> error "genValue: error verwacht precies 1 argument")
+
+genValueSeq prog adts args as =
+  case as
+    (Cons a rest -> genValueSeqRest prog adts args a rest)
+    (Nil -> error "genValue: <#> verwacht precies 2 operanden")
+
+genValueSeqRest prog adts args a rest =
+  case rest
+    (Cons b rest2 -> genValueSeqRest2 prog adts args a b rest2)
+    (Nil -> error "genValue: <#> verwacht precies 2 operanden")
+
+genValueSeqRest2 prog adts args a b rest2 =
+  case rest2
+    (Nil -> append (genValue prog adts args a) (genValue prog adts args b))
+    (Cons x xs -> error "genValue: <#> verwacht precies 2 operanden")
+
+// String literals: code is one instruction (`push "..."`), but the TEXT
+// needs the same escaping the lexer can read back (`\n`,`\t`,`\\`,`"`,`'`).
+escapeStrChar c =
+  if (c == '\n') (Cons '\\' (Cons 'n' Nil))
+  (if (c == '\t') (Cons '\\' (Cons 't' Nil))
+  (if (c == '\\') (Cons '\\' (Cons '\\' Nil))
+  (if (c == '"') (Cons '\\' (Cons '"' Nil))
+  (if (c == '\'') (Cons '\\' (Cons '\'' Nil))
+  (Cons c Nil)))))
+
+escapeStr cs =
+  case cs
+    (Nil -> Nil)
+    (Cons c rest -> append (escapeStrChar c) (escapeStr rest))
+
+quoteStr s = append (Cons '"' Nil) (append (escapeStr s) (Cons '"' Nil))
+
+// E-mode (value position): leaves a concrete value on the stack.
+genValue prog adts args e =
+  case e
+    (Num n -> Cons (mkI (append ['push '] (itoa n))) Nil)
+    (FloatLit s -> Cons (mkI (append ['push '] s)) Nil)
+    (Str s -> Cons (mkI (append ['push '] (quoteStr s))) Nil)
+    (Var v -> Cons (mkI (append ['load '] (itoa (slotOf v args)))) Nil)
+    (App n as -> genValueApp prog adts args n as)
+    (Prim op as -> genValuePrim prog adts args op as)
+    (Ct n as -> genValueCt prog adts args n as)
+    (Case sc cs -> error "genValue: Case in value position not yet implemented (only tail position built)")
+    (Let ls b -> error "genValue: Let cannot appear as a subexpression (sapl_programmeer_regels.md sectie 4)")
+    (NoMatch -> error "genValue: NoMatch not expected in value position (only as a whole case-branch body)")
+    (Lazy inner -> error "genValue: Lazy should not reach codegen (stage4 removes it)")
+    (Thunk inner -> genCreateApp prog adts args inner 3)
+    (Closure inner -> genCreateApp prog adts args inner 7)
+    (Eval inner -> genEval prog adts args inner)
+    (Try b h -> error "genValue: Try in value position not yet implemented (only tail position built)")
+    (Throw nr p -> error "genValue: Throw in value position not yet implemented (only tail position built)")
+
+genValueApp prog adts args n as =
+  if (isPrintCall n) (genPrintCall prog adts args as)
+  (if (isPrintCCall n) (genPrintCCall prog adts args as)
+  (if (isPrintSCall n) (genPrintSCall prog adts args as)
+  (if (isPredefCall n) (genPredefCall prog adts args n as)
+  (if (isFloatOpCall n) (genFloatOpCall prog adts args n as)
+  (if (isErrorCall n) (genErrorCall prog adts args as)
+  (if (isSyscallCall n) (genSyscallCall prog adts args n as)
+  (if (isStrcreateCall n) (genStrcreateCall prog adts args as)
+  (if (isReflectionCall n) (genReflectionCall prog adts args n as)
+  (append (genCallArgs prog adts args as) (Cons (mkJ ['call'] n) Nil))))))))))
+
+genValuePrim prog adts args op as =
+  if (charListEq op ['<#>'])
+    (genValueSeq prog adts args as)
+    (append (concatAll (map (genValue prog adts args) as)) (Cons (mkI (primInstr op)) Nil))
+
+genValueCt prog adts args n as =
+  append (genCallArgs prog adts args as)
+         (Cons (mkI (append ['ccreatet '] (append (itoa (length as)) (append [' 11 '] (append (itoa (conTypeId n adts)) (append [' '] (itoa (conTag n adts)))))))) Nil)
+
+// A function value as its own stack item: `pushfunc <arity> <label>` for a
+// known top-level function, `load <slot>` for a local (unknown) variable
+// (like `twice`'s own parameter `f`) -- no "call" here, this only puts the
+// VALUE on the stack, for use by create/eval. A REFERENCE must ALWAYS point
+// at the lazy entry, since the context where this value is actually invoked
+// later doesn't guarantee its arguments are already evaluated -- EVEN when
+// `f` itself has no strict argument at all. Mirrors the 10 augustus 2026 fix
+// to the real newparser/stage5_codegen.ama: gating this on `hasStrictArg`
+// let a function with zero `!`-marked arguments (but whose body still forces
+// an argument via `if`/`case`, e.g. `nott a = if a False True`) reference
+// its own unsafe, non-evaluating body directly whenever passed around as a
+// first-class value. See stage4_retag.cfp's `retag4`/`If` case for the
+// complementary fix (the actual `eval` insertion) -- this one alone only
+// guarantees the lazy entry point EXISTS and gets referenced.
+pushFuncRef prog args n =
+  case (lookupFunc n prog)
+    (Found f -> pushFuncRefKnown f)
+    (NoFunc -> mkI (append ['load '] (itoa (slotOf n args))))
+
+pushFuncRefKnown f =
+  mkJ (append ['pushfunc '] (itoa (funcArityOf f))) (funcRefLabel f)
+
+funcRefLabel f = append (funcNameOf f) ['_lazy']
+
+// Arguments (source order) followed by the function value itself, the
+// order create/the direct eval-apply trick expect.
+pushArgsThenFunc prog adts args n as = append (genCallArgs prog adts args as) (Cons (pushFuncRef prog args n) Nil)
+
+// E(thunk as)/E(closure as) = code as + pushfunc <callee arity> + create
+// |as|+1 <tag>. Thunk/Closure always wrap an App (that's how stage4 builds
+// them); any other shape is an invariant violation.
+genCreateApp prog adts args e tag =
+  case e
+    (App n as -> genCreateAppApp prog adts args n as tag)
+    (Lazy inner -> error "genCreateApp: nested Lazy not expected here")
+    (Thunk inner -> error "genCreateApp: nested Thunk not expected here")
+    (Closure inner -> error "genCreateApp: nested Closure not expected here")
+    (Eval inner -> error "genCreateApp: nested Eval not expected here")
+    (_ -> error "genCreateApp: thunk/closure must wrap an application")
+
+genCreateAppApp prog adts args n as tag =
+  append (pushArgsThenFunc prog adts args n as)
+         (Cons (mkI (append ['create '] (append (itoa (length as + 1)) (append [' '] (itoa tag))))) Nil)
+
+// E(eval as)/E(eval(f as)): what "eval" does depends on what it wraps. For
+// an unknown application there's no static label to "call" -- push the
+// arguments plus the function value itself (same order as create) and let
+// `eval` do the generic closure application. For a known but oversaturated
+// application: push ALL arguments (reversed, as usual), then "call f"
+// (consumes exactly f's own arity off the top), then "eval" on the result
+// (which picks up the surplus arguments still lying underneath via the same
+// curried mechanism as an unknown application).
+genEval prog adts args e =
+  case e
+    (App n as -> genEvalApp prog adts args n as)
+    (If a b c -> error "genEval: If inside eval not yet implemented")
+    (Let ls b -> error "genEval: Let cannot appear as a subexpression (sapl_programmeer_regels.md sectie 4)")
+    (Eval inner -> error "genEval: nested Eval not expected")
+    (Num n -> append (genValue prog adts args (Num n)) (Cons (mkI ['eval']) Nil))
+    (FloatLit s -> append (genValue prog adts args (FloatLit s)) (Cons (mkI ['eval']) Nil))
+    (Str s -> append (genValue prog adts args (Str s)) (Cons (mkI ['eval']) Nil))
+    (Var v -> append (genValue prog adts args (Var v)) (Cons (mkI ['eval']) Nil))
+    (_ -> genEvalDefault e)
+
+genEvalDefault e = error (append ['genEval: '] (append (exprConstrNameOf e) [' inside eval not expected']))
+
+genEvalApp prog adts args n as =
+  if (isKnownFunc n prog)
+    (genEvalAppKnown prog adts args n as)
+    (append (pushArgsThenFunc prog adts args n as) (Cons (mkI ['eval']) Nil))
+
+genEvalAppKnown prog adts args n as =
+  append (genCallArgs prog adts args as) (append (Cons (mkJ ['call'] n) Nil) (Cons (mkI ['eval']) Nil))
+
+// Condition of an if: special cases for `expr == 0`/`expr != 0`, general
+// fallback for everything else: compute the value, test it for truth
+// (`ifeq` -- jump if 0/false).
+genCond prog adts args e elseLabel =
+  case e
+    (Prim op operands -> genCondPrim prog adts args op operands elseLabel)
+    (If a b c -> error "genCond: nested if-condition not yet implemented")
+    (Let ls b -> error "genCond: Let cannot appear as a subexpression (sapl_programmeer_regels.md sectie 4)")
+    (NoMatch -> error "genCond: NoMatch not expected as if-condition")
+    (Lazy inner -> error "genCond: Lazy in condition not expected")
+    (Thunk inner -> error "genCond: Thunk in condition not expected")
+    (Closure inner -> error "genCond: Closure in condition not expected")
+    (_ -> genCondFallback prog adts args e elseLabel)
+
+genCondFallback prog adts args e elseLabel = append (genValue prog adts args e) (Cons (mkJ ['ifeq'] elseLabel) Nil)
+
+genCondPrim prog adts args op operands elseLabel =
+  case operands
+    (Cons a rest -> genCondPrimRest prog adts args op a rest elseLabel)
+    (Nil -> error "genCond: comparison needs exactly two operands")
+
+genCondPrimRest prog adts args op a rest elseLabel =
+  case rest
+    (Cons b rest2 -> genCondPrimRest2 prog adts args op a b rest2 elseLabel)
+    (Nil -> error "genCond: comparison needs exactly two operands")
+
+genCondPrimRest2 prog adts args op a b rest2 elseLabel =
+  case rest2
+    (Nil -> genCondCompareOp prog adts args op a b elseLabel)
+    (Cons x xs -> error "genCond: comparison needs exactly two operands")
+
+// vm.cpp has no ifgt/ifge -- only ifeq/ifneq/iflt/ifle, each against 0 on
+// the stack top, so every comparison becomes E(x)++E(y)++sub++if<mnem>, with
+// a per-operator (x,y) order and mnemonic (independently re-derived and
+// confirmed against the real benchmarks/hamming.jmvm). The old `expr op 0`
+// shortcut (no redundant "push 0; sub") is kept for ==/!=.
+genCondCompareOp prog adts args op a b elseLabel =
+  if (charListEq op ['==']) (genCondEqNe prog adts args ['ifneq'] a b elseLabel)
+  (if (charListEq op ['!=']) (genCondEqNe prog adts args ['ifeq'] a b elseLabel)
+  (if (charListEq op ['<']) (genCondSwapSub prog adts args ['ifle'] a b elseLabel)
+  (if (charListEq op ['<=']) (genCondSwapSub prog adts args ['iflt'] a b elseLabel)
+  (if (charListEq op ['>']) (genCondDirectSub prog adts args ['ifle'] a b elseLabel)
+  (if (charListEq op ['>=']) (genCondDirectSub prog adts args ['iflt'] a b elseLabel)
+  (error "genCond: unsupported comparison operator"))))))
+
+genCondEqNe prog adts args jumpMnemonic a b elseLabel =
+  if (isZeroLit b)
+    (append (genValue prog adts args a) (Cons (mkJ jumpMnemonic elseLabel) Nil))
+    (append (genCondSub prog adts args a b) (Cons (mkJ jumpMnemonic elseLabel) Nil))
+
+genCondDirectSub prog adts args jumpMnemonic a b elseLabel =
+  append (genCondSub prog adts args a b) (Cons (mkJ jumpMnemonic elseLabel) Nil)
+
+genCondSwapSub prog adts args jumpMnemonic a b elseLabel =
+  append (genCondSub prog adts args b a) (Cons (mkJ jumpMnemonic elseLabel) Nil)
+
+genCondSub prog adts args x y =
+  append (genValue prog adts args x) (append (genValue prog adts args y) (Cons (mkI ['sub']) Nil))
+
+isZeroLit e =
+  case e
+    (Num n -> n == 0)
+    (_ -> False)
+
+isComparisonOp op =
+  charListEq op ['=='] \/ charListEq op ['!='] \/ charListEq op ['<'] \/
+  charListEq op ['<='] \/ charListEq op ['>'] \/ charListEq op ['>=']
+
+// T-mode (tail position): ends in return/tailcall, or splits into blocks.
+genTail prog adts fname args e =
+  case e
+    (If a b c -> genTailIfDispatch prog adts fname args a b c)
+    (App n as -> genTailApp prog adts fname args n as)
+    (Var v -> genTailVar prog adts fname args v)
+    (Prim op as -> genTailPrim prog adts fname args op as)
+    (Case sc cs -> genCase prog adts fname args sc cs)
+    (Let ls b -> error "genTail: Let only allowed as a function's whole body (sapl_programmeer_regels.md sectie 4)")
+    (NoMatch -> genTailNoMatch fname args)
+    (Lazy inner -> error "genTail: Lazy should not reach codegen")
+    (Throw nr p -> genTailThrow prog adts args nr p)
+    (Try b h -> genTailTry prog adts fname args b h)
+    (_ -> genTailDefault prog adts args e)
+
+// Throw (Gat 2, try/catch, parser.ama:605's `generate (Throw nr payload) =
+// generate nr <++> generate payload <++> return [GoJMP]`): nr first
+// (deeper), payload last (on top) -- vm.cpp's GoJMP reads throw_nr from
+// sp-1 and payload from sp, so pushing in source order (no reverse) is
+// exactly right. GoJMP always jumps away itself (never falls through), so
+// no trailing return.
+genTailThrow prog adts args nr p =
+  Gencode (append (genValue prog adts args nr) (append (genValue prog adts args p) (Cons (mkI ['gojmp']) Nil))) Nil
+
+// Try (Gat 2, try/catch, parser.ama:606-611): `setjmp <catchNr> <catchLabel>`
+// before body's value code, followed by `popjmp` (normal exit: drop the
+// handler frame) and an immediate `return` (instead of parser.ama's shared
+// end label -- every genTail branch already returns independently here, see
+// genTailIf's thenPart/elsePart, so no separate Jmp/Nop landing point is
+// needed). The catch block is a SEPARATE, named Block (like If's else
+// branch) because SetJMP needs its own, externally addressable jump target:
+// first the handler's VALUE code (usually an undersaturated-call Closure,
+// see ast_helpers.cfp's getCatchNr comment), then `eval` (applies it to the
+// payload GoJMP already placed on the restored stack), then return.
+// `getCatchNr` only reads the handler's SOURCE-TEXT shape (compile time),
+// independent of how the handler is actually codegen'd.
+genTailTry prog adts fname args b h =
+  let catchLabel = append fname ['_catch'],
+      setjmpInstr = mkJ (append ['setjmp '] (itoa (getCatchNr h))) catchLabel,
+      normalInstrs = append (genValue prog adts args b) (Cons (mkI ['popjmp']) (Cons (mkI (append ['return '] (itoa (length args)))) Nil)),
+      catchInstrs = append (genValue prog adts args h) (Cons (mkI ['eval']) (Cons (mkI (append ['return '] (itoa (length args)))) Nil)) in
+  Gencode (Cons setjmpInstr normalInstrs) (Cons (Block catchLabel catchInstrs) Nil)
+
+genTailDefault prog adts args e =
+  Gencode (append (genValue prog adts args e) (Cons (mkI (append ['return '] (itoa (length args)))) Nil)) Nil
+
+// nomatch trap, now carrying the enclosing function's name (pushed as a
+// string literal right before "debug 2") so a runtime "nomatch for this
+// case" says which function it happened in - see vm.cpp's dodebug case 2 /
+// extractCString, and newparser/stage5_codegen.ama's mirrored change.
+genTailNoMatch fname args =
+  Gencode (Cons (mkI (append ['push '] (quoteStr fname))) (Cons (mkI ['debug 2']) (Cons (mkI (append ['return '] (itoa (length args)))) Nil))) Nil
+
+genTailVar prog adts fname args v =
+  Gencode (append (genValue prog adts args (Var v)) (append (evalIfLazy v args) (Cons (mkI (append ['return '] (itoa (length args)))) Nil))) Nil
+
+// 12 augustus 2026: `parser.ama` fuseert "strikte variabele < letterlijk
+// getal, spring" tot één `ifltlv`-instructie (parser.ama:655, genif) i.p.v.
+// de vijf instructies (push/load/eval/sub/ifle) die genTailIf hieronder
+// anders zou genereren -- gevonden via de aggregated-stats-vergelijking in
+// docs/bootstrapping_plan.md (sessielog 12 augustus). `ifltlv` heeft
+// spring-als-WAAR-semantiek (vm.cpp:506-509), het omgekeerde van genCond's
+// overal-spring-als-ONWAAR-conventie -- past dus niet als drop-in in
+// genTailIf, vandaar een aparte tak hier, net als parser.ama's eigen
+// `genif` dat doet (buiten de generieke genCond-machinerie om).
+genTailIfDispatch prog adts fname args a b c =
+  if (isIfltlvCond args a) (genTailIfltlv prog adts fname args a b c) (genTailIf prog adts fname args a b c)
+
+genTailIf prog adts fname args a b c =
+  let elseLabel = append fname ['_else'],
+      condInstrs = genCond prog adts args a elseLabel,
+      thenPart = genTail prog adts (append fname ['_then']) args b,
+      elsePart = genTail prog adts (append fname ['_else']) args c in
+  Gencode (append condInstrs (gcInstrs thenPart))
+          (append (gcBlocks thenPart) (Cons (Block elseLabel (gcInstrs elsePart)) (gcBlocks elsePart)))
+
+// `ifltlv slot k target` springt naar `target` als `slot < k` WAAR is --
+// dus de THEN-tak zit op het sprongdoel (net als genTailIf se ELSE-tak dat
+// doet), en de ELSE-tak is de doorval (net als genTailIf se THEN-tak dat
+// doet). Zelfde Gencode/Block-vorm als genTailIf, alleen then/else
+// omgewisseld.
+genTailIfltlv prog adts fname args a b c =
+  let thenLabel = append fname ['_then'],
+      ifltlvInstr = mkJ (append ['ifltlv '] (append (itoa (slotOf (ifltlvVar a) args)) (append [' '] (itoa (ifltlvLit a))))) thenLabel,
+      thenPart = genTail prog adts thenLabel args b,
+      elsePart = genTail prog adts (append fname ['_else']) args c in
+  Gencode (Cons ifltlvInstr (gcInstrs elsePart))
+          (append (gcBlocks elsePart) (Cons (Block thenLabel (gcInstrs thenPart)) (gcBlocks thenPart)))
+
+// Detecteert of `a` exact `Prim "<" [Var v, Num k]` is met v bekend-strikt.
+isIfltlvCond args e =
+  case e
+    (Prim op operands -> isIfltlvOp args op operands)
+    (_ -> False)
+
+isIfltlvOp args op operands =
+  if (charListEq op ['<']) (isIfltlvOperands args operands) False
+
+isIfltlvOperands args operands =
+  case operands
+    (Cons a rest -> isIfltlvOperandsCons args a rest)
+    (Nil -> False)
+
+isIfltlvOperandsCons args a rest =
+  case rest
+    (Cons b rest2 -> isIfltlvOperandsPair args a b rest2)
+    (Nil -> False)
+
+isIfltlvOperandsPair args a b rest2 =
+  case rest2
+    (Nil -> isIfltlvPair args a b)
+    (_ -> False)
+
+isIfltlvPair args a b =
+  case a
+    (Var v -> isIfltlvPairVar args v b)
+    (_ -> False)
+
+isIfltlvPairVar args v b =
+  case b
+    (Num k -> isStrictVar v args)
+    (_ -> False)
+
+ifltlvVar a =
+  case a
+    (Prim op operands -> ifltlvVarOperands operands)
+    (_ -> error "ifltlvVar: expected Prim")
+
+ifltlvVarOperands operands =
+  case operands
+    (Cons a rest -> ifltlvVarFirst a)
+    (Nil -> error "ifltlvVarOperands: expected at least one operand")
+
+ifltlvVarFirst a =
+  case a
+    (Var v -> v)
+    (_ -> error "ifltlvVarFirst: expected Var")
+
+ifltlvLit a =
+  case a
+    (Prim op operands -> ifltlvLitOperands operands)
+    (_ -> error "ifltlvLit: expected Prim")
+
+ifltlvLitOperands operands =
+  case operands
+    (Cons a rest -> ifltlvLitOperandsRest rest)
+    (Nil -> error "ifltlvLitOperands: expected at least one operand")
+
+ifltlvLitOperandsRest rest =
+  case rest
+    (Cons b rest2 -> ifltlvLitFirst b)
+    (Nil -> error "ifltlvLitOperandsRest: expected a second operand")
+
+ifltlvLitFirst b =
+  case b
+    (Num k -> k)
+    (_ -> error "ifltlvLitFirst: expected Num")
+
+// `print` in tail position: no "tailcall print" (that label doesn't exist,
+// print isn't a top-level function) -- just the generic value-then-return
+// route, same as parser.ama itself.
+genTailApp prog adts fname args n as =
+  if (isPrintCall n) (Gencode (append (genPrintCall prog adts args as) (Cons (mkI (append ['return '] (itoa (length args)))) Nil)) Nil)
+  (if (isPrintCCall n) (Gencode (append (genPrintCCall prog adts args as) (Cons (mkI (append ['return '] (itoa (length args)))) Nil)) Nil)
+  (if (isPrintSCall n) (Gencode (append (genPrintSCall prog adts args as) (Cons (mkI (append ['return '] (itoa (length args)))) Nil)) Nil)
+  (if (isPredefCall n) (Gencode (append (genPredefCall prog adts args n as) (Cons (mkI (append ['return '] (itoa (length args)))) Nil)) Nil)
+  (if (isFloatOpCall n) (Gencode (append (genFloatOpCall prog adts args n as) (Cons (mkI (append ['return '] (itoa (length args)))) Nil)) Nil)
+  (if (isErrorCall n) (Gencode (append (genErrorCall prog adts args as) (Cons (mkI (append ['return '] (itoa (length args)))) Nil)) Nil)
+  (if (isSyscallCall n) (Gencode (append (genSyscallCall prog adts args n as) (Cons (mkI (append ['return '] (itoa (length args)))) Nil)) Nil)
+  (if (isStrcreateCall n) (Gencode (append (genStrcreateCall prog adts args as) (Cons (mkI (append ['return '] (itoa (length args)))) Nil)) Nil)
+  (if (isReflectionCall n) (Gencode (append (genReflectionCall prog adts args n as) (Cons (mkI (append ['return '] (itoa (length args)))) Nil)) Nil)
+  (Gencode (append (genCallArgs prog adts args as) (Cons (mkJ (append ['tailcall '] (itoa (length args))) n) Nil)) Nil)))))))))
+
+genTailPrim prog adts fname args op as =
+  if (isComparisonOp op) (genTailComparison prog adts fname args op as)
+  (if (charListEq op ['<#>']) (genTailSeq prog adts fname args as)
+  (Gencode (append (genValue prog adts args (Prim op as)) (Cons (mkI (append ['return '] (itoa (length args)))) Nil)) Nil))
+
+genTailComparison prog adts fname args op as =
+  let falseLabel = append fname ['_false'],
+      condInstrs = genCondPrim prog adts args op as falseLabel in
+  Gencode (append condInstrs (Cons (mkI ['push 1']) (Cons (mkI (append ['return '] (itoa (length args)))) Nil)))
+          (Cons (Block falseLabel (Cons (mkI ['push 0']) (Cons (mkI (append ['return '] (itoa (length args)))) Nil))) Nil)
+
+genTailSeq prog adts fname args as =
+  case as
+    (Cons l rest -> genTailSeqRest prog adts fname args l rest)
+    (Nil -> error "genTail: <#> verwacht precies 2 operanden")
+
+genTailSeqRest prog adts fname args l rest =
+  case rest
+    (Cons r rest2 -> genTailSeqRest2 prog adts fname args l r rest2)
+    (Nil -> error "genTail: <#> verwacht precies 2 operanden")
+
+genTailSeqRest2 prog adts fname args l r rest2 =
+  case rest2
+    (Nil -> buildTailSeq prog adts fname args l r)
+    (Cons x xs -> error "genTail: <#> verwacht precies 2 operanden")
+
+buildTailSeq prog adts fname args l r =
+  let rightTail = genTail prog adts fname args r in
+  Gencode (append (genValue prog adts args l) (gcInstrs rightTail)) (gcBlocks rightTail)
+
+// T(case a cs) = E(a) + jmpt n ls + S(c)|c<-cs. Each branch becomes its own
+// block with the pattern variables in front of `args` (same "list =
+// positional slots" trick as stage4_retag.cfp's branchLocals).
+genCase prog adts fname args scrutinee branches =
+  let scrutInstrs = genValue prog adts args scrutinee,
+      firstCon = cbConOf (headBranchOf branches),
+      arity = adtArity firstCon adts,
+      branchLabels = map (branchBlockName fname) branches,
+      jmptInstr = mkJM (append ['jmpt '] (itoa arity)) branchLabels in
+  Gencode (append scrutInstrs (Cons jmptInstr Nil)) (genCaseBranches prog adts fname args branches)
+
+headBranchOf branches =
+  case branches
+    (Cons b bs -> b)
+    (Nil -> error "genCase: case has no branches")
+
+branchBlockName fname cb = append fname (append ['_'] (cbConOf cb))
+
+// A nested case within a branch gets its OWN branch name as its new
+// `fname` (not the outer case's), so its own branch labels can never
+// collide with the outer case's own labels (bug fixed in the original
+// stage5_codegen.ama, see that file's header for the hamming/merge story).
+genCaseBranches prog adts fname args cbs =
+  case cbs
+    (Nil -> Nil)
+    (Cons cb rest -> genCaseBranchesCons prog adts fname args cb rest)
+
+genCaseBranchesCons prog adts fname args cb rest =
+  let extendedArgs = append (mkCaseArgs (cbVarsOf cb) (conFields (cbConOf cb) adts)) args,
+      bodyCode = genTail prog adts (branchBlockName fname cb) extendedArgs (cbBodyOf cb),
+      mainBlock = Block (branchBlockName fname cb) (gcInstrs bodyCode) in
+  append (Cons mainBlock Nil) (append (gcBlocks bodyCode) (genCaseBranches prog adts fname args rest))
+
+mkCaseArgs vs fields =
+  case vs
+    (Nil -> Nil)
+    (Cons v vs2 -> mkCaseArgsCons v vs2 fields)
+
+mkCaseArgsCons v vs2 fields =
+  case fields
+    (Cons f fs -> Cons (Arg v f) (mkCaseArgs vs2 fs))
+    (Nil -> error "mkCaseArgs: fewer fields than case-bound variables")
+
+// == let: two independent orderings, never conflate them. ==
+// 1. SLOT NUMBER = position in the list as DECLARED in the source,
+//    regardless of dependency (letBindingToArg on the ORIGINAL `ls`, plus
+//    slotOf, give this automatically -- same trick as genCaseBranches).
+// 2. EMISSION ORDER = topologically sorted (Kahn): a binding may only emit
+//    once every let-bound free variable it needs is already stored.
+// Cyclic bindings: Phase A (the plain Kahn sort) resolves whatever it can
+// without tricks; whatever's left over is a cyclic group. Within such a
+// group, a reference to a cyclic sibling that's a bare, direct argument of
+// the binding's own Ct/Thunk/Closure construction can always be forward-
+// filled with a dummy value (`push 666`), patched via `update` once the
+// sibling actually exists -- Phase B. A reference that ISN'T such a bare
+// direct argument (nested inside a further call) can't be patched -- that
+// sibling must already exist, so Phase B is itself a topological sort, but
+// on a SMALLER dependency relation (only the non-patchable "must-precede"
+// references). A strict binding can never be resolved via Phase B (a dummy
+// is a lazy placeholder; a strict binding needs a real value right away).
+genLet prog adts fname args ls b =
+  let extendedArgs = append (map letBindingToArg ls) args,
+      allLetNames = map lbNameOf ls,
+      paramNames = map argNameOf args,
+      phaseAResult = phaseASort ls allLetNames paramNames,
+      phaseAOrder = sortResolved phaseAResult,
+      residual = sortResidual phaseAResult,
+      availAfterA = append paramNames (map lbNameOf phaseAOrder),
+      phaseBOrder = genLetPhaseB residual allLetNames availAfterA,
+      phaseACode = concatAll (map (genLetBindingCode prog adts extendedArgs) phaseAOrder),
+      phaseBResult = genLetBindingsPatched prog adts extendedArgs availAfterA phaseBOrder,
+      phaseBCode = pcInstrs phaseBResult,
+      patchCode = concatAll (map (genPatchInstr extendedArgs) (pcPatches phaseBResult)),
+      bindingsCode = append phaseACode (append phaseBCode patchCode),
+      bodyCode = genTail prog adts fname extendedArgs b in
+  Gencode (append (Cons (mkI (append ['updsp '] (itoa (length ls)))) Nil) (append bindingsCode (gcInstrs bodyCode)))
+          (gcBlocks bodyCode)
+
+genLetPhaseB residual allLetNames availAfterA =
+  if (anyStrict residual)
+    (error "genLet: strict binding cannot be part of a cyclic let group (a dummy is a lazy value, a strict binding needs a real one immediately)")
+    (phaseBSort residual allLetNames availAfterA)
+
+// `store`'s slot number comes from `extendedArgs` (declaration order), NOT
+// the position in the sorted order.
+genLetBindingCode prog adts extendedArgs lb =
+  append (genValue prog adts extendedArgs (lbRhsOf lb))
+         (Cons (mkI (append ['store '] (itoa (slotOf (lbNameOf lb) extendedArgs)))) Nil)
+
+::Sortres = Sortres !resolved !residual
+
+sortResolved r = case r (Sortres res resid -> res)
+sortResidual r = case r (Sortres res resid -> resid)
+
+phaseASort lbs allNames avail =
+  case lbs
+    (Nil -> Sortres Nil Nil)
+    (Cons x xs -> phaseASortNonEmpty lbs allNames avail)
+
+phaseASortNonEmpty lbs allNames avail =
+  let ready = letReady lbs allNames avail,
+      rest = letNotReady lbs allNames avail in
+  phaseASortBranch lbs ready rest allNames avail
+
+phaseASortBranch lbs ready rest allNames avail =
+  case ready
+    (Nil -> Sortres Nil lbs)
+    (Cons r rs -> prependSortres ready (phaseASort rest allNames (append avail (map lbNameOf ready))))
+
+prependSortres newly sr =
+  case sr
+    (Sortres resolved residual -> Sortres (append newly resolved) residual)
+
+// Phase B: same Kahn shape as Phase A, but "ready" means every NON-patchable
+// (nested) reference to a cyclic sibling is already available -- patchable
+// (bare, direct) references never block.
+phaseBSort lbs allNames avail =
+  case lbs
+    (Nil -> Nil)
+    (Cons x xs -> phaseBSortNonEmpty lbs allNames avail)
+
+phaseBSortNonEmpty lbs allNames avail =
+  let ready = phaseBReady lbs allNames avail,
+      rest = phaseBNotReady lbs allNames avail in
+  phaseBSortBranch ready rest allNames avail
+
+phaseBSortBranch ready rest allNames avail =
+  case ready
+    (Nil -> error "genLet: cyclic let has a nested reference cycle, not yet supported (zie parser_ama_cyclic_let_bug.md)")
+    (Cons r rs -> append ready (phaseBSort rest allNames (append avail (map lbNameOf ready))))
+
+phaseBReady lbs allNames avail =
+  case lbs
+    (Nil -> Nil)
+    (Cons lb rest -> phaseBReadyCons lb rest allNames avail)
+
+phaseBReadyCons lb rest allNames avail =
+  if (mustPrecedeSatisfied lb allNames avail)
+    (Cons lb (phaseBReady rest allNames avail))
+    (phaseBReady rest allNames avail)
+
+phaseBNotReady lbs allNames avail =
+  case lbs
+    (Nil -> Nil)
+    (Cons lb rest -> phaseBNotReadyCons lb rest allNames avail)
+
+phaseBNotReadyCons lb rest allNames avail =
+  if (mustPrecedeSatisfied lb allNames avail)
+    (phaseBNotReady rest allNames avail)
+    (Cons lb (phaseBNotReady rest allNames avail))
+
+// A strict binding can never be resolved via a dummy -- rejected outright
+// here rather than treated as "ready", so it lands in phaseBSort's own
+// error path instead of silently getting a dummy 666 as its "value".
+mustPrecedeSatisfied lb allNames avail =
+  if (lbStrictOf lb) False (letDepsAvailable (mustPrecedeDeps lb allNames) allNames avail)
+
+anyStrict lbs =
+  case lbs
+    (Nil -> False)
+    (Cons lb rest -> if (lbStrictOf lb) True (anyStrict rest))
+
+mustPrecedeDeps lb allNames = removeNames (letCollectVars (lbRhsOf lb)) (directPatchableNames (lbRhsOf lb))
+
+removeNames xs toRemove =
+  case xs
+    (Nil -> Nil)
+    (Cons x rest -> if (member toRemove x) (removeNames rest toRemove) (Cons x (removeNames rest toRemove)))
+
+// Names that occur as a BARE, DIRECT argument of the binding's own
+// construction -- only Ct/Thunk(App)/Closure(App) have such directly
+// patchable positions.
+directPatchableNames e =
+  case e
+    (Ct n as -> directVarNames as)
+    (Let ls b -> error "directPatchableNames: nested Let not expected (sapl_programmeer_regels.md sectie 4)")
+    (Lazy inner -> error "directPatchableNames: Lazy should not reach codegen")
+    (Thunk inner -> directPatchableNamesThunk inner)
+    (Closure inner -> directPatchableNamesClosure inner)
+    (_ -> Nil)
+
+directPatchableNamesThunk inner =
+  case inner
+    (App n as -> directVarNames as)
+    (Lazy e2 -> error "directPatchableNames: nested Thunk/Lazy not expected")
+    (Thunk e2 -> error "directPatchableNames: nested Thunk not expected")
+    (Closure e2 -> error "directPatchableNames: nested Thunk/Closure not expected")
+    (_ -> error "directPatchableNames: Thunk must wrap an application")
+
+directPatchableNamesClosure inner =
+  case inner
+    (App n as -> directVarNames as)
+    (Lazy e2 -> error "directPatchableNames: nested Closure/Lazy not expected")
+    (Thunk e2 -> error "directPatchableNames: nested Closure/Thunk not expected")
+    (Closure e2 -> error "directPatchableNames: nested Closure not expected")
+    (_ -> error "directPatchableNames: Closure must wrap an application")
+
+directVarNames es =
+  case es
+    (Nil -> Nil)
+    (Cons e rest -> directVarNamesCons e rest)
+
+directVarNamesCons e rest =
+  case e
+    (Var v -> Cons v (directVarNames rest))
+    (_ -> directVarNames rest)
+
+letReady lbs allNames avail =
+  case lbs
+    (Nil -> Nil)
+    (Cons lb rest -> letReadyCons lb rest allNames avail)
+
+letReadyCons lb rest allNames avail =
+  if (letDepsAvailable (letCollectVars (lbRhsOf lb)) allNames avail)
+    (Cons lb (letReady rest allNames avail))
+    (letReady rest allNames avail)
+
+letNotReady lbs allNames avail =
+  case lbs
+    (Nil -> Nil)
+    (Cons lb rest -> letNotReadyCons lb rest allNames avail)
+
+letNotReadyCons lb rest allNames avail =
+  if (letDepsAvailable (letCollectVars (lbRhsOf lb)) allNames avail)
+    (letNotReady rest allNames avail)
+    (Cons lb (letNotReady rest allNames avail))
+
+// Only references to OTHER let-bound names count as a dependency (a
+// reference to a function parameter or top-level function never blocks).
+letDepsAvailable refs allNames avail = letDepsAvailableHelper (filterLetNames refs allNames) avail
+
+filterLetNames vs allNames =
+  case vs
+    (Nil -> Nil)
+    (Cons v rest -> if (member allNames v) (Cons v (filterLetNames rest allNames)) (filterLetNames rest allNames))
+
+letDepsAvailableHelper vs avail =
+  case vs
+    (Nil -> True)
+    (Cons v rest -> if (member avail v) (letDepsAvailableHelper rest avail) False)
+
+// -- Phase B codegen: a dummy value now, `update` instructions afterward. --
+
+::Letpatch = LetPatch !targetSlot !fieldIdx !sourceVar
+
+lpTargetSlot p = case p (LetPatch t i v -> t)
+lpFieldIdx p = case p (LetPatch t i v -> i)
+lpSourceVar p = case p (LetPatch t i v -> v)
+
+::Patchedcode = Patchedcode !is !ps
+
+pcInstrs pc = case pc (Patchedcode is ps -> is)
+pcPatches pc = case pc (Patchedcode is ps -> ps)
+
+// One Phase-B binding: value code (with dummies where needed) + the
+// patches that follow from it, then the rest of the Phase-B list with a
+// GROWN `avail` (this binding's own name is available to later Phase-B
+// bindings in the same group right after its own store).
+genLetBindingsPatched prog adts args avail lbs =
+  case lbs
+    (Nil -> Patchedcode Nil Nil)
+    (Cons lb rest -> genLetBindingsPatchedCons prog adts args avail lb rest)
+
+genLetBindingsPatchedCons prog adts args avail lb rest =
+  let thisResult = genPatchedRhs prog adts args avail (slotOf (lbNameOf lb) args) (lbRhsOf lb),
+      thisInstrs = pcInstrs thisResult,
+      thisPatches = pcPatches thisResult,
+      restResult = genLetBindingsPatched prog adts args (append avail (Cons (lbNameOf lb) Nil)) rest,
+      restInstrs = pcInstrs restResult,
+      restPatches = pcPatches restResult in
+  Patchedcode (append thisInstrs (append (Cons (mkI (append ['store '] (itoa (slotOf (lbNameOf lb) args)))) Nil) restInstrs))
+              (append thisPatches restPatches)
+
+// Only Ct/Thunk(App)/Closure(App) support dummy substitution.
+genPatchedRhs prog adts args avail slot e =
+  case e
+    (Var v -> error "genLet: cyclic let binding rhs must be Ct/Thunk(App)/Closure(App), bare Var alias not supported")
+    (App n as -> error "genLet: cyclic let binding rhs must be Ct/Thunk(App)/Closure(App), bare (strict) App not supported")
+    (Ct n as -> genPatchedCt prog adts args avail slot n as)
+    (Let ls b -> error "genLet: nested Let not expected (sapl_programmeer_regels.md sectie 4)")
+    (Lazy inner -> error "genLet: Lazy should not reach codegen")
+    (Thunk inner -> genPatchedRhsThunk prog adts args avail slot inner)
+    (Closure inner -> genPatchedRhsClosure prog adts args avail slot inner)
+    (_ -> error (append ['genLet: cyclic let binding rhs must be Ct/Thunk(App)/Closure(App), '] (append (exprConstrNameOf e) [' not supported'])))
+
+genPatchedRhsThunk prog adts args avail slot inner =
+  case inner
+    (App n as -> genPatchedCreate prog adts args avail slot n as 3)
+    (Lazy e2 -> error "genLet: nested Thunk/Lazy not expected")
+    (Thunk e2 -> error "genLet: nested Thunk not expected")
+    (Closure e2 -> error "genLet: nested Thunk/Closure not expected")
+    (_ -> error "genLet: Thunk must wrap an application")
+
+genPatchedRhsClosure prog adts args avail slot inner =
+  case inner
+    (App n as -> genPatchedCreate prog adts args avail slot n as 7)
+    (Lazy e2 -> error "genLet: nested Closure/Lazy not expected")
+    (Thunk e2 -> error "genLet: nested Closure/Thunk not expected")
+    (Closure e2 -> error "genLet: nested Closure not expected")
+    (_ -> error "genLet: Closure must wrap an application")
+
+// Ct target: field index = 0-based source position (no header field to
+// count, unlike Thunk/Closure below).
+genPatchedCt prog adts args avail slot n as =
+  Patchedcode
+    (append (genArgsWithDummies prog adts args avail as)
+            (Cons (mkI (append ['ccreate '] (append (itoa (length as)) (append [' 11 '] (itoa (conTag n adts)))))) Nil))
+    (ctPatches slot avail 0 as)
+
+ctPatches slot avail p as =
+  case as
+    (Nil -> Nil)
+    (Cons e rest -> ctPatchesCons slot avail p e rest)
+
+ctPatchesCons slot avail p e rest =
+  case e
+    (Var v -> ctPatchOne slot avail p v rest)
+    (_ -> ctPatches slot avail (p+1) rest)
+
+ctPatchOne slot avail p v rest =
+  if (member avail v)
+    (ctPatches slot avail (p+1) rest)
+    (Cons (LetPatch slot p v) (ctPatches slot avail (p+1) rest))
+
+// Thunk/Closure target: field index = source position + 1 (the function
+// reference itself counts as position 0).
+genPatchedCreate prog adts args avail slot n as tag =
+  Patchedcode
+    (append (genArgsWithDummies prog adts args avail as)
+            (append (Cons (pushFuncRef prog args n) Nil)
+                    (Cons (mkI (append ['create '] (append (itoa (length as + 1)) (append [' '] (itoa tag))))) Nil)))
+    (createPatches slot avail 0 as)
+
+createPatches slot avail p as =
+  case as
+    (Nil -> Nil)
+    (Cons e rest -> createPatchesCons slot avail p e rest)
+
+createPatchesCons slot avail p e rest =
+  case e
+    (Var v -> createPatchOne slot avail p v rest)
+    (_ -> createPatches slot avail (p+1) rest)
+
+createPatchOne slot avail p v rest =
+  if (member avail v)
+    (createPatches slot avail (p+1) rest)
+    (Cons (LetPatch slot (p+1) v) (createPatches slot avail (p+1) rest))
+
+// Arguments in the same reversed order as genCallArgs (codegen order), but
+// each bare-Var argument gets a dummy instead of a `load` if its sibling
+// isn't available yet -- every other shape just goes via the existing
+// genValue (never patchable, see directPatchableNames/directVarNames).
+genArgsWithDummies prog adts args avail as = concatAll (map (genOneArgWithDummy prog adts args avail) (reverse as))
+
+genOneArgWithDummy prog adts args avail e =
+  case e
+    (Var v -> genDummyOrLoad prog adts args avail v)
+    (_ -> genValue prog adts args e)
+
+genDummyOrLoad prog adts args avail v =
+  if (member avail v) (genValue prog adts args (Var v)) (Cons (mkI ['push 666']) Nil)
+
+// Executing one patch: `load <target slot>, push <field idx>, load <source
+// slot>, update`.
+genPatchInstr args p =
+  Cons (mkI (append ['load '] (itoa (lpTargetSlot p))))
+  (Cons (mkI (append ['push '] (itoa (lpFieldIdx p))))
+  (Cons (mkI (append ['load '] (itoa (slotOf (lpSourceVar p) args))))
+  (Cons (mkI ['update']) Nil)))
+
+// Own small free-variable collector (not stage3_lift.cfp's collectVars --
+// each stage file only imports newparser_ast.cfp, same discipline as every
+// other stage here). Must cover every shape a let-rhs can have AFTER stage
+// 4 (so Thunk/Closure/Eval too), unlike stage3's variant which runs before
+// stage 4.
+letCollectVars e =
+  case e
+    (Var v -> Cons v Nil)
+    (If a b c -> append (letCollectVars a) (append (letCollectVars b) (letCollectVars c)))
+    (App n as -> Cons n (concatAll (map letCollectVars as)))
+    (Prim op as -> concatAll (map letCollectVars as))
+    (Ct n as -> concatAll (map letCollectVars as))
+    (Case sc cs -> append (letCollectVars sc) (concatAll (map letCollectVarsBranch cs)))
+    (Let ls b -> error "letCollectVars: nested Let not expected (sapl_programmeer_regels.md sectie 4)")
+    (Lazy inner -> letCollectVars inner)
+    (Thunk inner -> letCollectVars inner)
+    (Closure inner -> letCollectVars inner)
+    (Eval inner -> letCollectVars inner)
+    (Try b h -> append (letCollectVars b) (letCollectVars h))
+    (Throw nr p -> append (letCollectVars nr) (letCollectVars p))
+    (_ -> Nil)
+
+letCollectVarsBranch cb = case cb (CaseBranch c vs b -> letCollectVars b)
+
+// Two entry points for functions with a strict argument: a lazy entry
+// evaluates each strict argument and falls through into the strict entry
+// (no jump).
+genLazyEntry i args =
+  case args
+    (Nil -> Nil)
+    (Cons a rest -> genLazyEntryCons i a rest)
+
+genLazyEntryCons i a rest =
+  if (argStrict a)
+    (append (evalSlot i) (genLazyEntry (i+1) rest))
+    (genLazyEntry (i+1) rest)
+
+evalSlot i =
+  Cons (mkI (append ['load '] (itoa i))) (Cons (mkI ['eval']) (Cons (mkI (append ['store '] (itoa i))) Nil))
+
+genFunc prog adts f =
+  case f
+    (Func name args body -> genFuncBody prog adts name args body)
+
+genFuncBody prog adts name args body =
+  let bodyCode = genBody prog adts name args body,
+      mainBlock = Block name (gcInstrs bodyCode),
+      mainBlocks = genFuncMainBlocks name args mainBlock in
+  append mainBlocks (gcBlocks bodyCode)
+
+// The `_lazy` entry is ALWAYS generated now (see pushFuncRef above for why)
+// -- even when `f` has no strict argument at all. Without any strict
+// argument, `genLazyEntry` has nothing to evaluate and returns Nil; a block
+// with ZERO instructions wouldn't carry its own index label in the rendered
+// text (renderBlockLines only emits a line for a non-empty instruction
+// list), so that case falls back to a bare `jmp` into the strict entry
+// block (a semantic no-op fallthrough that's still >=1 real instruction).
+genFuncMainBlocks name args mainBlock =
+  genFuncMainBlocksFromLazy name mainBlock (genLazyEntry 0 args)
+
+genFuncMainBlocksFromLazy name mainBlock lazyBody =
+  case lazyBody
+    (Nil -> Cons (Block (append name ['_lazy']) (Cons (mkJ ['jmp'] name) Nil)) (Cons mainBlock Nil))
+    (Cons a as -> Cons (Block (append name ['_lazy']) lazyBody) (Cons mainBlock Nil))
+
+// `Let` may only be the WHOLE function body -- only here, at a function's
+// own top level, does `Let` get special treatment; everywhere else
+// (genTail/genValue/genCond/genEval/genCreateApp) it's a hard error.
+genBody prog adts fname args e =
+  case e
+    (Let ls b -> genLet prog adts fname args ls b)
+    (_ -> genTail prog adts fname args e)
+
+// Peephole optimization, direct Sapl port of newparser/stage5_codegen.ama's
+// own port of parser.ama:882-896's `optimize` -- see that file's header
+// comment for the full rationale (text-based instr representation instead
+// of a real ADT, per-block application being provably equivalent to
+// parser.ama's flat-list-with-inline-labels approach, and why the two
+// `Push 1 : Sub/Add -> Dec/Inc` rules are deliberately not ported).
+
+hasPrefix s p =
+  case p
+    (Nil -> True)
+    (Cons pc prest -> hasPrefixCons s pc prest)
+
+hasPrefixCons s pc prest =
+  case s
+    (Nil -> False)
+    (Cons sc srest -> if (sc == pc) (hasPrefix srest prest) False)
+
+dropN n xs =
+  if (n == 0) xs (dropNCons n xs)
+
+dropNCons n xs =
+  case xs
+    (Nil -> Nil)
+    (Cons x rest -> dropN (n - 1) rest)
+
+digitsToNum ds = digitsToNumAcc ds 0
+
+digitsToNumAcc ds acc =
+  case ds
+    (Nil -> acc)
+    (Cons d rest -> digitsToNumAcc rest ((acc * 10) + (d - '0')))
+
+instrTextOf i =
+  case i
+    (Instr t target -> t)
+    (InstrMulti t targets -> t)
+
+isLoadI i = hasPrefix (instrTextOf i) ['load ']
+isStoreI i = hasPrefix (instrTextOf i) ['store ']
+isPushI i = hasPrefix (instrTextOf i) ['push ']
+isAddI i = charListEq (instrTextOf i) ['add']
+isSubI i = charListEq (instrTextOf i) ['sub']
+isReturnI i = hasPrefix (instrTextOf i) ['return ']
+
+numArgOf i prefixLen = digitsToNum (dropN prefixLen (instrTextOf i))
+loadSlotOf i = numArgOf i 5
+storeSlotOf i = numArgOf i 6
+returnArityOf i = numArgOf i 7
+
+// A `push` argument is only a number if it doesn't start with a `"`
+// (string literal, `push "..."`) -- the Sapl compiler never pushes a bare
+// char literal (chars become Num during lexing), so this is the only
+// ambiguity to guard against.
+isNumPushI i =
+  if (isPushI i) (isNumPushRest (dropN 5 (instrTextOf i))) False
+
+hasDotOrQuote cs =
+  case cs
+    (Nil -> False)
+    (Cons c cs2 -> if ((c == 34) \/ (c == '.')) True (hasDotOrQuote cs2))
+
+isNumPushRest rest =
+  case rest
+    (Nil -> False)
+    (Cons c cs -> if (hasDotOrQuote (Cons c cs)) False True)
+
+pushNumOf i = numArgOf i 5
+
+isAddNext is =
+  case is
+    (Nil -> False)
+    (Cons i3 rest -> isAddI i3)
+
+isSubNext is =
+  case is
+    (Nil -> False)
+    (Cons i3 rest -> isSubI i3)
+
+optimizeInstrs xs =
+  case xs
+    (Nil -> Nil)
+    (Cons i1 rest1 -> optimizeInstrsFrom i1 rest1)
+
+optimizeInstrsFrom i1 rest1 =
+  case rest1
+    (Nil -> Cons i1 Nil)
+    (Cons i2 is -> optimizeInstrsPair i1 i2 is)
+
+// 12 augustus 2026: `push 1; add` -> `inc` en `push 1; sub` -> `dec`
+// toegevoegd (vm.cpp:605-612, INCDECVAL=4 -- de shift-tagging-representatie
+// van 1, geen zorg hier: pure instructie-tekst-substitutie, net als
+// optimizeLoadPushAdd/optimizePushReturn hieronder al doen). Zie
+// newparser/stage5_codegen.ama's identieke toevoeging voor de volle
+// onderbouwing (fib/Ifltlv-sessielog, docs/bootstrapping_plan.md).
+isOnePushI i = isNumPushI i /\ (pushNumOf i == 1)
+
+optimizeInstrsPair i1 i2 is =
+  if (isLoadI i1 /\ isLoadI i2) (optimizeLoadLoad i1 i2 is)
+  (if (isStoreI i1 /\ isLoadI i2) (optimizeStoreLoad i1 i2 is)
+  (if (isLoadI i1 /\ isStoreI i2) (optimizeLoadStore i1 i2 is)
+  (if (isLoadI i1 /\ isNumPushI i2 /\ isAddNext is) (optimizeLoadPushAdd i1 i2 is)
+  (if (isLoadI i1 /\ isNumPushI i2 /\ isSubNext is) (optimizeLoadPushSub i1 i2 is)
+  (if (isNumPushI i1 /\ isReturnI i2) (optimizePushReturn i1 i2 is)
+  (if (isOnePushI i1 /\ isAddI i2) (Cons (mkI ['inc']) (optimizeInstrs is))
+  (if (isOnePushI i1 /\ isSubI i2) (Cons (mkI ['dec']) (optimizeInstrs is))
+  (Cons i1 (optimizeInstrsFrom i2 is)))))))))
+
+optimizeLoadLoad i1 i2 is =
+  if (loadSlotOf i1 == loadSlotOf i2) (Cons i1 (Cons (mkI ['dup']) (optimizeInstrs is)))
+  (Cons i1 (optimizeInstrsFrom i2 is))
+
+optimizeStoreLoad i1 i2 is =
+  if (storeSlotOf i1 == loadSlotOf i2) (Cons (mkI ['dup']) (optimizeInstrsFrom i1 is))
+  (Cons i1 (optimizeInstrsFrom i2 is))
+
+optimizeLoadStore i1 i2 is =
+  if (loadSlotOf i1 == storeSlotOf i2) (optimizeInstrs is)
+  (Cons i1 (optimizeInstrsFrom i2 is))
+
+optimizeLoadPushAdd i1 i2 is =
+  case is
+    nomatch
+    (Cons i3 rest -> Cons (mkI (append ['loadadd '] (append (itoa (loadSlotOf i1)) (append [' '] (itoa (pushNumOf i2)))))) (optimizeInstrs rest))
+
+optimizeLoadPushSub i1 i2 is =
+  case is
+    nomatch
+    (Cons i3 rest -> Cons (mkI (append ['loadadd '] (append (itoa (loadSlotOf i1)) (append [' '] (itoa (0 - (pushNumOf i2))))))) (optimizeInstrs rest))
+
+optimizePushReturn i1 i2 is =
+  Cons (mkI (append ['return_const '] (append (itoa (returnArityOf i2)) (append [' '] (itoa (pushNumOf i1)))))) (optimizeInstrs is)
+
+optimizeBlockInstrs b =
+  case b
+    (Block name instrs -> Block name (optimizeInstrs instrs))
+
+// -- Render: resolve symbolic label names to their position in `blocks`. --
+//
+// 11 sep 2026 perf fix: `blockIndex` used to be a straight linear scan of
+// `blocks` -- O(#blocks) per call, called
+// once per jump/call-family target. Measured on the self-hosting source
+// (908 functions): 5392 blocks, 10294 target resolutions, ~1.39s of the
+// ~2.10s render phase (see docs session: codegen-analyse), because EVERY
+// comparison is interpreted Sapl (`charListEq`, a real JMVM function call
+// per list cell) rather than a native primitive -- parser.ama's own
+// `findnr` has the identical O(n) shape, but Amanda's `=` is a compiled C
+// loop (comparecell), not user-level code, so it doesn't show up there.
+// Fix: build a BALANCED binary search tree, once, keyed by block name --
+// O(log #blocks) per lookup instead of O(#blocks). Balance is not
+// incidental: naive insertion in `blocks`' own order would degrade badly
+// for exactly this codebase's block names (long, deeply shared prefixes
+// like `f_else_else_else`, see stage5_codegen.cfp's genTailIf), so the
+// tree is built from a SORTED list by repeatedly splitting at the
+// midpoint -- guarantees O(log n) depth regardless of name distribution.
+// Only this section and its two call sites in renderInstr*/renderTargets/
+// genFuncMetas/genMetadata/renderProgram change; genFunc/genTail/genCond
+// (how blocks and instructions are BUILT) are untouched.
+
+::labelentry = LabelEntry !name !idx
+entryName e = case e (LabelEntry n i -> n)
+entryIdx e = case e (LabelEntry n i -> i)
+
+::bst = BstLeaf | BstNode !name !idx !left !right
+
+buildEntries blocks = buildEntriesAt blocks 0
+
+buildEntriesAt blocks i =
+  case blocks
+    (Nil -> Nil)
+    (Cons b rest -> Cons (LabelEntry (blockName b) i) (buildEntriesAt rest (i + 1)))
+
+// Bottom-up merge sort on `.name` via charListCompare -- O(n log n), one
+// time cost dwarfed by what it replaces (5392 blocks: n*log2(n) =~ 67,000
+// vs. the ~27.7M comparisons the old O(n^2) scan needed).
+mergeSortEntries es = mergeSortLen es (length es)
+
+mergeSortLen es n =
+  if (n <= 1) es (mergeSortSplit es n)
+
+mergeSortSplit es n =
+  let mid = n / 2,
+      left = take mid es,
+      right = drop mid es in
+  mergeEntries (mergeSortLen left mid) (mergeSortLen right (n - mid))
+
+mergeEntries xs ys =
+  case xs
+    (Nil -> ys)
+    (Cons x xs2 -> mergeEntriesCons x xs2 ys)
+
+mergeEntriesCons x xs2 ys =
+  case ys
+    (Nil -> Cons x xs2)
+    (Cons y ys2 -> mergeEntriesBoth x xs2 y ys2)
+
+mergeEntriesBoth x xs2 y ys2 =
+  if (charListCompare (entryName x) (entryName y) <= 0)
+    (Cons x (mergeEntries xs2 (Cons y ys2)))
+    (Cons y (mergeEntries (Cons x xs2) ys2))
+
+// Balanced-by-construction: pick the sorted list's midpoint as the node,
+// recurse left/right on the two halves. `take`/`drop`/`length` on a plain
+// Sapl list are each O(k), so this pass is O(n log n) overall (one time,
+// at the start of renderProgram) -- not the O(n) "half a list in one
+// pointer-swap" a real array would give, but utterly negligible next to
+// what the resulting O(log n) lookups save.
+buildBst sortedEntries = buildBstN sortedEntries (length sortedEntries)
+
+buildBstN entries n =
+  if (n == 0) BstLeaf (buildBstNSplit entries n)
+
+buildBstNSplit entries n =
+  let mid = n / 2,
+      leftEntries = take mid entries,
+      fromMid = drop mid entries in
+  buildBstNode leftEntries mid fromMid (n - mid - 1)
+
+buildBstNode leftEntries leftCount fromMid rightCount =
+  case fromMid
+    (Cons e rightEntries -> BstNode (entryName e) (entryIdx e) (buildBstN leftEntries leftCount) (buildBstN rightEntries rightCount))
+
+buildBlockIndex blocks = buildBst (mergeSortEntries (buildEntries blocks))
+
+bstLookup name tree =
+  case tree
+    (BstLeaf -> error "blockIndex: unknown label")
+    (BstNode n idx left right -> bstLookupAt (charListCompare name n) name idx left right)
+
+bstLookupAt cmp name idx left right =
+  if (cmp == 0) idx (bstLookupAtNonzero cmp name left right)
+
+bstLookupAtNonzero cmp name left right =
+  if (cmp < 0) (bstLookup name left) (bstLookup name right)
+
+blockIndex name bidx = bstLookup name bidx
+
+// Column layout mirrors parser.ama's printcode/printins (parser.ama:919-983):
+// every rendered line gets a fixed-width left column (either the block's
+// own index, on that block's first instruction, or 12 spaces otherwise),
+// and every instruction carrying a jump/call-family target gets that
+// target's original (pre-resolution) block name appended as a trailing
+// " || name" comment, with the instruction text ljustify'd to column 40
+// first exactly like printins does. Before this, only a block's very
+// first instruction got any prefix at all (just the bare index, no
+// padding) and no instruction ever got a comment -- functionally
+// identical bytecode either way, but unreadable next to parser.ama's own
+// output (docs session: "ik zie dat de compiler in sapl geen inspringing
+// genereert in de bytecode").
+spaces k = if (k <= 0) Nil (Cons ' ' (spaces (k-1)))
+
+ljustify n s = if (length s >= n) s (append s (spaces (n - length s)))
+
+prefixCols = spaces 12
+
+pipeSpace = Cons ' ' (Cons '|' (Cons '|' (Cons ' ' Nil)))
+
+commentSuffix name = append pipeSpace name
+
+// `bidx` below is the BST built once by buildBlockIndex, not the flat
+// `blocks` list -- these functions only ever use it for blockIndex
+// lookups, never to iterate, so the BST drops straight in.
+renderInstr bidx instrVal =
+  case instrVal
+    (Instr t target -> renderInstrSingle bidx t target)
+    (InstrMulti t targets -> append (ljustify 40 (append t (renderTargets bidx targets))) (commentSuffix ['lbs']))
+
+renderInstrSingle bidx t target =
+  case target
+    (Nil -> t)
+    (Cons x xs -> append (ljustify 40 (append t (append [' '] (itoa (blockIndex target bidx))))) (commentSuffix target))
+
+renderTargets bidx targets =
+  case targets
+    (Nil -> Nil)
+    (Cons t rest -> append [' '] (append (itoa (blockIndex t bidx)) (renderTargets bidx rest)))
+
+renderInstrIndented bidx i = append prefixCols (renderInstr bidx i)
+
+renderBlockLines bidx idx name is =
+  case is
+    (Nil -> Nil)
+    (Cons i rest -> renderBlockLinesCons bidx idx name i rest)
+
+renderBlockLinesCons bidx idx name i rest =
+  Cons (append (ljustify 12 (itoa idx)) (append (ljustify 40 (renderInstr bidx i)) (commentSuffix name)))
+       (map (renderInstrIndented bidx) rest)
+
+renderAllBlocks blocks bidx = renderAllBlocksAt bidx blocks 0
+
+renderAllBlocksAt bidx blocks idx =
+  case blocks
+    (Nil -> Nil)
+    (Cons b rest -> append (renderBlockLines bidx idx (blockName b) (blockInstrs b)) (renderAllBlocksAt bidx rest (idx+1)))
+
+prologueInstrs = Cons (mkJ ['call'] ['start']) (Cons (mkI ['print 4']) (Cons (mkI ['stop']) Nil))
+
+// unwords/unlines aren't real Amanda builtins (only pg99.ama's prelude has
+// them, which this port deliberately doesn't import) -- own, subset-
+// conforming versions.
+joinWith sep first xs =
+  case xs
+    (Nil -> first)
+    (Cons x rest -> joinWithCons sep first x rest)
+
+joinWithCons sep first x rest = append first (append sep (joinWith sep x rest))
+
+myUnwords xs =
+  case xs
+    (Nil -> Nil)
+    (Cons x rest -> joinWith [' '] x rest)
+
+myUnlines xs =
+  case xs
+    (Nil -> Nil)
+    (Cons x rest -> append x (append (Cons '\n' Nil) (myUnlines rest)))
+
+headerLine blocks = append (myUnwords (map blockName blocks)) [' #']
+
+// .metadata block (parser.ama:1049-1073's genMetadata, direct port of
+// newparser/stage5_codegen.ama's identical addition -- Gat 4/deel B/stap 3
+// in newparser/docs/parser_ama_sync_plan.md). VM reflection opcodes
+// GetConstrName/GetFuncName/GetFuncArity/GetFuncRemaining/Lookup read
+// EXCLUSIVELY from this block (parser.cpp:555-599's `.metadata` parser,
+// shared unchanged with parser.ama) -- without it those opcodes fire but
+// always return 0/empty, even with deel A's routing already in place.
+// `lbl` is the existing small positional block index (blockIndex, the same
+// table pushfunc/call/jmp targets already use), NOT a bytecode offset --
+// parser.cpp's loader resolves that at load time.
+//
+// `['\n...']` can't carry a real newline (bracket literals don't process
+// escapes, confirmed empirically in ast_helpers.cfp's slashBackslash
+// comment) -- `nl` below builds one via a single-quoted char literal
+// instead, which DOES support `\n`.
+nl = Cons '\n' Nil
+
+// Unlike parser.ama's `isLifted` filter (dropping "lift_case_"-prefixed
+// names): this port's lambda-lift helpers are named `fname_1`/`fname_2`
+// (suffix, no recognizable prefix) -- including them is harmless, just a
+// few extra valid reflectable helper-function names, not filtered out.
+//
+// The STRICT and LAZY entry point of the same function both get the SAME
+// `name` (like parser.ama's genFuncInfo) -- only `lbl` differs -- so
+// GetFuncName on a closure built via the lazy entry still reports the bare
+// function name, and Lookup (which takes the FIRST name match, see
+// vm.cpp) always finds the STRICT label: strict entry first, lazy entry
+// second below, same order as parser.ama.
+genMetadata funcs adts bidx =
+  let funcMetas = concatAll (map (genFuncMetas bidx) funcs) in
+  genMetadataParts adts funcMetas
+
+genMetadataParts adts funcMetas =
+  if ((isNonEmptyList adts) \/ (isNonEmptyList funcMetas))
+    (append nl (append ['.metadata'] (append nl (append (genTypesBlockText adts) (append (genFuncsBlockText funcMetas) (append ['.endmetadata'] nl))))))
+    Nil
+
+isNonEmptyList xs = case xs (Nil -> False) (_ -> True)
+
+genTypesBlockText adts =
+  case adts
+    (Nil -> Nil)
+    (_ -> append ['types '] (append (itoa (length adts)) (append nl (concatAll (map (genTypeMeta adts) adts)))))
+
+genFuncsBlockText funcMetas =
+  case funcMetas
+    (Nil -> Nil)
+    (_ -> append ['functions '] (append (itoa (length funcMetas)) (append nl (concatAll funcMetas))))
+
+genTypeMeta adts a =
+  let tid = adtTypeId (adtName a) adts,
+      nm = adtName a,
+      cs = adtConsOf a in
+  append ['type '] (append (itoa tid) (append [' '] (append nm (append [' '] (append (itoa (length cs)) (append nl (concatAll (map (genConstrMeta adts) cs))))))))
+
+genConstrMeta adts c =
+  let nm = adtConName c,
+      tag = conTag nm adts,
+      arity = length (adtConFields c) in
+  append ['  constr '] (append (itoa tag) (append [' '] (append nm (append [' '] (append (itoa arity) nl)))))
+
+genFuncMetas bidx f =
+  let n = funcNameOf f,
+      arity = funcArityOf f,
+      strict = strictStr (map argStrict (funcArgs f)),
+      lazyName = append n ['_lazy'] in
+  Cons (genFuncMetaLine (blockIndex n bidx) n arity strict)
+       (Cons (genFuncMetaLine (blockIndex lazyName bidx) n arity strict) Nil)
+
+genFuncMetaLine lbl name arity strict =
+  append ['  func '] (append (itoa lbl) (append [' '] (append name (append [' '] (append (itoa arity) (append [' '] (append strict nl)))))))
+
+// `True`/`False` aren't real constructors in Sapl (they're Num 1/Num 0,
+// sapl_programmeer_regels.md #2) -- never `case`-match on them, branch with
+// `if` on the bound element instead.
+strictStr bs =
+  case bs
+    (Nil -> ['0'])
+    (Cons b rest -> strictStrCons b rest)
+
+strictStrCons b rest =
+  if b (append ['1'] (strictStr rest)) (append ['0'] (strictStr rest))
+
+// Public: take a fully transformed (stage 1-4) program (incl. the
+// functions stage 3 emitted) plus the ADT declarations, produce textual
+// .jmvm instructions.
+renderProgram funcs adts =
+  let blocks = map optimizeBlockInstrs (concatAll (map (genFunc funcs adts) funcs)),
+      bidx = buildBlockIndex blocks in
+  append (myUnlines (append (Cons (headerLine blocks) Nil) (append (map (renderInstrIndented bidx) prologueInstrs) (renderAllBlocks blocks bidx)))) (genMetadata funcs adts bidx)

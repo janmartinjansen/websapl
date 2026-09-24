@@ -1089,6 +1089,54 @@
       "_expanded": false
     },
     {
+      "name": "lc_repl",
+      "path": "lc_repl",
+      "type": "directory",
+      "children": [
+        {
+          "name": "driver.js",
+          "path": "lc_repl/driver.js",
+          "type": "file",
+          "ext": ".js",
+          "size": 9686,
+          "isBinary": false
+        },
+        {
+          "name": "index.html",
+          "path": "lc_repl/index.html",
+          "type": "file",
+          "ext": ".html",
+          "size": 14149,
+          "isBinary": false
+        },
+        {
+          "name": "lc_repl.jmvm",
+          "path": "lc_repl/lc_repl.jmvm",
+          "type": "file",
+          "ext": ".jmvm",
+          "size": 130503,
+          "isBinary": false
+        },
+        {
+          "name": "README.md",
+          "path": "lc_repl/README.md",
+          "type": "file",
+          "ext": ".md",
+          "size": 3358,
+          "isBinary": false
+        },
+        {
+          "name": "transcript.js",
+          "path": "lc_repl/transcript.js",
+          "type": "file",
+          "ext": ".js",
+          "size": 2657,
+          "isBinary": false
+        }
+      ],
+      "_expanded": false
+    },
+    {
       "name": "lib",
       "path": "lib",
       "type": "directory",
@@ -1274,7 +1322,7 @@
           "path": "parser_combinators/saplParse_demo.spp",
           "type": "file",
           "ext": ".spp",
-          "size": 1847,
+          "size": 2011,
           "isBinary": false
         },
         {
@@ -1426,7 +1474,7 @@
           "path": "sapl_compiler/ast_helpers.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 13523,
+          "size": 17946,
           "isBinary": false
         },
         {
@@ -1450,7 +1498,7 @@
           "path": "sapl_compiler/README.md",
           "type": "file",
           "ext": ".md",
-          "size": 1425,
+          "size": 1447,
           "isBinary": false
         },
         {
@@ -1458,7 +1506,15 @@
           "path": "sapl_compiler/stage_dump.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 9623,
+          "size": 18408,
+          "isBinary": false
+        },
+        {
+          "name": "stage5_codegen.cfp",
+          "path": "sapl_compiler/stage5_codegen.cfp",
+          "type": "file",
+          "ext": ".cfp",
+          "size": 65356,
           "isBinary": false
         }
       ],

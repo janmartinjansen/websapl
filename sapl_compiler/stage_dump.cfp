@@ -1,9 +1,18 @@
 #import "lib/stdlib.cfp"
 #import "sapl_compiler/newparser_ast.cfp"
+// escapeStr (below, ppExpr's Str case) -- explicit, not relying on
+// driver.cfp happening to import both this file and stage5_codegen.cfp
+// together.
+#import "sapl_compiler/stage5_codegen.cfp"
+// funcNameOf/funcArityOf/funcArgs/argStrict (writeDefFile below) -- also
+// already reachable transitively via stage5_codegen.cfp's own import of
+// this file, but explicit here too for the same reason as the import
+// above: don't lean on another file's import graph happening to supply it.
+#import "sapl_compiler/ast_helpers.cfp"
 
 // stage_dump.cfp - pretty-printer for newparser_ast.cfp's Func/expr/adt
 // types, for the --emit=<stage> CLI flag on ./compile-sapl (see docs/
-// 2026-08-18_eval_hang_pauze_en_stagevorm_decompiler_plan.md section 4).
+// decompiler/2026-08-18_eval_hang_pauze_en_stagevorm_decompiler_plan.md section 4).
 // Renders in the SAME concrete notation as main.pdf's own figures and
 // ordinary Sapl source (juxtaposed application, infix Prim operators,
 // `if (c) t e`, `case x (Con v -> body) ...`, `let a = X, b = Y in body`,
@@ -92,7 +101,17 @@ ppExpr e =
   case e
     (Num n -> list2str (itoa n))
     (FloatLit s -> list2str s)
-    (Str s -> strcat "\"" (strcat (list2str s) "\""))
+    // escapeStr: sapl_compiler/stage5_codegen.cfp's own string-literal
+    // escaper (`push "..."`'s TEXT needs the same escaping the lexer can
+    // read back). Reused, not reimplemented -- an unescaped source string
+    // containing a literal '"' or '\' broke the retag dump's own
+    // re-tokenizing (lexer2.cfp's readStrLit, "tokenize: missing closing
+    // \" in string literal", found 13 september 2026 dumping
+    // sapl_compiler's own ~4618-line source). A first attempt duplicated
+    // this logic locally under the same name (`escapeStrChar`) and hit
+    // "already defined" at compile time -- the collision itself is the
+    // evidence this already existed, not something to name around.
+    (Str s -> strcat "\"" (strcat (list2str (escapeStr s)) "\""))
     (Var v -> list2str v)
     (NoMatch -> "nomatch")
     (If c t el -> ppIf c t el)
@@ -225,4 +244,165 @@ ppAdtsOnly adts =
 
 // Public entry point: ADT declarations first (if any), then every
 // function, one per line -- matches the layout of real Sapl source.
+//
+// O(n^2) on real-sized programs (kept only because
+// sapl_compiler/test_retag_roundtrip.cfp's byte-diff check calls it
+// directly on tiny examples): every ppFuncsOnly/ppArgsSpace/ppBranchesCons/
+// ppLetBindingsCons/ppAdtsOnly step is `strcat headPiece (strcat sep
+// (recurseOnRest))` -- strcat on packed-array strings copies BOTH operands
+// into a fresh array, and the inner recursive call must fully materialize
+// "the rest" before the outer strcat can prepend one more piece, so each of
+// the n functions pays for re-copying the (growing) remainder. Measured
+// 12 september 2026: ~5-9 BILLION instructions to dump sapl_compiler's own
+// ~900-function source (vs. ~634 million for the entire compile-to-
+// bytecode pipeline) via ./compile-sapl --emit=<stage>, and --emit=retag/
+// lazytag/lift segfault outright on that source (see docs/2026-09-12_
+// modulariteit_en_linken_plan.md #5.2) -- likely a stack-depth issue
+// elsewhere entangled with the same growing-string pattern, not fully
+// root-caused. dumpProgramToFile below avoids the whole class of problem
+// by never materializing the concatenated whole; use that for anything
+// beyond a small, fixed test fixture.
 dumpProgram fs adts = strcat (ppAdtsOnly adts) (ppFuncsOnly fs)
+
+// Streaming variant: writes each ADT/function's own (small, O(1)-to-render)
+// line straight to an already-open file descriptor as it's produced,
+// instead of concatenating everything into one packed string first. Total
+// work is O(total output size), not O(size^2), and memory never holds more
+// than one line at a time. Reuses writeChar/openFile/closeFile (the same
+// primitives writeStream/lib/stdlib.cfp already use for streaming file
+// I/O) rather than writeStream itself, since writeStream closes the file
+// descriptor on Nil -- wrong here, since more lines still need to be
+// written to the same fd afterwards.
+writeCharsNoClose fd cs =
+  case cs
+    (Nil -> 0)
+    (Cons c rest -> writeChar fd c <#> writeCharsNoClose fd rest)
+
+writeLineTo fd s = writeCharsNoClose fd (str2list s) <#> writeChar fd '\n'
+
+writeAdtsStream fd adts =
+  case adts
+    (Nil -> 0)
+    (Cons a rest -> writeLineTo fd (ppAdt a) <#> writeAdtsStream fd rest)
+
+writeFuncsStream fd fs =
+  case fs
+    (Nil -> 0)
+    (Cons f rest -> writeLineTo fd (ppFunc f) <#> writeFuncsStream fd rest)
+
+dumpProgramToFile outfile fs adts =
+  let fd = openFile outfile "w" in
+  writeAdtsStream fd adts <#> writeFuncsStream fd fs <#> closeFile fd
+
+// == Definitiebestand: naam/ariteit/striktheid per functie, geen lichaam ==
+//
+// docs/2026-09-12_modulariteit_en_linken_plan.md #5.1: wat een module
+// nodig heeft om EEN ANDERE, apart gecompileerde module te kunnen
+// aanroepen tijdens zijn eigen strictness-inferentie/naamresolutie (§C.1/
+// §5) -- dezelfde drie velden die uiteindelijk toch in `.metadata`'s
+// `func`-regel terechtkomen, alleen hier zonder bytecode-label (dat bestaat
+// nog niet vóór codegen) en zonder de lazy/strict-entry-verdubbeling
+// (irrelevant voor een lezende module -- die wil één kanoniek signatuur
+// per naam, geen twee bytecode-adressen).
+//
+// `funcNameOf`/`funcArityOf`/`funcArgs`/`argStrict` (ast_helpers.cfp) zijn
+// exact wat `genFuncMetas` (stage5_codegen.cfp:1416-1422) ook al voor
+// `.metadata` gebruikt -- geen nieuwe extractielogica. NIET hergebruikt:
+// `genFuncMetas`'s eigen `strictStr` (stage5_codegen.cfp:1430-1436) -- die
+// heeft een off-by-one: `strictStr Nil = ['0']` is bedoeld als plaatshouder
+// voor ariteit 0, maar vuurt ook aan het EIND van de recursie voor elke
+// NIET-lege lijst, dus elke ariteit>=1 krijgt een spookkarakter '0' achteraan
+// geplakt (geverifieerd: een echt gecompileerd .jmvm's `.metadata` had al
+// `func 13 el 2 010` staan -- ariteit 2, drie tekens). Al aanwezig in
+// productie, stil onschadelijk omdat niets ooit meer dan de eerste `ariteit`
+// tekens leest -- maar een definitiebestand dat straks WEL op exacte lengte
+// gelezen wordt, mag die dubbelzinnigheid niet overnemen. `genStrictField`
+// hieronder is een eigen, correcte renderer (geen gedeeld bestand gewijzigd,
+// geen regressierisico voor `.metadata`/reflectie).
+//
+// Bevat, net als de retag-dump zelf (dumpProgramToFile hierboven), ALLE
+// functies in `fs` -- inclusief tijdens lift ontstane hulpfuncties zoals
+// `el_1` (docs/2026-09-12_modulariteit_en_linken_plan.md #C.3's uitleg
+// waarom parser.ama deze wél mist maar sapl_compiler niet). Nog geen
+// export/zichtbaarheidsonderscheid (§6.3's ML/Go-stijl-alternatieven) --
+// "in eerste instantie" betekent hier: alles zichtbaar, net als Sapl
+// vandaag al doet voor top-level namen binnen één bestand.
+// `if` moet als hele clausule-body staan, niet inline als aanroepargument
+// (docs/sapl_programmeer_regels.md #3) -- vandaar een eigen naam i.p.v.
+// `Cons (if b '1' '0') ...` rechtstreeks, zelfde stijl als dit bestand se
+// eigen `ppStrictMark`.
+strictBitChar b = if b '1' '0'
+
+genStrictBitsChars bits =
+  case bits
+    (Nil -> Nil)
+    (Cons b rest -> Cons (strictBitChar b) (genStrictBitsChars rest))
+
+genStrictField arity bits =
+  if (arity == 0) "0" (list2str (genStrictBitsChars bits))
+
+genDefLine f =
+  let n = list2str (funcNameOf f),
+      arity = funcArityOf f,
+      strict = genStrictField arity (map argStrict (funcArgs f)) in
+  strcat n (strcat " " (strcat (list2str (itoa arity)) (strcat " " strict)))
+
+writeDefsStream fd fs =
+  case fs
+    (Nil -> 0)
+    (Cons f rest -> writeLineTo fd (genDefLine f) <#> writeDefsStream fd rest)
+
+writeDefFile outfile fs =
+  let fd = openFile outfile "w" in
+  writeDefsStream fd fs <#> closeFile fd
+
+// Type-definitiebestand (docs/2026-09-12_modulariteit_en_linken_plan.md
+// #5.6, gat 2): in tegenstelling tot een functie heeft een ADT-declaratie
+// geen lichaam om weg te laten -- `AdtCon !name !fields` (newparser_ast.cfp)
+// bevat sowieso alleen een naam en een `[Bool]` (strict-vlag per veld,
+// veldnamen worden door de parser al niet bewaard, zie parser.cfp's
+// `collectConFieldsTok`). Een NIEUW lijnformaat zou dus alleen dupliceren
+// wat de taal zelf al zegt -- vandaar hier gewoon een pretty-printer terug
+// naar geldige `::Naam = Con1 ... | Con2 ...`-syntax. De lezerkant hoeft
+// daarom geen nieuwe parser te zijn: `parseProgram`/`ppAdts` (parser.cfp)
+// leest zo'n bestand net zo goed als een gewoon .cfp-bestand met alleen
+// ADT-declaraties erin (zie sapl_compiler/saplcomp_module.cfp).
+adtFieldName i = append ['f'] (itoa i)
+
+adtFieldText i strict =
+  if strict (strcat "!" (list2str (adtFieldName i))) (list2str (adtFieldName i))
+
+adtFieldsJoined fields = adtFieldsJoinedN 0 fields
+
+adtFieldsJoinedN i fields =
+  case fields
+    (Nil -> "")
+    (Cons strict rest -> adtFieldsJoinedCons i strict rest)
+
+adtFieldsJoinedCons i strict rest =
+  case rest
+    (Nil -> adtFieldText i strict)
+    (Cons s2 rest2 -> strcat (adtFieldText i strict) (strcat " " (adtFieldsJoinedN (i+1) rest)))
+
+adtConText c = strcat (list2str (adtConName c)) (strcat " " (adtFieldsJoined (adtConFields c)))
+
+adtConsJoined cons =
+  case cons
+    (Nil -> "")
+    (Cons c rest -> adtConsJoinedCons c rest)
+
+adtConsJoinedCons c rest =
+  case rest
+    (Nil -> adtConText c)
+    (Cons c2 rest2 -> strcat (adtConText c) (strcat " | " (adtConsJoined rest)))
+
+adtDeclLine a = strcat "::" (strcat (list2str (adtName a)) (strcat " = " (adtConsJoined (adtConsOf a))))
+
+writeTypeDefsStream fd as =
+  case as
+    (Nil -> 0)
+    (Cons a rest -> writeLineTo fd (adtDeclLine a) <#> writeTypeDefsStream fd rest)
+
+writeTypeDefFile outfile as =
+  let fd = openFile outfile "w" in
+  writeTypeDefsStream fd as <#> closeFile fd

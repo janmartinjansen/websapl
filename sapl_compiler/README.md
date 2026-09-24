@@ -1,13 +1,13 @@
 # `sapl_compiler/` — interne compilermodules, geen voorbeelden
 
-De vier bestanden hier (`ast_helpers.cfp`, `lexer2.cfp`, `newparser_ast.cfp`,
-`stage_dump.cfp`) zijn **geen zelfstandige voorbeelden** — het zijn kale
+De vijf bestanden hier (`ast_helpers.cfp`, `lexer2.cfp`, `newparser_ast.cfp`,
+`stage_dump.cfp`, `stage5_codegen.cfp`) zijn **geen zelfstandige voorbeelden** — het zijn kale
 library-modules van de zelf-hostende Sapl-compiler ("gen1"), zonder eigen
 `start`. Open je er één rechtstreeks en klik "Compileer", dan gebeurt er
 niets nuttigs.
 
 **Waarom staan ze dan toch in de bestandsboom?** `engine/worker.js` laadt
-deze vier bestanden bij het opstarten in de virtuele bestandssysteem
+deze vijf bestanden bij het opstarten in de virtuele bestandssysteem
 (`/sapl_compiler/...`), omdat andere, wél-uitvoerbare voorbeelden ze via
 `#import` nodig hebben:
 

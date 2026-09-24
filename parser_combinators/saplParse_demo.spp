@@ -3,7 +3,7 @@
 
 // saplParse_demo.spp -- a small, self-contained showcase of saplParse.spp
 // (the capstone of the whole parser_combinators/ exercise, see
-// docs/spp_taal_en_parser_combinators.md section 5.6 and
+// parser_combinators/spp_taal_en_parser_combinators.md section 5.6 and
 // preprocess/PLAN.md section 17): parses a short SAPL fragment, entirely
 // as an embedded string (no readFile), with the PARSER-COMBINATOR-BASED
 // parser, and pretty-prints the resulting AST via sapl_compiler/
@@ -17,10 +17,12 @@
 // inside websapl's in-browser WASM VM (which has no access to the real
 // repo's benchmarks/*.cfp files, only to a virtual filesystem).
 
-nl = list2str (Cons 10 Nil)
+// nlStr, niet nl: sapl_compiler/stage_dump.cfp importeert sinds 13 sep 2026
+// stage5_codegen.cfp, dat zelf al een (char-lijst-)nl definieert.
+nlStr = list2str (Cons 10 Nil)
 joinLines Nil = ""
 joinLines (Cons l Nil) = l
-joinLines (Cons l rest) = strcat l (strcat nl (joinLines rest))
+joinLines (Cons l rest) = strcat l (strcat nlStr (joinLines rest))
 
 demoSrc = joinLines
   [ "::list = Nil | Cons !x xs"

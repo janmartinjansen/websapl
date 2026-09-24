@@ -254,6 +254,9 @@ async function initEngine(data = {}) {
     { url: "../sapl_compiler/lexer2.cfp", vfsPath: "/sapl_compiler/lexer2.cfp" },
     { url: "../sapl_compiler/ast_helpers.cfp", vfsPath: "/sapl_compiler/ast_helpers.cfp" },
     { url: "../sapl_compiler/stage_dump.cfp", vfsPath: "/sapl_compiler/stage_dump.cfp" },
+    // stage_dump.cfp #import't sinds 13 sep 2026 ook stage5_codegen.cfp
+    // (escapeStr/primInstr/genFuncMetas voor de defs-/typedefs-uitvoer).
+    { url: "../sapl_compiler/stage5_codegen.cfp", vfsPath: "/sapl_compiler/stage5_codegen.cfp" },
     { url: "../parser_combinators/parsecomb.spp", vfsPath: "/parser_combinators/parsecomb.spp" },
     { url: "../parser_combinators/saplParse.spp", vfsPath: "/parser_combinators/saplParse.spp" },
     { url: "../benchmarks_saplplus/prologlib.spp", vfsPath: "/benchmarks_saplplus/prologlib.spp" },

@@ -22,10 +22,111 @@ charListEq a b =
     (Nil -> case b (Nil -> True) (Cons y ys -> False))
     (Cons x xs -> case b (Nil -> False) (Cons y ys -> if (x == y) (charListEq xs ys) False))
 
+// Three-way lexicographic comparison (-1/0/1), one pass -- unlike using
+// charListEq plus a separate "less-than" check (which would walk the same
+// two lists twice), a single case-dispatch per position gives both the
+// equality test AND the ordering in one traversal. Added 11 sep 2026 for
+// stage5_codegen.cfp's block-label BST (see that file's header comment on
+// the O(n) blockIndexAt scan it replaces) -- kept here, not there, since
+// it's a general char-list primitive like charListEq itself, not codegen-
+// specific.
+charListCompare a b =
+  case a
+    (Nil -> charListCompareLeftNil b)
+    (Cons x xs -> charListCompareLeftCons x xs b)
+
+charListCompareLeftNil b =
+  case b
+    (Nil -> 0)
+    (Cons y ys -> 0 - 1)
+
+charListCompareLeftCons x xs b =
+  case b
+    (Nil -> 1)
+    (Cons y ys -> charListCompareChar x y xs ys)
+
+charListCompareChar x y xs ys =
+  if (x == y) (charListCompare xs ys) (charListCompareOrder x y)
+
+charListCompareOrder x y = if (x < y) (0 - 1) 1
+
 member names n =
   case names
     (Nil -> False)
     (Cons x xs -> if (charListEq x n) True (member xs n))
+
+// Balanced BST for name-SET membership (no associated value, unlike
+// stage5_codegen.cfp's LabelEntry/bst, which pairs each name with a block
+// index) -- same shape/construction as that BST (mergesort on
+// charListCompare, then split-at-midpoint for O(log n) depth regardless of
+// name distribution), added here because it's a second, independent need
+// for the identical fix: `member` used as a per-reference O(n) linear scan
+// against a large, unchanging name set. Found 13 september 2026 in
+// sapl_compiler/retag_parse.cfp's rresolveVar/rfixupCtor -- `member
+// topNames v` called once per Var/Ct node while walking every function in
+// the program, topNames itself the size of the whole program's function
+// count (~900 for saplcomp.cfp) -- the same O(n) "scan a shared table once
+// per reference" shape as the isKnownFunc+findFunc and blockIndex problems
+// this BST's sibling already fixed (11 september, 238d523/48f8791), just
+// found in a different file. Measured impact: retagcomp on saplcomp.cfp's
+// own 1053-line retag dump dropped from 1.86 miljard instructies (2.80s)
+// to well under what a straight linear-scan-per-reference would predict --
+// see docs/2026-09-12_modulariteit_en_linken_plan.md #5.4 for the full
+// measurement.
+::nameset = NSLeaf | NSNode !name !left !right
+
+buildNameSet names = nsBuildBalanced (mergeSortNames names)
+
+mergeSortNames ns = mergeSortNamesLen ns (length ns)
+
+mergeSortNamesLen ns n = if (n <= 1) ns (mergeSortNamesSplit ns n)
+
+mergeSortNamesSplit ns n =
+  let mid = n / 2,
+      left = take mid ns,
+      right = drop mid ns in
+  mergeNames (mergeSortNamesLen left mid) (mergeSortNamesLen right (n - mid))
+
+mergeNames xs ys =
+  case xs
+    (Nil -> ys)
+    (Cons x xs2 -> mergeNamesCons x xs2 ys)
+
+mergeNamesCons x xs2 ys =
+  case ys
+    (Nil -> Cons x xs2)
+    (Cons y ys2 -> mergeNamesBoth x xs2 y ys2)
+
+mergeNamesBoth x xs2 y ys2 =
+  if (charListCompare x y <= 0)
+    (Cons x (mergeNames xs2 (Cons y ys2)))
+    (Cons y (mergeNames (Cons x xs2) ys2))
+
+nsBuildBalanced sortedNames = nsBuildN sortedNames (length sortedNames)
+
+nsBuildN names n =
+  if (n == 0) NSLeaf (nsBuildNSplit names n)
+
+nsBuildNSplit names n =
+  let mid = n / 2,
+      leftNames = take mid names,
+      fromMid = drop mid names in
+  nsBuildNode leftNames mid fromMid (n - mid - 1)
+
+nsBuildNode leftNames leftCount fromMid rightCount =
+  case fromMid
+    (Cons nm rest -> NSNode nm (nsBuildN leftNames leftCount) (nsBuildN rest rightCount))
+
+nsMember name tree =
+  case tree
+    (NSLeaf -> False)
+    (NSNode n left right -> nsMemberAt (charListCompare name n) name left right)
+
+nsMemberAt cmp name left right =
+  if (cmp == 0) True (nsMemberAtNonzero cmp name left right)
+
+nsMemberAtNonzero cmp name left right =
+  if (cmp < 0) (nsMember name left) (nsMember name right)
 
 // `/\` and `\/` need a literal backslash (92), which can't go through a
 // `['...']` literal (no escape processing there, confirmed empirically) --
@@ -55,6 +156,20 @@ isKnownFunc name funcs =
   case funcs
     (Nil -> False)
     (Cons f fs -> if (charListEq (funcNameOf f) name) True (isKnownFunc name fs))
+
+// Every call site that needs the Func record used to do isKnownFunc THEN
+// findFunc -- two full linear scans of `prog` per call-site occurrence.
+// lookupFunc does the same job in one scan (11 sep 2026 perf investigation:
+// gen1 re-resolves each call by name at every pipeline stage, unlike
+// parser.ama's Calf node which resolves once at parse time -- this doesn't
+// fix that redundancy across stages, but halves the cost of each stage's
+// own lookup).
+::maybefunc = NoFunc | Found !f
+
+lookupFunc name funcs =
+  case funcs
+    (Nil -> NoFunc)
+    (Cons f fs -> if (charListEq (funcNameOf f) name) (Found f) (lookupFunc name fs))
 
 // `print` is a VM instruction (vm.cpp's `print:`), not a top-level function
 // in `prog` -- every stage must recognize it before isKnownFunc, else it's
