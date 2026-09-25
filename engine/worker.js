@@ -1322,6 +1322,44 @@ async function replLoadContent(content, notes) {
   return updates.map(([name]) => name);
 }
 
+/**
+ * `:type <expr>` (25 sep 2026): de huidige sessie (mét prelude) plus
+ * `__type = <expr>` door typecheckSource(), zonder de sessie te wijzigen.
+ * Zelfde gedrag en meldingen als repl_retag.py's Session.type_of/
+ * parse_typecheck_output en vm.cpp's ReplSession::typeOf: een typefout in
+ * een eigen sessiedefinitie geeft een notitie (types die ervan afhangen
+ * kunnen te algemeen zijn), fouten in de bewust dynamische prelude niet.
+ */
+async function replTypeOf(expr) {
+  const source = replSession.prelude + "\n" + replJoinEntries(replSession.entries) + `__type = ${expr}\n`;
+  const result = await typecheckSource(source, "/tmp/repl_type_query.cfp");
+  const raw = result.stdout || "";
+  const lines = raw.split("\n");
+  const userNames = new Set(replSession.entries.map((e) => e.name));
+
+  const okLine = lines.find((l) => l.startsWith("__type :: "));
+  if (okLine) {
+    const failed = lines
+      .filter((l) => l.includes(": FOUT: ") && userNames.has(l.split(":")[0]))
+      .map((l) => l.split(":")[0]);
+    const notes = failed.length
+      ? [`let op: typefout in ${failed.join(", ")} -- een type dat daarvan afhangt kan te algemeen zijn`]
+      : [];
+    return { inferredType: okLine.slice("__type :: ".length).trim(), notes };
+  }
+  const errPrefix = "__type: FOUT: __type: ";
+  const errLine = lines.find((l) => l.startsWith(errPrefix));
+  if (errLine) throw new Error(errLine.slice(errPrefix.length).trim());
+  // Geen __type-regel: de parser van de typechecker faalde; de melding
+  // staat tussen `execution started` en vm.cpp's `stop`.
+  const startMarker = raw.match(/execution started, progsize=\d+\r?\n?/);
+  let body = startMarker ? raw.slice(startMarker.index + startMarker[0].length) : raw;
+  const stopIdx = body.indexOf("stop");
+  if (stopIdx >= 0) body = body.slice(0, stopIdx);
+  body = body.trim();
+  throw new Error(body || "typechecker gaf geen uitvoer");
+}
+
 function replFuncs() {
   if (!replSession.defs) return [];
   return replSession.defs
@@ -1561,6 +1599,9 @@ self.onmessage = async function (e) {
             break;
           case "funcs":
             payload = { funcs: replFuncs() };
+            break;
+          case "type":
+            payload = await replTypeOf(msg.expr);
             break;
           case "load": {
             const notes = [];

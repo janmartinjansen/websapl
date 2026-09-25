@@ -109,7 +109,8 @@ dezelfde vijf primitieven als de "modules"-backend hierboven
 
 Klik **⌨️ REPL** in de kopbalk om het REPL-tabblad te openen. Typ een
 expressie (Enter of **Uitvoeren**) of `:def naam ... = ...` voor een
-eigen functie/ADT; de belangrijkste commando's hebben ook een eigen
+eigen functie/ADT, of `:type <expr>` voor het afgeleide type (via
+`engine/typecheck.jmvm`); de belangrijkste commando's hebben ook een eigen
 knop (**Historie**, **Undo**, **Functies**, **Reset**), plus `:load`/
 `:save` met een eigen padveld. Geen Start/Stop nodig — de sessie leeft
 zolang de pagina open blijft.

@@ -1451,7 +1451,7 @@
   // rebuild, prelude-/reserved-name-botsingen) zit in engine/worker.js's
   // replXxx()-functies, hergebruikt van dezelfde vijf WASM-primitieven
   // als de "modules"-backend hierboven. Hier alleen: commando's parsen
-  // (dezelfde `:def`/`:history`/`:undo`/`:reset`/`:load`/`:save`/`:funcs`-
+  // (dezelfde `:def`/`:history`/`:undo`/`:reset`/`:load`/`:save`/`:funcs`/`:type`-
   // syntax als de terminal-versies), `:load`/`:save`'s bestandstoegang
   // (getFileContentForPath/nieuw-tabblad-openen, al gebouwd voor de
   // modules-hulp hierboven), en het logvenster.
@@ -1652,6 +1652,13 @@
         await replHandleLoad(line.slice(5).trim());
       } else if (line.startsWith(":save")) {
         await replHandleSave(line.slice(5).trim());
+      } else if (line.startsWith(":type")) {
+        const expr = line.slice(5).trim();
+        if (!expr) throw new Error(":type heeft een expressie nodig, bv. ':type res0 * 2'");
+        const r = await replCall("type", { expr });
+        if (!r.success) throw new Error(r.error);
+        replAppendLog(`${expr} :: ${r.inferredType}\n`);
+        for (const note of r.notes) replAppendLog(`  (${note})\n`);
       } else if (line === ":funcs") {
         const r = await replCall("funcs");
         if (!r.success) throw new Error(r.error);
