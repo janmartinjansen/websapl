@@ -558,6 +558,38 @@ async function collectSppImports(source, found = {}) {
   return found;
 }
 
+/**
+ * Databestanden voor een notebook: elke string-literal in de bron die op
+ * een datapad lijkt ("notebooks/data/fruit.csv", ook via C.read "..."), uit
+ * de eigen VFS of van de server, op hetzelfde pad (relatief aan "/") in de
+ * run-instantie. Zonder dit ziet readFile in de notebook niets.
+ */
+const DATA_PATH_RE = /"([^"\n]+\.(?:csv|tsv|txt|dat|json))"/g;
+
+async function collectDataFiles(source) {
+  const files = {};
+  for (const m of source.matchAll(DATA_PATH_RE)) {
+    const rel = m[1].startsWith("/") ? m[1].slice(1) : m[1];
+    const vfsPath = "/" + rel;
+    if (files[vfsPath] !== undefined) continue;
+    let content = null;
+    for (const cand of [vfsPath, "/workspace/" + rel]) {
+      if (jmvmModule && jmvmModule.FS.analyzePath(cand).exists) {
+        content = jmvmModule.FS.readFile(cand);
+        break;
+      }
+    }
+    if (content === null) {
+      try {
+        const res = await fetch("../" + rel);
+        if (res.ok) content = new Uint8Array(await res.arrayBuffer());
+      } catch (_) {}
+    }
+    if (content !== null) files[vfsPath] = content;
+  }
+  return files;
+}
+
 function mkdirsFor(fs, filePath) {
   const parts = filePath.split("/").filter(Boolean);
   parts.pop();
@@ -1443,7 +1475,7 @@ function replFuncs() {
  * die is voor de "Run"-knop se terminal-streaming) -- nodig om printVal's
  * eigen uitvoer achteraf uit de vaste vm.cpp-banner (`VM starting for
  * .../execution started.../res: <code>/stop/...`) te kunnen isoleren. */
-async function runJmvmCapture(jmvmContent) {
+async function runJmvmCapture(jmvmContent, extraFiles = {}) {
   let output = [];
   const instance = await createJMVMModule({
     noInitialRun: true,
@@ -1453,6 +1485,10 @@ async function runJmvmCapture(jmvmContent) {
     stderr: (c) => output.push(String.fromCharCode(c))
   });
   instance.FS.writeFile("/tmp/repl_turn.jmvm", jmvmContent);
+  for (const [path, content] of Object.entries(extraFiles)) {
+    mkdirsFor(instance.FS, path);
+    instance.FS.writeFile(path, content);
+  }
   try {
     instance.callMain(["/tmp/repl_turn.jmvm"]);
   } catch (e) {
@@ -1652,7 +1688,7 @@ self.onmessage = async function (e) {
         }
         // runJmvmCapture levert één teken per byte; een notebook toont
         // gewone tekst (°, emoji), dus als UTF-8 terugdecoderen.
-        const raw = await runJmvmCapture(jm.content);
+        const raw = await runJmvmCapture(jm.content, await collectDataFiles(msg.source));
         const output = new TextDecoder().decode(Uint8Array.from(raw, (ch) => ch.charCodeAt(0) & 255));
         postMessage({ type: "NOTEBOOK_RESULT", id: msg.id, success: true, output });
       } catch (err) {

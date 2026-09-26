@@ -1142,6 +1142,14 @@ window.WEBSAPL_TREE = [
     "type": "directory",
     "children": [
       {
+        "name": "csv.spp",
+        "path": "lib/csv.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 4181,
+        "isBinary": false
+      },
+      {
         "name": "dict.cfp",
         "path": "lib/dict.cfp",
         "type": "file",
@@ -1182,11 +1190,27 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
+        "name": "plot.spp",
+        "path": "lib/plot.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 5685,
+        "isBinary": false
+      },
+      {
         "name": "README.md",
         "path": "lib/README.md",
         "type": "file",
         "ext": ".md",
         "size": 2335,
+        "isBinary": false
+      },
+      {
+        "name": "stats.spp",
+        "path": "lib/stats.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 5099,
         "isBinary": false
       },
       {
@@ -1213,6 +1237,30 @@ window.WEBSAPL_TREE = [
     "path": "notebooks",
     "type": "directory",
     "children": [
+      {
+        "name": "data",
+        "path": "notebooks/data",
+        "type": "directory",
+        "children": [
+          {
+            "name": "fruit.csv",
+            "path": "notebooks/data/fruit.csv",
+            "type": "file",
+            "ext": ".csv",
+            "size": 226,
+            "isBinary": false
+          }
+        ],
+        "_expanded": false
+      },
+      {
+        "name": "data_verkennen.spp",
+        "path": "notebooks/data_verkennen.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 1115,
+        "isBinary": false
+      },
       {
         "name": "kennismaking.spp",
         "path": "notebooks/kennismaking.spp",
@@ -1434,7 +1482,7 @@ window.WEBSAPL_TREE = [
         "path": "repl/stddyn.cfp",
         "type": "file",
         "ext": ".cfp",
-        "size": 4566,
+        "size": 4845,
         "isBinary": false
       }
     ],
@@ -1562,7 +1610,7 @@ window.WEBSAPL_TREE = [
         "path": "sapl_compiler/stage5_codegen.cfp",
         "type": "file",
         "ext": ".cfp",
-        "size": 68263,
+        "size": 68921,
         "isBinary": false
       }
     ],
@@ -1789,7 +1837,7 @@ window.WEBSAPL_TREE = [
     "path": "notebook.html",
     "type": "file",
     "ext": ".html",
-    "size": 19691,
+    "size": 20548,
     "isBinary": false
   },
   {

@@ -161,7 +161,19 @@ genStrcreateCallRest prog adts args a rest =
 // order. No arity check: see ast_helpers.cfp's isReflectionCall comment for
 // why (makeConstr has no fixed arity, and parser.ama doesn't check either).
 genReflectionCall prog adts args n as =
-  append (concatAll (map (genValue prog adts args) as)) (Cons (mkI (reflectionOpcode n)) Nil)
+  append (concatAll (map (genValue prog adts args) as)) (reflectionInstrs n)
+
+// `getField` levert het veld zoals het in de knoop staat, dus bij een lui
+// veld een onge-evalueerde thunk (type-id 4). De rest van de codegen neemt
+// aan dat de uitkomst van een primitief al geëvalueerd is (isEvaluatedExpr),
+// dus zonder `eval` gebruikte bv. showVal de thunk-pointer als getal: een
+// tupel `(x * 2.0, 0)` toonde als `(9.00725e+15, 0)`. Sinds 26 september
+// 2026 dwingt een `eval` direct na `getfield` het veld af, net als een
+// `case` op dat veld; op een al geëvalueerde waarde doet `eval` niets.
+reflectionInstrs n =
+  if (charListEq n getFieldKw)
+    (Cons (mkI ['getfield']) (Cons (mkI ['eval']) Nil))
+    (Cons (mkI (reflectionOpcode n)) Nil)
 
 genErrorCall prog adts args as =
   case as

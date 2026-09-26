@@ -56,5 +56,16 @@ check("cel 2", out.cells[2].blocks[0], { kind: "table", content: "n\tn^2\n1\t1" 
 check("cel 3", [out.cells[3].ended, out.cells[3].error], [false, "List.head: lege lijst"]);
 check("los", out.loose, "");
 
+// 5. Typecheckfouten aan cellen koppelen.
+const tcCells = nb.parseNotebook("//%%\nf x = x + \"a\"\n(<+>) a b = a\n//%%\nniet_bestaand 3\n//%%\n1 + 1\n");
+const tcGen = nb.generateProgram(tcCells);
+check("definedNames", nb.definedNames(tcCells[0].source), ["f", "<+>"]);
+check("celfouten uit typecheck", nb.cellErrorsFromTypecheck([
+  "f: FOUT: f: kan niet unificeren: Num met Str",
+  "__cell1: FOUT: __cell1: onbekende functie: niet_bestaand",
+  "showListItems: FOUT: showListItems: oneindig type",
+  "__cell2 :: Num",
+].join("\n"), tcCells, tcGen), { 0: ["f: kan niet unificeren: Num met Str"], 1: ["onbekende functie: niet_bestaand"] });
+
 console.log(failures ? `${failures} fout(en)` : "notebook_core: alles goed");
 process.exit(failures ? 1 : 0);

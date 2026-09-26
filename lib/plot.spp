@@ -1,0 +1,145 @@
+// lib/plot.spp -- grafieken met assen en getallen (26 september 2026).
+// Plan: docs/2026-09-25_notebook_en_bibliotheken_plan.md, deel 2.3.
+//
+// Gebruik:  import "lib/plot.spp" as P
+//           P.line [1, 2, 3] [1, 4, 9]
+//
+// Elke functie geeft een Display-waarde (lib/display.spp), die de notebook
+// als plaatje toont. Anders dan D.bar/D.lineChart tekenen deze functies
+// assen met de kleinste en grootste waarde erbij, en werken ze met echte
+// x-waarden. Getallen mogen Int of Float zijn.
+module Plot
+import "lib/display.spp" as D
+import "grafisch/graphics.cfp" as G
+import "lib/text.spp" as T
+import "lib/stats.spp" as S
+
+::list = Nil | Cons !x xs
+
+// == Plotvlak ================================================================
+// Het canvas loopt van -1 tot 1; het plotvlak laat links en onder ruimte
+// voor de getallen.
+
+x0 = 0.0 - 0.72
+x1 = 0.92
+y0 = 0.0 - 0.78
+y1 = 0.9
+
+toF v = if (typeId v == 2) v (itof v)
+
+// Een waarde v uit [lo, hi] naar het interval [a, b].
+scale lo hi a b v = if (hi > lo) (a + ((b - a) * ((toF v - lo) / (hi - lo)))) ((a + b) / 2.0)
+
+// Ruimte rond de gegevens, zodat punten niet op de rand vallen; bij een
+// leeg bereik (alle waarden gelijk) een eenheid eromheen.
+padLo lo hi = if (hi > lo) lo (lo - 1.0)
+padHi lo hi = if (hi > lo) hi (hi + 1.0)
+
+// Een getal kort genoeg voor een aslabel.
+label v = if (fabs v >= 1000.0) (T.showFixed 0 v) (if (fabs v >= 10.0) (T.showFixed 1 v) (T.showFixed 2 v))
+
+axisColor = 7
+textColor = 15
+
+axes xlo xhi ylo yhi =
+  Cons (G.GraphText textColor (G.Pt x0 (y0 - 0.1)) (label xlo))
+  (Cons (G.GraphText textColor (G.Pt (x1 - (0.04 * itof (T.length (label xhi)))) (y0 - 0.1)) (label xhi))
+  (axesY ylo yhi))
+
+// Alleen de assen en de y-getallen (staafdiagrammen hebben eigen labels
+// onder de x-as).
+axesY ylo yhi =
+  Cons (G.GraphPolyLine axisColor (Cons (G.Pt x0 y1) (Cons (G.Pt x0 y0) (Cons (G.Pt x1 y0) Nil))))
+  (Cons (G.GraphText textColor (G.Pt (x0 - 0.05 - (0.04 * itof (T.length (label ylo)))) y0) (label ylo))
+  (Cons (G.GraphText textColor (G.Pt (x0 - 0.05 - (0.04 * itof (T.length (label yhi)))) (y1 - 0.03)) (label yhi)) Nil))
+
+// == Lijn en spreiding =======================================================
+
+// Lijngrafiek door de punten (x, y), in de volgorde van de lijsten.
+line xs ys = lineColored 11 xs ys
+
+lineColored c xs ys =
+  let xlo = padLo (S.minimum xs) (S.maximum xs),
+      xhi = padHi (S.minimum xs) (S.maximum xs),
+      ylo = padLo (S.minimum ys) (S.maximum ys),
+      yhi = padHi (S.minimum ys) (S.maximum ys) in
+  D.picture (appendL (axes xlo xhi ylo yhi) (Cons (G.GraphPolyLine c (points xlo xhi ylo yhi xs ys)) Nil))
+
+// Alleen y-waarden: x is dan 0, 1, 2, ...
+lineY ys = line (indices 0 ys) ys
+
+// Spreidingsdiagram: een stip per punt.
+scatter xs ys =
+  let xlo = padLo (S.minimum xs) (S.maximum xs),
+      xhi = padHi (S.minimum xs) (S.maximum xs),
+      ylo = padLo (S.minimum ys) (S.maximum ys),
+      yhi = padHi (S.minimum ys) (S.maximum ys) in
+  D.picture (appendL (axes xlo xhi ylo yhi) (dots xlo xhi ylo yhi xs ys))
+
+// Spreiding plus de kleinste-kwadratenlijn.
+scatterFit xs ys =
+  let xlo = padLo (S.minimum xs) (S.maximum xs),
+      xhi = padHi (S.minimum xs) (S.maximum xs),
+      ylo = padLo (S.minimum ys) (S.maximum ys),
+      yhi = padHi (S.minimum ys) (S.maximum ys) in
+  D.picture (appendL (axes xlo xhi ylo yhi) (appendL (dots xlo xhi ylo yhi xs ys) (Cons (fitLine xlo xhi ylo yhi (S.linearRegression xs ys)) Nil)))
+
+fitLine xlo xhi ylo yhi (b, a) =
+  G.GraphPolyLine 12 (Cons (G.Pt x0 (scale ylo yhi y0 y1 (a + (b * xlo)))) (Cons (G.Pt x1 (scale ylo yhi y0 y1 (a + (b * xhi)))) Nil))
+
+points xlo xhi ylo yhi xs ys =
+  case xs
+    (Nil -> Nil)
+    (Cons x xr -> case ys (Nil -> Nil) (Cons y yr -> Cons (G.Pt (scale xlo xhi x0 x1 x) (scale ylo yhi y0 y1 y)) (points xlo xhi ylo yhi xr yr)))
+
+dots xlo xhi ylo yhi xs ys = mapL dot (points xlo xhi ylo yhi xs ys)
+
+dot p = case p (G.Pt x y -> G.GraphDisc 14 (G.Pt (x - 0.018) (y - 0.018)) (G.Pt (x + 0.018) (y + 0.018)))
+
+// == Staven ==================================================================
+
+// Staafdiagram met een label onder elke staaf (labels zijn strings).
+bars labels values =
+  let hi = padHi 0.0 (maxZero values),
+      n = listLen values in
+  D.picture (appendL (axesY 0.0 hi) (barsFrom 0 n hi labels values))
+
+maxZero xs = case xs (Nil -> 0.0) (Cons y ys -> maxF (toF y) (maxZero ys))
+
+maxF a b = if (a > b) a b
+
+barsFrom !i n hi labels values =
+  case values
+    (Nil -> Nil)
+    (Cons v rest -> appendL (barAt i n hi (headOr "" labels) v) (barsFrom (i + 1) n hi (tailOr labels) rest))
+
+barAt i n hi lbl v =
+  let w = (x1 - x0) / itof n,
+      bx0 = x0 + (itof i * w) + (w * 0.15),
+      bx1 = bx0 + (w * 0.7),
+      top = scale 0.0 hi y0 y1 v in
+  Cons (G.GraphPolygon 9 (Cons (G.Pt bx0 y0) (Cons (G.Pt bx1 y0) (Cons (G.Pt bx1 top) (Cons (G.Pt bx0 top) Nil)))))
+  (Cons (G.GraphText textColor (G.Pt bx0 (y0 - 0.1)) lbl) Nil)
+
+// Histogram: k even brede bakken (lib/stats.spp's histogram), met de
+// ondergrens van elke bak eronder.
+histogram k xs = histogramBins (S.histogram k xs)
+
+histogramBins bins = bars (mapL (\b -> label (binLo b)) bins) (mapL binCount bins)
+
+binLo (lo, c) = lo
+binCount (lo, c) = c
+
+// == Lijsthulpjes ============================================================
+
+appendL xs ys = case xs (Nil -> ys) (Cons z zs -> Cons z (appendL zs ys))
+
+mapL f xs = case xs (Nil -> Nil) (Cons y ys -> Cons (f y) (mapL f ys))
+
+listLen xs = case xs (Nil -> 0) (Cons y ys -> 1 + listLen ys)
+
+indices !i xs = case xs (Nil -> Nil) (Cons y ys -> Cons i (indices (i + 1) ys))
+
+headOr d xs = case xs (Nil -> d) (Cons y ys -> y)
+
+tailOr xs = case xs (Nil -> Nil) (Cons y ys -> ys)

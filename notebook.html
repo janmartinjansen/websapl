@@ -92,6 +92,7 @@
       <select id="sel-example" title="Voorbeeld openen">
         <option value="">Voorbeeld…</option>
         <option value="notebooks/kennismaking.spp">Kennismaking</option>
+        <option value="notebooks/data_verkennen.spp">Data verkennen</option>
       </select>
       <label class="btn" title="Een .spp-notebook openen">Openen<input type="file" id="file-open" accept=".spp,.txt" /></label>
       <button id="btn-save" title="Opslaan als .spp">Opslaan</button>
@@ -190,6 +191,7 @@
         if (!r.success) {
           showBanner((r.stage === "preprocess" ? "Fout bij het voorbewerken:\n" : r.stage === "compile" ? "Fout bij het compileren:\n" : "") + cleanError(r.error));
           for (const e of gen.exprCells) cells[e.cell].output = { notRun: true };
+          await attachTypeErrors(gen);
         } else {
           const parsed = NB.parseOutput(r.output);
           let stopped = false;
@@ -210,6 +212,17 @@
       renderOutputs();
       running = false;
       el("btn-run").disabled = !ready;
+    }
+
+    // Compileren mislukt: de typechecker over hetzelfde programma laten
+    // lopen en zijn meldingen bij de cellen zetten waar ze horen (de
+    // compilermelding zelf zegt niet in welke cel het misgaat).
+    async function attachTypeErrors(gen) {
+      try {
+        const t = await call({ type: "TYPECHECK", source: gen.source, path: "/workspace/notebook.spp" }, TIMEOUT_MS);
+        const errs = NB.cellErrorsFromTypecheck(t.report, cells, gen);
+        for (const [i, msgs] of Object.entries(errs)) cells[i].output = { error: msgs.join("\n"), hint: true };
+      } catch (_) {}
     }
 
     function cleanError(text) {
@@ -323,6 +336,8 @@
         for (const cellText of line.split("\t")) {
           const td = document.createElement(r === 0 ? "th" : "td");
           td.textContent = cellText;
+          // Getallen rechts, tekst links.
+          if (r > 0 && !/^\s*-?\d+(\.\d+)?(e[+-]?\d+)?\s*$/i.test(cellText)) td.style.textAlign = "left";
           tr.appendChild(td);
         }
         t.appendChild(tr);

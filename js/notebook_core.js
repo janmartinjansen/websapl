@@ -214,7 +214,44 @@
     return { cells: result, loose: loose.join("\n") };
   }
 
-  const api = { parseNotebook, serializeNotebook, classifyCell, generateProgram, parseOutput };
+  /** Namen die een definitiecel op kolom 0 definieert (functies, operators). */
+  function definedNames(source) {
+    const names = [];
+    for (const l of codeLines(source)) {
+      if (/^\s/.test(l) || /^(::|#|import |module )/.test(l)) continue;
+      const m = l.match(/^\(([^)\s]+)\)/) || l.match(/^([A-Za-z_][A-Za-z0-9_']*)/);
+      if (m && !names.includes(m[1])) names.push(m[1]);
+    }
+    return names;
+  }
+
+  /**
+   * Koppelt de typechecker-uitvoer (regels `naam: FOUT: melding`) aan
+   * cellen: `__cellN` aan expressiecel N, een gedefinieerde naam aan zijn
+   * definitiecel. Fouten in bibliotheken (stdlib, stddyn, modules) worden
+   * genegeerd. Resultaat: { cellIndex: [melding, ...] }.
+   */
+  function cellErrorsFromTypecheck(report, cells, gen) {
+    const owner = {};
+    for (const e of gen.exprCells) owner[`__cell${e.n}`] = e.cell;
+    cells.forEach((c, i) => {
+      if (c.kind === "code" && classifyCell(c.source).kind === "def") {
+        for (const n of definedNames(c.source)) owner[n] = i;
+      }
+    });
+    const out = {};
+    for (const line of String(report || "").split("\n")) {
+      const m = line.match(/^(\S+): FOUT: (.*)$/);
+      if (!m || owner[m[1]] === undefined) continue;
+      let msg = m[2];
+      if (msg.startsWith(m[1] + ": ")) msg = msg.slice(m[1].length + 2);
+      const shown = m[1].startsWith("__cell") ? msg : `${m[1]}: ${msg}`;
+      (out[owner[m[1]]] = out[owner[m[1]]] || []).push(shown);
+    }
+    return out;
+  }
+
+  const api = { parseNotebook, serializeNotebook, classifyCell, generateProgram, parseOutput, definedNames, cellErrorsFromTypecheck };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.SaplNotebook = api;
 })(typeof window !== "undefined" ? window : globalThis);

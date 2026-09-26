@@ -1,0 +1,142 @@
+// lib/stats.spp -- beschrijvende statistiek als Sapl+-module (26 september 2026).
+// Plan: docs/2026-09-25_notebook_en_bibliotheken_plan.md, deel 2.3.
+//
+// Gebruik:  import "lib/stats.spp" as S
+//           S.mean [1, 2, 3, 4]          -- 2.5
+//
+// Invoer: lijsten getallen, Int of Float door elkaar. Uitkomsten zijn Floats
+// (behalve tellingen). Zelfstandig: geen stdlib nodig. Een lege lijst geeft
+// bij mean/variance/... een foutmelding, geen stille 0.
+module Stats
+
+::list = Nil | Cons !x xs
+
+// == Hulpjes =================================================================
+
+toF v = if (typeId v == 2) v (itof v)
+
+floats xs = case xs (Nil -> Nil) (Cons y ys -> Cons (toF y) (floats ys))
+
+len xs = lenAcc xs 0
+
+lenAcc xs !n = case xs (Nil -> n) (Cons y ys -> lenAcc ys (n + 1))
+
+sumF xs = sumAcc xs 0.0
+
+sumAcc xs !acc = case xs (Nil -> acc) (Cons y ys -> sumAcc ys (acc + toF y))
+
+nonEmpty name xs = case xs (Nil -> error (strcatS "Stats." (strcatS name ": lege lijst"))) (_ -> xs)
+
+// strcat zonder stdlib (alleen voor foutmeldingen).
+strcatS a b = strcatFill b (strlen a) (strcatFill a 0 (strcreate (strlen a + strlen b)))
+
+strcatFill s !off !t = strcatAt s off 0 (strlen s) t
+
+strcatAt s !off !i !n !t = if (i >= n) t (strcatAt s off (i + 1) n (update (strat i s) (off + i) t))
+
+// Stabiele mergesort op Floats.
+sortF xs = sortLen xs (len xs)
+
+sortLen xs n = if (n <= 1) xs (sortSplit xs n)
+
+sortSplit xs n =
+  let mid = n / 2 in
+  merge (sortLen (takeL mid xs) mid) (sortLen (dropL mid xs) (n - mid))
+
+merge xs ys = case xs (Nil -> ys) (Cons a as -> mergeCons a as ys)
+
+mergeCons a as ys = case ys (Nil -> Cons a as) (Cons b bs -> if (a <= b) (Cons a (merge as ys)) (Cons b (merge (Cons a as) bs)))
+
+takeL n xs = if (n <= 0) Nil (case xs (Nil -> Nil) (Cons y ys -> Cons y (takeL (n - 1) ys)))
+
+dropL n xs = if (n <= 0) xs (case xs (Nil -> Nil) (Cons y ys -> dropL (n - 1) ys))
+
+nthL i xs = case xs (Cons y ys -> if (i == 0) y (nthL (i - 1) ys)) (Nil -> error "Stats: index te groot")
+
+mapL f xs = case xs (Nil -> Nil) (Cons y ys -> Cons (f y) (mapL f ys))
+
+zipWithL f xs ys = case xs (Nil -> Nil) (Cons a as -> case ys (Nil -> Nil) (Cons b bs -> Cons (f a b) (zipWithL f as bs)))
+
+// == Ligging =================================================================
+
+count xs = len xs
+
+sum xs = sumF xs
+
+mean xs = sumF (nonEmpty "mean" xs) / itof (len xs)
+
+minimum xs = case (nonEmpty "minimum" xs) (Cons y ys -> minFrom (toF y) ys)
+
+minFrom !m xs = case xs (Nil -> m) (Cons y ys -> minFrom (if (toF y < m) (toF y) m) ys)
+
+maximum xs = case (nonEmpty "maximum" xs) (Cons y ys -> maxFrom (toF y) ys)
+
+maxFrom !m xs = case xs (Nil -> m) (Cons y ys -> maxFrom (if (toF y > m) (toF y) m) ys)
+
+range xs = maximum xs - minimum xs
+
+// Kwantiel p (0.0 .. 1.0), lineair geïnterpoleerd (zoals numpy's standaard).
+quantile p xs = quantileSorted (toF p) (sortF (floats (nonEmpty "quantile" xs))) (len xs)
+
+quantileSorted p sorted n =
+  let pos = p * itof (n - 1),
+      lo = ftoi (floor pos),
+      frac = pos - itof lo in
+  if (lo >= n - 1) (nthL (n - 1) sorted) (nthL lo sorted + (frac * (nthL (lo + 1) sorted - nthL lo sorted)))
+
+median xs = quantile 0.5 xs
+
+// == Spreiding ===============================================================
+
+// Steekproefvariantie (delen door n - 1); populatievariantie apart.
+variance xs = sumSq (nonEmpty "variance" xs) (mean xs) / itof (len xs - 1)
+
+populationVariance xs = sumSq (nonEmpty "populationVariance" xs) (mean xs) / itof (len xs)
+
+sumSq xs m = sumF (mapL (\x -> (toF x - m) * (toF x - m)) xs)
+
+stdev xs = sqrt (variance xs)
+
+// == Samenhang ===============================================================
+
+covariance xs ys =
+  let mx = mean xs,
+      my = mean ys in
+  sumF (zipWithL (\a b -> (toF a - mx) * (toF b - my)) xs ys) / itof (len xs - 1)
+
+correlation xs ys = covariance xs ys / (stdev xs * stdev ys)
+
+// Kleinste-kwadratenlijn y = a + b x: geeft (b, a), dus (helling, snijpunt).
+linearRegression xs ys =
+  let b = covariance xs ys / variance xs,
+      a = mean ys - (b * mean xs) in
+  (b, a)
+
+// == Verdelingen =============================================================
+
+// Cumulatieve som: [1, 2, 3] -> [1.0, 3.0, 6.0].
+cumulative xs = cumFrom 0.0 xs
+
+cumFrom !acc xs = case xs (Nil -> Nil) (Cons y ys -> Cons (acc + toF y) (cumFrom (acc + toF y) ys))
+
+// histogram k xs: k even brede bakken van minimum tot maximum; geeft een
+// lijst van (ondergrens, aantal). De bovenste bak telt het maximum mee.
+histogram k xs =
+  let lo = minimum xs,
+      hi = maximum xs,
+      w = if (hi > lo) ((hi - lo) / itof k) 1.0 in
+  histBins 0 k lo w (floats xs)
+
+histBins !i k lo w xs = if (i >= k) Nil (Cons ((lo + (itof i * w)), countBin i k lo w xs 0) (histBins (i + 1) k lo w xs))
+
+countBin i k lo w xs !acc = case xs (Nil -> acc) (Cons x rest -> countBin i k lo w rest (if (binOf x k lo w == i) (acc + 1) acc))
+
+binOf x k lo w = minInt (k - 1) (ftoi (floor ((x - lo) / w)))
+
+minInt a b = if (a < b) a b
+
+// Standaardscores: (x - gemiddelde) / standaardafwijking.
+zscores xs =
+  let m = mean xs,
+      s = stdev xs in
+  mapL (\x -> (toF x - m) / s) xs

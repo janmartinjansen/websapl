@@ -1,0 +1,101 @@
+// lib/csv.spp -- CSV lezen (26 september 2026).
+// Plan: docs/2026-09-25_notebook_en_bibliotheken_plan.md, deel 2.3.
+//
+// Gebruik:  import "lib/csv.spp" as C
+//           rijen = C.read "notebooks/data/fruit.csv"
+//           C.column "prijs" rijen            -- ["1.20", "0.45", ...]
+//           C.floats (C.column "prijs" rijen)  -- [1.2, 0.45, ...]
+//           C.table rijen                      -- als tabel in de notebook
+//
+// Een tabel is een lijst rijen, een rij een lijst velden (gepakte strings);
+// de eerste rij is de kop. Velden tussen aanhalingstekens mogen de
+// scheider, regeleinden en `""` (een aanhalingsteken) bevatten. Regeleinden
+// "\n" of "\r\n"; lege regels worden overgeslagen.
+module Csv
+import "lib/text.spp" as T
+import "lib/display.spp" as D
+
+::list = Nil | Cons !x xs
+
+// == Lezen ===================================================================
+
+read path = parse (readFile path)
+
+parse text = parseWith ',' text
+
+// Met een andere scheider, bv. parseWith ';' tekst.
+parseWith sep s = rowsFrom sep s 0 (strlen s)
+
+rowsFrom sep s !i !n = if (i >= n) Nil (rowNext sep s n (fieldsFrom sep s i n))
+
+rowNext sep s n (fs, j) = if (isBlankRow fs) (rowsFrom sep s j n) (Cons fs (rowsFrom sep s j n))
+
+isBlankRow fs = case fs (Cons f rest -> case rest (Nil -> T.isEmpty f) (_ -> False)) (Nil -> True)
+
+// De velden van één rij vanaf i: (velden, positie na het regeleinde).
+fieldsFrom sep s !i !n =
+  if (i >= n) (Cons T.empty Nil, n)
+  (if (strat i s == 34) (quotedFrom sep s (i + 1) n Nil) (plainFrom sep s i i n))
+
+plainFrom sep s !a !k !n =
+  if (k >= n) (afterField sep s k n (T.slice a (k - a) s))
+  (if (isFieldEnd sep (strat k s)) (afterField sep s k n (T.slice a (k - a) s)) (plainFrom sep s a (k + 1) n))
+
+isFieldEnd sep c = (c == sep) \/ (c == 10) \/ (c == 13)
+
+// Binnen aanhalingstekens; `acc` is de omgekeerde char-lijst van het veld.
+quotedFrom sep s !k !n acc =
+  if (k >= n) (afterField sep s k n (T.fromChars (revL acc Nil)))
+  (if (strat k s == 34) (quoteEnd sep s k n acc) (quotedFrom sep s (k + 1) n (Cons (strat k s) acc)))
+
+quoteEnd sep s !k !n acc =
+  if (k + 1 < n) (if (strat (k + 1) s == 34) (quotedFrom sep s (k + 2) n (Cons 34 acc)) (afterQuoted sep s (k + 1) n acc))
+  (afterQuoted sep s (k + 1) n acc)
+
+// Na het sluitende aanhalingsteken: eventuele rommel tot de scheider negeren.
+afterQuoted sep s !k !n acc =
+  if (k >= n) (afterField sep s k n (T.fromChars (revL acc Nil)))
+  (if (isFieldEnd sep (strat k s)) (afterField sep s k n (T.fromChars (revL acc Nil))) (afterQuoted sep s (k + 1) n acc))
+
+afterField sep s !j !n field =
+  if (j >= n) (Cons field Nil, n)
+  (if (strat j s == sep) (consField field (fieldsFrom sep s (j + 1) n))
+  (if (strat j s == 13) (Cons field Nil, skipLf s (j + 1) n) (Cons field Nil, j + 1)))
+
+skipLf s !j !n = if (j < n) (if (strat j s == 10) (j + 1) j) j
+
+consField field (fs, k) = (Cons field fs, k)
+
+revL xs acc = case xs (Nil -> acc) (Cons y ys -> revL ys (Cons y acc))
+
+// == Kop en kolommen =========================================================
+
+header rows = case rows (Cons h rest -> h) (Nil -> Nil)
+
+body rows = case rows (Cons h rest -> rest) (Nil -> Nil)
+
+// De waarden van één kolom (zonder de kop), op naam.
+column name rows = columnAt (indexOfName name (header rows) 0) (body rows)
+
+columnAt i rows = if (i < 0) (error "Csv.column: onbekende kolom") (mapL (\r -> nthOr i r) rows)
+
+indexOfName name hs !i = case hs (Nil -> 0 - 1) (Cons h rest -> if (T.equal (T.trim h) name) i (indexOfName name rest (i + 1)))
+
+nthOr i r = case r (Nil -> T.empty) (Cons f rest -> if (i == 0) f (nthOr (i - 1) rest))
+
+// Velden als getallen.
+floats xs = mapL T.readFloat xs
+
+ints xs = mapL T.readInt xs
+
+// Alleen de genoemde kolommen, in die volgorde (kop plus rijen).
+select names rows = selectIdx (mapL (\nm -> indexOfName nm (header rows) 0) names) rows
+
+selectIdx idxs rows = mapL (\r -> mapL (\i -> nthOr i r) idxs) rows
+
+// Als tabel in de notebook: de kop boven, dan de rijen.
+table rows = D.table (header rows) (body rows)
+
+// == Lijsthulpjes ============================================================
+
+mapL f xs = case xs (Nil -> Nil) (Cons y ys -> Cons (f y) (mapL f ys))

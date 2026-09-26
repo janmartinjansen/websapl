@@ -1,0 +1,33 @@
+//%% [markdown]
+// # Data verkennen: een kleine fruitverkoop
+//
+// De gegevens staan in `notebooks/data/fruit.csv` (verzonnen cijfers).
+// `lib/csv.spp` leest ze, `lib/stats.spp` rekent, `lib/plot.spp` tekent.
+//%%
+import "lib/csv.spp" as C
+import "lib/stats.spp" as S
+import "lib/plot.spp" as P
+import "lib/list.spp" as L
+import "lib/text.spp" as T
+
+rijen = C.read "notebooks/data/fruit.csv"
+
+appels = [ r | r <- C.body rijen, T.equal (L.nth 1 r) "appels" ]
+peren  = [ r | r <- C.body rijen, T.equal (L.nth 1 r) "peren" ]
+
+kilo rs = C.ints (C.column "kilo" (Cons (C.header rijen) rs))
+prijs rs = C.floats (C.column "prijs" (Cons (C.header rijen) rs))
+//%%
+C.table rijen
+//%%
+D.table ["", "appels", "peren"] [["kilo totaal", S.sum (kilo appels), S.sum (kilo peren)], ["gem. prijs", T.showFixed 2 (S.mean (prijs appels)), T.showFixed 2 (S.mean (prijs peren))]]
+//%% [markdown]
+// Verkopen de peren beter naarmate ze goedkoper worden?
+//%%
+P.scatterFit (prijs peren) (kilo peren)
+//%%
+S.correlation (prijs peren) (kilo peren)
+//%%
+P.bars ["w1", "w2", "w3", "w4"] (kilo appels)
+//%%
+P.line [1, 2, 3, 4] (prijs appels)

@@ -23,7 +23,7 @@ applyDynamicByName !name !args = applyDynamic (lookup name) args
 
 // Generieke pretty printer: showVal x -> print een waarde
 // als leesbare string-representatie
-showVal x =
+showVal !x =
   let tid = typeId x in if (tid > TYPE_FUNC) (showConstr x) (showValAux tid x)
 
 showValAux !tid !x =
@@ -64,7 +64,12 @@ showConstrDynamic !x !name =
 showConstrGeneric !x !name =
   let arity = getConstrArity x,
       shown = displayConName name in
-  if (arity == 0) shown (strcat shown (strcat "(" (strcat (showFields x 0 arity) ")")))
+  if (isTupleName name) (strcat "(" (strcat (showFields x 0 arity) ")"))
+  (if (arity == 0) shown (strcat shown (strcat "(" (strcat (showFields x 0 arity) ")"))))
+
+// Sapl+-tupels (`(a, b)`) heten onder water `__Tuple2`, `__Tuple3`, ...;
+// getoond zoals ze geschreven worden: `(1, 2.5)`.
+isTupleName !name = if (strlen name > 7) (strEqualAt 0 "__Tuple" name) False
 
 // Een constructor uit een Sapl+-module heet onder water `Module__Naam`
 // (preprocess/modules.cfp, bv. `Lijst__Wel`); voor weergave alleen `Naam`,
