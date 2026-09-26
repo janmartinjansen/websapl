@@ -62,8 +62,28 @@ showConstrDynamic !x !name =
   if (typeId h == TYPE_FUNC) (applyDynamic h (Cons x Nil)) (showConstrGeneric x name)
 
 showConstrGeneric !x !name =
-  let arity = getConstrArity x in
-  if (arity == 0) name (strcat name (strcat "(" (strcat (showFields x 0 arity) ")")))
+  let arity = getConstrArity x,
+      shown = displayConName name in
+  if (arity == 0) shown (strcat shown (strcat "(" (strcat (showFields x 0 arity) ")")))
+
+// Een constructor uit een Sapl+-module heet onder water `Module__Naam`
+// (preprocess/modules.cfp, bv. `Lijst__Wel`); voor weergave alleen `Naam`,
+// zoals Haskell's show. Alleen de weergave: de show_-haak en de ariteit
+// hierboven zoeken met de volle naam. Een naam zonder `Hoofdletter...__
+// Hoofdletter`-vorm (Cons, __Tuple2, Pair) blijft ongewijzigd.
+displayConName !name =
+  let n = strlen name in
+  if (n > 0) (displayConNameFrom name n (isUpperCode (strat 0 name))) name
+
+displayConNameFrom !name !n !upper = if upper (displayConNameScan name n 1) name
+
+displayConNameScan !name !n !i =
+  if (i + 2 >= n) name
+  (if (isModuleSep name i) (substr name (i + 2) (n - i - 2)) (displayConNameScan name n (i + 1)))
+
+isModuleSep !name !i = (strat i name == '_') /\ (strat (i + 1) name == '_') /\ isUpperCode (strat (i + 2) name)
+
+isUpperCode !c = (c >= 'A') /\ (c <= 'Z')
 
 // Lijst-default: een ::list-waarde (Cons/Nil, lib/stdlib.cfp) toont
 // showVal/printVal als "[1, 2, 3]" i.p.v. de generieke

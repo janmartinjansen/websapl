@@ -511,6 +511,65 @@ async function compileRetag(source, srcPath) {
  * (each createJMVMModule() call gets its own independent virtual
  * filesystem, so every dependency has to be re-mounted here).
  */
+/**
+ * Verzamelt (recursief) elk bestand achter een `#import "pad"` of een
+ * Sapl+-module-import `import "pad" as Naam` (preprocess/modules.cfp) dat
+ * niet al in de vaste sppDeps-lijst staat, zodat driver.jmvm het in zijn
+ * verse instantie kan `readFile`-en. Tot 26 september 2026 vond een .spp in
+ * WebSapl alleen die vaste lijst. Bronnen, in volgorde: de eigen VFS van
+ * deze worker (op "/pad" of "/workspace/pad", waar geopende en eerder
+ * opgehaalde bestanden staan), anders één keer ophalen van de server (zoals
+ * resolveImports hierboven). Resultaat: VFS-pad ("/pad") -> tekst.
+ */
+const SPP_IMPORT_RE = /^(?:#import|import)\s+"([^"]+)"/;
+
+async function collectSppImports(source, found = {}) {
+  for (const line of source.split("\n")) {
+    const m = line.match(SPP_IMPORT_RE);
+    if (!m) continue;
+    const rel = m[1].startsWith("/") ? m[1].slice(1) : m[1];
+    const vfsPath = "/" + rel;
+    if (vfsPath === "/lib/stdlib.cfp" || sppDeps[vfsPath] !== undefined || found[vfsPath] !== undefined) continue;
+    let content = null;
+    for (const cand of [vfsPath, "/workspace/" + rel]) {
+      if (jmvmModule && jmvmModule.FS.analyzePath(cand).exists) {
+        content = jmvmModule.FS.readFile(cand, { encoding: "utf8" });
+        break;
+      }
+    }
+    if (content === null) {
+      try {
+        const res = await fetch("../" + rel);
+        if (res.ok) {
+          content = await res.text();
+          if (jmvmModule) {
+            ensureDirFor(vfsPath);
+            jmvmModule.FS.writeFile(vfsPath, content);
+          }
+        }
+      } catch (_) {}
+    }
+    // Niet gevonden: niets mounten; de preprocessor meldt dan zelf
+    // "import: bestand niet gevonden of leeg: <pad>".
+    if (content === null) continue;
+    found[vfsPath] = content;
+    await collectSppImports(content, found);
+  }
+  return found;
+}
+
+function mkdirsFor(fs, filePath) {
+  const parts = filePath.split("/").filter(Boolean);
+  parts.pop();
+  let cur = "";
+  for (const p of parts) {
+    cur += "/" + p;
+    try {
+      if (!fs.analyzePath(cur).exists) fs.mkdir(cur);
+    } catch (_) {}
+  }
+}
+
 async function preprocessSpp(source, srcPath) {
   if (!isInitialized) throw new Error("JMVM engine is not initialized.");
   if (!driverBytecode) throw new Error("Sapl+ preprocessor (driver.jmvm) kon niet geladen worden.");
@@ -553,6 +612,11 @@ async function preprocessSpp(source, srcPath) {
   }
   instance.FS.writeFile("/lib/stdlib.cfp", stdlibContent);
   for (const [path, content] of Object.entries(sppDeps)) {
+    instance.FS.writeFile(path, content);
+  }
+  const extraDeps = await collectSppImports(source);
+  for (const [path, content] of Object.entries(extraDeps)) {
+    mkdirsFor(instance.FS, path);
     instance.FS.writeFile(path, content);
   }
 
@@ -709,6 +773,12 @@ async function typecheckSource(source, srcPath) {
   }
   instance.FS.writeFile("/lib/stdlib.cfp", stdlibContent);
   for (const [depPath, content] of Object.entries(sppDeps)) {
+    instance.FS.writeFile(depPath, content);
+  }
+  // Zelfde aanvulling als in preprocessSpp: modules achter `import "..."`.
+  const extraDeps = await collectSppImports(source);
+  for (const [depPath, content] of Object.entries(extraDeps)) {
+    mkdirsFor(instance.FS, depPath);
     instance.FS.writeFile(depPath, content);
   }
 
