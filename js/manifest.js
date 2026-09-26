@@ -1266,7 +1266,7 @@ window.WEBSAPL_TREE = [
         "path": "notebooks/kennismaking.spp",
         "type": "file",
         "ext": ".spp",
-        "size": 1586,
+        "size": 2008,
         "isBinary": false
       }
     ],
@@ -1837,7 +1837,7 @@ window.WEBSAPL_TREE = [
     "path": "notebook.html",
     "type": "file",
     "ext": ".html",
-    "size": 20548,
+    "size": 25633,
     "isBinary": false
   },
   {

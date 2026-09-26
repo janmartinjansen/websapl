@@ -73,6 +73,8 @@
     .out .err { color: var(--err); }
     .out .note { color: var(--muted); font-size: 12px; }
     .out .ok { color: var(--ok); font-size: 12px; }
+    .cell.stale .out { opacity: .45; }
+    .cell.stale .gutter::after { content: " •"; color: var(--accent); }
     .table-wrap { overflow-x: auto; max-width: 100%; }
     .out table { border-collapse: collapse; font-size: 13px; font-family: var(--font-mono); margin: 2px 0; }
     .out th, .out td { border: 1px solid var(--border); padding: 3px 10px; text-align: right; }
@@ -103,6 +105,8 @@
     <div class="add-row">
       <button id="btn-add-code">+ Code</button>
       <button id="btn-add-md">+ Tekst</button>
+      <button id="btn-add-lc" title="Lambda-calculus via lc_repl">+ λ</button>
+      <button id="btn-add-type" title="Typen van expressies">+ Type</button>
     </div>
     <p class="help">
       Een codecel bevat definities óf één expressie. Beschikbaar zonder import:
@@ -110,7 +114,11 @@
       <code>D.bar</code>, <code>D.lineChart</code>, <code>D.picture</code>, <code>D.text</code>,
       <code>D.markdown</code>) en <code>G</code> (<code>grafisch/graphics.cfp</code>).
       Meer via bijvoorbeeld <code>import "lib/list.spp" as L</code> of
-      <code>import "lib/text.spp" as T</code>. Ctrl/⌘+Enter voert uit.
+      <code>import "lib/text.spp" as T</code>. Shift+Enter voert een cel uit
+      (met de cellen die ervan afhangen), Ctrl/⌘+Enter alles. Grijze uitvoer is
+      verouderd. Een λ-cel is pure lambda-calculus (<code>lc_repl</code>, bv.
+      <code>:nf</code>, <code>:seval</code>, <code>:blc</code>); een type-cel
+      toont per regel het type van een expressie.
     </p>
   </div>
 
@@ -171,47 +179,109 @@
     }
 
     // ---- uitvoeren ------------------------------------------------------
-    async function runAll() {
+    // Herberekenen per cel: runCells(doelen) voert alleen de gekozen
+    // cellen uit (definitiecellen gaan altijd mee in het programma); de
+    // uitvoer van de andere cellen blijft staan. Een definitiecel neemt haar
+    // afhankelijke cellen mee (NB.dependents), een lc-cel de hele lc-sessie.
+    function runAll() { return runCells(new Set(cells.map((_, i) => i))); }
+
+    function runCell(i) {
+      const c = cells[i];
+      if (!c) return;
+      if (c.kind === "markdown") { c.editing = false; renderAll(); return; }
+      if (c.kind === "lc") return runCells(new Set(cells.map((x, j) => (x.kind === "lc" ? j : -1)).filter((j) => j >= 0)));
+      return runCells(NB.dependents(cells, i));
+    }
+
+    async function runCells(targets) {
       if (!ready || running) return;
       running = true;
       el("btn-run").disabled = true;
       hideBanner();
-      const gen = NB.generateProgram(cells);
-      cells.forEach((c, i) => {
-        if (c.kind !== "code") return;
-        const cls = NB.classifyCell(c.source);
-        c.output = gen.errors[i] ? { error: gen.errors[i] }
-          : cls.kind === "def" ? { def: true } : cls.kind === "expr" ? { pending: true } : null;
-      });
+      const exprT = new Set(), typeT = new Set(), defT = [];
+      let lcT = false;
+      for (const i of targets) {
+        const c = cells[i];
+        if (!c) continue;
+        if (c.kind === "code") {
+          const cls = NB.classifyCell(c.source);
+          if (cls.error) c.output = { error: cls.error };
+          else if (cls.kind === "expr") { exprT.add(i); c.output = { pending: true }; }
+          else if (cls.kind === "def") { defT.push(i); c.output = { pending: true }; }
+          else c.output = null;
+        } else if (c.kind === "type") { typeT.add(i); c.output = { pending: true }; }
+        else if (c.kind === "lc") { lcT = true; c.output = { pending: true }; }
+        if (c.kind !== "markdown") c.stale = false;
+      }
       renderOutputs();
       setStatus("uitvoeren…");
       const t0 = performance.now();
+      let n = 0;
       try {
-        const r = await call({ type: "NOTEBOOK_RUN", source: gen.source }, TIMEOUT_MS);
-        if (!r.success) {
-          showBanner((r.stage === "preprocess" ? "Fout bij het voorbewerken:\n" : r.stage === "compile" ? "Fout bij het compileren:\n" : "") + cleanError(r.error));
-          for (const e of gen.exprCells) cells[e.cell].output = { notRun: true };
-          await attachTypeErrors(gen);
-        } else {
-          const parsed = NB.parseOutput(r.output);
-          let stopped = false;
-          for (const e of gen.exprCells) {
-            const res = parsed.cells[e.n];
-            if (!res) cells[e.cell].output = { notRun: true, afterStop: stopped };
-            else if (res.error) { cells[e.cell].output = { error: res.error }; stopped = true; }
-            else cells[e.cell].output = { blocks: res.blocks };
-          }
-          if (parsed.loose) showBanner(parsed.loose);
-        }
-        setStatus(`klaar (${Math.round(performance.now() - t0)} ms)`);
+        if (exprT.size || defT.length) { n += exprT.size; await runProgram(exprT, defT); }
+        if (typeT.size) { n += typeT.size; await runTypes(typeT); }
+        if (lcT) { n += 1; await runLc(); }
+        setStatus(`klaar (${Math.round(performance.now() - t0)} ms, ${targets.size === cells.length ? "alles" : targets.size + " cel" + (targets.size === 1 ? "" : "len")})`);
       } catch (err) {
         showBanner(err.message);
-        for (const e of gen.exprCells) cells[e.cell].output = { notRun: true };
+        for (const i of targets) if (cells[i] && cells[i].output && cells[i].output.pending) cells[i].output = { notRun: true };
         setStatus("gestopt");
       }
       renderOutputs();
       running = false;
       el("btn-run").disabled = !ready;
+    }
+
+    async function runProgram(exprT, defT) {
+      const gen = NB.generateProgram(cells, exprT);
+      const r = await call({ type: "NOTEBOOK_RUN", source: gen.source }, TIMEOUT_MS);
+      if (!r.success) {
+        showBanner((r.stage === "preprocess" ? "Fout bij het voorbewerken:\n" : r.stage === "compile" ? "Fout bij het compileren:\n" : "") + cleanError(r.error));
+        for (const e of gen.exprCells) cells[e.cell].output = { notRun: true };
+        for (const i of defT) cells[i].output = { notRun: true };
+        await attachTypeErrors(gen);
+        return;
+      }
+      for (const i of defT) cells[i].output = { def: true };
+      const parsed = NB.parseOutput(r.output);
+      let stopped = false;
+      for (const e of gen.exprCells) {
+        const res = parsed.cells[e.n];
+        if (!res) cells[e.cell].output = { notRun: true, afterStop: stopped };
+        else if (res.error) { cells[e.cell].output = { error: res.error }; stopped = true; }
+        else cells[e.cell].output = { blocks: res.blocks };
+      }
+      if (parsed.loose) showBanner(parsed.loose);
+    }
+
+    async function runTypes(typeT) {
+      const tp = NB.generateTypeProgram(cells, typeT);
+      const t = await call({ type: "TYPECHECK", source: tp.source, path: "/workspace/notebook_types.spp" }, TIMEOUT_MS);
+      const byCell = NB.parseTypeReport(t.report, tp.typeLines);
+      for (const i of typeT) cells[i].output = { types: byCell[i] || [] };
+    }
+
+    async function runLc() {
+      const inp = NB.lcInput(cells);
+      const r = await call({ type: "LC_RUN", stdin: inp.stdin }, TIMEOUT_MS);
+      if (!r.success) { showBanner("lc_repl: " + r.error); return; }
+      const byCell = NB.parseLcOutput(r.output, inp.lines);
+      cells.forEach((c, i) => { if (c.kind === "lc") c.output = { lc: byCell[i] || [] }; });
+    }
+
+    // Een cel gewijzigd: haar uitvoer en die van afhankelijke cellen is
+    // verouderd tot de volgende run (grijs weergegeven).
+    function markStale(i) {
+      const c = cells[i];
+      const set = c.kind === "lc" ? cells.map((x, j) => (x.kind === "lc" && j >= i ? j : -1)).filter((j) => j >= 0)
+        : c.kind === "markdown" ? [] : [...NB.dependents(cells, i)];
+      for (const j of set) {
+        if (cells[j].output && !cells[j].stale) {
+          cells[j].stale = true;
+          const row = document.querySelector(`.cell[data-index="${j}"]`);
+          if (row) row.classList.add("stale");
+        }
+      }
     }
 
     // Compileren mislukt: de typechecker over hetzelfde programma laten
@@ -242,11 +312,12 @@
 
     function renderCell(c, i) {
       const row = document.createElement("div");
-      row.className = "cell";
+      row.className = "cell" + (c.stale ? " stale" : "");
       row.dataset.index = i;
       const gutter = document.createElement("div");
       gutter.className = "gutter";
-      gutter.textContent = c.kind === "code" ? `[${i + 1}]` : "md";
+      gutter.textContent = { code: `[${i + 1}]`, markdown: "md", lc: "λ", type: "::" }[c.kind];
+      gutter.title = { code: "Sapl+-code", markdown: "tekst (Markdown)", lc: "lambda-calculus (lc_repl)", type: "typen van expressies" }[c.kind];
       const body = document.createElement("div");
       body.className = "cell-body";
       body.appendChild(renderTools(i));
@@ -261,7 +332,8 @@
         ta.value = c.source;
         ta.rows = 1;
         ta.spellcheck = false;
-        ta.addEventListener("input", () => { c.source = ta.value; autoGrow(ta); save(); });
+        ta.placeholder = { code: "definities of één expressie", lc: "lambda-calculus, bv. I = \\x.x  of  :nf (\\x y.x) 1 2", type: "een expressie per regel", markdown: "tekst" }[c.kind];
+        ta.addEventListener("input", () => { c.source = ta.value; autoGrow(ta); save(); markStale(i); });
         ta.addEventListener("keydown", (e) => onKey(e, ta, c));
         ta.addEventListener("focus", () => row.classList.add("focus"));
         ta.addEventListener("blur", () => {
@@ -288,10 +360,13 @@
         b.addEventListener("click", fn);
         tools.appendChild(b);
       };
+      mk("▶", "Deze cel uitvoeren, met wat ervan afhangt (Shift+Enter)", () => runCell(i));
       mk("↑", "Omhoog", () => move(i, -1));
       mk("↓", "Omlaag", () => move(i, 1));
-      mk(cells[i].kind === "code" ? "→ tekst" : "→ code", "Soort wisselen", () => {
-        cells[i].kind = cells[i].kind === "code" ? "markdown" : "code"; cells[i].output = null; save(); renderAll();
+      const next = { code: "markdown", markdown: "lc", lc: "type", type: "code" };
+      const label = { code: "code", markdown: "tekst", lc: "λ", type: "type" };
+      mk("soort: " + label[cells[i].kind], "Soort wisselen: code → tekst → λ → type", () => {
+        cells[i].kind = next[cells[i].kind]; cells[i].output = null; cells[i].editing = cells[i].kind === "markdown"; save(); renderAll();
       });
       mk("✕", "Verwijderen", () => { cells.splice(i, 1); save(); renderAll(); });
       return tools;
@@ -301,6 +376,7 @@
       document.querySelectorAll(".cell").forEach((row) => {
         const c = cells[+row.dataset.index];
         const out = row.querySelector(".out");
+        if (c) row.classList.toggle("stale", !!c.stale);
         if (c && out) fillOutput(out, c);
       });
     }
@@ -308,9 +384,22 @@
     function fillOutput(out, c) {
       out.innerHTML = "";
       const o = c.output;
-      if (!o || c.kind !== "code") return;
+      if (!o || c.kind === "markdown") return;
       const pre = (cls, text) => { const p = document.createElement("pre"); p.className = cls; p.textContent = text; out.appendChild(p); };
       if (o.pending) return pre("note", "…");
+      if (o.types) {
+        for (const t of o.types) t.error ? pre("err", `${t.expr}: ${t.error}`) : pre("", `${t.expr} :: ${t.type}`);
+        return;
+      }
+      if (o.lc) {
+        for (const l of o.lc) {
+          pre("print", "lc> " + l.line);
+          if (l.error) pre("err", l.error);
+          else if (l.notRun) pre("note", "niet uitgevoerd: een eerdere regel stopte lc_repl");
+          else if (l.output) pre("", l.output);
+        }
+        return;
+      }
       if (o.def) return pre("ok", "✓ definities");
       if (o.error) return pre("err", o.error);
       if (o.notRun) return pre("note", o.afterStop ? "niet uitgevoerd: een eerdere cel stopte" : "niet uitgevoerd");
@@ -351,6 +440,7 @@
 
     function onKey(e, ta, c) {
       if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); runAll(); return; }
+      if (e.key === "Enter" && e.shiftKey) { e.preventDefault(); runCell(cells.indexOf(c)); return; }
       if (e.key === "Tab") {
         e.preventDefault();
         const s = ta.selectionStart;
@@ -410,6 +500,8 @@
     el("btn-run").addEventListener("click", runAll);
     el("btn-add-code").addEventListener("click", () => addCell("code"));
     el("btn-add-md").addEventListener("click", () => addCell("markdown"));
+    el("btn-add-lc").addEventListener("click", () => addCell("lc"));
+    el("btn-add-type").addEventListener("click", () => addCell("type"));
     el("btn-save").addEventListener("click", download);
     el("sel-example").addEventListener("change", (e) => { if (e.target.value) loadExample(e.target.value); e.target.value = ""; });
     el("file-open").addEventListener("change", async (e) => {

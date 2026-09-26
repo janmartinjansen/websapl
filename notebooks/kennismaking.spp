@@ -44,5 +44,19 @@ zin = "  de kat krabt de krullen van de trap  "
 D.table ["woord", "lengte"] [ [T.toUpper w, T.length w] | w <- T.words zin ]
 //%%
 T.join " | " (L.map (T.padLeft 4) (L.map T.showInt (L.take 6 priemen)))
+//%% [markdown]
+// Een **type-cel** toont per regel het type van een expressie; een
+// **λ-cel** is pure lambda-calculus (`lc_repl`). Shift+Enter voert één cel
+// uit, met de cellen die ervan afhangen.
+//%% [type]
+// zeef
+// L.take 15 priemen
+// T.padLeft 4
+//%% [lc]
+// Y = \f.(\x. f (x x)) (\x. f (x x))
+// fact = Y (\self n. eq n 0 1 (mult n (self (sub n 1))))
+// :seval fact 10
+// :db \f x. f (f x)
+// :blc \x y. x
 //%%
 D.picture [G.GraphDisc 12 (G.Pt (0.0 - 0.5) (0.0 - 0.5)) (G.Pt 0.5 0.5), G.GraphText 15 (G.Pt (0.0 - 0.2) 0.0) "Sapl"]

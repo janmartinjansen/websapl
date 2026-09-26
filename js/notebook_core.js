@@ -20,9 +20,20 @@
  *   - anders een expressie; die mag over meerdere regels lopen, zolang de
  *     vervolgregels ingesprongen zijn.
  *
- * Uitvoeren: alle cellen worden één Sapl+-programma (generateProgram), met
- * lib/notebook_glue.cfp als uitvoerlaag. Elke keer het hele notebook: er is
- * nog geen incrementele herberekening (plan 3.4).
+ * Uitvoeren: de cellen worden één Sapl+-programma (generateProgram), met
+ * lib/notebook_glue.cfp als uitvoerlaag.
+ *
+ * Herberekenen per cel (plan 3.5 stap 4): `dependents` bepaalt, op naam,
+ * welke cellen van een gewijzigde cel afhangen. Een run neemt altijd alle
+ * definitiecellen mee, maar alleen de gekozen expressiecellen; de uitvoer
+ * van de andere cellen blijft staan.
+ *
+ * Speciale celtypen, in het bestand als commentaar (zodat het een geldig
+ * Sapl+-bestand blijft, net als [markdown]):
+ *   //%% [type]  -- elke regel een expressie; toont haar type
+ *                   (generateTypeProgram, via de typechecker);
+ *   //%% [lc]    -- pure lambda-calculus via lc_repl/lc_repl.jmvm; alle
+ *                   lc-cellen samen vormen één sessie (lcInput/parseLcOutput).
  */
 (function (root) {
   const MARK_RE = /^\/\/%%(.*)$/;
@@ -36,7 +47,7 @@
       if (m) {
         if (sawMarker || cur.lines.some((l) => l.trim() !== "")) cells.push(cur);
         sawMarker = true;
-        cur = { kind: /\[markdown\]/.test(m[1]) ? "markdown" : "code", lines: [] };
+        cur = { kind: markerKind(m[1]), lines: [] };
       } else {
         cur.lines.push(line);
       }
@@ -44,8 +55,16 @@
     cells.push(cur);
     return cells.map((c) => ({
       kind: c.kind,
-      source: trimBlankEdges(c.kind === "markdown" ? c.lines.map(unComment) : c.lines).join("\n"),
+      source: trimBlankEdges(COMMENTED.includes(c.kind) ? c.lines.map(unComment) : c.lines).join("\n"),
     }));
+  }
+
+  // Celsoorten die in het bestand als commentaar staan.
+  const COMMENTED = ["markdown", "lc", "type"];
+
+  function markerKind(rest) {
+    const m = rest.match(/\[(markdown|lc|type)\]/);
+    return m ? m[1] : "code";
   }
 
   function unComment(line) {
@@ -64,9 +83,9 @@
   function serializeNotebook(cells) {
     const out = [];
     for (const c of cells) {
-      out.push(c.kind === "markdown" ? "//%% [markdown]" : "//%%");
+      out.push(c.kind === "code" ? "//%%" : `//%% [${c.kind}]`);
       const lines = c.source.split("\n");
-      if (c.kind === "markdown") out.push(...lines.map((l) => (l === "" ? "//" : "// " + l)));
+      if (COMMENTED.includes(c.kind)) out.push(...lines.map((l) => (l === "" ? "//" : "// " + l)));
       else out.push(...lines);
     }
     return out.join("\n") + "\n";
@@ -134,7 +153,9 @@
    *   { source, exprCells: [{ cell, n }], errors: { cellIndex: tekst } }
    * Cellen met een fout (classifyCell) gaan niet mee.
    */
-  function generateProgram(cells) {
+  // `only` (optioneel): een Set celindexen; dan komen alleen die
+  // expressiecellen in het programma (definitiecellen altijd allemaal).
+  function generateProgram(cells, only) {
     const body = [...HEADER, ""];
     const exprCells = [];
     const errors = {};
@@ -143,7 +164,7 @@
       const cls = classifyCell(c.source);
       if (cls.error) { errors[i] = cls.error; return; }
       if (cls.kind === "def") body.push(c.source, "");
-      else if (cls.kind === "expr") {
+      else if (cls.kind === "expr" && (!only || only.has(i))) {
         const n = exprCells.length + 1;
         exprCells.push({ cell: i, n });
         body.push(`__cell${n} = ${c.source}`, "");
@@ -251,7 +272,159 @@
     return out;
   }
 
-  const api = { parseNotebook, serializeNotebook, classifyCell, generateProgram, parseOutput, definedNames, cellErrorsFromTypecheck };
+  // == Afhankelijkheden ======================================================
+
+  const KEYWORDS = new Set(["let", "in", "case", "if", "then", "else", "import", "as", "module", "nomatch", "try", "throw", "otherwise"]);
+
+  function stripLiterals(text) {
+    return text.replace(/"(?:\\.|[^"\\])*"/g, " ").replace(/'(?:\\.|[^'\\])'/g, " ").replace(/\/\/.*$/gm, " ");
+  }
+
+  /** Namen die een cel gebruikt; `L.map` telt als gebruik van `L`. */
+  function referencedNames(source) {
+    const refs = new Set();
+    for (const m of stripLiterals(source).matchAll(/[A-Za-z_][A-Za-z0-9_']*/g)) {
+      if (!KEYWORDS.has(m[0])) refs.add(m[0]);
+    }
+    return refs;
+  }
+
+  /**
+   * Wat een definitiecel aanbiedt: functies en operators, constructors uit
+   * `::`-regels, en import-aliassen. Een haak `render_X`/`show_X` telt als
+   * aanbod van `X`: wie een X toont, hangt van die haak af. `global`: de cel
+   * heeft een `#import` (tekstueel, onbekend wat erin zit): alles hangt ervan af.
+   */
+  function providedNames(source) {
+    const names = new Set(definedNames(source));
+    let global = false;
+    for (const l of codeLines(source)) {
+      if (/^#import\b/.test(l)) global = true;
+      const imp = l.match(/^import\s+"[^"]*"\s+as\s+([A-Z][A-Za-z0-9_]*)/);
+      if (imp) names.add(imp[1]);
+      if (/^::/.test(l)) {
+        const rhs = l.split("=").slice(1).join("=");
+        for (const alt of rhs.split("|")) {
+          const c = alt.trim().match(/^([A-Z][A-Za-z0-9_]*)/);
+          if (c) names.add(c[1]);
+        }
+      }
+    }
+    for (const n of [...names]) {
+      const h = n.match(/^(?:render|show)_(.+)$/);
+      if (h) names.add(h[1]);
+    }
+    return { names, global };
+  }
+
+  /**
+   * Alle cellen die (via definities, transitief) van cel `start` afhangen,
+   * inclusief `start` zelf. Alleen code- en type-cellen; lc-cellen vormen
+   * hun eigen sessie (zie lcInput).
+   */
+  function dependents(cells, start) {
+    const result = new Set([start]);
+    const queue = [start];
+    while (queue.length) {
+      const d = queue.shift();
+      const c = cells[d];
+      if (!c || c.kind !== "code" || classifyCell(c.source).kind !== "def") continue;
+      const { names, global } = providedNames(c.source);
+      cells.forEach((other, i) => {
+        if (result.has(i) || (other.kind !== "code" && other.kind !== "type")) return;
+        const refs = referencedNames(other.source);
+        if (global || [...names].some((n) => refs.has(n))) { result.add(i); queue.push(i); }
+      });
+    }
+    return result;
+  }
+
+  // == type-cellen ==========================================================
+
+  /**
+   * Programma voor de typechecker: de kop, alle definitiecellen, en per
+   * regel van een type-cel `__typeK = <expressie>`.
+   * { source, typeLines: [{ cell, expr, name }] }
+   */
+  function generateTypeProgram(cells, only) {
+    const body = [...HEADER, ""];
+    const typeLines = [];
+    cells.forEach((c, i) => {
+      if (c.kind === "code" && classifyCell(c.source).kind === "def" && !classifyCell(c.source).error) body.push(c.source, "");
+      if (c.kind === "type" && (!only || only.has(i))) {
+        for (const expr of codeLines(c.source)) {
+          const name = `__type${typeLines.length + 1}`;
+          typeLines.push({ cell: i, expr: expr.trim(), name });
+          body.push(`${name} = ${expr.trim()}`, "");
+        }
+      }
+    });
+    body.push("start = 0");
+    return { source: body.join("\n") + "\n", typeLines };
+  }
+
+  /** { cellIndex: [{ expr, type } | { expr, error }] } uit het typecheckrapport. */
+  function parseTypeReport(report, typeLines) {
+    const byName = {};
+    for (const line of String(report || "").split("\n")) {
+      const ok = line.match(/^(__type\d+) :: (.*)$/);
+      const bad = line.match(/^(__type\d+): FOUT: (?:__type\d+: )?(.*)$/);
+      if (ok) byName[ok[1]] = { type: ok[2] };
+      else if (bad) byName[bad[1]] = { error: bad[2] };
+    }
+    const out = {};
+    for (const t of typeLines) {
+      const r = byName[t.name] || { error: "geen type gevonden (voorbewerken mislukt?)" };
+      (out[t.cell] = out[t.cell] || []).push({ expr: t.expr, ...r });
+    }
+    return out;
+  }
+
+  // == lc-cellen ============================================================
+
+  /** Alle regels van alle lc-cellen, in volgorde: één lc_repl-sessie. */
+  function lcInput(cells) {
+    const lines = [];
+    cells.forEach((c, i) => {
+      if (c.kind !== "lc") return;
+      for (const l of c.source.split("\n")) {
+        if (l.trim() !== "" && !l.trim().startsWith("--")) lines.push({ cell: i, text: l.trim() });
+      }
+    });
+    return { lines, stdin: lines.map((l) => l.text).concat(["quit"]).join("\n") + "\n" };
+  }
+
+  /**
+   * lc_repl schrijft vóór elke invoerregel "lc> ". De k-de prompt hoort bij
+   * regel k; stopt lc_repl op een fout (Sapl's `error` stopt de VM), dan
+   * hebben de regels daarna geen prompt meer.
+   * { cellIndex: [{ line, output } | { line, error } | { line, notRun }] }
+   */
+  function parseLcOutput(raw, lines) {
+    const startIdx = raw.indexOf("execution started");
+    let body = startIdx === -1 ? raw : raw.slice(raw.indexOf("\n", startIdx) + 1);
+    const chunks = body.split("lc> ");
+    const out = {};
+    let stopped = false;
+    lines.forEach((l, k) => {
+      let entry;
+      const chunk = chunks[k + 1];
+      if (stopped || chunk === undefined) entry = { line: l.text, notRun: true };
+      else {
+        const isLast = k + 1 === chunks.length - 1;
+        let text = chunk.replace(/\n?(res: .*|Elapsed time.*|nr gc.*|instr executed.*|calls: .*|creates: .*)$/gm, "").replace(/stop\s*$/, "").trimEnd();
+        if (isLast) { stopped = true; entry = { line: l.text, error: text || "lc_repl stopte op deze regel" }; }
+        else entry = { line: l.text, output: text };
+      }
+      (out[l.cell] = out[l.cell] || []).push(entry);
+    });
+    return out;
+  }
+
+  const api = {
+    parseNotebook, serializeNotebook, classifyCell, generateProgram, parseOutput, definedNames, cellErrorsFromTypecheck,
+    referencedNames, providedNames, dependents, generateTypeProgram, parseTypeReport, lcInput, parseLcOutput,
+  };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.SaplNotebook = api;
 })(typeof window !== "undefined" ? window : globalThis);

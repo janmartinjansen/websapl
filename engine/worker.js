@@ -521,6 +521,11 @@ async function compileRetag(source, srcPath) {
  * opgehaalde bestanden staan), anders één keer ophalen van de server (zoals
  * resolveImports hierboven). Resultaat: VFS-pad ("/pad") -> tekst.
  */
+// Notebook: gecompileerde programma's per bron (NOTEBOOK_RUN), en de
+// lc_repl-bytecode voor lc-cellen (LC_RUN).
+const notebookCache = new Map();
+let lcReplBytecode = null;
+
 const SPP_IMPORT_RE = /^(?:#import|import)\s+"([^"]+)"/;
 
 async function collectSppImports(source, found = {}) {
@@ -1475,12 +1480,14 @@ function replFuncs() {
  * die is voor de "Run"-knop se terminal-streaming) -- nodig om printVal's
  * eigen uitvoer achteraf uit de vaste vm.cpp-banner (`VM starting for
  * .../execution started.../res: <code>/stop/...`) te kunnen isoleren. */
-async function runJmvmCapture(jmvmContent, extraFiles = {}) {
+async function runJmvmCapture(jmvmContent, extraFiles = {}, stdinText = "") {
   let output = [];
+  const stdinBytes = new TextEncoder().encode(stdinText);
+  let stdinPos = 0;
   const instance = await createJMVMModule({
     noInitialRun: true,
     locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm" : (prefix || "") + p),
-    stdin: () => null,
+    stdin: () => (stdinPos < stdinBytes.length ? stdinBytes[stdinPos++] : null),
     stdout: (c) => output.push(String.fromCharCode(c)),
     stderr: (c) => output.push(String.fromCharCode(c))
   });
@@ -1675,6 +1682,15 @@ self.onmessage = async function (e) {
       // uitvoer teruggeven; notebook.js leest daar de @@begin/@@end-blokken
       // van lib/notebook_glue.cfp uit.
       try {
+        // Zelfde programma als een eerdere run (bv. opnieuw "Alles
+        // uitvoeren" zonder wijziging): voorbewerken en compileren overslaan.
+        let jmCached = notebookCache.get(msg.source);
+        if (jmCached) {
+          const raw = await runJmvmCapture(jmCached, await collectDataFiles(msg.source));
+          const output = new TextDecoder().decode(Uint8Array.from(raw, (ch) => ch.charCodeAt(0) & 255));
+          postMessage({ type: "NOTEBOOK_RESULT", id: msg.id, success: true, output, cached: true });
+          break;
+        }
         const pre = await preprocessSpp(msg.source, "/workspace/notebook.spp");
         if (!pre.success) {
           postMessage({ type: "NOTEBOOK_RESULT", id: msg.id, success: false, stage: "preprocess", error: pre.stdout });
@@ -1686,6 +1702,8 @@ self.onmessage = async function (e) {
           postMessage({ type: "NOTEBOOK_RESULT", id: msg.id, success: false, stage: "compile", error: comp.error || comp.stderr || comp.stdout });
           break;
         }
+        notebookCache.set(msg.source, jm.content);
+        if (notebookCache.size > 8) notebookCache.delete(notebookCache.keys().next().value);
         // runJmvmCapture levert één teken per byte; een notebook toont
         // gewone tekst (°, emoji), dus als UTF-8 terugdecoderen.
         const raw = await runJmvmCapture(jm.content, await collectDataFiles(msg.source));
@@ -1693,6 +1711,23 @@ self.onmessage = async function (e) {
         postMessage({ type: "NOTEBOOK_RESULT", id: msg.id, success: true, output });
       } catch (err) {
         postMessage({ type: "NOTEBOOK_RESULT", id: msg.id, success: false, stage: "worker", error: err.message });
+      }
+      break;
+
+    case "LC_RUN":
+      // lc-cellen van de notebook: lc_repl/lc_repl.jmvm met alle lc-regels
+      // als stdin (notebook_core.js's lcInput/parseLcOutput).
+      try {
+        if (!lcReplBytecode) {
+          const res = await fetch("../lc_repl/lc_repl.jmvm");
+          if (!res.ok) throw new Error("lc_repl/lc_repl.jmvm niet gevonden");
+          lcReplBytecode = await res.text();
+        }
+        const raw = await runJmvmCapture(lcReplBytecode, {}, msg.stdin);
+        const output = new TextDecoder().decode(Uint8Array.from(raw, (ch) => ch.charCodeAt(0) & 255));
+        postMessage({ type: "LC_RESULT", id: msg.id, success: true, output });
+      } catch (err) {
+        postMessage({ type: "LC_RESULT", id: msg.id, success: false, error: err.message });
       }
       break;
 

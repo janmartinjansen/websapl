@@ -67,5 +67,42 @@ check("celfouten uit typecheck", nb.cellErrorsFromTypecheck([
   "__cell2 :: Num",
 ].join("\n"), tcCells, tcGen), { 0: ["f: kan niet unificeren: Num met Str"], 1: ["onbekende functie: niet_bestaand"] });
 
+// 6. Celsoorten in het bestand (lc/type als commentaar).
+const kinds = nb.parseNotebook("//%% [lc]\n// I = \\x.x\n//%% [type]\n// 1 + 1\n//%%\n2\n");
+check("lc/type parse", kinds.map((c) => [c.kind, c.source]), [["lc", "I = \\x.x"], ["type", "1 + 1"], ["code", "2"]]);
+check("lc/type heen en terug", nb.parseNotebook(nb.serializeNotebook(kinds)), kinds);
+
+// 7. Afhankelijkheden.
+const dep = nb.parseNotebook([
+  "//%%", "import \"lib/list.spp\" as L",
+  "//%%", "kwadraat x = x * x",
+  "//%%", "::Vorm = Rond !r | Vierkant !z", "", "render_Rond v = D.text \"rond\"",
+  "//%%", "L.map kwadraat [1, 2]",
+  "//%%", "Rond 3",
+  "//%% [type]", "// kwadraat",
+  "//%%", "42",
+  "//%%", "#import \"lib/stdlib.cfp\"",
+].join("\n"));
+check("dependents import", [...nb.dependents(dep, 0)].sort(), [0, 3]);
+check("dependents functie", [...nb.dependents(dep, 1)].sort(), [1, 3, 5]);
+check("dependents haak", [...nb.dependents(dep, 2)].sort(), [2, 4]);
+check("dependents expressie", [...nb.dependents(dep, 6)], [6]);
+check("dependents #import", nb.dependents(dep, 7).size, 8);
+check("deelprogramma", nb.generateProgram(dep, new Set([4])).exprCells, [{ cell: 4, n: 1 }]);
+
+// 8. type-cellen.
+const tp = nb.generateTypeProgram(dep);
+check("typeLines", tp.typeLines, [{ cell: 5, expr: "kwadraat", name: "__type1" }]);
+check("typerapport", nb.parseTypeReport("__type1 :: (Num -> Num)\n", tp.typeLines), { 5: [{ expr: "kwadraat", type: "(Num -> Num)" }] });
+
+// 9. lc-cellen (uitvoer zoals lc_repl die schrijft).
+const lcCells = [{ kind: "lc", source: "I = \\x.x\n:nf I 1" }, { kind: "lc", source: ":nf bad\n:nf 2" }];
+const li = nb.lcInput(lcCells);
+check("lc stdin", li.stdin, "I = \\x.x\n:nf I 1\n:nf bad\n:nf 2\nquit\n");
+check("lc uitvoer", nb.parseLcOutput("execution started, progsize=1\nbanner\nlc> gedefinieerd: I\nlc> 1\nlc> onbekende variabele: badstop\n", li.lines), {
+  0: [{ line: "I = \\x.x", output: "gedefinieerd: I" }, { line: ":nf I 1", output: "1" }],
+  1: [{ line: ":nf bad", error: "onbekende variabele: bad" }, { line: ":nf 2", notRun: true }],
+});
+
 console.log(failures ? `${failures} fout(en)` : "notebook_core: alles goed");
 process.exit(failures ? 1 : 0);
