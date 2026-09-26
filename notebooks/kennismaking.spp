@@ -58,5 +58,17 @@ T.join " | " (L.map (T.padLeft 4) (L.map T.showInt (L.take 6 priemen)))
 // :seval fact 10
 // :db \f x. f (f x)
 // :blc \x y. x
+//%% [markdown]
+// De klassieke **één-regel priemzeef** in pure lambda-calculus (Tromp-achtig,
+// via zelftoepassing `(\p.p p)`, zonder `Y` of getallen). `primes` is een
+// oneindige stroom booleans: bit *i* zegt of *i* + 2 priem is. `:bits N`
+// leest de eerste *N* bits uit.
+//%% [lc]
+// primes = (\p.p p) (\p d c. c (\f t.t) ((\n. p p n ((\r.r r)(\r. n (r r)))) (\a. (\g k s c. c k (s g)) (d a)))) (\g k s c. c (\f t.f) (s g))
+// :bits 60 primes
+//%% [markdown]
+// Ter controle hetzelfde patroon uit de gewone Sapl-zeef van bovenaan:
+//%%
+T.fromChars [ if (L.elem n (L.takeWhile (\p -> p <= 61) priemen)) '1' '0' | n <- L.range 2 61 ]
 //%%
 D.picture [G.GraphDisc 12 (G.Pt (0.0 - 0.5) (0.0 - 0.5)) (G.Pt 0.5 0.5), G.GraphText 15 (G.Pt (0.0 - 0.2) 0.0) "Sapl"]
