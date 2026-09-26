@@ -1,0 +1,95 @@
+// lib/notebook_glue.cfp -- de uitvoer van notebookcellen (26 september 2026).
+// Plan: docs/2026-09-25_notebook_en_bibliotheken_plan.md, deel 3.
+//
+// Wordt niet door de gebruiker geïmporteerd: de notebookpagina
+// (websapl/notebook.html) maakt van een notebook één Sapl+-programma met
+// deze kop
+//
+//   #import "repl/stddyn.cfp"
+//   #import "lib/notebook_glue.cfp"
+//   import "lib/display.spp" as D
+//   import "grafisch/graphics.cfp" as G
+//
+// daarna de definitiecellen, een `__cellN = <expressie>` per
+// expressiecel, en `start = nbCell 1 __cell1 <#> nbCell 2 __cell2 <#> ... 0`.
+//
+// Protocol op stdout, per expressiecel:
+//   @@begin N
+//   @@<soort>            (value, text, markdown, table of graphics)
+//   <inhoud>
+//   @@end N
+// Stopt een cel met `error`, dan ontbreekt haar @@end: de pagina markeert
+// die cel en de cellen erna als niet uitgevoerd. Een tabel: koppen en
+// cellen gescheiden door een tab, één rij per regel.
+//
+// De alias `D` (en de constructornamen `Display__...`, uit `module
+// Display`) zijn dus een vaste afspraak met notebook.js.
+
+nbCell n v = nbMark "@@begin " n <#> nbRender v <#> nbMark "@@end " n
+
+nbMark s n = printString s <#> printString (list2str (itoa n)) <#> writeChar 1 10
+
+nbNl = writeChar 1 10
+
+nbTab = writeChar 1 9
+
+// Een Display-waarde herkennen we aan de naam: een `case` op een waarde van
+// een ander type zou stil op tagnummer matchen (tags zijn per ADT).
+nbRender v =
+  if (typeId v > TYPE_FUNC) (nbRenderAdt v (constrName v)) (nbValue v)
+
+nbRenderAdt v name =
+  if (nbIsDisplayName name) (nbDisplay v) (nbRenderHook v (lookup (strcat "render_" name)))
+
+nbRenderHook v h =
+  if (typeId h == TYPE_FUNC) (nbRenderChecked v (applyDynamic h (Cons v Nil))) (nbValue v)
+
+// Een render_-haak die geen Display teruggeeft: dan toch gewoon showVal.
+nbRenderChecked v d =
+  if (typeId d > TYPE_FUNC) (nbRenderCheckedName v d (constrName d)) (nbValue v)
+
+nbRenderCheckedName v d name = if (nbIsDisplayName name) (nbDisplay d) (nbValue v)
+
+nbIsDisplayName name = (strlen name > 9) /\ strEqualAt 0 "Display__" name
+
+nbDisplay d =
+  case d
+    (D.DText s -> printString "@@text" <#> nbNl <#> printString s <#> nbNl)
+    (D.DMarkdown s -> printString "@@markdown" <#> nbNl <#> printString s <#> nbNl)
+    (D.DTable hs rows -> printString "@@table" <#> nbNl <#> nbRow hs <#> nbRows 500 rows)
+    (D.DGraphics gs -> printString "@@graphics" <#> nbNl <#> printString (D.graphicsText gs) <#> nbNl)
+
+nbRows k rows =
+  case rows
+    (Nil -> 0)
+    (Cons r rest -> if (k == 0) (printString "..." <#> nbNl) (nbRow r <#> nbRows (k - 1) rest))
+
+nbRow cells =
+  case cells
+    (Nil -> nbNl)
+    (Cons c rest -> printString (nbCellText c) <#> nbRowRest rest)
+
+nbRowRest cells =
+  case cells
+    (Nil -> nbNl)
+    (Cons c rest -> nbTab <#> printString (nbCellText c) <#> nbRowRest rest)
+
+nbCellText c = if (typeId c == TYPE_STRING) c (nbShow c)
+
+nbValue v = printString "@@value" <#> nbNl <#> printString (nbShow v) <#> nbNl
+
+// showVal, maar een lijst op het hoogste niveau na 100 elementen afgekapt:
+// een oneindige lijst (`L.from 1`) zou showVal anders nooit laten stoppen.
+nbShow v = if (nbIsCons v) (strcat "[" (strcat (nbShowItems 100 v) "]")) (showVal v)
+
+nbIsCons v = if (typeId v > TYPE_FUNC) (strEqual (constrName v) "Cons") False
+
+nbShowItems k xs =
+  case xs
+    (Nil -> "")
+    (Cons x rest -> if (k == 0) "..." (strcat (showVal x) (nbShowMore (k - 1) rest)))
+
+nbShowMore k xs =
+  case xs
+    (Nil -> "")
+    (Cons x rest -> strcat ", " (nbShowItems k xs))

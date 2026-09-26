@@ -1150,11 +1150,35 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
+        "name": "display.spp",
+        "path": "lib/display.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 3226,
+        "isBinary": false
+      },
+      {
         "name": "eqnum.spp",
         "path": "lib/eqnum.spp",
         "type": "file",
         "ext": ".spp",
         "size": 1871,
+        "isBinary": false
+      },
+      {
+        "name": "list.spp",
+        "path": "lib/list.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 5279,
+        "isBinary": false
+      },
+      {
+        "name": "notebook_glue.cfp",
+        "path": "lib/notebook_glue.cfp",
+        "type": "file",
+        "ext": ".cfp",
+        "size": 3513,
         "isBinary": false
       },
       {
@@ -1171,6 +1195,22 @@ window.WEBSAPL_TREE = [
         "type": "file",
         "ext": ".cfp",
         "size": 2790,
+        "isBinary": false
+      }
+    ],
+    "_expanded": false
+  },
+  {
+    "name": "notebooks",
+    "path": "notebooks",
+    "type": "directory",
+    "children": [
+      {
+        "name": "kennismaking.spp",
+        "path": "notebooks/kennismaking.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 1270,
         "isBinary": false
       }
     ],
@@ -1386,7 +1426,7 @@ window.WEBSAPL_TREE = [
         "path": "repl/stddyn.cfp",
         "type": "file",
         "ext": ".cfp",
-        "size": 3654,
+        "size": 4566,
         "isBinary": false
       }
     ],
@@ -1474,7 +1514,7 @@ window.WEBSAPL_TREE = [
         "path": "sapl_compiler/ast_helpers.cfp",
         "type": "file",
         "ext": ".cfp",
-        "size": 17954,
+        "size": 20244,
         "isBinary": false
       },
       {
@@ -1482,7 +1522,7 @@ window.WEBSAPL_TREE = [
         "path": "sapl_compiler/lexer2.cfp",
         "type": "file",
         "ext": ".cfp",
-        "size": 10153,
+        "size": 11729,
         "isBinary": false
       },
       {
@@ -1514,7 +1554,7 @@ window.WEBSAPL_TREE = [
         "path": "sapl_compiler/stage5_codegen.cfp",
         "type": "file",
         "ext": ".cfp",
-        "size": 65380,
+        "size": 68263,
         "isBinary": false
       }
     ],
@@ -1737,11 +1777,19 @@ window.WEBSAPL_TREE = [
     "_expanded": false
   },
   {
+    "name": "notebook.html",
+    "path": "notebook.html",
+    "type": "file",
+    "ext": ".html",
+    "size": 19477,
+    "isBinary": false
+  },
+  {
     "name": "README.md",
     "path": "README.md",
     "type": "file",
     "ext": ".md",
-    "size": 9925,
+    "size": 9998,
     "isBinary": false
   }
 ];

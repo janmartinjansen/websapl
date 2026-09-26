@@ -1,0 +1,38 @@
+//%% [markdown]
+// # Kennismaking met de Sapl-notebook
+//
+// Elke cel is een blok **definities** of precies **één expressie**. Een
+// expressiecel toont haar waarde; een `Display`-waarde (uit
+// `lib/display.spp`, beschikbaar als `D`) wordt een tabel of plaatje.
+// Alle cellen samen vormen één programma, dus de volgorde van
+// definities doet er niet toe.
+//%%
+import "lib/list.spp" as L
+
+priemen = zeef (L.from 2)
+
+zeef xs = case xs (Cons p rest -> Cons p (zeef (L.filter (\x -> x % p != 0) rest)))
+//%%
+L.take 15 priemen
+//%% [markdown]
+// Oneindige lijsten zijn gewone data. Zonder `take` toont de notebook de
+// eerste 100 elementen:
+//%%
+priemen
+//%%
+D.table ["n", "n-de priemgetal", "kwadraat"] [ [n + 1, p, p * p] | (n, p) <- L.take 8 (L.indexed priemen) ]
+//%%
+D.bar (L.map (\p -> p % 10) (L.take 12 priemen))
+//%%
+D.lineChart (L.take 20 priemen)
+//%% [markdown]
+// Een eigen type krijgt een rijke weergave met een haak
+// `render_<Constructor>`, die een `Display` teruggeeft:
+//%%
+::Temperatuur = Celsius !graden
+
+render_Celsius t = case t (Celsius g -> D.text (strcat "🌡 " (strcat (list2str (itoa g)) " °C")))
+//%%
+Celsius 21
+//%%
+D.picture [G.GraphDisc 12 (G.Pt (0.0 - 0.5) (0.0 - 0.5)) (G.Pt 0.5 0.5), G.GraphText 15 (G.Pt (0.0 - 0.2) 0.0) "Sapl"]

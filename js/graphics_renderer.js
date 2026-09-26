@@ -447,7 +447,10 @@ class SaplGraphicsRenderer {
     const nextPt = () => ({ x: nextNum(), y: nextNum() });
 
     while (pos < tokens.length) {
-      const tag = nextWord();
+      // Via een Sapl+-module-import (`import "grafisch/graphics.cfp" as G`)
+      // heet een constructor onder water `Graphics__GraphPolyLine`
+      // (preprocess/modules.cfp); het voorvoegsel doet hier niet ter zake.
+      const tag = nextWord().replace(/^[A-Z][A-Za-z0-9]*__/, "");
       if (tag === "GraphClear") {
         this.clear();
         this.drawGrid();

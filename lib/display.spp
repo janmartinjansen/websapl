@@ -1,0 +1,83 @@
+// lib/display.spp -- rijke weergave voor de notebook (26 september 2026).
+// Plan: docs/2026-09-25_notebook_en_bibliotheken_plan.md, deel 2.3 en 3.
+//
+// Een notebookcel die een `Display`-waarde oplevert, wordt als tekst,
+// tabel, Markdown of plaatje getoond in plaats van via showVal. Een eigen
+// type krijgt een rijke weergave met een haak `render_<Constructor> x`
+// die een Display teruggeeft (zelfde conventie als `show_<Constructor>`).
+//
+// Deze module bevat alleen het type en bouwfuncties. Het afdrukken naar de
+// notebookpagina (en de terugval op showVal) gebeurt in
+// lib/notebook_glue.cfp, dat bij het hoofdprogramma hoort: showVal staat in
+// repl/stddyn.cfp, dat geen module kan zijn (het gebruikt #import).
+//
+// Plaatjes zijn lijsten `Graphics`-waarden uit grafisch/graphics.cfp
+// (`import "grafisch/graphics.cfp" as G`, dan G.GraphDisc, G.Pt, ...), in
+// WebSapl's coördinaten: x en y van -1.0 tot 1.0, (0,0) in het midden.
+module Display
+import "grafisch/graphics.cfp" as G
+
+::Display = DText !s | DTable !headers !rows | DMarkdown !s | DGraphics !gs
+
+// == Bouwfuncties ============================================================
+
+text s = DText s
+
+markdown s = DMarkdown s
+
+// table ["x", "x^2"] [[1, 1], [2, 4]]: koppen zijn strings, cellen mogen
+// elke waarde zijn (getoond via showVal).
+table headers rows = DTable headers rows
+
+picture gs = DGraphics gs
+
+// Staafdiagram van een lijst getallen (Int of Float, niet negatief).
+bar values = DGraphics (Cons baseLine (barsFrom 0 (listLen values) (maxOf values) values))
+
+// Lijngrafiek van een lijst getallen.
+lineChart values = DGraphics (Cons baseLine (Cons (G.GraphPolyLine 11 (linePoints 0 (listLen values) (minOf values) (maxOf values) values)) Nil))
+
+// Voor lib/notebook_glue.cfp: de tekst die WebSapl's graphics-renderer leest.
+graphicsText gs = G.graphicsout gs
+
+// == Rekenwerk voor de diagrammen ============================================
+
+toF v = if (typeId v == 2) v (itof v)
+
+listLen xs = case xs (Nil -> 0) (Cons y ys -> 1 + listLen ys)
+
+maxOf xs = case xs (Nil -> 1.0) (Cons y ys -> maxFrom (toF y) ys)
+
+maxFrom !m xs = case xs (Nil -> m) (Cons y ys -> maxFrom (if (toF y > m) (toF y) m) ys)
+
+minOf xs = case xs (Nil -> 0.0) (Cons y ys -> minFrom (toF y) ys)
+
+minFrom !m xs = case xs (Nil -> m) (Cons y ys -> minFrom (if (toF y < m) (toF y) m) ys)
+
+left = 0.0 - 0.9
+bottom = 0.0 - 0.9
+span = 1.8
+
+baseLine = G.GraphPolyLine 7 (Cons (G.Pt left bottom) (Cons (G.Pt (left + span) bottom) Nil))
+
+barsFrom !i n m vs =
+  case vs
+    (Nil -> Nil)
+    (Cons v rest -> Cons (barAt i n m (toF v)) (barsFrom (i + 1) n m rest))
+
+barAt i n m v =
+  let w = span / itof n,
+      x0 = left + (itof i * w) + (w * 0.1),
+      x1 = x0 + (w * 0.8),
+      h = if (m > 0.0) (span * (v / m)) 0.0 in
+  G.GraphPolygon 9 (Cons (G.Pt x0 bottom) (Cons (G.Pt x1 bottom) (Cons (G.Pt x1 (bottom + h)) (Cons (G.Pt x0 (bottom + h)) Nil))))
+
+linePoints !i n lo hi vs =
+  case vs
+    (Nil -> Nil)
+    (Cons v rest -> Cons (linePoint i n lo hi (toF v)) (linePoints (i + 1) n lo hi rest))
+
+linePoint i n lo hi v =
+  let x = if (n > 1) (left + (span * (itof i / itof (n - 1)))) 0.0,
+      y = if (hi > lo) (bottom + (span * ((v - lo) / (hi - lo)))) 0.0 in
+  G.Pt x y

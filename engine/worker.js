@@ -1633,6 +1633,33 @@ self.onmessage = async function (e) {
       }
       break;
 
+    case "NOTEBOOK_RUN":
+      // Notebook (notebook.html): het door notebook.js gegenereerde
+      // Sapl+-programma preprocessen, compileren en draaien, en de volledige
+      // uitvoer teruggeven; notebook.js leest daar de @@begin/@@end-blokken
+      // van lib/notebook_glue.cfp uit.
+      try {
+        const pre = await preprocessSpp(msg.source, "/workspace/notebook.spp");
+        if (!pre.success) {
+          postMessage({ type: "NOTEBOOK_RESULT", id: msg.id, success: false, stage: "preprocess", error: pre.stdout });
+          break;
+        }
+        const comp = await compileSapl(pre.files[0].content, "/tmp/notebook.cfp", ["jmvm"], true);
+        const jm = comp.success && comp.files.find((f) => f.name.endsWith(".jmvm"));
+        if (!jm) {
+          postMessage({ type: "NOTEBOOK_RESULT", id: msg.id, success: false, stage: "compile", error: comp.error || comp.stderr || comp.stdout });
+          break;
+        }
+        // runJmvmCapture levert één teken per byte; een notebook toont
+        // gewone tekst (°, emoji), dus als UTF-8 terugdecoderen.
+        const raw = await runJmvmCapture(jm.content);
+        const output = new TextDecoder().decode(Uint8Array.from(raw, (ch) => ch.charCodeAt(0) & 255));
+        postMessage({ type: "NOTEBOOK_RESULT", id: msg.id, success: true, output });
+      } catch (err) {
+        postMessage({ type: "NOTEBOOK_RESULT", id: msg.id, success: false, stage: "worker", error: err.message });
+      }
+      break;
+
     case "REPL_INIT":
       try {
         await replInit();

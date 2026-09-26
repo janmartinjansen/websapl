@@ -1,0 +1,143 @@
+// lib/list.spp -- lijstfuncties als Sapl+-module (26 september 2026).
+// Plan: docs/2026-09-25_notebook_en_bibliotheken_plan.md, deel 2.
+//
+// Gebruik:  import "lib/list.spp" as L            // L.range, L.sum, ...
+//           import "lib/list.spp" as L (..)       // alles ook kaal
+//
+// Zelfstandig: geen stdlib nodig. `::list` wordt hier gedeclareerd; de
+// modulestap (preprocess/modules.cfp) neemt die maar één keer in het
+// programma op, dus lijsten van hier en van stdlib zijn dezelfde.
+//
+// Geen typeklassen in Sapl: vergelijken gaat met `==`/`<` (Sapl+ maakt van
+// `==` een structurele vergelijking), en waar een volgorde nodig is, geeft
+// de `...By`-variant een eigen functie mee (`sortBy (\a b -> a <= b) xs`).
+module List
+
+::list = Nil | Cons !x xs
+
+// == Opbouwen ================================================================
+
+// range a b = [a .. b]; from n = [n ..] (oneindig, lui).
+range a b = if (a > b) Nil (Cons a (range (a + 1) b))
+
+from n = Cons n (from (n + 1))
+
+iterate f x = Cons x (iterate f (f x))
+
+repeat x = Cons x (repeat x)
+
+replicate n x = if (n <= 0) Nil (Cons x (replicate (n - 1) x))
+
+// == Basis ===================================================================
+
+length xs = lengthAcc 0 xs
+
+lengthAcc !n xs = case xs (Nil -> n) (Cons y ys -> lengthAcc (n + 1) ys)
+
+append xs ys = case xs (Nil -> ys) (Cons z zs -> Cons z (append zs ys))
+
+reverse xs = revAcc xs Nil
+
+revAcc xs acc = case xs (Nil -> acc) (Cons y ys -> revAcc ys (Cons y acc))
+
+map f xs = case xs (Nil -> Nil) (Cons y ys -> Cons (f y) (map f ys))
+
+filter p xs = case xs (Nil -> Nil) (Cons y ys -> if (p y) (Cons y (filter p ys)) (filter p ys))
+
+foldl f !acc xs = case xs (Nil -> acc) (Cons y ys -> foldl f (f acc y) ys)
+
+foldr f z xs = case xs (Nil -> z) (Cons y ys -> f y (foldr f z ys))
+
+concat xss = foldr append Nil xss
+
+concatMap f xs = case xs (Nil -> Nil) (Cons y ys -> append (f y) (concatMap f ys))
+
+head xs = case xs (Cons y ys -> y) (Nil -> error "List.head: lege lijst")
+
+tail xs = case xs (Cons y ys -> ys) (Nil -> error "List.tail: lege lijst")
+
+last xs = case xs (Cons y ys -> case ys (Nil -> y) (_ -> last ys)) (Nil -> error "List.last: lege lijst")
+
+isEmpty xs = case xs (Nil -> True) (_ -> False)
+
+// nth 0 xs = eerste element.
+nth n xs = case xs (Cons y ys -> if (n == 0) y (nth (n - 1) ys)) (Nil -> error "List.nth: index te groot")
+
+// == Knippen en zoeken =======================================================
+
+take n xs = if (n <= 0) Nil (takePos n xs)
+
+takePos n xs = case xs (Nil -> Nil) (Cons y ys -> Cons y (take (n - 1) ys))
+
+drop n xs = if (n <= 0) xs (dropPos n xs)
+
+dropPos n xs = case xs (Nil -> Nil) (Cons y ys -> drop (n - 1) ys)
+
+takeWhile p xs = case xs (Nil -> Nil) (Cons y ys -> if (p y) (Cons y (takeWhile p ys)) Nil)
+
+dropWhile p xs = case xs (Nil -> Nil) (Cons y ys -> if (p y) (dropWhile p ys) xs)
+
+elem x xs = any (\y -> y == x) xs
+
+// Index van het eerste element dat aan p voldoet, of -1.
+findIndex p xs = findIndexFrom 0 p xs
+
+findIndexFrom !i p xs = case xs (Nil -> 0 - 1) (Cons y ys -> if (p y) i (findIndexFrom (i + 1) p ys))
+
+// == Samenvatten =============================================================
+
+sum xs = foldl (\a b -> a + b) 0 xs
+
+product xs = foldl (\a b -> a * b) 1 xs
+
+maximum xs = case xs (Cons y ys -> foldl (\a b -> if (b > a) b a) y ys) (Nil -> error "List.maximum: lege lijst")
+
+minimum xs = case xs (Cons y ys -> foldl (\a b -> if (b < a) b a) y ys) (Nil -> error "List.minimum: lege lijst")
+
+any p xs = case xs (Nil -> False) (Cons y ys -> if (p y) True (any p ys))
+
+all p xs = case xs (Nil -> True) (Cons y ys -> if (p y) (all p ys) False)
+
+and xs = all (\b -> b) xs
+
+or xs = any (\b -> b) xs
+
+count p xs = length (filter p xs)
+
+// == Combineren ==============================================================
+
+zipWith f xs ys = case xs (Nil -> Nil) (Cons a as -> case ys (Nil -> Nil) (Cons b bs -> Cons (f a b) (zipWith f as bs)))
+
+zip xs ys = zipWith (\a b -> (a, b)) xs ys
+
+// Paren (index, element), vanaf 0.
+indexed xs = zip (from 0) xs
+
+intersperse sep xs = case xs (Nil -> Nil) (Cons y ys -> Cons y (prependAll sep ys))
+
+prependAll sep xs = case xs (Nil -> Nil) (Cons y ys -> Cons sep (Cons y (prependAll sep ys)))
+
+// == Sorteren en groeperen ===================================================
+
+// Stabiele mergesort; `le a b` zegt of a vóór (of gelijk aan) b komt.
+sortBy le xs = sortByLen le xs (length xs)
+
+sortByLen le xs n = if (n <= 1) xs (sortBySplit le xs n)
+
+sortBySplit le xs n =
+  let mid = n / 2 in
+  merge le (sortByLen le (take mid xs) mid) (sortByLen le (drop mid xs) (n - mid))
+
+merge le xs ys = case xs (Nil -> ys) (Cons a as -> mergeCons le a as ys)
+
+mergeCons le a as ys = case ys (Nil -> Cons a as) (Cons b bs -> if (le a b) (Cons a (merge le as ys)) (Cons b (merge le (Cons a as) bs)))
+
+sort xs = sortBy (\a b -> a <= b) xs
+
+// Opeenvolgende elementen waarvoor `eq` geldt, samen in één groep.
+groupBy eq xs = case xs (Nil -> Nil) (Cons y ys -> Cons (Cons y (takeWhile (\z -> eq y z) ys)) (groupBy eq (dropWhile (\z -> eq y z) ys)))
+
+// Dubbele weg, eerste voorkomen blijft (kwadratisch, voor kleine lijsten).
+nub xs = nubSeen Nil xs
+
+nubSeen seen xs = case xs (Nil -> Nil) (Cons y ys -> if (elem y seen) (nubSeen seen ys) (Cons y (nubSeen (Cons y seen) ys)))
