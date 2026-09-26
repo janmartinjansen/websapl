@@ -34,5 +34,15 @@ D.lineChart (L.take 20 priemen)
 render_Celsius t = case t (Celsius g -> D.text (strcat "🌡 " (strcat (list2str (itoa g)) " °C")))
 //%%
 Celsius 21
+//%% [markdown]
+// Tekst: `lib/text.spp` werkt op gewone strings (`"..."`).
+//%%
+import "lib/text.spp" as T
+
+zin = "  de kat krabt de krullen van de trap  "
+//%%
+D.table ["woord", "lengte"] [ [T.toUpper w, T.length w] | w <- T.words zin ]
+//%%
+T.join " | " (L.map (T.padLeft 4) (L.map T.showInt (L.take 6 priemen)))
 //%%
 D.picture [G.GraphDisc 12 (G.Pt (0.0 - 0.5) (0.0 - 0.5)) (G.Pt 0.5 0.5), G.GraphText 15 (G.Pt (0.0 - 0.2) 0.0) "Sapl"]

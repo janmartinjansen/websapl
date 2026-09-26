@@ -1194,7 +1194,15 @@ window.WEBSAPL_TREE = [
         "path": "lib/stdlib.cfp",
         "type": "file",
         "ext": ".cfp",
-        "size": 2790,
+        "size": 3972,
+        "isBinary": false
+      },
+      {
+        "name": "text.spp",
+        "path": "lib/text.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 8874,
         "isBinary": false
       }
     ],
@@ -1210,7 +1218,7 @@ window.WEBSAPL_TREE = [
         "path": "notebooks/kennismaking.spp",
         "type": "file",
         "ext": ".spp",
-        "size": 1270,
+        "size": 1586,
         "isBinary": false
       }
     ],
@@ -1781,7 +1789,7 @@ window.WEBSAPL_TREE = [
     "path": "notebook.html",
     "type": "file",
     "ext": ".html",
-    "size": 19477,
+    "size": 19691,
     "isBinary": false
   },
   {

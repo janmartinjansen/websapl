@@ -116,6 +116,7 @@ const ENTRIES = [
   { src: "lib/display.spp", dst: "lib/display.spp" },
   { src: "lib/list.spp", dst: "lib/list.spp" },
   { src: "lib/notebook_glue.cfp", dst: "lib/notebook_glue.cfp" },
+  { src: "lib/text.spp", dst: "lib/text.spp" },
   { src: "notebooks/kennismaking.spp", dst: "notebooks/kennismaking.spp" },
   { src: "lib/eqnum.spp", dst: "lib/eqnum.spp" },
   { src: "lib/stdlib.cfp", dst: "lib/stdlib.cfp" },

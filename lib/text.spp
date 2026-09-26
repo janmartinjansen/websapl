@@ -1,0 +1,231 @@
+// lib/text.spp -- tekstfuncties als Sapl+-module (26 september 2026).
+// Keuze en metingen: docs/2026-09-26_strings_keuze_analyse.md.
+//
+// Gebruik:  import "lib/text.spp" as T       // T.lines, T.padLeft, ...
+//
+// Alles werkt op GEPAKTE strings ("..."; readFile, f-strings en showVal
+// leveren die ook). Dat is de enige tekstvorm die tijdens het draaien als
+// tekst te herkennen is (showVal, de notebook). Een char-lijst is een lijst
+// getallen; `T.chars` en `T.fromChars` zijn de expliciete brug, bv.
+//   T.fromChars [ c | c <- T.chars s, c != ' ' ]
+//
+// De string is steeds het LAATSTE argument, zodat gedeeltelijk toepassen
+// werkt: L.map (T.padLeft 6) xs, L.map T.trim (T.lines tekst).
+//
+// Alles is O(lengte): één allocatie per resultaat, geen `strcat`-ketens
+// (die zijn kwadratisch). Zelfstandig: geen stdlib nodig.
+module Text
+
+::list = Nil | Cons !x xs
+
+// == Bouwstenen ==============================================================
+
+length s = strlen s
+
+isEmpty s = strlen s == 0
+
+empty = strcreate 0
+
+// blit src from off k t: src[from .. from+k-1] naar t[off ..]; geeft t.
+// Alleen voor een verse t (update past t ter plekke aan).
+blit src !from !off !k !t = blitAt src from off 0 k t
+
+blitAt src !from !off !i !k !t = if (i >= k) t (blitAt src from off (i + 1) k (update (strat (from + i) src) (off + i) t))
+
+// slice start len s; zelfde randgevallen als stdlib's substr: een start
+// buiten de string geeft "", een te grote of negatieve len neemt de rest.
+slice start len s = sliceClamp s start len (strlen s)
+
+sliceClamp s !a !len !n = if ((a < 0) \/ (a >= n)) empty (copyRange s a (clampLen len (n - a)))
+
+clampLen !len !r = if ((len < 0) \/ (len > r)) r len
+
+copyRange s !a !k = blit s a 0 k (strcreate k)
+
+take n s = if (n <= 0) empty (slice 0 n s)
+
+drop n s = if (n <= 0) s (slice n (strlen s - n) s)
+
+// Het teken (als getal) op positie i.
+at i s = strat i s
+
+fromChar c = update c 0 (strcreate 1)
+
+append a b = concat (Cons a (Cons b Nil))
+
+// Een lijst strings aan elkaar, in één allocatie.
+concat xs = concatFill xs 0 (strcreate (totalLen xs 0))
+
+totalLen xs !acc = case xs (Nil -> acc) (Cons s rest -> totalLen rest (acc + strlen s))
+
+concatFill xs !off !t = case xs (Nil -> t) (Cons s rest -> concatFill rest (off + strlen s) (blit s 0 off (strlen s) t))
+
+join sep xs = concat (intersperse sep xs)
+
+intersperse sep xs = case xs (Nil -> Nil) (Cons y ys -> Cons y (prependAll sep ys))
+
+prependAll sep xs = case xs (Nil -> Nil) (Cons y ys -> Cons sep (Cons y (prependAll sep ys)))
+
+repeat n s = concat (replicateList n s)
+
+replicateList n x = if (n <= 0) Nil (Cons x (replicateList (n - 1) x))
+
+// == Brug naar char-lijsten ==================================================
+
+chars s = charsFrom s 0 (strlen s)
+
+charsFrom s !i !n = if (i >= n) Nil (Cons (strat i s) (charsFrom s (i + 1) n))
+
+fromChars cs = fillChars cs 0 (strcreate (listLen cs 0))
+
+listLen xs !acc = case xs (Nil -> acc) (Cons y ys -> listLen ys (acc + 1))
+
+fillChars cs !i !t = case cs (Nil -> t) (Cons c rest -> fillChars rest (i + 1) (update c i t))
+
+// == Per teken ===============================================================
+
+// f: teken -> teken (getal naar getal).
+mapChars f s = mapCharsAt f s 0 (strlen s) (strcreate (strlen s))
+
+mapCharsAt f s !i !n !t = if (i >= n) t (mapCharsAt f s (i + 1) n (update (f (strat i s)) i t))
+
+filterChars p s = fromChars (filterList p (chars s))
+
+filterList p xs = case xs (Nil -> Nil) (Cons y ys -> if (p y) (Cons y (filterList p ys)) (filterList p ys))
+
+toUpper s = mapChars upperChar s
+
+toLower s = mapChars lowerChar s
+
+upperChar c = if ((c >= 'a') /\ (c <= 'z')) (c - 32) c
+
+lowerChar c = if ((c >= 'A') /\ (c <= 'Z')) (c + 32) c
+
+reverse s = reverseAt s 0 (strlen s) (strcreate (strlen s))
+
+reverseAt s !i !n !t = if (i >= n) t (reverseAt s (i + 1) n (update (strat i s) (n - 1 - i) t))
+
+isSpace c = (c == 32) \/ (c == 9) \/ (c == 10) \/ (c == 13)
+
+isDigit c = (c >= '0') /\ (c <= '9')
+
+// == Splitsen ================================================================
+
+// Regels, zonder het regeleinde (een "\r" ervoor valt ook weg). Zoals
+// Haskell: "a\nb\n" geeft ["a", "b"], "a\n\nb" geeft ["a", "", "b"].
+lines s = linesFrom s 0 0 (strlen s)
+
+linesFrom s !a !i !n =
+  if (i >= n) (if (i > a) (Cons (lineSlice s a i) Nil) Nil)
+  (if (strat i s == 10) (Cons (lineSlice s a i) (linesFrom s (i + 1) (i + 1) n)) (linesFrom s a (i + 1) n))
+
+lineSlice s !a !e = if (e > a) (if (strat (e - 1) s == 13) (slice a (e - 1 - a) s) (slice a (e - a) s)) empty
+
+unlines xs = concat (concatMapList (\l -> Cons l (Cons "\n" Nil)) xs)
+
+concatMapList f xs = case xs (Nil -> Nil) (Cons y ys -> appendList (f y) (concatMapList f ys))
+
+appendList xs ys = case xs (Nil -> ys) (Cons z zs -> Cons z (appendList zs ys))
+
+// Woorden: gescheiden door spaties, tabs en regeleinden; geen lege woorden.
+words s = wordsFrom s 0 (strlen s)
+
+wordsFrom s !i !n = if (i >= n) Nil (if (isSpace (strat i s)) (wordsFrom s (i + 1) n) (wordEnd s i i n))
+
+wordEnd s !a !i !n =
+  if (i >= n) (Cons (slice a (i - a) s) Nil)
+  (if (isSpace (strat i s)) (Cons (slice a (i - a) s) (wordsFrom s i n)) (wordEnd s a (i + 1) n))
+
+unwords xs = join " " xs
+
+// split ',' s: velden gescheiden door één teken; lege velden blijven.
+// "a,,b" geeft ["a", "", "b"], "" geeft [""].
+split c s = splitFrom c s 0 0 (strlen s)
+
+splitFrom c s !a !i !n =
+  if (i >= n) (Cons (slice a (i - a) s) Nil)
+  (if (strat i s == c) (Cons (slice a (i - a) s) (splitFrom c s (i + 1) (i + 1) n)) (splitFrom c s a (i + 1) n))
+
+// == Opmaak ==================================================================
+
+trim s = trimRange s (firstNonSpace s 0 (strlen s)) (lastNonSpace s (strlen s))
+
+trimStart s = slice (firstNonSpace s 0 (strlen s)) (strlen s) s
+
+trimEnd s = slice 0 (lastNonSpace s (strlen s)) s
+
+trimRange s !a !e = if (e > a) (slice a (e - a) s) empty
+
+firstNonSpace s !i !n = if (i >= n) n (if (isSpace (strat i s)) (firstNonSpace s (i + 1) n) i)
+
+// Het einde (exclusief) van het laatste niet-spatieteken.
+lastNonSpace s !e = if (e <= 0) 0 (if (isSpace (strat (e - 1) s)) (lastNonSpace s (e - 1)) e)
+
+padLeft n s = if (strlen s >= n) s (append (repeat (n - strlen s) " ") s)
+
+padRight n s = if (strlen s >= n) s (append s (repeat (n - strlen s) " "))
+
+// Midden: overschot links naar beneden afgerond.
+center n s = if (strlen s >= n) s (padRight n (padLeft (strlen s + ((n - strlen s) / 2)) s))
+
+// == Getallen ================================================================
+
+showInt n = if (n < 0) (append "-" (showNat (0 - n))) (showNat n)
+
+showNat n = fromChars (natChars n Nil)
+
+natChars n acc = if (n < 10) (Cons ('0' + n) acc) (natChars (n / 10) (Cons ('0' + (n % 10)) acc))
+
+// showFixed 2 3.14159 = "3.14"; x mag Int of Float zijn.
+showFixed d x = showFixedF d (toF x)
+
+showFixedF d xf =
+  let scale = pow10 d,
+      r = ftoi (round (fabs xf * itof scale)),
+      body = fixedBody d scale r in
+  if ((xf < 0.0) /\ (r > 0)) (append "-" body) body
+
+fixedBody d scale r = if (d <= 0) (showNat r) (concat (Cons (showNat (r / scale)) (Cons "." (Cons (padZero d (showNat (r % scale))) Nil))))
+
+padZero n s = if (strlen s >= n) s (append (repeat (n - strlen s) "0") s)
+
+pow10 d = if (d <= 0) 1 (10 * pow10 (d - 1))
+
+toF v = if (typeId v == 2) v (itof v)
+
+// readInt "  -42 " = -42; stopt bij het eerste teken dat geen cijfer is.
+readInt s = readIntTrimmed (trim s)
+
+readIntTrimmed s = if (strlen s == 0) 0 (if (strat 0 s == '-') (0 - digitsFrom s 1 (strlen s) 0) (digitsFrom s 0 (strlen s) 0))
+
+digitsFrom s !i !n !acc = if (i >= n) acc (if (isDigit (strat i s)) (digitsFrom s (i + 1) n ((acc * 10) + (strat i s - '0'))) acc)
+
+readFloat s = atof (trim s)
+
+// == Zoeken en vergelijken ===================================================
+
+// Geneste if i.p.v. /\: matchAt mag alleen lopen als de lengtes gelijk zijn.
+equal a b = if (strlen a == strlen b) (matchAt a b 0) False
+
+// Staat p op positie off in s?
+matchAt p s !off = matchAtI p s off 0 (strlen p)
+
+matchAtI p s !off !i !k = if (i >= k) True (if (strat i p == strat (off + i) s) (matchAtI p s off (i + 1) k) False)
+
+startsWith p s = if (strlen p <= strlen s) (matchAt p s 0) False
+
+endsWith p s = if (strlen p <= strlen s) (matchAt p s (strlen s - strlen p)) False
+
+// Positie van het eerste voorkomen van sub, of -1.
+indexOf sub s = indexFrom sub s 0
+
+indexFrom sub s !i = if (i > strlen s - strlen sub) (0 - 1) (if (matchAt sub s i) i (indexFrom sub s (i + 1)))
+
+contains sub s = indexOf sub s >= 0
+
+// Elk voorkomen van old vervangen door new (van links, niet overlappend).
+replace old new s = if (strlen old == 0) s (concat (replaceFrom old new s 0 0))
+
+replaceFrom old new s !a !i =
+  if (i > strlen s - strlen old) (Cons (slice a (strlen s - a) s) Nil)
+  (if (matchAt old s i) (Cons (slice a (i - a) s) (Cons new (replaceFrom old new s (i + strlen old) (i + strlen old)))) (replaceFrom old new s a (i + 1)))
