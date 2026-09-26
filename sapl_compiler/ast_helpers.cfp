@@ -171,6 +171,78 @@ lookupFunc name funcs =
     (Nil -> NoFunc)
     (Cons f fs -> if (charListEq (funcNameOf f) name) (Found f) (lookupFunc name fs))
 
+// Gebalanceerde zoekboom over een functielijst, voor de opzoekingen die
+// strictness (appStrictIn), stage2 (tagApp) en stage4 (retagApp/
+// retagLazyApp) per aanroep doen. Met lookupFunc was dat een lineaire
+// scan per aanroep, kwadratisch in de programmagrootte: bij het
+// compileren van gen1's eigen bron ~30.000 opzoekingen, samen 38 van de
+// 62 mln aanroepen (26 september 2026). Zelfde uitkomst als lookupFunc:
+// de sortering is stabiel en bij een dubbele naam blijft de eerste staan.
+::funcidx = FILeaf | FINode !name !f !left !right
+
+buildFuncIndex funcs =
+  let sorted = fiDedup (fiSortLen funcs (length funcs)) in
+  fiBuildN sorted (length sorted)
+
+lookupFuncIdx name idx =
+  case idx
+    (FILeaf -> NoFunc)
+    (FINode n f left right -> fiLookupAt (charListCompare name n) name f left right)
+
+fiLookupAt cmp name f left right =
+  if (cmp == 0) (Found f) (fiLookupNonzero cmp name left right)
+
+fiLookupNonzero cmp name left right =
+  if (cmp < 0) (lookupFuncIdx name left) (lookupFuncIdx name right)
+
+fiSortLen fs n = if (n <= 1) fs (fiSortSplit fs n)
+
+fiSortSplit fs n =
+  let mid = n / 2,
+      left = take mid fs,
+      right = drop mid fs in
+  fiMerge (fiSortLen left mid) (fiSortLen right (n - mid))
+
+fiMerge xs ys =
+  case xs
+    (Nil -> ys)
+    (Cons x xs2 -> fiMergeCons x xs2 ys)
+
+fiMergeCons x xs2 ys =
+  case ys
+    (Nil -> Cons x xs2)
+    (Cons y ys2 -> fiMergeBoth x xs2 y ys2)
+
+fiMergeBoth x xs2 y ys2 =
+  if (charListCompare (funcNameOf x) (funcNameOf y) <= 0)
+    (Cons x (fiMerge xs2 (Cons y ys2)))
+    (Cons y (fiMerge (Cons x xs2) ys2))
+
+// Na een stabiele sortering staan dubbele namen naast elkaar, de eerste
+// uit de oorspronkelijke lijst voorop.
+fiDedup fs =
+  case fs
+    (Nil -> Nil)
+    (Cons f rest -> Cons f (fiDedup (fiSkipName (funcNameOf f) rest)))
+
+fiSkipName n fs =
+  case fs
+    (Nil -> Nil)
+    (Cons f rest -> if (charListEq (funcNameOf f) n) (fiSkipName n rest) fs)
+
+fiBuildN fs n =
+  if (n == 0) FILeaf (fiBuildSplit fs n)
+
+fiBuildSplit fs n =
+  let mid = n / 2,
+      leftFs = take mid fs,
+      fromMid = drop mid fs in
+  fiBuildNode leftFs mid fromMid (n - mid - 1)
+
+fiBuildNode leftFs leftCount fromMid rightCount =
+  case fromMid
+    (Cons f rest -> FINode (funcNameOf f) f (fiBuildN leftFs leftCount) (fiBuildN rest rightCount))
+
 // `print` is a VM instruction (vm.cpp's `print:`), not a top-level function
 // in `prog` -- every stage must recognize it before isKnownFunc, else it's
 // treated as a call to an unknown (possibly higher-order) function.
