@@ -268,7 +268,14 @@ pushFuncRef prog args n =
 pushFuncRefKnown f =
   mkJ (append ['pushfunc '] (itoa (funcArityOf f))) (funcRefLabel f)
 
-funcRefLabel f = append (funcNameOf f) ['_lazy']
+// 26 september 2026: een functie ZONDER strikte argumenten heeft een
+// luie ingang die alleen `jmp` naar de gewone doet (zie
+// genFuncMainBlocksFromLazy); verwijs dan rechtstreeks naar de gewone
+// ingang -- semantisch identiek, zonder de extra sprong bij elke aanroep
+// via een functiewaarde (benchmarks/twice: +38,6 mln `jmp`). De
+// eval-invoeging voor een argument dat het lichaam forceert zit in
+// stage4 (retag4), niet in deze ingang, dus dat blijft gedekt.
+funcRefLabel f = if (hasStrictArg (funcArgs f)) (append (funcNameOf f) ['_lazy']) (funcNameOf f)
 
 // Arguments (source order) followed by the function value itself, the
 // order create/the direct eval-apply trick expect.
@@ -287,8 +294,51 @@ genCreateApp prog adts args e tag =
     (_ -> error "genCreateApp: thunk/closure must wrap an application")
 
 genCreateAppApp prog adts args n as tag =
-  append (pushArgsThenFunc prog adts args n as)
-         (Cons (mkI (append ['create '] (append (itoa (length as + 1)) (append [' '] (itoa tag))))) Nil)
+  append (genCallArgs prog adts args as)
+         (Cons (thunkFuncRef prog args n as tag)
+               (Cons (mkI (append ['create '] (append (itoa (length as + 1)) (append [' '] (itoa tag))))) Nil))
+
+// 26 september 2026: een VERZADIGDE thunk (tag 3) van een bekende functie
+// waarvan elk argument op een strikte positie bij het aanmaken al
+// geëvalueerd is, mag naar de gewone ingang verwijzen i.p.v. de luie: die
+// zou bij het forceren alleen `load; eval; store` doen op waarden die al
+// geëvalueerd zijn (benchmarks/match: +66 mln instructies, `fromto`'s
+// staart-thunk). parser.ama doet hetzelfde. Een partiële applicatie
+// (closure, tag 7) krijgt zijn laatste argumenten pas later, ongeëvalueerd:
+// die blijft altijd via pushFuncRef (de luie ingang) gaan.
+thunkFuncRef prog args n as tag =
+  if (tag == 3) (thunkFuncRefLookup prog args n as (lookupFunc n prog)) (pushFuncRef prog args n)
+
+thunkFuncRefLookup prog args n as lf =
+  case lf
+    (Found f -> if (thunkArgsReady args (funcArgs f) as) (pushFuncRefMain f) (pushFuncRefKnown f))
+    (NoFunc -> pushFuncRef prog args n)
+
+pushFuncRefMain f = mkJ (append ['pushfunc '] (itoa (funcArityOf f))) (funcNameOf f)
+
+thunkArgsReady args params as = if (length params == length as) (thunkArgsReadyEach args params as) False
+
+thunkArgsReadyEach args params as =
+  case params
+    (Nil -> True)
+    (Cons p ps -> thunkArgsReadyStep args p ps as)
+
+thunkArgsReadyStep args p ps as =
+  case as
+    (Nil -> False)
+    (Cons a rest -> if (argStrict p) (if (isEvaluatedExpr args a) (thunkArgsReadyEach args ps rest) False) (thunkArgsReadyEach args ps rest))
+
+// Een expressie waarvan de waarde na genValue zeker in WHNF is.
+isEvaluatedExpr args e =
+  case e
+    (Num n -> True)
+    (FloatLit s -> True)
+    (Str s -> True)
+    (Var v -> isStrictVar v args)
+    (Prim op as -> if (charListEq op ['<#>']) False True)
+    (Ct n as -> True)
+    (Eval x -> True)
+    (_ -> False)
 
 // E(eval as)/E(eval(f as)): what "eval" does depends on what it wraps. For
 // an unknown application there's no static label to "call" -- push the
@@ -368,7 +418,17 @@ genCondCompareOp prog adts args op a b elseLabel =
 genCondEqNe prog adts args jumpMnemonic a b elseLabel =
   if (isZeroLit b)
     (append (genValue prog adts args a) (Cons (mkJ jumpMnemonic elseLabel) Nil))
-    (append (genCondSub prog adts args a b) (Cons (mkJ jumpMnemonic elseLabel) Nil))
+    (if (charListEq jumpMnemonic ['ifeq'])
+       (genCondIfcmp prog adts args a b elseLabel)
+       (append (genCondSub prog adts args a b) (Cons (mkJ jumpMnemonic elseLabel) Nil)))
+
+// 26 september 2026: `a != b` als if-voorwaarde (jumpMnemonic `ifeq`: naar
+// else als het verschil 0 is) wordt `ifcmp`: vergelijken en springen in
+// één instructie, springt als de twee waarden gelijk zijn -- precies de
+// else-tak. Was `sub` + `ifeq`; parser.ama gebruikt hier ook ifcmp
+// (benchmarks/queens' `x != y /\ ...`).
+genCondIfcmp prog adts args a b elseLabel =
+  append (genValue prog adts args a) (append (genValue prog adts args b) (Cons (mkJ ['ifcmp'] elseLabel) Nil))
 
 genCondDirectSub prog adts args jumpMnemonic a b elseLabel =
   append (genCondSub prog adts args a b) (Cons (mkJ jumpMnemonic elseLabel) Nil)

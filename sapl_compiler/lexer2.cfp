@@ -30,10 +30,62 @@ tailOr d cs = case cs (Nil -> d) (Cons c cs2 -> cs2)
 
 // `//` comment to end of (logical) line -- stripped before tokenizing.
 startsWithSlashSlash cs = (headOr 32 cs == '/') /\ (headOr 32 (tailOr Nil cs) == '/')
+// `//` begint alleen commentaar BUITEN een literal: in "..."/['...'] of
+// een char-literal is het gewone tekst (sapl_compiler/test_lexer2.cfp heeft
+// `['case xs ... // comment']`; parser.ama's lexer kent dat onderscheid al).
+// 26 september 2026, gevonden toen deze test voor het eerst door gen1 zelf
+// gecompileerd werd.
 stripComment cs =
   case cs
     (Nil -> Nil)
-    (Cons c1 cs2 -> if (startsWithSlashSlash (Cons c1 cs2)) Nil (Cons c1 (stripComment cs2)))
+    (Cons c1 cs2 -> scCh c1 cs2)
+
+scCh c cs2 =
+  if (startsWithSlashSlash (Cons c cs2)) Nil
+  (if (c == 34) (Cons c (scStr cs2))
+  (if ((c == '[') /\ (scHeadIs 39 cs2)) (Cons c (scCListOpen cs2))
+  (if (c == 39) (Cons c (scChar cs2))
+  (Cons c (stripComment cs2)))))
+
+scHeadIs ch cs = case cs (Nil -> False) (Cons c rest -> c == ch)
+
+// Binnen "...": tot en met de afsluitende " (backslash-escapes overslaan).
+scStr cs =
+  case cs
+    (Nil -> Nil)
+    (Cons c cs2 -> if (c == 92) (Cons c (scStrEsc cs2)) (if (c == 34) (Cons c (stripComment cs2)) (Cons c (scStr cs2))))
+
+scStrEsc cs =
+  case cs
+    (Nil -> Nil)
+    (Cons c cs2 -> Cons c (scStr cs2))
+
+// Na `[`: het openende ' en dan alles tot en met ']'.
+scCListOpen cs =
+  case cs
+    (Nil -> Nil)
+    (Cons q cs2 -> Cons q (scCList cs2))
+
+scCList cs =
+  case cs
+    (Nil -> Nil)
+    (Cons c cs2 -> if (c == 92) (Cons c (scCListEsc cs2)) (if ((c == 39) /\ (scHeadIs ']' cs2)) (Cons c (stripComment cs2)) (Cons c (scCList cs2))))
+
+scCListEsc cs =
+  case cs
+    (Nil -> Nil)
+    (Cons c cs2 -> Cons c (scCList cs2))
+
+// Na ': één (eventueel ge-escapet) teken ongezien meenemen.
+scChar cs =
+  case cs
+    (Nil -> Nil)
+    (Cons c cs2 -> if (c == 92) (Cons c (scCharEsc cs2)) (Cons c (stripComment cs2)))
+
+scCharEsc cs =
+  case cs
+    (Nil -> Nil)
+    (Cons c cs2 -> Cons c (stripComment cs2))
 
 // `::name = ...` ADT declarations are recognized on the raw line, before
 // tokenizing, and the leading `::` is dropped there -- no dedicated token
