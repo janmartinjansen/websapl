@@ -24957,7 +24957,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             tailcall 6 5148                          || mdStartsRev
 5153        return_const 6 0                         || mdStartsRev_Cons_Cons_else
 5154        jmp 5155                                 || start || start_lazy
-5155        updsp 14                                 || start
+5155        updsp 15                                 || start
             syscall 2
             store 0
             syscall 2
@@ -25022,7 +25022,25 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             load 6
             pushfunc 3 5133                          || reresolveWithExt
             create 4 3
+            dup
             store 13
+            eval
+            load 9
+            pushfunc 1 409                           || funcNameOf_lazy
+            create 1 7
+            pushfunc 2 58                            || map_lazy
+            create 3 3
+            load 13
+            pushfunc 1 409                           || funcNameOf_lazy
+            create 1 7
+            pushfunc 2 58                            || map_lazy
+            create 3 3
+            pushfunc 2 75                            || append_lazy
+            create 3 3
+            pushfunc 1 354                           || buildNameSet_lazy
+            create 2 3
+            call 4990                                || checkNoUnknownNamesIn
+            store 14
             load 11
             load 9
             load 7
@@ -25032,7 +25050,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             call 5159                                || dispatchStageExternal
             push "success, output written\n"
             syscall 3
-            return 14
+            return 15
 5156        jmp 5157                                 || readExternalAdts || readExternalAdts_lazy
 5157        load 0                                   || readExternalAdts
             call 1877                                || parseProgram

@@ -525,6 +525,9 @@ async function compileRetag(source, srcPath) {
 // lc_repl-bytecode voor lc-cellen (LC_RUN).
 const notebookCache = new Map();
 let lcReplBytecode = null;
+// Vooraf gecompileerde bibliotheekdelen van notebookprogramma's, per sleutel
+// (zie notebookLibUnit).
+const notebookLibCache = new Map();
 
 const SPP_IMPORT_RE = /^(?:#import|import(?:\s+extern)?)\s+"([^"]+)"/;
 
@@ -1632,6 +1635,56 @@ async function replCommit(line) {
   return name;
 }
 
+/**
+ * Notebook in twee delen (27 september 2026, zelfde opzet als de REPL): de
+ * `#import`/`import`-regels op kolom 0 (de vaste kop van notebook_core.js
+ * plus de importcellen) vormen een bibliotheekdeel dat één keer
+ * gecompileerd wordt (notebookLibUnit); de eigen cellen worden daartegen
+ * gecompileerd (saplcomp_module) en met retaglink erbij gelinkt. Daarvoor
+ * werden repl/stddyn.cfp (met de hele stdlib), de glue, Display, Graphics en
+ * elke geïmporteerde module bij elke run opnieuw gecompileerd.
+ *
+ * Resultaat: { jmvm } of { stage, error } (stage "preprocess"/"compile").
+ */
+const NB_LIB_LINE_RE = /^(?:#import|import)\s+"/;
+
+async function notebookLibUnit(importLines) {
+  const libText = importLines.join("\n") + "\n";
+  const deps = await collectSppImports(libText);
+  const key = libText + "\0" + Object.keys(deps).sort().map((p) => p + "\0" + deps[p]).join("\0");
+  const cached = notebookLibCache.get(key);
+  if (cached) return cached;
+  const pre = await preprocessSpp(libText, "/workspace/notebook_lib.spp", "l");
+  if (!pre.success) return { stage: "preprocess", error: pre.stdout };
+  const lib = {};
+  for (const stage of ["defs", "typedefs", "retag"]) {
+    const r = await runCompilerStage(pre.files[0].content, stage, `/tmp/notebook_lib.${stage}.txt`);
+    if (!r.success) return { stage: "compile", error: r.output };
+    lib[stage] = r.content;
+  }
+  notebookLibCache.set(key, lib);
+  if (notebookLibCache.size > 4) notebookLibCache.delete(notebookLibCache.keys().next().value);
+  return lib;
+}
+
+async function notebookCompile(source) {
+  const lines = source.split("\n");
+  const importLines = lines.filter((l) => NB_LIB_LINE_RE.test(l));
+  const lib = await notebookLibUnit(importLines);
+  if (lib.stage) return lib;
+  const externs = importLines.filter((l) => l.startsWith("import ")).map((l) => l.replace("import ", "import extern "));
+  const own = lines.filter((l) => !NB_LIB_LINE_RE.test(l));
+  const pre = await preprocessSpp([...externs, ...own].join("\n"), "/workspace/notebook.spp");
+  if (!pre.success) return { stage: "preprocess", error: pre.stdout };
+  const retag = await runSaplcompModuleStage(pre.files[0].content, "retag", "/tmp/notebook.retag.txt", [lib.defs], [lib.typedefs]);
+  if (!retag.success) return { stage: "compile", error: retag.output };
+  const link = await runRetagLinkStage([lib.retag, retag.content], "/tmp/notebook_linked.retag.txt", "start");
+  if (!link.success) return { stage: "compile", error: link.output };
+  const comp = await runRetagCompStage(link.content, "/tmp/notebook.jmvm");
+  if (!comp.success) return { stage: "compile", error: comp.output };
+  return { jmvm: comp.content };
+}
+
 async function replDefine(defText) {
   const name = replExtractDefName(defText);
   await replSetEntries([[name, defText]]);
@@ -1776,17 +1829,12 @@ self.onmessage = async function (e) {
           postMessage({ type: "NOTEBOOK_RESULT", id: msg.id, success: true, output, cached: true });
           break;
         }
-        const pre = await preprocessSpp(msg.source, "/workspace/notebook.spp");
-        if (!pre.success) {
-          postMessage({ type: "NOTEBOOK_RESULT", id: msg.id, success: false, stage: "preprocess", error: pre.stdout });
+        const built = await notebookCompile(msg.source);
+        if (!built.jmvm) {
+          postMessage({ type: "NOTEBOOK_RESULT", id: msg.id, success: false, stage: built.stage, error: built.error });
           break;
         }
-        const comp = await compileSapl(pre.files[0].content, "/tmp/notebook.cfp", ["jmvm"], true);
-        const jm = comp.success && comp.files.find((f) => f.name.endsWith(".jmvm"));
-        if (!jm) {
-          postMessage({ type: "NOTEBOOK_RESULT", id: msg.id, success: false, stage: "compile", error: comp.error || comp.stderr || comp.stdout });
-          break;
-        }
+        const jm = { content: built.jmvm };
         notebookCache.set(msg.source, jm.content);
         if (notebookCache.size > 8) notebookCache.delete(notebookCache.keys().next().value);
         // runJmvmCapture levert één teken per byte; een notebook toont

@@ -108,9 +108,32 @@ showConstrDynamic !x !name =
   let h = lookup (strcat "show_" name) in
   if (typeId h == TYPE_FUNC) (applyDynamic h (Cons x Nil)) (showConstrGeneric x name)
 
+// Tupels en moduleconstructors zoals repl/stddyn.cfp (en de notebook) ze
+// tonen: `(1, 2)` i.p.v. `__Tuple2(1, 2)`, `Wel(3)` i.p.v. `Lijst__Wel(3)`.
+// Tot 27 september 2026 kende de REPL-prelude dat niet.
 showConstrGeneric !x !name =
-  let arity = getConstrArity x in
-  if (arity == 0) name (strcat name (strcat "(" (strcat (showFields x 0 arity) ")")))
+  let arity = getConstrArity x,
+      shown = displayConName name in
+  if (isTupleName name) (strcat "(" (strcat (showFields x 0 arity) ")"))
+  (if (arity == 0) shown (strcat shown (strcat "(" (strcat (showFields x 0 arity) ")"))))
+
+isTupleName !name = if (strlen name > 7) (strEqualAt 0 "__Tuple" name) False
+
+// `Module__Naam` -> `Naam` (alleen de weergave; de show_-haak en de
+// ariteit zoeken met de volle naam). Zelfde regel als repl/stddyn.cfp.
+displayConName !name =
+  let n = strlen name in
+  if (n > 0) (displayConNameFrom name n (isUpperCode (strat 0 name))) name
+
+displayConNameFrom !name !n !upper = if upper (displayConNameScan name n 1) name
+
+displayConNameScan !name !n !i =
+  if (i + 2 >= n) name
+  (if (isModuleSep name i) (strslice name (i + 2) n) (displayConNameScan name n (i + 1)))
+
+isModuleSep !name !i = (strat i name == '_') /\ (strat (i + 1) name == '_') /\ isUpperCode (strat (i + 2) name)
+
+isUpperCode !c = (c >= 'A') /\ (c <= 'Z')
 
 // Lijst-default: een ::list-waarde (Cons/Nil, hierboven) toont
 // showVal/printVal als "[1, 2, 3]" i.p.v. de generieke
