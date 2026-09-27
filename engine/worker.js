@@ -607,7 +607,9 @@ function mkdirsFor(fs, filePath) {
   }
 }
 
-async function preprocessSpp(source, srcPath) {
+// `tag`: unit-tag voor verse namen (preprocess/genstate.cfp); alleen de
+// REPL-turn geeft er een mee.
+async function preprocessSpp(source, srcPath, tag = "") {
   if (!isInitialized) throw new Error("JMVM engine is not initialized.");
   if (!driverBytecode) throw new Error("Sapl+ preprocessor (driver.jmvm) kon niet geladen worden.");
 
@@ -616,7 +618,7 @@ async function preprocessSpp(source, srcPath) {
   const outPath = `/tmp/${baseName}.cfp`;
 
   let compilerOutput = [];
-  let stdinBuffer = `/tmp/in.spp\n${outPath}\n`.split("");
+  let stdinBuffer = `/tmp/in.spp\n${outPath}\n${tag}\n`.split("");
   let stdinIndex = 0;
 
   const instance = await createJMVMModule({
@@ -1304,8 +1306,8 @@ function replExternImports(entries) {
 // Sapl+ -> Sapl via preprocess/driver.jmvm, zoals repl_retag.py en vm.cpp
 // dat per sessie en per turn doen (sinds 27 september 2026 ook hier; nodig
 // voor imports, en zo werkt ook de rest van Sapl+ in deze REPL).
-async function replPreprocess(text, name) {
-  const r = await preprocessSpp(text, `/workspace/${name}.spp`);
+async function replPreprocess(text, name, tag = "") {
+  const r = await preprocessSpp(text, `/workspace/${name}.spp`, tag);
   if (!r.success) {
     const msg = String(r.stdout || "").split("\n")
       .filter((l) => !/^(VM starting|Reading file|\d+ instr read|execution started|Elapsed time|nr gc|instr executed|calls:|creates:)/.test(l))
@@ -1370,36 +1372,67 @@ async function replInit() {
     preludeNames,
     defs: "",
     typedefs: "",
-    retag: ""
+    retag: "",
+    // Bibliotheekunits (prelude + imports) per cachesleutel; zie replLibUnit.
+    libCache: new Map(),
+    lib: null
   };
 
   await replAtomicRebuild([], 0);
 }
 
 /**
- * Bouwt en compileert `newEntries` (vóórafgegaan door de vaste prelude)
- * als kandidaat-sessie; pas bij volledig succes wordt dat gepromoveerd.
- * Zelfde alles-of-niets-garantie als repl_retag.py's
- * Session._atomic_rebuild/vm.cpp's ReplSession::atomicRebuild -- een
- * mislukte regel raakt de sessie dus nooit.
+ * De bibliotheekunit voor deze imports (27 september 2026, zelfde opzet
+ * als repl_retag.py's Session._lib_unit): prelude + de `import`-regels,
+ * voorbewerkt met unit-tag `l` en als complete unit gecompileerd. Bewaard
+ * per sleutel = de import-teksten plus de inhoud van alle (transitief)
+ * geïmporteerde bestanden.
+ */
+async function replLibUnit(imports) {
+  const importText = imports.map((t) => t + "\n").join("");
+  const deps = await collectSppImports(importText);
+  const key = importText + "\0" + Object.keys(deps).sort().map((p) => p + "\0" + deps[p]).join("\0");
+  const cached = replSession.libCache.get(key);
+  if (cached) return cached;
+  const libText = await replPreprocess(replSession.prelude + "\n" + importText, "repl_lib", "l");
+  const lib = {};
+  for (const stage of ["defs", "typedefs", "retag"]) {
+    const r = await runCompilerStage(libText, stage, `/tmp/repl_lib.${stage}.txt`);
+    if (!r.success) throw new Error(`bibliotheek-${stage} mislukt:\n${r.output}`);
+    lib[stage] = r.content;
+  }
+  replSession.libCache.set(key, lib);
+  return lib;
+}
+
+/**
+ * Bouwt en compileert `newEntries` als kandidaat-sessie; pas bij volledig
+ * succes wordt dat gepromoveerd. Zelfde alles-of-niets-garantie als
+ * repl_retag.py's Session._atomic_rebuild/vm.cpp's
+ * ReplSession::atomicRebuild -- een mislukte regel raakt de sessie dus
+ * nooit. De prelude en de imports zitten in de bibliotheekunit
+ * (replLibUnit); de sessie zelf compileert daartegen.
  */
 async function replAtomicRebuild(newEntries, newResCounter) {
   const oldSnapshot = { entries: replSession.entries, resCounter: replSession.resCounter };
-  const sessionText = await replPreprocess(replSession.prelude + "\n" + replJoinEntries(newEntries), "repl_session");
+  const lib = await replLibUnit(newEntries.filter((e) => e.name.startsWith("import ")).map((e) => e.text));
+  const own = newEntries.filter((e) => !e.name.startsWith("import "));
+  const sessionText = await replPreprocess(replExternImports(newEntries) + replJoinEntries(own), "repl_session");
 
-  const defsRes = await runCompilerStage(sessionText, "defs", "/tmp/repl_session.defs.txt");
-  if (!defsRes.success) throw new Error(`sessie-defs mislukt:\n${defsRes.output}`);
-  const typedefsRes = await runCompilerStage(sessionText, "typedefs", "/tmp/repl_session.typedefs.txt");
-  if (!typedefsRes.success) throw new Error(`sessie-typedefs mislukt:\n${typedefsRes.output}`);
-  const retagRes = await runCompilerStage(sessionText, "retag", "/tmp/repl_session.retag.txt");
+  const retagRes = await runSaplcompModuleStage(sessionText, "retag", "/tmp/repl_session.retag.txt", [lib.defs], [lib.typedefs]);
   if (!retagRes.success) throw new Error(`sessie-retag mislukt:\n${retagRes.output}`);
+  const defsRes = await runSaplcompModuleStage(sessionText, "defs", "/tmp/repl_session.defs.txt", [lib.defs], [lib.typedefs]);
+  if (!defsRes.success) throw new Error(`sessie-defs mislukt:\n${defsRes.output}`);
 
   replSession.history.push(oldSnapshot);
   replSession.entries = newEntries;
   replSession.resCounter = newResCounter;
   replSession.defs = defsRes.content;
-  replSession.typedefs = typedefsRes.content;
+  // Als typedefs dient de voorbewerkte sessietekst zelf: saplcomp_module
+  // leest daar alleen de ADT-declaraties uit.
+  replSession.typedefs = sessionText;
   replSession.retag = retagRes.content;
+  replSession.lib = lib;
 }
 
 async function replSetEntries(updates, newResCounter) {
@@ -1576,12 +1609,13 @@ function replExtractOutput(out) {
 }
 
 async function replEvalLine(line) {
-  const turnSource = await replPreprocess(replExternImports(replSession.entries) + `start = printVal (${line})\n`, "repl_turn");
+  const turnSource = await replPreprocess(replExternImports(replSession.entries) + `start = printVal (${line})\n`, "repl_turn", "t");
 
-  const turnRes = await runSaplcompModuleStage(turnSource, "retag", "/tmp/repl_turn.retag.txt", [replSession.defs], [replSession.typedefs]);
+  const lib = replSession.lib;
+  const turnRes = await runSaplcompModuleStage(turnSource, "retag", "/tmp/repl_turn.retag.txt", [lib.defs, replSession.defs], [lib.typedefs, replSession.typedefs]);
   if (!turnRes.success) throw new Error(turnRes.output);
 
-  const linkRes = await runRetagLinkStage([replSession.retag, turnRes.content], "/tmp/repl_linked.retag.txt", "start");
+  const linkRes = await runRetagLinkStage([lib.retag, replSession.retag, turnRes.content], "/tmp/repl_linked.retag.txt", "start");
   if (!linkRes.success) throw new Error(`retaglink.jmvm mislukt:\n${linkRes.output}`);
 
   const compRes = await runRetagCompStage(linkRes.content, "/tmp/repl_linked.jmvm");

@@ -31,3 +31,11 @@ map zelf al uit van de scan).
   kopieert (bijvoorbeeld na het herbouwen van `sapl_compiler/saplcomp.jmvm`
   of een aanpassing in `sapl_compiler/stage_dump.cfp`), en bij een nieuw
   of verdwenen bestand ook `build_manifest.js`.
+
+- **`repl_test.js`** — draait de WebSapl-REPL (`engine/worker.js`) in Node
+  op de REPL-regressietests in `repl/tests/` (dezelfde bestanden als
+  `repl/tests/run_repl_tests.sh` voor de Python- en C++-REPL):
+
+  ```bash
+  node websapl/tools/repl_test.js
+  ```
