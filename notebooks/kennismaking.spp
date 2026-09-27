@@ -53,18 +53,18 @@ T.join " | " (L.map (T.padLeft 4) (L.map T.showInt (L.take 6 priemen)))
 // L.take 15 priemen
 // T.padLeft 4
 //%% [lc]
-// Y = \f.(\x. f (x x)) (\x. f (x x))
-// fact = Y (\self n. eq n 0 1 (mult n (self (sub n 1))))
+// Y = λf.(λx. f (x x)) (λx. f (x x))
+// fact = Y (λself n. eq n 0 1 (mult n (self (sub n 1))))
 // :seval fact 10
-// :db \f x. f (f x)
-// :blc \x y. x
+// :db λf x. f (f x)
+// :blc λx y. x
 //%% [markdown]
 // De klassieke **één-regel priemzeef** in pure lambda-calculus (Tromp-achtig,
-// via zelftoepassing `(\p.p p)`, zonder `Y` of getallen). `primes` is een
+// via zelftoepassing `(λp.p p)`, zonder `Y` of getallen). `primes` is een
 // oneindige stroom booleans: bit *i* zegt of *i* + 2 priem is. `:bits N`
 // leest de eerste *N* bits uit.
 //%% [lc]
-// primes = (\p.p p) (\p d c. c (\f t.t) ((\n. p p n ((\r.r r)(\r. n (r r)))) (\a. (\g k s c. c k (s g)) (d a)))) (\g k s c. c (\f t.f) (s g))
+// primes = (λp.p p) (λp d c. c (λf t.t) ((λn. p p n ((λr.r r)(λr. n (r r)))) (λa. (λg k s c. c k (s g)) (d a)))) (λg k s c. c (λf t.f) (s g))
 // :bits 60 primes
 //%% [markdown]
 // Ter controle hetzelfde patroon uit de gewone Sapl-zeef van bovenaan:

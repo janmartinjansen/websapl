@@ -332,8 +332,17 @@
         ta.value = c.source;
         ta.rows = 1;
         ta.spellcheck = false;
-        ta.placeholder = { code: "definities of één expressie", lc: "lambda-calculus, bv. I = \\x.x  of  :nf (\\x y.x) 1 2", type: "een expressie per regel", markdown: "tekst" }[c.kind];
-        ta.addEventListener("input", () => { c.source = ta.value; autoGrow(ta); save(); markStale(i); });
+        ta.placeholder = { code: "definities of één expressie", lc: "lambda-calculus, bv. I = λx.x  of  :nf (λx y.x) 1 2 (typ \\ voor λ)", type: "een expressie per regel", markdown: "tekst" }[c.kind];
+        ta.addEventListener("input", () => {
+          // In een λ-cel wordt een getypte `\` meteen een λ (lc_repl accepteert
+          // beide, zie lc_repl/README.md).
+          if (c.kind === "lc" && ta.value.includes("\\")) {
+            const pos = ta.selectionStart;
+            ta.value = ta.value.replace(/\\/g, "λ");
+            ta.selectionStart = ta.selectionEnd = pos;
+          }
+          c.source = ta.value; autoGrow(ta); save(); markStale(i);
+        });
         ta.addEventListener("keydown", (e) => onKey(e, ta, c));
         ta.addEventListener("focus", () => row.classList.add("focus"));
         ta.addEventListener("blur", () => {
@@ -392,11 +401,13 @@
         return;
       }
       if (o.lc) {
+        // lc_repl schrijft lambda's als `\`; hier getoond als λ.
+        const lam = (t) => t.replace(/\\/g, "λ");
         for (const l of o.lc) {
-          pre("print", "lc> " + l.line);
+          pre("print", "lc> " + lam(l.line));
           if (l.error) pre("err", l.error);
           else if (l.notRun) pre("note", "niet uitgevoerd: een eerdere regel stopte lc_repl");
-          else if (l.output) pre("", l.output);
+          else if (l.output) pre("", lam(l.output));
         }
         return;
       }

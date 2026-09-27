@@ -1114,7 +1114,7 @@ window.WEBSAPL_TREE = [
         "path": "lc_repl/lc_repl.jmvm",
         "type": "file",
         "ext": ".jmvm",
-        "size": 130503,
+        "size": 150435,
         "isBinary": false
       },
       {
@@ -1266,7 +1266,7 @@ window.WEBSAPL_TREE = [
         "path": "notebooks/kennismaking.spp",
         "type": "file",
         "ext": ".spp",
-        "size": 2008,
+        "size": 2665,
         "isBinary": false
       }
     ],
@@ -1837,7 +1837,7 @@ window.WEBSAPL_TREE = [
     "path": "notebook.html",
     "type": "file",
     "ext": ".html",
-    "size": 25633,
+    "size": 26147,
     "isBinary": false
   },
   {
