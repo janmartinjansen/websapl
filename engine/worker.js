@@ -1302,8 +1302,20 @@ function replImportEntryName(text) {
 
 // De imports als `import extern` voor een turn: namen oplossen, de
 // modulecode zit al in de sessie (preprocess/modules.cfp).
-function replExternImports(entries) {
-  return entries.filter((e) => e.name.startsWith("import ")).map((e) => e.text.replace("import ", "import extern ") + "\n").join("");
+// Alleen de imports die `code` nodig heeft (zelfde regel als
+// repl_retag.py's import_needed): `Alias.` komt erin voor, of de import
+// heeft een open lijst (`as L (sum)`, `(..)`). Elke `import extern` laat de
+// preprocessor het modulebestand parsen, ook als niemand het gebruikt.
+function importNeeded(importText, code) {
+  const m = importText.trim().match(/^import\s+(?:extern\s+)?"[^"]+"\s+as\s+([A-Z][A-Za-z0-9_]*)/);
+  if (!m || importText.trim().slice(m[0].length).includes("(")) return true;
+  return new RegExp("(^|[^A-Za-z0-9_])" + m[1] + "\\.").test(code);
+}
+
+function replExternImports(entries, code) {
+  return entries
+    .filter((e) => e.name.startsWith("import ") && importNeeded(e.text, code))
+    .map((e) => e.text.replace("import ", "import extern ") + "\n").join("");
 }
 
 // Sapl+ -> Sapl via preprocess/driver.jmvm, zoals repl_retag.py en vm.cpp
@@ -1420,7 +1432,8 @@ async function replAtomicRebuild(newEntries, newResCounter) {
   const oldSnapshot = { entries: replSession.entries, resCounter: replSession.resCounter };
   const lib = await replLibUnit(newEntries.filter((e) => e.name.startsWith("import ")).map((e) => e.text));
   const own = newEntries.filter((e) => !e.name.startsWith("import "));
-  const sessionText = await replPreprocess(replExternImports(newEntries) + replJoinEntries(own), "repl_session");
+  const ownText = replJoinEntries(own);
+  const sessionText = await replPreprocess(replExternImports(newEntries, ownText) + ownText, "repl_session");
 
   const retagRes = await runSaplcompModuleStage(sessionText, "retag", "/tmp/repl_session.retag.txt", [lib.defs], [lib.typedefs]);
   if (!retagRes.success) throw new Error(`sessie-retag mislukt:\n${retagRes.output}`);
@@ -1612,7 +1625,7 @@ function replExtractOutput(out) {
 }
 
 async function replEvalLine(line) {
-  const turnSource = await replPreprocess(replExternImports(replSession.entries) + `start = printVal (${line})\n`, "repl_turn", "t");
+  const turnSource = await replPreprocess(replExternImports(replSession.entries, line) + `start = printVal (${line})\n`, "repl_turn", "t");
 
   const lib = replSession.lib;
   const turnRes = await runSaplcompModuleStage(turnSource, "retag", "/tmp/repl_turn.retag.txt", [lib.defs, replSession.defs], [lib.typedefs, replSession.typedefs]);
@@ -1672,8 +1685,9 @@ async function notebookCompile(source) {
   const importLines = lines.filter((l) => NB_LIB_LINE_RE.test(l));
   const lib = await notebookLibUnit(importLines);
   if (lib.stage) return lib;
-  const externs = importLines.filter((l) => l.startsWith("import ")).map((l) => l.replace("import ", "import extern "));
   const own = lines.filter((l) => !NB_LIB_LINE_RE.test(l));
+  const ownText = own.join("\n");
+  const externs = importLines.filter((l) => l.startsWith("import ") && importNeeded(l, ownText)).map((l) => l.replace("import ", "import extern "));
   const pre = await preprocessSpp([...externs, ...own].join("\n"), "/workspace/notebook.spp");
   if (!pre.success) return { stage: "preprocess", error: pre.stdout };
   const retag = await runSaplcompModuleStage(pre.files[0].content, "retag", "/tmp/notebook.retag.txt", [lib.defs], [lib.typedefs]);
