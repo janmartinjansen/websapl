@@ -140,6 +140,8 @@
     let autoRan = false;
     let seq = 0;
     const pending = new Map();
+    let progressText = "";   // NOTEBOOK_PROGRESS van de lopende run
+    let currentGen = null;
 
     // ---- worker ---------------------------------------------------------
     function startWorker() {
@@ -156,6 +158,16 @@
           // tests). Niet opnieuw na een herstart van de worker door de
           // tijdslimiet: dan zou dezelfde oneindige cel eindeloos herstarten.
           if (!autoRan && new URLSearchParams(location.search).get("run") === "1") { autoRan = true; runAll(); }
+          return;
+        }
+        // Tussentijdse uitvoer van een notebookrun: bewaren, en tonen welke
+        // cel bezig is (geen antwoord op de call zelf).
+        if (m.type === "NOTEBOOK_PROGRESS") {
+          progressText += m.text;
+          const begins = [...progressText.matchAll(/^@@begin (\d+)$/gm)];
+          const last = begins.length ? +begins[begins.length - 1][1] : 0;
+          const e = currentGen && currentGen.exprCells.find((x) => x.n === last);
+          if (e && !new RegExp(`^@@end ${last}$`, "m").test(progressText)) setStatus(`cel [${e.cell + 1}] bezig…`);
           return;
         }
         if (m.id !== undefined && pending.has(m.id)) { pending.get(m.id)(m); pending.delete(m.id); }
@@ -234,9 +246,32 @@
 
     async function runProgram(exprT, defT) {
       const gen = NB.generateProgram(cells, exprT);
-      const r = await call({ type: "NOTEBOOK_RUN", source: gen.source }, TIMEOUT_MS);
+      progressText = "";
+      currentGen = gen;
+      let r;
+      try {
+        r = await call({ type: "NOTEBOOK_RUN", source: gen.source }, TIMEOUT_MS);
+      } catch (err) {
+        // Tijdslimiet: wat al klaar was blijft staan; de cel die begonnen maar
+        // niet klaar was, bleef hangen; de rest liep niet.
+        const parsed = NB.parseOutput(progressText);
+        let hung = false;
+        for (const e of gen.exprCells) {
+          const res = parsed.cells[e.n];
+          if (res && res.ended) cells[e.cell].output = { blocks: res.blocks };
+          else if (res && !hung) { hung = true; cells[e.cell].output = { error: `Geen resultaat binnen ${TIMEOUT_MS / 1000} s: deze cel bleef rekenen (een oneindige berekening?).` }; }
+          else cells[e.cell].output = { notRun: true, afterStop: hung };
+        }
+        for (const i of defT) cells[i].output = { def: true };
+        throw err;
+      }
       if (!r.success) {
-        showBanner((r.stage === "preprocess" ? "Fout bij het voorbewerken:\n" : r.stage === "compile" ? "Fout bij het compileren:\n" : "") + cleanError(r.error));
+        // `__cellN` (de interne naam van een expressiecel) als celnummer tonen.
+        const text = cleanError(r.error).replace(/__cell(\d+)/g, (m, n) => {
+          const e = gen.exprCells.find((x) => x.n === +n);
+          return e ? `cel [${e.cell + 1}]` : m;
+        });
+        showBanner((r.stage === "preprocess" ? "Fout bij het voorbewerken:\n" : r.stage === "compile" ? "Fout bij het compileren:\n" : "") + text);
         for (const e of gen.exprCells) cells[e.cell].output = { notRun: true };
         for (const i of defT) cells[i].output = { notRun: true };
         await attachTypeErrors(gen);

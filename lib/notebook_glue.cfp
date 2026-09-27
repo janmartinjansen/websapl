@@ -78,18 +78,38 @@ nbCellText c = if (typeId c == TYPE_STRING) c (nbShow c)
 
 nbValue v = printString "@@value" <#> nbNl <#> printString (nbShow v) <#> nbNl
 
-// showVal, maar een lijst op het hoogste niveau na 100 elementen afgekapt:
-// een oneindige lijst (`L.from 1`) zou showVal anders nooit laten stoppen.
-nbShow v = if (nbIsCons v) (strcat "[" (strcat (nbShowItems 100 v) "]")) (showVal v)
+// showVal, maar met grenzen, zodat een oneindige waarde de pagina niet laat
+// hangen: elke lijst (op elk niveau) na 100 elementen afgekapt, en na 40
+// niveaus diep "...". Verder als showVal (repl/stddyn.cfp): show_-haken,
+// tupels als (a, b), modulenamen zonder voorvoegsel (displayConName).
+// (Tot 27 september 2026 alleen de buitenste lijst; `[L.from 1]` hing.)
+nbShow v = nbShowD 40 v
 
-nbIsCons v = if (typeId v > TYPE_FUNC) (strEqual (constrName v) "Cons") False
+nbShowD d v = if (d == 0) "..." (nbShowTid d v (typeId v))
 
-nbShowItems k xs =
+nbShowTid d v tid = if (tid > TYPE_FUNC) (nbShowAdt d v (constrName v)) (showVal v)
+
+nbShowAdt d v name =
+  if (strEqual name "Cons") (strcat "[" (strcat (nbItems (d - 1) 100 v) "]"))
+  (if (strEqual name "Nil") "[]"
+  (nbShowHook d v name (lookup (strcat "show_" name))))
+
+nbShowHook d v name h = if (typeId h == TYPE_FUNC) (applyDynamic h (Cons v Nil)) (nbShowGeneric d v name (getConstrArity v))
+
+nbShowGeneric d v name arity =
+  if (isTupleName name) (strcat "(" (strcat (nbFields (d - 1) v 0 arity) ")"))
+  (if (arity == 0) (displayConName name) (strcat (displayConName name) (strcat "(" (strcat (nbFields (d - 1) v 0 arity) ")"))))
+
+nbFields d v i n =
+  if (i >= n) ""
+  (if (i == n - 1) (nbShowD d (getField v i)) (strcat (nbShowD d (getField v i)) (strcat ", " (nbFields d v (i + 1) n))))
+
+nbItems d k xs =
   case xs
     (Nil -> "")
-    (Cons x rest -> if (k == 0) "..." (strcat (showVal x) (nbShowMore (k - 1) rest)))
+    (Cons x rest -> if (k == 0) "..." (strcat (nbShowD d x) (nbMore d (k - 1) rest)))
 
-nbShowMore k xs =
+nbMore d k xs =
   case xs
     (Nil -> "")
-    (Cons x rest -> strcat ", " (nbShowItems k xs))
+    (Cons x rest -> strcat ", " (nbItems d k xs))

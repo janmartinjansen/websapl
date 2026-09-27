@@ -1480,15 +1480,30 @@ function replFuncs() {
  * die is voor de "Run"-knop se terminal-streaming) -- nodig om printVal's
  * eigen uitvoer achteraf uit de vaste vm.cpp-banner (`VM starting for
  * .../execution started.../res: <code>/stop/...`) te kunnen isoleren. */
-async function runJmvmCapture(jmvmContent, extraFiles = {}, stdinText = "") {
+// onProgress (optioneel): krijgt de nieuwe uitvoer telkens als er een regel
+// `@@begin N`/`@@end N` (lib/notebook_glue.cfp) af is -- de notebook weet zo
+// welke cel bezig is, en houdt bij een tijdslimiet de al klare cellen.
+async function runJmvmCapture(jmvmContent, extraFiles = {}, stdinText = "", onProgress = null) {
   let output = [];
+  let lineStart = 0;
+  let flushed = 0;
   const stdinBytes = new TextEncoder().encode(stdinText);
   let stdinPos = 0;
   const instance = await createJMVMModule({
     noInitialRun: true,
     locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm" : (prefix || "") + p),
     stdin: () => (stdinPos < stdinBytes.length ? stdinBytes[stdinPos++] : null),
-    stdout: (c) => output.push(String.fromCharCode(c)),
+    stdout: (c) => {
+      output.push(String.fromCharCode(c));
+      if (c === 10 && onProgress) {
+        const line = output.slice(lineStart, lineStart + 7).join("");
+        lineStart = output.length;
+        if (line.startsWith("@@begin") || line.startsWith("@@end")) {
+          onProgress(output.slice(flushed).join(""));
+          flushed = output.length;
+        }
+      }
+    },
     stderr: (c) => output.push(String.fromCharCode(c))
   });
   instance.FS.writeFile("/tmp/repl_turn.jmvm", jmvmContent);
@@ -1684,9 +1699,11 @@ self.onmessage = async function (e) {
       try {
         // Zelfde programma als een eerdere run (bv. opnieuw "Alles
         // uitvoeren" zonder wijziging): voorbewerken en compileren overslaan.
+        const bytesToText = (raw) => new TextDecoder().decode(Uint8Array.from(raw, (ch) => ch.charCodeAt(0) & 255));
+        const progress = (raw) => postMessage({ type: "NOTEBOOK_PROGRESS", id: msg.id, text: bytesToText(raw) });
         let jmCached = notebookCache.get(msg.source);
         if (jmCached) {
-          const raw = await runJmvmCapture(jmCached, await collectDataFiles(msg.source));
+          const raw = await runJmvmCapture(jmCached, await collectDataFiles(msg.source), "", progress);
           const output = new TextDecoder().decode(Uint8Array.from(raw, (ch) => ch.charCodeAt(0) & 255));
           postMessage({ type: "NOTEBOOK_RESULT", id: msg.id, success: true, output, cached: true });
           break;
@@ -1706,7 +1723,7 @@ self.onmessage = async function (e) {
         if (notebookCache.size > 8) notebookCache.delete(notebookCache.keys().next().value);
         // runJmvmCapture levert één teken per byte; een notebook toont
         // gewone tekst (°, emoji), dus als UTF-8 terugdecoderen.
-        const raw = await runJmvmCapture(jm.content, await collectDataFiles(msg.source));
+        const raw = await runJmvmCapture(jm.content, await collectDataFiles(msg.source), "", progress);
         const output = new TextDecoder().decode(Uint8Array.from(raw, (ch) => ch.charCodeAt(0) & 255));
         postMessage({ type: "NOTEBOOK_RESULT", id: msg.id, success: true, output });
       } catch (err) {

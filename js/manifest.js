@@ -1186,7 +1186,7 @@ window.WEBSAPL_TREE = [
         "path": "lib/notebook_glue.cfp",
         "type": "file",
         "ext": ".cfp",
-        "size": 3513,
+        "size": 4442,
         "isBinary": false
       },
       {
@@ -1570,7 +1570,7 @@ window.WEBSAPL_TREE = [
         "path": "sapl_compiler/ast_helpers.cfp",
         "type": "file",
         "ext": ".cfp",
-        "size": 20244,
+        "size": 20624,
         "isBinary": false
       },
       {
@@ -1837,7 +1837,7 @@ window.WEBSAPL_TREE = [
     "path": "notebook.html",
     "type": "file",
     "ext": ".html",
-    "size": 26147,
+    "size": 27925,
     "isBinary": false
   },
   {

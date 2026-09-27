@@ -481,6 +481,13 @@ reflectionKws = Cons typeIdKw (Cons constrNameKw (Cons getFieldKw (Cons makeCons
 
 isReflectionCall name = member reflectionKws name
 
+// Elke naam die een stage als ingebouwde aanroep herkent (geen gewone
+// functie). Gebruikt door parser.cfp (eigen functies met zo'n naam
+// hernoemen) en driver.cfp (onbekende namen melden).
+sbIsBuiltin n =
+  isPrintCall n \/ isPrintCCall n \/ isPrintSCall n \/ isPredefCall n \/ isFloatOpCall n \/
+  isErrorCall n \/ isSyscallCall n \/ isStrcreateCall n \/ isReflectionCall n
+
 // Name -> VM opcode mnemonic (exact spelling from parser.cpp's opcode table,
 // see also parser.ama:1186-1194's `prE`).
 reflectionOpcode name =
