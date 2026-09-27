@@ -128,7 +128,12 @@
   <script>
   (function () {
     const NB = window.SaplNotebook;
-    const STORE_KEY = "websapl_notebook";
+    // ?engine=server: in de Workbench (workbench/server.js serveert deze
+    // pagina onder /websapl/). Dan draaien voorbewerken, compileren, de
+    // typechecker en lc_repl native via /api/notebook/*, met de repo-root als
+    // werkmap, en gaan openen en opslaan naar echte bestanden.
+    const SERVER = new URLSearchParams(location.search).get("engine") === "server";
+    const STORE_KEY = SERVER ? "workbench_notebook" : "websapl_notebook";
     const TIMEOUT_MS = 30000;
     const el = (id) => document.getElementById(id);
 
@@ -143,8 +148,27 @@
     let progressText = "";   // NOTEBOOK_PROGRESS van de lopende run
     let currentGen = null;
 
+    // ?run=1: één keer alles uitvoeren zodra de motor klaar is én het
+    // notebook geladen (in servermodus is de motor meteen klaar, terwijl het
+    // laden via /api/file nog loopt). Niet opnieuw na een herstart van de
+    // worker door de tijdslimiet.
+    let loaded = false;
+    function maybeAutoRun() {
+      if (autoRan || !ready || !loaded || running) return;
+      if (new URLSearchParams(location.search).get("run") !== "1") return;
+      autoRan = true;
+      runAll();
+    }
+
     // ---- worker ---------------------------------------------------------
     function startWorker() {
+      if (SERVER) {
+        ready = true;
+        el("btn-run").disabled = false;
+        setStatus("klaar (lokale tools)");
+        maybeAutoRun();
+        return;
+      }
       ready = false;
       setStatus("engine laden…");
       worker = new Worker("engine/worker.js?v=" + Date.now());
@@ -157,7 +181,7 @@
           // ?run=1: na het laden één keer alles uitvoeren (demo-links,
           // tests). Niet opnieuw na een herstart van de worker door de
           // tijdslimiet: dan zou dezelfde oneindige cel eindeloos herstarten.
-          if (!autoRan && new URLSearchParams(location.search).get("run") === "1") { autoRan = true; runAll(); }
+          maybeAutoRun();
           return;
         }
         // Tussentijdse uitvoer van een notebookrun: bewaren, en tonen welke
@@ -175,7 +199,33 @@
       worker.postMessage({ type: "INIT" });
     }
 
+    async function serverCall(msg) {
+      const post = async (url, body) => {
+        const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+        if (!res.ok) throw new Error(`${url}: ${res.status} ${await res.text()}`);
+        return res.json();
+      };
+      if (msg.type === "NOTEBOOK_RUN") {
+        const r = await post("/api/notebook/run", { source: msg.source });
+        // De server stopt een run na 30 s en geeft de uitvoer tot dan toe
+        // mee: zelfde afhandeling als de tijdslimiet van de worker.
+        if (r.timedOut) {
+          progressText = r.output;
+          throw new Error(`Tijdslimiet van ${TIMEOUT_MS / 1000} s overschreden (een oneindige berekening?).`);
+        }
+        return r;
+      }
+      if (msg.type === "TYPECHECK") return post("/api/notebook/typecheck", { source: msg.source });
+      if (msg.type === "LC_RUN") {
+        const r = await post("/api/notebook/lc", { stdin: msg.stdin });
+        if (r.timedOut) throw new Error(`lc_repl: geen antwoord binnen ${TIMEOUT_MS / 1000} s (divergente term?).`);
+        return r;
+      }
+      throw new Error("onbekend verzoek: " + msg.type);
+    }
+
     function call(msg, timeoutMs) {
+      if (SERVER) return serverCall(msg);
       return new Promise((resolve, reject) => {
         const id = ++seq;
         const timer = setTimeout(() => {
@@ -518,13 +568,29 @@
       cells = NB.parseNotebook(text).map((c) => ({ ...c, output: null }));
       fileName = name || "notebook.spp";
       save(); renderAll(); hideBanner();
+      loaded = true;
+      maybeAutoRun();
     }
 
     function save() {
       try { localStorage.setItem(STORE_KEY, JSON.stringify({ fileName, text: NB.serializeNotebook(cells) })); } catch (_) {}
     }
 
+    async function saveToServer() {
+      let target = fileName.includes("/") ? fileName : null;
+      if (!target) {
+        target = prompt("Opslaan als (pad in de repo):", "notebooks/" + fileName);
+        if (!target) return;
+        fileName = target;
+        el("nb-name").textContent = fileName;
+      }
+      const res = await fetch("/api/save", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ path: target, content: NB.serializeNotebook(cells) }) });
+      setStatus(res.ok ? "opgeslagen: " + target : "opslaan mislukt");
+      save();
+    }
+
     function download() {
+      if (SERVER) return saveToServer();
       const blob = new Blob([NB.serializeNotebook(cells)], { type: "text/plain" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
@@ -534,9 +600,28 @@
     }
 
     async function loadExample(path) {
+      if (SERVER) {
+        const res = await fetch("/api/file?path=" + encodeURIComponent(path));
+        if (!res.ok) return showBanner("Notebook niet gevonden: " + path);
+        return load((await res.json()).content, path);
+      }
       const res = await fetch(path + "?v=" + Date.now());
       if (!res.ok) return showBanner("Voorbeeld niet gevonden: " + path);
       load(await res.text(), path.split("/").pop());
+    }
+
+    // Workbench: alle notebooks onder notebooks/ in de keuzelijst.
+    async function listServerNotebooks() {
+      try {
+        const r = await (await fetch("/api/notebook/list")).json();
+        const sel = el("sel-example");
+        sel.innerHTML = '<option value="">Notebook openen…</option>';
+        for (const p of r.notebooks) {
+          const o = document.createElement("option");
+          o.value = p; o.textContent = p.replace(/^notebooks\//, "");
+          sel.appendChild(o);
+        }
+      } catch (_) {}
     }
 
     function setStatus(t) { el("status").textContent = t; }
@@ -556,6 +641,13 @@
       e.target.value = "";
     });
     document.addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); runAll(); } });
+
+    if (SERVER) {
+      listServerNotebooks();
+      el("btn-save").title = "Opslaan in de repo";
+      const back = document.querySelector(".brand a");
+      back.href = "/"; back.textContent = "Workbench ›";
+    }
 
     let stored = null;
     try { stored = JSON.parse(localStorage.getItem(STORE_KEY) || "null"); } catch (_) {}
