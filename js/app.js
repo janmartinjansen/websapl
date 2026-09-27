@@ -1635,6 +1635,12 @@
         const r = await replCall("def", { text });
         if (!r.success) throw new Error(r.error);
         replAppendLog(`gedefinieerd: ${r.name}\n`);
+      } else if (line.startsWith(":import")) {
+        const arg = line.slice(7).trim();
+        if (!arg) throw new Error(`:import heeft een module nodig, bv. ':import "lib/list.spp" as L'`);
+        const r = await replCall("def", { text: "import " + arg });
+        if (!r.success) throw new Error(r.error);
+        replAppendLog(`geïmporteerd: ${r.name.slice(7)}\n`);
       } else if (line === ":list" || line === ":history") {
         const r = await replCall("history");
         if (!r.success) throw new Error(r.error);

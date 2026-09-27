@@ -526,7 +526,7 @@ async function compileRetag(source, srcPath) {
 const notebookCache = new Map();
 let lcReplBytecode = null;
 
-const SPP_IMPORT_RE = /^(?:#import|import)\s+"([^"]+)"/;
+const SPP_IMPORT_RE = /^(?:#import|import(?:\s+extern)?)\s+"([^"]+)"/;
 
 async function collectSppImports(source, found = {}) {
   for (const line of source.split("\n")) {
@@ -1287,8 +1287,37 @@ function replSplitDefinitions(text) {
   return defs;
 }
 
+// Een gekwalificeerde import (`import "lib/list.spp" as L`) is een
+// sessie-entry `import L` (zelfde regel als repl_retag.py en vm.cpp).
+function replImportEntryName(text) {
+  const m = text.trim().match(/^import\s+"([^"]+)"\s+as\s+([A-Z][A-Za-z0-9_]*)/);
+  if (!m) throw new Error(`verwacht: import "pad" as Naam, bv. :import "lib/list.spp" as L -- niet: '${text}'`);
+  return "import " + m[2];
+}
+
+// De imports als `import extern` voor een turn: namen oplossen, de
+// modulecode zit al in de sessie (preprocess/modules.cfp).
+function replExternImports(entries) {
+  return entries.filter((e) => e.name.startsWith("import ")).map((e) => e.text.replace("import ", "import extern ") + "\n").join("");
+}
+
+// Sapl+ -> Sapl via preprocess/driver.jmvm, zoals repl_retag.py en vm.cpp
+// dat per sessie en per turn doen (sinds 27 september 2026 ook hier; nodig
+// voor imports, en zo werkt ook de rest van Sapl+ in deze REPL).
+async function replPreprocess(text, name) {
+  const r = await preprocessSpp(text, `/workspace/${name}.spp`);
+  if (!r.success) {
+    const msg = String(r.stdout || "").split("\n")
+      .filter((l) => !/^(VM starting|Reading file|\d+ instr read|execution started|Elapsed time|nr gc|instr executed|calls:|creates:)/.test(l))
+      .join("\n").replace(/stop\s*$/, "").trim();
+    throw new Error(msg || "voorbewerken mislukt");
+  }
+  return r.files[0].content;
+}
+
 function replExtractDefName(text) {
   const stripped = text.trim();
+  if (stripped.startsWith("import ")) return replImportEntryName(stripped);
   let m = stripped.match(/^::\s*([A-Za-z_][A-Za-z0-9_]*)/);
   if (m) return "::" + m[1];
   m = stripped.match(/^([A-Za-z_][A-Za-z0-9_]*)/);
@@ -1356,7 +1385,7 @@ async function replInit() {
  */
 async function replAtomicRebuild(newEntries, newResCounter) {
   const oldSnapshot = { entries: replSession.entries, resCounter: replSession.resCounter };
-  const sessionText = replSession.prelude + "\n" + replJoinEntries(newEntries);
+  const sessionText = await replPreprocess(replSession.prelude + "\n" + replJoinEntries(newEntries), "repl_session");
 
   const defsRes = await runCompilerStage(sessionText, "defs", "/tmp/repl_session.defs.txt");
   if (!defsRes.success) throw new Error(`sessie-defs mislukt:\n${defsRes.output}`);
@@ -1414,6 +1443,10 @@ async function replLoadContent(content, notes) {
 
   const updates = [];
   for (const d of defs) {
+    if (d.trim().startsWith("module ")) {
+      notes.push(`'${d.trim()}' overgeslagen: een module-regel betekent in een sessie niets (importeer het bestand met :import).`);
+      continue;
+    }
     const name = replExtractDefName(d);
     if (REPL_RESERVED_NAMES.has(name)) {
       notes.push(`'${name}' is gereserveerd voor de REPL zelf -- overgeslagen (roep de functies die je wil verkennen rechtstreeks aan).`);
@@ -1472,7 +1505,8 @@ function replFuncs() {
   return replSession.defs
     .split("\n")
     .map((l) => l.trim())
-    .filter((l) => l && !replSession.preludeNames.has(l.split(" ")[0]));
+    // Namen met `__` zijn intern (functies uit een geïmporteerde module).
+    .filter((l) => l && !replSession.preludeNames.has(l.split(" ")[0]) && !l.split(" ")[0].includes("__"));
 }
 
 /** Draait een gecompileerd .jmvm-programma en geeft de VOLLEDIGE stdout
@@ -1542,7 +1576,7 @@ function replExtractOutput(out) {
 }
 
 async function replEvalLine(line) {
-  const turnSource = `start = printVal (${line})\n`;
+  const turnSource = await replPreprocess(replExternImports(replSession.entries) + `start = printVal (${line})\n`, "repl_turn");
 
   const turnRes = await runSaplcompModuleStage(turnSource, "retag", "/tmp/repl_turn.retag.txt", [replSession.defs], [replSession.typedefs]);
   if (!turnRes.success) throw new Error(turnRes.output);
