@@ -305,8 +305,60 @@ async function initEngine(data = {}) {
     jmvmModule.FS.writeFile("/retagcomp.jmvm", retagcompBytecode);
   }
 
+  await warmUpEngine();
+
   isInitialized = true;
   postMessage({ type: "INIT_DONE" });
+}
+
+/**
+ * Opwarmrun (29 september 2026). V8 (Chrome, Edge) kan een wasm-functie die
+ * al draait niet halverwege omzetten naar geoptimaliseerde code. De
+ * interpreterlus van de engine blijft daardoor de hele eerste run op de
+ * basiscompiler (Liftoff) staan: de eerste zware run van een sessie was ~2x
+ * trager dan alle latere (primes 1,13 s tegen 0,57 s, een compilatie van gen1
+ * 1,57 s tegen 0,90 s). Een piepkleine run hier start de optimalisatie
+ * alvast; die loopt op de achtergrond (~50 ms nodig) terwijl de gebruiker nog
+ * typt, en elke latere instantie van dezelfde jmvm.wasm krijgt de
+ * geoptimaliseerde code. Kost ~5 ms. In Safari (JavaScriptCore) is er geen
+ * verschil tussen koud en warm, daar doet dit niets. Gemeten met
+ * websapl/wasm_test/opwarm/; zie wasm_compiler/README.md §8.
+ */
+const WARMUP_JMVM = `start_lazy start nfib_lazy nfib nfib_then #
+            call 1
+            print 4
+            stop
+0           jmp 1
+1           push 18
+            tailcall 0 3
+2           load 0
+            eval
+            store 0
+3           ifltlv 0 2 4
+            loadadd 0 -1
+            call 3
+            loadadd 0 -2
+            call 3
+            add
+            inc
+            return 1
+4           return_const 1 1
+`;
+
+async function warmUpEngine() {
+  try {
+    const inst = await createJMVMModule({
+      noInitialRun: true,
+      locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm" : (prefix || "") + p),
+      stdin: () => null,
+      stdout: () => {},
+      stderr: () => {}
+    });
+    inst.FS.writeFile("/tmp/warmup.jmvm", WARMUP_JMVM);
+    try { inst.callMain(["/tmp/warmup.jmvm"]); } catch (_) {}
+  } catch (_) {
+    // Opwarmen is alleen een versnelling; een fout hier mag het laden niet breken.
+  }
 }
 
 /**

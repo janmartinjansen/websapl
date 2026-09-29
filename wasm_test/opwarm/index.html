@@ -1,0 +1,9 @@
+<!doctype html><meta charset="utf-8"><title>opwarm-experiment</title>
+<pre id="o"></pre>
+<script>
+// ?opwarm=nfib22&wacht=300&doel=primes  (doel: een benchmark uit ../build of gen1)
+const q = new URLSearchParams(location.search);
+const w = new Worker('worker.js');
+w.onmessage = e => { document.getElementById('o').textContent = e.data; console.log('PROEF ' + e.data); console.log('PROEF KLAAR'); };
+w.postMessage({ opwarm: q.get('opwarm'), wacht: +(q.get('wacht') || 0), doel: q.get('doel') || 'primes' });
+</script>

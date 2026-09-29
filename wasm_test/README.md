@@ -11,6 +11,14 @@ twee manieren om Sapl-programma's te draaien:
 Elk wordt **koud** en **warm** gemeten. Achtergrond en de cijfers op de Mac
 staan in [`../../wasm_compiler/README.md`](../../wasm_compiler/README.md).
 
+`opwarm/` bevat twee losse experimenten voor de opwarmrun in
+`../engine/worker.js`:
+
+- `opwarm/index.html`: de engine alleen;
+- `opwarm/echt.html`: de echte worker.
+
+Zie §8 van `wasm_compiler/README.md`.
+
 ## Bouwen
 
 Vanuit de repo-root:

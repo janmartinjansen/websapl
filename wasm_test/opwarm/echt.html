@@ -1,0 +1,34 @@
+<!doctype html><meta charset="utf-8"><title>opwarm, echte worker</title>
+<pre id="o"></pre>
+<script>
+// Meet de echte websapl/engine/worker.js: INIT, dan (na ?wacht= ms, default 500:
+// de gebruiker die nog typt) twee keer COMPILE + RUN van ?prog= (benchmarks_sapl).
+// ?worker= kiest een ander worker-script in ../../engine/ (voor een vergelijking).
+const q = new URLSearchParams(location.search);
+const w = new Worker('../../engine/' + (q.get('worker') || 'worker.js'));
+const prog = q.get('prog') || 'primes';
+let id = 0; const wachters = {};
+w.onmessage = e => { const m = e.data; if (m.type === 'INIT_DONE') wachters.init(); if (m.type === 'COMPILE_COMPLETE' || m.type === 'RUN_COMPLETE') wachters[m.id](m); };
+const stuur = (msg) => new Promise(r => { const i = ++id; wachters[i] = r; w.postMessage(Object.assign({ id: i }, msg)); });
+(async () => {
+  const t0 = performance.now();
+  await new Promise(r => { wachters.init = r; w.postMessage({ type: 'INIT' }); });
+  const init = Math.round(performance.now() - t0);
+  await new Promise(r => setTimeout(r, +(q.get('wacht') || 500)));
+  // ?pad=<url>: een ander bronbestand, dat alleen gecompileerd wordt (niet gedraaid)
+  const pad = q.get('pad');
+  const src = await (await fetch(pad || '../../benchmarks_sapl/' + prog + '.cfp')).text();
+  const uit = ['init ' + init + ' ms'];
+  for (let k = 1; k <= 2; k++) {
+    let t = performance.now();
+    const c = await stuur({ type: 'COMPILE', source: src, path: '/workspace/' + prog + '.cfp', stages: ['jmvm'] });
+    const tc = Math.round(performance.now() - t);
+    if (pad) { uit.push(`compile ${k}: ${tc} ms (${c.success ? 'ok' : 'FOUT'})`); continue; }
+    t = performance.now();
+    const r = await stuur({ type: 'RUN', contentOrPath: c.files[0].content, isPath: false });
+    uit.push(`run ${k}: compile ${tc} ms, draaien ${Math.round(performance.now() - t)} ms (res ${r.metrics && r.metrics.res})`);
+  }
+  document.getElementById('o').textContent = uit.join('\n');
+  console.log('PROEF ' + uit.join(' | ')); console.log('PROEF KLAAR');
+})();
+</script>

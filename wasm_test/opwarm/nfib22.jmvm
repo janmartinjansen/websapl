@@ -1,0 +1,27 @@
+start_lazy start nfib_lazy nfib nfib_then #
+            call 1                                   || start
+            print 4
+            stop
+0           jmp 1                                    || start || start_lazy
+1           push 22                                  || start
+            tailcall 0 3                             || nfib
+2           load 0                                   || nfib_lazy
+            eval
+            store 0
+3           ifltlv 0 2 4                             || nfib_then || nfib
+            loadadd 0 -1
+            call 3                                   || nfib
+            loadadd 0 -2
+            call 3                                   || nfib
+            add
+            inc
+            return 1
+4           return_const 1 1                         || nfib_then
+
+.metadata
+functions 4
+  func 1 start 0 0
+  func 0 start 0 0
+  func 3 nfib 1 10
+  func 2 nfib 1 10
+.endmetadata
