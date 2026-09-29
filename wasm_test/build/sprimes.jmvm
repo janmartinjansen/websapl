@@ -1,0 +1,360 @@
+start_lazy start Add_lazy Add Add_Zero Add_Suc tonum_lazy tonum tonum_Zero tonum_Suc fromnum_lazy fromnum fromnum_else one_lazy one two_lazy two four_lazy four eight_lazy eight five_lazy five ten_lazy ten twenty_lazy twenty forty_lazy forty eighty_lazy eighty h60_lazy h60 h20_lazy h20 h200_lazy h200 h280_lazy h280 Pred_lazy Pred Pred_Zero Pred_Suc Sub_lazy Sub Sub_Zero Sub_Suc Sub_Suc_Zero Sub_Suc_Suc Gt_lazy Gt Gt_Zero Gt_Suc Gt_Suc_Zero Gt_Suc_Suc Neq_lazy Neq Neq_Zero Neq_Zero_Zero Neq_Zero_Suc Neq_Suc Neq_Suc_Zero Neq_Suc_Suc el_lazy el el_Zero el_Zero_Nil el_Zero_Cons el_Suc el_Suc_Nil el_Suc_Cons Mod_lazy Mod Mod_else notmodzero_lazy notmodzero from_lazy from primes_lazy primes sieve_lazy sieve sieve_Nil sieve_Cons filter_lazy filter filter_Nil filter_Cons filter_Cons_else domain_lazy domain printlist_lazy printlist printlist_Nil printlist_Cons from_1_lazy from_1 #
+            call 1                                   || start
+            print 4
+            stop
+0           jmp 1                                    || start || start_lazy
+1           call 79                                  || primes || start
+            call 38                                  || h280
+            call 64                                  || el
+            tailcall 0 7                             || tonum
+2           load 0                                   || Add_lazy
+            eval
+            store 0
+3           load 0                                   || Add
+            jmpt 2 4 5                               || lbs
+4           load 1                                   || Add_Zero
+            eval
+            return 2
+5           load 2                                   || Add_Suc
+            load 0
+            call 3                                   || Add
+            ccreatet 1 11 5 1
+            return 3
+6           load 0                                   || tonum_lazy
+            eval
+            store 0
+7           load 0                                   || tonum
+            jmpt 2 8 9                               || lbs
+8           return_const 1 0                         || tonum_Zero
+9           load 0                                   || tonum_Suc
+            call 7                                   || tonum
+            inc
+            return 2
+10          load 0                                   || fromnum_lazy
+            eval
+            store 0
+11          load 0                                   || fromnum
+            ifneq 12                                 || fromnum_else
+            ccreatet 0 11 5 0
+            return 1
+12          loadadd 0 -1                             || fromnum_else
+            call 11                                  || fromnum
+            ccreatet 1 11 5 1
+            return 1
+13          jmp 14                                   || one || one_lazy
+14          ccreatet 0 11 5 0                        || one
+            ccreatet 1 11 5 1
+            return 0
+15          jmp 16                                   || two || two_lazy
+16          pushfunc 0 14                            || one || two
+            create 1 3
+            call 14                                  || one
+            tailcall 0 3                             || Add
+17          jmp 18                                   || four || four_lazy
+18          pushfunc 0 16                            || two || four
+            create 1 3
+            call 16                                  || two
+            tailcall 0 3                             || Add
+19          jmp 20                                   || eight || eight_lazy
+20          pushfunc 0 18                            || four || eight
+            create 1 3
+            call 18                                  || four
+            tailcall 0 3                             || Add
+21          jmp 22                                   || five || five_lazy
+22          ccreatet 0 11 5 0                        || five
+            ccreatet 1 11 5 1
+            ccreatet 1 11 5 1
+            ccreatet 1 11 5 1
+            ccreatet 1 11 5 1
+            ccreatet 1 11 5 1
+            return 0
+23          jmp 24                                   || ten || ten_lazy
+24          pushfunc 0 22                            || five || ten
+            create 1 3
+            call 22                                  || five
+            tailcall 0 3                             || Add
+25          jmp 26                                   || twenty || twenty_lazy
+26          pushfunc 0 24                            || ten || twenty
+            create 1 3
+            call 24                                  || ten
+            tailcall 0 3                             || Add
+27          jmp 28                                   || forty || forty_lazy
+28          pushfunc 0 26                            || twenty || forty
+            create 1 3
+            call 26                                  || twenty
+            tailcall 0 3                             || Add
+29          jmp 30                                   || eighty || eighty_lazy
+30          pushfunc 0 28                            || forty || eighty
+            create 1 3
+            call 28                                  || forty
+            tailcall 0 3                             || Add
+31          jmp 32                                   || h60 || h60_lazy
+32          pushfunc 0 30                            || eighty || h60
+            create 1 3
+            call 30                                  || eighty
+            tailcall 0 3                             || Add
+33          jmp 34                                   || h20 || h20_lazy
+34          pushfunc 0 28                            || forty || h20
+            create 1 3
+            call 30                                  || eighty
+            tailcall 0 3                             || Add
+35          jmp 36                                   || h200 || h200_lazy
+36          pushfunc 0 28                            || forty || h200
+            create 1 3
+            call 32                                  || h60
+            tailcall 0 3                             || Add
+37          jmp 38                                   || h280 || h280_lazy
+38          pushfunc 0 30                            || eighty || h280
+            create 1 3
+            call 36                                  || h200
+            tailcall 0 3                             || Add
+39          load 0                                   || Pred_lazy
+            eval
+            store 0
+40          load 0                                   || Pred
+            jmpt 2 41 42                             || lbs
+41          return_const 1 111                       || Pred_Zero
+42          load 0                                   || Pred_Suc
+            return 2
+43          load 0                                   || Sub_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+44          load 1                                   || Sub
+            jmpt 2 45 46                             || lbs
+45          load 0                                   || Sub_Zero
+            return 2
+46          load 1                                   || Sub_Suc
+            jmpt 2 47 48                             || lbs
+47          return_const 3 123                       || Sub_Suc_Zero
+48          load 1                                   || Sub_Suc_Suc
+            load 0
+            tailcall 4 44                            || Sub
+49          load 0                                   || Gt_lazy
+            eval
+            store 0
+50          load 0                                   || Gt
+            jmpt 2 51 52                             || lbs
+51          return_const 2 0                         || Gt_Zero
+52          load 2                                   || Gt_Suc
+            eval
+            jmpt 2 53 54                             || lbs
+53          return_const 3 1                         || Gt_Suc_Zero
+54          load 0                                   || Gt_Suc_Suc
+            load 1
+            tailcall 4 50                            || Gt
+55          load 0                                   || Neq_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+56          load 0                                   || Neq
+            jmpt 2 57 60                             || lbs
+57          load 1                                   || Neq_Zero
+            jmpt 2 58 59                             || lbs
+58          return_const 2 0                         || Neq_Zero_Zero
+59          return_const 3 1                         || Neq_Zero_Suc
+60          load 2                                   || Neq_Suc
+            jmpt 2 61 62                             || lbs
+61          return_const 3 1                         || Neq_Suc_Zero
+62          load 0                                   || Neq_Suc_Suc
+            load 1
+            tailcall 4 56                            || Neq
+63          load 0                                   || el_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+64          load 0                                   || el
+            jmpt 2 65 68                             || lbs
+65          load 1                                   || el_Zero
+            jmpt 2 66 67                             || lbs
+66          return_const 2 111                       || el_Zero_Nil
+67          load 0                                   || el_Zero_Cons
+            return 4
+68          load 2                                   || el_Suc
+            jmpt 2 69 70                             || lbs
+69          return_const 3 111                       || el_Suc_Nil
+70          load 1                                   || el_Suc_Cons
+            eval
+            load 2
+            tailcall 5 64                            || el
+71          load 1                                   || Mod_lazy
+            eval
+            store 1
+72          load 0                                   || Mod
+            load 1
+            call 50                                  || Gt
+            ifeq 73                                  || Mod_else
+            load 0
+            eval
+            return 2
+73          load 1                                   || Mod_else
+            dup
+            load 0
+            pushfunc 2 43                            || Sub_lazy
+            create 3 3
+            tailcall 2 72                            || Mod
+74          load 0                                   || notmodzero_lazy
+            eval
+            store 0
+75          ccreatet 0 11 5 0                        || notmodzero
+            load 0
+            load 1
+            call 72                                  || Mod
+            tailcall 2 56                            || Neq
+76          jmp 77                                   || from || from_lazy
+77          load 0                                   || from
+            pushfunc 1 96                            || from_1
+            create 2 3
+            pushfunc 1 77                            || from
+            create 2 3
+            load 0
+            eval
+            ccreatet 2 11 6 1
+            return 1
+78          jmp 79                                   || primes || primes_lazy
+79          pushfunc 0 16                            || two || primes
+            create 1 3
+            call 77                                  || from
+            tailcall 0 81                            || sieve
+80          load 0                                   || sieve_lazy
+            eval
+            store 0
+81          load 0                                   || sieve
+            jmpt 2 82 83                             || lbs
+82          return_const 1 111                       || sieve_Nil
+83          load 1                                   || sieve_Cons
+            load 0
+            pushfunc 2 74                            || notmodzero_lazy
+            create 2 7
+            pushfunc 2 84                            || filter_lazy
+            create 3 3
+            pushfunc 1 80                            || sieve_lazy
+            create 2 3
+            load 0
+            ccreatet 2 11 6 1
+            return 3
+84          load 1                                   || filter_lazy
+            eval
+            store 1
+85          load 1                                   || filter
+            jmpt 2 86 87                             || lbs
+86          ccreatet 0 11 6 0                        || filter_Nil
+            return 2
+87          load 0                                   || filter_Cons
+            load 2
+            eval
+            ifeq 88                                  || filter_Cons_else
+            load 1
+            load 2
+            pushfunc 2 84                            || filter_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 6 1
+            return 4
+88          load 1                                   || filter_Cons_else
+            eval
+            load 2
+            tailcall 4 85                            || filter
+89          load 0                                   || domain_lazy
+            eval
+            store 0
+90          call 79                                  || primes || domain
+            load 0
+            call 64                                  || el
+            tailcall 1 7                             || tonum
+91          load 0                                   || printlist_lazy
+            eval
+            store 0
+92          load 0                                   || printlist
+            jmpt 2 93 94                             || lbs
+93          return_const 1 0                         || printlist_Nil
+94          load 0                                   || printlist_Cons
+            call 7                                   || tonum
+            print 0
+            load 1
+            eval
+            tailcall 3 92                            || printlist
+95          jmp 96                                   || from_1 || from_1_lazy
+96          load 0                                   || from_1
+            eval
+            ccreatet 1 11 5 1
+            return 1
+
+.metadata
+types 2
+type 5 nat 2
+  constr 0 Zero 0
+  constr 1 Suc 1
+type 6 list 2
+  constr 0 Nil 0
+  constr 1 Cons 2
+functions 62
+  func 1 start 0 0
+  func 0 start 0 0
+  func 3 Add 2 100
+  func 2 Add 2 100
+  func 7 tonum 1 10
+  func 6 tonum 1 10
+  func 11 fromnum 1 10
+  func 10 fromnum 1 10
+  func 14 one 0 0
+  func 13 one 0 0
+  func 16 two 0 0
+  func 15 two 0 0
+  func 18 four 0 0
+  func 17 four 0 0
+  func 20 eight 0 0
+  func 19 eight 0 0
+  func 22 five 0 0
+  func 21 five 0 0
+  func 24 ten 0 0
+  func 23 ten 0 0
+  func 26 twenty 0 0
+  func 25 twenty 0 0
+  func 28 forty 0 0
+  func 27 forty 0 0
+  func 30 eighty 0 0
+  func 29 eighty 0 0
+  func 32 h60 0 0
+  func 31 h60 0 0
+  func 34 h20 0 0
+  func 33 h20 0 0
+  func 36 h200 0 0
+  func 35 h200 0 0
+  func 38 h280 0 0
+  func 37 h280 0 0
+  func 40 Pred 1 10
+  func 39 Pred 1 10
+  func 44 Sub 2 110
+  func 43 Sub 2 110
+  func 50 Gt 2 100
+  func 49 Gt 2 100
+  func 56 Neq 2 110
+  func 55 Neq 2 110
+  func 64 el 2 110
+  func 63 el 2 110
+  func 72 Mod 2 010
+  func 71 Mod 2 010
+  func 75 notmodzero 2 100
+  func 74 notmodzero 2 100
+  func 77 from 1 00
+  func 76 from 1 00
+  func 79 primes 0 0
+  func 78 primes 0 0
+  func 81 sieve 1 10
+  func 80 sieve 1 10
+  func 85 filter 2 010
+  func 84 filter 2 010
+  func 90 domain 1 10
+  func 89 domain 1 10
+  func 92 printlist 1 10
+  func 91 printlist 1 10
+  func 96 from_1 1 00
+  func 95 from_1 1 00
+.endmetadata

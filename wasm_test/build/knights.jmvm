@@ -1,0 +1,308 @@
+start_lazy start knights_lazy knights doknights_lazy doknights doknights_Nil doknights_Cons doknights_Cons_else dkaf_lazy dkaf moves_lazy moves moves_Tup legal_lazy legal legal_Tup legal_Tup_then_then_then_else legal_Tup_then_then_else legal_Tup_then_else legal_Tup_else neqtup_lazy neqtup neqtup_Tup neqtup_Tup_Tup neqtup_Tup_Tup_else neqtup_Tup_Tup_else_false notmemb_lazy notmemb notmemb_Nil notmemb_Cons notmemb_Cons_else filter_lazy filter filter_Nil filter_Cons filter_Cons_else map_lazy map map_Nil map_Cons concat_lazy concat concat_Nil concat_Cons concat_Cons_Nil concat_Cons_Cons length_lazy length length_Nil length_Cons printtup_lazy printtup printtup_Tup printlist_lazy printlist printlist_Nil printlist_Cons head_lazy head head_Nil head_Cons concat_1_lazy concat_1 #
+            call 1                                   || start
+            print 4
+            stop
+0           jmp 1                                    || start || start_lazy
+1           push 5                                   || start
+            call 3                                   || knights
+            call 59                                  || head
+            tailcall 0 55                            || printlist
+2           jmp 3                                    || knights || knights_lazy
+3           ccreatet 0 11 5 0                        || knights
+            push 1
+            push 1
+            ccreatet 2 11 6 0
+            ccreatet 2 11 5 1
+            load 0
+            tailcall 1 5                             || doknights
+4           load 1                                   || doknights_lazy
+            eval
+            store 1
+5           load 1                                   || doknights
+            jmpt 2 6 7                               || lbs
+6           return_const 2 111                       || doknights_Nil
+7           load 1                                   || doknights_Cons
+            eval
+            call 48                                  || length
+            inc
+            load 2
+            eval
+            load 2
+            eval
+            mult
+            sub
+            ifneq 8                                  || doknights_Cons_else
+            ccreatet 0 11 5 0
+            load 3
+            ccreatet 2 11 5 1
+            return 4
+8           load 0                                   || doknights_Cons_else
+            load 1
+            load 2
+            call 12                                  || moves
+            load 3
+            load 2
+            pushfunc 3 10                            || dkaf
+            create 3 7
+            call 38                                  || map
+            tailcall 4 42                            || concat
+9           jmp 10                                   || dkaf || dkaf_lazy
+10          load 1                                   || dkaf
+            load 2
+            eval
+            ccreatet 2 11 5 1
+            load 0
+            tailcall 3 5                             || doknights
+11          load 2                                   || moves_lazy
+            eval
+            store 2
+12          load 2                                   || moves
+            jmpt 1 13                                || lbs
+13          ccreatet 0 11 5 0                        || moves_Tup
+            loadadd 1 -1
+            loadadd 0 -2
+            ccreatet 2 11 6 0
+            ccreatet 2 11 5 1
+            loadadd 1 1
+            loadadd 0 -2
+            ccreatet 2 11 6 0
+            ccreatet 2 11 5 1
+            loadadd 1 -1
+            loadadd 0 2
+            ccreatet 2 11 6 0
+            ccreatet 2 11 5 1
+            loadadd 1 1
+            loadadd 0 2
+            ccreatet 2 11 6 0
+            ccreatet 2 11 5 1
+            loadadd 1 -2
+            loadadd 0 -1
+            ccreatet 2 11 6 0
+            ccreatet 2 11 5 1
+            loadadd 1 2
+            loadadd 0 -1
+            ccreatet 2 11 6 0
+            ccreatet 2 11 5 1
+            loadadd 1 -2
+            loadadd 0 1
+            ccreatet 2 11 6 0
+            ccreatet 2 11 5 1
+            loadadd 1 2
+            loadadd 0 1
+            ccreatet 2 11 6 0
+            ccreatet 2 11 5 1
+            load 3
+            load 2
+            pushfunc 3 14                            || legal_lazy
+            create 3 7
+            tailcall 5 33                            || filter
+14          load 2                                   || legal_lazy
+            eval
+            store 2
+15          load 2                                   || legal
+            jmpt 1 16                                || lbs
+16          loadadd 0 -1                             || legal_Tup
+            iflt 20                                  || legal_Tup_else
+            load 2
+            eval
+            load 0
+            sub
+            iflt 19                                  || legal_Tup_then_else
+            loadadd 1 -1
+            iflt 18                                  || legal_Tup_then_then_else
+            load 2
+            eval
+            load 1
+            sub
+            iflt 17                                  || legal_Tup_then_then_then_else
+            load 4
+            load 3
+            eval
+            tailcall 5 28                            || notmemb
+17          return_const 5 0                         || legal_Tup_then_then_then_else
+18          return_const 5 0                         || legal_Tup_then_then_else
+19          return_const 5 0                         || legal_Tup_then_else
+20          return_const 5 0                         || legal_Tup_else
+21          load 0                                   || neqtup_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+22          load 0                                   || neqtup
+            jmpt 1 23                                || lbs
+23          load 3                                   || neqtup_Tup
+            jmpt 1 24                                || lbs
+24          load 2                                   || neqtup_Tup_Tup
+            load 0
+            ifcmp 25                                 || neqtup_Tup_Tup_else
+            return_const 6 1
+25          load 3                                   || neqtup_Tup_Tup_else
+            load 1
+            ifcmp 26                                 || neqtup_Tup_Tup_else_false
+            return_const 6 1
+26          return_const 6 0                         || neqtup_Tup_Tup_else_false
+27          load 0                                   || notmemb_lazy
+            eval
+            store 0
+28          load 0                                   || notmemb
+            jmpt 2 29 30                             || lbs
+29          return_const 2 1                         || notmemb_Nil
+30          load 0                                   || notmemb_Cons
+            load 3
+            eval
+            call 22                                  || neqtup
+            ifeq 31                                  || notmemb_Cons_else
+            load 3
+            load 1
+            eval
+            tailcall 4 28                            || notmemb
+31          return_const 4 0                         || notmemb_Cons_else
+32          load 1                                   || filter_lazy
+            eval
+            store 1
+33          load 1                                   || filter
+            jmpt 2 34 35                             || lbs
+34          ccreatet 0 11 5 0                        || filter_Nil
+            return 2
+35          load 0                                   || filter_Cons
+            load 2
+            eval
+            ifeq 36                                  || filter_Cons_else
+            load 1
+            load 2
+            pushfunc 2 32                            || filter_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 4
+36          load 1                                   || filter_Cons_else
+            eval
+            load 2
+            tailcall 4 33                            || filter
+37          load 1                                   || map_lazy
+            eval
+            store 1
+38          load 1                                   || map
+            jmpt 2 39 40                             || lbs
+39          ccreatet 0 11 5 0                        || map_Nil
+            return 2
+40          load 1                                   || map_Cons
+            load 2
+            pushfunc 2 37                            || map_lazy
+            create 3 3
+            load 0
+            load 2
+            eval
+            ccreatet 2 11 5 1
+            return 4
+41          load 0                                   || concat_lazy
+            eval
+            store 0
+42          load 0                                   || concat
+            jmpt 2 43 44                             || lbs
+43          ccreatet 0 11 5 0                        || concat_Nil
+            return 1
+44          load 0                                   || concat_Cons
+            jmpt 2 45 46                             || lbs
+45          load 1                                   || concat_Cons_Nil
+            eval
+            tailcall 3 42                            || concat
+46          load 3                                   || concat_Cons_Cons
+            load 1
+            pushfunc 2 63                            || concat_1
+            create 3 3
+            pushfunc 1 41                            || concat_lazy
+            create 2 3
+            load 0
+            ccreatet 2 11 5 1
+            return 5
+47          load 0                                   || length_lazy
+            eval
+            store 0
+48          load 0                                   || length
+            jmpt 2 49 50                             || lbs
+49          return_const 1 0                         || length_Nil
+50          push 1                                   || length_Cons
+            load 1
+            eval
+            call 48                                  || length
+            add
+            return 3
+51          load 0                                   || printtup_lazy
+            eval
+            store 0
+52          load 0                                   || printtup
+            jmpt 1 53                                || lbs
+53          load 0                                   || printtup_Tup
+            print 0
+            load 1
+            print 0
+            return 3
+54          load 0                                   || printlist_lazy
+            eval
+            store 0
+55          load 0                                   || printlist
+            jmpt 2 56 57                             || lbs
+56          return_const 1 0                         || printlist_Nil
+57          load 0                                   || printlist_Cons
+            call 52                                  || printtup
+            load 1
+            eval
+            tailcall 3 55                            || printlist
+58          load 0                                   || head_lazy
+            eval
+            store 0
+59          load 0                                   || head
+            jmpt 2 60 61                             || lbs
+60          return_const 1 111                       || head_Nil
+61          load 0                                   || head_Cons
+            return 3
+62          jmp 63                                   || concat_1 || concat_1_lazy
+63          load 1                                   || concat_1
+            load 0
+            eval
+            ccreatet 2 11 5 1
+            return 2
+
+.metadata
+types 2
+type 5 list 2
+  constr 0 Nil 0
+  constr 1 Cons 2
+type 6 Tup 1
+  constr 0 Tup 2
+functions 32
+  func 1 start 0 0
+  func 0 start 0 0
+  func 3 knights 1 00
+  func 2 knights 1 00
+  func 5 doknights 2 010
+  func 4 doknights 2 010
+  func 10 dkaf 3 0000
+  func 9 dkaf 3 0000
+  func 12 moves 3 0010
+  func 11 moves 3 0010
+  func 15 legal 3 0010
+  func 14 legal 3 0010
+  func 22 neqtup 2 110
+  func 21 neqtup 2 110
+  func 28 notmemb 2 100
+  func 27 notmemb 2 100
+  func 33 filter 2 010
+  func 32 filter 2 010
+  func 38 map 2 010
+  func 37 map 2 010
+  func 42 concat 1 10
+  func 41 concat 1 10
+  func 48 length 1 10
+  func 47 length 1 10
+  func 52 printtup 1 10
+  func 51 printtup 1 10
+  func 55 printlist 1 10
+  func 54 printlist 1 10
+  func 59 head 1 10
+  func 58 head 1 10
+  func 63 concat_1 2 000
+  func 62 concat_1 2 000
+.endmetadata

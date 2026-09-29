@@ -1,0 +1,157 @@
+start_lazy start el_lazy el el_Nil el_Cons el_Cons_else take_lazy take take_else take_else_Nil take_else_Cons nmz_lazy nmz nmz_false filter_lazy filter filter_Nil filter_Cons filter_Cons_else from_lazy from sieve_lazy sieve sieve_Nil sieve_Cons primes_lazy primes printlist_lazy printlist printlist_Nil printlist_Cons from_1_lazy from_1 #
+            call 1                                   || start
+            print 4
+            stop
+0           jmp 1                                    || start || start_lazy
+1           call 27                                  || primes || start
+            push 5000
+            tailcall 0 3                             || el
+2           load 0                                   || el_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+3           load 1                                   || el
+            jmpt 2 4 5                               || lbs
+4           push "el_Nil"                            || el_Nil
+            debug 2
+            return 2
+5           load 2                                   || el_Cons
+            ifneq 6                                  || el_Cons_else
+            load 0
+            return 4
+6           load 1                                   || el_Cons_else
+            eval
+            loadadd 2 -1
+            tailcall 4 3                             || el
+7           load 0                                   || take_lazy
+            eval
+            store 0
+8           load 0                                   || take
+            ifneq 9                                  || take_else
+            ccreatet 0 11 5 0
+            return 2
+9           load 1                                   || take_else
+            eval
+            jmpt 2 10 11                             || lbs
+10          ccreatet 0 11 5 0                        || take_else_Nil
+            return 2
+11          load 1                                   || take_else_Cons
+            loadadd 2 -1
+            pushfunc 2 8                             || take
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 4
+12          load 0                                   || nmz_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+13          load 1                                   || nmz
+            load 0
+            mod
+            ifeq 14                                  || nmz_false
+            return_const 2 1
+14          return_const 2 0                         || nmz_false
+15          load 1                                   || filter_lazy
+            eval
+            store 1
+16          load 1                                   || filter
+            jmpt 2 17 18                             || lbs
+17          ccreatet 0 11 5 0                        || filter_Nil
+            return 2
+18          load 0                                   || filter_Cons
+            load 2
+            eval
+            ifeq 19                                  || filter_Cons_else
+            load 1
+            load 2
+            pushfunc 2 15                            || filter_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 4
+19          load 1                                   || filter_Cons_else
+            eval
+            load 2
+            tailcall 4 16                            || filter
+20          jmp 21                                   || from || from_lazy
+21          load 0                                   || from
+            pushfunc 1 33                            || from_1
+            create 2 3
+            pushfunc 1 21                            || from
+            create 2 3
+            load 0
+            eval
+            ccreatet 2 11 5 1
+            return 1
+22          load 0                                   || sieve_lazy
+            eval
+            store 0
+23          load 0                                   || sieve
+            jmpt 2 24 25                             || lbs
+24          push "sieve_Nil"                         || sieve_Nil
+            debug 2
+            return 1
+25          load 1                                   || sieve_Cons
+            load 0
+            pushfunc 2 12                            || nmz_lazy
+            create 2 7
+            pushfunc 2 15                            || filter_lazy
+            create 3 3
+            pushfunc 1 22                            || sieve_lazy
+            create 2 3
+            load 0
+            ccreatet 2 11 5 1
+            return 3
+26          jmp 27                                   || primes || primes_lazy
+27          push 2                                   || primes
+            call 21                                  || from
+            tailcall 0 23                            || sieve
+28          load 0                                   || printlist_lazy
+            eval
+            store 0
+29          load 0                                   || printlist
+            jmpt 2 30 31                             || lbs
+30          return_const 1 0                         || printlist_Nil
+31          load 0                                   || printlist_Cons
+            print 0
+            load 1
+            eval
+            tailcall 3 29                            || printlist
+32          jmp 33                                   || from_1 || from_1_lazy
+33          load 0                                   || from_1
+            eval
+            inc
+            return 1
+
+.metadata
+types 1
+type 5 list 2
+  constr 0 Nil 0
+  constr 1 Cons 2
+functions 20
+  func 1 start 0 0
+  func 0 start 0 0
+  func 3 el 2 110
+  func 2 el 2 110
+  func 8 take 2 100
+  func 7 take 2 100
+  func 13 nmz 2 110
+  func 12 nmz 2 110
+  func 16 filter 2 010
+  func 15 filter 2 010
+  func 21 from 1 00
+  func 20 from 1 00
+  func 23 sieve 1 10
+  func 22 sieve 1 10
+  func 27 primes 0 0
+  func 26 primes 0 0
+  func 29 printlist 1 10
+  func 28 printlist 1 10
+  func 33 from_1 1 00
+  func 32 from_1 1 00
+.endmetadata

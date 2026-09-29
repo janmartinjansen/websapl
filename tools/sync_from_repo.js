@@ -159,6 +159,9 @@ const ENTRIES = [
   { src: "typing/09_foutmeldingen.cfp", dst: "typing/09_foutmeldingen.cfp" },
   { src: "typing/10_beperkingen.cfp", dst: "typing/10_beperkingen.cfp" },
   { src: "typing/11_vm_primitieven.cfp", dst: "typing/11_vm_primitieven.cfp" },
+  // WASM-compiler testbank; wasm_test/build/ zelf is gegenereerd door
+  // wasm_compiler/build_websapl_test.sh en staat hier dus niet.
+  { src: "wasm_compiler/host.js", dst: "wasm_test/host.js" },
 ];
 
 function expected(entry) {

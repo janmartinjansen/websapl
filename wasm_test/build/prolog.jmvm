@@ -1,0 +1,2304 @@
+fst_lazy fst fst_Tup snd_lazy snd snd_Tup hd_lazy hd hd_Nil hd_Cons tl_lazy tl tl_Nil tl_Cons length_lazy length length_Nil length_Cons fromto_lazy fromto fromto_else from_lazy from el_lazy el el_Nil el_Cons el_Cons_else zip_lazy zip zip_Nil zip_Cons zip_Cons_Nil zip_Cons_Cons take_lazy take take_else take_else_Nil take_else_Cons drop_lazy drop drop_else drop_else_Nil drop_else_Cons filter_lazy filter filter_Nil filter_Cons filter_Cons_else map_lazy map map_Nil map_Cons append_lazy append append_Nil append_Cons concat_lazy concat concat_Nil concat_Cons concat_Cons_Nil concat_Cons_Cons merge_lazy merge merge_Nil merge_Cons merge_Cons_Nil merge_Cons_Cons merge_Cons_Cons_else merge_Cons_Cons_else_else foldl_lazy foldl foldl_Nil foldl_Cons foldr_lazy foldr foldr_Nil foldr_Cons sum_lazy sum sum_Nil sum_Cons eqlist_lazy eqlist eqlist_Nil eqlist_Nil_Nil eqlist_Nil_Cons eqlist_Cons eqlist_Cons_Nil eqlist_Cons_Cons eqlist_Cons_Cons_else gtlist_lazy gtlist gtlist_Nil gtlist_Cons gtlist_Cons_Nil gtlist_Cons_Cons gtlist_Cons_Cons_else pSymbol_lazy pSymbol pSymbol_Nil pSymbol_Cons pSymbol_Cons_else pSatisfy_lazy pSatisfy pSatisfy_Nil pSatisfy_Cons pSatisfy_Cons_else do1_lazy do1 do1_Tup do2_lazy do2 do2_Tup dt_lazy dt dt_Nil dt_Cons null_lazy null null_Nil null_Cons pSequence_lazy pSequence pSequence_Nil pSequence_Cons tag_lazy tag tag_Con tag_Var tag_Fun tagRule_lazy tagRule tagRule_Rule lookUp_lazy lookUp lookUp_Con lookUp_Var lookUp_Fun look_lazy look look_Nil look_Cons look_Cons_ProTup look_Cons_ProTup_else unify_lazy unify unify_Just unify_Just_ProTup unify_Nothing uni_lazy uni uni_Con uni_Con_Con uni_Con_Con_else uni_Con_Var uni_Con_Fun uni_Var uni_Fun uni_Fun_Con uni_Fun_Var uni_Fun_Fun uni_Fun_Fun_then_else uni_Fun_Fun_else solve_lazy solve solve_Nil solve_Cons ff_lazy ff ff_Rule fh_lazy fh fh_Just fh_Nothing isSingle_lazy isSingle isSingle_Rule isSingle_Rule_Con isSingle_Rule_Var isSingle_Rule_Fun isSingle_Rule_Fun_then_false isSingle_Rule_Fun_else list_lazy list nott_lazy nott nott_else repeat_lazy repeat repeat_else compose_lazy compose flip_lazy flip pToken_lazy pToken pToken_else pFailp_lazy pFailp pSucceed_lazy pSucceed choice_lazy choice seq_lazy seq seqapply_lazy seqapply option_lazy option konst_lazy konst seqleft_lazy seqleft seqright_lazy seqright seqapplyleft_lazy seqapplyleft pMany_lazy pMany pMany1_lazy pMany1 pPack_lazy pPack pListSep_lazy pListSep determ_lazy determ greedy_lazy greedy greedy1_lazy greedy1 pDigit_lazy pDigit isDigit_lazy isDigit isDigit_then_false isDigit_else isAlpha_lazy isAlpha isAlpha_then_else isAlpha_else isAlphaNum_lazy isAlphaNum isAlphaNum_else pDigAsInt_lazy pDigAsInt dig2num_lazy dig2num pNatural_lazy pNatural makeNum_lazy makeNum pInteger_lazy pInteger pNeg_lazy pNeg pNeg2_lazy pNeg2 negate_lazy negate id_lazy id pIdentifier_lazy pIdentifier pParens_lazy pParens pCommaList_lazy pCommaList lchoice_lazy lchoice numlist_lazy numlist numidlist_lazy numidlist getres_lazy getres con_lazy con var_lazy var fun_lazy fun rule_lazy rule pCon_lazy pCon pVar_lazy pVar pFun_lazy pFun pTerm_lazy pTerm pRule_lazy pRule pRightHandSide_lazy pRightHandSide pComma_lazy pComma isSpace_lazy isSpace isSpace_else isSpace_else_false pStart_lazy pStart parseTerm_lazy parseTerm parseRules_lazy parseRules parseRule_lazy parseRule emptyEnv_lazy emptyEnv bind_lazy bind str2list_lazy str2list strls_lazy strls strls_else printstrlist_lazy printstrlist printstrlist_Nil printstrlist_Cons prog_lazy prog prog2_lazy prog2 prog3_lazy prog3 prog10_lazy prog10 prog20_lazy prog20 prog30_lazy prog30 prog40_lazy prog40 prog50_lazy prog50 prog100_lazy prog100 line1_lazy line1 line2_lazy line2 line3_lazy line3 line4_lazy line4 line5_lazy line5 line6_lazy line6 line7_lazy line7 line8_lazy line8 line9_lazy line9 line10_lazy line10 line11_lazy line11 line12_lazy line12 line13_lazy line13 line14_lazy line14 line15_lazy line15 line16_lazy line16 line17_lazy line17 sol_lazy sol msol_lazy msol dosol_lazy dosol unitest_lazy unitest parsetest_lazy parsetest parsetest_else prologtest_lazy prologtest start0_lazy start0 start1_lazy start1 start2_lazy start2 start3_lazy start3 start4_lazy start4 start5_lazy start5 start_lazy start printlist_lazy printlist printlist_Nil printlist_Cons from_1_lazy from_1 el_1_lazy el_1 concat_1_lazy concat_1 uni_1_lazy uni_1 uni_j1_lazy uni_j1 ff_1_lazy ff_1 fh_1_lazy fh_1 isAlpha_j1_lazy isAlpha_j1 isAlpha_j1_then_false isAlpha_j1_else prog_1_lazy prog_1 prog_2_lazy prog_2 prog_3_lazy prog_3 prog_4_lazy prog_4 prog_5_lazy prog_5 prog_6_lazy prog_6 prog_7_lazy prog_7 prog_8_lazy prog_8 prog_9_lazy prog_9 prog_10_lazy prog_10 prog_11_lazy prog_11 prog_12_lazy prog_12 prog_13_lazy prog_13 prog_14_lazy prog_14 prog_15_lazy prog_15 prog_16_lazy prog_16 prog2_1_lazy prog2_1 prog3_1_lazy prog3_1 prog3_2_lazy prog3_2 prog10_1_lazy prog10_1 prog10_2_lazy prog10_2 prog10_3_lazy prog10_3 prog10_4_lazy prog10_4 prog10_5_lazy prog10_5 prog10_6_lazy prog10_6 prog10_7_lazy prog10_7 prog10_8_lazy prog10_8 prog10_9_lazy prog10_9 prog20_1_lazy prog20_1 prog30_1_lazy prog30_1 prog30_2_lazy prog30_2 prog40_1_lazy prog40_1 prog40_2_lazy prog40_2 prog40_3_lazy prog40_3 prog50_1_lazy prog50_1 prog50_2_lazy prog50_2 prog50_3_lazy prog50_3 prog50_4_lazy prog50_4 prog100_1_lazy prog100_1 prog100_2_lazy prog100_2 prog100_3_lazy prog100_3 prog100_4_lazy prog100_4 prog100_5_lazy prog100_5 prog100_6_lazy prog100_6 prog100_7_lazy prog100_7 prog100_8_lazy prog100_8 prog100_9_lazy prog100_9 unitest_1_lazy unitest_1 #
+            call 403                                 || start
+            print 4
+            stop
+0           load 0                                   || fst_lazy
+            eval
+            store 0
+1           load 0                                   || fst
+            jmpt 1 2                                 || lbs
+2           load 0                                   || fst_Tup
+            eval
+            return 3
+3           load 0                                   || snd_lazy
+            eval
+            store 0
+4           load 0                                   || snd
+            jmpt 1 5                                 || lbs
+5           load 1                                   || snd_Tup
+            eval
+            return 3
+6           load 0                                   || hd_lazy
+            eval
+            store 0
+7           load 0                                   || hd
+            jmpt 2 8 9                               || lbs
+8           push "hd_Nil"                            || hd_Nil
+            debug 2
+            return 1
+9           load 0                                   || hd_Cons
+            return 3
+10          load 0                                   || tl_lazy
+            eval
+            store 0
+11          load 0                                   || tl
+            jmpt 2 12 13                             || lbs
+12          push "tl_Nil"                            || tl_Nil
+            debug 2
+            return 1
+13          load 1                                   || tl_Cons
+            eval
+            return 3
+14          load 0                                   || length_lazy
+            eval
+            store 0
+15          load 0                                   || length
+            jmpt 2 16 17                             || lbs
+16          return_const 1 0                         || length_Nil
+17          push 1                                   || length_Cons
+            load 1
+            eval
+            call 15                                  || length
+            add
+            return 3
+18          load 0                                   || fromto_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+19          load 0                                   || fromto
+            load 1
+            sub
+            ifle 20                                  || fromto_else
+            ccreatet 0 11 5 0
+            return 2
+20          load 1                                   || fromto_else
+            loadadd 0 1
+            pushfunc 2 19                            || fromto
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 2
+21          jmp 22                                   || from || from_lazy
+22          load 0                                   || from
+            pushfunc 1 409                           || from_1
+            create 2 3
+            pushfunc 1 22                            || from
+            create 2 3
+            load 0
+            eval
+            ccreatet 2 11 5 1
+            return 1
+23          load 1                                   || el_lazy
+            eval
+            store 1
+24          load 1                                   || el
+            jmpt 2 25 26                             || lbs
+25          return_const 2 111                       || el_Nil
+26          load 2                                   || el_Cons
+            eval
+            ifneq 27                                 || el_Cons_else
+            load 0
+            return 4
+27          load 1                                   || el_Cons_else
+            eval
+            load 2
+            pushfunc 1 411                           || el_1
+            create 2 3
+            tailcall 4 24                            || el
+28          load 0                                   || zip_lazy
+            eval
+            store 0
+29          load 0                                   || zip
+            jmpt 2 30 31                             || lbs
+30          ccreatet 0 11 5 0                        || zip_Nil
+            return 2
+31          load 3                                   || zip_Cons
+            eval
+            jmpt 2 32 33                             || lbs
+32          ccreatet 0 11 5 0                        || zip_Cons_Nil
+            return 4
+33          load 1                                   || zip_Cons_Cons
+            load 3
+            pushfunc 2 28                            || zip_lazy
+            create 3 3
+            load 0
+            load 2
+            ccreatet 2 11 6 0
+            ccreatet 2 11 5 1
+            return 6
+34          load 0                                   || take_lazy
+            eval
+            store 0
+35          load 0                                   || take
+            ifneq 36                                 || take_else
+            ccreatet 0 11 5 0
+            return 2
+36          load 1                                   || take_else
+            eval
+            jmpt 2 37 38                             || lbs
+37          ccreatet 0 11 5 0                        || take_else_Nil
+            return 2
+38          load 1                                   || take_else_Cons
+            loadadd 2 -1
+            pushfunc 2 35                            || take
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 4
+39          load 0                                   || drop_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+40          load 0                                   || drop
+            ifneq 41                                 || drop_else
+            load 1
+            return 2
+41          load 1                                   || drop_else
+            jmpt 2 42 43                             || lbs
+42          ccreatet 0 11 5 0                        || drop_else_Nil
+            return 2
+43          load 1                                   || drop_else_Cons
+            eval
+            loadadd 2 -1
+            tailcall 4 40                            || drop
+44          load 1                                   || filter_lazy
+            eval
+            store 1
+45          load 1                                   || filter
+            jmpt 2 46 47                             || lbs
+46          ccreatet 0 11 5 0                        || filter_Nil
+            return 2
+47          load 0                                   || filter_Cons
+            load 2
+            eval
+            ifeq 48                                  || filter_Cons_else
+            load 1
+            load 2
+            pushfunc 2 44                            || filter_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 4
+48          load 1                                   || filter_Cons_else
+            eval
+            load 2
+            tailcall 4 45                            || filter
+49          load 1                                   || map_lazy
+            eval
+            store 1
+50          load 1                                   || map
+            jmpt 2 51 52                             || lbs
+51          ccreatet 0 11 5 0                        || map_Nil
+            return 2
+52          load 1                                   || map_Cons
+            load 2
+            pushfunc 2 49                            || map_lazy
+            create 3 3
+            load 0
+            load 2
+            eval
+            ccreatet 2 11 5 1
+            return 4
+53          load 0                                   || append_lazy
+            eval
+            store 0
+54          load 0                                   || append
+            jmpt 2 55 56                             || lbs
+55          load 1                                   || append_Nil
+            eval
+            return 2
+56          load 3                                   || append_Cons
+            load 1
+            pushfunc 2 53                            || append_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 4
+57          load 0                                   || concat_lazy
+            eval
+            store 0
+58          load 0                                   || concat
+            jmpt 2 59 60                             || lbs
+59          ccreatet 0 11 5 0                        || concat_Nil
+            return 1
+60          load 0                                   || concat_Cons
+            jmpt 2 61 62                             || lbs
+61          load 1                                   || concat_Cons_Nil
+            eval
+            tailcall 3 58                            || concat
+62          load 3                                   || concat_Cons_Cons
+            load 1
+            pushfunc 2 413                           || concat_1
+            create 3 3
+            pushfunc 1 57                            || concat_lazy
+            create 2 3
+            load 0
+            ccreatet 2 11 5 1
+            return 5
+63          load 0                                   || merge_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+64          load 0                                   || merge
+            jmpt 2 65 66                             || lbs
+65          load 1                                   || merge_Nil
+            return 2
+66          load 3                                   || merge_Cons
+            jmpt 2 67 68                             || lbs
+67          load 2                                   || merge_Cons_Nil
+            return 4
+68          load 2                                   || merge_Cons_Cons
+            load 0
+            sub
+            ifneq 69                                 || merge_Cons_Cons_else
+            load 1
+            load 3
+            pushfunc 2 63                            || merge_lazy
+            create 3 3
+            load 2
+            ccreatet 2 11 5 1
+            return 6
+69          load 0                                   || merge_Cons_Cons_else
+            load 2
+            sub
+            ifle 70                                  || merge_Cons_Cons_else_else
+            load 5
+            load 3
+            pushfunc 2 63                            || merge_lazy
+            create 3 3
+            load 2
+            ccreatet 2 11 5 1
+            return 6
+70          load 1                                   || merge_Cons_Cons_else_else
+            load 4
+            pushfunc 2 63                            || merge_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 6
+71          load 2                                   || foldl_lazy
+            eval
+            store 2
+72          load 2                                   || foldl
+            jmpt 2 73 74                             || lbs
+73          load 1                                   || foldl_Nil
+            eval
+            return 3
+74          load 1                                   || foldl_Cons
+            eval
+            load 0
+            load 3
+            load 2
+            create 3 7
+            load 2
+            tailcall 5 72                            || foldl
+75          load 2                                   || foldr_lazy
+            eval
+            store 2
+76          load 2                                   || foldr
+            jmpt 2 77 78                             || lbs
+77          load 1                                   || foldr_Nil
+            eval
+            return 3
+78          load 1                                   || foldr_Cons
+            load 3
+            load 2
+            pushfunc 3 75                            || foldr_lazy
+            create 4 3
+            load 0
+            load 2
+            eval
+            return 5
+79          load 0                                   || sum_lazy
+            eval
+            store 0
+80          load 0                                   || sum
+            jmpt 2 81 82                             || lbs
+81          return_const 1 0                         || sum_Nil
+82          load 0                                   || sum_Cons
+            load 1
+            eval
+            call 80                                  || sum
+            add
+            return 3
+83          load 0                                   || eqlist_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+84          load 0                                   || eqlist
+            jmpt 2 85 88                             || lbs
+85          load 1                                   || eqlist_Nil
+            jmpt 2 86 87                             || lbs
+86          return_const 2 1                         || eqlist_Nil_Nil
+87          return_const 4 0                         || eqlist_Nil_Cons
+88          load 3                                   || eqlist_Cons
+            jmpt 2 89 90                             || lbs
+89          return_const 4 0                         || eqlist_Cons_Nil
+90          load 2                                   || eqlist_Cons_Cons
+            load 0
+            sub
+            ifneq 91                                 || eqlist_Cons_Cons_else
+            load 1
+            eval
+            load 3
+            eval
+            tailcall 6 84                            || eqlist
+91          return_const 6 0                         || eqlist_Cons_Cons_else
+92          load 0                                   || gtlist_lazy
+            eval
+            store 0
+93          load 0                                   || gtlist
+            jmpt 2 94 95                             || lbs
+94          return_const 2 0                         || gtlist_Nil
+95          load 3                                   || gtlist_Cons
+            eval
+            jmpt 2 96 97                             || lbs
+96          return_const 4 1                         || gtlist_Cons_Nil
+97          load 2                                   || gtlist_Cons_Cons
+            load 0
+            sub
+            ifle 98                                  || gtlist_Cons_Cons_else
+            return_const 6 1
+98          load 1                                   || gtlist_Cons_Cons_else
+            load 3
+            eval
+            tailcall 6 93                            || gtlist
+99          load 1                                   || pSymbol_lazy
+            eval
+            store 1
+100         load 1                                   || pSymbol
+            jmpt 2 101 102                           || lbs
+101         ccreatet 0 11 5 0                        || pSymbol_Nil
+            return 2
+102         load 0                                   || pSymbol_Cons
+            load 2
+            eval
+            sub
+            ifneq 103                                || pSymbol_Cons_else
+            ccreatet 0 11 5 0
+            load 1
+            load 0
+            ccreatet 2 11 6 0
+            ccreatet 2 11 5 1
+            return 4
+103         ccreatet 0 11 5 0                        || pSymbol_Cons_else
+            return 4
+104         load 1                                   || pSatisfy_lazy
+            eval
+            store 1
+105         load 1                                   || pSatisfy
+            jmpt 2 106 107                           || lbs
+106         ccreatet 0 11 5 0                        || pSatisfy_Nil
+            return 2
+107         load 0                                   || pSatisfy_Cons
+            load 2
+            eval
+            ifeq 108                                 || pSatisfy_Cons_else
+            ccreatet 0 11 5 0
+            load 1
+            load 0
+            ccreatet 2 11 6 0
+            ccreatet 2 11 5 1
+            return 4
+108         ccreatet 0 11 5 0                        || pSatisfy_Cons_else
+            return 4
+109         load 1                                   || do1_lazy
+            eval
+            store 1
+110         load 1                                   || do1
+            jmpt 1 111                               || lbs
+111         load 1                                   || do1_Tup
+            load 0
+            load 2
+            create 2 7
+            ccreatet 2 11 6 0
+            return 4
+112         load 1                                   || do2_lazy
+            eval
+            store 1
+113         load 1                                   || do2
+            jmpt 1 114                               || lbs
+114         load 1                                   || do2_Tup
+            load 2
+            eval
+            load 0
+            pushfunc 2 109                           || do1_lazy
+            create 2 7
+            tailcall 4 50                            || map
+115         load 0                                   || dt_lazy
+            eval
+            store 0
+116         load 0                                   || dt
+            jmpt 2 117 118                           || lbs
+117         ccreatet 0 11 5 0                        || dt_Nil
+            return 1
+118         ccreatet 0 11 5 0                        || dt_Cons
+            load 0
+            ccreatet 2 11 5 1
+            return 3
+119         load 0                                   || null_lazy
+            eval
+            store 0
+120         load 0                                   || null
+            jmpt 2 121 122                           || lbs
+121         return_const 1 1                         || null_Nil
+122         return_const 3 0                         || null_Cons
+123         load 0                                   || pSequence_lazy
+            eval
+            store 0
+124         load 0                                   || pSequence
+            jmpt 2 125 126                           || lbs
+125         ccreatet 0 11 5 0                        || pSequence_Nil
+            pushfunc 2 202                           || pSucceed
+            create 2 7
+            return 1
+126         load 1                                   || pSequence_Cons
+            pushfunc 1 123                           || pSequence_lazy
+            create 2 3
+            load 0
+            pushfunc 2 185                           || list
+            create 1 7
+            pushfunc 2 208                           || seqapply
+            create 3 3
+            pushfunc 3 206                           || seq
+            create 3 7
+            return 3
+127         load 1                                   || tag_lazy
+            eval
+            store 1
+128         load 1                                   || tag
+            jmpt 3 129 130 131                       || lbs
+129         load 0                                   || tag_Con
+            ccreatet 1 11 9 0
+            return 3
+130         load 1                                   || tag_Var
+            eval
+            push 10
+            load 0
+            mult
+            add
+            ccreatet 1 11 9 1
+            return 3
+131         load 1                                   || tag_Fun
+            load 2
+            pushfunc 2 127                           || tag_lazy
+            create 2 7
+            call 50                                  || map
+            load 0
+            ccreatet 2 11 9 2
+            return 4
+132         load 1                                   || tagRule_lazy
+            eval
+            store 1
+133         load 1                                   || tagRule
+            jmpt 1 134                               || lbs
+134         load 1                                   || tagRule_Rule
+            load 2
+            pushfunc 2 127                           || tag_lazy
+            create 2 7
+            call 50                                  || map
+            load 0
+            load 2
+            call 128                                 || tag
+            ccreatet 2 11 10 0
+            return 4
+135         load 1                                   || lookUp_lazy
+            eval
+            store 1
+136         load 1                                   || lookUp
+            jmpt 3 137 138 139                       || lbs
+137         load 2                                   || lookUp_Con
+            return 3
+138         load 0                                   || lookUp_Var
+            load 1
+            eval
+            tailcall 3 141                           || look
+139         load 3                                   || lookUp_Fun
+            return 4
+140         load 0                                   || look_lazy
+            eval
+            store 0
+141         load 0                                   || look
+            jmpt 2 142 143                           || lbs
+142         load 1                                   || look_Nil
+            eval
+            ccreatet 1 11 9 1
+            return 2
+143         load 0                                   || look_Cons
+            jmpt 1 144                               || lbs
+144         load 5                                   || look_Cons_ProTup
+            eval
+            load 0
+            sub
+            ifneq 145                                || look_Cons_ProTup_else
+            load 1
+            load 3
+            tailcall 6 136                           || lookUp
+145         load 5                                   || look_Cons_ProTup_else
+            load 3
+            eval
+            tailcall 6 141                           || look
+146         load 1                                   || unify_lazy
+            eval
+            store 1
+147         load 1                                   || unify
+            jmpt 2 148 150                           || lbs
+148         load 1                                   || unify_Just
+            eval
+            jmpt 1 149                               || lbs
+149         load 2                                   || unify_Just_ProTup
+            load 1
+            load 2
+            pushfunc 2 136                           || lookUp
+            create 3 3
+            load 0
+            load 2
+            call 136                                 || lookUp
+            tailcall 5 152                           || uni
+150         ccreatet 0 11 8 1                        || unify_Nothing
+            return 2
+151         load 0                                   || uni_lazy
+            eval
+            store 0
+152         load 0                                   || uni
+            jmpt 3 153 158 159                       || lbs
+153         load 2                                   || uni_Con
+            eval
+            jmpt 3 154 156 157                       || lbs
+154         load 1                                   || uni_Con_Con
+            load 0
+            ifcmp 155                                || uni_Con_Con_else
+            ccreatet 0 11 8 1
+            return 5
+155         load 4                                   || uni_Con_Con_else
+            eval
+            ccreatet 1 11 8 0
+            return 5
+156         load 4                                   || uni_Con_Var
+            load 2
+            load 0
+            call 315                                 || bind
+            ccreatet 1 11 8 0
+            return 5
+157         ccreatet 0 11 8 1                        || uni_Con_Fun
+            return 6
+158         load 3                                   || uni_Var
+            load 2
+            load 0
+            call 315                                 || bind
+            ccreatet 1 11 8 0
+            return 4
+159         load 3                                   || uni_Fun
+            eval
+            jmpt 3 160 161 162                       || lbs
+160         ccreatet 0 11 8 1                        || uni_Fun_Con
+            return 6
+161         load 5                                   || uni_Fun_Var
+            load 3
+            load 0
+            call 315                                 || bind
+            ccreatet 1 11 8 0
+            return 6
+162         load 0                                   || uni_Fun_Fun
+            load 2
+            call 84                                  || eqlist
+            ifeq 164                                 || uni_Fun_Fun_else
+            load 3
+            call 15                                  || length
+            load 1
+            call 15                                  || length
+            sub
+            ifneq 163                                || uni_Fun_Fun_then_else
+            load 1
+            load 3
+            call 29                                  || zip
+            load 6
+            pushfunc 1 415                           || uni_1
+            create 2 3
+            pushfunc 2 146                           || unify_lazy
+            create 1 7
+            tailcall 7 76                            || foldr
+163         push 0                                   || uni_Fun_Fun_then_else
+            tailcall 7 417                           || uni_j1
+164         push 0                                   || uni_Fun_Fun_else
+            tailcall 7 417                           || uni_j1
+165         load 1                                   || solve_lazy
+            eval
+            store 1
+166         load 1                                   || solve
+            jmpt 2 167 168                           || lbs
+167         ccreatet 0 11 5 0                        || solve_Nil
+            load 2
+            eval
+            ccreatet 2 11 5 1
+            return 4
+168         load 2                                   || solve_Cons
+            eval
+            load 5
+            pushfunc 2 132                           || tagRule_lazy
+            create 2 7
+            load 5
+            load 1
+            load 2
+            load 0
+            load 4
+            pushfunc 6 169                           || ff_lazy
+            create 6 7
+            pushfunc 3 193                           || compose
+            create 3 7
+            call 50                                  || map
+            tailcall 6 58                            || concat
+169         load 0                                   || ff_lazy
+            eval
+            store 0
+            load 5
+            eval
+            store 5
+170         load 5                                   || ff
+            jmpt 1 171                               || lbs
+171         load 2                                   || ff_Rule
+            load 0
+            load 3
+            pushfunc 2 419                           || ff_1
+            create 3 3
+            call 147                                 || unify
+            load 1
+            load 6
+            load 5
+            load 4
+            tailcall 8 173                           || fh
+172         load 4                                   || fh_lazy
+            eval
+            store 4
+173         load 4                                   || fh
+            jmpt 2 174 175                           || lbs
+174         load 3                                   || fh_Just
+            pushfunc 1 421                           || fh_1
+            create 2 3
+            load 5
+            load 2
+            load 4
+            eval
+            call 54                                  || append
+            load 1
+            tailcall 6 166                           || solve
+175         ccreatet 0 11 5 0                        || fh_Nothing
+            return 5
+176         load 0                                   || isSingle_lazy
+            eval
+            store 0
+177         load 0                                   || isSingle
+            jmpt 1 178                               || lbs
+178         load 0                                   || isSingle_Rule
+            jmpt 3 179 180 181                       || lbs
+179         push "isSingle_Rule_Con"                 || isSingle_Rule_Con
+            debug 2
+            return 4
+180         push "isSingle_Rule_Var"                 || isSingle_Rule_Var
+            debug 2
+            return 4
+181         load 1                                   || isSingle_Rule_Fun
+            call 15                                  || length
+            dec
+            ifneq 183                                || isSingle_Rule_Fun_else
+            load 3
+            call 15                                  || length
+            ifneq 182                                || isSingle_Rule_Fun_then_false
+            return_const 5 1
+182         return_const 5 0                         || isSingle_Rule_Fun_then_false
+183         return_const 5 0                         || isSingle_Rule_Fun_else
+184         jmp 185                                  || list || list_lazy
+185         load 1                                   || list
+            load 0
+            eval
+            ccreatet 2 11 5 1
+            return 2
+186         load 0                                   || nott_lazy
+            eval
+            store 0
+187         load 0                                   || nott
+            ifeq 188                                 || nott_else
+            return_const 1 0
+188         return_const 1 1                         || nott_else
+189         load 0                                   || repeat_lazy
+            eval
+            store 0
+190         load 0                                   || repeat
+            ifneq 191                                || repeat_else
+            ccreatet 0 11 5 0
+            return 2
+191         load 1                                   || repeat_else
+            loadadd 0 -1
+            pushfunc 2 190                           || repeat
+            create 3 3
+            load 1
+            eval
+            ccreatet 2 11 5 1
+            return 2
+192         jmp 193                                  || compose || compose_lazy
+193         load 2                                   || compose
+            load 1
+            create 2 7
+            load 0
+            eval
+            return 3
+194         jmp 195                                  || flip || flip_lazy
+195         load 1                                   || flip
+            load 2
+            load 0
+            eval
+            return 3
+196         load 0                                   || pToken_lazy
+            eval
+            store 0
+197         load 1                                   || pToken
+            load 0
+            call 15                                  || length
+            call 35                                  || take
+            load 0
+            call 84                                  || eqlist
+            ifeq 198                                 || pToken_else
+            ccreatet 0 11 5 0
+            load 1
+            load 0
+            pushfunc 1 15                            || length
+            create 2 3
+            pushfunc 2 39                            || drop_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 6 0
+            ccreatet 2 11 5 1
+            return 2
+198         ccreatet 0 11 5 0                        || pToken_else
+            return 2
+199         jmp 200                                  || pFailp || pFailp_lazy
+200         ccreatet 0 11 5 0                        || pFailp
+            return 1
+201         jmp 202                                  || pSucceed || pSucceed_lazy
+202         ccreatet 0 11 5 0                        || pSucceed
+            load 1
+            load 0
+            ccreatet 2 11 6 0
+            ccreatet 2 11 5 1
+            return 2
+203         jmp 204                                  || choice || choice_lazy
+204         load 2                                   || choice
+            load 1
+            create 2 7
+            load 2
+            load 0
+            eval
+            tailcall 3 54                            || append
+205         jmp 206                                  || seq || seq_lazy
+206         load 2                                   || seq
+            load 0
+            eval
+            load 1
+            pushfunc 2 112                           || do2_lazy
+            create 2 7
+            call 50                                  || map
+            tailcall 3 58                            || concat
+207         jmp 208                                  || seqapply || seqapply_lazy
+208         load 1                                   || seqapply
+            load 0
+            pushfunc 2 202                           || pSucceed
+            create 2 7
+            pushfunc 3 206                           || seq
+            create 3 7
+            return 2
+209         jmp 210                                  || option || option_lazy
+210         load 1                                   || option
+            pushfunc 2 202                           || pSucceed
+            create 2 7
+            load 0
+            pushfunc 3 204                           || choice
+            create 3 7
+            return 2
+211         load 0                                   || konst_lazy
+            eval
+            store 0
+212         load 0                                   || konst
+            return 2
+213         jmp 214                                  || seqleft || seqleft_lazy
+214         load 1                                   || seqleft
+            load 0
+            pushfunc 2 211                           || konst_lazy
+            create 1 7
+            pushfunc 2 208                           || seqapply
+            create 3 3
+            pushfunc 3 206                           || seq
+            create 3 7
+            return 2
+215         jmp 216                                  || seqright || seqright_lazy
+216         load 1                                   || seqright
+            load 0
+            pushfunc 2 211                           || konst_lazy
+            create 1 7
+            pushfunc 3 195                           || flip
+            create 2 7
+            pushfunc 2 208                           || seqapply
+            create 3 3
+            pushfunc 3 206                           || seq
+            create 3 7
+            return 2
+217         jmp 218                                  || seqapplyleft || seqapplyleft_lazy
+218         load 1                                   || seqapplyleft
+            load 0
+            pushfunc 2 211                           || konst_lazy
+            create 2 7
+            tailcall 2 208                           || seqapply
+219         jmp 220                                  || pMany || pMany_lazy
+220         ccreatet 0 11 5 0                        || pMany
+            load 0
+            pushfunc 1 220                           || pMany
+            create 2 3
+            load 0
+            pushfunc 2 185                           || list
+            create 1 7
+            pushfunc 2 208                           || seqapply
+            create 3 3
+            pushfunc 3 206                           || seq
+            create 3 7
+            tailcall 1 210                           || option
+221         jmp 222                                  || pMany1 || pMany1_lazy
+222         load 0                                   || pMany1
+            pushfunc 1 220                           || pMany
+            create 2 3
+            load 0
+            pushfunc 2 185                           || list
+            create 1 7
+            pushfunc 2 208                           || seqapply
+            create 3 3
+            pushfunc 3 206                           || seq
+            create 3 7
+            return 1
+223         jmp 224                                  || pPack || pPack_lazy
+224         load 2                                   || pPack
+            load 1
+            load 0
+            pushfunc 2 216                           || seqright
+            create 3 3
+            tailcall 3 214                           || seqleft
+225         jmp 226                                  || pListSep || pListSep_lazy
+226         load 0                                   || pListSep
+            load 1
+            pushfunc 2 216                           || seqright
+            create 3 3
+            pushfunc 1 220                           || pMany
+            create 2 3
+            load 0
+            pushfunc 2 185                           || list
+            create 1 7
+            pushfunc 2 208                           || seqapply
+            create 3 3
+            pushfunc 3 206                           || seq
+            create 3 7
+            return 2
+227         jmp 228                                  || determ || determ_lazy
+228         load 1                                   || determ
+            load 0
+            eval
+            tailcall 2 116                           || dt
+229         jmp 230                                  || greedy || greedy_lazy
+230         load 0                                   || greedy
+            pushfunc 1 220                           || pMany
+            create 2 3
+            pushfunc 2 228                           || determ
+            create 2 7
+            return 1
+231         jmp 232                                  || greedy1 || greedy1_lazy
+232         load 0                                   || greedy1
+            pushfunc 1 222                           || pMany1
+            create 2 3
+            pushfunc 2 228                           || determ
+            create 2 7
+            return 1
+233         jmp 234                                  || pDigit || pDigit_lazy
+234         pushfunc 1 235                           || isDigit_lazy || pDigit
+            create 1 7
+            pushfunc 2 104                           || pSatisfy_lazy
+            create 2 7
+            return 0
+235         load 0                                   || isDigit_lazy
+            eval
+            store 0
+236         loadadd 0 -48                            || isDigit
+            iflt 238                                 || isDigit_else
+            push 57
+            load 0
+            sub
+            iflt 237                                 || isDigit_then_false
+            return_const 1 1
+237         return_const 1 0                         || isDigit_then_false
+238         return_const 1 0                         || isDigit_else
+239         load 0                                   || isAlpha_lazy
+            eval
+            store 0
+240         loadadd 0 -97                            || isAlpha
+            iflt 242                                 || isAlpha_else
+            push 122
+            load 0
+            sub
+            iflt 241                                 || isAlpha_then_else
+            return_const 1 1
+241         load 0                                   || isAlpha_then_else
+            tailcall 1 423                           || isAlpha_j1
+242         load 0                                   || isAlpha_else
+            tailcall 1 423                           || isAlpha_j1
+243         load 0                                   || isAlphaNum_lazy
+            eval
+            store 0
+244         load 0                                   || isAlphaNum
+            call 240                                 || isAlpha
+            ifeq 245                                 || isAlphaNum_else
+            return_const 1 1
+245         load 0                                   || isAlphaNum_else
+            tailcall 1 236                           || isDigit
+246         jmp 247                                  || pDigAsInt || pDigAsInt_lazy
+247         pushfunc 0 234                           || pDigit || pDigAsInt
+            create 1 3
+            pushfunc 1 248                           || dig2num_lazy
+            create 1 7
+            tailcall 0 208                           || seqapply
+248         load 0                                   || dig2num_lazy
+            eval
+            store 0
+249         loadadd 0 -48                            || dig2num
+            return 1
+250         jmp 251                                  || pNatural || pNatural_lazy
+251         pushfunc 0 247                           || pDigAsInt || pNatural
+            create 1 3
+            pushfunc 1 222                           || pMany1
+            create 2 3
+            push 0
+            pushfunc 2 252                           || makeNum_lazy
+            create 1 7
+            pushfunc 3 71                            || foldl_lazy
+            create 3 7
+            tailcall 0 208                           || seqapply
+252         load 0                                   || makeNum_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+253         load 0                                   || makeNum
+            push 10
+            mult
+            load 1
+            add
+            return 2
+254         jmp 255                                  || pInteger || pInteger_lazy
+255         pushfunc 0 251                           || pNatural || pInteger
+            create 1 3
+            pushfunc 1 262                           || id_lazy
+            create 1 7
+            push 45
+            pushfunc 2 99                            || pSymbol_lazy
+            create 2 7
+            pushfunc 1 260                           || negate_lazy
+            create 1 7
+            pushfunc 2 218                           || seqapplyleft
+            create 3 3
+            pushfunc 2 210                           || option
+            create 3 3
+            pushfunc 3 206                           || seq
+            create 3 7
+            return 0
+256         jmp 257                                  || pNeg || pNeg_lazy
+257         pushfunc 0 251                           || pNatural || pNeg
+            create 1 3
+            push 45
+            pushfunc 2 99                            || pSymbol_lazy
+            create 2 7
+            pushfunc 1 260                           || negate_lazy
+            create 1 7
+            pushfunc 2 218                           || seqapplyleft
+            create 3 3
+            pushfunc 3 206                           || seq
+            create 3 7
+            return 0
+258         jmp 259                                  || pNeg2 || pNeg2_lazy
+259         pushfunc 0 251                           || pNatural || pNeg2
+            create 1 3
+            push 45
+            pushfunc 2 99                            || pSymbol_lazy
+            create 2 7
+            pushfunc 2 216                           || seqright
+            create 3 3
+            pushfunc 1 260                           || negate_lazy
+            create 1 7
+            tailcall 0 208                           || seqapply
+260         load 0                                   || negate_lazy
+            eval
+            store 0
+261         push 0                                   || negate
+            load 0
+            sub
+            return 1
+262         load 0                                   || id_lazy
+            eval
+            store 0
+263         load 0                                   || id
+            return 1
+264         jmp 265                                  || pIdentifier || pIdentifier_lazy
+265         pushfunc 1 243                           || isAlphaNum_lazy || pIdentifier
+            create 1 7
+            pushfunc 2 104                           || pSatisfy_lazy
+            create 2 7
+            pushfunc 1 230                           || greedy
+            create 2 3
+            pushfunc 1 239                           || isAlpha_lazy
+            create 1 7
+            pushfunc 2 104                           || pSatisfy_lazy
+            create 2 7
+            pushfunc 2 185                           || list
+            create 1 7
+            pushfunc 2 208                           || seqapply
+            create 3 3
+            pushfunc 3 206                           || seq
+            create 3 7
+            return 0
+266         jmp 267                                  || pParens || pParens_lazy
+267         push 41                                  || pParens
+            pushfunc 2 99                            || pSymbol_lazy
+            create 2 7
+            load 0
+            push 40
+            pushfunc 2 99                            || pSymbol_lazy
+            create 2 7
+            tailcall 1 224                           || pPack
+268         jmp 269                                  || pCommaList || pCommaList_lazy
+269         push 44                                  || pCommaList
+            pushfunc 2 99                            || pSymbol_lazy
+            create 2 7
+            load 0
+            tailcall 1 226                           || pListSep
+270         jmp 271                                  || lchoice || lchoice_lazy
+271         pushfunc 1 200                           || pFailp || lchoice
+            create 1 7
+            pushfunc 2 210                           || option
+            create 1 7
+            pushfunc 3 75                            || foldr_lazy
+            create 3 7
+            return 0
+272         jmp 273                                  || numlist || numlist_lazy
+273         push 93                                  || numlist
+            pushfunc 2 99                            || pSymbol_lazy
+            create 2 7
+            pushfunc 0 255                           || pInteger
+            create 1 3
+            pushfunc 1 269                           || pCommaList
+            create 2 3
+            push 91
+            pushfunc 2 99                            || pSymbol_lazy
+            create 2 7
+            tailcall 0 224                           || pPack
+274         jmp 275                                  || numidlist || numidlist_lazy
+275         push 93                                  || numidlist
+            pushfunc 2 99                            || pSymbol_lazy
+            create 2 7
+            pushfunc 0 265                           || pIdentifier
+            create 1 3
+            pushfunc 0 255                           || pInteger
+            create 1 3
+            pushfunc 3 204                           || choice
+            create 3 7
+            pushfunc 1 269                           || pCommaList
+            create 2 3
+            push 91
+            pushfunc 2 99                            || pSymbol_lazy
+            create 2 7
+            tailcall 0 224                           || pPack
+276         load 0                                   || getres_lazy
+            eval
+            store 0
+277         load 0                                   || getres
+            call 7                                   || hd
+            tailcall 1 1                             || fst
+278         jmp 279                                  || con || con_lazy
+279         load 0                                   || con
+            eval
+            ccreatet 1 11 9 0
+            return 1
+280         jmp 281                                  || var || var_lazy
+281         load 0                                   || var
+            eval
+            ccreatet 1 11 9 1
+            return 1
+282         jmp 283                                  || fun || fun_lazy
+283         load 1                                   || fun
+            eval
+            load 0
+            eval
+            ccreatet 2 11 9 2
+            return 2
+284         jmp 285                                  || rule || rule_lazy
+285         load 1                                   || rule
+            eval
+            load 0
+            eval
+            ccreatet 2 11 10 0
+            return 2
+286         jmp 287                                  || pCon || pCon_lazy
+287         pushfunc 0 255                           || pInteger || pCon
+            create 1 3
+            pushfunc 1 279                           || con
+            create 1 7
+            tailcall 0 208                           || seqapply
+288         jmp 289                                  || pVar || pVar_lazy
+289         pushfunc 0 255                           || pInteger || pVar
+            create 1 3
+            push 88
+            pushfunc 2 99                            || pSymbol_lazy
+            create 2 7
+            pushfunc 2 216                           || seqright
+            create 3 3
+            pushfunc 1 281                           || var
+            create 1 7
+            tailcall 0 208                           || seqapply
+290         jmp 291                                  || pFun || pFun_lazy
+291         ccreatet 0 11 5 0                        || pFun
+            pushfunc 2 202                           || pSucceed
+            create 2 7
+            pushfunc 0 299                           || pComma
+            create 1 3
+            pushfunc 0 293                           || pTerm
+            create 1 3
+            pushfunc 2 226                           || pListSep
+            create 3 3
+            pushfunc 1 267                           || pParens
+            create 2 3
+            pushfunc 3 204                           || choice
+            create 3 7
+            pushfunc 0 265                           || pIdentifier
+            create 1 3
+            pushfunc 2 283                           || fun
+            create 1 7
+            pushfunc 2 208                           || seqapply
+            create 3 3
+            pushfunc 3 206                           || seq
+            create 3 7
+            return 0
+292         jmp 293                                  || pTerm || pTerm_lazy
+293         pushfunc 0 291                           || pFun || pTerm
+            create 1 3
+            pushfunc 0 289                           || pVar
+            create 1 3
+            pushfunc 0 287                           || pCon
+            create 1 3
+            pushfunc 3 204                           || choice
+            create 3 7
+            pushfunc 3 204                           || choice
+            create 3 7
+            return 0
+294         jmp 295                                  || pRule || pRule_lazy
+295         push 46                                  || pRule
+            pushfunc 2 99                            || pSymbol_lazy
+            create 2 7
+            ccreatet 0 11 5 0
+            pushfunc 0 297                           || pRightHandSide
+            create 1 3
+            pushfunc 2 210                           || option
+            create 3 3
+            pushfunc 0 293                           || pTerm
+            create 1 3
+            pushfunc 2 285                           || rule
+            create 1 7
+            pushfunc 2 208                           || seqapply
+            create 3 3
+            pushfunc 3 206                           || seq
+            create 3 7
+            tailcall 0 214                           || seqleft
+296         jmp 297                                  || pRightHandSide || pRightHandSide_lazy
+297         pushfunc 0 299                           || pComma || pRightHandSide
+            create 1 3
+            pushfunc 0 293                           || pTerm
+            create 1 3
+            pushfunc 2 226                           || pListSep
+            create 3 3
+            push 45
+            pushfunc 2 99                            || pSymbol_lazy
+            create 2 7
+            push 58
+            pushfunc 2 99                            || pSymbol_lazy
+            create 2 7
+            pushfunc 2 216                           || seqright
+            create 3 3
+            tailcall 0 216                           || seqright
+298         jmp 299                                  || pComma || pComma_lazy
+299         push 44                                  || pComma
+            pushfunc 2 99                            || pSymbol_lazy
+            create 2 7
+            return 0
+300         load 0                                   || isSpace_lazy
+            eval
+            store 0
+301         loadadd 0 -32                            || isSpace
+            ifneq 302                                || isSpace_else
+            return_const 1 1
+302         loadadd 0 -10                            || isSpace_else
+            ifneq 303                                || isSpace_else_false
+            return_const 1 1
+303         return_const 1 0                         || isSpace_else_false
+304         jmp 305                                  || pStart || pStart_lazy
+305         load 1                                   || pStart
+            pushfunc 1 300                           || isSpace_lazy
+            create 1 7
+            pushfunc 1 186                           || nott_lazy
+            create 1 7
+            pushfunc 3 193                           || compose
+            create 3 7
+            pushfunc 2 44                            || filter_lazy
+            create 3 3
+            load 0
+            eval
+            call 7                                   || hd
+            tailcall 2 1                             || fst
+306         jmp 307                                  || parseTerm || parseTerm_lazy
+307         pushfunc 0 293                           || pTerm || parseTerm
+            create 1 3
+            pushfunc 2 305                           || pStart
+            create 2 7
+            return 0
+308         jmp 309                                  || parseRules || parseRules_lazy
+309         load 0                                   || parseRules
+            pushfunc 0 295                           || pRule
+            create 1 3
+            pushfunc 1 220                           || pMany
+            create 2 3
+            tailcall 1 305                           || pStart
+310         jmp 311                                  || parseRule || parseRule_lazy
+311         pushfunc 0 295                           || pRule || parseRule
+            create 1 3
+            pushfunc 2 305                           || pStart
+            create 2 7
+            return 0
+312         jmp 313                                  || emptyEnv || emptyEnv_lazy
+313         ccreatet 0 11 5 0                        || emptyEnv
+            ccreatet 1 11 8 0
+            return 0
+314         jmp 315                                  || bind || bind_lazy
+315         load 2                                   || bind
+            load 1
+            eval
+            load 0
+            eval
+            ccreatet 2 11 7 0
+            ccreatet 2 11 5 1
+            return 3
+316         jmp 317                                  || str2list || str2list_lazy
+317         load 0                                   || str2list
+            push 0
+            tailcall 1 319                           || strls
+318         load 0                                   || strls_lazy
+            eval
+            store 0
+319         load 1                                   || strls
+            eval
+            strop 2
+            load 0
+            sub
+            ifle 320                                 || strls_else
+            load 1
+            loadadd 0 1
+            pushfunc 2 319                           || strls
+            create 3 3
+            load 1
+            eval
+            load 0
+            strop 4
+            ccreatet 2 11 5 1
+            return 2
+320         ccreatet 0 11 5 0                        || strls_else
+            return 2
+321         load 0                                   || printstrlist_lazy
+            eval
+            store 0
+322         load 0                                   || printstrlist
+            jmpt 2 323 324                           || lbs
+323         return_const 1 0                         || printstrlist_Nil
+324         load 0                                   || printstrlist_Cons
+            print 2
+            load 1
+            eval
+            tailcall 3 322                           || printstrlist
+325         jmp 326                                  || prog || prog_lazy
+326         pushfunc 0 457                           || prog_16 || prog
+            create 1 3
+            call 344                                 || line1
+            ccreatet 2 11 5 1
+            pushfunc 1 317                           || str2list
+            create 1 7
+            call 50                                  || map
+            tailcall 0 58                            || concat
+327         jmp 328                                  || prog2 || prog2_lazy
+328         pushfunc 0 459                           || prog2_1 || prog2
+            create 1 3
+            call 326                                 || prog
+            ccreatet 2 11 5 1
+            tailcall 0 58                            || concat
+329         jmp 330                                  || prog3 || prog3_lazy
+330         pushfunc 0 463                           || prog3_2 || prog3
+            create 1 3
+            call 326                                 || prog
+            ccreatet 2 11 5 1
+            tailcall 0 58                            || concat
+331         jmp 332                                  || prog10 || prog10_lazy
+332         pushfunc 0 481                           || prog10_9 || prog10
+            create 1 3
+            call 326                                 || prog
+            ccreatet 2 11 5 1
+            tailcall 0 58                            || concat
+333         jmp 334                                  || prog20 || prog20_lazy
+334         pushfunc 0 483                           || prog20_1 || prog20
+            create 1 3
+            call 332                                 || prog10
+            ccreatet 2 11 5 1
+            tailcall 0 58                            || concat
+335         jmp 336                                  || prog30 || prog30_lazy
+336         pushfunc 0 487                           || prog30_2 || prog30
+            create 1 3
+            call 332                                 || prog10
+            ccreatet 2 11 5 1
+            tailcall 0 58                            || concat
+337         jmp 338                                  || prog40 || prog40_lazy
+338         pushfunc 0 493                           || prog40_3 || prog40
+            create 1 3
+            call 332                                 || prog10
+            ccreatet 2 11 5 1
+            tailcall 0 58                            || concat
+339         jmp 340                                  || prog50 || prog50_lazy
+340         pushfunc 0 501                           || prog50_4 || prog50
+            create 1 3
+            call 332                                 || prog10
+            ccreatet 2 11 5 1
+            tailcall 0 58                            || concat
+341         jmp 342                                  || prog100 || prog100_lazy
+342         pushfunc 0 519                           || prog100_9 || prog100
+            create 1 3
+            call 332                                 || prog10
+            ccreatet 2 11 5 1
+            tailcall 0 58                            || concat
+343         jmp 344                                  || line1 || line1_lazy
+344         push "man(jan)."                         || line1
+            return 0
+345         jmp 346                                  || line2 || line2_lazy
+346         push "man(mark)."                        || line2
+            return 0
+347         jmp 348                                  || line3 || line3_lazy
+348         push "vrouw(margriet)."                  || line3
+            return 0
+349         jmp 350                                  || line4 || line4_lazy
+350         push "vrouw(marit)."                     || line4
+            return 0
+351         jmp 352                                  || line5 || line5_lazy
+352         push "ouder(jan,mark)."                  || line5
+            return 0
+353         jmp 354                                  || line6 || line6_lazy
+354         push "ouder(jan,marit)."                 || line6
+            return 0
+355         jmp 356                                  || line7 || line7_lazy
+356         push "ouder(margriet,marit)."            || line7
+            return 0
+357         jmp 358                                  || line8 || line8_lazy
+358         push "ouder(margriet,mark)."             || line8
+            return 0
+359         jmp 360                                  || line9 || line9_lazy
+360         push "moeder(X1,X2) :- ouder(X1,X2),vrouw(X1)." || line9
+            return 0
+361         jmp 362                                  || line10 || line10_lazy
+362         push "vader(X1,X2) :- ouder(X1,X2),man(X1)." || line10
+            return 0
+363         jmp 364                                  || line11 || line11_lazy
+364         push "ouder(joop,jan)."                  || line11
+            return 0
+365         jmp 366                                  || line12 || line12_lazy
+366         push "ouder(nel,jan)."                   || line12
+            return 0
+367         jmp 368                                  || line13 || line13_lazy
+368         push "grootouder(X1,X2) :- ouder(X1,X3),ouder(X3,X2)." || line13
+            return 0
+369         jmp 370                                  || line14 || line14_lazy
+370         push "voorouder(X1,X2) :- ouder(X1,X2)." || line14
+            return 0
+371         jmp 372                                  || line15 || line15_lazy
+372         push "voorouder(X1,X2) :- ouder(X1,X3),voorouder(X3,X2)." || line15
+            return 0
+373         jmp 374                                  || line16 || line16_lazy
+374         push "ouder(siem,nel)."                  || line16
+            return 0
+375         jmp 376                                  || line17 || line17_lazy
+376         push "ouder(cornelia,nel)."              || line17
+            return 0
+377         jmp 378                                  || sol || sol_lazy
+378         push 0                                   || sol
+            pushfunc 0 313                           || emptyEnv
+            create 1 3
+            ccreatet 0 11 5 0
+            load 1
+            call 307                                 || parseTerm
+            eval
+            ccreatet 2 11 5 1
+            load 0
+            call 166                                 || solve
+            tailcall 3 15                            || length
+379         load 0                                   || msol_lazy
+            eval
+            store 0
+380         load 0                                   || msol
+            push 1
+            call 19                                  || fromto
+            push "voorouder(X1,marit)"
+            pushfunc 1 317                           || str2list
+            create 2 3
+            pushfunc 0 326                           || prog
+            create 1 3
+            pushfunc 1 309                           || parseRules
+            create 2 3
+            pushfunc 3 378                           || sol
+            create 3 7
+            call 50                                  || map
+            tailcall 1 80                            || sum
+381         jmp 382                                  || dosol || dosol_lazy
+382         push 0                                   || dosol
+            pushfunc 0 313                           || emptyEnv
+            create 1 3
+            ccreatet 0 11 5 0
+            load 0
+            call 307                                 || parseTerm
+            eval
+            ccreatet 2 11 5 1
+            pushfunc 0 336                           || prog30
+            create 1 3
+            pushfunc 1 309                           || parseRules
+            create 2 3
+            tailcall 1 166                           || solve
+383         jmp 384                                  || unitest || unitest_lazy
+384         call 313                                 || emptyEnv || unitest
+            load 1
+            load 0
+            pushfunc 2 521                           || unitest_1
+            create 3 3
+            tailcall 2 147                           || unify
+385         load 0                                   || parsetest_lazy
+            eval
+            store 0
+386         load 0                                   || parsetest
+            ifneq 387                                || parsetest_else
+            ccreatet 0 11 5 0
+            return 1
+387         loadadd 0 -1                             || parsetest_else
+            pushfunc 1 386                           || parsetest
+            create 2 3
+            pushfunc 0 342                           || prog100
+            create 1 3
+            call 309                                 || parseRules
+            pushfunc 1 176                           || isSingle_lazy
+            create 1 7
+            call 45                                  || filter
+            call 15                                  || length
+            ccreatet 2 11 5 1
+            return 1
+388         jmp 389                                  || prologtest || prologtest_lazy
+389         push "vader(X1,mark)"                    || prologtest
+            pushfunc 1 317                           || str2list
+            create 2 3
+            call 382                                 || dosol
+            tailcall 0 15                            || length
+390         jmp 391                                  || start0 || start0_lazy
+391         push "1234 aap"                          || start0
+            pushfunc 1 317                           || str2list
+            create 2 3
+            pushfunc 0 251                           || pNatural
+            create 1 3
+            tailcall 0 305                           || pStart
+392         jmp 393                                  || start1 || start1_lazy
+393         push "[1,2,3,44,555,6666]"               || start1
+            pushfunc 1 317                           || str2list
+            create 2 3
+            pushfunc 0 273                           || numlist
+            create 1 3
+            tailcall 0 305                           || pStart
+394         jmp 395                                  || start2 || start2_lazy
+395         push "[1,2,3,44,555,6666]"               || start2
+            pushfunc 1 317                           || str2list
+            create 2 3
+            pushfunc 0 273                           || numlist
+            create 1 3
+            tailcall 0 305                           || pStart
+396         jmp 397                                  || start3 || start3_lazy
+397         push 20                                  || start3
+            call 386                                 || parsetest
+            tailcall 0 405                           || printlist
+398         jmp 399                                  || start4 || start4_lazy
+399         push "q(X2)"                             || start4
+            push "p(X1)"
+            tailcall 0 384                           || unitest
+400         jmp 401                                  || start5 || start5_lazy
+401         push 500                                 || start5
+            tailcall 0 380                           || msol
+402         jmp 403                                  || start || start_lazy
+403         tailcall 0 389                           || prologtest || start
+404         load 0                                   || printlist_lazy
+            eval
+            store 0
+405         load 0                                   || printlist
+            jmpt 2 406 407                           || lbs
+406         return_const 1 0                         || printlist_Nil
+407         load 0                                   || printlist_Cons
+            print 0
+            load 1
+            eval
+            tailcall 3 405                           || printlist
+408         jmp 409                                  || from_1 || from_1_lazy
+409         load 0                                   || from_1
+            eval
+            inc
+            return 1
+410         jmp 411                                  || el_1 || el_1_lazy
+411         load 0                                   || el_1
+            eval
+            dec
+            return 1
+412         jmp 413                                  || concat_1 || concat_1_lazy
+413         load 1                                   || concat_1
+            load 0
+            eval
+            ccreatet 2 11 5 1
+            return 2
+414         jmp 415                                  || uni_1 || uni_1_lazy
+415         load 0                                   || uni_1
+            eval
+            ccreatet 1 11 8 0
+            return 1
+416         jmp 417                                  || uni_j1 || uni_j1_lazy
+417         ccreatet 0 11 8 1                        || uni_j1
+            return 1
+418         jmp 419                                  || ff_1 || ff_1_lazy
+419         load 1                                   || ff_1
+            eval
+            load 0
+            eval
+            ccreatet 2 11 7 0
+            return 2
+420         jmp 421                                  || fh_1 || fh_1_lazy
+421         load 0                                   || fh_1
+            eval
+            inc
+            return 1
+422         jmp 423                                  || isAlpha_j1 || isAlpha_j1_lazy
+423         load 0                                   || isAlpha_j1
+            eval
+            push 65
+            sub
+            iflt 425                                 || isAlpha_j1_else
+            push 90
+            load 0
+            eval
+            sub
+            iflt 424                                 || isAlpha_j1_then_false
+            return_const 1 1
+424         return_const 1 0                         || isAlpha_j1_then_false
+425         return_const 1 0                         || isAlpha_j1_else
+426         jmp 427                                  || prog_1 || prog_1_lazy
+427         ccreatet 0 11 5 0                        || prog_1
+            call 376                                 || line17
+            ccreatet 2 11 5 1
+            return 0
+428         jmp 429                                  || prog_2 || prog_2_lazy
+429         pushfunc 0 427                           || prog_1 || prog_2
+            create 1 3
+            call 374                                 || line16
+            ccreatet 2 11 5 1
+            return 0
+430         jmp 431                                  || prog_3 || prog_3_lazy
+431         pushfunc 0 429                           || prog_2 || prog_3
+            create 1 3
+            call 372                                 || line15
+            ccreatet 2 11 5 1
+            return 0
+432         jmp 433                                  || prog_4 || prog_4_lazy
+433         pushfunc 0 431                           || prog_3 || prog_4
+            create 1 3
+            call 370                                 || line14
+            ccreatet 2 11 5 1
+            return 0
+434         jmp 435                                  || prog_5 || prog_5_lazy
+435         pushfunc 0 433                           || prog_4 || prog_5
+            create 1 3
+            call 368                                 || line13
+            ccreatet 2 11 5 1
+            return 0
+436         jmp 437                                  || prog_6 || prog_6_lazy
+437         pushfunc 0 435                           || prog_5 || prog_6
+            create 1 3
+            call 366                                 || line12
+            ccreatet 2 11 5 1
+            return 0
+438         jmp 439                                  || prog_7 || prog_7_lazy
+439         pushfunc 0 437                           || prog_6 || prog_7
+            create 1 3
+            call 364                                 || line11
+            ccreatet 2 11 5 1
+            return 0
+440         jmp 441                                  || prog_8 || prog_8_lazy
+441         pushfunc 0 439                           || prog_7 || prog_8
+            create 1 3
+            call 362                                 || line10
+            ccreatet 2 11 5 1
+            return 0
+442         jmp 443                                  || prog_9 || prog_9_lazy
+443         pushfunc 0 441                           || prog_8 || prog_9
+            create 1 3
+            call 360                                 || line9
+            ccreatet 2 11 5 1
+            return 0
+444         jmp 445                                  || prog_10 || prog_10_lazy
+445         pushfunc 0 443                           || prog_9 || prog_10
+            create 1 3
+            call 358                                 || line8
+            ccreatet 2 11 5 1
+            return 0
+446         jmp 447                                  || prog_11 || prog_11_lazy
+447         pushfunc 0 445                           || prog_10 || prog_11
+            create 1 3
+            call 356                                 || line7
+            ccreatet 2 11 5 1
+            return 0
+448         jmp 449                                  || prog_12 || prog_12_lazy
+449         pushfunc 0 447                           || prog_11 || prog_12
+            create 1 3
+            call 354                                 || line6
+            ccreatet 2 11 5 1
+            return 0
+450         jmp 451                                  || prog_13 || prog_13_lazy
+451         pushfunc 0 449                           || prog_12 || prog_13
+            create 1 3
+            call 352                                 || line5
+            ccreatet 2 11 5 1
+            return 0
+452         jmp 453                                  || prog_14 || prog_14_lazy
+453         pushfunc 0 451                           || prog_13 || prog_14
+            create 1 3
+            call 350                                 || line4
+            ccreatet 2 11 5 1
+            return 0
+454         jmp 455                                  || prog_15 || prog_15_lazy
+455         pushfunc 0 453                           || prog_14 || prog_15
+            create 1 3
+            call 348                                 || line3
+            ccreatet 2 11 5 1
+            return 0
+456         jmp 457                                  || prog_16 || prog_16_lazy
+457         pushfunc 0 455                           || prog_15 || prog_16
+            create 1 3
+            call 346                                 || line2
+            ccreatet 2 11 5 1
+            return 0
+458         jmp 459                                  || prog2_1 || prog2_1_lazy
+459         ccreatet 0 11 5 0                        || prog2_1
+            call 326                                 || prog
+            ccreatet 2 11 5 1
+            return 0
+460         jmp 461                                  || prog3_1 || prog3_1_lazy
+461         ccreatet 0 11 5 0                        || prog3_1
+            call 326                                 || prog
+            ccreatet 2 11 5 1
+            return 0
+462         jmp 463                                  || prog3_2 || prog3_2_lazy
+463         pushfunc 0 461                           || prog3_1 || prog3_2
+            create 1 3
+            call 326                                 || prog
+            ccreatet 2 11 5 1
+            return 0
+464         jmp 465                                  || prog10_1 || prog10_1_lazy
+465         ccreatet 0 11 5 0                        || prog10_1
+            call 326                                 || prog
+            ccreatet 2 11 5 1
+            return 0
+466         jmp 467                                  || prog10_2 || prog10_2_lazy
+467         pushfunc 0 465                           || prog10_1 || prog10_2
+            create 1 3
+            call 326                                 || prog
+            ccreatet 2 11 5 1
+            return 0
+468         jmp 469                                  || prog10_3 || prog10_3_lazy
+469         pushfunc 0 467                           || prog10_2 || prog10_3
+            create 1 3
+            call 326                                 || prog
+            ccreatet 2 11 5 1
+            return 0
+470         jmp 471                                  || prog10_4 || prog10_4_lazy
+471         pushfunc 0 469                           || prog10_3 || prog10_4
+            create 1 3
+            call 326                                 || prog
+            ccreatet 2 11 5 1
+            return 0
+472         jmp 473                                  || prog10_5 || prog10_5_lazy
+473         pushfunc 0 471                           || prog10_4 || prog10_5
+            create 1 3
+            call 326                                 || prog
+            ccreatet 2 11 5 1
+            return 0
+474         jmp 475                                  || prog10_6 || prog10_6_lazy
+475         pushfunc 0 473                           || prog10_5 || prog10_6
+            create 1 3
+            call 326                                 || prog
+            ccreatet 2 11 5 1
+            return 0
+476         jmp 477                                  || prog10_7 || prog10_7_lazy
+477         pushfunc 0 475                           || prog10_6 || prog10_7
+            create 1 3
+            call 326                                 || prog
+            ccreatet 2 11 5 1
+            return 0
+478         jmp 479                                  || prog10_8 || prog10_8_lazy
+479         pushfunc 0 477                           || prog10_7 || prog10_8
+            create 1 3
+            call 326                                 || prog
+            ccreatet 2 11 5 1
+            return 0
+480         jmp 481                                  || prog10_9 || prog10_9_lazy
+481         pushfunc 0 479                           || prog10_8 || prog10_9
+            create 1 3
+            call 326                                 || prog
+            ccreatet 2 11 5 1
+            return 0
+482         jmp 483                                  || prog20_1 || prog20_1_lazy
+483         ccreatet 0 11 5 0                        || prog20_1
+            call 332                                 || prog10
+            ccreatet 2 11 5 1
+            return 0
+484         jmp 485                                  || prog30_1 || prog30_1_lazy
+485         ccreatet 0 11 5 0                        || prog30_1
+            call 332                                 || prog10
+            ccreatet 2 11 5 1
+            return 0
+486         jmp 487                                  || prog30_2 || prog30_2_lazy
+487         pushfunc 0 485                           || prog30_1 || prog30_2
+            create 1 3
+            call 332                                 || prog10
+            ccreatet 2 11 5 1
+            return 0
+488         jmp 489                                  || prog40_1 || prog40_1_lazy
+489         ccreatet 0 11 5 0                        || prog40_1
+            call 332                                 || prog10
+            ccreatet 2 11 5 1
+            return 0
+490         jmp 491                                  || prog40_2 || prog40_2_lazy
+491         pushfunc 0 489                           || prog40_1 || prog40_2
+            create 1 3
+            call 332                                 || prog10
+            ccreatet 2 11 5 1
+            return 0
+492         jmp 493                                  || prog40_3 || prog40_3_lazy
+493         pushfunc 0 491                           || prog40_2 || prog40_3
+            create 1 3
+            call 332                                 || prog10
+            ccreatet 2 11 5 1
+            return 0
+494         jmp 495                                  || prog50_1 || prog50_1_lazy
+495         ccreatet 0 11 5 0                        || prog50_1
+            call 332                                 || prog10
+            ccreatet 2 11 5 1
+            return 0
+496         jmp 497                                  || prog50_2 || prog50_2_lazy
+497         pushfunc 0 495                           || prog50_1 || prog50_2
+            create 1 3
+            call 332                                 || prog10
+            ccreatet 2 11 5 1
+            return 0
+498         jmp 499                                  || prog50_3 || prog50_3_lazy
+499         pushfunc 0 497                           || prog50_2 || prog50_3
+            create 1 3
+            call 332                                 || prog10
+            ccreatet 2 11 5 1
+            return 0
+500         jmp 501                                  || prog50_4 || prog50_4_lazy
+501         pushfunc 0 499                           || prog50_3 || prog50_4
+            create 1 3
+            call 332                                 || prog10
+            ccreatet 2 11 5 1
+            return 0
+502         jmp 503                                  || prog100_1 || prog100_1_lazy
+503         ccreatet 0 11 5 0                        || prog100_1
+            call 332                                 || prog10
+            ccreatet 2 11 5 1
+            return 0
+504         jmp 505                                  || prog100_2 || prog100_2_lazy
+505         pushfunc 0 503                           || prog100_1 || prog100_2
+            create 1 3
+            call 332                                 || prog10
+            ccreatet 2 11 5 1
+            return 0
+506         jmp 507                                  || prog100_3 || prog100_3_lazy
+507         pushfunc 0 505                           || prog100_2 || prog100_3
+            create 1 3
+            call 332                                 || prog10
+            ccreatet 2 11 5 1
+            return 0
+508         jmp 509                                  || prog100_4 || prog100_4_lazy
+509         pushfunc 0 507                           || prog100_3 || prog100_4
+            create 1 3
+            call 332                                 || prog10
+            ccreatet 2 11 5 1
+            return 0
+510         jmp 511                                  || prog100_5 || prog100_5_lazy
+511         pushfunc 0 509                           || prog100_4 || prog100_5
+            create 1 3
+            call 332                                 || prog10
+            ccreatet 2 11 5 1
+            return 0
+512         jmp 513                                  || prog100_6 || prog100_6_lazy
+513         pushfunc 0 511                           || prog100_5 || prog100_6
+            create 1 3
+            call 332                                 || prog10
+            ccreatet 2 11 5 1
+            return 0
+514         jmp 515                                  || prog100_7 || prog100_7_lazy
+515         pushfunc 0 513                           || prog100_6 || prog100_7
+            create 1 3
+            call 332                                 || prog10
+            ccreatet 2 11 5 1
+            return 0
+516         jmp 517                                  || prog100_8 || prog100_8_lazy
+517         pushfunc 0 515                           || prog100_7 || prog100_8
+            create 1 3
+            call 332                                 || prog10
+            ccreatet 2 11 5 1
+            return 0
+518         jmp 519                                  || prog100_9 || prog100_9_lazy
+519         pushfunc 0 517                           || prog100_8 || prog100_9
+            create 1 3
+            call 332                                 || prog10
+            ccreatet 2 11 5 1
+            return 0
+520         jmp 521                                  || unitest_1 || unitest_1_lazy
+521         load 1                                   || unitest_1
+            pushfunc 1 317                           || str2list
+            create 2 3
+            call 307                                 || parseTerm
+            eval
+            load 0
+            pushfunc 1 317                           || str2list
+            create 2 3
+            call 307                                 || parseTerm
+            eval
+            ccreatet 2 11 7 0
+            return 2
+
+.metadata
+types 6
+type 5 list 2
+  constr 0 Nil 0
+  constr 1 Cons 2
+type 6 Tup 1
+  constr 0 Tup 2
+type 7 ProTup 1
+  constr 0 ProTup 2
+type 8 Maybe 2
+  constr 0 Just 1
+  constr 1 Nothing 0
+type 9 Term 3
+  constr 0 Con 1
+  constr 1 Var 1
+  constr 2 Fun 2
+type 10 Rule 1
+  constr 0 Rule 2
+functions 396
+  func 1 fst 1 10
+  func 0 fst 1 10
+  func 4 snd 1 10
+  func 3 snd 1 10
+  func 7 hd 1 10
+  func 6 hd 1 10
+  func 11 tl 1 10
+  func 10 tl 1 10
+  func 15 length 1 10
+  func 14 length 1 10
+  func 19 fromto 2 110
+  func 18 fromto 2 110
+  func 22 from 1 00
+  func 21 from 1 00
+  func 24 el 2 010
+  func 23 el 2 010
+  func 29 zip 2 100
+  func 28 zip 2 100
+  func 35 take 2 100
+  func 34 take 2 100
+  func 40 drop 2 110
+  func 39 drop 2 110
+  func 45 filter 2 010
+  func 44 filter 2 010
+  func 50 map 2 010
+  func 49 map 2 010
+  func 54 append 2 100
+  func 53 append 2 100
+  func 58 concat 1 10
+  func 57 concat 1 10
+  func 64 merge 2 110
+  func 63 merge 2 110
+  func 72 foldl 3 0010
+  func 71 foldl 3 0010
+  func 76 foldr 3 0010
+  func 75 foldr 3 0010
+  func 80 sum 1 10
+  func 79 sum 1 10
+  func 84 eqlist 2 110
+  func 83 eqlist 2 110
+  func 93 gtlist 2 100
+  func 92 gtlist 2 100
+  func 100 pSymbol 2 010
+  func 99 pSymbol 2 010
+  func 105 pSatisfy 2 010
+  func 104 pSatisfy 2 010
+  func 110 do1 2 010
+  func 109 do1 2 010
+  func 113 do2 2 010
+  func 112 do2 2 010
+  func 116 dt 1 10
+  func 115 dt 1 10
+  func 120 null 1 10
+  func 119 null 1 10
+  func 124 pSequence 1 10
+  func 123 pSequence 1 10
+  func 128 tag 2 010
+  func 127 tag 2 010
+  func 133 tagRule 2 010
+  func 132 tagRule 2 010
+  func 136 lookUp 2 010
+  func 135 lookUp 2 010
+  func 141 look 2 100
+  func 140 look 2 100
+  func 147 unify 2 010
+  func 146 unify 2 010
+  func 152 uni 3 1000
+  func 151 uni 3 1000
+  func 166 solve 4 01000
+  func 165 solve 4 01000
+  func 170 ff 6 1000010
+  func 169 ff 6 1000010
+  func 173 fh 5 000010
+  func 172 fh 5 000010
+  func 177 isSingle 1 10
+  func 176 isSingle 1 10
+  func 185 list 2 000
+  func 184 list 2 000
+  func 187 nott 1 10
+  func 186 nott 1 10
+  func 190 repeat 2 100
+  func 189 repeat 2 100
+  func 193 compose 3 0000
+  func 192 compose 3 0000
+  func 195 flip 3 0000
+  func 194 flip 3 0000
+  func 197 pToken 2 100
+  func 196 pToken 2 100
+  func 200 pFailp 1 00
+  func 199 pFailp 1 00
+  func 202 pSucceed 2 000
+  func 201 pSucceed 2 000
+  func 204 choice 3 0000
+  func 203 choice 3 0000
+  func 206 seq 3 0000
+  func 205 seq 3 0000
+  func 208 seqapply 2 000
+  func 207 seqapply 2 000
+  func 210 option 2 000
+  func 209 option 2 000
+  func 212 konst 2 100
+  func 211 konst 2 100
+  func 214 seqleft 2 000
+  func 213 seqleft 2 000
+  func 216 seqright 2 000
+  func 215 seqright 2 000
+  func 218 seqapplyleft 2 000
+  func 217 seqapplyleft 2 000
+  func 220 pMany 1 00
+  func 219 pMany 1 00
+  func 222 pMany1 1 00
+  func 221 pMany1 1 00
+  func 224 pPack 3 0000
+  func 223 pPack 3 0000
+  func 226 pListSep 2 000
+  func 225 pListSep 2 000
+  func 228 determ 2 000
+  func 227 determ 2 000
+  func 230 greedy 1 00
+  func 229 greedy 1 00
+  func 232 greedy1 1 00
+  func 231 greedy1 1 00
+  func 234 pDigit 0 0
+  func 233 pDigit 0 0
+  func 236 isDigit 1 10
+  func 235 isDigit 1 10
+  func 240 isAlpha 1 10
+  func 239 isAlpha 1 10
+  func 244 isAlphaNum 1 10
+  func 243 isAlphaNum 1 10
+  func 247 pDigAsInt 0 0
+  func 246 pDigAsInt 0 0
+  func 249 dig2num 1 10
+  func 248 dig2num 1 10
+  func 251 pNatural 0 0
+  func 250 pNatural 0 0
+  func 253 makeNum 2 110
+  func 252 makeNum 2 110
+  func 255 pInteger 0 0
+  func 254 pInteger 0 0
+  func 257 pNeg 0 0
+  func 256 pNeg 0 0
+  func 259 pNeg2 0 0
+  func 258 pNeg2 0 0
+  func 261 negate 1 10
+  func 260 negate 1 10
+  func 263 id 1 10
+  func 262 id 1 10
+  func 265 pIdentifier 0 0
+  func 264 pIdentifier 0 0
+  func 267 pParens 1 00
+  func 266 pParens 1 00
+  func 269 pCommaList 1 00
+  func 268 pCommaList 1 00
+  func 271 lchoice 0 0
+  func 270 lchoice 0 0
+  func 273 numlist 0 0
+  func 272 numlist 0 0
+  func 275 numidlist 0 0
+  func 274 numidlist 0 0
+  func 277 getres 1 10
+  func 276 getres 1 10
+  func 279 con 1 00
+  func 278 con 1 00
+  func 281 var 1 00
+  func 280 var 1 00
+  func 283 fun 2 000
+  func 282 fun 2 000
+  func 285 rule 2 000
+  func 284 rule 2 000
+  func 287 pCon 0 0
+  func 286 pCon 0 0
+  func 289 pVar 0 0
+  func 288 pVar 0 0
+  func 291 pFun 0 0
+  func 290 pFun 0 0
+  func 293 pTerm 0 0
+  func 292 pTerm 0 0
+  func 295 pRule 0 0
+  func 294 pRule 0 0
+  func 297 pRightHandSide 0 0
+  func 296 pRightHandSide 0 0
+  func 299 pComma 0 0
+  func 298 pComma 0 0
+  func 301 isSpace 1 10
+  func 300 isSpace 1 10
+  func 305 pStart 2 000
+  func 304 pStart 2 000
+  func 307 parseTerm 0 0
+  func 306 parseTerm 0 0
+  func 309 parseRules 1 00
+  func 308 parseRules 1 00
+  func 311 parseRule 0 0
+  func 310 parseRule 0 0
+  func 313 emptyEnv 0 0
+  func 312 emptyEnv 0 0
+  func 315 bind 3 0000
+  func 314 bind 3 0000
+  func 317 str2list 1 00
+  func 316 str2list 1 00
+  func 319 strls 2 100
+  func 318 strls 2 100
+  func 322 printstrlist 1 10
+  func 321 printstrlist 1 10
+  func 326 prog 0 0
+  func 325 prog 0 0
+  func 328 prog2 0 0
+  func 327 prog2 0 0
+  func 330 prog3 0 0
+  func 329 prog3 0 0
+  func 332 prog10 0 0
+  func 331 prog10 0 0
+  func 334 prog20 0 0
+  func 333 prog20 0 0
+  func 336 prog30 0 0
+  func 335 prog30 0 0
+  func 338 prog40 0 0
+  func 337 prog40 0 0
+  func 340 prog50 0 0
+  func 339 prog50 0 0
+  func 342 prog100 0 0
+  func 341 prog100 0 0
+  func 344 line1 0 0
+  func 343 line1 0 0
+  func 346 line2 0 0
+  func 345 line2 0 0
+  func 348 line3 0 0
+  func 347 line3 0 0
+  func 350 line4 0 0
+  func 349 line4 0 0
+  func 352 line5 0 0
+  func 351 line5 0 0
+  func 354 line6 0 0
+  func 353 line6 0 0
+  func 356 line7 0 0
+  func 355 line7 0 0
+  func 358 line8 0 0
+  func 357 line8 0 0
+  func 360 line9 0 0
+  func 359 line9 0 0
+  func 362 line10 0 0
+  func 361 line10 0 0
+  func 364 line11 0 0
+  func 363 line11 0 0
+  func 366 line12 0 0
+  func 365 line12 0 0
+  func 368 line13 0 0
+  func 367 line13 0 0
+  func 370 line14 0 0
+  func 369 line14 0 0
+  func 372 line15 0 0
+  func 371 line15 0 0
+  func 374 line16 0 0
+  func 373 line16 0 0
+  func 376 line17 0 0
+  func 375 line17 0 0
+  func 378 sol 3 0000
+  func 377 sol 3 0000
+  func 380 msol 1 10
+  func 379 msol 1 10
+  func 382 dosol 1 00
+  func 381 dosol 1 00
+  func 384 unitest 2 000
+  func 383 unitest 2 000
+  func 386 parsetest 1 10
+  func 385 parsetest 1 10
+  func 389 prologtest 0 0
+  func 388 prologtest 0 0
+  func 391 start0 0 0
+  func 390 start0 0 0
+  func 393 start1 0 0
+  func 392 start1 0 0
+  func 395 start2 0 0
+  func 394 start2 0 0
+  func 397 start3 0 0
+  func 396 start3 0 0
+  func 399 start4 0 0
+  func 398 start4 0 0
+  func 401 start5 0 0
+  func 400 start5 0 0
+  func 403 start 0 0
+  func 402 start 0 0
+  func 405 printlist 1 10
+  func 404 printlist 1 10
+  func 409 from_1 1 00
+  func 408 from_1 1 00
+  func 411 el_1 1 00
+  func 410 el_1 1 00
+  func 413 concat_1 2 000
+  func 412 concat_1 2 000
+  func 415 uni_1 1 00
+  func 414 uni_1 1 00
+  func 417 uni_j1 1 00
+  func 416 uni_j1 1 00
+  func 419 ff_1 2 000
+  func 418 ff_1 2 000
+  func 421 fh_1 1 00
+  func 420 fh_1 1 00
+  func 423 isAlpha_j1 1 00
+  func 422 isAlpha_j1 1 00
+  func 427 prog_1 0 0
+  func 426 prog_1 0 0
+  func 429 prog_2 0 0
+  func 428 prog_2 0 0
+  func 431 prog_3 0 0
+  func 430 prog_3 0 0
+  func 433 prog_4 0 0
+  func 432 prog_4 0 0
+  func 435 prog_5 0 0
+  func 434 prog_5 0 0
+  func 437 prog_6 0 0
+  func 436 prog_6 0 0
+  func 439 prog_7 0 0
+  func 438 prog_7 0 0
+  func 441 prog_8 0 0
+  func 440 prog_8 0 0
+  func 443 prog_9 0 0
+  func 442 prog_9 0 0
+  func 445 prog_10 0 0
+  func 444 prog_10 0 0
+  func 447 prog_11 0 0
+  func 446 prog_11 0 0
+  func 449 prog_12 0 0
+  func 448 prog_12 0 0
+  func 451 prog_13 0 0
+  func 450 prog_13 0 0
+  func 453 prog_14 0 0
+  func 452 prog_14 0 0
+  func 455 prog_15 0 0
+  func 454 prog_15 0 0
+  func 457 prog_16 0 0
+  func 456 prog_16 0 0
+  func 459 prog2_1 0 0
+  func 458 prog2_1 0 0
+  func 461 prog3_1 0 0
+  func 460 prog3_1 0 0
+  func 463 prog3_2 0 0
+  func 462 prog3_2 0 0
+  func 465 prog10_1 0 0
+  func 464 prog10_1 0 0
+  func 467 prog10_2 0 0
+  func 466 prog10_2 0 0
+  func 469 prog10_3 0 0
+  func 468 prog10_3 0 0
+  func 471 prog10_4 0 0
+  func 470 prog10_4 0 0
+  func 473 prog10_5 0 0
+  func 472 prog10_5 0 0
+  func 475 prog10_6 0 0
+  func 474 prog10_6 0 0
+  func 477 prog10_7 0 0
+  func 476 prog10_7 0 0
+  func 479 prog10_8 0 0
+  func 478 prog10_8 0 0
+  func 481 prog10_9 0 0
+  func 480 prog10_9 0 0
+  func 483 prog20_1 0 0
+  func 482 prog20_1 0 0
+  func 485 prog30_1 0 0
+  func 484 prog30_1 0 0
+  func 487 prog30_2 0 0
+  func 486 prog30_2 0 0
+  func 489 prog40_1 0 0
+  func 488 prog40_1 0 0
+  func 491 prog40_2 0 0
+  func 490 prog40_2 0 0
+  func 493 prog40_3 0 0
+  func 492 prog40_3 0 0
+  func 495 prog50_1 0 0
+  func 494 prog50_1 0 0
+  func 497 prog50_2 0 0
+  func 496 prog50_2 0 0
+  func 499 prog50_3 0 0
+  func 498 prog50_3 0 0
+  func 501 prog50_4 0 0
+  func 500 prog50_4 0 0
+  func 503 prog100_1 0 0
+  func 502 prog100_1 0 0
+  func 505 prog100_2 0 0
+  func 504 prog100_2 0 0
+  func 507 prog100_3 0 0
+  func 506 prog100_3 0 0
+  func 509 prog100_4 0 0
+  func 508 prog100_4 0 0
+  func 511 prog100_5 0 0
+  func 510 prog100_5 0 0
+  func 513 prog100_6 0 0
+  func 512 prog100_6 0 0
+  func 515 prog100_7 0 0
+  func 514 prog100_7 0 0
+  func 517 prog100_8 0 0
+  func 516 prog100_8 0 0
+  func 519 prog100_9 0 0
+  func 518 prog100_9 0 0
+  func 521 unitest_1 2 000
+  func 520 unitest_1 2 000
+.endmetadata

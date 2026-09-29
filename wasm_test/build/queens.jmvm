@@ -1,0 +1,224 @@
+start_lazy start length_lazy length length_Nil length_Cons fromto_lazy fromto fromto_else queens_lazy queens qqueens_lazy qqueens qqueens_else recqq_lazy recqq safe_lazy safe safe_Nil safe_Cons safe_Cons_then_then_else safe_Cons_then_else safe_Cons_else rcons_lazy rcons concat_lazy concat concat_Nil concat_Cons concat_Cons_Nil concat_Cons_Cons mapfil_lazy mapfil mapfil_Nil mapfil_Cons mapfil_Cons_else map_lazy map map_Nil map_Cons safe_1_lazy safe_1 concat_1_lazy concat_1 #
+            call 1                                   || start
+            print 4
+            stop
+0           jmp 1                                    || start || start_lazy
+1           push 11                                  || start
+            tailcall 0 10                            || queens
+2           load 0                                   || length_lazy
+            eval
+            store 0
+3           load 0                                   || length
+            jmpt 2 4 5                               || lbs
+4           return_const 1 0                         || length_Nil
+5           push 1                                   || length_Cons
+            load 1
+            eval
+            call 3                                   || length
+            add
+            return 3
+6           load 0                                   || fromto_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+7           load 0                                   || fromto
+            load 1
+            sub
+            ifle 8                                   || fromto_else
+            ccreatet 0 11 5 0
+            return 2
+8           load 1                                   || fromto_else
+            loadadd 0 1
+            pushfunc 2 7                             || fromto
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 2
+9           load 0                                   || queens_lazy
+            eval
+            store 0
+10          load 0                                   || queens
+            dup
+            call 12                                  || qqueens
+            tailcall 1 3                             || length
+11          load 1                                   || qqueens_lazy
+            eval
+            store 1
+12          load 1                                   || qqueens
+            ifneq 13                                 || qqueens_else
+            ccreatet 0 11 5 0
+            ccreatet 0 11 5 0
+            ccreatet 2 11 5 1
+            return 2
+13          loadadd 1 -1                             || qqueens_else
+            load 0
+            call 12                                  || qqueens
+            load 0
+            pushfunc 2 14                            || recqq_lazy
+            create 2 7
+            call 37                                  || map
+            tailcall 2 26                            || concat
+14          load 0                                   || recqq_lazy
+            eval
+            store 0
+15          load 0                                   || recqq
+            push 1
+            call 7                                   || fromto
+            load 1
+            pushfunc 2 24                            || rcons
+            create 2 7
+            push 1
+            load 1
+            pushfunc 3 16                            || safe_lazy
+            create 3 7
+            tailcall 2 32                            || mapfil
+16          load 0                                   || safe_lazy
+            eval
+            store 0
+17          load 0                                   || safe
+            jmpt 2 18 19                             || lbs
+18          return_const 3 1                         || safe_Nil
+19          load 4                                   || safe_Cons
+            eval
+            load 0
+            ifcmp 22                                 || safe_Cons_else
+            load 4
+            eval
+            load 3
+            eval
+            add
+            load 0
+            ifcmp 21                                 || safe_Cons_then_else
+            load 4
+            eval
+            load 3
+            eval
+            sub
+            load 0
+            ifcmp 20                                 || safe_Cons_then_then_else
+            load 4
+            load 3
+            pushfunc 1 41                            || safe_1
+            create 2 3
+            load 1
+            eval
+            tailcall 5 17                            || safe
+20          return_const 5 0                         || safe_Cons_then_then_else
+21          return_const 5 0                         || safe_Cons_then_else
+22          return_const 5 0                         || safe_Cons_else
+23          jmp 24                                   || rcons || rcons_lazy
+24          load 0                                   || rcons
+            load 1
+            eval
+            ccreatet 2 11 5 1
+            return 2
+25          load 0                                   || concat_lazy
+            eval
+            store 0
+26          load 0                                   || concat
+            jmpt 2 27 28                             || lbs
+27          ccreatet 0 11 5 0                        || concat_Nil
+            return 1
+28          load 0                                   || concat_Cons
+            jmpt 2 29 30                             || lbs
+29          load 1                                   || concat_Cons_Nil
+            eval
+            tailcall 3 26                            || concat
+30          load 3                                   || concat_Cons_Cons
+            load 1
+            pushfunc 2 43                            || concat_1
+            create 3 3
+            pushfunc 1 25                            || concat_lazy
+            create 2 3
+            load 0
+            ccreatet 2 11 5 1
+            return 5
+31          load 2                                   || mapfil_lazy
+            eval
+            store 2
+32          load 2                                   || mapfil
+            jmpt 2 33 34                             || lbs
+33          ccreatet 0 11 5 0                        || mapfil_Nil
+            return 3
+34          load 0                                   || mapfil_Cons
+            load 2
+            eval
+            ifeq 35                                  || mapfil_Cons_else
+            load 1
+            load 3
+            load 2
+            pushfunc 3 31                            || mapfil_lazy
+            create 4 3
+            load 0
+            load 3
+            eval
+            ccreatet 2 11 5 1
+            return 5
+35          load 1                                   || mapfil_Cons_else
+            eval
+            load 3
+            load 2
+            tailcall 5 32                            || mapfil
+36          load 1                                   || map_lazy
+            eval
+            store 1
+37          load 1                                   || map
+            jmpt 2 38 39                             || lbs
+38          ccreatet 0 11 5 0                        || map_Nil
+            return 2
+39          load 1                                   || map_Cons
+            load 2
+            pushfunc 2 36                            || map_lazy
+            create 3 3
+            load 0
+            load 2
+            eval
+            ccreatet 2 11 5 1
+            return 4
+40          jmp 41                                   || safe_1 || safe_1_lazy
+41          load 0                                   || safe_1
+            eval
+            inc
+            return 1
+42          jmp 43                                   || concat_1 || concat_1_lazy
+43          load 1                                   || concat_1
+            load 0
+            eval
+            ccreatet 2 11 5 1
+            return 2
+
+.metadata
+types 1
+type 5 list 2
+  constr 0 Nil 0
+  constr 1 Cons 2
+functions 26
+  func 1 start 0 0
+  func 0 start 0 0
+  func 3 length 1 10
+  func 2 length 1 10
+  func 7 fromto 2 110
+  func 6 fromto 2 110
+  func 10 queens 1 10
+  func 9 queens 1 10
+  func 12 qqueens 2 010
+  func 11 qqueens 2 010
+  func 15 recqq 2 100
+  func 14 recqq 2 100
+  func 17 safe 3 1000
+  func 16 safe 3 1000
+  func 24 rcons 2 000
+  func 23 rcons 2 000
+  func 26 concat 1 10
+  func 25 concat 1 10
+  func 32 mapfil 3 0010
+  func 31 mapfil 3 0010
+  func 37 map 2 010
+  func 36 map 2 010
+  func 41 safe_1 1 00
+  func 40 safe_1 1 00
+  func 43 concat_1 2 000
+  func 42 concat_1 2 000
+.endmetadata

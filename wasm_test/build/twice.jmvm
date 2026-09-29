@@ -1,0 +1,81 @@
+start_lazy start reptwice_lazy reptwice reptwice_else inc_lazy inc twice_lazy twice tinc_lazy tinc printlist_lazy printlist printlist_Nil printlist_Cons #
+            call 1                                   || start
+            print 4
+            stop
+0           jmp 1                                    || start || start_lazy
+1           push 400                                 || start
+            call 3                                   || reptwice
+            tailcall 0 12                            || printlist
+2           load 0                                   || reptwice_lazy
+            eval
+            store 0
+3           load 0                                   || reptwice
+            ifneq 4                                  || reptwice_else
+            ccreatet 0 11 5 0
+            return 1
+4           loadadd 0 -1                             || reptwice_else
+            pushfunc 1 3                             || reptwice
+            create 2 3
+            push 0
+            call 10                                  || tinc
+            ccreatet 2 11 5 1
+            return 1
+5           load 0                                   || inc_lazy
+            eval
+            store 0
+6           loadadd 0 1                              || inc
+            return 1
+7           jmp 8                                    || twice || twice_lazy
+8           updsp 1                                  || twice
+            load 2
+            load 1
+            create 2 7
+            dup
+            store 0
+            load 1
+            eval
+            return 3
+9           jmp 10                                   || tinc || tinc_lazy
+10          load 0                                   || tinc
+            pushfunc 1 5                             || inc_lazy
+            create 1 7
+            pushfunc 2 8                             || twice
+            create 1 7
+            pushfunc 2 8                             || twice
+            create 1 7
+            pushfunc 2 8                             || twice
+            create 1 7
+            call 8                                   || twice
+            eval
+            return 1
+11          load 0                                   || printlist_lazy
+            eval
+            store 0
+12          load 0                                   || printlist
+            jmpt 2 13 14                             || lbs
+13          return_const 1 0                         || printlist_Nil
+14          load 0                                   || printlist_Cons
+            print 0
+            load 1
+            eval
+            tailcall 3 12                            || printlist
+
+.metadata
+types 1
+type 5 list 2
+  constr 0 Nil 0
+  constr 1 Cons 2
+functions 12
+  func 1 start 0 0
+  func 0 start 0 0
+  func 3 reptwice 1 10
+  func 2 reptwice 1 10
+  func 6 inc 1 10
+  func 5 inc 1 10
+  func 8 twice 2 000
+  func 7 twice 2 000
+  func 10 tinc 1 00
+  func 9 tinc 1 00
+  func 12 printlist 1 10
+  func 11 printlist 1 10
+.endmetadata

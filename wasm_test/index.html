@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WASM-compiler testbank</title>
+<style>
+  :root {
+    --bg: #f7f7f5; --fg: #1d1d1b; --muted: #6b6b66; --line: #dcdcd6; --card: #ffffff;
+    --ok: #1f7a3a; --bad: #b3261e; --accent: #2b5fb8; --run: #fff4cc;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #161615; --fg: #ececea; --muted: #9a9a94; --line: #34342f; --card: #1f1f1d;
+            --ok: #5fcf7f; --bad: #ff7a70; --accent: #7fa8ff; --run: #3a3420; color-scheme: dark; }
+  }
+  body { margin: 0; background: var(--bg); color: var(--fg);
+         font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; padding: 20px 16px 48px; }
+  h1 { font-size: 1.35rem; margin: 0 0 4px; }
+  p.sub { margin: 0 0 16px; color: var(--muted); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; }
+  .env { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; font-size: 0.9rem; }
+  .env dt { color: var(--muted); }
+  .env dd { margin: 0; word-break: break-word; }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+  label { display: inline-flex; gap: 6px; align-items: center; }
+  select, button { font: inherit; padding: 6px 10px; border-radius: 7px; border: 1px solid var(--line);
+                   background: var(--card); color: var(--fg); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button:disabled { opacity: 0.5; }
+  .scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; font-size: 0.92rem; }
+  th, td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  th.grp { text-align: center; border-bottom: none; }
+  td:first-child, th:first-child { text-align: left; }
+  tr.running td { background: var(--run); }
+  .ok { color: var(--ok); } .bad { color: var(--bad); }
+  .factor { font-weight: 600; }
+  .note { color: var(--muted); font-size: 0.85rem; }
+  textarea { width: 100%; box-sizing: border-box; min-height: 180px; font: 12px/1.4 ui-monospace, Menlo, monospace;
+             background: var(--card); color: var(--fg); border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
+  td button { padding: 2px 8px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>WASM-compiler testbank</h1>
+  <p class="sub">Interpreter (WebSapl's Emscripten-engine) tegen gecompileerde wasm (<code>wasm_compiler/jmvm2wat.py</code>), koud en warm, per platform.</p>
+
+  <div class="card">
+    <dl class="env" id="env"></dl>
+  </div>
+
+  <div class="card controls">
+    <label>Compiler-variant
+      <select id="variant">
+        <option value="auto">automatisch</option>
+        <option value="tail">tail calls</option>
+        <option value="driver">driverlus (zonder tail calls)</option>
+      </select>
+    </label>
+    <label>Geheugen
+      <select id="geheugen">
+        <option value="groot">groot (~460 MB, heap zoals vm.cpp)</option>
+        <option value="klein">klein (~275 MB)</option>
+      </select>
+    </label>
+    <button class="primary" id="alles">Alles draaien</button>
+    <button id="stop" disabled>Stoppen</button>
+    <span class="note" id="status"></span>
+  </div>
+
+  <div class="card scroll">
+    <table>
+      <thead>
+        <tr><th></th><th class="grp" colspan="2">interpreter (ms)</th><th class="grp" colspan="2">compiler (ms)</th>
+            <th class="grp" colspan="2">factor</th><th></th><th></th></tr>
+        <tr><th>programma</th><th>koud</th><th>warm</th><th>koud</th><th>warm</th><th>koud</th><th>warm</th><th>correct</th><th></th></tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <p class="note">Koud: eerste run van een vers gecompileerde module (met een willekeurige custom section, zodat de engine niets kan hergebruiken). Warm: tweede instantie van dezelfde module, direct daarna. Factor = interpreter / compiler (groter is beter voor de compiler). Elke meting draait in een eigen Web Worker. gen1 = de Sapl-compiler die zijn eigen bron (~3.200 regels) compileert.</p>
+  </div>
+
+  <div class="card">
+    <div class="controls" style="margin-bottom:8px">
+      <strong>Resultaten</strong>
+      <button id="kopieer">Kopieer</button>
+      <span class="note" id="kopieerstatus"></span>
+    </div>
+    <textarea id="uitvoer" readonly></textarea>
+  </div>
+</main>
+<script src="test.js"></script>
+</body>
+</html>

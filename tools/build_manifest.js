@@ -20,7 +20,7 @@ function scanDirectory(dirPath, relBase = "") {
   });
 
   for (const entry of entries) {
-    if (entry.name.startsWith(".") || entry.name === "node_modules" || entry.name === "tools" || entry.name === "css" || entry.name === "js" || entry.name === "engine") {
+    if (entry.name.startsWith(".") || entry.name === "node_modules" || entry.name === "tools" || entry.name === "css" || entry.name === "js" || entry.name === "engine" || entry.name === "wasm_test") {
       continue;
     }
     if (!relBase && entry.isFile() && ROOT_FILE_EXCLUDES.has(entry.name)) {

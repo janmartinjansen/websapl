@@ -1,0 +1,186 @@
+start_lazy start t_lazy t fromto_lazy fromto fromto_else sum_lazy sum sum_Nil sum_Cons length_lazy length length_Nil length_Cons map_lazy map map_Nil map_Cons cm_lazy cm cm_Nil cm_Cons cm_Cons_Nil cm_Cons_Cons cm_Cons_Cons_Nil cm_Cons_Cons_Cons cm_Cons_Cons_Cons_Nil cm_Cons_Cons_Cons_Cons cm_Cons_Cons_Cons_Cons_Nil cm_Cons_Cons_Cons_Cons_Cons mtestaf0_lazy mtestaf0 mtest_lazy mtest match_lazy match #
+            call 1                                   || start
+            print 4
+            stop
+0           jmp 1                                    || start || start_lazy
+1           push 2000                                || start
+            tailcall 0 36                            || match
+2           jmp 3                                    || t || t_lazy
+3           ccreatet 0 11 5 0                        || t
+            push 7
+            ccreatet 2 11 5 1
+            push 6
+            ccreatet 2 11 5 1
+            push 5
+            ccreatet 2 11 5 1
+            push 4
+            ccreatet 2 11 5 1
+            push 3
+            ccreatet 2 11 5 1
+            tailcall 0 20                            || cm
+4           load 0                                   || fromto_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+5           load 0                                   || fromto
+            load 1
+            sub
+            ifle 6                                   || fromto_else
+            ccreatet 0 11 5 0
+            return 2
+6           load 1                                   || fromto_else
+            loadadd 0 1
+            pushfunc 2 5                             || fromto
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 2
+7           load 0                                   || sum_lazy
+            eval
+            store 0
+8           load 0                                   || sum
+            jmpt 2 9 10                              || lbs
+9           return_const 1 0                         || sum_Nil
+10          load 0                                   || sum_Cons
+            load 1
+            eval
+            call 8                                   || sum
+            add
+            return 3
+11          load 0                                   || length_lazy
+            eval
+            store 0
+12          load 0                                   || length
+            jmpt 2 13 14                             || lbs
+13          return_const 1 0                         || length_Nil
+14          push 1                                   || length_Cons
+            load 1
+            eval
+            call 12                                  || length
+            add
+            return 3
+15          load 1                                   || map_lazy
+            eval
+            store 1
+16          load 1                                   || map
+            jmpt 2 17 18                             || lbs
+17          ccreatet 0 11 5 0                        || map_Nil
+            return 2
+18          load 1                                   || map_Cons
+            load 2
+            pushfunc 2 15                            || map_lazy
+            create 3 3
+            load 0
+            load 2
+            eval
+            ccreatet 2 11 5 1
+            return 4
+19          load 0                                   || cm_lazy
+            eval
+            store 0
+20          load 0                                   || cm
+            jmpt 2 21 22                             || lbs
+21          return_const 1 0                         || cm_Nil
+22          load 1                                   || cm_Cons
+            eval
+            jmpt 2 23 24                             || lbs
+23          load 0                                   || cm_Cons_Nil
+            return 3
+24          load 1                                   || cm_Cons_Cons
+            eval
+            jmpt 2 25 26                             || lbs
+25          load 2                                   || cm_Cons_Cons_Nil
+            load 0
+            add
+            return 5
+26          load 1                                   || cm_Cons_Cons_Cons
+            eval
+            jmpt 2 27 28                             || lbs
+27          load 4                                   || cm_Cons_Cons_Cons_Nil
+            load 2
+            add
+            load 0
+            add
+            return 7
+28          load 1                                   || cm_Cons_Cons_Cons_Cons
+            eval
+            jmpt 2 29 30                             || lbs
+29          load 6                                   || cm_Cons_Cons_Cons_Cons_Nil
+            load 4
+            add
+            load 2
+            add
+            load 0
+            add
+            return 9
+30          load 8                                   || cm_Cons_Cons_Cons_Cons_Cons
+            load 6
+            add
+            load 4
+            add
+            load 2
+            add
+            load 3
+            eval
+            call 12                                  || length
+            add
+            return 11
+31          load 0                                   || mtestaf0_lazy
+            eval
+            store 0
+32          load 0                                   || mtestaf0
+            push 10
+            mod
+            push 1
+            call 5                                   || fromto
+            tailcall 1 20                            || cm
+33          load 0                                   || mtest_lazy
+            eval
+            store 0
+34          load 0                                   || mtest
+            push 1
+            call 5                                   || fromto
+            pushfunc 1 31                            || mtestaf0_lazy
+            create 1 7
+            call 16                                  || map
+            tailcall 1 8                             || sum
+35          load 0                                   || match_lazy
+            eval
+            store 0
+36          load 0                                   || match
+            push 1
+            call 5                                   || fromto
+            pushfunc 1 33                            || mtest_lazy
+            create 1 7
+            call 16                                  || map
+            tailcall 1 8                             || sum
+
+.metadata
+types 1
+type 5 list 2
+  constr 0 Nil 0
+  constr 1 Cons 2
+functions 20
+  func 1 start 0 0
+  func 0 start 0 0
+  func 3 t 0 0
+  func 2 t 0 0
+  func 5 fromto 2 110
+  func 4 fromto 2 110
+  func 8 sum 1 10
+  func 7 sum 1 10
+  func 12 length 1 10
+  func 11 length 1 10
+  func 16 map 2 010
+  func 15 map 2 010
+  func 20 cm 1 10
+  func 19 cm 1 10
+  func 32 mtestaf0 1 10
+  func 31 mtestaf0 1 10
+  func 34 mtest 1 10
+  func 33 mtest 1 10
+  func 36 match 1 10
+  func 35 match 1 10
+.endmetadata
