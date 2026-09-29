@@ -1,6 +1,6 @@
 {
- "gebouwd": "2026-09-29T10:58:13",
- "commit": "559a5a3 (+ lokale wijzigingen)",
+ "gebouwd": "2026-09-29T11:44:16",
+ "commit": "bd3f7e2 (+ lokale wijzigingen)",
  "varianten": {
   "tail_groot": {
    "pages": 7345
@@ -69,5 +69,8 @@
   "invoer": "gen1_input.cfp",
   "lengte": 1345359,
   "fnv": "b047e18c"
+ },
+ "kalibratie": {
+  "verwacht": "res: 7049155\n"
  }
 }

@@ -74,11 +74,14 @@ URL-parameters (ook handig voor headless tests; zie
 ## Varianten
 
 - **Compiler-variant:**
-  - *tail calls* is de snelle variant.
-  - *driverlus* werkt ook zonder WASM tail calls, maar is trager.
-  - *automatisch* kiest *tail calls* als de browser een module met
-    `return_call` kan valideren. De omgevingsregel bovenaan toont wat de
-    browser kan.
+  - *tail calls* is de snelste variant in V8 (Chrome, Edge).
+  - *driverlus* werkt ook zonder WASM tail calls, en is de snelste in
+    JavaScriptCore (Safari, en elke browser op iPad/iPhone).
+  - *automatisch* draait eerst een kort programma (nfib 32) in beide
+    varianten en kiest de snelste. Ondersteuning zegt niets over snelheid: in
+    Safari/JavaScriptCore zijn tail calls ~3× trager dan de driverlus, in
+    Chrome andersom. De uitkomst staat in de omgevingsinfo en in het
+    rapport.
 - **Geheugen:**
   - *groot* gebruikt dezelfde heap als `vm.cpp`, in totaal ~460 MB.
   - *klein* gebruikt ~275 MB en doet meer GC's.

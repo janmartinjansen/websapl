@@ -6,6 +6,7 @@
 const $ = id => document.getElementById(id);
 const params = new URLSearchParams(location.search);
 let manifest, stopped = false, results = {};
+let kalibratie = null;   // {tail, driver, gekozen}: bij 'automatisch' de snelste variant
 
 // tail calls: kan de engine een module met return_call valideren?
 const tailCallModule = new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 4, 1, 96, 0, 0, 3, 2, 1, 0, 10, 6, 1, 4, 0, 18, 0, 11]);
@@ -18,6 +19,8 @@ function env() {
     'Kernen': navigator.hardwareConcurrency || '?',
     'Geheugen (deviceMemory)': navigator.deviceMemory ? navigator.deviceMemory + ' GB' : 'onbekend',
     'Tail calls': hasTailCalls ? 'ja' : 'nee (driverlus wordt gebruikt)',
+    'Kalibratie (nfib 32, warm)': kalibratie ? (kalibratie.tail != null ? 'tail ' + kalibratie.tail + ' ms, ' : '') +
+        'driver ' + kalibratie.driver + ' ms → ' + kalibratie.gekozen : ($('variant').value === 'auto' ? 'nog niet gedraaid' : 'n.v.t. (variant vast gekozen)'),
     'Build': manifest ? manifest.gebouwd + ', commit ' + manifest.commit : '?',
   };
   $('env').innerHTML = Object.entries(d).map(([k, v]) => `<dt>${k}</dt><dd>${String(v).replace(/</g, '&lt;')}</dd>`).join('');
@@ -25,9 +28,26 @@ function env() {
 }
 
 const variantNaam = () => {
-  const v = $('variant').value === 'auto' ? (hasTailCalls ? 'tail' : 'driver') : $('variant').value;
+  const v = $('variant').value === 'auto' ? (kalibratie ? kalibratie.gekozen : (hasTailCalls ? 'tail' : 'driver')) : $('variant').value;
   return v + '_' + $('geheugen').value;
 };
+
+// 'automatisch': een kort programma in beide varianten draaien en de snelste
+// nemen. Ondersteuning zegt niets over snelheid: JavaScriptCore (Safari) kan
+// tail calls, maar ze zijn daar ~3x trager dan de driverlus; in V8 andersom.
+async function kalibreer() {
+  const meet = async v => {
+    const r = await inWorker(Object.assign(job('kalibratie', 'compiler'), {
+      wasm: 'build/kalibratie.' + v + '_' + $('geheugen').value + '.wasm', variant: v }));
+    if (!r.ok || !r.res.runs.every(x => x.ok)) return null;
+    return Math.min(r.res.runs[0].ms, r.res.runs[1].ms);
+  };
+  $('status').textContent = 'kalibratie…';
+  const k = { tail: hasTailCalls ? await meet('tail') : null, driver: await meet('driver') };
+  k.gekozen = k.tail != null && (k.driver == null || k.tail <= k.driver) ? 'tail' : 'driver';
+  kalibratie = k;
+  env();
+}
 
 function programmas() {
   const all = manifest.benchmarks.map(b => b.naam).concat(['gen1']);
@@ -38,7 +58,9 @@ function programmas() {
 function job(naam, soort) {
   const v = variantNaam();
   const j = { soort, naam };
-  if (naam === 'gen1') {
+  if (naam === 'kalibratie') {
+    j.verwacht = manifest.kalibratie.verwacht;
+  } else if (naam === 'gen1') {
     j.gen1 = { invoer: 'build/' + manifest.gen1.invoer, lengte: manifest.gen1.lengte, fnv: manifest.gen1.fnv };
     j.jmvm = '../engine/saplcomp.jmvm';
   } else {
@@ -104,6 +126,7 @@ function report() {
 async function runAll(namen) {
   stopped = false;
   $('alles').disabled = true; $('stop').disabled = false;
+  if ($('variant').value === 'auto' && !kalibratie) await kalibreer();
   for (const naam of namen) {
     if (stopped) break;
     results[naam] = {};
@@ -133,7 +156,8 @@ $('kopieer').onclick = async () => {
   try { await navigator.clipboard.writeText(txt); $('kopieerstatus').textContent = 'gekopieerd'; }
   catch (e) { $('uitvoer').focus(); $('uitvoer').select(); $('kopieerstatus').textContent = 'geselecteerd: kopieer met de hand (klembord niet beschikbaar op http)'; }
 };
-$('variant').onchange = $('geheugen').onchange = () => report();
+$('variant').onchange = () => { env(); report(); };
+$('geheugen').onchange = () => { kalibratie = null; env(); report(); };
 
 (async () => {
   try {
