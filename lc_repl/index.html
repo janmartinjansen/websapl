@@ -193,7 +193,7 @@
     druk op Enter &mdash; <code>:nf</code> reduceert tot bèta-normaalvorm,
     <code>:seval</code> laat de self-interpreter zelf een term uitvoeren,
     <code>:blc</code>/<code>:fromblc</code> converteren naar/van Tromp's
-    binaire notatie (<code>:hlc</code>/<code>:fromhlc</code>: hetzelfde in hex), en <code>:db</code>/<code>:scott</code> tonen hoe een
+    binaire notatie (<code>:hlc</code>/<code>:fromhlc</code>: hetzelfde in hex, <code>:b64lc</code>/<code>:fromb64lc</code>: in base64url), en <code>:db</code>/<code>:scott</code> tonen hoe een
     term intern gerepresenteerd is (de Bruijn-indices resp. de
     Scott-encoded datastructuur). Een <code>naam = ...</code>-binding blijft
     in de sessie en mag later hergebruikt worden; een regel die faalt laat
@@ -227,6 +227,12 @@ fact = Y (\self n. eq n 0 1 (mult n (self (sub n 1))))
       <button class="chip" type="button" data-cmd=":blc \x y.x">:blc K</button>
       <button class="chip" type="button" data-cmd="primes = (\p.p p) (\p d c. c (\f t.t) ((\n. p p n ((\r.r r)(\r. n (r r)))) (\a. (\g k s c. c k (s g)) (d a)))) (\g k s c. c (\f t.f) (s g))
 :hlc primes">:hlc priemzeef</button>
+      <button class="chip" type="button" data-cmd="primes = (\p.p p) (\p d c. c (\f t.t) ((\n. p p n ((\r.r r)(\r. n (r r)))) (\a. (\g k s c. c k (s g)) (d a)))) (\g k s c. c (\f t.f) (s g))
+:b64lc primes">:b64lc priemzeef</button>
+      <button class="chip" type="button" data-cmd="seval = (\m e.m m e m)(\m e b.e(\s.s b)(\a c.m m a b(m m c b))(\t x.m m t(\f.f x b)))
+:b64lc seval">:b64lc seval</button>
+      <button class="chip" type="button" data-cmd="E = ((\a.(a a)) (\a.(\b.(\c.(c (\d.(\e.(\f.(\g.(e (\h.(d (f (\i.(h (g (\j.(\k.(i (\l.(l k j)))))) (f (\j.(g (\k.(i k (j k))))))))) (h (g (\i.(i h))) (\i.(f (\j.(g (\k.(j (k h))))) e)))))))))) (a a) b)))))
+:b64lc E">:b64lc E (Tromp)</button>
       <button class="chip" type="button" data-cmd="seval = (\m e.m m e m)(\m e b.e(\s.s b)(\a c.m m a b(m m c b))(\t x.m m t(\f.f x b)))
 :hlc seval">:hlc seval</button>
       <button class="chip" type="button" data-cmd="primes = (\p.p p) (\p d c. c (\f t.t) ((\n. p p n ((\r.r r)(\r. n (r r)))) (\a. (\g k s c. c k (s g)) (d a)))) (\g k s c. c (\f t.f) (s g))
@@ -282,6 +288,8 @@ decodeAcc = Y (\self n ls acc. eq n 0 acc (ls (\h t. self (sub n 1) t (add (mult
       <tr><td>:fromblc &lt;bits&gt;</td><td>decodeer een binaire tekenreeks terug naar een term</td></tr>
       <tr><td>:hlc &lt;expr&gt;</td><td>als <code>:blc</code>, maar hexadecimaal (4 bits per cijfer, achteraan met nullen aangevuld)</td></tr>
       <tr><td>:fromhlc &lt;hex&gt;</td><td>decodeer een hexadecimale BLC-reeks terug naar een term</td></tr>
+      <tr><td>:b64lc &lt;expr&gt;</td><td>als <code>:blc</code>, maar in base64url (<code>A–Z a–z 0–9 - _</code>, 6 bits per teken, aangevuld tot hele bytes)</td></tr>
+      <tr><td>:fromb64lc &lt;b64&gt;</td><td>decodeer base64url (of gewone base64) terug naar een term</td></tr>
       <tr><td>{t1, t2, &hellip;}</td><td>in een expressie: de BLC-bits van <code>t1</code>, dan <code>t2</code>, &hellip; als luie stroom van booleans (bit 0 = <code>\x y.x</code>), de invoer voor een zelf-evaluator op bits: <code>:bits 30 evalT {\i. primes}</code></td></tr>
       <tr><td>:list</td><td>toon de namen van de huidige sessie-bindingen</td></tr>
     </table>

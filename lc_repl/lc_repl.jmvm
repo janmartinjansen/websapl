@@ -1,11 +1,11 @@
-readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStream_Nil writeStream_Cons str2list_lazy str2list strls_lazy strls strls_else strEqual_lazy strEqual strEqual_else strEqualAt_lazy strEqualAt strEqualAt_else strEqualAt_else_else list2str_lazy list2str fillStr_lazy fillStr fillStr_Nil fillStr_Cons strcat_lazy strcat toUpperChar_lazy toUpperChar toUpperChar_then_else toUpperChar_else code_lazy code decode_lazy decode strUpper_lazy strUpper strUpperAt_lazy strUpperAt strUpperAt_else substr_lazy substr substrClamp_lazy substrClamp substrClamp_else_else substrClamp_then substrLen_lazy substrLen substrLen_else_else substrLen_then itoa_lazy itoa itoa_else_then itoa_then length_lazy length length_Nil length_Cons map_lazy map map_Nil map_Cons filter_lazy filter filter_Nil filter_Cons filter_Cons_else foldl_lazy foldl foldl_Nil foldl_Cons foldr_lazy foldr foldr_Nil foldr_Cons append_lazy append append_Nil append_Cons take_lazy take take_Nil take_Cons take_Cons_else drop_lazy drop drop_Nil drop_Cons drop_Cons_else reverse_lazy reverse rev_lazy rev rev_Nil rev_Cons isDigit_lazy isDigit isDigit_then_false isDigit_else isAlpha_lazy isAlpha isAlpha_then_else isAlpha_else isAlphaNum_lazy isAlphaNum isAlphaNum_else isSpace_lazy isSpace isSpace_else isSpace_else_else isSpace_else_else_false lexNum_lazy lexNum lexNum_Nil lexNum_Cons lexNum_Cons_else lexIdent_lazy lexIdent lexIdent_Nil lexIdent_Cons lexIdent_Cons_else lexNumHelper_lazy lexNumHelper lexNumHelper_Pair lexIdentHelper_lazy lexIdentHelper lexIdentHelper_Pair lexer_lazy lexer lexer_Nil lexer_Cons lexer_Cons_else lexer_Cons_else_else lexer_Cons_else_else_else lexer_Cons_else_else_else_else showToken_lazy showToken showToken_Term showToken_Identifier showToken_Number showToken_NL showTokens_lazy showTokens showTokens_Nil showTokens_Cons cons_lazy cons nil_lazy nil var_lazy var app_lazy app abs__usr_lazy abs__usr lit_lazy lit makeSel_lazy makeSel makeSel_else iLam_lazy iLam i_lazy i s1Lam_lazy s1Lam s1_lazy s1 seval_lazy seval makeLamA_lazy makeLamA makeLamB_lazy makeLamB makeLamC_lazy makeLamC makeLamD_lazy makeLamD makeLam_lazy makeLam addBind_lazy addBind eqFn_lazy eqFn eqFn_else subFn_lazy subFn multFn_lazy multFn nameEq_lazy nameEq nameEq_Nil nameEq_Cons nameEqNil_lazy nameEqNil nameEqNil_Nil nameEqNil_Cons nameEqCons_lazy nameEqCons nameEqCons_Nil nameEqCons_Cons nameEqCons_Cons_else eqName_lazy eqName subName_lazy subName multName_lazy multName isPrimName_lazy isPrimName isPrimName_else isPrimName_else_else isCh_lazy isCh isCh_Term isCh_Identifier isCh_Number isCh_NL isChS_lazy isChS isChS_Nil isChS_Cons isChS_Cons_false lexAll_lazy lexAll dropNL_lazy dropNL dropNL_Nil dropNL_Cons dropNLTok_lazy dropNLTok dropNLTok_Term dropNLTok_Identifier dropNLTok_Number dropNLTok_NL findVarIndex_lazy findVarIndex findVarIndex_Nil findVarIndex_Cons findVarIndexTok_lazy findVarIndexTok findVarIndexTok_else bumpIndex_lazy bumpIndex bumpIndex_else parseExpr_lazy parseExpr parseExpr_Nil parseExpr_Cons parseExprTok_lazy parseExprTok parseExprTok_else parseLambda_lazy parseLambda parseLambdaVars_lazy parseLambdaVars parseLambdaVars_Nil parseLambdaVars_Cons parseLambdaVarsTok_lazy parseLambdaVarsTok parseLambdaVarsTok_Term parseLambdaVarsTok_Identifier parseLambdaVarsTok_Number parseLambdaVarsTok_NL wrapLAbs_lazy wrapLAbs wrapLAbs_Pair parseApp_lazy parseApp parseApp_Pair parseAppTail_lazy parseAppTail parseAppTail_Nil parseAppTail_Cons parseAppTailTok_lazy parseAppTailTok parseAppTailTok_then_Pair parseAppTailTok_else looksLikeAtomStart_lazy looksLikeAtomStart looksLikeAtomStart_Term looksLikeAtomStart_Identifier looksLikeAtomStart_Number looksLikeAtomStart_NL looksLikeAtomStartTerm_lazy looksLikeAtomStartTerm looksLikeAtomStartTerm_else looksLikeAtomStartTerm_else_else parseAtom_lazy parseAtom parseAtom_Nil parseAtom_Cons parseAtomTok_lazy parseAtomTok parseAtomTok_Term parseAtomTok_Identifier parseAtomTok_Number parseAtomTok_NL parseAtomTerm_lazy parseAtomTerm parseAtomTerm_else parseAtomTermBackslash_lazy parseAtomTermBackslash parseAtomTermBackslash_else parseAtomTermBrace_lazy parseAtomTermBrace parseAtomTermBrace_else parseQuote_lazy parseQuote parseQuote_Pair parseQuoteRest_lazy parseQuoteRest parseQuoteRest_Nil parseQuoteRest_Cons parseQuoteRestTok_lazy parseQuoteRestTok parseQuoteRestTok_then_Pair parseQuoteRestTok_else blcStream_lazy blcStream blcStream_Nil blcStream_Cons bitTerm_lazy bitTerm bitTerm_else parseParenExpr_lazy parseParenExpr parseParenExpr_Pair dropCloseParen_lazy dropCloseParen dropCloseParen_Nil dropCloseParen_Cons parseAtomIdent_lazy parseAtomIdent parseAtomIdentIdx_lazy parseAtomIdentIdx parseAtomIdentIdx_else parseAtomIdentFree_lazy parseAtomIdentFree parseAtomIdentFree_else parseAtomIdentBinding_lazy parseAtomIdentBinding parseAtomIdentBinding_else parseFreeError_lazy parseFreeError parseFreshTop_lazy parseFreshTop parseFreshTop_Pair toScott_lazy toScott toScott_LVar toScott_LApp toScott_LAbs toScott_LLitNum toScott_LLitPrim toScottPrim_lazy toScottPrim toScottPrim_else toScottPrim_else_else shiftTerm_lazy shiftTerm shiftTerm_LVar shiftTerm_LVar_else shiftTerm_LApp shiftTerm_LAbs shiftTerm_LLitNum shiftTerm_LLitPrim substTerm_lazy substTerm substTerm_LVar substTerm_LApp substTerm_LAbs substTerm_LLitNum substTerm_LLitPrim substVar_lazy substVar substVar_else betaReduce_lazy betaReduce whnf_lazy whnf whnf_LVar whnf_LApp whnf_LAbs whnf_LLitNum whnf_LLitPrim whnfApp_lazy whnfApp whnfApp_LVar whnfApp_LApp whnfApp_LAbs whnfApp_LLitNum whnfApp_LLitPrim nf_lazy nf nfFrom_lazy nfFrom nfFrom_LVar nfFrom_LApp nfFrom_LAbs nfFrom_LLitNum nfFrom_LLitPrim termToBlc_lazy termToBlc termToBlc_LVar termToBlc_LApp termToBlc_LAbs termToBlc_LLitNum termToBlc_LLitPrim onesFor_lazy onesFor onesFor_else filterBits_lazy filterBits filterBits_Nil filterBits_Cons filterBitsTok_lazy filterBitsTok filterBitsTok_else filterBitsTok_else_else parseBlc_lazy parseBlc parseBlc_Nil parseBlc_Cons parseBlcTok_lazy parseBlcTok parseBlcTok_else parseBlcTok_else_else parseBlcVar_lazy parseBlcVar parseBlcVar_Nil parseBlcVar_Cons parseBlcVarTok_lazy parseBlcVarTok parseBlcVarTok_else parseBlcVarTok_else_else parseBlcZero_lazy parseBlcZero parseBlcZero_Nil parseBlcZero_Cons parseBlcZeroTok_lazy parseBlcZeroTok parseBlcZeroTok_else parseBlcZeroTok_else_else parseBlcAbs_lazy parseBlcAbs parseBlcAbs_Pair parseBlcApp_lazy parseBlcApp parseBlcApp_Pair parseBlcAppL_lazy parseBlcAppL parseBlcAppL_Pair parseBlcTop_lazy parseBlcTop parseBlcTop_Pair blcToHex_lazy blcToHex zerosFor_lazy zerosFor zerosFor_else bitsToHex_lazy bitsToHex bitsToHex_Nil bitsToHex_Cons bitsToHex1_lazy bitsToHex1 bitsToHex1_Nil bitsToHex1_Cons bitsToHex2_lazy bitsToHex2 bitsToHex2_Nil bitsToHex2_Cons bitsToHex3_lazy bitsToHex3 bitsToHex3_Nil bitsToHex3_Cons hexDigit_lazy hexDigit hexDigit_then hexToBits_lazy hexToBits hexToBits_Nil hexToBits_Cons hexToBitsVal_lazy hexToBitsVal hexToBitsVal_then nibbleBits_lazy nibbleBits nibbleBits_else bitChar_lazy bitChar bitChar_else dropHexPrefix_lazy dropHexPrefix dropHexPrefix_else dropHexPrefix_else_else hexVal_lazy hexVal hexVal_then_else hexVal_else showTerm_lazy showTerm showTermD_lazy showTermD showTermD_LVar showTermD_LApp showTermD_LAbs showTermD_LLitNum showTermD_LLitPrim varName_lazy varName wrapParen_lazy wrapParen appendSp_lazy appendSp wrapAbsShow_lazy wrapAbsShow printChars_lazy printChars printChars_Nil printChars_Cons hasBindingName_lazy hasBindingName hasBindingName_Nil hasBindingName_Cons hasBindingNameTok_lazy hasBindingNameTok hasBindingNameTok_Pair hasBindingNameTok_Pair_else lookupBindingTerm_lazy lookupBindingTerm lookupBindingTerm_Nil lookupBindingTerm_Cons lookupBindingTermTok_lazy lookupBindingTermTok lookupBindingTermTok_Pair lookupBindingTermTok_Pair_else startsWith_lazy startsWith startsWith_Nil startsWith_Cons startsWithTok_lazy startsWithTok startsWithTok_Nil startsWithTok_Cons startsWithTok_Cons_else nfPrefix_lazy nfPrefix hlcPrefix_lazy hlcPrefix fromhlcPrefix_lazy fromhlcPrefix sevalPrefix_lazy sevalPrefix blcPrefix_lazy blcPrefix fromblcPrefix_lazy fromblcPrefix listPrefix_lazy listPrefix bitsPrefix_lazy bitsPrefix dbPrefix_lazy dbPrefix scottPrefix_lazy scottPrefix repl_lazy repl readAndDispatch_lazy readAndDispatch dispatchLine_lazy dispatchLine dispatchLine_else dispatchLine_else_else lambdaToBackslash_lazy lambdaToBackslash lambdaToBackslash_Nil lambdaToBackslash_Cons lambdaToBackslash_Cons_else lamAfter206_lazy lamAfter206 lamAfter206_Nil lamAfter206_Cons lamAfter206_Cons_else dispatchCs_lazy dispatchCs dispatchCs_else dispatchCs_else_else dispatchCs_else_else_else dispatchCs_else_else_else_else dispatchCs_else_else_else_else_else dispatchCs_else_else_else_else_else_else dispatchCs_else_else_else_else_else_else_else dispatchCs_else_else_else_else_else_else_else_else dispatchCs_else_else_else_else_else_else_else_else_else dispatchCs_else_else_else_else_else_else_else_else_else_else routeAssignOrEval_lazy routeAssignOrEval routeAssignOrEval_Nil routeAssignOrEval_Cons routeAssignOrEvalTok_lazy routeAssignOrEvalTok routeAssignOrEvalTok_Term routeAssignOrEvalTok_Identifier routeAssignOrEvalTok_Number routeAssignOrEvalTok_NL routeAssignCheck_lazy routeAssignCheck routeAssignCheck_Nil routeAssignCheck_Cons routeAssignCheckTok_lazy routeAssignCheckTok routeAssignCheckTok_else cmdAssign_lazy cmdAssign cmdAssignForce_lazy cmdAssignForce cmdAssignForce_else termSize_lazy termSize termSize_LVar termSize_LApp termSize_LAbs termSize_LLitNum termSize_LLitPrim cmdAssignShow_lazy cmdAssignShow cmdEvalEcho_lazy cmdEvalEcho cmdEvalEchoShow_lazy cmdEvalEchoShow cmdNf_lazy cmdNf cmdNfShow_lazy cmdNfShow cmdSeval_lazy cmdSeval cmdSevalShow_lazy cmdSevalShow cmdBits_lazy cmdBits cmdBits_Nil cmdBits_Cons cmdBitsTok_lazy cmdBitsTok cmdBitsTok_Term cmdBitsTok_Identifier cmdBitsTok_Number cmdBitsTok_NL printBits_lazy printBits printBits_else printBitsLam_lazy printBitsLam cmdDb_lazy cmdDb showDb_lazy showDb showDb_LVar showDb_LApp showDb_LAbs showDb_LLitNum showDb_LLitPrim showDbFun_lazy showDbFun showDbFun_LVar showDbFun_LApp showDbFun_LAbs showDbFun_LLitNum showDbFun_LLitPrim showDbArg_lazy showDbArg showDbArg_LVar showDbArg_LApp showDbArg_LAbs showDbArg_LLitNum showDbArg_LLitPrim cmdScott_lazy cmdScott cmdScottShow_lazy cmdScottShow showScott_lazy showScott showScott_LVar showScott_LApp showScott_LAbs showScott_LLitNum showScott_LLitPrim showScottLam_lazy showScottLam showScottLam_LVar showScottLam_LApp showScottLam_LAbs showScottLam_LLitNum showScottLam_LLitPrim scottSel_lazy scottSel cmdBlc_lazy cmdBlc cmdBlcShow_lazy cmdBlcShow cmdHlc_lazy cmdHlc cmdFromBlc_lazy cmdFromBlc cmdFromBlcShow_lazy cmdFromBlcShow cmdList_lazy cmdList printBindingNames_lazy printBindingNames printBindingNames_Nil printBindingNames_Cons printBindingNamesTok_lazy printBindingNamesTok printBindingNamesTok_Pair printBindingNamesRest_lazy printBindingNamesRest printBindingNamesRest_Nil printBindingNamesRest_Cons start_lazy start readStream_1_lazy readStream_1 substrClamp_j1_lazy substrClamp_j1 take_1_lazy take_1 drop_1_lazy drop_1 isAlpha_j1_lazy isAlpha_j1 isAlpha_j1_false isAlpha_j2_lazy isAlpha_j2 isAlpha_j2_then_else isAlpha_j2_else lexNum_1_lazy lexNum_1 lexNumHelper_1_lazy lexNumHelper_1 lexIdentHelper_1_lazy lexIdentHelper_1 showTokens_1_lazy showTokens_1 showTokens_1_else parseLambdaVarsTok_1_lazy parseLambdaVarsTok_1 shiftTerm_1_lazy shiftTerm_1 shiftTerm_2_lazy shiftTerm_2 substTerm_1_lazy substTerm_1 parseBlcVarTok_1_lazy parseBlcVarTok_1 bitsToHex1_1_lazy bitsToHex1_1 bitsToHex2_1_lazy bitsToHex2_1 nibbleBits_1_lazy nibbleBits_1 nibbleBits_v2_lazy nibbleBits_v2 nibbleBits_v2_false dropHexPrefix_j1_lazy dropHexPrefix_j1 hexVal_j1_lazy hexVal_j1 hexVal_j2_lazy hexVal_j2 hexVal_j2_then_else hexVal_j2_else hexVal_j3_lazy hexVal_j3 hexVal_j3_then_else hexVal_j3_else showTermD_1_lazy showTermD_1 showTermD_2_lazy showTermD_2 showTermD_3_lazy showTermD_3 readAndDispatch_1_lazy readAndDispatch_1 routeAssignCheck_1_lazy routeAssignCheck_1 routeAssignCheckTok_1_lazy routeAssignCheckTok_1 cmdAssignShow_1_lazy cmdAssignShow_1 scottSel_1_lazy scottSel_1 #
-            call 722                                 || start
+readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStream_Nil writeStream_Cons str2list_lazy str2list strls_lazy strls strls_else strEqual_lazy strEqual strEqual_else strEqualAt_lazy strEqualAt strEqualAt_else strEqualAt_else_else list2str_lazy list2str fillStr_lazy fillStr fillStr_Nil fillStr_Cons strcat_lazy strcat toUpperChar_lazy toUpperChar toUpperChar_then_else toUpperChar_else code_lazy code decode_lazy decode strUpper_lazy strUpper strUpperAt_lazy strUpperAt strUpperAt_else substr_lazy substr substrClamp_lazy substrClamp substrClamp_else_else substrClamp_then substrLen_lazy substrLen substrLen_else_else substrLen_then itoa_lazy itoa itoa_else_then itoa_then length_lazy length length_Nil length_Cons map_lazy map map_Nil map_Cons filter_lazy filter filter_Nil filter_Cons filter_Cons_else foldl_lazy foldl foldl_Nil foldl_Cons foldr_lazy foldr foldr_Nil foldr_Cons append_lazy append append_Nil append_Cons take_lazy take take_Nil take_Cons take_Cons_else drop_lazy drop drop_Nil drop_Cons drop_Cons_else reverse_lazy reverse rev_lazy rev rev_Nil rev_Cons isDigit_lazy isDigit isDigit_then_false isDigit_else isAlpha_lazy isAlpha isAlpha_then_else isAlpha_else isAlphaNum_lazy isAlphaNum isAlphaNum_else isSpace_lazy isSpace isSpace_else isSpace_else_else isSpace_else_else_false lexNum_lazy lexNum lexNum_Nil lexNum_Cons lexNum_Cons_else lexIdent_lazy lexIdent lexIdent_Nil lexIdent_Cons lexIdent_Cons_else lexNumHelper_lazy lexNumHelper lexNumHelper_Pair lexIdentHelper_lazy lexIdentHelper lexIdentHelper_Pair lexer_lazy lexer lexer_Nil lexer_Cons lexer_Cons_else lexer_Cons_else_else lexer_Cons_else_else_else lexer_Cons_else_else_else_else showToken_lazy showToken showToken_Term showToken_Identifier showToken_Number showToken_NL showTokens_lazy showTokens showTokens_Nil showTokens_Cons cons_lazy cons nil_lazy nil var_lazy var app_lazy app abs__usr_lazy abs__usr lit_lazy lit makeSel_lazy makeSel makeSel_else iLam_lazy iLam i_lazy i s1Lam_lazy s1Lam s1_lazy s1 seval_lazy seval makeLamA_lazy makeLamA makeLamB_lazy makeLamB makeLamC_lazy makeLamC makeLamD_lazy makeLamD makeLam_lazy makeLam addBind_lazy addBind eqFn_lazy eqFn eqFn_else subFn_lazy subFn multFn_lazy multFn nameEq_lazy nameEq nameEq_Nil nameEq_Cons nameEqNil_lazy nameEqNil nameEqNil_Nil nameEqNil_Cons nameEqCons_lazy nameEqCons nameEqCons_Nil nameEqCons_Cons nameEqCons_Cons_else eqName_lazy eqName subName_lazy subName multName_lazy multName isPrimName_lazy isPrimName isPrimName_else isPrimName_else_else isCh_lazy isCh isCh_Term isCh_Identifier isCh_Number isCh_NL isChS_lazy isChS isChS_Nil isChS_Cons isChS_Cons_false lexAll_lazy lexAll dropNL_lazy dropNL dropNL_Nil dropNL_Cons dropNLTok_lazy dropNLTok dropNLTok_Term dropNLTok_Identifier dropNLTok_Number dropNLTok_NL findVarIndex_lazy findVarIndex findVarIndex_Nil findVarIndex_Cons findVarIndexTok_lazy findVarIndexTok findVarIndexTok_else bumpIndex_lazy bumpIndex bumpIndex_else parseExpr_lazy parseExpr parseExpr_Nil parseExpr_Cons parseExprTok_lazy parseExprTok parseExprTok_else parseLambda_lazy parseLambda parseLambdaVars_lazy parseLambdaVars parseLambdaVars_Nil parseLambdaVars_Cons parseLambdaVarsTok_lazy parseLambdaVarsTok parseLambdaVarsTok_Term parseLambdaVarsTok_Identifier parseLambdaVarsTok_Number parseLambdaVarsTok_NL wrapLAbs_lazy wrapLAbs wrapLAbs_Pair parseApp_lazy parseApp parseApp_Pair parseAppTail_lazy parseAppTail parseAppTail_Nil parseAppTail_Cons parseAppTailTok_lazy parseAppTailTok parseAppTailTok_then_Pair parseAppTailTok_else looksLikeAtomStart_lazy looksLikeAtomStart looksLikeAtomStart_Term looksLikeAtomStart_Identifier looksLikeAtomStart_Number looksLikeAtomStart_NL looksLikeAtomStartTerm_lazy looksLikeAtomStartTerm looksLikeAtomStartTerm_else looksLikeAtomStartTerm_else_else parseAtom_lazy parseAtom parseAtom_Nil parseAtom_Cons parseAtomTok_lazy parseAtomTok parseAtomTok_Term parseAtomTok_Identifier parseAtomTok_Number parseAtomTok_NL parseAtomTerm_lazy parseAtomTerm parseAtomTerm_else parseAtomTermBackslash_lazy parseAtomTermBackslash parseAtomTermBackslash_else parseAtomTermBrace_lazy parseAtomTermBrace parseAtomTermBrace_else parseQuote_lazy parseQuote parseQuote_Pair parseQuoteRest_lazy parseQuoteRest parseQuoteRest_Nil parseQuoteRest_Cons parseQuoteRestTok_lazy parseQuoteRestTok parseQuoteRestTok_then_Pair parseQuoteRestTok_else blcStream_lazy blcStream blcStream_Nil blcStream_Cons bitTerm_lazy bitTerm bitTerm_else parseParenExpr_lazy parseParenExpr parseParenExpr_Pair dropCloseParen_lazy dropCloseParen dropCloseParen_Nil dropCloseParen_Cons parseAtomIdent_lazy parseAtomIdent parseAtomIdentIdx_lazy parseAtomIdentIdx parseAtomIdentIdx_else parseAtomIdentFree_lazy parseAtomIdentFree parseAtomIdentFree_else parseAtomIdentBinding_lazy parseAtomIdentBinding parseAtomIdentBinding_else parseFreeError_lazy parseFreeError parseFreshTop_lazy parseFreshTop parseFreshTop_Pair toScott_lazy toScott toScott_LVar toScott_LApp toScott_LAbs toScott_LLitNum toScott_LLitPrim toScottPrim_lazy toScottPrim toScottPrim_else toScottPrim_else_else shiftTerm_lazy shiftTerm shiftTerm_LVar shiftTerm_LVar_else shiftTerm_LApp shiftTerm_LAbs shiftTerm_LLitNum shiftTerm_LLitPrim substTerm_lazy substTerm substTerm_LVar substTerm_LApp substTerm_LAbs substTerm_LLitNum substTerm_LLitPrim substVar_lazy substVar substVar_else betaReduce_lazy betaReduce whnf_lazy whnf whnf_LVar whnf_LApp whnf_LAbs whnf_LLitNum whnf_LLitPrim whnfApp_lazy whnfApp whnfApp_LVar whnfApp_LApp whnfApp_LAbs whnfApp_LLitNum whnfApp_LLitPrim nf_lazy nf nfFrom_lazy nfFrom nfFrom_LVar nfFrom_LApp nfFrom_LAbs nfFrom_LLitNum nfFrom_LLitPrim termToBlc_lazy termToBlc termToBlc_LVar termToBlc_LApp termToBlc_LAbs termToBlc_LLitNum termToBlc_LLitPrim onesFor_lazy onesFor onesFor_else filterBits_lazy filterBits filterBits_Nil filterBits_Cons filterBitsTok_lazy filterBitsTok filterBitsTok_else filterBitsTok_else_else parseBlc_lazy parseBlc parseBlc_Nil parseBlc_Cons parseBlcTok_lazy parseBlcTok parseBlcTok_else parseBlcTok_else_else parseBlcVar_lazy parseBlcVar parseBlcVar_Nil parseBlcVar_Cons parseBlcVarTok_lazy parseBlcVarTok parseBlcVarTok_else parseBlcVarTok_else_else parseBlcZero_lazy parseBlcZero parseBlcZero_Nil parseBlcZero_Cons parseBlcZeroTok_lazy parseBlcZeroTok parseBlcZeroTok_else parseBlcZeroTok_else_else parseBlcAbs_lazy parseBlcAbs parseBlcAbs_Pair parseBlcApp_lazy parseBlcApp parseBlcApp_Pair parseBlcAppL_lazy parseBlcAppL parseBlcAppL_Pair parseBlcTop_lazy parseBlcTop parseBlcTop_Pair blcToHex_lazy blcToHex zerosFor_lazy zerosFor zerosFor_else bitsToHex_lazy bitsToHex bitsToHex_Nil bitsToHex_Cons bitsToHex1_lazy bitsToHex1 bitsToHex1_Nil bitsToHex1_Cons bitsToHex2_lazy bitsToHex2 bitsToHex2_Nil bitsToHex2_Cons bitsToHex3_lazy bitsToHex3 bitsToHex3_Nil bitsToHex3_Cons hexDigit_lazy hexDigit hexDigit_then hexToBits_lazy hexToBits hexToBits_Nil hexToBits_Cons hexToBitsVal_lazy hexToBitsVal hexToBitsVal_then nibbleBits_lazy nibbleBits nibbleBits_else bitChar_lazy bitChar bitChar_else dropHexPrefix_lazy dropHexPrefix dropHexPrefix_else dropHexPrefix_else_else blcToB64_lazy blcToB64 padTo_lazy padTo bitsToB64_lazy bitsToB64 bitsToB64_Nil bitsToB64_Cons b64Group_lazy b64Group b64Group_else b64Group_else_Nil b64Group_else_Cons b64Digit_lazy b64Digit b64Digit_else_else_else_else b64Digit_else_else_then b64Digit_else_then b64Digit_then b64ToBits_lazy b64ToBits b64ToBits_Nil b64ToBits_Cons b64ToBitsVal_lazy b64ToBitsVal b64ToBitsVal_then b64Val_lazy b64Val b64Val_then_else b64Val_else hexVal_lazy hexVal hexVal_then_else hexVal_else showTerm_lazy showTerm showTermD_lazy showTermD showTermD_LVar showTermD_LApp showTermD_LAbs showTermD_LLitNum showTermD_LLitPrim varName_lazy varName wrapParen_lazy wrapParen appendSp_lazy appendSp wrapAbsShow_lazy wrapAbsShow printChars_lazy printChars printChars_Nil printChars_Cons hasBindingName_lazy hasBindingName hasBindingName_Nil hasBindingName_Cons hasBindingNameTok_lazy hasBindingNameTok hasBindingNameTok_Pair hasBindingNameTok_Pair_else lookupBindingTerm_lazy lookupBindingTerm lookupBindingTerm_Nil lookupBindingTerm_Cons lookupBindingTermTok_lazy lookupBindingTermTok lookupBindingTermTok_Pair lookupBindingTermTok_Pair_else startsWith_lazy startsWith startsWith_Nil startsWith_Cons startsWithTok_lazy startsWithTok startsWithTok_Nil startsWithTok_Cons startsWithTok_Cons_else nfPrefix_lazy nfPrefix hlcPrefix_lazy hlcPrefix fromhlcPrefix_lazy fromhlcPrefix b64Prefix_lazy b64Prefix fromb64Prefix_lazy fromb64Prefix sevalPrefix_lazy sevalPrefix blcPrefix_lazy blcPrefix fromblcPrefix_lazy fromblcPrefix listPrefix_lazy listPrefix bitsPrefix_lazy bitsPrefix dbPrefix_lazy dbPrefix scottPrefix_lazy scottPrefix repl_lazy repl readAndDispatch_lazy readAndDispatch dispatchLine_lazy dispatchLine dispatchLine_else dispatchLine_else_else lambdaToBackslash_lazy lambdaToBackslash lambdaToBackslash_Nil lambdaToBackslash_Cons lambdaToBackslash_Cons_else lamAfter206_lazy lamAfter206 lamAfter206_Nil lamAfter206_Cons lamAfter206_Cons_else dispatchCs_lazy dispatchCs dispatchCs_else dispatchCs_else_else dispatchCs_else_else_else dispatchCs_else_else_else_else dispatchCs_else_else_else_else_else dispatchCs_else_else_else_else_else_else dispatchCs_else_else_else_else_else_else_else dispatchCs_else_else_else_else_else_else_else_else dispatchCs_else_else_else_else_else_else_else_else_else dispatchCs_else_else_else_else_else_else_else_else_else_else dispatchCs_else_else_else_else_else_else_else_else_else_else_else dispatchCs_else_else_else_else_else_else_else_else_else_else_else_else routeAssignOrEval_lazy routeAssignOrEval routeAssignOrEval_Nil routeAssignOrEval_Cons routeAssignOrEvalTok_lazy routeAssignOrEvalTok routeAssignOrEvalTok_Term routeAssignOrEvalTok_Identifier routeAssignOrEvalTok_Number routeAssignOrEvalTok_NL routeAssignCheck_lazy routeAssignCheck routeAssignCheck_Nil routeAssignCheck_Cons routeAssignCheckTok_lazy routeAssignCheckTok routeAssignCheckTok_else cmdAssign_lazy cmdAssign cmdAssignForce_lazy cmdAssignForce cmdAssignForce_else termSize_lazy termSize termSize_LVar termSize_LApp termSize_LAbs termSize_LLitNum termSize_LLitPrim cmdAssignShow_lazy cmdAssignShow cmdEvalEcho_lazy cmdEvalEcho cmdEvalEchoShow_lazy cmdEvalEchoShow cmdNf_lazy cmdNf cmdNfShow_lazy cmdNfShow cmdSeval_lazy cmdSeval cmdSevalShow_lazy cmdSevalShow cmdBits_lazy cmdBits cmdBits_Nil cmdBits_Cons cmdBitsTok_lazy cmdBitsTok cmdBitsTok_Term cmdBitsTok_Identifier cmdBitsTok_Number cmdBitsTok_NL printBits_lazy printBits printBits_else printBitsLam_lazy printBitsLam cmdDb_lazy cmdDb showDb_lazy showDb showDb_LVar showDb_LApp showDb_LAbs showDb_LLitNum showDb_LLitPrim showDbFun_lazy showDbFun showDbFun_LVar showDbFun_LApp showDbFun_LAbs showDbFun_LLitNum showDbFun_LLitPrim showDbArg_lazy showDbArg showDbArg_LVar showDbArg_LApp showDbArg_LAbs showDbArg_LLitNum showDbArg_LLitPrim cmdScott_lazy cmdScott cmdScottShow_lazy cmdScottShow showScott_lazy showScott showScott_LVar showScott_LApp showScott_LAbs showScott_LLitNum showScott_LLitPrim showScottLam_lazy showScottLam showScottLam_LVar showScottLam_LApp showScottLam_LAbs showScottLam_LLitNum showScottLam_LLitPrim scottSel_lazy scottSel cmdBlc_lazy cmdBlc cmdBlcShow_lazy cmdBlcShow cmdB64_lazy cmdB64 cmdHlc_lazy cmdHlc cmdFromBlc_lazy cmdFromBlc cmdFromBlcShow_lazy cmdFromBlcShow cmdList_lazy cmdList printBindingNames_lazy printBindingNames printBindingNames_Nil printBindingNames_Cons printBindingNamesTok_lazy printBindingNamesTok printBindingNamesTok_Pair printBindingNamesRest_lazy printBindingNamesRest printBindingNamesRest_Nil printBindingNamesRest_Cons start_lazy start readStream_1_lazy readStream_1 substrClamp_j1_lazy substrClamp_j1 take_1_lazy take_1 drop_1_lazy drop_1 isAlpha_j1_lazy isAlpha_j1 isAlpha_j1_false isAlpha_j2_lazy isAlpha_j2 isAlpha_j2_then_else isAlpha_j2_else lexNum_1_lazy lexNum_1 lexNumHelper_1_lazy lexNumHelper_1 lexIdentHelper_1_lazy lexIdentHelper_1 showTokens_1_lazy showTokens_1 showTokens_1_else parseLambdaVarsTok_1_lazy parseLambdaVarsTok_1 shiftTerm_1_lazy shiftTerm_1 shiftTerm_2_lazy shiftTerm_2 substTerm_1_lazy substTerm_1 parseBlcVarTok_1_lazy parseBlcVarTok_1 bitsToHex1_1_lazy bitsToHex1_1 bitsToHex2_1_lazy bitsToHex2_1 nibbleBits_1_lazy nibbleBits_1 nibbleBits_v2_lazy nibbleBits_v2 nibbleBits_v2_false dropHexPrefix_j1_lazy dropHexPrefix_j1 b64Group_1_lazy b64Group_1 b64Val_j1_lazy b64Val_j1 b64Val_j1_else b64Val_j1_else_else b64Val_j1_else_else_else b64Val_j1_else_else_else_else b64Val_j2_lazy b64Val_j2 b64Val_j2_then_else b64Val_j2_else b64Val_j3_lazy b64Val_j3 b64Val_j3_then_else b64Val_j3_else hexVal_j1_lazy hexVal_j1 hexVal_j2_lazy hexVal_j2 hexVal_j2_then_else hexVal_j2_else hexVal_j3_lazy hexVal_j3 hexVal_j3_then_else hexVal_j3_else showTermD_1_lazy showTermD_1 showTermD_2_lazy showTermD_2 showTermD_3_lazy showTermD_3 readAndDispatch_1_lazy readAndDispatch_1 routeAssignCheck_1_lazy routeAssignCheck_1 routeAssignCheckTok_1_lazy routeAssignCheckTok_1 cmdAssignShow_1_lazy cmdAssignShow_1 scottSel_1_lazy scottSel_1 #
+            call 760                                 || start
             print 4
             stop
 0           jmp 1                                    || readStream || readStream_lazy
 1           updsp 1                                  || readStream
             load 1
-            pushfunc 1 724                           || readStream_1
+            pushfunc 1 762                           || readStream_1
             create 2 3
             dup
             store 0
@@ -257,7 +257,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             sub
             iflt 44                                  || substrClamp_else_else
             push 0
-            tailcall 4 726                           || substrClamp_j1
+            tailcall 4 764                           || substrClamp_j1
 44          load 1                                   || substrClamp_else_else
             load 3
             load 1
@@ -270,7 +270,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             strop 1
             return 4
 45          push 0                                   || substrClamp_then
-            tailcall 4 726                           || substrClamp_j1
+            tailcall 4 764                           || substrClamp_j1
 46          load 0                                   || substrLen_lazy
             eval
             store 0
@@ -431,7 +431,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             return 4
 83          load 1                                   || take_Cons_else
             load 2
-            pushfunc 1 728                           || take_1
+            pushfunc 1 766                           || take_1
             create 2 3
             pushfunc 2 79                            || take_lazy
             create 3 3
@@ -455,7 +455,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 88          load 1                                   || drop_Cons_else
             eval
             load 2
-            pushfunc 1 730                           || drop_1
+            pushfunc 1 768                           || drop_1
             create 2 3
             tailcall 4 85                            || drop
 89          load 0                                   || reverse_lazy
@@ -501,9 +501,9 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             iflt 101                                 || isAlpha_then_else
             return_const 1 1
 101         load 0                                   || isAlpha_then_else
-            tailcall 1 735                           || isAlpha_j2
+            tailcall 1 773                           || isAlpha_j2
 102         load 0                                   || isAlpha_else
-            tailcall 1 735                           || isAlpha_j2
+            tailcall 1 773                           || isAlpha_j2
 103         load 0                                   || isAlphaNum_lazy
             eval
             store 0
@@ -543,7 +543,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             eval
             load 0
             load 2
-            pushfunc 2 739                           || lexNum_1
+            pushfunc 2 777                           || lexNum_1
             create 3 3
             tailcall 4 112                           || lexNum
 115         load 3                                   || lexNum_Cons_else
@@ -584,7 +584,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             store 1
 122         load 1                                   || lexNumHelper
             load 0
-            pushfunc 1 741                           || lexNumHelper_1
+            pushfunc 1 779                           || lexNumHelper_1
             create 2 3
             call 112                                 || lexNum
             jmpt 1 123                               || lbs
@@ -599,7 +599,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             store 1
 125         load 1                                   || lexIdentHelper
             load 0
-            pushfunc 1 743                           || lexIdentHelper_1
+            pushfunc 1 781                           || lexIdentHelper_1
             create 2 3
             call 117                                 || lexIdent
             jmpt 1 126                               || lbs
@@ -679,7 +679,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 143         ccreatet 0 11 5 0                        || showTokens_Nil
             return 1
 144         load 1                                   || showTokens_Cons
-            pushfunc 1 745                           || showTokens_1
+            pushfunc 1 783                           || showTokens_1
             create 2 3
             load 0
             call 136                                 || showToken
@@ -1099,7 +1099,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 261         load 4                                   || parseLambdaVarsTok_Identifier
             load 2
             load 0
-            pushfunc 2 748                           || parseLambdaVarsTok_1
+            pushfunc 2 786                           || parseLambdaVarsTok_1
             create 3 3
             load 1
             call 255                                 || parseLambdaVars
@@ -1468,14 +1468,14 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             store 0
 341         load 0                                   || parseAtomIdentBinding
             load 1
-            call 523                                 || hasBindingName
+            call 553                                 || hasBindingName
             ifeq 342                                 || parseAtomIdentBinding_else
             load 2
             eval
             load 0
             load 1
             eval
-            call 531                                 || lookupBindingTerm
+            call 561                                 || lookupBindingTerm
             ccreatet 2 11 7 0
             return 3
 342         load 1                                   || parseAtomIdentBinding_else
@@ -1571,7 +1571,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             ifle 362                                 || shiftTerm_LVar_else
             load 1
             load 0
-            pushfunc 2 750                           || shiftTerm_1
+            pushfunc 2 788                           || shiftTerm_1
             create 3 3
             ccreatet 1 11 8 0
             return 4
@@ -1592,7 +1592,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             return 5
 364         load 0                                   || shiftTerm_LAbs
             load 2
-            pushfunc 1 752                           || shiftTerm_2
+            pushfunc 1 790                           || shiftTerm_2
             create 2 3
             load 1
             pushfunc 3 359                           || shiftTerm_lazy
@@ -1635,7 +1635,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             pushfunc 3 359                           || shiftTerm_lazy
             create 4 3
             load 1
-            pushfunc 1 754                           || substTerm_1
+            pushfunc 1 792                           || substTerm_1
             create 2 3
             pushfunc 3 367                           || substTerm_lazy
             create 4 3
@@ -1890,7 +1890,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             load 2
             eval
             load 0
-            pushfunc 1 756                           || parseBlcVarTok_1
+            pushfunc 1 794                           || parseBlcVarTok_1
             create 2 3
             tailcall 3 429                           || parseBlcVar
 434         loadadd 1 -48                            || parseBlcVarTok_else
@@ -2025,7 +2025,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             eval
             load 0
             load 2
-            pushfunc 2 758                           || bitsToHex1_1
+            pushfunc 2 796                           || bitsToHex1_1
             create 3 3
             tailcall 4 470                           || bitsToHex2
 469         load 1                                   || bitsToHex2_lazy
@@ -2040,7 +2040,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             eval
             load 0
             load 2
-            pushfunc 2 760                           || bitsToHex2_1
+            pushfunc 2 798                           || bitsToHex2_1
             create 3 3
             tailcall 4 474                           || bitsToHex3
 473         load 1                                   || bitsToHex3_lazy
@@ -2082,7 +2082,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             return 1
 483         load 1                                   || hexToBits_Cons
             load 0
-            call 498                                 || hexVal
+            call 528                                 || hexVal
             tailcall 3 485                           || hexToBitsVal
 484         load 0                                   || hexToBitsVal_lazy
             eval
@@ -2108,7 +2108,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 489         load 2                                   || nibbleBits_else
             load 0
             load 1
-            pushfunc 2 762                           || nibbleBits_1
+            pushfunc 2 800                           || nibbleBits_1
             create 3 3
             load 0
             push 2
@@ -2117,7 +2117,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             create 4 3
             load 0
             load 1
-            call 764                                 || nibbleBits_v2
+            call 802                                 || nibbleBits_v2
             call 491                                 || bitChar
             ccreatet 2 11 5 1
             return 3
@@ -2134,88 +2134,207 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 494         load 0                                   || dropHexPrefix
             push "0x"
             call 8                                   || str2list
-            call 539                                 || startsWith
+            call 569                                 || startsWith
             ifeq 495                                 || dropHexPrefix_else
             load 0
-            tailcall 1 767                           || dropHexPrefix_j1
+            tailcall 1 805                           || dropHexPrefix_j1
 495         load 0                                   || dropHexPrefix_else
             push "0X"
             call 8                                   || str2list
-            call 539                                 || startsWith
+            call 569                                 || startsWith
             ifeq 496                                 || dropHexPrefix_else_else
             load 0
-            tailcall 1 767                           || dropHexPrefix_j1
+            tailcall 1 805                           || dropHexPrefix_j1
 496         load 0                                   || dropHexPrefix_else_else
             return 1
-497         load 0                                   || hexVal_lazy
+497         load 0                                   || blcToB64_lazy
             eval
             store 0
-498         loadadd 0 -48                            || hexVal
-            iflt 500                                 || hexVal_else
+498         load 0                                   || blcToB64
+            push 8
+            call 500                                 || padTo
+            push 6
+            call 500                                 || padTo
+            tailcall 1 502                           || bitsToB64
+499         load 1                                   || padTo_lazy
+            eval
+            store 1
+500         load 0                                   || padTo
+            eval
+            load 1
+            call 55                                  || length
+            load 0
+            eval
+            mod
+            sub
+            load 0
+            eval
+            mod
+            pushfunc 1 459                           || zerosFor
+            create 2 3
+            load 1
+            tailcall 2 76                            || append
+501         load 0                                   || bitsToB64_lazy
+            eval
+            store 0
+502         load 0                                   || bitsToB64
+            jmpt 2 503 504                           || lbs
+503         ccreatet 0 11 5 0                        || bitsToB64_Nil
+            return 1
+504         load 1                                   || bitsToB64_Cons
+            loadadd 0 -48
+            push 5
+            tailcall 3 506                           || b64Group
+505         load 0                                   || b64Group_lazy
+            eval
+            store 0
+506         load 0                                   || b64Group
+            ifneq 507                                || b64Group_else
+            load 2
+            pushfunc 1 501                           || bitsToB64_lazy
+            create 2 3
+            load 1
+            eval
+            call 511                                 || b64Digit
+            ccreatet 2 11 5 1
+            return 3
+507         load 2                                   || b64Group_else
+            eval
+            jmpt 2 508 509                           || lbs
+508         push "b64Group_else_Nil"                 || b64Group_else_Nil
+            debug 2
+            return 3
+509         load 1                                   || b64Group_else_Cons
+            load 0
+            load 3
+            pushfunc 2 807                           || b64Group_1
+            create 3 3
+            loadadd 2 -1
+            tailcall 5 506                           || b64Group
+510         load 0                                   || b64Digit_lazy
+            eval
+            store 0
+511         ifltlv 0 26 515                          || b64Digit_then || b64Digit
+            ifltlv 0 52 514                          || b64Digit_else_then
+            ifltlv 0 62 513                          || b64Digit_else_else_then
+            loadadd 0 -62
+            ifneq 512                                || b64Digit_else_else_else_else
+            return_const 1 45
+512         return_const 1 95                        || b64Digit_else_else_else_else
+513         loadadd 0 -4                             || b64Digit_else_else_then
+            return 1
+514         loadadd 0 71                             || b64Digit_else_then
+            return 1
+515         loadadd 0 65                             || b64Digit_then
+            return 1
+516         load 0                                   || b64ToBits_lazy
+            eval
+            store 0
+517         load 0                                   || b64ToBits
+            jmpt 2 518 519                           || lbs
+518         ccreatet 0 11 5 0                        || b64ToBits_Nil
+            return 1
+519         load 1                                   || b64ToBits_Cons
+            load 0
+            call 524                                 || b64Val
+            tailcall 3 521                           || b64ToBitsVal
+520         load 0                                   || b64ToBitsVal_lazy
+            eval
+            store 0
+521         ifltlv 0 0 522                           || b64ToBitsVal_then || b64ToBitsVal
+            load 1
+            pushfunc 1 516                           || b64ToBits_lazy
+            create 2 3
+            load 0
+            push 32
+            tailcall 2 488                           || nibbleBits
+522         load 1                                   || b64ToBitsVal_then
+            eval
+            tailcall 2 517                           || b64ToBits
+523         load 0                                   || b64Val_lazy
+            eval
+            store 0
+524         loadadd 0 -65                            || b64Val
+            iflt 526                                 || b64Val_else
+            push 90
+            load 0
+            sub
+            iflt 525                                 || b64Val_then_else
+            loadadd 0 -65
+            return 1
+525         load 0                                   || b64Val_then_else
+            tailcall 1 819                           || b64Val_j3
+526         load 0                                   || b64Val_else
+            tailcall 1 819                           || b64Val_j3
+527         load 0                                   || hexVal_lazy
+            eval
+            store 0
+528         loadadd 0 -48                            || hexVal
+            iflt 530                                 || hexVal_else
             push 57
             load 0
             sub
-            iflt 499                                 || hexVal_then_else
+            iflt 529                                 || hexVal_then_else
             loadadd 0 -48
             return 1
-499         load 0                                   || hexVal_then_else
-            tailcall 1 775                           || hexVal_j3
-500         load 0                                   || hexVal_else
-            tailcall 1 775                           || hexVal_j3
-501         load 0                                   || showTerm_lazy
+529         load 0                                   || hexVal_then_else
+            tailcall 1 829                           || hexVal_j3
+530         load 0                                   || hexVal_else
+            tailcall 1 829                           || hexVal_j3
+531         load 0                                   || showTerm_lazy
             eval
             store 0
-502         push 0                                   || showTerm
+532         push 0                                   || showTerm
             load 0
-            tailcall 1 504                           || showTermD
-503         load 0                                   || showTermD_lazy
+            tailcall 1 534                           || showTermD
+533         load 0                                   || showTermD_lazy
             eval
             store 0
-504         load 0                                   || showTermD
-            jmpt 5 505 506 507 508 509               || lbs
-505         load 0                                   || showTermD_LVar
+534         load 0                                   || showTermD
+            jmpt 5 535 536 537 538 539               || lbs
+535         load 0                                   || showTermD_LVar
             load 2
-            pushfunc 2 779                           || showTermD_1
+            pushfunc 2 833                           || showTermD_1
             create 3 3
-            tailcall 3 511                           || varName
-506         load 3                                   || showTermD_LApp
+            tailcall 3 541                           || varName
+536         load 3                                   || showTermD_LApp
             load 1
-            pushfunc 2 503                           || showTermD_lazy
+            pushfunc 2 533                           || showTermD_lazy
             create 3 3
             load 3
             load 0
-            pushfunc 2 503                           || showTermD_lazy
+            pushfunc 2 533                           || showTermD_lazy
             create 3 3
-            pushfunc 2 514                           || appendSp_lazy
+            pushfunc 2 544                           || appendSp_lazy
             create 3 3
-            tailcall 4 513                           || wrapParen
-507         load 2                                   || showTermD_LAbs
-            pushfunc 1 783                           || showTermD_3
+            tailcall 4 543                           || wrapParen
+537         load 2                                   || showTermD_LAbs
+            pushfunc 1 837                           || showTermD_3
             create 2 3
             load 0
-            pushfunc 2 503                           || showTermD_lazy
+            pushfunc 2 533                           || showTermD_lazy
             create 3 3
             load 2
-            pushfunc 1 781                           || showTermD_2
+            pushfunc 1 835                           || showTermD_2
             create 2 3
-            pushfunc 1 511                           || varName
+            pushfunc 1 541                           || varName
             create 2 3
-            tailcall 3 517                           || wrapAbsShow
-508         load 0                                   || showTermD_LLitNum
+            tailcall 3 547                           || wrapAbsShow
+538         load 0                                   || showTermD_LLitNum
             eval
             tailcall 3 51                            || itoa
-509         load 0                                   || showTermD_LLitPrim
+539         load 0                                   || showTermD_LLitPrim
             eval
             return 3
-510         jmp 511                                  || varName || varName_lazy
-511         load 0                                   || varName
+540         jmp 541                                  || varName || varName_lazy
+541         load 0                                   || varName
             pushfunc 1 50                            || itoa_lazy
             create 2 3
             push 118
             ccreatet 2 11 5 1
             return 1
-512         jmp 513                                  || wrapParen || wrapParen_lazy
-513         push ")"                                 || wrapParen
+542         jmp 543                                  || wrapParen || wrapParen_lazy
+543         push ")"                                 || wrapParen
             pushfunc 1 8                             || str2list
             create 2 3
             load 0
@@ -2224,10 +2343,10 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             push "("
             call 8                                   || str2list
             tailcall 1 76                            || append
-514         load 0                                   || appendSp_lazy
+544         load 0                                   || appendSp_lazy
             eval
             store 0
-515         load 1                                   || appendSp
+545         load 1                                   || appendSp
             push " "
             pushfunc 1 8                             || str2list
             create 2 3
@@ -2235,8 +2354,8 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             create 3 3
             load 0
             tailcall 2 76                            || append
-516         jmp 517                                  || wrapAbsShow || wrapAbsShow_lazy
-517         push ")"                                 || wrapAbsShow
+546         jmp 547                                  || wrapAbsShow || wrapAbsShow_lazy
+547         push ")"                                 || wrapAbsShow
             pushfunc 1 8                             || str2list
             create 2 3
             load 1
@@ -2253,219 +2372,225 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             push "(\\"
             call 8                                   || str2list
             tailcall 2 76                            || append
-518         load 0                                   || printChars_lazy
+548         load 0                                   || printChars_lazy
             eval
             store 0
-519         load 0                                   || printChars
-            jmpt 2 520 521                           || lbs
-520         return_const 1 0                         || printChars_Nil
-521         load 0                                   || printChars_Cons
+549         load 0                                   || printChars
+            jmpt 2 550 551                           || lbs
+550         return_const 1 0                         || printChars_Nil
+551         load 0                                   || printChars_Cons
             print 2
             load 1
             eval
-            tailcall 3 519                           || printChars
-522         load 1                                   || hasBindingName_lazy
+            tailcall 3 549                           || printChars
+552         load 1                                   || hasBindingName_lazy
             eval
             store 1
-523         load 1                                   || hasBindingName
-            jmpt 2 524 525                           || lbs
-524         return_const 2 0                         || hasBindingName_Nil
-525         load 1                                   || hasBindingName_Cons
+553         load 1                                   || hasBindingName
+            jmpt 2 554 555                           || lbs
+554         return_const 2 0                         || hasBindingName_Nil
+555         load 1                                   || hasBindingName_Cons
             load 0
             load 2
             eval
-            tailcall 4 527                           || hasBindingNameTok
-526         load 0                                   || hasBindingNameTok_lazy
+            tailcall 4 557                           || hasBindingNameTok
+556         load 0                                   || hasBindingNameTok_lazy
             eval
             store 0
             load 1
             eval
             store 1
-527         load 1                                   || hasBindingNameTok
-            jmpt 1 528                               || lbs
-528         load 2                                   || hasBindingNameTok_Pair
+557         load 1                                   || hasBindingNameTok
+            jmpt 1 558                               || lbs
+558         load 2                                   || hasBindingNameTok_Pair
             load 0
             call 190                                 || nameEq
-            ifeq 529                                 || hasBindingNameTok_Pair_else
+            ifeq 559                                 || hasBindingNameTok_Pair_else
             return_const 5 1
-529         load 4                                   || hasBindingNameTok_Pair_else
+559         load 4                                   || hasBindingNameTok_Pair_else
             eval
             load 2
-            tailcall 5 523                           || hasBindingName
-530         load 0                                   || lookupBindingTerm_lazy
+            tailcall 5 553                           || hasBindingName
+560         load 0                                   || lookupBindingTerm_lazy
             eval
             store 0
             load 1
             eval
             store 1
-531         load 1                                   || lookupBindingTerm
-            jmpt 2 532 533                           || lbs
-532         push "lookupBindingTerm_Nil"             || lookupBindingTerm_Nil
+561         load 1                                   || lookupBindingTerm
+            jmpt 2 562 563                           || lbs
+562         push "lookupBindingTerm_Nil"             || lookupBindingTerm_Nil
             debug 2
             return 2
-533         load 1                                   || lookupBindingTerm_Cons
+563         load 1                                   || lookupBindingTerm_Cons
             load 0
             load 2
-            tailcall 4 535                           || lookupBindingTermTok
-534         load 0                                   || lookupBindingTermTok_lazy
+            tailcall 4 565                           || lookupBindingTermTok
+564         load 0                                   || lookupBindingTermTok_lazy
             eval
             store 0
             load 1
             eval
             store 1
-535         load 1                                   || lookupBindingTermTok
-            jmpt 1 536                               || lbs
-536         load 2                                   || lookupBindingTermTok_Pair
+565         load 1                                   || lookupBindingTermTok
+            jmpt 1 566                               || lbs
+566         load 2                                   || lookupBindingTermTok_Pair
             load 0
             call 190                                 || nameEq
-            ifeq 537                                 || lookupBindingTermTok_Pair_else
+            ifeq 567                                 || lookupBindingTermTok_Pair_else
             load 1
             return 5
-537         load 4                                   || lookupBindingTermTok_Pair_else
+567         load 4                                   || lookupBindingTermTok_Pair_else
             eval
             load 2
-            tailcall 5 531                           || lookupBindingTerm
-538         load 0                                   || startsWith_lazy
+            tailcall 5 561                           || lookupBindingTerm
+568         load 0                                   || startsWith_lazy
             eval
             store 0
-539         load 0                                   || startsWith
-            jmpt 2 540 541                           || lbs
-540         return_const 2 1                         || startsWith_Nil
-541         load 3                                   || startsWith_Cons
+569         load 0                                   || startsWith
+            jmpt 2 570 571                           || lbs
+570         return_const 2 1                         || startsWith_Nil
+571         load 3                                   || startsWith_Cons
             eval
             load 1
             load 0
-            tailcall 4 543                           || startsWithTok
-542         load 2                                   || startsWithTok_lazy
+            tailcall 4 573                           || startsWithTok
+572         load 2                                   || startsWithTok_lazy
             eval
             store 2
-543         load 2                                   || startsWithTok
-            jmpt 2 544 545                           || lbs
-544         return_const 3 0                         || startsWithTok_Nil
-545         load 0                                   || startsWithTok_Cons
+573         load 2                                   || startsWithTok
+            jmpt 2 574 575                           || lbs
+574         return_const 3 0                         || startsWithTok_Nil
+575         load 0                                   || startsWithTok_Cons
             load 2
             eval
             sub
-            ifneq 546                                || startsWithTok_Cons_else
+            ifneq 576                                || startsWithTok_Cons_else
             load 1
             load 3
             eval
-            tailcall 5 539                           || startsWith
-546         return_const 5 0                         || startsWithTok_Cons_else
-547         jmp 548                                  || nfPrefix || nfPrefix_lazy
-548         push ":nf "                              || nfPrefix
+            tailcall 5 569                           || startsWith
+576         return_const 5 0                         || startsWithTok_Cons_else
+577         jmp 578                                  || nfPrefix || nfPrefix_lazy
+578         push ":nf "                              || nfPrefix
             tailcall 0 8                             || str2list
-549         jmp 550                                  || hlcPrefix || hlcPrefix_lazy
-550         push ":hlc "                             || hlcPrefix
+579         jmp 580                                  || hlcPrefix || hlcPrefix_lazy
+580         push ":hlc "                             || hlcPrefix
             tailcall 0 8                             || str2list
-551         jmp 552                                  || fromhlcPrefix || fromhlcPrefix_lazy
-552         push ":fromhlc "                         || fromhlcPrefix
+581         jmp 582                                  || fromhlcPrefix || fromhlcPrefix_lazy
+582         push ":fromhlc "                         || fromhlcPrefix
             tailcall 0 8                             || str2list
-553         jmp 554                                  || sevalPrefix || sevalPrefix_lazy
-554         push ":seval "                           || sevalPrefix
+583         jmp 584                                  || b64Prefix || b64Prefix_lazy
+584         push ":b64lc "                           || b64Prefix
             tailcall 0 8                             || str2list
-555         jmp 556                                  || blcPrefix || blcPrefix_lazy
-556         push ":blc "                             || blcPrefix
+585         jmp 586                                  || fromb64Prefix || fromb64Prefix_lazy
+586         push ":fromb64lc "                       || fromb64Prefix
             tailcall 0 8                             || str2list
-557         jmp 558                                  || fromblcPrefix || fromblcPrefix_lazy
-558         push ":fromblc "                         || fromblcPrefix
+587         jmp 588                                  || sevalPrefix || sevalPrefix_lazy
+588         push ":seval "                           || sevalPrefix
             tailcall 0 8                             || str2list
-559         jmp 560                                  || listPrefix || listPrefix_lazy
-560         push ":list"                             || listPrefix
+589         jmp 590                                  || blcPrefix || blcPrefix_lazy
+590         push ":blc "                             || blcPrefix
             tailcall 0 8                             || str2list
-561         jmp 562                                  || bitsPrefix || bitsPrefix_lazy
-562         push ":bits "                            || bitsPrefix
+591         jmp 592                                  || fromblcPrefix || fromblcPrefix_lazy
+592         push ":fromblc "                         || fromblcPrefix
             tailcall 0 8                             || str2list
-563         jmp 564                                  || dbPrefix || dbPrefix_lazy
-564         push ":db "                              || dbPrefix
+593         jmp 594                                  || listPrefix || listPrefix_lazy
+594         push ":list"                             || listPrefix
             tailcall 0 8                             || str2list
-565         jmp 566                                  || scottPrefix || scottPrefix_lazy
-566         push ":scott "                           || scottPrefix
+595         jmp 596                                  || bitsPrefix || bitsPrefix_lazy
+596         push ":bits "                            || bitsPrefix
             tailcall 0 8                             || str2list
-567         jmp 568                                  || repl || repl_lazy
-568         push "lc> "                              || repl
+597         jmp 598                                  || dbPrefix || dbPrefix_lazy
+598         push ":db "                              || dbPrefix
+            tailcall 0 8                             || str2list
+599         jmp 600                                  || scottPrefix || scottPrefix_lazy
+600         push ":scott "                           || scottPrefix
+            tailcall 0 8                             || str2list
+601         jmp 602                                  || repl || repl_lazy
+602         push "lc> "                              || repl
             syscall 3
             load 0
-            tailcall 1 570                           || readAndDispatch
-569         jmp 570                                  || readAndDispatch || readAndDispatch_lazy
-570         updsp 1                                  || readAndDispatch
-            pushfunc 0 785                           || readAndDispatch_1
+            tailcall 1 604                           || readAndDispatch
+603         jmp 604                                  || readAndDispatch || readAndDispatch_lazy
+604         updsp 1                                  || readAndDispatch
+            pushfunc 0 839                           || readAndDispatch_1
             create 1 3
             dup
             store 0
             eval
             load 1
-            tailcall 2 572                           || dispatchLine
-571         load 1                                   || dispatchLine_lazy
+            tailcall 2 606                           || dispatchLine
+605         load 1                                   || dispatchLine_lazy
             eval
             store 1
-572         push "quit"                              || dispatchLine
+606         push "quit"                              || dispatchLine
             load 1
             call 13                                  || strEqual
-            ifeq 573                                 || dispatchLine_else
+            ifeq 607                                 || dispatchLine_else
             push "Tot ziens!\n"
             syscall 3
             return 2
-573         push "exit"                              || dispatchLine_else
+607         push "exit"                              || dispatchLine_else
             load 1
             call 13                                  || strEqual
-            ifeq 574                                 || dispatchLine_else_else
+            ifeq 608                                 || dispatchLine_else_else
             push "Tot ziens!\n"
             syscall 3
             return 2
-574         load 1                                   || dispatchLine_else_else
+608         load 1                                   || dispatchLine_else_else
             pushfunc 1 8                             || str2list
             create 2 3
-            pushfunc 1 575                           || lambdaToBackslash_lazy
+            pushfunc 1 609                           || lambdaToBackslash_lazy
             create 2 3
             load 0
-            tailcall 2 586                           || dispatchCs
-575         load 0                                   || lambdaToBackslash_lazy
+            tailcall 2 620                           || dispatchCs
+609         load 0                                   || lambdaToBackslash_lazy
             eval
             store 0
-576         load 0                                   || lambdaToBackslash
-            jmpt 2 577 578                           || lbs
-577         ccreatet 0 11 5 0                        || lambdaToBackslash_Nil
+610         load 0                                   || lambdaToBackslash
+            jmpt 2 611 612                           || lbs
+611         ccreatet 0 11 5 0                        || lambdaToBackslash_Nil
             return 1
-578         loadadd 0 -206                           || lambdaToBackslash_Cons
-            ifneq 579                                || lambdaToBackslash_Cons_else
+612         loadadd 0 -206                           || lambdaToBackslash_Cons
+            ifneq 613                                || lambdaToBackslash_Cons_else
             load 1
             eval
-            tailcall 3 581                           || lamAfter206
-579         load 1                                   || lambdaToBackslash_Cons_else
-            pushfunc 1 575                           || lambdaToBackslash_lazy
+            tailcall 3 615                           || lamAfter206
+613         load 1                                   || lambdaToBackslash_Cons_else
+            pushfunc 1 609                           || lambdaToBackslash_lazy
             create 2 3
             load 0
             ccreatet 2 11 5 1
             return 3
-580         load 0                                   || lamAfter206_lazy
+614         load 0                                   || lamAfter206_lazy
             eval
             store 0
-581         load 0                                   || lamAfter206
-            jmpt 2 582 583                           || lbs
-582         ccreatet 0 11 5 0                        || lamAfter206_Nil
+615         load 0                                   || lamAfter206
+            jmpt 2 616 617                           || lbs
+616         ccreatet 0 11 5 0                        || lamAfter206_Nil
             push 206
             ccreatet 2 11 5 1
             return 1
-583         loadadd 0 -187                           || lamAfter206_Cons
-            ifneq 584                                || lamAfter206_Cons_else
+617         loadadd 0 -187                           || lamAfter206_Cons
+            ifneq 618                                || lamAfter206_Cons_else
             load 1
-            pushfunc 1 575                           || lambdaToBackslash_lazy
+            pushfunc 1 609                           || lambdaToBackslash_lazy
             create 2 3
             push 92
             ccreatet 2 11 5 1
             return 3
-584         load 2                                   || lamAfter206_Cons_else
-            pushfunc 1 576                           || lambdaToBackslash
+618         load 2                                   || lamAfter206_Cons_else
+            pushfunc 1 610                           || lambdaToBackslash
             create 2 3
             push 206
             ccreatet 2 11 5 1
             return 3
-585         jmp 586                                  || dispatchCs || dispatchCs_lazy
-586         load 1                                   || dispatchCs
-            call 548                                 || nfPrefix
-            call 539                                 || startsWith
-            ifeq 587                                 || dispatchCs_else
+619         jmp 620                                  || dispatchCs || dispatchCs_lazy
+620         load 1                                   || dispatchCs
+            call 578                                 || nfPrefix
+            call 569                                 || startsWith
+            ifeq 621                                 || dispatchCs_else
             load 1
             push 4
             pushfunc 2 84                            || drop_lazy
@@ -2473,11 +2598,11 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             pushfunc 1 223                           || lexAll_lazy
             create 2 3
             load 0
-            tailcall 2 633                           || cmdNf
-587         load 1                                   || dispatchCs_else
-            call 554                                 || sevalPrefix
-            call 539                                 || startsWith
-            ifeq 588                                 || dispatchCs_else_else
+            tailcall 2 669                           || cmdNf
+621         load 1                                   || dispatchCs_else
+            call 588                                 || sevalPrefix
+            call 569                                 || startsWith
+            ifeq 622                                 || dispatchCs_else_else
             load 1
             push 7
             pushfunc 2 84                            || drop_lazy
@@ -2485,11 +2610,11 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             pushfunc 1 223                           || lexAll_lazy
             create 2 3
             load 0
-            tailcall 2 637                           || cmdSeval
-588         load 1                                   || dispatchCs_else_else
-            call 556                                 || blcPrefix
-            call 539                                 || startsWith
-            ifeq 589                                 || dispatchCs_else_else_else
+            tailcall 2 673                           || cmdSeval
+622         load 1                                   || dispatchCs_else_else
+            call 590                                 || blcPrefix
+            call 569                                 || startsWith
+            ifeq 623                                 || dispatchCs_else_else_else
             load 1
             push 5
             pushfunc 2 84                            || drop_lazy
@@ -2497,11 +2622,11 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             pushfunc 1 223                           || lexAll_lazy
             create 2 3
             load 0
-            tailcall 2 699                           || cmdBlc
-589         load 1                                   || dispatchCs_else_else_else
-            call 558                                 || fromblcPrefix
-            call 539                                 || startsWith
-            ifeq 590                                 || dispatchCs_else_else_else_else
+            tailcall 2 735                           || cmdBlc
+623         load 1                                   || dispatchCs_else_else_else
+            call 592                                 || fromblcPrefix
+            call 569                                 || startsWith
+            ifeq 624                                 || dispatchCs_else_else_else_else
             load 1
             push 9
             pushfunc 2 84                            || drop_lazy
@@ -2509,11 +2634,11 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             pushfunc 1 412                           || filterBits_lazy
             create 2 3
             load 0
-            tailcall 2 705                           || cmdFromBlc
-590         load 1                                   || dispatchCs_else_else_else_else
-            call 550                                 || hlcPrefix
-            call 539                                 || startsWith
-            ifeq 591                                 || dispatchCs_else_else_else_else_else
+            tailcall 2 743                           || cmdFromBlc
+624         load 1                                   || dispatchCs_else_else_else_else
+            call 580                                 || hlcPrefix
+            call 569                                 || startsWith
+            ifeq 625                                 || dispatchCs_else_else_else_else_else
             load 1
             push 5
             pushfunc 2 84                            || drop_lazy
@@ -2521,11 +2646,11 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             pushfunc 1 223                           || lexAll_lazy
             create 2 3
             load 0
-            tailcall 2 703                           || cmdHlc
-591         load 1                                   || dispatchCs_else_else_else_else_else
-            call 552                                 || fromhlcPrefix
-            call 539                                 || startsWith
-            ifeq 592                                 || dispatchCs_else_else_else_else_else_else
+            tailcall 2 741                           || cmdHlc
+625         load 1                                   || dispatchCs_else_else_else_else_else
+            call 582                                 || fromhlcPrefix
+            call 569                                 || startsWith
+            ifeq 626                                 || dispatchCs_else_else_else_else_else_else
             load 1
             push 9
             pushfunc 2 84                            || drop_lazy
@@ -2535,40 +2660,11 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             pushfunc 1 480                           || hexToBits_lazy
             create 2 3
             load 0
-            tailcall 2 705                           || cmdFromBlc
-592         load 1                                   || dispatchCs_else_else_else_else_else_else
-            call 560                                 || listPrefix
-            call 539                                 || startsWith
-            ifeq 593                                 || dispatchCs_else_else_else_else_else_else_else
-            load 0
-            tailcall 2 709                           || cmdList
-593         load 1                                   || dispatchCs_else_else_else_else_else_else_else
-            call 562                                 || bitsPrefix
-            call 539                                 || startsWith
-            ifeq 594                                 || dispatchCs_else_else_else_else_else_else_else_else
-            load 1
-            eval
-            push 6
-            call 85                                  || drop
-            call 224                                 || lexAll
-            load 0
-            tailcall 2 641                           || cmdBits
-594         load 1                                   || dispatchCs_else_else_else_else_else_else_else_else
-            call 564                                 || dbPrefix
-            call 539                                 || startsWith
-            ifeq 595                                 || dispatchCs_else_else_else_else_else_else_else_else_else
-            load 1
-            push 4
-            pushfunc 2 84                            || drop_lazy
-            create 3 3
-            pushfunc 1 223                           || lexAll_lazy
-            create 2 3
-            load 0
-            tailcall 2 656                           || cmdDb
-595         load 1                                   || dispatchCs_else_else_else_else_else_else_else_else_else
-            call 566                                 || scottPrefix
-            call 539                                 || startsWith
-            ifeq 596                                 || dispatchCs_else_else_else_else_else_else_else_else_else_else
+            tailcall 2 743                           || cmdFromBlc
+626         load 1                                   || dispatchCs_else_else_else_else_else_else
+            call 584                                 || b64Prefix
+            call 569                                 || startsWith
+            ifeq 627                                 || dispatchCs_else_else_else_else_else_else_else
             load 1
             push 7
             pushfunc 2 84                            || drop_lazy
@@ -2576,188 +2672,241 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             pushfunc 1 223                           || lexAll_lazy
             create 2 3
             load 0
-            tailcall 2 679                           || cmdScott
-596         load 1                                   || dispatchCs_else_else_else_else_else_else_else_else_else_else
+            tailcall 2 739                           || cmdB64
+627         load 1                                   || dispatchCs_else_else_else_else_else_else_else
+            call 586                                 || fromb64Prefix
+            call 569                                 || startsWith
+            ifeq 628                                 || dispatchCs_else_else_else_else_else_else_else_else
+            load 1
+            push 11
+            pushfunc 2 84                            || drop_lazy
+            create 3 3
+            pushfunc 1 516                           || b64ToBits_lazy
+            create 2 3
+            load 0
+            tailcall 2 743                           || cmdFromBlc
+628         load 1                                   || dispatchCs_else_else_else_else_else_else_else_else
+            call 594                                 || listPrefix
+            call 569                                 || startsWith
+            ifeq 629                                 || dispatchCs_else_else_else_else_else_else_else_else_else
+            load 0
+            tailcall 2 747                           || cmdList
+629         load 1                                   || dispatchCs_else_else_else_else_else_else_else_else_else
+            call 596                                 || bitsPrefix
+            call 569                                 || startsWith
+            ifeq 630                                 || dispatchCs_else_else_else_else_else_else_else_else_else_else
+            load 1
+            eval
+            push 6
+            call 85                                  || drop
+            call 224                                 || lexAll
+            load 0
+            tailcall 2 677                           || cmdBits
+630         load 1                                   || dispatchCs_else_else_else_else_else_else_else_else_else_else
+            call 598                                 || dbPrefix
+            call 569                                 || startsWith
+            ifeq 631                                 || dispatchCs_else_else_else_else_else_else_else_else_else_else_else
+            load 1
+            push 4
+            pushfunc 2 84                            || drop_lazy
+            create 3 3
+            pushfunc 1 223                           || lexAll_lazy
+            create 2 3
+            load 0
+            tailcall 2 692                           || cmdDb
+631         load 1                                   || dispatchCs_else_else_else_else_else_else_else_else_else_else_else
+            call 600                                 || scottPrefix
+            call 569                                 || startsWith
+            ifeq 632                                 || dispatchCs_else_else_else_else_else_else_else_else_else_else_else_else
+            load 1
+            push 7
+            pushfunc 2 84                            || drop_lazy
+            create 3 3
+            pushfunc 1 223                           || lexAll_lazy
+            create 2 3
+            load 0
+            tailcall 2 715                           || cmdScott
+632         load 1                                   || dispatchCs_else_else_else_else_else_else_else_else_else_else_else_else
             eval
             call 224                                 || lexAll
             load 0
-            tailcall 2 598                           || routeAssignOrEval
-597         load 1                                   || routeAssignOrEval_lazy
+            tailcall 2 634                           || routeAssignOrEval
+633         load 1                                   || routeAssignOrEval_lazy
             eval
             store 1
-598         load 1                                   || routeAssignOrEval
-            jmpt 2 599 600                           || lbs
-599         push ""                                  || routeAssignOrEval_Nil
+634         load 1                                   || routeAssignOrEval
+            jmpt 2 635 636                           || lbs
+635         push ""                                  || routeAssignOrEval_Nil
             syscall 3
             load 0
-            tailcall 2 568                           || repl
-600         load 1                                   || routeAssignOrEval_Cons
+            tailcall 2 602                           || repl
+636         load 1                                   || routeAssignOrEval_Cons
             load 0
             load 2
-            tailcall 4 602                           || routeAssignOrEvalTok
-601         load 1                                   || routeAssignOrEvalTok_lazy
+            tailcall 4 638                           || routeAssignOrEvalTok
+637         load 1                                   || routeAssignOrEvalTok_lazy
             eval
             store 1
-602         load 1                                   || routeAssignOrEvalTok
-            jmpt 4 603 604 605 606                   || lbs
-603         load 3                                   || routeAssignOrEvalTok_Term
+638         load 1                                   || routeAssignOrEvalTok
+            jmpt 4 639 640 641 642                   || lbs
+639         load 3                                   || routeAssignOrEvalTok_Term
             load 2
             ccreatet 2 11 5 1
             load 1
-            tailcall 4 629                           || cmdEvalEcho
-604         load 3                                   || routeAssignOrEvalTok_Identifier
+            tailcall 4 665                           || cmdEvalEcho
+640         load 3                                   || routeAssignOrEvalTok_Identifier
             eval
             load 0
             load 1
-            tailcall 4 608                           || routeAssignCheck
-605         load 3                                   || routeAssignOrEvalTok_Number
+            tailcall 4 644                           || routeAssignCheck
+641         load 3                                   || routeAssignOrEvalTok_Number
             load 2
             ccreatet 2 11 5 1
             load 1
-            tailcall 4 629                           || cmdEvalEcho
-606         load 2                                   || routeAssignOrEvalTok_NL
+            tailcall 4 665                           || cmdEvalEcho
+642         load 2                                   || routeAssignOrEvalTok_NL
             load 1
             ccreatet 2 11 5 1
             load 0
-            tailcall 3 629                           || cmdEvalEcho
-607         load 2                                   || routeAssignCheck_lazy
+            tailcall 3 665                           || cmdEvalEcho
+643         load 2                                   || routeAssignCheck_lazy
             eval
             store 2
-608         load 2                                   || routeAssignCheck
-            jmpt 2 609 610                           || lbs
-609         load 1                                   || routeAssignCheck_Nil
-            pushfunc 1 787                           || routeAssignCheck_1
+644         load 2                                   || routeAssignCheck
+            jmpt 2 645 646                           || lbs
+645         load 1                                   || routeAssignCheck_Nil
+            pushfunc 1 841                           || routeAssignCheck_1
             create 2 3
             load 0
-            tailcall 3 629                           || cmdEvalEcho
-610         load 1                                   || routeAssignCheck_Cons
+            tailcall 3 665                           || cmdEvalEcho
+646         load 1                                   || routeAssignCheck_Cons
             load 0
             load 3
             load 2
-            tailcall 5 612                           || routeAssignCheckTok
-611         load 2                                   || routeAssignCheckTok_lazy
+            tailcall 5 648                           || routeAssignCheckTok
+647         load 2                                   || routeAssignCheckTok_lazy
             eval
             store 2
-612         load 2                                   || routeAssignCheckTok
+648         load 2                                   || routeAssignCheckTok
             push 61
             call 213                                 || isCh
-            ifeq 613                                 || routeAssignCheckTok_else
+            ifeq 649                                 || routeAssignCheckTok_else
             load 3
             eval
             load 1
             load 0
-            tailcall 4 615                           || cmdAssign
-613         load 3                                   || routeAssignCheckTok_else
+            tailcall 4 651                           || cmdAssign
+649         load 3                                   || routeAssignCheckTok_else
             load 2
             load 1
-            pushfunc 3 789                           || routeAssignCheckTok_1
+            pushfunc 3 843                           || routeAssignCheckTok_1
             create 4 3
             load 0
-            tailcall 4 629                           || cmdEvalEcho
-614         load 2                                   || cmdAssign_lazy
+            tailcall 4 665                           || cmdEvalEcho
+650         load 2                                   || cmdAssign_lazy
             eval
             store 2
-615         load 2                                   || cmdAssign
+651         load 2                                   || cmdAssign
             load 0
             call 346                                 || parseFreshTop
             load 1
             load 0
-            tailcall 3 617                           || cmdAssignForce
-616         load 2                                   || cmdAssignForce_lazy
+            tailcall 3 653                           || cmdAssignForce
+652         load 2                                   || cmdAssignForce_lazy
             eval
             store 2
-617         load 2                                   || cmdAssignForce
-            call 620                                 || termSize
+653         load 2                                   || cmdAssignForce
+            call 656                                 || termSize
             push 0
             sub
-            ifle 618                                 || cmdAssignForce_else
+            ifle 654                                 || cmdAssignForce_else
             load 2
             load 1
             load 0
-            tailcall 3 627                           || cmdAssignShow
-618         load 2                                   || cmdAssignForce_else
+            tailcall 3 663                           || cmdAssignShow
+654         load 2                                   || cmdAssignForce_else
             load 1
             load 0
-            tailcall 3 627                           || cmdAssignShow
-619         load 0                                   || termSize_lazy
+            tailcall 3 663                           || cmdAssignShow
+655         load 0                                   || termSize_lazy
             eval
             store 0
-620         load 0                                   || termSize
-            jmpt 5 621 622 623 624 625               || lbs
-621         return_const 2 1                         || termSize_LVar
-622         load 0                                   || termSize_LApp
+656         load 0                                   || termSize
+            jmpt 5 657 658 659 660 661               || lbs
+657         return_const 2 1                         || termSize_LVar
+658         load 0                                   || termSize_LApp
             eval
-            call 620                                 || termSize
+            call 656                                 || termSize
             load 1
             eval
-            call 620                                 || termSize
+            call 656                                 || termSize
             add
             inc
             return 3
-623         load 0                                   || termSize_LAbs
+659         load 0                                   || termSize_LAbs
             eval
-            call 620                                 || termSize
+            call 656                                 || termSize
             inc
             return 2
-624         return_const 2 1                         || termSize_LLitNum
-625         return_const 2 1                         || termSize_LLitPrim
-626         jmp 627                                  || cmdAssignShow || cmdAssignShow_lazy
-627         load 1                                   || cmdAssignShow
+660         return_const 2 1                         || termSize_LLitNum
+661         return_const 2 1                         || termSize_LLitPrim
+662         jmp 663                                  || cmdAssignShow || cmdAssignShow_lazy
+663         load 1                                   || cmdAssignShow
             push "gedefinieerd: "
             call 8                                   || str2list
             call 76                                  || append
-            call 519                                 || printChars
+            call 549                                 || printChars
             push 10
             print 2
             load 0
             load 2
             load 1
-            pushfunc 3 791                           || cmdAssignShow_1
+            pushfunc 3 845                           || cmdAssignShow_1
             create 4 3
-            tailcall 3 568                           || repl
-628         jmp 629                                  || cmdEvalEcho || cmdEvalEcho_lazy
-629         load 1                                   || cmdEvalEcho
+            tailcall 3 602                           || repl
+664         jmp 665                                  || cmdEvalEcho || cmdEvalEcho_lazy
+665         load 1                                   || cmdEvalEcho
             load 0
             pushfunc 2 345                           || parseFreshTop_lazy
             create 3 3
             load 0
-            tailcall 2 631                           || cmdEvalEchoShow
-630         jmp 631                                  || cmdEvalEchoShow || cmdEvalEchoShow_lazy
-631         load 1                                   || cmdEvalEchoShow
+            tailcall 2 667                           || cmdEvalEchoShow
+666         jmp 667                                  || cmdEvalEchoShow || cmdEvalEchoShow_lazy
+667         load 1                                   || cmdEvalEchoShow
             eval
-            call 502                                 || showTerm
-            call 519                                 || printChars
+            call 532                                 || showTerm
+            call 549                                 || printChars
             push 10
             print 2
             load 0
-            tailcall 2 568                           || repl
-632         jmp 633                                  || cmdNf || cmdNf_lazy
-633         load 1                                   || cmdNf
+            tailcall 2 602                           || repl
+668         jmp 669                                  || cmdNf || cmdNf_lazy
+669         load 1                                   || cmdNf
             load 0
             pushfunc 2 345                           || parseFreshTop_lazy
             create 3 3
             pushfunc 1 393                           || nf_lazy
             create 2 3
             load 0
-            tailcall 2 635                           || cmdNfShow
-634         jmp 635                                  || cmdNfShow || cmdNfShow_lazy
-635         load 1                                   || cmdNfShow
+            tailcall 2 671                           || cmdNfShow
+670         jmp 671                                  || cmdNfShow || cmdNfShow_lazy
+671         load 1                                   || cmdNfShow
             eval
-            call 502                                 || showTerm
-            call 519                                 || printChars
+            call 532                                 || showTerm
+            call 549                                 || printChars
             push 10
             print 2
             load 0
-            tailcall 2 568                           || repl
-636         jmp 637                                  || cmdSeval || cmdSeval_lazy
-637         load 1                                   || cmdSeval
+            tailcall 2 602                           || repl
+672         jmp 673                                  || cmdSeval || cmdSeval_lazy
+673         load 1                                   || cmdSeval
             load 0
             pushfunc 2 345                           || parseFreshTop_lazy
             create 3 3
             load 0
-            tailcall 2 639                           || cmdSevalShow
-638         jmp 639                                  || cmdSevalShow || cmdSevalShow_lazy
-639         load 1                                   || cmdSevalShow
+            tailcall 2 675                           || cmdSevalShow
+674         jmp 675                                  || cmdSevalShow || cmdSevalShow_lazy
+675         load 1                                   || cmdSevalShow
             pushfunc 1 348                           || toScott_lazy
             create 2 3
             call 169                                 || seval
@@ -2765,34 +2914,34 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             push 10
             print 2
             load 0
-            tailcall 2 568                           || repl
-640         load 1                                   || cmdBits_lazy
+            tailcall 2 602                           || repl
+676         load 1                                   || cmdBits_lazy
             eval
             store 1
-641         load 1                                   || cmdBits
-            jmpt 2 642 643                           || lbs
-642         push "gebruik: :bits N <expr>\n"         || cmdBits_Nil
+677         load 1                                   || cmdBits
+            jmpt 2 678 679                           || lbs
+678         push "gebruik: :bits N <expr>\n"         || cmdBits_Nil
             syscall 3
             load 0
-            tailcall 2 568                           || repl
-643         load 1                                   || cmdBits_Cons
+            tailcall 2 602                           || repl
+679         load 1                                   || cmdBits_Cons
             load 0
             load 2
-            tailcall 4 645                           || cmdBitsTok
-644         load 1                                   || cmdBitsTok_lazy
+            tailcall 4 681                           || cmdBitsTok
+680         load 1                                   || cmdBitsTok_lazy
             eval
             store 1
-645         load 1                                   || cmdBitsTok
-            jmpt 4 646 647 648 649                   || lbs
-646         push "gebruik: :bits N <expr> (N een getal)\n" || cmdBitsTok_Term
+681         load 1                                   || cmdBitsTok
+            jmpt 4 682 683 684 685                   || lbs
+682         push "gebruik: :bits N <expr> (N een getal)\n" || cmdBitsTok_Term
             syscall 3
             load 1
-            tailcall 4 568                           || repl
-647         push "gebruik: :bits N <expr> (N een getal)\n" || cmdBitsTok_Identifier
+            tailcall 4 602                           || repl
+683         push "gebruik: :bits N <expr> (N een getal)\n" || cmdBitsTok_Identifier
             syscall 3
             load 1
-            tailcall 4 568                           || repl
-648         load 3                                   || cmdBitsTok_Number
+            tailcall 4 602                           || repl
+684         load 3                                   || cmdBitsTok_Number
             load 1
             pushfunc 2 345                           || parseFreshTop_lazy
             create 3 3
@@ -2802,29 +2951,29 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             create 2 3
             load 0
             eval
-            call 651                                 || printBits
+            call 687                                 || printBits
             push 10
             print 2
             load 1
-            tailcall 4 568                           || repl
-649         push "gebruik: :bits N <expr> (N een getal)\n" || cmdBitsTok_NL
+            tailcall 4 602                           || repl
+685         push "gebruik: :bits N <expr> (N een getal)\n" || cmdBitsTok_NL
             syscall 3
             load 0
-            tailcall 3 568                           || repl
-650         load 0                                   || printBits_lazy
+            tailcall 3 602                           || repl
+686         load 0                                   || printBits_lazy
             eval
             store 0
-651         load 0                                   || printBits
-            ifneq 652                                || printBits_else
+687         load 0                                   || printBits
+            ifneq 688                                || printBits_else
             return_const 2 0
-652         load 0                                   || printBits_else
-            pushfunc 3 654                           || printBitsLam
+688         load 0                                   || printBits_else
+            pushfunc 3 690                           || printBitsLam
             create 2 7
             load 1
             eval
             return 2
-653         jmp 654                                  || printBitsLam || printBitsLam_lazy
-654         push 48                                  || printBitsLam
+689         jmp 690                                  || printBitsLam || printBitsLam_lazy
+690         push 48                                  || printBitsLam
             push 1
             push 0
             load 1
@@ -2835,151 +2984,151 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             load 0
             eval
             dec
-            tailcall 3 651                           || printBits
-655         jmp 656                                  || cmdDb || cmdDb_lazy
-656         load 1                                   || cmdDb
+            tailcall 3 687                           || printBits
+691         jmp 692                                  || cmdDb || cmdDb_lazy
+692         load 1                                   || cmdDb
             eval
             load 0
             call 346                                 || parseFreshTop
-            call 658                                 || showDb
-            call 519                                 || printChars
+            call 694                                 || showDb
+            call 549                                 || printChars
             push 10
             print 2
             load 0
-            tailcall 2 568                           || repl
-657         load 0                                   || showDb_lazy
+            tailcall 2 602                           || repl
+693         load 0                                   || showDb_lazy
             eval
             store 0
-658         load 0                                   || showDb
-            jmpt 5 659 660 661 662 663               || lbs
-659         load 0                                   || showDb_LVar
+694         load 0                                   || showDb
+            jmpt 5 695 696 697 698 699               || lbs
+695         load 0                                   || showDb_LVar
             eval
             tailcall 2 51                            || itoa
-660         load 1                                   || showDb_LApp
-            pushfunc 1 671                           || showDbArg_lazy
+696         load 1                                   || showDb_LApp
+            pushfunc 1 707                           || showDbArg_lazy
             create 2 3
             load 0
             eval
-            call 665                                 || showDbFun
-            tailcall 3 515                           || appendSp
-661         load 0                                   || showDb_LAbs
-            pushfunc 1 657                           || showDb_lazy
+            call 701                                 || showDbFun
+            tailcall 3 545                           || appendSp
+697         load 0                                   || showDb_LAbs
+            pushfunc 1 693                           || showDb_lazy
             create 2 3
             push "\\ "
             call 8                                   || str2list
             tailcall 2 76                            || append
-662         load 0                                   || showDb_LLitNum
+698         load 0                                   || showDb_LLitNum
             pushfunc 1 50                            || itoa_lazy
             create 2 3
             push 35
             ccreatet 2 11 5 1
             return 2
-663         load 0                                   || showDb_LLitPrim
+699         load 0                                   || showDb_LLitPrim
             eval
             return 2
-664         load 0                                   || showDbFun_lazy
+700         load 0                                   || showDbFun_lazy
             eval
             store 0
-665         load 0                                   || showDbFun
-            jmpt 5 666 667 668 669 670               || lbs
-666         load 1                                   || showDbFun_LVar
-            tailcall 2 658                           || showDb
-667         load 2                                   || showDbFun_LApp
-            tailcall 3 658                           || showDb
-668         load 1                                   || showDbFun_LAbs
-            pushfunc 1 658                           || showDb
+701         load 0                                   || showDbFun
+            jmpt 5 702 703 704 705 706               || lbs
+702         load 1                                   || showDbFun_LVar
+            tailcall 2 694                           || showDb
+703         load 2                                   || showDbFun_LApp
+            tailcall 3 694                           || showDb
+704         load 1                                   || showDbFun_LAbs
+            pushfunc 1 694                           || showDb
             create 2 3
-            tailcall 2 513                           || wrapParen
-669         load 1                                   || showDbFun_LLitNum
-            tailcall 2 658                           || showDb
-670         load 1                                   || showDbFun_LLitPrim
-            tailcall 2 658                           || showDb
-671         load 0                                   || showDbArg_lazy
+            tailcall 2 543                           || wrapParen
+705         load 1                                   || showDbFun_LLitNum
+            tailcall 2 694                           || showDb
+706         load 1                                   || showDbFun_LLitPrim
+            tailcall 2 694                           || showDb
+707         load 0                                   || showDbArg_lazy
             eval
             store 0
-672         load 0                                   || showDbArg
-            jmpt 5 673 674 675 676 677               || lbs
-673         load 1                                   || showDbArg_LVar
-            tailcall 2 658                           || showDb
-674         load 2                                   || showDbArg_LApp
-            pushfunc 1 658                           || showDb
+708         load 0                                   || showDbArg
+            jmpt 5 709 710 711 712 713               || lbs
+709         load 1                                   || showDbArg_LVar
+            tailcall 2 694                           || showDb
+710         load 2                                   || showDbArg_LApp
+            pushfunc 1 694                           || showDb
             create 2 3
-            tailcall 3 513                           || wrapParen
-675         load 1                                   || showDbArg_LAbs
-            pushfunc 1 658                           || showDb
+            tailcall 3 543                           || wrapParen
+711         load 1                                   || showDbArg_LAbs
+            pushfunc 1 694                           || showDb
             create 2 3
-            tailcall 2 513                           || wrapParen
-676         load 1                                   || showDbArg_LLitNum
-            tailcall 2 658                           || showDb
-677         load 1                                   || showDbArg_LLitPrim
-            tailcall 2 658                           || showDb
-678         jmp 679                                  || cmdScott || cmdScott_lazy
-679         load 1                                   || cmdScott
+            tailcall 2 543                           || wrapParen
+712         load 1                                   || showDbArg_LLitNum
+            tailcall 2 694                           || showDb
+713         load 1                                   || showDbArg_LLitPrim
+            tailcall 2 694                           || showDb
+714         jmp 715                                  || cmdScott || cmdScott_lazy
+715         load 1                                   || cmdScott
             load 0
             pushfunc 2 345                           || parseFreshTop_lazy
             create 3 3
             load 0
-            tailcall 2 681                           || cmdScottShow
-680         jmp 681                                  || cmdScottShow || cmdScottShow_lazy
-681         push "constructors: "                    || cmdScottShow
+            tailcall 2 717                           || cmdScottShow
+716         jmp 717                                  || cmdScottShow || cmdScottShow_lazy
+717         push "constructors: "                    || cmdScottShow
             syscall 3
             load 1
             eval
-            call 683                                 || showScott
-            call 519                                 || printChars
+            call 719                                 || showScott
+            call 549                                 || printChars
             push 10
             print 2
             push "als lambda:   "
             syscall 3
             load 1
             eval
-            call 690                                 || showScottLam
-            call 519                                 || printChars
+            call 726                                 || showScottLam
+            call 549                                 || printChars
             push 10
             print 2
             load 0
-            tailcall 2 568                           || repl
-682         load 0                                   || showScott_lazy
+            tailcall 2 602                           || repl
+718         load 0                                   || showScott_lazy
             eval
             store 0
-683         load 0                                   || showScott
-            jmpt 5 684 685 686 687 688               || lbs
-684         load 0                                   || showScott_LVar
+719         load 0                                   || showScott
+            jmpt 5 720 721 722 723 724               || lbs
+720         load 0                                   || showScott_LVar
             pushfunc 1 50                            || itoa_lazy
             create 2 3
             push "var "
             call 8                                   || str2list
             tailcall 2 76                            || append
-685         load 1                                   || showScott_LApp
-            pushfunc 1 682                           || showScott_lazy
+721         load 1                                   || showScott_LApp
+            pushfunc 1 718                           || showScott_lazy
             create 2 3
-            pushfunc 1 513                           || wrapParen
+            pushfunc 1 543                           || wrapParen
             create 2 3
             load 0
-            pushfunc 1 682                           || showScott_lazy
+            pushfunc 1 718                           || showScott_lazy
             create 2 3
-            pushfunc 1 513                           || wrapParen
+            pushfunc 1 543                           || wrapParen
             create 2 3
-            pushfunc 2 514                           || appendSp_lazy
+            pushfunc 2 544                           || appendSp_lazy
             create 3 3
             push "app "
             call 8                                   || str2list
             tailcall 3 76                            || append
-686         load 0                                   || showScott_LAbs
-            pushfunc 1 682                           || showScott_lazy
+722         load 0                                   || showScott_LAbs
+            pushfunc 1 718                           || showScott_lazy
             create 2 3
-            pushfunc 1 513                           || wrapParen
+            pushfunc 1 543                           || wrapParen
             create 2 3
             push "abs "
             call 8                                   || str2list
             tailcall 2 76                            || append
-687         load 0                                   || showScott_LLitNum
+723         load 0                                   || showScott_LLitNum
             pushfunc 1 50                            || itoa_lazy
             create 2 3
             push "lit "
             call 8                                   || str2list
             tailcall 2 76                            || append
-688         push "Fn"                                || showScott_LLitPrim
+724         push "Fn"                                || showScott_LLitPrim
             pushfunc 1 8                             || str2list
             create 2 3
             load 0
@@ -2988,185 +3137,197 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             push "lit "
             call 8                                   || str2list
             tailcall 2 76                            || append
-689         load 0                                   || showScottLam_lazy
+725         load 0                                   || showScottLam_lazy
             eval
             store 0
-690         load 0                                   || showScottLam
-            jmpt 5 691 692 693 694 695               || lbs
-691         load 0                                   || showScottLam_LVar
+726         load 0                                   || showScottLam
+            jmpt 5 727 728 729 730 731               || lbs
+727         load 0                                   || showScottLam_LVar
             pushfunc 1 50                            || itoa_lazy
             create 2 3
             push 102
-            tailcall 2 697                           || scottSel
-692         load 1                                   || showScottLam_LApp
-            pushfunc 1 689                           || showScottLam_lazy
+            tailcall 2 733                           || scottSel
+728         load 1                                   || showScottLam_LApp
+            pushfunc 1 725                           || showScottLam_lazy
             create 2 3
             load 0
-            pushfunc 1 689                           || showScottLam_lazy
+            pushfunc 1 725                           || showScottLam_lazy
             create 2 3
-            pushfunc 2 514                           || appendSp_lazy
+            pushfunc 2 544                           || appendSp_lazy
             create 3 3
             push 103
-            tailcall 3 697                           || scottSel
-693         load 0                                   || showScottLam_LAbs
-            pushfunc 1 689                           || showScottLam_lazy
+            tailcall 3 733                           || scottSel
+729         load 0                                   || showScottLam_LAbs
+            pushfunc 1 725                           || showScottLam_lazy
             create 2 3
             push 104
-            tailcall 2 697                           || scottSel
-694         load 0                                   || showScottLam_LLitNum
+            tailcall 2 733                           || scottSel
+730         load 0                                   || showScottLam_LLitNum
             pushfunc 1 50                            || itoa_lazy
             create 2 3
             push 107
-            tailcall 2 697                           || scottSel
-695         push "Fn"                                || showScottLam_LLitPrim
+            tailcall 2 733                           || scottSel
+731         push "Fn"                                || showScottLam_LLitPrim
             pushfunc 1 8                             || str2list
             create 2 3
             load 0
             pushfunc 2 75                            || append_lazy
             create 3 3
             push 107
-            tailcall 2 697                           || scottSel
-696         jmp 697                                  || scottSel || scottSel_lazy
-697         load 1                                   || scottSel
+            tailcall 2 733                           || scottSel
+732         jmp 733                                  || scottSel || scottSel_lazy
+733         load 1                                   || scottSel
             load 0
-            pushfunc 2 793                           || scottSel_1
+            pushfunc 2 847                           || scottSel_1
             create 3 3
             push "(\\f g h k. "
             call 8                                   || str2list
             tailcall 2 76                            || append
-698         jmp 699                                  || cmdBlc || cmdBlc_lazy
-699         load 1                                   || cmdBlc
+734         jmp 735                                  || cmdBlc || cmdBlc_lazy
+735         load 1                                   || cmdBlc
             load 0
             pushfunc 2 345                           || parseFreshTop_lazy
             create 3 3
             load 0
-            tailcall 2 701                           || cmdBlcShow
-700         jmp 701                                  || cmdBlcShow || cmdBlcShow_lazy
-701         load 1                                   || cmdBlcShow
+            tailcall 2 737                           || cmdBlcShow
+736         jmp 737                                  || cmdBlcShow || cmdBlcShow_lazy
+737         load 1                                   || cmdBlcShow
             eval
             call 403                                 || termToBlc
-            call 519                                 || printChars
+            call 549                                 || printChars
             push 10
             print 2
             load 0
-            tailcall 2 568                           || repl
-702         jmp 703                                  || cmdHlc || cmdHlc_lazy
-703         load 1                                   || cmdHlc
+            tailcall 2 602                           || repl
+738         jmp 739                                  || cmdB64 || cmdB64_lazy
+739         load 1                                   || cmdB64
+            eval
+            load 0
+            call 346                                 || parseFreshTop
+            call 403                                 || termToBlc
+            call 498                                 || blcToB64
+            call 549                                 || printChars
+            push 10
+            print 2
+            load 0
+            tailcall 2 602                           || repl
+740         jmp 741                                  || cmdHlc || cmdHlc_lazy
+741         load 1                                   || cmdHlc
             eval
             load 0
             call 346                                 || parseFreshTop
             call 403                                 || termToBlc
             call 457                                 || blcToHex
-            call 519                                 || printChars
+            call 549                                 || printChars
             push 10
             print 2
             load 0
-            tailcall 2 568                           || repl
-704         jmp 705                                  || cmdFromBlc || cmdFromBlc_lazy
-705         load 1                                   || cmdFromBlc
+            tailcall 2 602                           || repl
+742         jmp 743                                  || cmdFromBlc || cmdFromBlc_lazy
+743         load 1                                   || cmdFromBlc
             pushfunc 1 453                           || parseBlcTop_lazy
             create 2 3
             load 0
-            tailcall 2 707                           || cmdFromBlcShow
-706         jmp 707                                  || cmdFromBlcShow || cmdFromBlcShow_lazy
-707         load 1                                   || cmdFromBlcShow
+            tailcall 2 745                           || cmdFromBlcShow
+744         jmp 745                                  || cmdFromBlcShow || cmdFromBlcShow_lazy
+745         load 1                                   || cmdFromBlcShow
             eval
-            call 502                                 || showTerm
-            call 519                                 || printChars
+            call 532                                 || showTerm
+            call 549                                 || printChars
             push 10
             print 2
             load 0
-            tailcall 2 568                           || repl
-708         jmp 709                                  || cmdList || cmdList_lazy
-709         load 0                                   || cmdList
+            tailcall 2 602                           || repl
+746         jmp 747                                  || cmdList || cmdList_lazy
+747         load 0                                   || cmdList
             eval
-            call 711                                 || printBindingNames
+            call 749                                 || printBindingNames
             load 0
-            tailcall 1 568                           || repl
-710         load 0                                   || printBindingNames_lazy
+            tailcall 1 602                           || repl
+748         load 0                                   || printBindingNames_lazy
             eval
             store 0
-711         load 0                                   || printBindingNames
-            jmpt 2 712 713                           || lbs
-712         push "(geen definities)\n"               || printBindingNames_Nil
+749         load 0                                   || printBindingNames
+            jmpt 2 750 751                           || lbs
+750         push "(geen definities)\n"               || printBindingNames_Nil
             syscall 3
             return 1
-713         load 1                                   || printBindingNames_Cons
+751         load 1                                   || printBindingNames_Cons
             load 0
-            tailcall 3 715                           || printBindingNamesTok
-714         load 0                                   || printBindingNamesTok_lazy
+            tailcall 3 753                           || printBindingNamesTok
+752         load 0                                   || printBindingNamesTok_lazy
             eval
             store 0
-715         load 0                                   || printBindingNamesTok
-            jmpt 1 716                               || lbs
-716         load 0                                   || printBindingNamesTok_Pair
-            call 519                                 || printChars
+753         load 0                                   || printBindingNamesTok
+            jmpt 1 754                               || lbs
+754         load 0                                   || printBindingNamesTok_Pair
+            call 549                                 || printChars
             push 10
             print 2
             load 3
             eval
-            tailcall 4 718                           || printBindingNamesRest
-717         load 0                                   || printBindingNamesRest_lazy
+            tailcall 4 756                           || printBindingNamesRest
+755         load 0                                   || printBindingNamesRest_lazy
             eval
             store 0
-718         load 0                                   || printBindingNamesRest
-            jmpt 2 719 720                           || lbs
-719         return_const 1 0                         || printBindingNamesRest_Nil
-720         load 1                                   || printBindingNamesRest_Cons
+756         load 0                                   || printBindingNamesRest
+            jmpt 2 757 758                           || lbs
+757         return_const 1 0                         || printBindingNamesRest_Nil
+758         load 1                                   || printBindingNamesRest_Cons
             load 0
-            tailcall 3 715                           || printBindingNamesTok
-721         jmp 722                                  || start || start_lazy
-722         push "Lambda-calculus REPL (self-interpreter-gebaseerd, zie lc_repl/README.md).\n" || start
+            tailcall 3 753                           || printBindingNamesTok
+759         jmp 760                                  || start || start_lazy
+760         push "Lambda-calculus REPL (self-interpreter-gebaseerd, zie lc_repl/README.md).\n" || start
             syscall 3
-            push "Commando\'s: :nf <expr>, :seval <expr>, :blc <expr>, :fromblc <bits>, :hlc <expr>, :fromhlc <hex>, :bits N <expr>, :db <expr>, :scott <expr>, :list, naam = <expr>, quit; {t1, t2} in een expressie = BLC-bitstroom.\n"
+            push "Commando\'s: :nf <expr>, :seval <expr>, :blc <expr>, :fromblc <bits>, :hlc <expr>, :fromhlc <hex>, :b64lc <expr>, :fromb64lc <b64>, :bits N <expr>, :db <expr>, :scott <expr>, :list, naam = <expr>, quit; {t1, t2} in een expressie = BLC-bitstroom.\n"
             syscall 3
             ccreatet 0 11 5 0
-            tailcall 0 568                           || repl
-723         jmp 724                                  || readStream_1 || readStream_1_lazy
-724         load 0                                   || readStream_1
+            tailcall 0 602                           || repl
+761         jmp 762                                  || readStream_1 || readStream_1_lazy
+762         load 0                                   || readStream_1
             eval
             syscall 6
             return 1
-725         jmp 726                                  || substrClamp_j1 || substrClamp_j1_lazy
-726         push 0                                   || substrClamp_j1
+763         jmp 764                                  || substrClamp_j1 || substrClamp_j1_lazy
+764         push 0                                   || substrClamp_j1
             array_create_dynamic 1
             return 1
-727         jmp 728                                  || take_1 || take_1_lazy
-728         load 0                                   || take_1
+765         jmp 766                                  || take_1 || take_1_lazy
+766         load 0                                   || take_1
             eval
             dec
             return 1
-729         jmp 730                                  || drop_1 || drop_1_lazy
-730         load 0                                   || drop_1
+767         jmp 768                                  || drop_1 || drop_1_lazy
+768         load 0                                   || drop_1
             eval
             dec
             return 1
-731         jmp 732                                  || isAlpha_j1 || isAlpha_j1_lazy
-732         load 0                                   || isAlpha_j1
+769         jmp 770                                  || isAlpha_j1 || isAlpha_j1_lazy
+770         load 0                                   || isAlpha_j1
             eval
             push 95
             sub
-            ifneq 733                                || isAlpha_j1_false
+            ifneq 771                                || isAlpha_j1_false
             return_const 1 1
-733         return_const 1 0                         || isAlpha_j1_false
-734         jmp 735                                  || isAlpha_j2 || isAlpha_j2_lazy
-735         load 0                                   || isAlpha_j2
+771         return_const 1 0                         || isAlpha_j1_false
+772         jmp 773                                  || isAlpha_j2 || isAlpha_j2_lazy
+773         load 0                                   || isAlpha_j2
             eval
             push 97
             sub
-            iflt 737                                 || isAlpha_j2_else
+            iflt 775                                 || isAlpha_j2_else
             push 122
             load 0
             eval
             sub
-            iflt 736                                 || isAlpha_j2_then_else
+            iflt 774                                 || isAlpha_j2_then_else
             return_const 1 1
-736         load 0                                   || isAlpha_j2_then_else
-            tailcall 1 732                           || isAlpha_j1
-737         load 0                                   || isAlpha_j2_else
-            tailcall 1 732                           || isAlpha_j1
-738         jmp 739                                  || lexNum_1 || lexNum_1_lazy
-739         load 0                                   || lexNum_1
+774         load 0                                   || isAlpha_j2_then_else
+            tailcall 1 770                           || isAlpha_j1
+775         load 0                                   || isAlpha_j2_else
+            tailcall 1 770                           || isAlpha_j1
+776         jmp 777                                  || lexNum_1 || lexNum_1_lazy
+777         load 0                                   || lexNum_1
             eval
             push 10
             mult
@@ -3176,61 +3337,61 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             sub
             add
             return 2
-740         jmp 741                                  || lexNumHelper_1 || lexNumHelper_1_lazy
-741         load 0                                   || lexNumHelper_1
+778         jmp 779                                  || lexNumHelper_1 || lexNumHelper_1_lazy
+779         load 0                                   || lexNumHelper_1
             eval
             push 48
             sub
             return 1
-742         jmp 743                                  || lexIdentHelper_1 || lexIdentHelper_1_lazy
-743         ccreatet 0 11 5 0                        || lexIdentHelper_1
+780         jmp 781                                  || lexIdentHelper_1 || lexIdentHelper_1_lazy
+781         ccreatet 0 11 5 0                        || lexIdentHelper_1
             load 0
             eval
             ccreatet 2 11 5 1
             return 1
-744         jmp 745                                  || showTokens_1 || showTokens_1_lazy
-745         load 0                                   || showTokens_1
+782         jmp 783                                  || showTokens_1 || showTokens_1_lazy
+783         load 0                                   || showTokens_1
             eval
             call 55                                  || length
-            ifneq 746                                || showTokens_1_else
+            ifneq 784                                || showTokens_1_else
             ccreatet 0 11 5 0
             return 1
-746         load 0                                   || showTokens_1_else
+784         load 0                                   || showTokens_1_else
             pushfunc 1 141                           || showTokens_lazy
             create 2 3
             push 32
             ccreatet 2 11 5 1
             return 1
-747         jmp 748                                  || parseLambdaVarsTok_1 || parseLambdaVarsTok_1_lazy
-748         load 1                                   || parseLambdaVarsTok_1
+785         jmp 786                                  || parseLambdaVarsTok_1 || parseLambdaVarsTok_1_lazy
+786         load 1                                   || parseLambdaVarsTok_1
             load 0
             eval
             ccreatet 2 11 5 1
             return 2
-749         jmp 750                                  || shiftTerm_1 || shiftTerm_1_lazy
-750         load 0                                   || shiftTerm_1
+787         jmp 788                                  || shiftTerm_1 || shiftTerm_1_lazy
+788         load 0                                   || shiftTerm_1
             eval
             load 1
             eval
             add
             return 2
-751         jmp 752                                  || shiftTerm_2 || shiftTerm_2_lazy
-752         load 0                                   || shiftTerm_2
+789         jmp 790                                  || shiftTerm_2 || shiftTerm_2_lazy
+790         load 0                                   || shiftTerm_2
             eval
             inc
             return 1
-753         jmp 754                                  || substTerm_1 || substTerm_1_lazy
-754         load 0                                   || substTerm_1
+791         jmp 792                                  || substTerm_1 || substTerm_1_lazy
+792         load 0                                   || substTerm_1
             eval
             inc
             return 1
-755         jmp 756                                  || parseBlcVarTok_1 || parseBlcVarTok_1_lazy
-756         load 0                                   || parseBlcVarTok_1
+793         jmp 794                                  || parseBlcVarTok_1 || parseBlcVarTok_1_lazy
+794         load 0                                   || parseBlcVarTok_1
             eval
             inc
             return 1
-757         jmp 758                                  || bitsToHex1_1 || bitsToHex1_1_lazy
-758         load 0                                   || bitsToHex1_1
+795         jmp 796                                  || bitsToHex1_1 || bitsToHex1_1_lazy
+796         load 0                                   || bitsToHex1_1
             eval
             push 2
             mult
@@ -3240,8 +3401,8 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             push 48
             sub
             return 2
-759         jmp 760                                  || bitsToHex2_1 || bitsToHex2_1_lazy
-760         load 0                                   || bitsToHex2_1
+797         jmp 798                                  || bitsToHex2_1 || bitsToHex2_1_lazy
+798         load 0                                   || bitsToHex2_1
             eval
             push 2
             mult
@@ -3251,100 +3412,179 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             push 48
             sub
             return 2
-761         jmp 762                                  || nibbleBits_1 || nibbleBits_1_lazy
-762         load 0                                   || nibbleBits_1
+799         jmp 800                                  || nibbleBits_1 || nibbleBits_1_lazy
+800         load 0                                   || nibbleBits_1
             eval
             load 1
             eval
             mod
             return 2
-763         jmp 764                                  || nibbleBits_v2 || nibbleBits_v2_lazy
-764         load 0                                   || nibbleBits_v2
+801         jmp 802                                  || nibbleBits_v2 || nibbleBits_v2_lazy
+802         load 0                                   || nibbleBits_v2
             eval
             load 1
             eval
             sub
-            iflt 765                                 || nibbleBits_v2_false
+            iflt 803                                 || nibbleBits_v2_false
             return_const 2 1
-765         return_const 2 0                         || nibbleBits_v2_false
-766         jmp 767                                  || dropHexPrefix_j1 || dropHexPrefix_j1_lazy
-767         load 0                                   || dropHexPrefix_j1
+803         return_const 2 0                         || nibbleBits_v2_false
+804         jmp 805                                  || dropHexPrefix_j1 || dropHexPrefix_j1_lazy
+805         load 0                                   || dropHexPrefix_j1
             eval
             push 2
             tailcall 1 85                            || drop
-768         jmp 769                                  || hexVal_j1 || hexVal_j1_lazy
-769         push 0                                   || hexVal_j1
+806         jmp 807                                  || b64Group_1 || b64Group_1_lazy
+807         load 0                                   || b64Group_1
+            eval
+            push 2
+            mult
+            load 1
+            eval
+            add
+            push 48
+            sub
+            return 2
+808         jmp 809                                  || b64Val_j1 || b64Val_j1_lazy
+809         load 0                                   || b64Val_j1
+            eval
+            push 45
+            sub
+            ifneq 810                                || b64Val_j1_else
+            return_const 1 62
+810         load 0                                   || b64Val_j1_else
+            eval
+            push 43
+            sub
+            ifneq 811                                || b64Val_j1_else_else
+            return_const 1 62
+811         load 0                                   || b64Val_j1_else_else
+            eval
+            push 95
+            sub
+            ifneq 812                                || b64Val_j1_else_else_else
+            return_const 1 63
+812         load 0                                   || b64Val_j1_else_else_else
+            eval
+            push 47
+            sub
+            ifneq 813                                || b64Val_j1_else_else_else_else
+            return_const 1 63
+813         push 0                                   || b64Val_j1_else_else_else_else
             dec
             return 1
-770         jmp 771                                  || hexVal_j2 || hexVal_j2_lazy
-771         load 0                                   || hexVal_j2
+814         jmp 815                                  || b64Val_j2 || b64Val_j2_lazy
+815         load 0                                   || b64Val_j2
+            eval
+            push 48
+            sub
+            iflt 817                                 || b64Val_j2_else
+            push 57
+            load 0
+            eval
+            sub
+            iflt 816                                 || b64Val_j2_then_else
+            load 0
+            eval
+            push 4
+            add
+            return 1
+816         load 0                                   || b64Val_j2_then_else
+            tailcall 1 809                           || b64Val_j1
+817         load 0                                   || b64Val_j2_else
+            tailcall 1 809                           || b64Val_j1
+818         jmp 819                                  || b64Val_j3 || b64Val_j3_lazy
+819         load 0                                   || b64Val_j3
+            eval
+            push 97
+            sub
+            iflt 821                                 || b64Val_j3_else
+            push 122
+            load 0
+            eval
+            sub
+            iflt 820                                 || b64Val_j3_then_else
+            load 0
+            eval
+            push 71
+            sub
+            return 1
+820         load 0                                   || b64Val_j3_then_else
+            tailcall 1 815                           || b64Val_j2
+821         load 0                                   || b64Val_j3_else
+            tailcall 1 815                           || b64Val_j2
+822         jmp 823                                  || hexVal_j1 || hexVal_j1_lazy
+823         push 0                                   || hexVal_j1
+            dec
+            return 1
+824         jmp 825                                  || hexVal_j2 || hexVal_j2_lazy
+825         load 0                                   || hexVal_j2
             eval
             push 65
             sub
-            iflt 773                                 || hexVal_j2_else
+            iflt 827                                 || hexVal_j2_else
             push 70
             load 0
             eval
             sub
-            iflt 772                                 || hexVal_j2_then_else
+            iflt 826                                 || hexVal_j2_then_else
             load 0
             eval
             push 55
             sub
             return 1
-772         push 0                                   || hexVal_j2_then_else
-            tailcall 1 769                           || hexVal_j1
-773         push 0                                   || hexVal_j2_else
-            tailcall 1 769                           || hexVal_j1
-774         jmp 775                                  || hexVal_j3 || hexVal_j3_lazy
-775         load 0                                   || hexVal_j3
+826         push 0                                   || hexVal_j2_then_else
+            tailcall 1 823                           || hexVal_j1
+827         push 0                                   || hexVal_j2_else
+            tailcall 1 823                           || hexVal_j1
+828         jmp 829                                  || hexVal_j3 || hexVal_j3_lazy
+829         load 0                                   || hexVal_j3
             eval
             push 97
             sub
-            iflt 777                                 || hexVal_j3_else
+            iflt 831                                 || hexVal_j3_else
             push 102
             load 0
             eval
             sub
-            iflt 776                                 || hexVal_j3_then_else
+            iflt 830                                 || hexVal_j3_then_else
             load 0
             eval
             push 87
             sub
             return 1
-776         load 0                                   || hexVal_j3_then_else
-            tailcall 1 771                           || hexVal_j2
-777         load 0                                   || hexVal_j3_else
-            tailcall 1 771                           || hexVal_j2
-778         jmp 779                                  || showTermD_1 || showTermD_1_lazy
-779         load 0                                   || showTermD_1
+830         load 0                                   || hexVal_j3_then_else
+            tailcall 1 825                           || hexVal_j2
+831         load 0                                   || hexVal_j3_else
+            tailcall 1 825                           || hexVal_j2
+832         jmp 833                                  || showTermD_1 || showTermD_1_lazy
+833         load 0                                   || showTermD_1
             eval
             load 1
             eval
             sub
             inc
             return 2
-780         jmp 781                                  || showTermD_2 || showTermD_2_lazy
-781         load 0                                   || showTermD_2
+834         jmp 835                                  || showTermD_2 || showTermD_2_lazy
+835         load 0                                   || showTermD_2
             eval
             inc
             return 1
-782         jmp 783                                  || showTermD_3 || showTermD_3_lazy
-783         load 0                                   || showTermD_3
+836         jmp 837                                  || showTermD_3 || showTermD_3_lazy
+837         load 0                                   || showTermD_3
             eval
             inc
             return 1
-784         jmp 785                                  || readAndDispatch_1 || readAndDispatch_1_lazy
-785         syscall 2                                || readAndDispatch_1
+838         jmp 839                                  || readAndDispatch_1 || readAndDispatch_1_lazy
+839         syscall 2                                || readAndDispatch_1
             return 0
-786         jmp 787                                  || routeAssignCheck_1 || routeAssignCheck_1_lazy
-787         ccreatet 0 11 5 0                        || routeAssignCheck_1
+840         jmp 841                                  || routeAssignCheck_1 || routeAssignCheck_1_lazy
+841         ccreatet 0 11 5 0                        || routeAssignCheck_1
             load 0
             ccreatet 1 11 6 1
             ccreatet 2 11 5 1
             return 1
-788         jmp 789                                  || routeAssignCheckTok_1 || routeAssignCheckTok_1_lazy
-789         load 2                                   || routeAssignCheckTok_1
+842         jmp 843                                  || routeAssignCheckTok_1 || routeAssignCheckTok_1_lazy
+843         load 2                                   || routeAssignCheckTok_1
             load 1
             eval
             ccreatet 2 11 5 1
@@ -3352,8 +3592,8 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             ccreatet 1 11 6 1
             ccreatet 2 11 5 1
             return 3
-790         jmp 791                                  || cmdAssignShow_1 || cmdAssignShow_1_lazy
-791         load 2                                   || cmdAssignShow_1
+844         jmp 845                                  || cmdAssignShow_1 || cmdAssignShow_1_lazy
+845         load 2                                   || cmdAssignShow_1
             load 1
             eval
             load 0
@@ -3361,8 +3601,8 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             ccreatet 2 11 7 0
             ccreatet 2 11 5 1
             return 3
-792         jmp 793                                  || scottSel_1 || scottSel_1_lazy
-793         push ")"                                 || scottSel_1
+846         jmp 847                                  || scottSel_1 || scottSel_1_lazy
+847         push ")"                                 || scottSel_1
             pushfunc 1 8                             || str2list
             create 2 3
             load 1
@@ -3393,7 +3633,7 @@ type 8 LTerm 5
   constr 2 LAbs 1
   constr 3 LLitNum 1
   constr 4 LLitPrim 1
-functions 476
+functions 506
   func 1 readStream 1 00
   func 0 readStream 1 00
   func 4 writeStream 2 010
@@ -3674,200 +3914,230 @@ functions 476
   func 490 bitChar 1 10
   func 494 dropHexPrefix 1 10
   func 493 dropHexPrefix 1 10
-  func 498 hexVal 1 10
-  func 497 hexVal 1 10
-  func 502 showTerm 1 10
-  func 501 showTerm 1 10
-  func 504 showTermD 2 100
-  func 503 showTermD 2 100
-  func 511 varName 1 00
-  func 510 varName 1 00
-  func 513 wrapParen 1 00
-  func 512 wrapParen 1 00
-  func 515 appendSp 2 100
-  func 514 appendSp 2 100
-  func 517 wrapAbsShow 2 000
-  func 516 wrapAbsShow 2 000
-  func 519 printChars 1 10
-  func 518 printChars 1 10
-  func 523 hasBindingName 2 010
-  func 522 hasBindingName 2 010
-  func 527 hasBindingNameTok 3 1100
-  func 526 hasBindingNameTok 3 1100
-  func 531 lookupBindingTerm 2 110
-  func 530 lookupBindingTerm 2 110
-  func 535 lookupBindingTermTok 3 1100
-  func 534 lookupBindingTermTok 3 1100
-  func 539 startsWith 2 100
-  func 538 startsWith 2 100
-  func 543 startsWithTok 3 0010
-  func 542 startsWithTok 3 0010
-  func 548 nfPrefix 0 0
-  func 547 nfPrefix 0 0
-  func 550 hlcPrefix 0 0
-  func 549 hlcPrefix 0 0
-  func 552 fromhlcPrefix 0 0
-  func 551 fromhlcPrefix 0 0
-  func 554 sevalPrefix 0 0
-  func 553 sevalPrefix 0 0
-  func 556 blcPrefix 0 0
-  func 555 blcPrefix 0 0
-  func 558 fromblcPrefix 0 0
-  func 557 fromblcPrefix 0 0
-  func 560 listPrefix 0 0
-  func 559 listPrefix 0 0
-  func 562 bitsPrefix 0 0
-  func 561 bitsPrefix 0 0
-  func 564 dbPrefix 0 0
-  func 563 dbPrefix 0 0
-  func 566 scottPrefix 0 0
-  func 565 scottPrefix 0 0
-  func 568 repl 1 00
-  func 567 repl 1 00
-  func 570 readAndDispatch 1 00
-  func 569 readAndDispatch 1 00
-  func 572 dispatchLine 2 010
-  func 571 dispatchLine 2 010
-  func 576 lambdaToBackslash 1 10
-  func 575 lambdaToBackslash 1 10
-  func 581 lamAfter206 1 10
-  func 580 lamAfter206 1 10
-  func 586 dispatchCs 2 000
-  func 585 dispatchCs 2 000
-  func 598 routeAssignOrEval 2 010
-  func 597 routeAssignOrEval 2 010
-  func 602 routeAssignOrEvalTok 3 0100
-  func 601 routeAssignOrEvalTok 3 0100
-  func 608 routeAssignCheck 3 0010
-  func 607 routeAssignCheck 3 0010
-  func 612 routeAssignCheckTok 4 00100
-  func 611 routeAssignCheckTok 4 00100
-  func 615 cmdAssign 3 0010
-  func 614 cmdAssign 3 0010
-  func 617 cmdAssignForce 3 0010
-  func 616 cmdAssignForce 3 0010
-  func 620 termSize 1 10
-  func 619 termSize 1 10
-  func 627 cmdAssignShow 3 0000
-  func 626 cmdAssignShow 3 0000
-  func 629 cmdEvalEcho 2 000
-  func 628 cmdEvalEcho 2 000
-  func 631 cmdEvalEchoShow 2 000
-  func 630 cmdEvalEchoShow 2 000
-  func 633 cmdNf 2 000
-  func 632 cmdNf 2 000
-  func 635 cmdNfShow 2 000
-  func 634 cmdNfShow 2 000
-  func 637 cmdSeval 2 000
-  func 636 cmdSeval 2 000
-  func 639 cmdSevalShow 2 000
-  func 638 cmdSevalShow 2 000
-  func 641 cmdBits 2 010
-  func 640 cmdBits 2 010
-  func 645 cmdBitsTok 3 0100
-  func 644 cmdBitsTok 3 0100
-  func 651 printBits 2 100
-  func 650 printBits 2 100
-  func 654 printBitsLam 3 0000
-  func 653 printBitsLam 3 0000
-  func 656 cmdDb 2 000
-  func 655 cmdDb 2 000
-  func 658 showDb 1 10
-  func 657 showDb 1 10
-  func 665 showDbFun 1 10
-  func 664 showDbFun 1 10
-  func 672 showDbArg 1 10
-  func 671 showDbArg 1 10
-  func 679 cmdScott 2 000
-  func 678 cmdScott 2 000
-  func 681 cmdScottShow 2 000
-  func 680 cmdScottShow 2 000
-  func 683 showScott 1 10
-  func 682 showScott 1 10
-  func 690 showScottLam 1 10
-  func 689 showScottLam 1 10
-  func 697 scottSel 2 000
-  func 696 scottSel 2 000
-  func 699 cmdBlc 2 000
-  func 698 cmdBlc 2 000
-  func 701 cmdBlcShow 2 000
-  func 700 cmdBlcShow 2 000
-  func 703 cmdHlc 2 000
-  func 702 cmdHlc 2 000
-  func 705 cmdFromBlc 2 000
-  func 704 cmdFromBlc 2 000
-  func 707 cmdFromBlcShow 2 000
-  func 706 cmdFromBlcShow 2 000
-  func 709 cmdList 1 00
-  func 708 cmdList 1 00
-  func 711 printBindingNames 1 10
-  func 710 printBindingNames 1 10
-  func 715 printBindingNamesTok 2 100
-  func 714 printBindingNamesTok 2 100
-  func 718 printBindingNamesRest 1 10
-  func 717 printBindingNamesRest 1 10
-  func 722 start 0 0
-  func 721 start 0 0
-  func 724 readStream_1 1 00
-  func 723 readStream_1 1 00
-  func 726 substrClamp_j1 1 00
-  func 725 substrClamp_j1 1 00
-  func 728 take_1 1 00
-  func 727 take_1 1 00
-  func 730 drop_1 1 00
-  func 729 drop_1 1 00
-  func 732 isAlpha_j1 1 00
-  func 731 isAlpha_j1 1 00
-  func 735 isAlpha_j2 1 00
-  func 734 isAlpha_j2 1 00
-  func 739 lexNum_1 2 000
-  func 738 lexNum_1 2 000
-  func 741 lexNumHelper_1 1 00
-  func 740 lexNumHelper_1 1 00
-  func 743 lexIdentHelper_1 1 00
-  func 742 lexIdentHelper_1 1 00
-  func 745 showTokens_1 1 00
-  func 744 showTokens_1 1 00
-  func 748 parseLambdaVarsTok_1 2 000
-  func 747 parseLambdaVarsTok_1 2 000
-  func 750 shiftTerm_1 2 000
-  func 749 shiftTerm_1 2 000
-  func 752 shiftTerm_2 1 00
-  func 751 shiftTerm_2 1 00
-  func 754 substTerm_1 1 00
-  func 753 substTerm_1 1 00
-  func 756 parseBlcVarTok_1 1 00
-  func 755 parseBlcVarTok_1 1 00
-  func 758 bitsToHex1_1 2 000
-  func 757 bitsToHex1_1 2 000
-  func 760 bitsToHex2_1 2 000
-  func 759 bitsToHex2_1 2 000
-  func 762 nibbleBits_1 2 000
-  func 761 nibbleBits_1 2 000
-  func 764 nibbleBits_v2 2 000
-  func 763 nibbleBits_v2 2 000
-  func 767 dropHexPrefix_j1 1 00
-  func 766 dropHexPrefix_j1 1 00
-  func 769 hexVal_j1 1 00
-  func 768 hexVal_j1 1 00
-  func 771 hexVal_j2 1 00
-  func 770 hexVal_j2 1 00
-  func 775 hexVal_j3 1 00
-  func 774 hexVal_j3 1 00
-  func 779 showTermD_1 2 000
-  func 778 showTermD_1 2 000
-  func 781 showTermD_2 1 00
-  func 780 showTermD_2 1 00
-  func 783 showTermD_3 1 00
-  func 782 showTermD_3 1 00
-  func 785 readAndDispatch_1 0 0
-  func 784 readAndDispatch_1 0 0
-  func 787 routeAssignCheck_1 1 00
-  func 786 routeAssignCheck_1 1 00
-  func 789 routeAssignCheckTok_1 3 0000
-  func 788 routeAssignCheckTok_1 3 0000
-  func 791 cmdAssignShow_1 3 0000
-  func 790 cmdAssignShow_1 3 0000
-  func 793 scottSel_1 2 000
-  func 792 scottSel_1 2 000
+  func 498 blcToB64 1 10
+  func 497 blcToB64 1 10
+  func 500 padTo 2 010
+  func 499 padTo 2 010
+  func 502 bitsToB64 1 10
+  func 501 bitsToB64 1 10
+  func 506 b64Group 3 1000
+  func 505 b64Group 3 1000
+  func 511 b64Digit 1 10
+  func 510 b64Digit 1 10
+  func 517 b64ToBits 1 10
+  func 516 b64ToBits 1 10
+  func 521 b64ToBitsVal 2 100
+  func 520 b64ToBitsVal 2 100
+  func 524 b64Val 1 10
+  func 523 b64Val 1 10
+  func 528 hexVal 1 10
+  func 527 hexVal 1 10
+  func 532 showTerm 1 10
+  func 531 showTerm 1 10
+  func 534 showTermD 2 100
+  func 533 showTermD 2 100
+  func 541 varName 1 00
+  func 540 varName 1 00
+  func 543 wrapParen 1 00
+  func 542 wrapParen 1 00
+  func 545 appendSp 2 100
+  func 544 appendSp 2 100
+  func 547 wrapAbsShow 2 000
+  func 546 wrapAbsShow 2 000
+  func 549 printChars 1 10
+  func 548 printChars 1 10
+  func 553 hasBindingName 2 010
+  func 552 hasBindingName 2 010
+  func 557 hasBindingNameTok 3 1100
+  func 556 hasBindingNameTok 3 1100
+  func 561 lookupBindingTerm 2 110
+  func 560 lookupBindingTerm 2 110
+  func 565 lookupBindingTermTok 3 1100
+  func 564 lookupBindingTermTok 3 1100
+  func 569 startsWith 2 100
+  func 568 startsWith 2 100
+  func 573 startsWithTok 3 0010
+  func 572 startsWithTok 3 0010
+  func 578 nfPrefix 0 0
+  func 577 nfPrefix 0 0
+  func 580 hlcPrefix 0 0
+  func 579 hlcPrefix 0 0
+  func 582 fromhlcPrefix 0 0
+  func 581 fromhlcPrefix 0 0
+  func 584 b64Prefix 0 0
+  func 583 b64Prefix 0 0
+  func 586 fromb64Prefix 0 0
+  func 585 fromb64Prefix 0 0
+  func 588 sevalPrefix 0 0
+  func 587 sevalPrefix 0 0
+  func 590 blcPrefix 0 0
+  func 589 blcPrefix 0 0
+  func 592 fromblcPrefix 0 0
+  func 591 fromblcPrefix 0 0
+  func 594 listPrefix 0 0
+  func 593 listPrefix 0 0
+  func 596 bitsPrefix 0 0
+  func 595 bitsPrefix 0 0
+  func 598 dbPrefix 0 0
+  func 597 dbPrefix 0 0
+  func 600 scottPrefix 0 0
+  func 599 scottPrefix 0 0
+  func 602 repl 1 00
+  func 601 repl 1 00
+  func 604 readAndDispatch 1 00
+  func 603 readAndDispatch 1 00
+  func 606 dispatchLine 2 010
+  func 605 dispatchLine 2 010
+  func 610 lambdaToBackslash 1 10
+  func 609 lambdaToBackslash 1 10
+  func 615 lamAfter206 1 10
+  func 614 lamAfter206 1 10
+  func 620 dispatchCs 2 000
+  func 619 dispatchCs 2 000
+  func 634 routeAssignOrEval 2 010
+  func 633 routeAssignOrEval 2 010
+  func 638 routeAssignOrEvalTok 3 0100
+  func 637 routeAssignOrEvalTok 3 0100
+  func 644 routeAssignCheck 3 0010
+  func 643 routeAssignCheck 3 0010
+  func 648 routeAssignCheckTok 4 00100
+  func 647 routeAssignCheckTok 4 00100
+  func 651 cmdAssign 3 0010
+  func 650 cmdAssign 3 0010
+  func 653 cmdAssignForce 3 0010
+  func 652 cmdAssignForce 3 0010
+  func 656 termSize 1 10
+  func 655 termSize 1 10
+  func 663 cmdAssignShow 3 0000
+  func 662 cmdAssignShow 3 0000
+  func 665 cmdEvalEcho 2 000
+  func 664 cmdEvalEcho 2 000
+  func 667 cmdEvalEchoShow 2 000
+  func 666 cmdEvalEchoShow 2 000
+  func 669 cmdNf 2 000
+  func 668 cmdNf 2 000
+  func 671 cmdNfShow 2 000
+  func 670 cmdNfShow 2 000
+  func 673 cmdSeval 2 000
+  func 672 cmdSeval 2 000
+  func 675 cmdSevalShow 2 000
+  func 674 cmdSevalShow 2 000
+  func 677 cmdBits 2 010
+  func 676 cmdBits 2 010
+  func 681 cmdBitsTok 3 0100
+  func 680 cmdBitsTok 3 0100
+  func 687 printBits 2 100
+  func 686 printBits 2 100
+  func 690 printBitsLam 3 0000
+  func 689 printBitsLam 3 0000
+  func 692 cmdDb 2 000
+  func 691 cmdDb 2 000
+  func 694 showDb 1 10
+  func 693 showDb 1 10
+  func 701 showDbFun 1 10
+  func 700 showDbFun 1 10
+  func 708 showDbArg 1 10
+  func 707 showDbArg 1 10
+  func 715 cmdScott 2 000
+  func 714 cmdScott 2 000
+  func 717 cmdScottShow 2 000
+  func 716 cmdScottShow 2 000
+  func 719 showScott 1 10
+  func 718 showScott 1 10
+  func 726 showScottLam 1 10
+  func 725 showScottLam 1 10
+  func 733 scottSel 2 000
+  func 732 scottSel 2 000
+  func 735 cmdBlc 2 000
+  func 734 cmdBlc 2 000
+  func 737 cmdBlcShow 2 000
+  func 736 cmdBlcShow 2 000
+  func 739 cmdB64 2 000
+  func 738 cmdB64 2 000
+  func 741 cmdHlc 2 000
+  func 740 cmdHlc 2 000
+  func 743 cmdFromBlc 2 000
+  func 742 cmdFromBlc 2 000
+  func 745 cmdFromBlcShow 2 000
+  func 744 cmdFromBlcShow 2 000
+  func 747 cmdList 1 00
+  func 746 cmdList 1 00
+  func 749 printBindingNames 1 10
+  func 748 printBindingNames 1 10
+  func 753 printBindingNamesTok 2 100
+  func 752 printBindingNamesTok 2 100
+  func 756 printBindingNamesRest 1 10
+  func 755 printBindingNamesRest 1 10
+  func 760 start 0 0
+  func 759 start 0 0
+  func 762 readStream_1 1 00
+  func 761 readStream_1 1 00
+  func 764 substrClamp_j1 1 00
+  func 763 substrClamp_j1 1 00
+  func 766 take_1 1 00
+  func 765 take_1 1 00
+  func 768 drop_1 1 00
+  func 767 drop_1 1 00
+  func 770 isAlpha_j1 1 00
+  func 769 isAlpha_j1 1 00
+  func 773 isAlpha_j2 1 00
+  func 772 isAlpha_j2 1 00
+  func 777 lexNum_1 2 000
+  func 776 lexNum_1 2 000
+  func 779 lexNumHelper_1 1 00
+  func 778 lexNumHelper_1 1 00
+  func 781 lexIdentHelper_1 1 00
+  func 780 lexIdentHelper_1 1 00
+  func 783 showTokens_1 1 00
+  func 782 showTokens_1 1 00
+  func 786 parseLambdaVarsTok_1 2 000
+  func 785 parseLambdaVarsTok_1 2 000
+  func 788 shiftTerm_1 2 000
+  func 787 shiftTerm_1 2 000
+  func 790 shiftTerm_2 1 00
+  func 789 shiftTerm_2 1 00
+  func 792 substTerm_1 1 00
+  func 791 substTerm_1 1 00
+  func 794 parseBlcVarTok_1 1 00
+  func 793 parseBlcVarTok_1 1 00
+  func 796 bitsToHex1_1 2 000
+  func 795 bitsToHex1_1 2 000
+  func 798 bitsToHex2_1 2 000
+  func 797 bitsToHex2_1 2 000
+  func 800 nibbleBits_1 2 000
+  func 799 nibbleBits_1 2 000
+  func 802 nibbleBits_v2 2 000
+  func 801 nibbleBits_v2 2 000
+  func 805 dropHexPrefix_j1 1 00
+  func 804 dropHexPrefix_j1 1 00
+  func 807 b64Group_1 2 000
+  func 806 b64Group_1 2 000
+  func 809 b64Val_j1 1 00
+  func 808 b64Val_j1 1 00
+  func 815 b64Val_j2 1 00
+  func 814 b64Val_j2 1 00
+  func 819 b64Val_j3 1 00
+  func 818 b64Val_j3 1 00
+  func 823 hexVal_j1 1 00
+  func 822 hexVal_j1 1 00
+  func 825 hexVal_j2 1 00
+  func 824 hexVal_j2 1 00
+  func 829 hexVal_j3 1 00
+  func 828 hexVal_j3 1 00
+  func 833 showTermD_1 2 000
+  func 832 showTermD_1 2 000
+  func 835 showTermD_2 1 00
+  func 834 showTermD_2 1 00
+  func 837 showTermD_3 1 00
+  func 836 showTermD_3 1 00
+  func 839 readAndDispatch_1 0 0
+  func 838 readAndDispatch_1 0 0
+  func 841 routeAssignCheck_1 1 00
+  func 840 routeAssignCheck_1 1 00
+  func 843 routeAssignCheckTok_1 3 0000
+  func 842 routeAssignCheckTok_1 3 0000
+  func 845 cmdAssignShow_1 3 0000
+  func 844 cmdAssignShow_1 3 0000
+  func 847 scottSel_1 2 000
+  func 846 scottSel_1 2 000
 .endmetadata
