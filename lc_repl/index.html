@@ -193,7 +193,7 @@
     druk op Enter &mdash; <code>:nf</code> reduceert tot bèta-normaalvorm,
     <code>:seval</code> laat de self-interpreter zelf een term uitvoeren,
     <code>:blc</code>/<code>:fromblc</code> converteren naar/van Tromp's
-    binaire notatie, en <code>:db</code>/<code>:scott</code> tonen hoe een
+    binaire notatie (<code>:hlc</code>/<code>:fromhlc</code>: hetzelfde in hex), en <code>:db</code>/<code>:scott</code> tonen hoe een
     term intern gerepresenteerd is (de Bruijn-indices resp. de
     Scott-encoded datastructuur). Een <code>naam = ...</code>-binding blijft
     in de sessie en mag later hergebruikt worden; een regel die faalt laat
@@ -225,6 +225,28 @@
 fact = Y (\self n. eq n 0 1 (mult n (self (sub n 1))))
 :seval fact 6">:seval fact 6</button>
       <button class="chip" type="button" data-cmd=":blc \x y.x">:blc K</button>
+      <button class="chip" type="button" data-cmd="primes = (\p.p p) (\p d c. c (\f t.t) ((\n. p p n ((\r.r r)(\r. n (r r)))) (\a. (\g k s c. c k (s g)) (d a)))) (\g k s c. c (\f t.f) (s g))
+:hlc primes">:hlc priemzeef</button>
+      <button class="chip" type="button" data-cmd="seval = (\m e.m m e m)(\m e b.e(\s.s b)(\a c.m m a b(m m c b))(\t x.m m t(\f.f x b)))
+:hlc seval">:hlc seval</button>
+      <button class="chip" type="button" data-cmd="primes = (\p.p p) (\p d c. c (\f t.t) ((\n. p p n ((\r.r r)(\r. n (r r)))) (\a. (\g k s c. c k (s g)) (d a)))) (\g k s c. c (\f t.f) (s g))
+E = ((\a.(a a)) (\a.(\b.(\c.(c (\d.(\e.(\f.(\g.(e (\h.(d (f (\i.(h (g (\j.(\k.(i (\l.(l k j)))))) (f (\j.(g (\k.(i k (j k))))))))) (h (g (\i.(i h))) (\i.(f (\j.(g (\k.(j (k h))))) e)))))))))) (a a) b)))))
+evalT = E (\w. w w)
+:bits 30 evalT {\i. primes}">bits-evaluator T (Tromp)</button>
+      <button class="chip" type="button" data-cmd="primes = (\p.p p) (\p d c. c (\f t.t) ((\n. p p n ((\r.r r)(\r. n (r r)))) (\a. (\g k s c. c k (s g)) (d a)))) (\g k s c. c (\f t.f) (s g))
+E = ((\a.(a a)) (\a.(\b.(\c.(c (\d.(\e.(\f.(\g.(e (\h.(d (f (\i.(h (g (\j.(\k.(i (\l.(l k j)))))) (f (\j.(g (\k.(i k (j k))))))))) (h (g (\i.(i h))) (\i.(f (\j.(g (\k.(j (k h))))) e)))))))))) (a a) b)))))
+evalT = E (\w. w w)
+:bits 30 evalT {evalT, \i. primes}">T voert zichzelf uit</button>
+      <button class="chip" type="button" data-cmd="E = ((\a.(a a)) (\a.(\b.(\c.(c (\d.(\e.(\f.(\g.(e (\h.(d (f (\i.(h (g (\j.(\k.(i (\l.(l k j)))))) (f (\j.(g (\k.(i k (j k))))))))) (h (g (\i.(i h))) (\i.(f (\j.(g (\k.(j (k h))))) e)))))))))) (a a) b)))))
+:hlc E">:hlc E (206 bits)</button>
+      <button class="chip" type="button" data-cmd="primes = (\p.p p) (\p d c. c (\f t.t) ((\n. p p n ((\r.r r)(\r. n (r r)))) (\a. (\g k s c. c k (s g)) (d a)))) (\g k s c. c (\f t.f) (s g))
+evalB = (\f.(\x.x x)(\x.f(x x))) (\d k s. s (\b. b (\r. r (\c. d (\w. c (k (\e x. w (\f. f x e))) (d (\u. k (\e. w e (u e))))))) ((\x.x x)(\v k s. s (\b. b (k (\e. e b)) (v v (\w. k (\e. w (e b)))))) k))) (\w. w w)
+:bits 30 evalB {evalB, \i. primes}
+:hlc evalB">bits-evaluator B</button>
+      <button class="chip" type="button" data-cmd="primes = (\p.p p) (\p d c. c (\f t.t) ((\n. p p n ((\r.r r)(\r. n (r r)))) (\a. (\g k s c. c k (s g)) (d a)))) (\g k s c. c (\f t.f) (s g))
+evalA = (\f.(\x.x x)(\x.f(x x))) (\d k s. s (\b. b (\r. r (\c. d (\w. c (k (\f g h. h w)) (d (\u. k (\f g h. g w u)))))) ((\x.x x)(\v k s. s (\b. b (k (\e. e b)) (v v (\w. k (\e. w (e b)))))) (\w. k (\f g h. f w))))) ((\m e.m m e m)(\m e b.e(\s.s b)(\a c.m m a b(m m c b))(\t x.m m t(\f.f x b))))
+:bits 30 evalA {evalA, \i. primes}
+:hlc evalA">bits-evaluator A</button>
       <button class="chip" type="button" data-cmd=":db \f x. f (f x)">:db Church-2</button>
       <button class="chip" type="button" data-cmd="Y = \f.(\x. f (x x)) (\x. f (x x))
 :db Y">:db Y</button>
@@ -258,6 +280,9 @@ decodeAcc = Y (\self n ls acc. eq n 0 acc (ls (\h t. self (sub n 1) t (add (mult
       <tr><td>:scott &lt;expr&gt;</td><td>toon de Scott-encoded datastructuur die <code>seval</code> krijgt: eerst met de constructors <code>var</code>/<code>app</code>/<code>abs</code>/<code>lit</code>, dan uitgeschreven als lambda-term (<code>\f g h k.</code> &hellip;; de echte <code>var n</code> geeft een selector <code>makeSel n</code> door, hier als <code>n</code> getoond)</td></tr>
       <tr><td>:blc &lt;expr&gt;</td><td>codeer naar Tromp's binaire notatie (alleen pure termen, geen <code>eq</code>/<code>sub</code>/<code>mult</code>/getallen)</td></tr>
       <tr><td>:fromblc &lt;bits&gt;</td><td>decodeer een binaire tekenreeks terug naar een term</td></tr>
+      <tr><td>:hlc &lt;expr&gt;</td><td>als <code>:blc</code>, maar hexadecimaal (4 bits per cijfer, achteraan met nullen aangevuld)</td></tr>
+      <tr><td>:fromhlc &lt;hex&gt;</td><td>decodeer een hexadecimale BLC-reeks terug naar een term</td></tr>
+      <tr><td>{t1, t2, &hellip;}</td><td>in een expressie: de BLC-bits van <code>t1</code>, dan <code>t2</code>, &hellip; als luie stroom van booleans (bit 0 = <code>\x y.x</code>), de invoer voor een zelf-evaluator op bits: <code>:bits 30 evalT {\i. primes}</code></td></tr>
       <tr><td>:list</td><td>toon de namen van de huidige sessie-bindingen</td></tr>
     </table>
   </div>
