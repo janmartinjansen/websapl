@@ -1137,17 +1137,24 @@ async function buildModules(manifestText, entryModule, entryFunc, moduleSources,
     }
     log += `build_modules: bouw ${mod} ...\n`;
 
-    const defsRes = await runCompilerStage(src, "defs", `/tmp/mods/${i}.defs.txt`);
+    const depMods = deps[mod];
+    const defsContents = depMods.map((d) => defsCache[d]);
+    const typedefsContents = depMods.map((d) => typedefsCache[d]);
+
+    // De defs van een module MET afhankelijkheden tegen die afhankelijkheden
+    // maken (saplcomp_module, stage defs): los bleef een kale verwijzing naar
+    // een externe naam zonder argumenten (bv. een CAF uit een andere module)
+    // een onbekende variabele ("findArgStrict: unknown variable"). Zelfde
+    // fix als build_modules.py, 5 oktober 2026; test: tools/modules_test.js.
+    const defsRes = depMods.length
+      ? await runSaplcompModuleStage(src, "defs", `/tmp/mods/${i}.defs.txt`, defsContents, typedefsContents)
+      : await runCompilerStage(src, "defs", `/tmp/mods/${i}.defs.txt`);
     if (!defsRes.success) throw new Error(`defs-extractie mislukt voor ${mod}:\n${defsRes.output}`);
     defsCache[mod] = defsRes.content;
 
     const typedefsRes = await runCompilerStage(src, "typedefs", `/tmp/mods/${i}.typedefs.txt`);
     if (!typedefsRes.success) throw new Error(`typedefs-extractie mislukt voor ${mod}:\n${typedefsRes.output}`);
     typedefsCache[mod] = typedefsRes.content;
-
-    const depMods = deps[mod];
-    const defsContents = depMods.map((d) => defsCache[d]);
-    const typedefsContents = depMods.map((d) => typedefsCache[d]);
     const retagRes = await runSaplcompModuleStage(src, "retag", `/tmp/mods/${i}.retag.txt`, defsContents, typedefsContents);
     log += retagRes.output;
     if (!retagRes.success) throw new Error(`retag-compilatie mislukt voor ${mod}:\n${retagRes.output}`);

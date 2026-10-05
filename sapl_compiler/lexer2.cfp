@@ -107,12 +107,24 @@ readFracDigits acc cs =
     (Nil -> Lexres (TFloatStr (reverse acc)) Nil)
     (Cons c cs2 -> if (isDigitCh c) (readFracDigits (Cons c acc) cs2) (Lexres (TFloatStr (reverse acc)) cs))
 
+// Een JMVM-int is 62 bits (max 2305843009213693951). `acc * 10 + d` mag
+// daar niet overheen: dan liep de rekensom stil over (5 oktober 2026: een
+// getal van 20 cijfers gaf een ander, kleiner getal; 2^61 liet de compiler
+// zelf vastlopen). Nu een duidelijke fout.
+// De grens (2^61 - 1) / 10 = 230584300921369395 wordt uitgerekend uit getallen
+// onder 2^31: een letterlijk getal boven 32 bits past in wasm32 niet in een
+// programmawoord, en deze compiler draait ook in WebSapl.
+numLimit = 230584300 * 1000000000 + 921369395
+numFits acc d = (acc < numLimit) \/ ((acc == numLimit) /\ (d <= 1))
+
+numDigit acc d = if (numFits acc d) (acc * 10 + d) (error "saplcomp: getal te groot (een JMVM-int is 62 bits, max 2305843009213693951)")
+
 readNumAcc acc intVal cs =
   case cs
     (Nil -> Lexres (TNum intVal) Nil)
     (Cons c cs2 ->
       if (isDigitCh c)
-        (readNumAcc (Cons c acc) (intVal * 10 + (c - '0')) cs2)
+        (readNumAcc (Cons c acc) (numDigit intVal (c - '0')) cs2)
         (if ((c == '.') /\ (isDigitCh (headOr 0 cs2)))
           (readFracDigits (Cons '.' acc) cs2)
           (Lexres (TNum intVal) cs)))
