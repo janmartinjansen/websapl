@@ -17,7 +17,11 @@ let initResolve;
 global.self = global;
 global.postMessage = (m) => {
   if (m.type === "INIT_DONE") return initResolve && initResolve();
-  if (m.id !== undefined && pending.has(m.id)) { pending.get(m.id)(m); pending.delete(m.id); }
+  if (m.id !== undefined && pending.has(m.id)) {
+    const p = pending.get(m.id);
+    if (p.want && m.type !== p.want) return;  // bv. NOTEBOOK_PROGRESS vóór NOTEBOOK_RESULT
+    p.resolve(m); pending.delete(m.id);
+  }
 };
 global.importScripts = (p) => {
   const file = path.join(engineDir, p.split("?")[0]);
@@ -44,10 +48,12 @@ global.fetch = async (url) => {
 vm.runInThisContext(fs.readFileSync(path.join(engineDir, "worker.js"), "utf8"), { filename: "worker.js" });
 
 let seq = 0;
-function call(msg) {
+// `want`: optioneel het berichttype waarop gewacht wordt (andere berichten
+// met hetzelfde id, zoals voortgangsmeldingen, worden overgeslagen).
+function call(msg, want) {
   return new Promise((resolve) => {
     const id = ++seq;
-    pending.set(id, resolve);
+    pending.set(id, { resolve, want });
     self.onmessage({ data: { ...msg, id } });
   });
 }

@@ -7568,7 +7568,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             pushfunc 1 5588                          || eagerCharList_1
             create 2 3
             load 0
-            ccreatet 1 11 8 0
+            call 1895                                || charExpr
             ccreatet 2 11 5 1
             push "Cons"
             call 8                                   || str2list
@@ -7677,8 +7677,8 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             call 1696                                || dropBlankLines
             call 1620                                || mergeContinuations
             call 1719                                || parseProgramLines
-            call 1962                                || charLiterals
             call 1888                                || resolveParsedProgram
+            call 1962                                || charLiterals
             call 2068                                || shadowBuiltins
             call 2126                                || renameShadowingLocals
             tailcall 1 2057                          || uniqueAdtNames
