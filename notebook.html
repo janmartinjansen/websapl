@@ -496,7 +496,13 @@
         }
         return;
       }
-      if (o.def) return pre("ok", "✓ definities");
+      if (o.def) {
+        pre("ok", "✓ definities");
+        // Beslissing 4 van het CAF-plan: `=:` niet automatisch, wel een hint.
+        const hint = NB.cafHintNames(c.source);
+        if (hint.length) pre("note", `tip: ${hint.join(", ")} wordt bij elk gebruik opnieuw uitgerekend; met "=:" (bv. ${hint[0]} =: …) één keer, en gedeeld`);
+        return;
+      }
       if (o.error) return pre("err", o.error);
       if (o.notRun) return pre("note", o.afterStop ? "niet uitgevoerd: een eerdere cel stopte" : "niet uitgevoerd");
       for (const b of o.blocks || []) {

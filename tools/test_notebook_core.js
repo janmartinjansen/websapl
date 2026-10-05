@@ -20,6 +20,7 @@ const cases = [
   ["1 + 2\n3 + 4", "expr!"], ["start = 1", "def!"], ["// alleen commentaar", "empty"],
   ["L.sum (L.map (\\x -> let y = x in y) [1])", "expr"], ["tekst = \"a = b\"", "def"],
   ["\"a = b\"", "expr"], ["foo\n  (bar 1)\n  2", "expr"], ["  1 + 1", "expr!"],
+  ["big =: som 0 10", "def"], ["k =: [x | x <- xs]", "def"],
 ];
 for (const [src, want] of cases) {
   const r = nb.classifyCell(src);
@@ -60,6 +61,11 @@ check("los", out.loose, "");
 const tcCells = nb.parseNotebook("//%%\nf x = x + \"a\"\n(<+>) a b = a\n//%%\nniet_bestaand 3\n//%%\n1 + 1\n");
 const tcGen = nb.generateProgram(tcCells);
 check("definedNames", nb.definedNames(tcCells[0].source), ["f", "<+>"]);
+// CAF-cel (`naam =: expr`, docs/2026-10-03_expliciete_cafs_plan.md): een
+// definitie, en `=:` blijft in het gegenereerde programma staan.
+check("definedNames CAF", nb.definedNames("big =: 1\nf x = x"), ["big", "f"]);
+check("cafHintNames", nb.cafHintNames("big = som 0 10\nn = 5\ns = \"x\"\nc =: dure 1\nf x = x\nstart = big\nt = (1, 2)\n  vervolg = 3\n::K = A\nq == 1"), ["big", "t"]);
+check("CAF in programma", nb.generateProgram(nb.parseNotebook("//%%\nbig =: 5\n//%%\nbig + big\n")).source.split("\n").includes("big =: 5"), true);
 check("celfouten uit typecheck", nb.cellErrorsFromTypecheck([
   "f: FOUT: f: kan niet unificeren: Num met Str",
   "__cell1: FOUT: __cell1: onbekende functie: niet_bestaand",

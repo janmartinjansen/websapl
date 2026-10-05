@@ -294,6 +294,23 @@ dumpProgramToFile outfile fs adts =
   let fd = openFile outfile "w" in
   writeAdtsStream fd adts <#> writeFuncsStream fd fs <#> closeFile fd
 
+// CAF's (`naam =: expr`, docs/2026-10-03_expliciete_cafs_plan.md): een
+// functie waarvan de naam in `cafs` staat, krijgt `=:` i.p.v. `=`. Zo
+// overleeft de markering het retag-formaat (saplcomp_module -> retaglink
+// -> retagcomp), dat retag_parse.cfp weer inleest.
+dumpProgramToFileCafs outfile fs adts cafs =
+  let fd = openFile outfile "w" in
+  writeAdtsStream fd adts <#> writeFuncsStreamCafs fd cafs fs <#> closeFile fd
+
+writeFuncsStreamCafs fd cafs fs =
+  case fs
+    (Nil -> 0)
+    (Cons f rest -> writeLineTo fd (ppFuncCafs cafs f) <#> writeFuncsStreamCafs fd cafs rest)
+
+ppFuncCafs cafs f = case f (Func name args body -> strcat (list2str name) (strcat (ppArgsHeader args) (strcat (ppDefEq cafs name) (ppExpr body))))
+
+ppDefEq cafs name = if (member cafs name) " =: " " = "
+
 // == Definitiebestand: naam/ariteit/striktheid per functie, geen lichaam ==
 //
 // archive/docs/2026-09-12_modulariteit_en_linken_plan.md #5.1: wat een module

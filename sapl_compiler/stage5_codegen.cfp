@@ -1242,6 +1242,65 @@ optimizeBlockInstrs b =
   case b
     (Block name instrs -> Block name (optimizeInstrs instrs))
 
+// == CAF's: `naam =: expr` (5 oktober 2026) ================================
+// Zie docs/2026-10-03_expliciete_cafs_plan.md. De proloog zet per CAF één
+// thunk onderin de stack (`pushfunc 0 c; create 1 3`), CAF k komt zo op
+// stack[k] (een GC-wortel). Een verwijzing ernaar wordt daarna, op de
+// gegenereerde instructies, omgezet:
+//   pushfunc 0 c; create 1 3   ->  pushcaf k                 (lui)
+//   call c                     ->  pushcaf k; eval           (strikt)
+//   tailcall n c               ->  pushcaf k; eval; return n (staart)
+// Alleen namen uit de CAF-lijst, nooit "elke functie zonder argumenten"
+// (stage 1/3 maken ook zulke hulpfuncties, die mogen niet gedeeld worden).
+// Een vorm die hier niet herkend wordt (een closure, of een thunk met
+// extra argumenten) blijft de oude code: de CAF wordt daar dan opnieuw
+// berekend, wat langzamer is maar niet fout. Zonder CAF's (de lijst leeg)
+// verandert er niets.
+cafSlot cafs n = cafSlotAt cafs n 0
+
+cafSlotAt cafs n k =
+  case cafs
+    (Nil -> 0 - 1)
+    (Cons c rest -> if (charListEq c n) k (cafSlotAt rest n (k + 1)))
+
+pushCafI k = mkI (append ['pushcaf '] (itoa k))
+
+cafBlocks cafs blocks =
+  case cafs
+    (Nil -> blocks)
+    (Cons c rest -> map (cafBlock cafs) blocks)
+
+cafBlock cafs b =
+  case b
+    (Block name instrs -> Block name (cafInstrs cafs instrs))
+
+cafInstrs cafs is =
+  case is
+    (Nil -> Nil)
+    (Cons i rest -> cafInstr cafs i rest)
+
+cafInstr cafs i rest =
+  case i
+    (Instr t target -> cafInstrT cafs i t (cafSlot cafs target) rest)
+    (InstrMulti t targets -> Cons i (cafInstrs cafs rest))
+
+cafInstrT cafs i t k rest =
+  if (k < 0) (Cons i (cafInstrs cafs rest))
+  (if (charListEq t ['call']) (Cons (pushCafI k) (Cons (mkI ['eval']) (cafInstrs cafs rest)))
+  (if (hasPrefix t ['tailcall ']) (Cons (pushCafI k) (Cons (mkI ['eval']) (Cons (mkI (append ['return '] (dropN 9 t))) (cafInstrs cafs rest))))
+  (if (charListEq t ['pushfunc 0']) (cafPushfunc cafs i k rest)
+  (Cons i (cafInstrs cafs rest)))))
+
+cafPushfunc cafs i k rest =
+  case rest
+    (Nil -> Cons i Nil)
+    (Cons i2 rest2 -> if (charListEq (instrTextOf i2) ['create 1 3']) (Cons (pushCafI k) (cafInstrs cafs rest2)) (Cons i (cafInstrs cafs rest)))
+
+cafPrologue cafs =
+  case cafs
+    (Nil -> Nil)
+    (Cons c rest -> Cons (mkJ ['pushfunc 0'] c) (Cons (mkI ['create 1 3']) (cafPrologue rest)))
+
 // -- Render: resolve symbolic label names to their position in `blocks`. --
 //
 // 11 sep 2026 perf fix: `blockIndex` used to be a straight linear scan of
@@ -1510,7 +1569,10 @@ strictStrCons b rest =
 // Public: take a fully transformed (stage 1-4) program (incl. the
 // functions stage 3 emitted) plus the ADT declarations, produce textual
 // .jmvm instructions.
-renderProgram funcs adts =
-  let blocks = map optimizeBlockInstrs (concatAll (map (genFunc funcs adts) funcs)),
+renderProgram funcs adts = renderProgramCafs funcs adts Nil
+
+// `cafs`: de namen van de `=:`-definities (zie cafBlocks hierboven).
+renderProgramCafs funcs adts cafs =
+  let blocks = cafBlocks cafs (map optimizeBlockInstrs (concatAll (map (genFunc funcs adts) funcs))),
       bidx = buildBlockIndex blocks in
-  append (myUnlines (append (Cons (headerLine blocks) Nil) (append (map (renderInstrIndented bidx) prologueInstrs) (renderAllBlocks blocks bidx)))) (genMetadata funcs adts bidx)
+  append (myUnlines (append (Cons (headerLine blocks) Nil) (append (map (renderInstrIndented bidx) (append (cafPrologue cafs) prologueInstrs)) (renderAllBlocks blocks bidx)))) (genMetadata funcs adts bidx)

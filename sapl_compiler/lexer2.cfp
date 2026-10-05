@@ -17,7 +17,7 @@
 // still used by reflection/serialize.cfp's deserialize logic and by
 // arith_repl/func_repl/repl's own small interpreters -- unrelated to this
 // front end, not safe to repurpose.
-::token = TIdent !name | TNum !n | TFloatStr !s | TStr !s | TStrList !s | TOp !op | TLParen | TRParen | TBang | TEquals | TArrow | TComma
+::token = TIdent !name | TNum !n | TFloatStr !s | TStr !s | TStrList !s | TOp !op | TLParen | TRParen | TBang | TEquals | TArrow | TComma | TCafEq
 
 isDigitCh c = (c >= '0') /\ (c <= '9')
 isAlphaCh c = ((c >= 'A') /\ (c <= 'Z')) \/ ((c >= 'a') /\ (c <= 'z')) \/ (c == '_')
@@ -127,6 +127,11 @@ isTwoCharOpPair c1 c2 = ((c1 == '=') /\ (c2 == '=')) \/ ((c1 == '!') /\ (c2 == '
 // ordinary infix-precedence table, it only separates a case-branch pattern
 // from its body.
 isArrowPair c1 c2 = (c1 == '-') /\ (c2 == '>')
+// `=:` (5 oktober 2026): een CAF-definitie, `naam =: expr` -- één keer
+// berekend en daarna gedeeld (docs/2026-10-03_expliciete_cafs_plan.md).
+// Eigen token, vóór de terugval naar `=`; in Sapl kan na `=` verder geen
+// `:` volgen.
+isCafEqPair c1 c2 = (c1 == '=') /\ (c2 == ':')
 // `<#>` is the only 3-char operator in this subset, hence its own lookahead
 // step (readOp3) instead of readOp2's simple 2-char check.
 isThreeCharOpStart c1 c2 = (c1 == '<') /\ (c2 == '#')
@@ -144,7 +149,8 @@ readOp3 c1 c2 cs3 =
 readOp2 c1 c2 cs2 =
   if (isThreeCharOpStart c1 c2) (readOp3 c1 c2 cs2)
   (if (isArrowPair c1 c2) (Lexres TArrow cs2)
-  (if (isTwoCharOpPair c1 c2) (Lexres (TOp (Cons c1 (Cons c2 Nil))) cs2) (readOp1 c1 (Cons c2 cs2))))
+  (if (isCafEqPair c1 c2) (Lexres TCafEq cs2)
+  (if (isTwoCharOpPair c1 c2) (Lexres (TOp (Cons c1 (Cons c2 Nil))) cs2) (readOp1 c1 (Cons c2 cs2)))))
 
 readOp c1 cs =
   case cs

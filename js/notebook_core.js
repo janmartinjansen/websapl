@@ -247,6 +247,25 @@
   }
 
   /**
+   * Namen van definities zonder argumenten met `=` (niet `=:`) waarvan de
+   * body meer is dan een kaal getal, string of teken: die rekent elk gebruik
+   * opnieuw uit. Het notebook toont daarvoor een korte hint naar `=:` (CAF,
+   * gedeeld; docs/sapl_programmeer_regels.md §15). Alleen de eerste regel
+   * van een definitie telt; een vervolgregel begint met een spatie.
+   */
+  function cafHintNames(source) {
+    const names = [];
+    for (const l of codeLines(source)) {
+      if (/^\s/.test(l) || /^(::|#|import |module )/.test(l)) continue;
+      const m = l.match(/^([a-z_][A-Za-z0-9_']*)\s*=(?![=:])(.*)$/);
+      if (!m || m[1] === "start") continue;
+      if (/^\s*(-?\d+(\.\d+)?|"[^"]*"|'.'|True|False)?\s*$/.test(m[2])) continue;
+      if (!names.includes(m[1])) names.push(m[1]);
+    }
+    return names;
+  }
+
+  /**
    * Koppelt de typechecker-uitvoer (regels `naam: FOUT: melding`) aan
    * cellen: `__cellN` aan expressiecel N, een gedefinieerde naam aan zijn
    * definitiecel. Fouten in bibliotheken (stdlib, stddyn, modules) worden
@@ -422,7 +441,7 @@
   }
 
   const api = {
-    parseNotebook, serializeNotebook, classifyCell, generateProgram, parseOutput, definedNames, cellErrorsFromTypecheck,
+    parseNotebook, serializeNotebook, classifyCell, generateProgram, parseOutput, definedNames, cafHintNames, cellErrorsFromTypecheck,
     referencedNames, providedNames, dependents, generateTypeProgram, parseTypeReport, lcInput, parseLcOutput,
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
