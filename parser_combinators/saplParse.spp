@@ -105,8 +105,10 @@ isTIdentTok t = case t (TIdent n -> True) (_ -> False)
 tIdentName t = case t (TIdent n -> n) (_ -> error "tIdentName: not a TIdent")
 pIdentTok = pSat isTIdentTok pItem --> tIdentName
 
-isTNumTok t = case t (TNum n -> True) (_ -> False)
-tNumVal t = case t (TNum n -> Num n) (_ -> error "tNumVal: not a TNum")
+// TChar (een char-literal, sinds 5 oktober 2026 een eigen token in
+// sapl_compiler/lexer2.cfp) blijft hier een getal, zoals vóór de char-tag.
+isTNumTok t = case t (TNum n -> True) (TChar n -> True) (_ -> False)
+tNumVal t = case t (TNum n -> Num n) (TChar n -> Num n) (_ -> error "tNumVal: not a TNum")
 pNumAtom = pSat isTNumTok pItem --> tNumVal
 
 isTFloatTok t = case t (TFloatStr s -> True) (_ -> False)

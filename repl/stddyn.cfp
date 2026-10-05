@@ -10,12 +10,16 @@ TYPE_INT    = 1
 TYPE_FLOAT  = 2
 TYPE_STRING = 3
 TYPE_FUNC   = 4
+// Char (tag 11 in de VM, sinds 5 oktober 2026): -1, want ADT-ids beginnen
+// bij 5 en `typeId x > TYPE_FUNC` betekent overal "een ADT".
+TYPE_CHAR   = 0 - 1
 
 // Type predicaten
 isInt    !x = typeId x == TYPE_INT
 isFloat  !x = typeId x == TYPE_FLOAT
 isString !x = typeId x == TYPE_STRING
 isFunc   !x = typeId x == TYPE_FUNC
+isChar   !x = typeId x == TYPE_CHAR
 isADT    !x = typeId x > TYPE_FUNC
 
 // Dynamische string-gebaseerde aanroep
@@ -31,7 +35,18 @@ showValAux !tid !x =
   (if (tid == TYPE_FLOAT) (ftoa x)
   (if (tid == TYPE_STRING) x
   (if (tid == TYPE_FUNC) (showFunc x)
-  (showConstr x))))
+  (if (tid == TYPE_CHAR) (showChar x)
+  (showConstr x)))))
+
+// 'a', met de escapes die de lexers kennen (\n \t \\ \').
+showChar !c = list2str (Cons 39 (append (showCharBody c) (Cons 39 Nil)))
+
+showCharBody !c =
+  if (c == 10) (Cons 92 (Cons 'n' Nil))
+  (if (c == 9) (Cons 92 (Cons 't' Nil))
+  (if (c == 92) (Cons 92 (Cons 92 Nil))
+  (if (c == 39) (Cons 92 (Cons 39 Nil))
+  (Cons c Nil))))
 
 showFunc !x = strcat "<fn:" (strcat (funcName x) (strcat "/" (strcat (list2str (itoa (funcArity x))) ">")))
 

@@ -17,7 +17,7 @@
 // still used by reflection/serialize.cfp's deserialize logic and by
 // arith_repl/func_repl/repl's own small interpreters -- unrelated to this
 // front end, not safe to repurpose.
-::token = TIdent !name | TNum !n | TFloatStr !s | TStr !s | TStrList !s | TOp !op | TLParen | TRParen | TBang | TEquals | TArrow | TComma | TCafEq
+::token = TIdent !name | TNum !n | TFloatStr !s | TStr !s | TStrList !s | TOp !op | TLParen | TRParen | TBang | TEquals | TArrow | TComma | TCafEq | TChar !n
 
 isDigitCh c = (c >= '0') /\ (c <= '9')
 isAlphaCh c = ((c >= 'A') /\ (c <= 'Z')) \/ ((c >= 'a') /\ (c <= 'z')) \/ (c == '_')
@@ -178,7 +178,7 @@ readOp c1 cs =
 readCharLitClose ch cs =
   case cs
     (Nil -> error "tokenize: missing closing ' in char literal")
-    (Cons q cs4 -> if (q == 39) (Lexres (TNum ch) cs4) (error "tokenize: missing closing ' in char literal"))
+    (Cons q cs4 -> if (q == 39) (Lexres (TChar ch) cs4) (error "tokenize: missing closing ' in char literal"))
 
 // Was `\n`-only ("the only one any golden source uses") until 10 augustus
 // 2026, when self-hosting testing hit `stage5_codegen.cfp`'s own

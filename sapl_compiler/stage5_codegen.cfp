@@ -254,7 +254,17 @@ genValuePrim prog adts args op as =
     (genValueSeq prog adts args as)
     (append (concatAll (map (genValue prog adts args) as)) (Cons (mkI (primInstr op)) Nil))
 
+// `Ct __Char [Num code]` is een char-literal (parser.cfp's charLiterals):
+// `pushc code`, nooit een heap-constructor.
 genValueCt prog adts args n as =
+  if (charListEq n ['__Char']) (Cons (mkI (append ['pushc '] (itoa (ctCharCode as)))) Nil)
+  (genValueCtHeap prog adts args n as)
+
+ctCharCode as = case as (Cons a r -> ctCharCodeOf a) (_ -> error "genValueCt: __Char zonder code")
+
+ctCharCodeOf a = case a (Num v -> v) (_ -> error "genValueCt: __Char-code is geen getal")
+
+genValueCtHeap prog adts args n as =
   append (genCallArgs prog adts args as)
          (Cons (mkI (append ['ccreatet '] (append (itoa (length as)) (append [' 11 '] (append (itoa (conTypeId n adts)) (append [' '] (itoa (conTag n adts)))))))) Nil)
 
@@ -967,6 +977,10 @@ genPatchedRhsClosure prog adts args avail slot inner =
 // Ct target: field index = 0-based source position (no header field to
 // count, unlike Thunk/Closure below).
 genPatchedCt prog adts args avail slot n as =
+  if (charListEq n ['__Char']) (error "genPatchedCt: char-literal als cyclische let-binding niet verwacht")
+  (genPatchedCtHeap prog adts args avail slot n as)
+
+genPatchedCtHeap prog adts args avail slot n as =
   Patchedcode
     (append (genArgsWithDummies prog adts args avail as)
             (Cons (mkI (append ['ccreate '] (append (itoa (length as)) (append [' 11 '] (itoa (conTag n adts)))))) Nil))
