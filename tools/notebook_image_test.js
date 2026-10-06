@@ -1,6 +1,8 @@
 // Test van het blijvende beeld in de WebSapl-worker (notebookplan §6.2,
 // 6 oktober 2026): NOTEBOOK_RUN draait op één wasm-exemplaar dat tussen
-// runs blijft, zodat een dure CAF niet opnieuw berekend wordt.
+// runs blijft, zodat een dure CAF niet opnieuw berekend wordt; vanaf de
+// tweede run worden alleen de eigen cellen gecompileerd (een los stuk tegen
+// de bibliotheek in het beeld).
 //
 //   node websapl/tools/notebook_image_test.js     (vanuit de repo-root)
 //
@@ -40,10 +42,13 @@ start = w (big + g) <#> w (${extra})
   const f1 = "f x = x + 1", f2 = "f x = x * 10";
   const a = await run(prog("1", f1));
   check("eerste run rekent big uit", a.image && a.image.calls > 2000000, `aanroepen ${a.image && a.image.calls}`);
-  const ref = await run(prog("2", f1), true);
+  // Eerst met beeld: de referentie zonder beeld zet het programma anders al
+  // in de compileercache, en dan wordt er helemaal niet meer gecompileerd.
   const b = await run(prog("2", f1));
+  const ref = await run(prog("2", f1), true);
   check("andere expressie: big bewaard", b.image && b.image.calls < 1000, `aanroepen ${b.image && b.image.calls}`);
   check("zelfde uitvoer als zonder beeld", JSON.stringify(b.lines) === JSON.stringify(ref.lines), b.lines.join(" "));
+  check("tweede run als los stuk (alleen de eigen cellen gecompileerd)", b.image && b.image.chunk === true, `chunk ${b.image && b.image.chunk}`);
   const c = await run(prog("3", f2));
   const refC = await run(prog("3", f2), true);
   check("f opnieuw: code opnieuw, big bewaard", c.image && c.image.calls < 1000 && /code opnieuw/.test(c.image.event), `aanroepen ${c.image && c.image.calls}, ${c.image && c.image.event}`);

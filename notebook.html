@@ -294,14 +294,23 @@
       el("btn-run").disabled = !ready;
     }
 
+    const exprTypesCache = new Map();
+
     async function runProgram(exprT, defT) {
       // Weergave op type: eerst de expressiecellen typeren, zodat een Bool
       // als True/False verschijnt; mislukt dat, dan zonder typen.
+      // De uitkomst per programmatekst bewaard: opnieuw uitvoeren zonder
+      // wijziging slaat de typecheck (140-220 ms) over.
       let types = {};
       try {
         const tp = NB.generateExprTypeProgram(cells, exprT);
-        const t = await call({ type: "TYPECHECK", source: tp.source, path: "/workspace/notebook_exprtypes.spp" }, TIMEOUT_MS);
-        types = NB.parseExprTypes(t.report, tp.typeLines);
+        if (exprTypesCache.has(tp.source)) types = exprTypesCache.get(tp.source);
+        else {
+          const t = await call({ type: "TYPECHECK", source: tp.source, path: "/workspace/notebook_exprtypes.spp" }, TIMEOUT_MS);
+          types = NB.parseExprTypes(t.report, tp.typeLines);
+          exprTypesCache.clear();
+          exprTypesCache.set(tp.source, types);
+        }
       } catch (_) {}
       const gen = NB.generateProgram(cells, exprT, types);
       progressText = "";

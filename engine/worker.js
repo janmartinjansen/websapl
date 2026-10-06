@@ -973,12 +973,12 @@ function topoOrderModules(deps, entry) {
  * tijdelijk VFS-pad geschreven, puur om aan het protocol te voldoen --
  * saplcomp_module.jmvm leest ze zelf weer in als gewone bestanden.
  */
-async function runSaplcompModuleStage(moduleSource, stage, outPath, defsContents, typedefsContents) {
+async function runSaplcompModuleStage(moduleSource, stage, outPath, defsContents, typedefsContents, extraLine = null) {
   if (!saplcompModuleBytecode) throw new Error("saplcomp_module.jmvm kon niet geladen worden.");
 
   const defsPaths = defsContents.map((_, i) => `/tmp/deps/d${i}.defs.txt`);
   const typedefsPaths = typedefsContents.map((_, i) => `/tmp/deps/d${i}.typedefs.txt`);
-  const stdinText = `/tmp/mod_in.cfp\n${outPath}\n${stage}\n${defsPaths.join(" ")}\n${typedefsPaths.join(" ")}\n`;
+  const stdinText = `/tmp/mod_in.cfp\n${outPath}\n${stage}\n${defsPaths.join(" ")}\n${typedefsPaths.join(" ")}\n` + (extraLine !== null ? extraLine + "\n" : "");
   let stdinBuffer = stdinText.split("");
   let stdinIndex = 0;
   let compilerOutput = [];
@@ -1665,7 +1665,9 @@ function dataFilesKey(files) {
 }
 
 // Zoals runJmvmCapture, maar op het beeld; null als het beeld weigert.
-async function runOnImage(jmvmContent, extraFiles = {}, onProgress = null) {
+// `chunk`: jmvmContent is een los stuk met open labels (saplcomp_module's
+// jmvm-stap); weigert het beeld (iets staat er nog niet in), dan null.
+async function runOnImage(jmvmContent, extraFiles = {}, onProgress = null, chunk = false) {
   const inst = await imageGet();
   const key = dataFilesKey(extraFiles);
   if (imageDataKey !== null && key !== imageDataKey) inst.ccall("jmvm_image_reset", null, [], []);
@@ -1690,7 +1692,7 @@ async function runOnImage(jmvmContent, extraFiles = {}, onProgress = null) {
   }
   let rc;
   try {
-    rc = inst.ccall("jmvm_image_run", "number", ["string", "number"], ["/tmp/image_run.jmvm", 0]);
+    rc = inst.ccall("jmvm_image_run", "number", ["string", "number"], ["/tmp/image_run.jmvm", chunk ? 1 : 0]);
   } catch (e) {
     // De VM stopte met een fout (exit): de uitvoer tot dan is het resultaat.
     imageInstance = null;
@@ -1703,7 +1705,8 @@ async function runOnImage(jmvmContent, extraFiles = {}, onProgress = null) {
     event: inst.UTF8ToString(inst.ccall("jmvm_image_event", "number", [], [])),
     newCode: inst.ccall("jmvm_image_new_code", "number", [], []),
     cafs: inst.ccall("jmvm_image_cafs", "number", [], []),
-    calls: inst.ccall("jmvm_image_calls", "number", [], [])
+    calls: inst.ccall("jmvm_image_calls", "number", [], []),
+    chunk
   };
   if (rc !== 0) return null;
   return output.join("");
@@ -1864,7 +1867,8 @@ async function notebookLibUnit(importLines) {
   return lib;
 }
 
-async function notebookCompile(source) {
+// Voorbewerken: de bibliotheekunit en de eigen tekst als Sapl.
+async function notebookPrepare(source) {
   const lines = source.split("\n");
   const importLines = lines.filter((l) => NB_LIB_LINE_RE.test(l));
   const lib = await notebookLibUnit(importLines);
@@ -1874,6 +1878,24 @@ async function notebookCompile(source) {
   const externs = importLines.filter((l) => l.startsWith("import ") && importNeeded(l, ownText)).map((l) => l.replace("import ", "import extern "));
   const pre = await preprocessSpp([...externs, ...own].join("\n"), "/workspace/notebook.spp");
   if (!pre.success) return { stage: "preprocess", error: pre.stdout };
+  return { lib, pre };
+}
+
+// Stap 3 voor het notebook (notebookplan §6.2): alleen de eigen cellen
+// compileren, als los stuk tegen de bibliotheek die al in het beeld staat
+// (retaglink + retagcomp van de hele bibliotheek, ~70% van een run, valt
+// weg). null als het niet lukt; dan de volledige weg.
+async function notebookCompileChunk(prep) {
+  if (!imageInstance || imageInstance.ccall("jmvm_image_size", "number", [], []) === 0) return null;
+  const cafs = imageInstance.UTF8ToString(imageInstance.ccall("jmvm_image_caf_names", "number", [], []));
+  const r = await runSaplcompModuleStage(prep.pre.files[0].content, "jmvm", "/tmp/notebook.chunk.jmvm", [prep.lib.defs], [prep.lib.typedefs], cafs);
+  return r.success ? r.content : null;
+}
+
+async function notebookCompile(source, prepared = null) {
+  const prep = prepared || await notebookPrepare(source);
+  if (prep.stage) return prep;
+  const { lib, pre } = prep;
   const retag = await runSaplcompModuleStage(pre.files[0].content, "retag", "/tmp/notebook.retag.txt", [lib.defs], [lib.typedefs]);
   if (!retag.success) return { stage: "compile", error: retag.output };
   const link = await runRetagLinkStage([lib.retag, retag.content], "/tmp/notebook_linked.retag.txt", "start");
@@ -2021,10 +2043,14 @@ self.onmessage = async function (e) {
         const bytesToText = (raw) => new TextDecoder().decode(Uint8Array.from(raw, (ch) => ch.charCodeAt(0) & 255));
         const progress = (raw) => postMessage({ type: "NOTEBOOK_PROGRESS", id: msg.id, text: bytesToText(raw) });
         let jmCached = notebookCache.get(msg.source);
+        // Wat een mislukte poging als los stuk al deed (bv. "code opnieuw"
+        // na een herdefinitie), komt vóór de melding van de volledige run.
+        let earlierEvent = "";
         const runNb = async (jmvm) => {
           const files = await collectDataFiles(msg.source);
           imageLast = null;
           const onImage = msg.noImage ? null : await runOnImage(jmvm, files, progress);
+          if (imageLast && earlierEvent) imageLast.event = earlierEvent + imageLast.event;
           return onImage !== null ? onImage : await runJmvmCapture(jmvm, files, "", progress);
         };
         if (jmCached) {
@@ -2033,7 +2059,27 @@ self.onmessage = async function (e) {
           postMessage({ type: "NOTEBOOK_RESULT", id: msg.id, success: true, output, cached: true, image: imageLast });
           break;
         }
-        const built = await notebookCompile(msg.source);
+        // Eerst als los stuk op het beeld; lukt dat niet, de volledige weg.
+        let prep = null;
+        if (!msg.noImage && !msg.noChunk) {
+          prep = await notebookPrepare(msg.source);
+          if (prep.stage) {
+            postMessage({ type: "NOTEBOOK_RESULT", id: msg.id, success: false, stage: prep.stage, error: prep.error });
+            break;
+          }
+          const chunk = await notebookCompileChunk(prep);
+          if (chunk) {
+            imageLast = null;
+            const rawC = await runOnImage(chunk, await collectDataFiles(msg.source), progress, true);
+            if (rawC !== null) {
+              const output = new TextDecoder().decode(Uint8Array.from(rawC, (ch) => ch.charCodeAt(0) & 255));
+              postMessage({ type: "NOTEBOOK_RESULT", id: msg.id, success: true, output, image: imageLast });
+              break;
+            }
+            if (imageLast) earlierEvent = imageLast.event || "";
+          }
+        }
+        const built = await notebookCompile(msg.source, prep);
         if (!built.jmvm) {
           postMessage({ type: "NOTEBOOK_RESULT", id: msg.id, success: false, stage: built.stage, error: built.error });
           break;
