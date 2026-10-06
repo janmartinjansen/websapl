@@ -295,7 +295,15 @@
     }
 
     async function runProgram(exprT, defT) {
-      const gen = NB.generateProgram(cells, exprT);
+      // Weergave op type: eerst de expressiecellen typeren, zodat een Bool
+      // als True/False verschijnt; mislukt dat, dan zonder typen.
+      let types = {};
+      try {
+        const tp = NB.generateExprTypeProgram(cells, exprT);
+        const t = await call({ type: "TYPECHECK", source: tp.source, path: "/workspace/notebook_exprtypes.spp" }, TIMEOUT_MS);
+        types = NB.parseExprTypes(t.report, tp.typeLines);
+      } catch (_) {}
+      const gen = NB.generateProgram(cells, exprT, types);
       progressText = "";
       currentGen = gen;
       let r;

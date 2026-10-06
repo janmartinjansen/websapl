@@ -155,7 +155,44 @@
    */
   // `only` (optioneel): een Set celindexen; dan komen alleen die
   // expressiecellen in het programma (definitiecellen altijd allemaal).
-  function generateProgram(cells, only) {
+  /**
+   * Programma voor de typechecker met per expressiecel `__exprN = <cel>`
+   * (weergave op type, notebookplan fase 3). { source, typeLines } zoals
+   * generateTypeProgram; parseExprTypes maakt er { cellIndex: type } van.
+   */
+  function generateExprTypeProgram(cells, only) {
+    const body = [...HEADER, ""];
+    const typeLines = [];
+    cells.forEach((c, i) => {
+      if (c.kind !== "code") return;
+      const cls = classifyCell(c.source);
+      if (cls.error) return;
+      if (cls.kind === "def") body.push(c.source, "");
+      else if (cls.kind === "expr" && (!only || only.has(i))) {
+        const name = `__expr${typeLines.length + 1}`;
+        typeLines.push({ cell: i, name });
+        body.push(`${name} = ${c.source}`, "");
+      }
+    });
+    body.push("start = 0");
+    return { source: body.join("\n") + "\n", typeLines };
+  }
+
+  function parseExprTypes(report, typeLines) {
+    const byName = {};
+    for (const line of String(report || "").split("\n")) {
+      const ok = line.match(/^(__expr\d+) :: (.*)$/);
+      if (ok) byName[ok[1]] = ok[2].trim();
+    }
+    const out = {};
+    for (const t of typeLines) if (byName[t.name]) out[t.cell] = byName[t.name];
+    return out;
+  }
+
+  // `types` (optioneel): { cellIndex: type } uit parseExprTypes. Een cel met
+  // `Bool` in het type wordt `nbCellT n "<type>"`, zodat 1/0 als True/False
+  // verschijnt (lib/notebook_glue.cfp).
+  function generateProgram(cells, only, types) {
     const body = [...HEADER, ""];
     const exprCells = [];
     const errors = {};
@@ -170,7 +207,11 @@
         body.push(`__cell${n} = ${c.source}`, "");
       }
     });
-    const calls = exprCells.map((e) => `nbCell ${e.n} __cell${e.n}`);
+    const showCall = (e) => {
+      const ty = types && types[e.cell];
+      return ty && ty.includes("Bool") ? `nbCellT ${e.n} "${ty}" __cell${e.n}` : `nbCell ${e.n} __cell${e.n}`;
+    };
+    const calls = exprCells.map(showCall);
     body.push(`start = ${[...calls, "0"].join(" <#> ")}`);
     return { source: body.join("\n") + "\n", exprCells, errors };
   }
@@ -441,7 +482,7 @@
   }
 
   const api = {
-    parseNotebook, serializeNotebook, classifyCell, generateProgram, parseOutput, definedNames, cafHintNames, cellErrorsFromTypecheck,
+    parseNotebook, serializeNotebook, classifyCell, generateProgram, parseOutput, definedNames, cafHintNames, cellErrorsFromTypecheck, generateExprTypeProgram, parseExprTypes,
     referencedNames, providedNames, dependents, generateTypeProgram, parseTypeReport, lcInput, parseLcOutput,
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api;

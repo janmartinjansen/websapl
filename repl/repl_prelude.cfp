@@ -174,3 +174,33 @@ getConstrArity !x =
   let c = lookup (constrName x) in if (typeId c == TYPE_FUNC) (funcArity c) 0
 
 printVal !x = printString (showVal x)
+
+// == Weergave op type (5 oktober 2026, notebookplan fase 3) ==================
+// Bools hebben geen eigen runtime-tag (beslissing 3 van het notebookplan):
+// een bool is in de VM gewoon 1/0. De REPL en het notebook typeren daarom de
+// expressie eerst (preprocess/typecheck.jmvm); bevat het type `Bool`, dan
+// tonen ze het resultaat met `printValT "<type>" x`: `Bool` -> True/False,
+// `[T]` -> een lijst met elk element op type T, al het andere via showVal.
+showTyped !ty x =
+  if (strEqual ty "Bool") (showBoolVal x)
+  (if (isListTy ty) (strcat "[" (strcat (showTypedItems (listElemTy ty) x) "]")) (showVal x))
+
+showBoolVal !b = if (b == 0) "False" "True"
+
+isListTy !ty = if (strlen ty < 2) 0 (isListTy2 ty)
+
+isListTy2 !ty = (strat 0 ty == '[') /\ (strat (strlen ty - 1) ty == ']')
+
+listElemTy !ty = strslice ty 1 (strlen ty - 1)
+
+showTypedItems !et !xs =
+  case xs
+    (Nil -> "")
+    (Cons y ys -> showTypedItemsC et y ys)
+
+showTypedItemsC !et y !ys =
+  case ys
+    (Nil -> showTyped et y)
+    (Cons z zs -> strcat (showTyped et y) (strcat ", " (showTypedItems et ys)))
+
+printValT !ty x = printString (showTyped ty x)

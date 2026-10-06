@@ -27,6 +27,29 @@
 
 nbCell n v = nbMark "@@begin " n <#> nbRender v <#> nbMark "@@end " n
 
+// Weergave op type (notebookplan fase 3, 5 oktober 2026): notebook_core.js
+// typeert elke expressiecel; bevat het type `Bool`, dan wordt de cel
+// `nbCellT n "<type>" v` (een bool is in de VM gewoon 1/0). Zelfde grenzen
+// als nbShow: lijsten na 100 elementen afgekapt, 40 niveaus diep.
+nbCellT n ty v = nbMark "@@begin " n <#> nbValueT ty v <#> nbMark "@@end " n
+
+nbValueT ty v = printString "@@value" <#> nbNl <#> printString (nbShowT 40 ty v) <#> nbNl
+
+nbShowT d ty v =
+  if (d == 0) "..."
+  (if (strEqual ty "Bool") (showBoolVal v)
+  (if (isListTy ty) (strcat "[" (strcat (nbItemsT (d - 1) (listElemTy ty) 100 v) "]")) (nbShowD d v)))
+
+nbItemsT d ty k xs =
+  case xs
+    (Nil -> "")
+    (Cons x rest -> if (k == 0) "..." (strcat (nbShowT d ty x) (nbMoreT d ty (k - 1) rest)))
+
+nbMoreT d ty k xs =
+  case xs
+    (Nil -> "")
+    (Cons x rest -> strcat ", " (nbItemsT d ty k xs))
+
 nbMark s n = printString s <#> printString (list2str (itoa n)) <#> writeChar 1 10
 
 nbNl = writeChar 1 10

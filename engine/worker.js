@@ -1684,7 +1684,15 @@ function replExtractOutput(out) {
 }
 
 async function replEvalLine(line) {
-  const turnSource = await replPreprocess(replExternImports(replSession.entries, line) + `start = printVal (${line})\n`, "repl_turn", "t");
+  // Weergave op type (notebookplan fase 3, 5 oktober 2026): bevat het type
+  // van de regel `Bool`, dan toont printValT True/False; mislukt het
+  // typeren, dan gewoon printVal (zelfde als repl_retag.py en repl-host).
+  let shower = "printVal";
+  try {
+    const t = await replTypeOf(line);
+    if (t.inferredType.includes("Bool")) shower = `printValT "${t.inferredType}"`;
+  } catch (_) {}
+  const turnSource = await replPreprocess(replExternImports(replSession.entries, line) + `start = ${shower} (${line})\n`, "repl_turn", "t");
 
   const lib = replSession.lib;
   const turnRes = await runSaplcompModuleStage(turnSource, "retag", "/tmp/repl_turn.retag.txt", [lib.defs, replSession.defs], [lib.typedefs, replSession.typedefs]);

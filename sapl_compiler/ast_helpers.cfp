@@ -476,8 +476,11 @@ funcArityKw = ['funcArity']
 funcRemainingKw = ['funcRemaining']
 applyDynamicKw = ['applyDynamic']
 lookupKw = ['lookup']
+// ord (char -> int) en chr (int -> char), 5 oktober 2026: _AUX Ord/Chr.
+ordKw = ['ord']
+chrKw = ['chr']
 
-reflectionKws = Cons typeIdKw (Cons constrNameKw (Cons getFieldKw (Cons makeConstrKw (Cons funcNameKw (Cons funcArityKw (Cons funcRemainingKw (Cons applyDynamicKw (Cons lookupKw Nil))))))))
+reflectionKws = Cons typeIdKw (Cons constrNameKw (Cons getFieldKw (Cons makeConstrKw (Cons funcNameKw (Cons funcArityKw (Cons funcRemainingKw (Cons applyDynamicKw (Cons lookupKw (Cons ordKw (Cons chrKw Nil))))))))))
 
 isReflectionCall name = member reflectionKws name
 
@@ -500,7 +503,9 @@ reflectionOpcode name =
   (if (charListEq name funcRemainingKw) ['getfuncremaining']
   (if (charListEq name applyDynamicKw) ['applydynamic']
   (if (charListEq name lookupKw) ['lookup']
-  (error "reflectionOpcode: unknown reflection call")))))))))
+  (if (charListEq name ordKw) ['ord']
+  (if (charListEq name chrKw) ['chr']
+  (error "reflectionOpcode: unknown reflection call")))))))))))
 
 exprConstrNameOf e =
   case e

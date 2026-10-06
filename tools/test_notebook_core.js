@@ -63,6 +63,18 @@ const tcGen = nb.generateProgram(tcCells);
 check("definedNames", nb.definedNames(tcCells[0].source), ["f", "<+>"]);
 // CAF-cel (`naam =: expr`, docs/2026-10-03_expliciete_cafs_plan.md): een
 // definitie, en `=:` blijft in het gegenereerde programma staan.
+// Weergave op type (fase 3): typeprogramma per expressiecel, en nbCellT
+// alleen bij een type met Bool.
+{
+  const tc = nb.parseNotebook("//%%\nok n = n > 0\n//%%\nok 5\n//%%\n3 + 4\n");
+  const tp = nb.generateExprTypeProgram(tc);
+  check("exprtype-regels", tp.typeLines, [{ cell: 1, name: "__expr1" }, { cell: 2, name: "__expr2" }]);
+  check("exprtype-programma", tp.source.includes("__expr1 = ok 5"), true);
+  const types = nb.parseExprTypes("ok :: (Num -> Bool)\n__expr1 :: Bool\n__expr2 :: Num\n", tp.typeLines);
+  check("parseExprTypes", types, { 1: "Bool", 2: "Num" });
+  const g = nb.generateProgram(tc, null, types);
+  check("nbCellT bij Bool", g.source.trim().split("\n").pop(), 'start = nbCellT 1 "Bool" __cell1 <#> nbCell 2 __cell2 <#> 0');
+}
 check("definedNames CAF", nb.definedNames("big =: 1\nf x = x"), ["big", "f"]);
 check("cafHintNames", nb.cafHintNames("big = som 0 10\nn = 5\ns = \"x\"\nc =: dure 1\nf x = x\nstart = big\nt = (1, 2)\n  vervolg = 3\n::K = A\nq == 1"), ["big", "t"]);
 check("CAF in programma", nb.generateProgram(nb.parseNotebook("//%%\nbig =: 5\n//%%\nbig + big\n")).source.split("\n").includes("big =: 5"), true);
