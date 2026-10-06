@@ -1625,6 +1625,90 @@ function replFuncs() {
 // onProgress (optioneel): krijgt de nieuwe uitvoer telkens als er een regel
 // `@@begin N`/`@@end N` (lib/notebook_glue.cfp) af is -- de notebook weet zo
 // welke cel bezig is, en houdt bij een tijdslimiet de al klare cellen.
+// Het blijvende beeld (notebookplan §6.2, 6 oktober 2026): één wasm-
+// exemplaar dat tussen notebook-runs blijft bestaan, met de code en de heap
+// (vm.cpp's ReplImage, ingang jmvm_image_run). Een run laadt alleen wat er
+// nog niet is; bij een herdefinitie begint de code opnieuw, maar CAF-waarden
+// die er niet van afhangen blijven (een dure `rijen =: C.read ...` wordt
+// niet opnieuw ingelezen). Weigert het beeld (-1), dan draait het programma
+// zoals vroeger in een vers exemplaar. Stopt de VM met een fout (exit), dan
+// is het exemplaar onbruikbaar en begint de volgende run met een nieuw.
+// Veranderen de databestanden, dan begint het beeld schoon (een CAF die een
+// bestand las, zou anders de oude inhoud houden).
+let imageInstance = null;
+let imageOutput = null;
+let imageDataKey = null;
+let imageLast = null;
+
+async function imageGet() {
+  if (!imageInstance) {
+    imageInstance = await createJMVMModule({
+      noInitialRun: true,
+      locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm" : (prefix || "") + p),
+      stdin: () => null,
+      stdout: (c) => imageOutput && imageOutput(c),
+      stderr: (c) => imageOutput && imageOutput(c)
+    });
+    imageInstance.ccall("jmvm_image_init", null, [], []);
+    imageDataKey = null;
+  }
+  return imageInstance;
+}
+
+function dataFilesKey(files) {
+  return Object.keys(files).sort().map((p) => {
+    const c = files[p];
+    let h = 0;
+    for (let i = 0; i < c.length; i++) h = (h * 31 + c[i]) | 0;
+    return p + ":" + c.length + ":" + h;
+  }).join("|");
+}
+
+// Zoals runJmvmCapture, maar op het beeld; null als het beeld weigert.
+async function runOnImage(jmvmContent, extraFiles = {}, onProgress = null) {
+  const inst = await imageGet();
+  const key = dataFilesKey(extraFiles);
+  if (imageDataKey !== null && key !== imageDataKey) inst.ccall("jmvm_image_reset", null, [], []);
+  imageDataKey = key;
+  const output = [];
+  let lineStart = 0, flushed = 0;
+  imageOutput = (c) => {
+    output.push(String.fromCharCode(c));
+    if (c === 10 && onProgress) {
+      const line = output.slice(lineStart, lineStart + 7).join("");
+      lineStart = output.length;
+      if (line.startsWith("@@begin") || line.startsWith("@@end")) {
+        onProgress(output.slice(flushed).join(""));
+        flushed = output.length;
+      }
+    }
+  };
+  inst.FS.writeFile("/tmp/image_run.jmvm", jmvmContent);
+  for (const [p, content] of Object.entries(extraFiles)) {
+    mkdirsFor(inst.FS, p);
+    inst.FS.writeFile(p, content);
+  }
+  let rc;
+  try {
+    rc = inst.ccall("jmvm_image_run", "number", ["string", "number"], ["/tmp/image_run.jmvm", 0]);
+  } catch (e) {
+    // De VM stopte met een fout (exit): de uitvoer tot dan is het resultaat.
+    imageInstance = null;
+    imageLast = { event: "exemplaar gestopt", error: true };
+    imageOutput = null;
+    return output.join("");
+  }
+  imageOutput = null;
+  imageLast = {
+    event: inst.UTF8ToString(inst.ccall("jmvm_image_event", "number", [], [])),
+    newCode: inst.ccall("jmvm_image_new_code", "number", [], []),
+    cafs: inst.ccall("jmvm_image_cafs", "number", [], []),
+    calls: inst.ccall("jmvm_image_calls", "number", [], [])
+  };
+  if (rc !== 0) return null;
+  return output.join("");
+}
+
 async function runJmvmCapture(jmvmContent, extraFiles = {}, stdinText = "", onProgress = null) {
   let output = [];
   let lineStart = 0;
@@ -1937,10 +2021,16 @@ self.onmessage = async function (e) {
         const bytesToText = (raw) => new TextDecoder().decode(Uint8Array.from(raw, (ch) => ch.charCodeAt(0) & 255));
         const progress = (raw) => postMessage({ type: "NOTEBOOK_PROGRESS", id: msg.id, text: bytesToText(raw) });
         let jmCached = notebookCache.get(msg.source);
+        const runNb = async (jmvm) => {
+          const files = await collectDataFiles(msg.source);
+          imageLast = null;
+          const onImage = msg.noImage ? null : await runOnImage(jmvm, files, progress);
+          return onImage !== null ? onImage : await runJmvmCapture(jmvm, files, "", progress);
+        };
         if (jmCached) {
-          const raw = await runJmvmCapture(jmCached, await collectDataFiles(msg.source), "", progress);
+          const raw = await runNb(jmCached);
           const output = new TextDecoder().decode(Uint8Array.from(raw, (ch) => ch.charCodeAt(0) & 255));
-          postMessage({ type: "NOTEBOOK_RESULT", id: msg.id, success: true, output, cached: true });
+          postMessage({ type: "NOTEBOOK_RESULT", id: msg.id, success: true, output, cached: true, image: imageLast });
           break;
         }
         const built = await notebookCompile(msg.source);
@@ -1953,12 +2043,18 @@ self.onmessage = async function (e) {
         if (notebookCache.size > 8) notebookCache.delete(notebookCache.keys().next().value);
         // runJmvmCapture levert één teken per byte; een notebook toont
         // gewone tekst (°, emoji), dus als UTF-8 terugdecoderen.
-        const raw = await runJmvmCapture(jm.content, await collectDataFiles(msg.source), "", progress);
+        const raw = await runNb(jm.content);
         const output = new TextDecoder().decode(Uint8Array.from(raw, (ch) => ch.charCodeAt(0) & 255));
-        postMessage({ type: "NOTEBOOK_RESULT", id: msg.id, success: true, output });
+        postMessage({ type: "NOTEBOOK_RESULT", id: msg.id, success: true, output, image: imageLast });
       } catch (err) {
         postMessage({ type: "NOTEBOOK_RESULT", id: msg.id, success: false, stage: "worker", error: err.message });
       }
+      break;
+
+    case "IMAGE_RESET":
+      // Het blijvende beeld leegmaken (alle bewaarde CAF-waarden weg).
+      if (imageInstance) imageInstance.ccall("jmvm_image_reset", null, [], []);
+      postMessage({ type: "IMAGE_RESET_DONE", id: msg.id });
       break;
 
     case "LC_RUN":

@@ -165,8 +165,15 @@ Wil je de WASM-engine opnieuw compileren vanuit de C++ bronbestanden? Zorg dat d
 
 ```bash
 source ~/emsdk/emsdk_env.sh
-em++ -O3 -sALLOW_MEMORY_GROWTH=1 -sFORCE_FILESYSTEM=1 -sMODULARIZE=1 \
+em++ -O3 -fwasm-exceptions -DIMAGE_API -sALLOW_MEMORY_GROWTH=1 -sFORCE_FILESYSTEM=1 -sMODULARIZE=1 \
      -sEXPORT_NAME=createJMVMModule \
-     -sEXPORTED_RUNTIME_METHODS='["FS","callMain","stringToUTF8","UTF8ToString"]' \
+     -sEXPORTED_RUNTIME_METHODS='["FS","callMain","stringToUTF8","UTF8ToString","ccall","cwrap"]' \
      -lidbfs.js -DSWITCH_CASE parser.cpp vm.cpp -o websapl/engine/jmvm.js
 ```
+
+`-DIMAGE_API` en `-fwasm-exceptions` (sinds 6 oktober 2026) zijn voor het
+blijvende beeld van het notebook (`jmvm_image_run`, zie
+`docs/2026-09-29_lui_dynamisch_notebook_plan.md` §6.2): de lader gebruikt
+C++-uitzonderingen. Gemeten in Node: de VM even snel (fib −5%, queens
++2%, sort/eval +1%, binnen de ruis); `jmvm.wasm` groeit van 87 naar
+237 KB.
