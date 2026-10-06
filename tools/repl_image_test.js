@@ -47,5 +47,13 @@ async function session(lines, noImage) {
   const c2 = calls("stap 4");
   // big, g, g (na f opnieuw), big, big (na tel opnieuw)
   check("stap 4: big bewaard na f opnieuw, opnieuw berekend na tel opnieuw", c2.length === 5 && c2[0] > 1000000 && c2[3] < 1000 && c2[4] > 1000000, c2.join(" "));
+  // Beslissing 5: resN is een momentopname (zie repl/tests/beeld_test.sh, 6).
+  const texts = async (lines) => (await session(lines, false)).map((x) => x.text);
+  const s1 = await texts([":def f x = x + 1", "f 10", ":def f x = x * 10", "res0", "f 10"]);
+  check("momentopname: res0 blijft 11 na f opnieuw", s1[3] === "11" && s1[4] === "100", s1.join(" | "));
+  const s2 = await texts([":def ::V = A x | B y", "[A 1]", ":def ::V = B y | A x | C", "res0", "[A 2]"]);
+  check("verlopen momentopname gemeld na een gewijzigd type", /res0 is verlopen/.test(s2[3]) && s2[4] === "[A(2)]", s2.join(" | "));
+  const s3 = await texts([":def f x = x + 1", "f 1", ":def f x = x * 10", "f 1", ":undo", ":undo", ":def f x = x * 100", "f 1", "res1"]);
+  check("na :undo krijgt een hergebruikte resN de nieuwe waarde", s3[7] === "100" && s3[8] === "100", s3.join(" | "));
   process.exit(fail);
 })();

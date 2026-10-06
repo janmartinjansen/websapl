@@ -1800,7 +1800,13 @@ async function replEvalLine(line0) {
     const t = await replTypeOf(line);
     if (t.inferredType.includes("Bool")) shower = `printValT "${t.inferredType}"`;
   } catch (_) {}
-  const turnSource = await replPreprocess(replExternImports(replSession.entries, line) + `start = ${shower} (${line})\n`, "repl_turn", "t");
+  // Beslissing 5 (6 oktober 2026, zoals repl-host): de regel definieert zelf
+  // `resN =: ...`, een momentopname die nu berekend wordt, en toont die; tag
+  // `t<N>` geeft de hulpfuncties van de regel een eigen naam.
+  replCheckNotExpired(line);
+  const resName = `res${replSession.resCounter}`;
+  replLineOnImage = false;
+  const turnSource = await replPreprocess(replExternImports(replSession.entries, line) + `${resName} =: ${line}\nstart = ${shower} ${resName}\n`, "repl_turn", `t${replSession.resCounter}`);
 
   const lib = replSession.lib;
   // Het blijvende beeld (notebookplan §6.2, zoals repl-host): eerst alleen de
@@ -1816,7 +1822,10 @@ async function replEvalLine(line0) {
       imageLast = null;
       const raw = await runOnImage(chunk.content, {}, null, true, "repl");
       replLastImage = imageLast;
-      if (raw !== null) return replExtractOutput("execution started\n" + raw) || "(geen uitvoer)";
+      if (raw !== null) { replLineOnImage = true; return replExtractOutput("execution started\n" + raw) || "(geen uitvoer)"; }
+      // Begon het beeld tijdens deze regel opnieuw, dan kan een momentopname
+      // die de regel gebruikt net verlopen zijn.
+      replCheckNotExpired(line);
     }
   }
   const turnRes = await runSaplcompModuleStage(turnSource, "retag", "/tmp/repl_turn.retag.txt", [lib.defs, replSession.defs], [lib.typedefs, replSession.typedefs]);
@@ -1833,7 +1842,11 @@ async function replEvalLine(line0) {
     imageLast = null;
     const raw = await runOnImage(compRes.content, {}, null, false, "repl");
     replLastImage = imageLast && { ...imageLast, event: earlier + imageLast.event };
-    if (raw !== null) return replExtractOutput("execution started\n" + raw) || "(geen uitvoer)";
+    if (raw !== null) {
+      if (imageLast && /opnieuw:/.test(imageLast.event)) replCheckNotExpired(line);
+      replLineOnImage = true;
+      return replExtractOutput("execution started\n" + raw) || "(geen uitvoer)";
+    }
   }
   const rawOutput = await runJmvmCapture(compRes.content);
   const shown = replExtractOutput(rawOutput);
@@ -1842,6 +1855,19 @@ async function replEvalLine(line0) {
 
 // Wat het beeld bij de laatste REPL-regel deed (voor tests).
 let replLastImage = null;
+// Draaide de laatste regel op het beeld (dan is `resN` een momentopname daar).
+let replLineOnImage = false;
+
+// Een momentopname die verloren ging toen het beeld helemaal opnieuw begon:
+// melden i.p.v. stil opnieuw rekenen (zoals repl-host's checkNotExpiredH).
+function replCheckNotExpired(text) {
+  if (!imageInstances.repl) return;
+  for (const m of text.matchAll(/(^|[^A-Za-z0-9_.])(res\d+)(?![A-Za-z0-9_])/g)) {
+    if (imageCall("repl", "jmvm_image_snapshot_state", "number", ["string"], [m[2]]) === 2) {
+      throw new Error(`${m[2]} is verlopen: het beeld begon opnieuw (bv. na een gewijzigd type), en daarmee ging de bewaarde waarde verloren. Reken hem opnieuw uit.`);
+    }
+  }
+}
 
 // `it` in een vastgelegde regel of `:def` wordt de vorige `resN`: de sessie
 // bewaart tekst en bindt namen pas bij het compileren, en `it` krijgt na elke
@@ -1878,7 +1904,9 @@ function replPrevRes() {
 
 async function replCommit(line) {
   const name = `res${replSession.resCounter}`;
-  await replSetEntries([[name, `${name} = ${replSubstIt(line, replPrevRes())}`], ["it", `it = ${name}`]], replSession.resCounter + 1);
+  await replSetEntries([[name, `${name} =: ${replSubstIt(line, replPrevRes())}`], ["it", `it = ${name}`]], replSession.resCounter + 1);
+  if (replLineOnImage) imageCall("repl", "jmvm_image_mark_snapshot", null, ["string"], [name]);
+  replLineOnImage = false;
   return name;
 }
 
@@ -1954,6 +1982,7 @@ async function notebookCompile(source, prepared = null) {
 }
 
 async function replDefine(defText) {
+  replCheckNotExpired(defText);
   const name = replExtractDefName(defText);
   await replSetEntries([[name, replSubstIt(defText, replPrevRes())]]);
   return name;
