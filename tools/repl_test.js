@@ -36,6 +36,12 @@ async function runLine(line) {
   for (const name of fs.readdirSync(testDir).filter((f) => f.endsWith(".in")).sort()) {
     const init = await call({ type: "REPL_INIT" });
     if (!init.success) { console.log("REPL_INIT mislukt:", init.error); process.exit(1); }
+    // REPL_INIT doet niets als er al een sessie is (replInit), dus per bestand
+    // ook :reset -- anders liepen alle bestanden door in één sessie, en zag
+    // `res1` in it.in de res1 van een vorig bestand (6 oktober 2026). De
+    // andere twee REPL's starten per bestand een vers proces.
+    const reset = await call({ type: "REPL_EVAL", cmd: "reset" });
+    if (!reset.success) { console.log(":reset mislukt:", reset.error); process.exit(1); }
     const lines = fs.readFileSync(path.join(testDir, name), "utf8").split("\n").filter((l) => l.trim());
     const expected = fs.readFileSync(path.join(testDir, name.replace(/\.in$/, ".expected")), "utf8").split("\n").filter((l) => l.trim());
     const got = [];

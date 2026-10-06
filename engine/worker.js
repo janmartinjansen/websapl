@@ -1709,9 +1709,42 @@ async function replEvalLine(line) {
   return shown || "(geen uitvoer)";
 }
 
+// `it` in een vastgelegde regel of `:def` wordt de vorige `resN`: de sessie
+// bewaart tekst en bindt namen pas bij het compileren, en `it` krijgt na elke
+// regel een nieuwe betekenis (anders werd `5`, `it + 1` in de sessie
+// `res1 = it + 1` naast `it = res1`, een kring; 6 oktober 2026). Zelfde
+// regels als repl_retag.py's subst_it.
+function replSubstIt(text, prev) {
+  if (!prev) return text;
+  const isId = (c) => /[A-Za-z0-9_]/.test(c);
+  let out = "", i = 0;
+  const n = text.length;
+  while (i < n) {
+    const c = text[i];
+    if (c === '"' || (c === "'" && !(i > 0 && isId(text[i - 1])))) {
+      let j = i + 1;
+      while (j < n && text[j] !== c) j += text[j] === "\\" ? 2 : 1;
+      out += text.slice(i, j + 1); i = j + 1;
+    } else if (text.startsWith("//", i)) {
+      out += text.slice(i); i = n;
+    } else if (/[A-Za-z_]/.test(c)) {
+      let j = i;
+      while (j < n && isId(text[j])) j++;
+      const word = text.slice(i, j);
+      out += word === "it" && !(i > 0 && text[i - 1] === ".") ? prev : word;
+      i = j;
+    } else { out += c; i++; }
+  }
+  return out;
+}
+
+function replPrevRes() {
+  return replSession.resCounter > 0 ? `res${replSession.resCounter - 1}` : null;
+}
+
 async function replCommit(line) {
   const name = `res${replSession.resCounter}`;
-  await replSetEntries([[name, `${name} = ${line}`], ["it", `it = ${name}`]], replSession.resCounter + 1);
+  await replSetEntries([[name, `${name} = ${replSubstIt(line, replPrevRes())}`], ["it", `it = ${name}`]], replSession.resCounter + 1);
   return name;
 }
 
@@ -1768,7 +1801,7 @@ async function notebookCompile(source) {
 
 async function replDefine(defText) {
   const name = replExtractDefName(defText);
-  await replSetEntries([[name, defText]]);
+  await replSetEntries([[name, replSubstIt(defText, replPrevRes())]]);
   return name;
 }
 
