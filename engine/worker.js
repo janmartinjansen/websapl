@@ -1499,6 +1499,16 @@ async function replAtomicRebuild(newEntries, newResCounter) {
   const defsRes = await runSaplcompModuleStage(sessionText, "defs", "/tmp/repl_session.defs.txt", [lib.defs], [lib.typedefs]);
   if (!defsRes.success) throw new Error(`sessie-defs mislukt:\n${defsRes.output}`);
 
+  // Het beeld (zoals repl-host's atomicRebuild): een andere bibliotheekunit
+  // maakt het leeg; een gewijzigde of verdwenen naam wordt ongeldig.
+  if (replSession.lib && lib !== replSession.lib) imageCall("repl", "jmvm_image_reset");
+  else {
+    const old = new Map(replSession.entries.map((e) => [e.name, e.text]));
+    const now = new Set(newEntries.map((e) => e.name));
+    const changed = newEntries.filter((e) => old.has(e.name) && old.get(e.name) !== e.text).map((e) => e.name);
+    for (const n of old.keys()) if (!now.has(n)) changed.push(n);
+    if (changed.length) imageCall("repl", "jmvm_image_invalidate", null, ["string"], [changed.join(" ")]);
+  }
   replSession.history.push(oldSnapshot);
   replSession.entries = newEntries;
   replSession.resCounter = newResCounter;
@@ -1635,14 +1645,16 @@ function replFuncs() {
 // is het exemplaar onbruikbaar en begint de volgende run met een nieuw.
 // Veranderen de databestanden, dan begint het beeld schoon (een CAF die een
 // bestand las, zou anders de oude inhoud houden).
-let imageInstance = null;
+// Eén exemplaar per gebruik ("notebook", "repl"), zodat hun namen elkaar
+// niet in de weg zitten.
+const imageInstances = {};
+const imageDataKeys = {};
 let imageOutput = null;
-let imageDataKey = null;
 let imageLast = null;
 
-async function imageGet() {
-  if (!imageInstance) {
-    imageInstance = await createJMVMModule({
+async function imageGet(kind = "notebook") {
+  if (!imageInstances[kind]) {
+    const imageInstance = await createJMVMModule({
       noInitialRun: true,
       locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm" : (prefix || "") + p),
       stdin: () => null,
@@ -1650,9 +1662,15 @@ async function imageGet() {
       stderr: (c) => imageOutput && imageOutput(c)
     });
     imageInstance.ccall("jmvm_image_init", null, [], []);
-    imageDataKey = null;
+    imageInstances[kind] = imageInstance;
+    imageDataKeys[kind] = null;
   }
-  return imageInstance;
+  return imageInstances[kind];
+}
+
+function imageCall(kind, name, ret = null, types = [], args = []) {
+  const inst = imageInstances[kind];
+  return inst ? inst.ccall(name, ret, types, args) : null;
 }
 
 function dataFilesKey(files) {
@@ -1667,11 +1685,11 @@ function dataFilesKey(files) {
 // Zoals runJmvmCapture, maar op het beeld; null als het beeld weigert.
 // `chunk`: jmvmContent is een los stuk met open labels (saplcomp_module's
 // jmvm-stap); weigert het beeld (iets staat er nog niet in), dan null.
-async function runOnImage(jmvmContent, extraFiles = {}, onProgress = null, chunk = false) {
-  const inst = await imageGet();
+async function runOnImage(jmvmContent, extraFiles = {}, onProgress = null, chunk = false, kind = "notebook") {
+  const inst = await imageGet(kind);
   const key = dataFilesKey(extraFiles);
-  if (imageDataKey !== null && key !== imageDataKey) inst.ccall("jmvm_image_reset", null, [], []);
-  imageDataKey = key;
+  if (imageDataKeys[kind] !== null && key !== imageDataKeys[kind]) inst.ccall("jmvm_image_reset", null, [], []);
+  imageDataKeys[kind] = key;
   const output = [];
   let lineStart = 0, flushed = 0;
   imageOutput = (c) => {
@@ -1695,7 +1713,7 @@ async function runOnImage(jmvmContent, extraFiles = {}, onProgress = null, chunk
     rc = inst.ccall("jmvm_image_run", "number", ["string", "number"], ["/tmp/image_run.jmvm", chunk ? 1 : 0]);
   } catch (e) {
     // De VM stopte met een fout (exit): de uitvoer tot dan is het resultaat.
-    imageInstance = null;
+    delete imageInstances[kind];
     imageLast = { event: "exemplaar gestopt", error: true };
     imageOutput = null;
     return output.join("");
@@ -1770,7 +1788,10 @@ function replExtractOutput(out) {
   return body.slice(0, markerIdx).trim();
 }
 
-async function replEvalLine(line) {
+async function replEvalLine(line0) {
+  // `it` is de vorige resN (zie replSubstIt); hier al vervangen, dan hoeft
+  // `it` zelf niet in het beeld te staan (zelfde als repl-host).
+  const line = replSubstIt(line0, replPrevRes());
   // Weergave op type (notebookplan fase 3, 5 oktober 2026): bevat het type
   // van de regel `Bool`, dan toont printValT True/False; mislukt het
   // typeren, dan gewoon printVal (zelfde als repl_retag.py en repl-host).
@@ -1782,6 +1803,22 @@ async function replEvalLine(line) {
   const turnSource = await replPreprocess(replExternImports(replSession.entries, line) + `start = ${shower} (${line})\n`, "repl_turn", "t");
 
   const lib = replSession.lib;
+  // Het blijvende beeld (notebookplan §6.2, zoals repl-host): eerst alleen de
+  // regel als los stuk tegen wat al in het beeld staat; lukt dat niet, het
+  // volledige gelinkte programma op het beeld; dan pas een vers exemplaar.
+  const useImage = !replSession.noImage;
+  const inst = imageInstances.repl;
+  if (useImage && inst && inst.ccall("jmvm_image_size", "number", [], []) > 0) {
+    const cafs = new Set(inst.UTF8ToString(inst.ccall("jmvm_image_caf_names", "number", [], [])).split(" ").filter((x) => x));
+    for (const e of replSession.entries) if (new RegExp("^\\s*" + e.name.replace(/[^A-Za-z0-9_]/g, "\\$&") + "\\s*=:").test(e.text)) cafs.add(e.name);
+    const chunk = await runSaplcompModuleStage(turnSource, "jmvm", "/tmp/repl_turn.chunk.jmvm", [lib.defs, replSession.defs], [lib.typedefs, replSession.typedefs], [...cafs].join(" "));
+    if (chunk.success) {
+      imageLast = null;
+      const raw = await runOnImage(chunk.content, {}, null, true, "repl");
+      replLastImage = imageLast;
+      if (raw !== null) return replExtractOutput("execution started\n" + raw) || "(geen uitvoer)";
+    }
+  }
   const turnRes = await runSaplcompModuleStage(turnSource, "retag", "/tmp/repl_turn.retag.txt", [lib.defs, replSession.defs], [lib.typedefs, replSession.typedefs]);
   if (!turnRes.success) throw new Error(turnRes.output);
 
@@ -1791,10 +1828,20 @@ async function replEvalLine(line) {
   const compRes = await runRetagCompStage(linkRes.content, "/tmp/repl_linked.jmvm");
   if (!compRes.success) throw new Error(`retagcomp.jmvm mislukt:\n${compRes.output}`);
 
+  if (useImage) {
+    const earlier = replLastImage && replLastImage.event ? replLastImage.event : "";
+    imageLast = null;
+    const raw = await runOnImage(compRes.content, {}, null, false, "repl");
+    replLastImage = imageLast && { ...imageLast, event: earlier + imageLast.event };
+    if (raw !== null) return replExtractOutput("execution started\n" + raw) || "(geen uitvoer)";
+  }
   const rawOutput = await runJmvmCapture(compRes.content);
   const shown = replExtractOutput(rawOutput);
   return shown || "(geen uitvoer)";
 }
+
+// Wat het beeld bij de laatste REPL-regel deed (voor tests).
+let replLastImage = null;
 
 // `it` in een vastgelegde regel of `:def` wordt de vorige `resN`: de sessie
 // bewaart tekst en bindt namen pas bij het compileren, en `it` krijgt na elke
@@ -1886,6 +1933,7 @@ async function notebookPrepare(source) {
 // (retaglink + retagcomp van de hele bibliotheek, ~70% van een run, valt
 // weg). null als het niet lukt; dan de volledige weg.
 async function notebookCompileChunk(prep) {
+  const imageInstance = imageInstances.notebook;
   if (!imageInstance || imageInstance.ccall("jmvm_image_size", "number", [], []) === 0) return null;
   const cafs = imageInstance.UTF8ToString(imageInstance.ccall("jmvm_image_caf_names", "number", [], []));
   const r = await runSaplcompModuleStage(prep.pre.files[0].content, "jmvm", "/tmp/notebook.chunk.jmvm", [prep.lib.defs], [prep.lib.typedefs], cafs);
@@ -2099,7 +2147,7 @@ self.onmessage = async function (e) {
 
     case "IMAGE_RESET":
       // Het blijvende beeld leegmaken (alle bewaarde CAF-waarden weg).
-      if (imageInstance) imageInstance.ccall("jmvm_image_reset", null, [], []);
+      for (const k of Object.keys(imageInstances)) imageCall(k, "jmvm_image_reset");
       postMessage({ type: "IMAGE_RESET_DONE", id: msg.id });
       break;
 
@@ -2135,9 +2183,11 @@ self.onmessage = async function (e) {
         let payload = {};
         switch (msg.cmd) {
           case "eval": {
+            if (msg.noImage !== undefined) replSession.noImage = !!msg.noImage;
+            replLastImage = null;
             const output = await replEvalLine(msg.line);
             const name = await replCommit(msg.line);
-            payload = { output, name };
+            payload = { output, name, image: replLastImage };
             break;
           }
           case "def": {
@@ -2153,6 +2203,7 @@ self.onmessage = async function (e) {
             break;
           case "reset":
             await replReset();
+            imageCall("repl", "jmvm_image_reset");   // :reset is een schone lei, ook voor bewaarde CAF-waarden
             break;
           case "funcs":
             payload = { funcs: replFuncs() };
@@ -2161,6 +2212,7 @@ self.onmessage = async function (e) {
             payload = await replTypeOf(msg.expr);
             break;
           case "load": {
+            imageCall("repl", "jmvm_image_reset");   // een (opnieuw) geladen bestand rekent zijn CAF's opnieuw uit
             const notes = [];
             const names = await replLoadContent(msg.content, notes);
             payload = { names, notes };
