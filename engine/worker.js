@@ -1778,6 +1778,29 @@ async function runJmvmCapture(jmvmContent, extraFiles = {}, stdinText = "", onPr
 // `res: `-marker zoeken (printVal schrijft geen eigen afsluitende
 // newline, dus de weergegeven waarde staat zonder scheidingsteken vóór
 // `res: <code>`, bv. `Just(5)res: 0`).
+// De melding van een programma dat zonder `res: `-marker stopte (een
+// runtimefout, bv. `error "kapot"`); zelfde regel als vm.cpp's
+// runtimeErrorTextH en repl_retag.py's runtime_error_text (7 oktober 2026).
+function replRuntimeErrorText(out) {
+  const lines = out.split("\n");
+  const startIdx = lines.findIndex((l) => l.startsWith("execution started"));
+  const body = startIdx === -1 ? lines : lines.slice(startIdx + 1);
+  const stats = ["Elapsed time", "nr gc", "instr executed", "calls:", "creates:"];
+  let t = body.filter((l) => !stats.some((p) => l.startsWith(p))).join("\n").trim();
+  if (t.endsWith("stop")) t = t.slice(0, -4).trim();
+  return t || "het programma stopte zonder melding";
+}
+
+// De getoonde waarde, of een fout bij een runtimefout (dan geen resN: de
+// regel wordt alleen vastgelegd als dit lukt).
+function replShownOrError(out) {
+  const body = out.split("\n");
+  const startIdx = body.findIndex((l) => l.startsWith("execution started"));
+  const rest = startIdx === -1 ? out : body.slice(startIdx + 1).join("\n");
+  if (rest.lastIndexOf("res: ") === -1) throw new Error(replRuntimeErrorText(out));
+  return replExtractOutput(out) || "(geen uitvoer)";
+}
+
 function replExtractOutput(out) {
   const lines = out.split("\n");
   const startIdx = lines.findIndex((l) => l.startsWith("execution started"));
@@ -1822,7 +1845,7 @@ async function replEvalLine(line0) {
       imageLast = null;
       const raw = await runOnImage(chunk.content, {}, null, true, "repl");
       replLastImage = imageLast;
-      if (raw !== null) { replLineOnImage = true; return replExtractOutput("execution started\n" + raw) || "(geen uitvoer)"; }
+      if (raw !== null) { replLineOnImage = true; return replShownOrError("execution started\n" + raw); }
       // Begon het beeld tijdens deze regel opnieuw, dan kan een momentopname
       // die de regel gebruikt net verlopen zijn.
       replCheckNotExpired(line);
@@ -1845,12 +1868,11 @@ async function replEvalLine(line0) {
     if (raw !== null) {
       if (imageLast && /opnieuw:/.test(imageLast.event)) replCheckNotExpired(line);
       replLineOnImage = true;
-      return replExtractOutput("execution started\n" + raw) || "(geen uitvoer)";
+      return replShownOrError("execution started\n" + raw);
     }
   }
   const rawOutput = await runJmvmCapture(compRes.content);
-  const shown = replExtractOutput(rawOutput);
-  return shown || "(geen uitvoer)";
+  return replShownOrError(rawOutput);
 }
 
 // Wat het beeld bij de laatste REPL-regel deed (voor tests).
