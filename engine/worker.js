@@ -1712,8 +1712,11 @@ async function runOnImage(jmvmContent, extraFiles = {}, onProgress = null, chunk
   try {
     rc = inst.ccall("jmvm_image_run", "number", ["string", "number"], ["/tmp/image_run.jmvm", chunk ? 1 : 0]);
   } catch (e) {
-    // De VM stopte met een fout (exit): de uitvoer tot dan is het resultaat.
+    // De VM stopte met een fout (exit, of een wasm-trap zoals bij 1 / 0):
+    // de uitvoer tot dan is het resultaat. Het exemplaar is weg, en met
+    // hem de bewaarde momentopnames (zie replSnapshots).
     delete imageInstances[kind];
+    if (kind === "repl") { for (const n of replSnapshots) replExpired.add(n); replSnapshots.clear(); }
     imageLast = { event: "exemplaar gestopt", error: true };
     imageOutput = null;
     return output.join("");
@@ -1880,12 +1883,18 @@ let replLastImage = null;
 // Draaide de laatste regel op het beeld (dan is `resN` een momentopname daar).
 let replLineOnImage = false;
 
+// De resN die als momentopname in het repl-exemplaar staan, en die verliepen
+// doordat het exemplaar zelf stierf (een wasm-trap, 7 oktober 2026: na `5`,
+// `1 / 0` gaf `res0 + 1` stil een opnieuw berekende waarde). Het nieuwe
+// exemplaar weet daar niets van, dus houdt de worker het bij.
+const replSnapshots = new Set();
+const replExpired = new Set();
+
 // Een momentopname die verloren ging toen het beeld helemaal opnieuw begon:
 // melden i.p.v. stil opnieuw rekenen (zoals repl-host's checkNotExpiredH).
 function replCheckNotExpired(text) {
-  if (!imageInstances.repl) return;
   for (const m of text.matchAll(/(^|[^A-Za-z0-9_.])(res\d+)(?![A-Za-z0-9_])/g)) {
-    if (imageCall("repl", "jmvm_image_snapshot_state", "number", ["string"], [m[2]]) === 2) {
+    if (replExpired.has(m[2]) || (imageInstances.repl && imageCall("repl", "jmvm_image_snapshot_state", "number", ["string"], [m[2]]) === 2)) {
       throw new Error(`${m[2]} is verlopen: het beeld begon opnieuw (bv. na een gewijzigd type), en daarmee ging de bewaarde waarde verloren. Reken hem opnieuw uit.`);
     }
   }
@@ -1927,7 +1936,8 @@ function replPrevRes() {
 async function replCommit(line) {
   const name = `res${replSession.resCounter}`;
   await replSetEntries([[name, `${name} =: ${replSubstIt(line, replPrevRes())}`], ["it", `it = ${name}`]], replSession.resCounter + 1);
-  if (replLineOnImage) imageCall("repl", "jmvm_image_mark_snapshot", null, ["string"], [name]);
+  replExpired.delete(name);
+  if (replLineOnImage) { imageCall("repl", "jmvm_image_mark_snapshot", null, ["string"], [name]); replSnapshots.add(name); }
   replLineOnImage = false;
   return name;
 }
@@ -2255,6 +2265,8 @@ self.onmessage = async function (e) {
           case "reset":
             await replReset();
             imageCall("repl", "jmvm_image_reset");   // :reset is een schone lei, ook voor bewaarde CAF-waarden
+            replSnapshots.clear();
+            replExpired.clear();
             break;
           case "funcs":
             payload = { funcs: replFuncs() };

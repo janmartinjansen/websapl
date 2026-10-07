@@ -175,6 +175,9 @@ reflectionInstrs n =
     (Cons (mkI ['getfield']) (Cons (mkI ['eval']) Nil))
     (Cons (mkI (reflectionOpcode n)) Nil)
 
+// `error msg`: syscall 8 (7 October 2026) goes to the nearest catch-all
+// try handler with msg as payload, or else prints msg and stops, exactly
+// what the former `syscall 3; stop` did (see vm.cpp, SysCall 8).
 genErrorCall prog adts args as =
   case as
     (Cons a rest -> genErrorCallRest prog adts args a rest)
@@ -182,7 +185,7 @@ genErrorCall prog adts args as =
 
 genErrorCallRest prog adts args a rest =
   case rest
-    (Nil -> append (genValue prog adts args a) (Cons (mkI ['syscall 3']) (Cons (mkI ['stop']) Nil)))
+    (Nil -> append (genValue prog adts args a) (Cons (mkI ['syscall 8']) Nil))
     (Cons x xs -> error "genValue: error verwacht precies 1 argument")
 
 genValueSeq prog adts args as =

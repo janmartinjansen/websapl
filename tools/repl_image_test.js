@@ -55,5 +55,10 @@ async function session(lines, noImage) {
   check("verlopen momentopname gemeld na een gewijzigd type", /res0 is verlopen/.test(s2[3]) && s2[4] === "[A(2)]", s2.join(" | "));
   const s3 = await texts([":def f x = x + 1", "f 1", ":def f x = x * 10", "f 1", ":undo", ":undo", ":def f x = x * 100", "f 1", "res1"]);
   check("na :undo krijgt een hergebruikte resN de nieuwe waarde", s3[7] === "100" && s3[8] === "100", s3.join(" | "));
+  // Een wasm-trap (1 / 0) laat het exemplaar sterven, en met hem de
+  // momentopnames: melden i.p.v. stil opnieuw rekenen (7 oktober 2026).
+  // Een VM-fout (strat verkeerd om) is vangbaar en laat het exemplaar heel.
+  const s4 = await texts(["5", "1 / 0", "res0 + 1", "7", "strat \"abc\" 1", "res1 + 1"]);
+  check("momentopname verlopen na een gestorven exemplaar; heel na een VM-fout", /res0 is verlopen/.test(s4[2]) && /^fout: runtime error: strat/.test(s4[4]) && s4[5] === "8", s4.join(" | "));
   process.exit(fail);
 })();

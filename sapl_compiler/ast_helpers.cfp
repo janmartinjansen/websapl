@@ -535,10 +535,19 @@ exprConstrNameOf e =
 // constant, more than one argument) silently becomes catch_nr=0 (wildcard --
 // catches every throw). See docs/sapl_programmeer_regels.md section 9 for
 // the full, empirically verified specification of this behavior.
+//
+// Stage 4 (retag) wraps a handler that is an undersaturated call in a
+// Closure (`closure (handler 1)`); look through that (and Lazy/Thunk) to the
+// source shape. Without this (until 7 October 2026) gen1 gave catch_nr 0 for
+// `try e (handler 1)` where parser.ama gives 1, so every numbered handler
+// silently caught every throw.
 getCatchNr e =
   case e
     (App n as -> getCatchNrArgs as)
     (Num n -> n)
+    (Closure inner -> getCatchNr inner)
+    (Lazy inner -> getCatchNr inner)
+    (Thunk inner -> getCatchNr inner)
     (_ -> 0)
 
 getCatchNrArgs as =
