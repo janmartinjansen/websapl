@@ -200,7 +200,7 @@ genValueSeqRest prog adts args a rest =
 
 genValueSeqRest2 prog adts args a b rest2 =
   case rest2
-    (Nil -> append (genValue prog adts args a) (genValue prog adts args b))
+    (Nil -> append (genValue prog adts args a) (append (seqPop a) (genValue prog adts args b)))
     (Cons x xs -> error "genValue: <#> verwacht precies 2 operanden")
 
 // String literals: code is one instruction (`push "..."`), but the TEXT
@@ -674,7 +674,27 @@ genTailSeqRest2 prog adts fname args l r rest2 =
 
 buildTailSeq prog adts fname args l r =
   let rightTail = genTail prog adts fname args r in
-  Gencode (append (genValue prog adts args l) (gcInstrs rightTail)) (gcBlocks rightTail)
+  Gencode (append (genValue prog adts args l) (append (seqPop l) (gcInstrs rightTail))) (gcBlocks rightTail)
+
+// `a <#> b`: het resultaat van a moet van de stack (7 oktober 2026). Tot dan
+// bleef het liggen: in waardepositie stonden er twee waarden waar er één
+// verwacht werd, en in staartpositie nam de tailcall (die alles boven hv
+// verplaatst) het mee, zodat de aanroeper zijn resultaat een cel verschoven
+// terugkreeg en een IO-lus per ronde een cel lekte. Gevonden in de REPL in
+// Sapl (repl_sapl/mini_repl.spp): een parameter las daarna de achtergebleven
+// waarde van een eerdere aanroep. De print-familie neemt haar argument zelf
+// al weg (`print n`), dan geen pop.
+seqPop a = if (seqLeavesValue a) (Cons (mkI ['pop']) Nil) Nil
+
+seqLeavesValue e =
+  case e
+    (App n as -> notPrintFamily n)
+    (Prim op as -> if (charListEq op ['<#>']) (seqLeavesValue (seqLastOf as)) True)
+    (_ -> True)
+
+notPrintFamily n = if (isPrintCall n) False (if (isPrintCCall n) False (if (isPrintSCall n) False True))
+
+seqLastOf as = case as (Nil -> Num 0) (Cons a rest -> case rest (Nil -> a) (Cons b more -> seqLastOf rest))
 
 // T(case a cs) = E(a) + jmpt n ls + S(c)|c<-cs. Each branch becomes its own
 // block with the pattern variables in front of `args` (same "list =

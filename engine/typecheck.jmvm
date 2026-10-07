@@ -36,6 +36,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             load 2
             eval
             syscall 7
+            pop
             load 1
             eval
             load 2
@@ -24914,6 +24915,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             call 5974                                || typecheckFile
             call 20                                  || list2str
             syscall 3
+            pop
             push 10
             push 1
             syscall 7
