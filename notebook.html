@@ -152,10 +152,10 @@
     let settings = { order: "any" };   // NB.parseSettings; gaat mee in het bestand
     // De engine (8 oktober 2026, docs/2026-10-08_notebook_in_sapl_plan.md):
     // "sapl" = de notebookmodus van de REPL in Sapl (NB_RUN), "beeld" = het
-    // oude blijvende beeld (NOTEBOOK_RUN). In de Workbench (nog) het beeld.
+    // oude blijvende beeld (NOTEBOOK_RUN). In de Workbench achter
+    // /api/notebook/nb, een eigen ./rs-driver-proces (stap 4).
     let engine = "sapl";
-    try { engine = localStorage.getItem("websapl_nb_engine") || "sapl"; } catch (_) {}
-    if (SERVER) engine = "beeld";
+    try { engine = localStorage.getItem(SERVER ? "workbench_nb_engine" : "websapl_nb_engine") || "sapl"; } catch (_) {}
     let fileName = "notebook.spp";
     let worker = null;
     let ready = false;
@@ -230,6 +230,14 @@
         if (r.timedOut) {
           progressText = r.output;
           throw new Error(`Tijdslimiet van ${TIMEOUT_MS / 1000} s overschreden (een oneindige berekening?).`);
+        }
+        return r;
+      }
+      if (msg.type === "NB_RUN") {
+        const r = await post("/api/notebook/nb", { input: msg.input });
+        if (r.timedOut) {
+          progressText = r.output;
+          throw new Error(`Tijdslimiet van ${TIMEOUT_MS / 1000} s overschreden (een oneindige berekening?). De engine begint de volgende run opnieuw.`);
         }
         return r;
       }
@@ -735,10 +743,9 @@
       setStatus("volgorde gewijzigd: voer opnieuw uit");
     });
     el("sel-engine").value = engine;
-    el("sel-engine").hidden = SERVER;
     el("sel-engine").addEventListener("change", (e) => {
       engine = e.target.value;
-      try { localStorage.setItem("websapl_nb_engine", engine); } catch (_) {}
+      try { localStorage.setItem(SERVER ? "workbench_nb_engine" : "websapl_nb_engine", engine); } catch (_) {}
       setStatus("engine: " + (engine === "sapl" ? "Sapl" : "beeld") + "; voer opnieuw uit");
     });
     el("btn-add-code").addEventListener("click", () => addCell("code"));
