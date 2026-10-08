@@ -98,6 +98,14 @@
       </select>
       <label class="btn" title="Een .spp-notebook openen">Openen<input type="file" id="file-open" accept=".spp,.txt" /></label>
       <button id="btn-save" title="Opslaan als .spp">Opslaan</button>
+      <select id="sel-order" title="Mag een cel een definitie uit een latere cel gebruiken? (wordt in het notebook bewaard)">
+        <option value="any">in elke volgorde</option>
+        <option value="top">van boven naar beneden</option>
+      </select>
+      <select id="sel-engine" title="Engine: de REPL in Sapl (alleen wat veranderde wordt opnieuw gecompileerd) of het oude blijvende beeld">
+        <option value="sapl">engine: Sapl</option>
+        <option value="beeld">engine: beeld (oud)</option>
+      </select>
       <span class="status" id="status">engine laden…</span>
     </header>
     <div id="banner" class="banner" hidden></div>
@@ -118,13 +126,16 @@
       (met de cellen die ervan afhangen), Ctrl/⌘+Enter alles. Grijze uitvoer is
       verouderd. Een λ-cel is pure lambda-calculus (<code>lc_repl</code>, bv.
       <code>:nf</code>, <code>:seval</code>, <code>:blc</code>); een type-cel
-      toont per regel het type van een expressie.
+      toont per regel het type van een expressie. Een cel mag een definitie uit
+      een latere cel gebruiken ("in elke volgorde"), tenzij je de volgorde op
+      "van boven naar beneden" zet; een fout blijft bij haar cel, de cellen
+      die ervan afhangen worden overgeslagen.
     </p>
   </div>
 
   <script src="js/marked.min.js"></script>
   <script src="js/graphics_renderer.js?v=20260926_modtag"></script>
-  <script src="js/notebook_core.js?v=20260926"></script>
+  <script src="js/notebook_core.js?v=20261008"></script>
   <script>
   (function () {
     const NB = window.SaplNotebook;
@@ -138,6 +149,13 @@
     const el = (id) => document.getElementById(id);
 
     let cells = [];          // [{ kind, source, output: {…} | null }]
+    let settings = { order: "any" };   // NB.parseSettings; gaat mee in het bestand
+    // De engine (8 oktober 2026, docs/2026-10-08_notebook_in_sapl_plan.md):
+    // "sapl" = de notebookmodus van de REPL in Sapl (NB_RUN), "beeld" = het
+    // oude blijvende beeld (NOTEBOOK_RUN). In de Workbench (nog) het beeld.
+    let engine = "sapl";
+    try { engine = localStorage.getItem("websapl_nb_engine") || "sapl"; } catch (_) {}
+    if (SERVER) engine = "beeld";
     let fileName = "notebook.spp";
     let worker = null;
     let ready = false;
@@ -296,7 +314,64 @@
 
     const exprTypesCache = new Map();
 
+    // De notebookmodus van de REPL in Sapl: het hele notebook als `:nb`-
+    // invoer; de engine compileert zelf alleen wat veranderde, typeert de
+    // expressiecellen (Bool als True/False) en zet elke cel in een eigen try.
+    async function runProgramNb(exprT, defT) {
+      const gen = NB.generateNbInput(cells, exprT, settings.order);
+      progressText = "";
+      currentGen = gen;
+      let r;
+      try {
+        r = await call({ type: "NB_RUN", input: gen.input }, TIMEOUT_MS);
+      } catch (err) {
+        const parsed = NB.parseNbOutput(progressText);
+        let hung = false;
+        for (const e of gen.exprCells) {
+          const res = parsed.cells[e.n];
+          if (res && res.ended) cells[e.cell].output = { blocks: res.blocks };
+          else if (res && !hung) { hung = true; cells[e.cell].output = { error: `Geen resultaat binnen ${TIMEOUT_MS / 1000} s: deze cel bleef rekenen (een oneindige berekening?).` }; }
+          else cells[e.cell].output = { notRun: true, afterStop: hung };
+        }
+        for (const i of defT) cells[i].output = { def: true };
+        throw err;
+      }
+      if (!r.success) {
+        showBanner(r.error);
+        for (const e of gen.exprCells) cells[e.cell].output = { notRun: true };
+        for (const i of defT) cells[i].output = { notRun: true };
+        return;
+      }
+      const p = NB.parseNbOutput(r.output);
+      for (const i of defT) cells[i].output = { def: true };
+      // Alle definitiecellen gaan mee: een fout ook tonen bij een cel die
+      // niet gekozen was (bv. die afhangt van de gewijzigde cel).
+      for (const [i, msg] of Object.entries(p.defErrors)) if (+i >= 0 && cells[+i]) cells[+i].output = { error: msg };
+      // Bij een wasm-trap: de cel die stopte is de laatst begonnen cel als die
+      // geen @@end en geen melding heeft, anders de cel erna (de regel
+      // @@begin n kan nog in de buffer gezeten hebben). Een eerdere cel die
+      // met `error` stopte heeft wel een melding.
+      let trapAt = -1;
+      if (r.trapped) {
+        let k = -1;
+        gen.exprCells.forEach((e, j) => { if (p.cells[e.n]) k = j; });
+        const last = k >= 0 ? p.cells[gen.exprCells[k].n] : null;
+        trapAt = last && !last.ended && last.error === NB.NO_MESSAGE ? k : k + 1;
+      }
+      gen.exprCells.forEach((e, j) => {
+        const res = p.cells[e.n];
+        if (j === trapAt) cells[e.cell].output = { error: "De engine stopte in deze cel (bv. 1 / 0 in de browser). De volgende run bouwt het notebook opnieuw op." };
+        else if (trapAt >= 0 && j > trapAt) cells[e.cell].output = { notRun: true, afterStop: true };
+        else if (!res) cells[e.cell].output = { notRun: true };
+        else if (res.error) cells[e.cell].output = { error: res.error };
+        else cells[e.cell].output = { blocks: res.blocks };
+      });
+      const banner = [p.error, p.loose].filter(Boolean).join("\n");
+      if (banner) showBanner(banner);
+    }
+
     async function runProgram(exprT, defT) {
+      if (engine === "sapl") return runProgramNb(exprT, defT);
       // Weergave op type: eerst de expressiecellen typeren, zodat een Bool
       // als True/False verschijnt; mislukt dat, dan zonder typen.
       // De uitkomst per programmatekst bewaard: opnieuw uitvoeren zonder
@@ -589,6 +664,8 @@
     // ---- bestanden ------------------------------------------------------
     function load(text, name) {
       cells = NB.parseNotebook(text).map((c) => ({ ...c, output: null }));
+      settings = NB.parseSettings(text);
+      el("sel-order").value = settings.order;
       fileName = name || "notebook.spp";
       save(); renderAll(); hideBanner();
       loaded = true;
@@ -596,7 +673,7 @@
     }
 
     function save() {
-      try { localStorage.setItem(STORE_KEY, JSON.stringify({ fileName, text: NB.serializeNotebook(cells) })); } catch (_) {}
+      try { localStorage.setItem(STORE_KEY, JSON.stringify({ fileName, text: NB.serializeNotebook(cells, settings) })); } catch (_) {}
     }
 
     async function saveToServer() {
@@ -607,14 +684,14 @@
         fileName = target;
         el("nb-name").textContent = fileName;
       }
-      const res = await fetch("/api/save", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ path: target, content: NB.serializeNotebook(cells) }) });
+      const res = await fetch("/api/save", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ path: target, content: NB.serializeNotebook(cells, settings) }) });
       setStatus(res.ok ? "opgeslagen: " + target : "opslaan mislukt");
       save();
     }
 
     function download() {
       if (SERVER) return saveToServer();
-      const blob = new Blob([NB.serializeNotebook(cells)], { type: "text/plain" });
+      const blob = new Blob([NB.serializeNotebook(cells, settings)], { type: "text/plain" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
       a.download = fileName;
@@ -652,6 +729,18 @@
     function hideBanner() { el("banner").hidden = true; }
 
     el("btn-run").addEventListener("click", runAll);
+    el("sel-order").addEventListener("change", (e) => {
+      settings.order = e.target.value;
+      save();
+      setStatus("volgorde gewijzigd: voer opnieuw uit");
+    });
+    el("sel-engine").value = engine;
+    el("sel-engine").hidden = SERVER;
+    el("sel-engine").addEventListener("change", (e) => {
+      engine = e.target.value;
+      try { localStorage.setItem("websapl_nb_engine", engine); } catch (_) {}
+      setStatus("engine: " + (engine === "sapl" ? "Sapl" : "beeld") + "; voer opnieuw uit");
+    });
     el("btn-add-code").addEventListener("click", () => addCell("code"));
     el("btn-add-md").addEventListener("click", () => addCell("markdown"));
     el("btn-add-lc").addEventListener("click", () => addCell("lc"));

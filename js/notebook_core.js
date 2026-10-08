@@ -38,11 +38,28 @@
 (function (root) {
   const MARK_RE = /^\/\/%%(.*)$/;
 
+  // Instellingen van het notebook (8 oktober 2026): een regel
+  // `//%% [instellingen] volgorde=boven-naar-beneden`. Alleen wat afwijkt van
+  // de standaard komt in het bestand ("in elke volgorde" is de standaard),
+  // zodat bestaande notebooks niet veranderen.
+  const SETTINGS_RE = /^\/\/%% \[instellingen\](.*)$/;
+
+  /** { order: "any" | "top" } */
+  function parseSettings(text) {
+    const settings = { order: "any" };
+    for (const line of text.replace(/\r\n/g, "\n").split("\n")) {
+      const m = line.match(SETTINGS_RE);
+      if (m && /\bvolgorde=boven-naar-beneden\b/.test(m[1])) settings.order = "top";
+    }
+    return settings;
+  }
+
   function parseNotebook(text) {
     const cells = [];
     let cur = { kind: "code", lines: [] };
     let sawMarker = false;
     for (const line of text.replace(/\r\n/g, "\n").split("\n")) {
+      if (SETTINGS_RE.test(line)) continue;
       const m = line.match(MARK_RE);
       if (m) {
         if (sawMarker || cur.lines.some((l) => l.trim() !== "")) cells.push(cur);
@@ -80,8 +97,9 @@
     return lines.slice(a, b);
   }
 
-  function serializeNotebook(cells) {
+  function serializeNotebook(cells, settings) {
     const out = [];
+    if (settings && settings.order === "top") out.push("//%% [instellingen] volgorde=boven-naar-beneden");
     for (const c of cells) {
       out.push(c.kind === "code" ? "//%%" : `//%% [${c.kind}]`);
       const lines = c.source.split("\n");
@@ -216,6 +234,8 @@
     return { source: body.join("\n") + "\n", exprCells, errors };
   }
 
+  const NO_MESSAGE = "De cel stopte zonder melding.";
+
   const VM_TRAILER_RE = /^(res: |Elapsed time|nr gc|instr executed|calls: |creates: )/;
 
   /**
@@ -269,7 +289,7 @@
         const text = r.blocks.map((b) => b.content).join("\n")
           .split("\n").filter((l) => !VM_TRAILER_RE.test(l)).join("\n")
           .replace(/stop\s*$/, "").trim();
-        r.error = text || "De cel stopte zonder melding.";
+        r.error = text || NO_MESSAGE;
         r.blocks = [];
       }
     }
@@ -532,7 +552,7 @@
   }
 
   const api = {
-    generateNbInput, parseNbOutput,
+    generateNbInput, parseNbOutput, parseSettings, NO_MESSAGE,
     parseNotebook, serializeNotebook, classifyCell, generateProgram, parseOutput, definedNames, cafHintNames, cellErrorsFromTypecheck, generateExprTypeProgram, parseExprTypes,
     referencedNames, providedNames, dependents, generateTypeProgram, parseTypeReport, lcInput, parseLcOutput,
   };

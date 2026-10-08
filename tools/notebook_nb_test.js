@@ -134,5 +134,26 @@ const cellsOf = (...srcs) => srcs.map((source) => ({ kind: "code", source }));
   r = await nbRun(cells);
   check("verwijderde cel: gebruiker geeft een fout", /weg/.test(r.defErrors[0] || "") && /niet uitgevoerd/.test(r.byCell[1].error || ""), JSON.stringify(r));
 
+  // == 3. Zoals de pagina: NB_RUN, ook na een wasm-trap ======================
+  await call({ type: "RSAPL_RESET" });
+  cells = cellsOf("x = 6", "x * 7", "1 / 0", "x + 1");
+  const runPage = async () => {
+    const g = NB.generateNbInput(cells, undefined, "any");
+    const res = await call({ type: "NB_RUN", input: g.input }, "NB_RESULT");
+    const p = NB.parseNbOutput(res.output);
+    return { res, p, g };
+  };
+  let pg = await runPage();
+  check("NB_RUN: wasm-trap gemeld, cellen ervoor hebben uitvoer", pg.res.success && pg.res.trapped &&
+    pg.p.cells[1] && pg.p.cells[1].ended && pg.p.cells[1].blocks[0].content === "42" && !(pg.p.cells[2] && pg.p.cells[2].ended),
+    JSON.stringify(pg.res).slice(0, 300));
+  cells[2].source = "7 / 1";
+  pg = await runPage();
+  check("NB_RUN: na de trap bouwt de volgende run het notebook opnieuw op", pg.res.success && !pg.res.trapped && pg.p.done &&
+    pg.p.cells[2].blocks[0].content === "7" && pg.p.cells[3].blocks[0].content === "7", JSON.stringify(pg.res).slice(0, 300));
+  check("instellingen: volgorde in het bestand", NB.parseSettings(NB.serializeNotebook(cells, { order: "top" })).order === "top" &&
+    NB.parseNotebook(NB.serializeNotebook(cells, { order: "top" })).length === cells.length &&
+    !/instellingen/.test(NB.serializeNotebook(cells, { order: "any" })));
+
   process.exit(fail);
 })();

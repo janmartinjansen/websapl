@@ -1365,6 +1365,8 @@ function importNeeded(importText, code) {
 // (bv. door readFile), dan wordt dat gemeld.
 let rsInstance = null;
 let rsOutput = [];
+// Optioneel: krijgt elk uitvoerteken (de notebookmodus meldt zo voortgang).
+let rsOnChar = null;
 // De regels die de engine verwerkte (zonder de regel die de trap gaf), met
 // de eerste uitvoerregel om na het opnieuw afspelen te vergelijken.
 let rsJournal = [];
@@ -1380,7 +1382,7 @@ async function rsStart() {
     noInitialRun: true,
     locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm" : (prefix || "") + p),
     stdin: () => null,
-    stdout: (c) => rsOutput.push(c & 255),
+    stdout: (c) => { rsOutput.push(c & 255); if (rsOnChar) rsOnChar(c & 255); },
     stderr: () => {}
   });
   for (const rel of RS_FILES) {
@@ -1489,6 +1491,46 @@ async function rsReplay() {
     return { ok: false, n: lines.length, differ };
   }
   return { ok: true, n: lines.length, differ };
+}
+
+// De notebookmodus (`:nb`, docs/2026-10-08_notebook_in_sapl_plan.md stap 3):
+// één run van het notebook in de REPL in Sapl. Geen logboek zoals bij de
+// REPL: na een wasm-trap (bv. 1 / 0) komt de uitvoer tot dan toe terug, en
+// begint de volgende run in een vers exemplaar (het notebook zelf is het
+// logboek; alles wordt dan opnieuw gecompileerd). onProgress krijgt de
+// uitvoer telkens als een regel @@begin/@@end af is, zoals bij NOTEBOOK_RUN.
+const NB_INPUT = "repl_sapl/gen/notebook_in.txt";
+
+async function nbRun(input, onProgress) {
+  if (!rsInstance) await rsStart();
+  mkdirsFor(rsInstance.FS, "/" + NB_INPUT);
+  rsInstance.FS.writeFile("/" + NB_INPUT, input);
+  const line = ":nb " + NB_INPUT;
+  await rsPrepare(line);
+  rsOutput = [];
+  let lineBuf = [];
+  let sent = 0;
+  rsOnChar = (c) => {
+    if (c !== 10) { lineBuf.push(c); return; }
+    const l = new TextDecoder().decode(Uint8Array.from(lineBuf));
+    lineBuf = [];
+    if (onProgress && /^@@(begin|end) /.test(l)) {
+      const text = rsText();
+      onProgress(text.slice(sent));
+      sent = text.length;
+    }
+  };
+  try {
+    rsInstance.ccall("jmvm_rs_feed", "number", ["string"], [line]);
+  } catch (e) {
+    rsInstance = null;
+    rsJournal = [];
+    return { trapped: true, output: rsText() };
+  } finally {
+    rsOnChar = null;
+  }
+  const text = rsText();
+  return { trapped: false, output: text.endsWith("repl> ") ? text.slice(0, -6) : text };
 }
 
 function rsTrapMessage(replay) {
@@ -1930,6 +1972,16 @@ self.onmessage = async function (e) {
           error: r.restarted ? rsTrapMessage(r.replay) : undefined });
       } catch (err) {
         postMessage({ type: "RSAPL_RESULT", id: msg.id, success: false, error: err.message });
+      }
+      break;
+
+    case "NB_RUN":
+      try {
+        const r = await nbRun(msg.input, (text) => postMessage({ type: "NOTEBOOK_PROGRESS", id: msg.id, text }));
+        postMessage({ type: "NB_RESULT", id: msg.id, success: true, output: r.output, trapped: r.trapped });
+      } catch (err) {
+        rsInstance = null;
+        postMessage({ type: "NB_RESULT", id: msg.id, success: false, error: err.message });
       }
       break;
 
