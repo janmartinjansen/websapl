@@ -1420,6 +1420,10 @@ async function rsPrepare(line) {
     }
     if (content !== null) { mkdirsFor(rsInstance.FS, "/" + rel); rsInstance.FS.writeFile("/" + rel, content); src = content; }
   }
+  // Databestanden die de regel noemt (`C.read "notebooks/data/fruit.csv"`),
+  // zoals het notebook (collectDataFiles); anders leest readFile niets.
+  const data = await collectDataFiles(line);
+  for (const [p, c] of Object.entries(data)) { mkdirsFor(rsInstance.FS, p); rsInstance.FS.writeFile(p, c); }
   if (!src) return;
   const found = await collectSppImports(src);
   for (const [p, c] of Object.entries(found)) { mkdirsFor(rsInstance.FS, p); rsInstance.FS.writeFile(p, c); }
