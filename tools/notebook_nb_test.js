@@ -152,7 +152,7 @@ const cellsOf = (...srcs) => srcs.map((source) => ({ kind: "code", source }));
   // het type; de cellen die de constructors gebruiken gaan mee (ook een
   // =:-CAF), en terug naar de oude definitie kan ook.
   await call({ type: "RSAPL_RESET" });
-  cells = cellsOf("::Kleur = Rood | Groen\n\nmooi k = case k (Rood -> 1) (Groen -> 2) (Blauw -> 3)", "g =: Groen", "los = 41", "mooi g", "[g, Rood]", "los + 1");
+  cells = cellsOf("::Kleur = Rood | Groen\n\nmooi k = case k (Rood -> 1) (Groen -> 2)", "g =: Groen", "los = 41", "mooi g", "[g, Rood]", "los + 1");
   const k0 = await nbRun(cells);
   cells[0].source = cells[0].source.replace("Rood | Groen", "Blauw | Rood | Groen");
   const ka = await nbRun(cells);
