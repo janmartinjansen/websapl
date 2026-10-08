@@ -19,9 +19,9 @@ const EXPECTED = JSON.parse(fs.readFileSync(path.join(__dirname, "fixtures", "no
 let fail = 0;
 const now = () => performance.now();
 
-async function nbRun(cells, only, mode) {
+async function nbRun(cells, only, mode, extraFiles = {}) {
   const g = NB.generateNbInput(cells, only, mode);
-  const r = await call({ type: "RSAPL_EVAL", line: ":nb " + NB_PATH, files: { [NB_PATH]: g.input } });
+  const r = await call({ type: "RSAPL_EVAL", line: ":nb " + NB_PATH, files: { [NB_PATH]: g.input, ...extraFiles } });
   if (!r.success) throw new Error(r.error);
   const p = NB.parseNbOutput(r.output);
   if (!p.done) throw new Error("geen @@nbdone:\n" + r.output);
@@ -132,6 +132,21 @@ const cellsOf = (...srcs) => srcs.map((source) => ({ kind: "code", source }));
     r3.byCell[2].blocks[0].content === "44", `${reken(r)} ${reken(r2)} ${reken(r3)} ${JSON.stringify(r3.byCell[2])}`);
   // De CAF rekent tijdens de cel, dus zijn "REKEN" staat in de uitvoer van de cel.
   check("gewijzigde CAF opnieuw uitgerekend", reken(r4) === 1 && /45$/.test(r4.byCell[2].blocks.map((b) => b.content).join("\n")), JSON.stringify(r4.byCell[2]));
+
+  // Een databestand dat verandert: de cel die het noemt (een =:-CAF) leest het
+  // opnieuw, en wie ervan afhangt gaat mee; ongewijzigd: niet opnieuw gelezen.
+  await call({ type: "RSAPL_RESET" });
+  const DATA = "repl_sapl/gen/nbdata_test.txt";
+  cells = cellsOf(`inhoud =: printString "LEES " <#> readFile "${DATA}"`, "lengte =: strlen inhoud", "inhoud", "lengte");
+  const lees = (x) => (x.raw.match(/LEES/g) || []).length;
+  const val = (x, i) => x.byCell[i].blocks.map((b) => b.content).join("|");
+  const d1 = await nbRun(cells, undefined, "any", { [DATA]: "een" });
+  const d2 = await nbRun(cells, undefined, "any", { [DATA]: "een" });
+  const d3 = await nbRun(cells, undefined, "any", { [DATA]: "twee!" });
+  check("databestand: één keer gelezen zolang het niet verandert", lees(d1) === 1 && lees(d2) === 0 && val(d2, 2) === "een" && val(d2, 3) === "3",
+    `${lees(d1)} ${lees(d2)} ${val(d2, 2)} ${val(d2, 3)}`);
+  check("databestand gewijzigd: opnieuw gelezen, afhankelijke cel mee", lees(d3) === 1 && /twee!$/.test(val(d3, 2)) && val(d3, 3) === "5",
+    `${lees(d3)} ${val(d3, 2)} ${val(d3, 3)}`);
 
   // Een cel weg: wie hem gebruikte, geeft een fout.
   await call({ type: "RSAPL_RESET" });
