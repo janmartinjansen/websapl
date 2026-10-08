@@ -573,13 +573,8 @@ async function compileRetag(source, srcPath) {
  * opgehaalde bestanden staan), anders één keer ophalen van de server (zoals
  * resolveImports hierboven). Resultaat: VFS-pad ("/pad") -> tekst.
  */
-// Notebook: gecompileerde programma's per bron (NOTEBOOK_RUN), en de
-// lc_repl-bytecode voor lc-cellen (LC_RUN).
-const notebookCache = new Map();
+// De lc_repl-bytecode voor de lc-cellen van het notebook (LC_RUN).
 let lcReplBytecode = null;
-// Vooraf gecompileerde bibliotheekdelen van notebookprogramma's, per sleutel
-// (zie notebookLibUnit).
-const notebookLibCache = new Map();
 
 const SPP_IMPORT_RE = /^(?:#import|import(?:\s+extern)?)\s+"([^"]+)"/;
 
@@ -1307,52 +1302,6 @@ async function executeJmvm(contentOrPath, isPath = false, customStdin = "", runI
 // repl_sapl/). De vorige JavaScript-REPL (replSession, replEvalLine, ...)
 // is weggehaald; zie git-geschiedenis vóór die datum.
 
-// De imports als `import extern` (notebook): namen oplossen, de
-// modulecode zit al in de bibliotheekunit (preprocess/modules.cfp).
-// Alleen de imports die `code` nodig heeft (zelfde regel als
-// de vroegere Python-REPL): `Alias.` komt erin voor, of de import
-// heeft een open lijst (`as L (sum)`, `(..)`). Elke `import extern` laat de
-// preprocessor het modulebestand parsen, ook als niemand het gebruikt.
-function importNeeded(importText, code) {
-  const m = importText.trim().match(/^import\s+(?:extern\s+)?"[^"]+"\s+as\s+([A-Z][A-Za-z0-9_]*)/);
-  if (!m || importText.trim().slice(m[0].length).includes("(")) return true;
-  return new RegExp("(^|[^A-Za-z0-9_])" + m[1] + "\\.").test(code);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/** Draait een gecompileerd .jmvm-programma en geeft de VOLLEDIGE stdout
- * in één keer terug (geen live per-regel postMessage zoals executeJmvm,
- * die is voor de "Run"-knop se terminal-streaming) -- nodig om printVal's
- * eigen uitvoer achteraf uit de vaste vm.cpp-banner (`VM starting for
- * .../execution started.../res: <code>/stop/...`) te kunnen isoleren. */
-// onProgress (optioneel): krijgt de nieuwe uitvoer telkens als er een regel
-// `@@begin N`/`@@end N` (lib/notebook_glue.cfp) af is -- de notebook weet zo
-// welke cel bezig is, en houdt bij een tijdslimiet de al klare cellen.
-// Het blijvende beeld (notebookplan §6.2, 6 oktober 2026): één wasm-
-// exemplaar dat tussen notebook-runs blijft bestaan, met de code en de heap
-// (vm.cpp's ReplImage, ingang jmvm_image_run). Een run laadt alleen wat er
-// nog niet is; bij een herdefinitie begint de code opnieuw, maar CAF-waarden
-// die er niet van afhangen blijven (een dure `rijen =: C.read ...` wordt
-// niet opnieuw ingelezen). Weigert het beeld (-1), dan draait het programma
-// zoals vroeger in een vers exemplaar. Stopt de VM met een fout (exit), dan
-// is het exemplaar onbruikbaar en begint de volgende run met een nieuw.
-// Veranderen de databestanden, dan begint het beeld schoon (een CAF die een
-// bestand las, zou anders de oude inhoud houden).
-// Eén exemplaar per gebruik ("notebook", "repl"), zodat hun namen elkaar
-// niet in de weg zitten.
 // == De REPL in Sapl (stap 6 van docs/2026-10-07_repl_in_sapl_plan.md) ======
 // Eén Sapl-programma (repl_sapl/build/mini_repl.jmvm: preprocessor,
 // compiler en typechecker als modules, plus de sessie) in een EIGEN
@@ -1498,7 +1447,7 @@ async function rsReplay() {
 // REPL: na een wasm-trap (bv. 1 / 0) komt de uitvoer tot dan toe terug, en
 // begint de volgende run in een vers exemplaar (het notebook zelf is het
 // logboek; alles wordt dan opnieuw gecompileerd). onProgress krijgt de
-// uitvoer telkens als een regel @@begin/@@end af is, zoals bij NOTEBOOK_RUN.
+// uitvoer telkens als een regel @@begin/@@end af is (NOTEBOOK_PROGRESS).
 const NB_INPUT = "repl_sapl/gen/notebook_in.txt";
 
 async function nbRun(input, onProgress) {
@@ -1541,90 +1490,14 @@ function rsTrapMessage(replay) {
   return m;
 }
 
-const imageInstances = {};
-const imageDataKeys = {};
-let imageOutput = null;
-let imageLast = null;
-
-async function imageGet(kind = "notebook") {
-  if (!imageInstances[kind]) {
-    const imageInstance = await createJMVMModule({
-      noInitialRun: true,
-      locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm" : (prefix || "") + p),
-      stdin: () => null,
-      stdout: (c) => imageOutput && imageOutput(c),
-      stderr: (c) => imageOutput && imageOutput(c)
-    });
-    imageInstance.ccall("jmvm_image_init", null, [], []);
-    imageInstances[kind] = imageInstance;
-    imageDataKeys[kind] = null;
-  }
-  return imageInstances[kind];
-}
-
-function imageCall(kind, name, ret = null, types = [], args = []) {
-  const inst = imageInstances[kind];
-  return inst ? inst.ccall(name, ret, types, args) : null;
-}
-
-function dataFilesKey(files) {
-  return Object.keys(files).sort().map((p) => {
-    const c = files[p];
-    let h = 0;
-    for (let i = 0; i < c.length; i++) h = (h * 31 + c[i]) | 0;
-    return p + ":" + c.length + ":" + h;
-  }).join("|");
-}
-
-// Zoals runJmvmCapture, maar op het beeld; null als het beeld weigert.
-// `chunk`: jmvmContent is een los stuk met open labels (saplcomp_module's
-// jmvm-stap); weigert het beeld (iets staat er nog niet in), dan null.
-async function runOnImage(jmvmContent, extraFiles = {}, onProgress = null, chunk = false, kind = "notebook") {
-  const inst = await imageGet(kind);
-  const key = dataFilesKey(extraFiles);
-  if (imageDataKeys[kind] !== null && key !== imageDataKeys[kind]) inst.ccall("jmvm_image_reset", null, [], []);
-  imageDataKeys[kind] = key;
-  const output = [];
-  let lineStart = 0, flushed = 0;
-  imageOutput = (c) => {
-    output.push(String.fromCharCode(c));
-    if (c === 10 && onProgress) {
-      const line = output.slice(lineStart, lineStart + 7).join("");
-      lineStart = output.length;
-      if (line.startsWith("@@begin") || line.startsWith("@@end")) {
-        onProgress(output.slice(flushed).join(""));
-        flushed = output.length;
-      }
-    }
-  };
-  inst.FS.writeFile("/tmp/image_run.jmvm", jmvmContent);
-  for (const [p, content] of Object.entries(extraFiles)) {
-    mkdirsFor(inst.FS, p);
-    inst.FS.writeFile(p, content);
-  }
-  let rc;
-  try {
-    rc = inst.ccall("jmvm_image_run", "number", ["string", "number"], ["/tmp/image_run.jmvm", chunk ? 1 : 0]);
-  } catch (e) {
-    // De VM stopte met een fout (exit, of een wasm-trap zoals bij 1 / 0):
-    // de uitvoer tot dan is het resultaat. Het exemplaar is weg, en met
-    delete imageInstances[kind];
-    imageLast = { event: "exemplaar gestopt", error: true };
-    imageOutput = null;
-    return output.join("");
-  }
-  imageOutput = null;
-  imageLast = {
-    event: inst.UTF8ToString(inst.ccall("jmvm_image_event", "number", [], [])),
-    newCode: inst.ccall("jmvm_image_new_code", "number", [], []),
-    cafs: inst.ccall("jmvm_image_cafs", "number", [], []),
-    calls: inst.ccall("jmvm_image_calls", "number", [], []),
-    chunk
-  };
-  if (rc !== 0) return null;
-  return output.join("");
-}
-
+/** Draait een gecompileerd .jmvm-programma en geeft de VOLLEDIGE stdout
+ * in één keer terug (geen live per-regel postMessage zoals executeJmvm,
+ * die is voor de "Run"-knop se terminal-streaming) -- nodig om printVal's
+ * eigen uitvoer achteraf uit de vaste vm.cpp-banner (`VM starting for
+ * .../execution started.../res: <code>/stop/...`) te kunnen isoleren. */
+// onProgress (optioneel): krijgt de nieuwe uitvoer telkens als er een regel
+// `@@begin N`/`@@end N` af is. Gebruikt voor de lc-cellen van het notebook
+// (LC_RUN).
 async function runJmvmCapture(jmvmContent, extraFiles = {}, stdinText = "", onProgress = null) {
   let output = [];
   let lineStart = 0;
@@ -1675,78 +1548,6 @@ async function runJmvmCapture(jmvmContent, extraFiles = {}, stdinText = "", onPr
 
 
 
-
-
-/**
- * Notebook in twee delen (27 september 2026, zelfde opzet als de REPL): de
- * `#import`/`import`-regels op kolom 0 (de vaste kop van notebook_core.js
- * plus de importcellen) vormen een bibliotheekdeel dat één keer
- * gecompileerd wordt (notebookLibUnit); de eigen cellen worden daartegen
- * gecompileerd (saplcomp_module) en met retaglink erbij gelinkt. Daarvoor
- * werden repl/stddyn.cfp (met de hele stdlib), de glue, Display, Graphics en
- * elke geïmporteerde module bij elke run opnieuw gecompileerd.
- *
- * Resultaat: { jmvm } of { stage, error } (stage "preprocess"/"compile").
- */
-const NB_LIB_LINE_RE = /^(?:#import|import)\s+"/;
-
-async function notebookLibUnit(importLines) {
-  const libText = importLines.join("\n") + "\n";
-  const deps = await collectSppImports(libText);
-  const key = libText + "\0" + Object.keys(deps).sort().map((p) => p + "\0" + deps[p]).join("\0");
-  const cached = notebookLibCache.get(key);
-  if (cached) return cached;
-  const pre = await preprocessSpp(libText, "/workspace/notebook_lib.spp", "l");
-  if (!pre.success) return { stage: "preprocess", error: pre.stdout };
-  const lib = {};
-  for (const stage of ["defs", "typedefs", "retag"]) {
-    const r = await runCompilerStage(pre.files[0].content, stage, `/tmp/notebook_lib.${stage}.txt`);
-    if (!r.success) return { stage: "compile", error: r.output };
-    lib[stage] = r.content;
-  }
-  notebookLibCache.set(key, lib);
-  if (notebookLibCache.size > 4) notebookLibCache.delete(notebookLibCache.keys().next().value);
-  return lib;
-}
-
-// Voorbewerken: de bibliotheekunit en de eigen tekst als Sapl.
-async function notebookPrepare(source) {
-  const lines = source.split("\n");
-  const importLines = lines.filter((l) => NB_LIB_LINE_RE.test(l));
-  const lib = await notebookLibUnit(importLines);
-  if (lib.stage) return lib;
-  const own = lines.filter((l) => !NB_LIB_LINE_RE.test(l));
-  const ownText = own.join("\n");
-  const externs = importLines.filter((l) => l.startsWith("import ") && importNeeded(l, ownText)).map((l) => l.replace("import ", "import extern "));
-  const pre = await preprocessSpp([...externs, ...own].join("\n"), "/workspace/notebook.spp");
-  if (!pre.success) return { stage: "preprocess", error: pre.stdout };
-  return { lib, pre };
-}
-
-// Stap 3 voor het notebook (notebookplan §6.2): alleen de eigen cellen
-// compileren, als los stuk tegen de bibliotheek die al in het beeld staat
-// (retaglink + retagcomp van de hele bibliotheek, ~70% van een run, valt
-// weg). null als het niet lukt; dan de volledige weg.
-async function notebookCompileChunk(prep) {
-  const imageInstance = imageInstances.notebook;
-  if (!imageInstance || imageInstance.ccall("jmvm_image_size", "number", [], []) === 0) return null;
-  const cafs = imageInstance.UTF8ToString(imageInstance.ccall("jmvm_image_caf_names", "number", [], []));
-  const r = await runSaplcompModuleStage(prep.pre.files[0].content, "jmvm", "/tmp/notebook.chunk.jmvm", [prep.lib.defs], [prep.lib.typedefs], cafs);
-  return r.success ? r.content : null;
-}
-
-async function notebookCompile(source, prepared = null) {
-  const prep = prepared || await notebookPrepare(source);
-  if (prep.stage) return prep;
-  const { lib, pre } = prep;
-  const retag = await runSaplcompModuleStage(pre.files[0].content, "retag", "/tmp/notebook.retag.txt", [lib.defs], [lib.typedefs]);
-  if (!retag.success) return { stage: "compile", error: retag.output };
-  const link = await runRetagLinkStage([lib.retag, retag.content], "/tmp/notebook_linked.retag.txt", "start");
-  if (!link.success) return { stage: "compile", error: link.output };
-  const comp = await runRetagCompStage(link.content, "/tmp/notebook.jmvm");
-  if (!comp.success) return { stage: "compile", error: comp.output };
-  return { jmvm: comp.content };
-}
 
 
 /**
@@ -1868,77 +1669,6 @@ self.onmessage = async function (e) {
           output: err.message
         });
       }
-      break;
-
-    case "NOTEBOOK_RUN":
-      // Notebook (notebook.html): het door notebook.js gegenereerde
-      // Sapl+-programma preprocessen, compileren en draaien, en de volledige
-      // uitvoer teruggeven; notebook.js leest daar de @@begin/@@end-blokken
-      // van lib/notebook_glue.cfp uit.
-      try {
-        // Zelfde programma als een eerdere run (bv. opnieuw "Alles
-        // uitvoeren" zonder wijziging): voorbewerken en compileren overslaan.
-        const bytesToText = (raw) => new TextDecoder().decode(Uint8Array.from(raw, (ch) => ch.charCodeAt(0) & 255));
-        const progress = (raw) => postMessage({ type: "NOTEBOOK_PROGRESS", id: msg.id, text: bytesToText(raw) });
-        let jmCached = notebookCache.get(msg.source);
-        // Wat een mislukte poging als los stuk al deed (bv. "code opnieuw"
-        // na een herdefinitie), komt vóór de melding van de volledige run.
-        let earlierEvent = "";
-        const runNb = async (jmvm) => {
-          const files = await collectDataFiles(msg.source);
-          imageLast = null;
-          const onImage = msg.noImage ? null : await runOnImage(jmvm, files, progress);
-          if (imageLast && earlierEvent) imageLast.event = earlierEvent + imageLast.event;
-          return onImage !== null ? onImage : await runJmvmCapture(jmvm, files, "", progress);
-        };
-        if (jmCached) {
-          const raw = await runNb(jmCached);
-          const output = new TextDecoder().decode(Uint8Array.from(raw, (ch) => ch.charCodeAt(0) & 255));
-          postMessage({ type: "NOTEBOOK_RESULT", id: msg.id, success: true, output, cached: true, image: imageLast });
-          break;
-        }
-        // Eerst als los stuk op het beeld; lukt dat niet, de volledige weg.
-        let prep = null;
-        if (!msg.noImage && !msg.noChunk) {
-          prep = await notebookPrepare(msg.source);
-          if (prep.stage) {
-            postMessage({ type: "NOTEBOOK_RESULT", id: msg.id, success: false, stage: prep.stage, error: prep.error });
-            break;
-          }
-          const chunk = await notebookCompileChunk(prep);
-          if (chunk) {
-            imageLast = null;
-            const rawC = await runOnImage(chunk, await collectDataFiles(msg.source), progress, true);
-            if (rawC !== null) {
-              const output = new TextDecoder().decode(Uint8Array.from(rawC, (ch) => ch.charCodeAt(0) & 255));
-              postMessage({ type: "NOTEBOOK_RESULT", id: msg.id, success: true, output, image: imageLast });
-              break;
-            }
-            if (imageLast) earlierEvent = imageLast.event || "";
-          }
-        }
-        const built = await notebookCompile(msg.source, prep);
-        if (!built.jmvm) {
-          postMessage({ type: "NOTEBOOK_RESULT", id: msg.id, success: false, stage: built.stage, error: built.error });
-          break;
-        }
-        const jm = { content: built.jmvm };
-        notebookCache.set(msg.source, jm.content);
-        if (notebookCache.size > 8) notebookCache.delete(notebookCache.keys().next().value);
-        // runJmvmCapture levert één teken per byte; een notebook toont
-        // gewone tekst (°, emoji), dus als UTF-8 terugdecoderen.
-        const raw = await runNb(jm.content);
-        const output = new TextDecoder().decode(Uint8Array.from(raw, (ch) => ch.charCodeAt(0) & 255));
-        postMessage({ type: "NOTEBOOK_RESULT", id: msg.id, success: true, output, image: imageLast });
-      } catch (err) {
-        postMessage({ type: "NOTEBOOK_RESULT", id: msg.id, success: false, stage: "worker", error: err.message });
-      }
-      break;
-
-    case "IMAGE_RESET":
-      // Het blijvende beeld leegmaken (alle bewaarde CAF-waarden weg).
-      for (const k of Object.keys(imageInstances)) imageCall(k, "jmvm_image_reset");
-      postMessage({ type: "IMAGE_RESET_DONE", id: msg.id });
       break;
 
     case "LC_RUN":

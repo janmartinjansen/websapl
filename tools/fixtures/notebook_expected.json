@@ -1,0 +1,134 @@
+{
+ "notebooks/kennismaking.spp": {
+  "2": {
+   "blocks": [
+    {
+     "kind": "value",
+     "content": "[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47]"
+    }
+   ]
+  },
+  "4": {
+   "blocks": [
+    {
+     "kind": "value",
+     "content": "[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199, 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293, 307, 311, 313, 317, 331, 337, 347, 349, 353, 359, 367, 373, 379, 383, 389, 397, 401, 409, 419, 421, 431, 433, 439, 443, 449, 457, 461, 463, 467, 479, 487, 491, 499, 503, 509, 521, 523, 541, ...]"
+    }
+   ]
+  },
+  "5": {
+   "blocks": [
+    {
+     "kind": "table",
+     "content": "n\tn-de priemgetal\tkwadraat\n1\t2\t4\n2\t3\t9\n3\t5\t25\n4\t7\t49\n5\t11\t121\n6\t13\t169\n7\t17\t289\n8\t19\t361"
+    }
+   ]
+  },
+  "6": {
+   "blocks": [
+    {
+     "kind": "graphics",
+     "content": "Graphics__GraphPolyLine 7 2 -0.9 -0.9 0.9 -0.9 Graphics__GraphPolygon 9 4 -0.885 -0.9 -0.765 -0.9 -0.765 -0.5 -0.885 -0.5 Graphics__GraphPolygon 9 4 -0.735 -0.9 -0.615 -0.9 -0.615 -0.3 -0.735 -0.3 Graphics__GraphPolygon 9 4 -0.585 -0.9 -0.465 -0.9 -0.465 0.1 -0.585 0.1 Graphics__GraphPolygon 9 4 -0.435 -0.9 -0.315 -0.9 -0.315 0.5 -0.435 0.5 Graphics__GraphPolygon 9 4 -0.285 -0.9 -0.165 -0.9 -0.165 -0.7 -0.285 -0.7 Graphics__GraphPolygon 9 4 -0.135 -0.9 -0.015 -0.9 -0.015 -0.3 -0.135 -0.3 Graphics__GraphPolygon 9 4 0.015 -0.9 0.135 -0.9 0.135 0.5 0.015 0.5 Graphics__GraphPolygon 9 4 0.165 -0.9 0.285 -0.9 0.285 0.9 0.165 0.9 Graphics__GraphPolygon 9 4 0.315 -0.9 0.435 -0.9 0.435 -0.3 0.315 -0.3 Graphics__GraphPolygon 9 4 0.465 -0.9 0.585 -0.9 0.585 0.9 0.465 0.9 Graphics__GraphPolygon 9 4 0.615 -0.9 0.735 -0.9 0.735 -0.7 0.615 -0.7 Graphics__GraphPolygon 9 4 0.765 -0.9 0.885 -0.9 0.885 0.5 0.765 0.5 "
+    }
+   ]
+  },
+  "7": {
+   "blocks": [
+    {
+     "kind": "graphics",
+     "content": "Graphics__GraphPolyLine 7 2 -0.9 -0.9 0.9 -0.9 Graphics__GraphPolyLine 11 20 -0.9 -0.9 -0.805263 -0.873913 -0.710526 -0.821739 -0.615789 -0.769565 -0.521053 -0.665217 -0.426316 -0.613043 -0.331579 -0.508696 -0.236842 -0.456522 -0.142105 -0.352174 -0.0473684 -0.195652 0.0473685 -0.143478 0.142105 0.0130435 0.236842 0.117391 0.331579 0.169565 0.426316 0.273913 0.521053 0.430435 0.615789 0.586957 0.710526 0.63913 0.805263 0.795652 0.9 0.9 "
+    }
+   ]
+  },
+  "10": {
+   "blocks": [
+    {
+     "kind": "text",
+     "content": "🌡 21 °C"
+    }
+   ]
+  },
+  "13": {
+   "blocks": [
+    {
+     "kind": "table",
+     "content": "woord\tlengte\nDE\t2\nKAT\t3\nKRABT\t5\nDE\t2\nKRULLEN\t7\nVAN\t3\nDE\t2\nTRAP\t4"
+    }
+   ]
+  },
+  "14": {
+   "blocks": [
+    {
+     "kind": "value",
+     "content": "   2 |    3 |    5 |    7 |   11 |   13"
+    }
+   ]
+  },
+  "21": {
+   "blocks": [
+    {
+     "kind": "value",
+     "content": "110101000101000101000100000101000001000101000100000100000101"
+    }
+   ]
+  },
+  "22": {
+   "blocks": [
+    {
+     "kind": "graphics",
+     "content": "Graphics__GraphDisc 12 -0.5 -0.5 0.5 0.5 Graphics__GraphText 15 -0.2 0 \"Sapl\" "
+    }
+   ]
+  }
+ },
+ "notebooks/data_verkennen.spp": {
+  "2": {
+   "blocks": [
+    {
+     "kind": "table",
+     "content": "week\tfruit\tkilo\tprijs\topmerking\n1\tappels\t120\t1.20\t\n1\tperen\t80\t1.45\trijp, zacht\n2\tappels\t135\t1.15\t\n2\tperen\t70\t1.50\t\n3\tappels\t150\t1.10\taanbieding \"3 halen\"\n3\tperen\t95\t1.40\t\n4\tappels\t142\t1.10\t\n4\tperen\t110\t1.35\tlaatste week"
+    }
+   ]
+  },
+  "3": {
+   "blocks": [
+    {
+     "kind": "table",
+     "content": "\tappels\tperen\nkilo totaal\t547\t355\ngem. prijs\t1.14\t1.43"
+    }
+   ]
+  },
+  "5": {
+   "blocks": [
+    {
+     "kind": "graphics",
+     "content": "Graphics__GraphText 15 -0.72 -0.88 \"1.35\" Graphics__GraphText 15 0.76 -0.88 \"1.50\" Graphics__GraphPolyLine 7 3 -0.72 0.9 -0.72 -0.78 0.92 -0.78 Graphics__GraphText 15 -0.93 -0.78 \"70.0\" Graphics__GraphText 15 -0.97 0.87 \"110.0\" Graphics__GraphDisc 14 0.355334 -0.378 0.391334 -0.342 Graphics__GraphDisc 14 0.902 -0.798 0.938 -0.762 Graphics__GraphDisc 14 -0.191334 0.252 -0.155334 0.288 Graphics__GraphDisc 14 -0.738 0.882 -0.702 0.918 Graphics__GraphPolyLine 12 2 -0.72 0.857999 0.92 -0.843001 "
+    }
+   ]
+  },
+  "6": {
+   "blocks": [
+    {
+     "kind": "value",
+     "content": "-0.99591"
+    }
+   ]
+  },
+  "7": {
+   "blocks": [
+    {
+     "kind": "graphics",
+     "content": "Graphics__GraphPolyLine 7 3 -0.72 0.9 -0.72 -0.78 0.92 -0.78 Graphics__GraphText 15 -0.93 -0.78 \"0.00\" Graphics__GraphText 15 -0.97 0.87 \"150.0\" Graphics__GraphPolygon 9 4 -0.6585 -0.78 -0.3715 -0.78 -0.3715 0.564 -0.6585 0.564 Graphics__GraphText 15 -0.6585 -0.88 \"w1\" Graphics__GraphPolygon 9 4 -0.2485 -0.78 0.0385 -0.78 0.0385 0.732 -0.2485 0.732 Graphics__GraphText 15 -0.2485 -0.88 \"w2\" Graphics__GraphPolygon 9 4 0.1615 -0.78 0.4485 -0.78 0.4485 0.9 0.1615 0.9 Graphics__GraphText 15 0.1615 -0.88 \"w3\" Graphics__GraphPolygon 9 4 0.5715 -0.78 0.8585 -0.78 0.8585 0.8104 0.5715 0.8104 Graphics__GraphText 15 0.5715 -0.88 \"w4\" "
+    }
+   ]
+  },
+  "8": {
+   "blocks": [
+    {
+     "kind": "graphics",
+     "content": "Graphics__GraphText 15 -0.72 -0.88 \"1.00\" Graphics__GraphText 15 0.76 -0.88 \"4.00\" Graphics__GraphPolyLine 7 3 -0.72 0.9 -0.72 -0.78 0.92 -0.78 Graphics__GraphText 15 -0.93 -0.78 \"1.10\" Graphics__GraphText 15 -0.93 0.87 \"1.20\" Graphics__GraphPolyLine 11 4 -0.72 0.9 -0.173333 0.059999 0.373333 -0.78 0.92 -0.78 "
+    }
+   ]
+  }
+ }
+}

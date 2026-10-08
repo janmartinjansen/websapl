@@ -12,7 +12,9 @@
     docs/2026-09-25_notebook_en_bibliotheken_plan.md, deel 3. De logica
     (cellen, programma genereren, uitvoer lezen) staat in
     js/notebook_core.js; de uitvoerlaag aan Sapl-kant in
-    lib/notebook_glue.cfp; de worker-kant in engine/worker.js (NOTEBOOK_RUN).
+    lib/notebook_glue.cfp; de engine is de notebookmodus van de REPL in Sapl
+    (`:nb`, repl_sapl/mini_repl.spp, docs/2026-10-08_notebook_in_sapl_plan.md):
+    NB_RUN in engine/worker.js, of /api/notebook/nb in de Workbench.
   -->
   <style>
     :root {
@@ -102,10 +104,6 @@
         <option value="any">in elke volgorde</option>
         <option value="top">van boven naar beneden</option>
       </select>
-      <select id="sel-engine" title="Engine: de REPL in Sapl (alleen wat veranderde wordt opnieuw gecompileerd) of het oude blijvende beeld">
-        <option value="sapl">engine: Sapl</option>
-        <option value="beeld">engine: beeld (oud)</option>
-      </select>
       <span class="status" id="status">engine laden…</span>
     </header>
     <div id="banner" class="banner" hidden></div>
@@ -150,12 +148,6 @@
 
     let cells = [];          // [{ kind, source, output: {…} | null }]
     let settings = { order: "any" };   // NB.parseSettings; gaat mee in het bestand
-    // De engine (8 oktober 2026, docs/2026-10-08_notebook_in_sapl_plan.md):
-    // "sapl" = de notebookmodus van de REPL in Sapl (NB_RUN), "beeld" = het
-    // oude blijvende beeld (NOTEBOOK_RUN). In de Workbench achter
-    // /api/notebook/nb, een eigen ./rs-driver-proces (stap 4).
-    let engine = "sapl";
-    try { engine = localStorage.getItem(SERVER ? "workbench_nb_engine" : "websapl_nb_engine") || "sapl"; } catch (_) {}
     let fileName = "notebook.spp";
     let worker = null;
     let ready = false;
@@ -223,16 +215,6 @@
         if (!res.ok) throw new Error(`${url}: ${res.status} ${await res.text()}`);
         return res.json();
       };
-      if (msg.type === "NOTEBOOK_RUN") {
-        const r = await post("/api/notebook/run", { source: msg.source });
-        // De server stopt een run na 30 s en geeft de uitvoer tot dan toe
-        // mee: zelfde afhandeling als de tijdslimiet van de worker.
-        if (r.timedOut) {
-          progressText = r.output;
-          throw new Error(`Tijdslimiet van ${TIMEOUT_MS / 1000} s overschreden (een oneindige berekening?).`);
-        }
-        return r;
-      }
       if (msg.type === "NB_RUN") {
         const r = await post("/api/notebook/nb", { input: msg.input });
         if (r.timedOut) {
@@ -320,12 +302,10 @@
       el("btn-run").disabled = !ready;
     }
 
-    const exprTypesCache = new Map();
-
     // De notebookmodus van de REPL in Sapl: het hele notebook als `:nb`-
     // invoer; de engine compileert zelf alleen wat veranderde, typeert de
     // expressiecellen (Bool als True/False) en zet elke cel in een eigen try.
-    async function runProgramNb(exprT, defT) {
+    async function runProgram(exprT, defT) {
       const gen = NB.generateNbInput(cells, exprT, settings.order);
       progressText = "";
       currentGen = gen;
@@ -378,67 +358,6 @@
       if (banner) showBanner(banner);
     }
 
-    async function runProgram(exprT, defT) {
-      if (engine === "sapl") return runProgramNb(exprT, defT);
-      // Weergave op type: eerst de expressiecellen typeren, zodat een Bool
-      // als True/False verschijnt; mislukt dat, dan zonder typen.
-      // De uitkomst per programmatekst bewaard: opnieuw uitvoeren zonder
-      // wijziging slaat de typecheck (140-220 ms) over.
-      let types = {};
-      try {
-        const tp = NB.generateExprTypeProgram(cells, exprT);
-        if (exprTypesCache.has(tp.source)) types = exprTypesCache.get(tp.source);
-        else {
-          const t = await call({ type: "TYPECHECK", source: tp.source, path: "/workspace/notebook_exprtypes.spp" }, TIMEOUT_MS);
-          types = NB.parseExprTypes(t.report, tp.typeLines);
-          exprTypesCache.clear();
-          exprTypesCache.set(tp.source, types);
-        }
-      } catch (_) {}
-      const gen = NB.generateProgram(cells, exprT, types);
-      progressText = "";
-      currentGen = gen;
-      let r;
-      try {
-        r = await call({ type: "NOTEBOOK_RUN", source: gen.source }, TIMEOUT_MS);
-      } catch (err) {
-        // Tijdslimiet: wat al klaar was blijft staan; de cel die begonnen maar
-        // niet klaar was, bleef hangen; de rest liep niet.
-        const parsed = NB.parseOutput(progressText);
-        let hung = false;
-        for (const e of gen.exprCells) {
-          const res = parsed.cells[e.n];
-          if (res && res.ended) cells[e.cell].output = { blocks: res.blocks };
-          else if (res && !hung) { hung = true; cells[e.cell].output = { error: `Geen resultaat binnen ${TIMEOUT_MS / 1000} s: deze cel bleef rekenen (een oneindige berekening?).` }; }
-          else cells[e.cell].output = { notRun: true, afterStop: hung };
-        }
-        for (const i of defT) cells[i].output = { def: true };
-        throw err;
-      }
-      if (!r.success) {
-        // `__cellN` (de interne naam van een expressiecel) als celnummer tonen.
-        const text = cleanError(r.error).replace(/__cell(\d+)/g, (m, n) => {
-          const e = gen.exprCells.find((x) => x.n === +n);
-          return e ? `cel [${e.cell + 1}]` : m;
-        });
-        showBanner((r.stage === "preprocess" ? "Fout bij het voorbewerken:\n" : r.stage === "compile" ? "Fout bij het compileren:\n" : "") + text);
-        for (const e of gen.exprCells) cells[e.cell].output = { notRun: true };
-        for (const i of defT) cells[i].output = { notRun: true };
-        await attachTypeErrors(gen);
-        return;
-      }
-      for (const i of defT) cells[i].output = { def: true };
-      const parsed = NB.parseOutput(r.output);
-      let stopped = false;
-      for (const e of gen.exprCells) {
-        const res = parsed.cells[e.n];
-        if (!res) cells[e.cell].output = { notRun: true, afterStop: stopped };
-        else if (res.error) { cells[e.cell].output = { error: res.error }; stopped = true; }
-        else cells[e.cell].output = { blocks: res.blocks };
-      }
-      if (parsed.loose) showBanner(parsed.loose);
-    }
-
     async function runTypes(typeT) {
       const tp = NB.generateTypeProgram(cells, typeT);
       const t = await call({ type: "TYPECHECK", source: tp.source, path: "/workspace/notebook_types.spp" }, TIMEOUT_MS);
@@ -467,23 +386,6 @@
           if (row) row.classList.add("stale");
         }
       }
-    }
-
-    // Compileren mislukt: de typechecker over hetzelfde programma laten
-    // lopen en zijn meldingen bij de cellen zetten waar ze horen (de
-    // compilermelding zelf zegt niet in welke cel het misgaat).
-    async function attachTypeErrors(gen) {
-      try {
-        const t = await call({ type: "TYPECHECK", source: gen.source, path: "/workspace/notebook.spp" }, TIMEOUT_MS);
-        const errs = NB.cellErrorsFromTypecheck(t.report, cells, gen);
-        for (const [i, msgs] of Object.entries(errs)) cells[i].output = { error: msgs.join("\n"), hint: true };
-      } catch (_) {}
-    }
-
-    function cleanError(text) {
-      return String(text || "").split("\n")
-        .filter((l) => !/^(VM starting|Reading file|\d+ instr read|execution started|Elapsed time|nr gc|instr executed|calls:|creates:|\[Stage)/.test(l))
-        .join("\n").replace(/stop\s*$/, "").trim();
     }
 
     // ---- weergave -------------------------------------------------------
@@ -741,12 +643,6 @@
       settings.order = e.target.value;
       save();
       setStatus("volgorde gewijzigd: voer opnieuw uit");
-    });
-    el("sel-engine").value = engine;
-    el("sel-engine").addEventListener("change", (e) => {
-      engine = e.target.value;
-      try { localStorage.setItem(SERVER ? "workbench_nb_engine" : "websapl_nb_engine", engine); } catch (_) {}
-      setStatus("engine: " + (engine === "sapl" ? "Sapl" : "beeld") + "; voer opnieuw uit");
     });
     el("btn-add-code").addEventListener("click", () => addCell("code"));
     el("btn-add-md").addEventListener("click", () => addCell("markdown"));

@@ -38,11 +38,17 @@ check("parse", cells, [
 ]);
 check("heen en terug", nb.parseNotebook(nb.serializeNotebook(cells)), cells);
 
-// 3. Programma genereren.
-const gen = nb.generateProgram(nb.parseNotebook("//%%\nf x = x\n//%%\nf 1\n//%%\nstart = 2\n//%%\n2 + 2\n"));
+// 3. De invoer voor de notebookmodus (`:nb`).
+const gen = nb.generateNbInput(nb.parseNotebook("//%%\nf x = x\n//%%\nf 1\n//%%\nstart = 2\n//%%\n2 + 2\n"));
 check("exprCells", gen.exprCells, [{ cell: 1, n: 1 }, { cell: 3, n: 2 }]);
 check("celfouten", Object.keys(gen.errors), ["2"]);
-check("start-regel", gen.source.trim().split("\n").pop(), "start = nbCell 1 __cell1 <#> nbCell 2 __cell2 <#> 0");
+check("nb-invoer", gen.input, "@@mode any\n@@def 0\nf x = x\n@@expr 1 1\nf 1\n@@expr 3 2\n2 + 2\n");
+check("nb-invoer van boven naar beneden", nb.generateNbInput(nb.parseNotebook("//%%\n1\n"), undefined, "top").input, "@@mode top\n@@expr 0 1\n1\n");
+{
+  const p = nb.parseNbOutput("@@deferror 0 onbekende naam x\n@@deferror -1 kapot\n@@begin 1\n@@value\n2\n@@end 1\n@@nbdone\n");
+  check("nb-uitvoer", [p.defErrors[0], p.cells[1].blocks[0].content, p.done, p.error], ["onbekende naam x", "2", true, "uitvoerlaag: kapot"]);
+}
+check("instellingen", [nb.parseSettings("//%% [instellingen] volgorde=boven-naar-beneden\n//%%\n1\n").order, nb.parseSettings("//%%\n1\n").order], ["top", "any"]);
 
 // 4. Uitvoer uitlezen (zoals de VM die schrijft; cel 3 stopt met `error`).
 const raw = [
@@ -57,33 +63,13 @@ check("cel 2", out.cells[2].blocks[0], { kind: "table", content: "n\tn^2\n1\t1" 
 check("cel 3", [out.cells[3].ended, out.cells[3].error], [false, "List.head: lege lijst"]);
 check("los", out.loose, "");
 
-// 5. Typecheckfouten aan cellen koppelen.
-const tcCells = nb.parseNotebook("//%%\nf x = x + \"a\"\n(<+>) a b = a\n//%%\nniet_bestaand 3\n//%%\n1 + 1\n");
-const tcGen = nb.generateProgram(tcCells);
-check("definedNames", nb.definedNames(tcCells[0].source), ["f", "<+>"]);
-// CAF-cel (`naam =: expr`, docs/2026-10-03_expliciete_cafs_plan.md): een
-// definitie, en `=:` blijft in het gegenereerde programma staan.
-// Weergave op type (fase 3): typeprogramma per expressiecel, en nbCellT
-// alleen bij een type met Bool.
-{
-  const tc = nb.parseNotebook("//%%\nok n = n > 0\n//%%\nok 5\n//%%\n3 + 4\n");
-  const tp = nb.generateExprTypeProgram(tc);
-  check("exprtype-regels", tp.typeLines, [{ cell: 1, name: "__expr1" }, { cell: 2, name: "__expr2" }]);
-  check("exprtype-programma", tp.source.includes("__expr1 = ok 5"), true);
-  const types = nb.parseExprTypes("ok :: (Num -> Bool)\n__expr1 :: Bool\n__expr2 :: Num\n", tp.typeLines);
-  check("parseExprTypes", types, { 1: "Bool", 2: "Num" });
-  const g = nb.generateProgram(tc, null, types);
-  check("nbCellT bij Bool", g.source.trim().split("\n").pop(), 'start = nbCellT 1 "Bool" __cell1 <#> nbCell 2 __cell2 <#> 0');
-}
+// 5. Namen in definitiecellen; CAF-cel (`naam =: expr`,
+// docs/2026-10-03_expliciete_cafs_plan.md): een definitie, en `=:` blijft in
+// de invoer staan.
+check("definedNames", nb.definedNames("f x = x + \"a\"\n(<+>) a b = a"), ["f", "<+>"]);
 check("definedNames CAF", nb.definedNames("big =: 1\nf x = x"), ["big", "f"]);
 check("cafHintNames", nb.cafHintNames("big = som 0 10\nn = 5\ns = \"x\"\nc =: dure 1\nf x = x\nstart = big\nt = (1, 2)\n  vervolg = 3\n::K = A\nq == 1"), ["big", "t"]);
-check("CAF in programma", nb.generateProgram(nb.parseNotebook("//%%\nbig =: 5\n//%%\nbig + big\n")).source.split("\n").includes("big =: 5"), true);
-check("celfouten uit typecheck", nb.cellErrorsFromTypecheck([
-  "f: FOUT: f: kan niet unificeren: Num met Str",
-  "__cell1: FOUT: __cell1: onbekende functie: niet_bestaand",
-  "showListItems: FOUT: showListItems: oneindig type",
-  "__cell2 :: Num",
-].join("\n"), tcCells, tcGen), { 0: ["f: kan niet unificeren: Num met Str"], 1: ["onbekende functie: niet_bestaand"] });
+check("CAF in de invoer", nb.generateNbInput(nb.parseNotebook("//%%\nbig =: 5\n//%%\nbig + big\n")).input.split("\n").includes("big =: 5"), true);
 
 // 6. Celsoorten in het bestand (lc/type als commentaar).
 const kinds = nb.parseNotebook("//%% [lc]\n// I = \\x.x\n//%% [type]\n// 1 + 1\n//%%\n2\n");
@@ -106,7 +92,7 @@ check("dependents functie", [...nb.dependents(dep, 1)].sort(), [1, 3, 5]);
 check("dependents haak", [...nb.dependents(dep, 2)].sort(), [2, 4]);
 check("dependents expressie", [...nb.dependents(dep, 6)], [6]);
 check("dependents #import", nb.dependents(dep, 7).size, 8);
-check("deelprogramma", nb.generateProgram(dep, new Set([4])).exprCells, [{ cell: 4, n: 1 }]);
+check("deelprogramma", nb.generateNbInput(dep, new Set([4])).exprCells, [{ cell: 4, n: 1 }]);
 
 // 8. type-cellen.
 const tp = nb.generateTypeProgram(dep);

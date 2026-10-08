@@ -3,8 +3,7 @@
 // via het DevTools-protocol. Start een statische server op websapl/ en
 // Chrome (macOS-pad, of CHROME=...). Scenario's: kennismaking.spp helemaal;
 // een wasm-trap na een `error`-cel; een cel wijzigen met Shift+Enter en dan
-// alles; de volgorde "van boven naar beneden" (ook in het bestand); de oude
-// engine (beeld) via de keuze.
+// alles; de volgorde "van boven naar beneden" (ook in het bestand).
 //
 // Met --workbench dezelfde pagina in de Workbench (workbench/server.js,
 // `?engine=server`): de engine is daar een eigen ./rs-driver-proces
@@ -98,9 +97,6 @@ const mark = `window.__mark = document.getElementById("status").textContent;`;
     const saved = await ev(`JSON.parse(localStorage.getItem("${STORE_KEY}")).text.split("\\n")[0]`);
     check("van boven naar beneden: fout bij de cel, en in het bestand", /latere cel \[2\]/.test(st[2]) && /niet uitgevoerd/.test(st[4]) &&
       saved === "//%% [instellingen] volgorde=boven-naar-beneden", st.join("\n") + "\n" + saved);
-    st = await act(`const s = document.getElementById("sel-engine"); s.value = "beeld"; s.dispatchEvent(new Event("change"));
-      const o = document.getElementById("sel-order"); o.value = "any"; o.dispatchEvent(new Event("change")); document.getElementById("btn-run").click();`);
-    check("de oude engine (beeld) via de keuze", st[4] === "42", st.join("\n"));
     await ev(`localStorage.clear()`);
     ws.close();
   } catch (e) {

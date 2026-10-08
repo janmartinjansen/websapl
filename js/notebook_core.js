@@ -20,8 +20,11 @@
  *   - anders een expressie; die mag over meerdere regels lopen, zolang de
  *     vervolgregels ingesprongen zijn.
  *
- * Uitvoeren: de cellen worden één Sapl+-programma (generateProgram), met
- * lib/notebook_glue.cfp als uitvoerlaag.
+ * Uitvoeren: de notebookmodus van de REPL in Sapl (`:nb`, generateNbInput
+ * en parseNbOutput hieronder), met lib/notebook_glue.cfp als uitvoerlaag.
+ * Tot 8 oktober 2026 werden de cellen één Sapl+-programma op een blijvend
+ * beeld (generateProgram, ReplImage); zie
+ * docs/2026-10-08_notebook_in_sapl_plan.md.
  *
  * Herberekenen per cel (plan 3.5 stap 4): `dependents` bepaalt, op naam,
  * welke cellen van een gewijzigde cel afhangen. Een run neemt altijd alle
@@ -159,80 +162,13 @@
     return { kind: "def" };
   }
 
+  // De kop van het typeprogramma van de type-cellen (generateTypeProgram).
   const HEADER = [
     "#import \"repl/stddyn.cfp\"",
     "#import \"lib/notebook_glue.cfp\"",
     "import \"lib/display.spp\" as D",
     "import \"grafisch/graphics.cfp\" as G",
   ];
-
-  /**
-   * Eén Sapl+-programma uit de cellen. Resultaat:
-   *   { source, exprCells: [{ cell, n }], errors: { cellIndex: tekst } }
-   * Cellen met een fout (classifyCell) gaan niet mee.
-   */
-  // `only` (optioneel): een Set celindexen; dan komen alleen die
-  // expressiecellen in het programma (definitiecellen altijd allemaal).
-  /**
-   * Programma voor de typechecker met per expressiecel `__exprN = <cel>`
-   * (weergave op type, notebookplan fase 3). { source, typeLines } zoals
-   * generateTypeProgram; parseExprTypes maakt er { cellIndex: type } van.
-   */
-  function generateExprTypeProgram(cells, only) {
-    const body = [...HEADER, ""];
-    const typeLines = [];
-    cells.forEach((c, i) => {
-      if (c.kind !== "code") return;
-      const cls = classifyCell(c.source);
-      if (cls.error) return;
-      if (cls.kind === "def") body.push(c.source, "");
-      else if (cls.kind === "expr" && (!only || only.has(i))) {
-        const name = `__expr${typeLines.length + 1}`;
-        typeLines.push({ cell: i, name });
-        body.push(`${name} = ${c.source}`, "");
-      }
-    });
-    body.push("start = 0");
-    return { source: body.join("\n") + "\n", typeLines };
-  }
-
-  function parseExprTypes(report, typeLines) {
-    const byName = {};
-    for (const line of String(report || "").split("\n")) {
-      const ok = line.match(/^(__expr\d+) :: (.*)$/);
-      if (ok) byName[ok[1]] = ok[2].trim();
-    }
-    const out = {};
-    for (const t of typeLines) if (byName[t.name]) out[t.cell] = byName[t.name];
-    return out;
-  }
-
-  // `types` (optioneel): { cellIndex: type } uit parseExprTypes. Een cel met
-  // `Bool` in het type wordt `nbCellT n "<type>"`, zodat 1/0 als True/False
-  // verschijnt (lib/notebook_glue.cfp).
-  function generateProgram(cells, only, types) {
-    const body = [...HEADER, ""];
-    const exprCells = [];
-    const errors = {};
-    cells.forEach((c, i) => {
-      if (c.kind !== "code") return;
-      const cls = classifyCell(c.source);
-      if (cls.error) { errors[i] = cls.error; return; }
-      if (cls.kind === "def") body.push(c.source, "");
-      else if (cls.kind === "expr" && (!only || only.has(i))) {
-        const n = exprCells.length + 1;
-        exprCells.push({ cell: i, n });
-        body.push(`__cell${n} = ${c.source}`, "");
-      }
-    });
-    const showCall = (e) => {
-      const ty = types && types[e.cell];
-      return ty && ty.includes("Bool") ? `nbCellT ${e.n} "${ty}" __cell${e.n}` : `nbCell ${e.n} __cell${e.n}`;
-    };
-    const calls = exprCells.map(showCall);
-    body.push(`start = ${[...calls, "0"].join(" <#> ")}`);
-    return { source: body.join("\n") + "\n", exprCells, errors };
-  }
 
   const NO_MESSAGE = "De cel stopte zonder melding.";
 
@@ -324,32 +260,6 @@
       if (!names.includes(m[1])) names.push(m[1]);
     }
     return names;
-  }
-
-  /**
-   * Koppelt de typechecker-uitvoer (regels `naam: FOUT: melding`) aan
-   * cellen: `__cellN` aan expressiecel N, een gedefinieerde naam aan zijn
-   * definitiecel. Fouten in bibliotheken (stdlib, stddyn, modules) worden
-   * genegeerd. Resultaat: { cellIndex: [melding, ...] }.
-   */
-  function cellErrorsFromTypecheck(report, cells, gen) {
-    const owner = {};
-    for (const e of gen.exprCells) owner[`__cell${e.n}`] = e.cell;
-    cells.forEach((c, i) => {
-      if (c.kind === "code" && classifyCell(c.source).kind === "def") {
-        for (const n of definedNames(c.source)) owner[n] = i;
-      }
-    });
-    const out = {};
-    for (const line of String(report || "").split("\n")) {
-      const m = line.match(/^(\S+): FOUT: (.*)$/);
-      if (!m || owner[m[1]] === undefined) continue;
-      let msg = m[2];
-      if (msg.startsWith(m[1] + ": ")) msg = msg.slice(m[1].length + 2);
-      const shown = m[1].startsWith("__cell") ? msg : `${m[1]}: ${msg}`;
-      (out[owner[m[1]]] = out[owner[m[1]]] || []).push(shown);
-    }
-    return out;
   }
 
   // == Afhankelijkheden ======================================================
@@ -507,8 +417,8 @@
   // er opnieuw gecompileerd moet worden. Alle definitiecellen gaan mee, de
   // expressiecellen alleen als ze in `only` staan (of alles zonder `only`).
   // mode: "any" (in elke volgorde, één letrec) of "top" (van boven naar
-  // beneden). Resultaat: { input, exprCells: [{ cell, n }], errors } zoals
-  // generateProgram.
+  // beneden). Resultaat: { input, exprCells: [{ cell, n }], errors }; errors:
+  // cellen die classifyCell afwijst.
   function generateNbInput(cells, only, mode) {
     const out = [`@@mode ${mode === "top" ? "top" : "any"}`];
     const exprCells = [];
@@ -553,7 +463,7 @@
 
   const api = {
     generateNbInput, parseNbOutput, parseSettings, NO_MESSAGE,
-    parseNotebook, serializeNotebook, classifyCell, generateProgram, parseOutput, definedNames, cafHintNames, cellErrorsFromTypecheck, generateExprTypeProgram, parseExprTypes,
+    parseNotebook, serializeNotebook, classifyCell, parseOutput, definedNames, cafHintNames,
     referencedNames, providedNames, dependents, generateTypeProgram, parseTypeReport, lcInput, parseLcOutput,
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api;

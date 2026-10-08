@@ -1,8 +1,9 @@
 // De notebookmodus van de REPL in Sapl (`:nb`, stap 2 van
 // docs/2026-10-08_notebook_in_sapl_plan.md) in de WebSapl-worker:
-//  1. de voorbeeldnotebooks: per expressiecel dezelfde uitvoer als de
-//     huidige notebookrun (NOTEBOOK_RUN), en de tijden van de scenario's
-//     van notebook_timing.js;
+//  1. de voorbeeldnotebooks: per expressiecel dezelfde uitvoer als de oude
+//     notebookweg (het blijvende beeld, tot 8 oktober 2026), vastgelegd in
+//     fixtures/notebook_expected.json; en de tijden van vier scenario's
+//     (eerste run, alles opnieuw, één expressiecel, één definitiecel);
 //  2. het gedrag uit §6 van het plan op kleine notebooks: fouten per cel,
 //     de volgorde, wederzijds recursieve cellen, CAF's die blijven, een
 //     verwijderde cel.
@@ -14,6 +15,7 @@ const { call, init, repo } = require("./worker_harness.js");
 const NB = require(path.join(__dirname, "..", "js", "notebook_core.js"));
 
 const NB_PATH = "repl_sapl/gen/notebook_in.txt";
+const EXPECTED = JSON.parse(fs.readFileSync(path.join(__dirname, "fixtures", "notebook_expected.json"), "utf8"));
 let fail = 0;
 const now = () => performance.now();
 
@@ -48,22 +50,20 @@ const cellsOf = (...srcs) => srcs.map((source) => ({ kind: "code", source }));
     const exprIdx = kinds.map((k, i) => (k === "expr" ? i : -1)).filter((i) => i >= 0);
     const defIdx = kinds.map((k, i) => (k === "def" ? i : -1)).filter((i) => i >= 0);
 
-    const gen = NB.generateProgram(cells, undefined, undefined);
-    const ref = await call({ type: "NOTEBOOK_RUN", source: gen.source, noImage: true }, "NOTEBOOK_RESULT");
-    const refCells = NB.parseOutput(ref.output).cells;
+    const expected = EXPECTED[file];
 
     await call({ type: "RSAPL_RESET" });
     let t = now();
     const r1 = await nbRun(cells);
     const firstMs = now() - t;
     let same = 0;
-    for (const e of gen.exprCells) {
-      const want = refCells[e.n].error ? { error: refCells[e.n].error } : { blocks: refCells[e.n].blocks };
-      if (JSON.stringify(want) === JSON.stringify(r1.byCell[e.cell])) same++;
-      else console.log(`      cel [${e.cell + 1}]: nu ${JSON.stringify(want).slice(0, 200)}\n               :nb ${JSON.stringify(r1.byCell[e.cell]).slice(0, 200)}`);
+    for (const [cell, want] of Object.entries(expected)) {
+      if (JSON.stringify(want) === JSON.stringify(r1.byCell[cell])) same++;
+      else console.log(`      cel [${+cell + 1}]: verwacht ${JSON.stringify(want).slice(0, 200)}\n               :nb ${JSON.stringify(r1.byCell[cell]).slice(0, 200)}`);
     }
-    check(`${file}: ${same}/${gen.exprCells.length} cellen gelijk aan de huidige run, geen fouten`,
-      same === gen.exprCells.length && !Object.keys(r1.defErrors).length && !r1.error, JSON.stringify(r1.defErrors) + r1.error);
+    const n = Object.keys(expected).length;
+    check(`${file}: ${same}/${n} cellen gelijk aan de vastgelegde uitvoer, geen fouten`,
+      same === n && n === exprIdx.length && !Object.keys(r1.defErrors).length && !r1.error, JSON.stringify(r1.defErrors) + r1.error);
 
     t = now(); await nbRun(cells); const againMs = now() - t;
     const e = exprIdx[exprIdx.length - 1];
