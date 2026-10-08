@@ -1653,10 +1653,15 @@ function replFuncs() {
 // wasm-exemplaar, dat tussen de regels gepauzeerd staat bij readLine
 // (jmvm_rs_start/jmvm_rs_feed in vm.cpp). Dat exemplaar wordt voor niets
 // anders gebruikt: de gepauzeerde run bezit alle globale toestand van de VM.
-// Sterft het (een wasm-trap, bv. 1 / 0), dan is de sessie weg; dat wordt
-// gemeld en de volgende regel begint een nieuwe sessie.
+// Sterft het (een wasm-trap, bv. 1 / 0), dan speelt de worker alle eerder
+// verwerkte regels opnieuw af in een vers exemplaar (rsJournal, rsReplay):
+// de sessie komt terug, met `resN` opnieuw berekend; wijkt een uitkomst af
+// (bv. door readFile), dan wordt dat gemeld.
 let rsInstance = null;
 let rsOutput = [];
+// De regels die de engine verwerkte (zonder de regel die de trap gaf), met
+// de eerste uitvoerregel om na het opnieuw afspelen te vergelijken.
+let rsJournal = [];
 const RS_FILES = ["repl_sapl/build/mini_repl.jmvm", "repl_sapl/build/prelude/prelude.cfp",
   "repl_sapl/build/prelude/prelude.pp.cfp", "repl_sapl/build/prelude/prelude.defs.txt"];
 
@@ -1714,6 +1719,11 @@ async function rsPrepare(line) {
   for (const [p, c] of Object.entries(found)) { mkdirsFor(rsInstance.FS, p); rsInstance.FS.writeFile(p, c); }
 }
 
+function rsFirstLine(text) {
+  const t = text.endsWith("repl> ") ? text.slice(0, -6) : text;
+  return t.split("\n")[0];
+}
+
 // Eén invoerregel: de uitvoer van de REPL tot de volgende prompt.
 async function rsEval(line) {
   if (!rsInstance) await rsStart();
@@ -1724,11 +1734,41 @@ async function rsEval(line) {
     st = rsInstance.ccall("jmvm_rs_feed", "number", ["string"], [line]);
   } catch (e) {
     rsInstance = null;
-    return { output: rsText(), restarted: true };
+    const replay = await rsReplay();
+    return { output: "", restarted: true, replay };
   }
-  if (st !== 1) rsInstance = null;   // het programma stopte (quit)
   const text = rsText();
+  if (st !== 1) { rsInstance = null; rsJournal = []; }   // het programma stopte (quit)
+  else rsJournal.push({ line, first: rsFirstLine(text) });
   return { output: text.endsWith("repl> ") ? text.slice(0, -6) : text, restarted: false };
+}
+
+// Na een trap: een vers exemplaar en alle verwerkte regels opnieuw.
+async function rsReplay() {
+  const lines = rsJournal;
+  const differ = [];
+  try {
+    await rsStart();
+    for (const j of lines) {
+      await rsPrepare(j.line);
+      rsOutput = [];
+      rsInstance.ccall("jmvm_rs_feed", "number", ["string"], [j.line]);
+      if (rsFirstLine(rsText()) !== j.first) differ.push(j.line);
+    }
+  } catch (e) {
+    rsInstance = null;
+    rsJournal = [];
+    return { ok: false, n: lines.length, differ };
+  }
+  return { ok: true, n: lines.length, differ };
+}
+
+function rsTrapMessage(replay) {
+  if (!replay || !replay.ok) return "de REPL-engine stopte (bv. 1 / 0), en opnieuw opbouwen lukte niet: de sessie is weg";
+  let m = "de REPL-engine stopte (bv. 1 / 0); de sessie is opnieuw opgebouwd";
+  if (replay.n > 0) m += ` (${replay.n} eerdere regel${replay.n === 1 ? "" : "s"} opnieuw uitgevoerd, resN opnieuw berekend)`;
+  if (replay.differ.length) m += `; andere uitkomst dan eerst bij: ${replay.differ.join(" | ")}`;
+  return m;
 }
 
 const imageInstances = {};
@@ -2319,7 +2359,7 @@ self.onmessage = async function (e) {
       try {
         const r = await rsEval(msg.line);
         postMessage({ type: "RSAPL_RESULT", id: msg.id, success: !r.restarted, output: r.output,
-          error: r.restarted ? "de REPL-engine stopte (bv. 1 / 0); de sessie is weg, de volgende regel begint opnieuw" : undefined });
+          error: r.restarted ? rsTrapMessage(r.replay) : undefined });
       } catch (err) {
         postMessage({ type: "RSAPL_RESULT", id: msg.id, success: false, error: err.message });
       }
@@ -2327,6 +2367,7 @@ self.onmessage = async function (e) {
 
     case "RSAPL_RESET":
       rsInstance = null;
+      rsJournal = [];
       postMessage({ type: "RSAPL_RESULT", id: msg.id, success: true, output: "" });
       break;
 
