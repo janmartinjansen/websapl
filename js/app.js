@@ -72,7 +72,7 @@
     btnTheme: document.getElementById("btn-theme-toggle"),
     btnRefreshTree: document.getElementById("btn-refresh-tree"),
 
-    // REPL panel (client-side poort van repl_retag.py, zie engine/worker.js)
+    // REPL panel (de REPL in Sapl, zie engine/worker.js's rsEval)
     btnOpenRepl: document.getElementById("btn-open-repl"),
     replPanel: document.getElementById("repl-panel"),
     replLog: document.getElementById("repl-log"),
@@ -83,7 +83,6 @@
     btnReplUndo: document.getElementById("btn-repl-undo"),
     btnReplFuncs: document.getElementById("btn-repl-funcs"),
     btnReplReset: document.getElementById("btn-repl-reset"),
-    selReplEngine: document.getElementById("sel-repl-engine"),
     selReplExample: document.getElementById("sel-repl-example"),
     txtReplLoad: document.getElementById("txt-repl-load"),
     btnReplLoad: document.getElementById("btn-repl-load"),
@@ -217,8 +216,7 @@
           }
           break;
 
-        case "RSAPL_RESULT":
-        case "REPL_RESULT": {
+        case "RSAPL_RESULT": {
           const replCb = state.pendingCompileCallbacks.get(msg.id);
           if (replCb) {
             state.pendingCompileCallbacks.delete(msg.id);
@@ -1252,7 +1250,7 @@
   }
 
   function splitDefinitionsJs(text) {
-    // Zelfde heuristiek als repl_retag.py's split_definitions/parser.cfp's
+    // Zelfde heuristiek als parser.cfp's
     // mergeContinuations: een niet-ingesprongen regel begint een nieuwe
     // top-level definitie. Onverwachte inspringing zonder voorgaande
     // regel wordt hier stil genegeerd (i.p.v. een fout te gooien zoals
@@ -1446,33 +1444,11 @@
     }
   }
 
-  // --- REPL: Sapl+ REPL, client-side poort van sapl_compiler/tools/
-  // repl_retag.py (repl/README.md) ---
+  // --- REPL: de REPL in Sapl (repl_sapl/, sinds 8 oktober 2026) ---
   //
-  // Alle sessie-logica (naam-tabel, atomische kandidaat-dan-promoveer-
-  // rebuild, prelude-/reserved-name-botsingen) zit in engine/worker.js's
-  // replXxx()-functies, hergebruikt van dezelfde vijf WASM-primitieven
-  // als de "modules"-backend hierboven. Hier alleen: commando's parsen
-  // (dezelfde `:def`/`:history`/`:undo`/`:reset`/`:load`/`:save`/`:funcs`/`:type`-
-  // syntax als de terminal-versies), `:load`/`:save`'s bestandstoegang
-  // (getFileContentForPath/nieuw-tabblad-openen, al gebouwd voor de
-  // modules-hulp hierboven), en het logvenster.
-
-  function replCall(cmd, extra) {
-    return new Promise((resolve) => {
-      const id = ++state.compileSeq;
-      state.pendingCompileCallbacks.set(id, resolve);
-      state.worker.postMessage({ type: "REPL_EVAL", id, cmd, ...extra });
-    });
-  }
-
-  function replInitCall() {
-    return new Promise((resolve) => {
-      const id = ++state.compileSeq;
-      state.pendingCompileCallbacks.set(id, resolve);
-      state.worker.postMessage({ type: "REPL_INIT", id });
-    });
-  }
+  // De sessie leeft in een eigen wasm-exemplaar in de worker (RSAPL_EVAL);
+  // de REPL verwerkt de commando's zelf. Hier alleen: het logvenster, :load
+  // (bestandstoegang via getFileContentForPath) en :save (nieuw tabblad).
 
   function scrollReplLogToBottom() {
     if (el.replLog) el.replLog.scrollTop = el.replLog.scrollHeight;
@@ -1503,9 +1479,8 @@
   // websapl/repl_examples/ (hergebruikt findTreeDir/listCfpSiblings,
   // dezelfde tree-lookup als de modules-manifest-hulp hierboven) --
   // een file-picker i.p.v. zelf een pad te typen, specifiek voor deze
-  // curated map met bekend-werkende REPL-demo's (allemaal al geverifieerd
-  // via :load, zie sapl_compiler/tools/repl_retag.py's eigen sweep-test
-  // over de kernbenchmarks). Idempotent: veilig opnieuw aan te roepen.
+  // curated map met bekend-werkende REPL-demo's (via :load). Idempotent:
+  // veilig opnieuw aan te roepen.
   function populateReplExamplePicker() {
     if (!el.selReplExample) return;
     const files = listCfpSiblings("repl_examples").sort();
@@ -1545,15 +1520,13 @@
           check();
         });
       }
-      const r = await replInitCall();
-      if (!r.success) throw new Error(r.error);
       state.replReady = true;
       if (el.replStatus) {
         el.replStatus.textContent = "Klaar.";
         el.replStatus.className = "tool-panel-status ok";
       }
       setReplBusy(false);
-      replAppendLog(`Sapl+ REPL klaar (engine: ${replEngineName(state.replEngine)}, te wisselen rechtsboven). Typ een expressie, of ':def naam ... = ...' voor een eigen functie/ADT.\n`);
+      replAppendLog("Sapl+ REPL klaar (de REPL in Sapl; de eerste regel laadt de engine). Typ een expressie, of ':def naam ... = ...' voor een eigen functie/ADT.\n");
       if (el.txtReplInput) el.txtReplInput.focus();
     } catch (err) {
       if (el.replStatus) {
@@ -1564,20 +1537,17 @@
     }
   }
 
-  // :load <pad> -- zelfde .jmvm->.cfp-terugval en identiek-aan-de-
-  // prelude-tolerantie als repl_retag.py/vm.cpp's REPL_HOST, hier alleen
-  // het BESTANDSTOEGANG-deel (de sessie-logica zit in worker.js's
-  // replLoadContent) via getFileContentForPath, dezelfde resolver als de
-  // modules-backend hierboven.
-  async function replHandleLoad(pathArg) {
+  // :load <pad>: de inhoud via getFileContentForPath (ook een open tabblad),
+  // met dezelfde .jmvm->.cfp-terugval als vroeger; de worker zet het bestand
+  // in het bestandssysteem van de REPL in Sapl vóór de regel.
+  async function replLoadFile(pathArg) {
     if (!pathArg) throw new Error(":load heeft een bestandspad nodig, bv. ':load mijn_functies.cfp'");
     const ext = pathExt(pathArg);
     let usePath = pathArg;
     if (ext !== ".cfp" && ext !== ".spp") {
       const base = ext ? pathArg.slice(0, -ext.length) : pathArg;
       const sibling = base + ".cfp";
-      const siblingContent = await getFileContentForPath(sibling);
-      if (siblingContent !== null) {
+      if ((await getFileContentForPath(sibling)) !== null) {
         replAppendLog(`'${pathArg}' is geen Sapl-broncode (${ext}) -- '${sibling}' geladen in plaats daarvan.\n`);
         usePath = sibling;
       } else {
@@ -1586,12 +1556,7 @@
     }
     const content = await getFileContentForPath(usePath);
     if (content === null) throw new Error(`bestand niet gevonden: ${usePath}`);
-    const r = await replCall("load", { content });
-    if (!r.success) throw new Error(r.error);
-    for (const note of r.notes) replAppendLog(note + "\n");
-    replAppendLog(r.names.length
-      ? `geladen: ${r.names.join(", ")}\n`
-      : "geladen: (niets nieuws -- alles was al gereserveerd of stond al in de prelude)\n");
+    return { path: usePath, content };
   }
 
   // :save <pad> -- opent de sessie (zonder prelude) als nieuw, nog niet
@@ -1603,7 +1568,7 @@
   // (die schrijven wél meteen echt naar schijf).
   async function replHandleSave(pathArg) {
     if (!pathArg) throw new Error(":save heeft een bestandspad nodig, bv. ':save mijn_sessie.cfp'");
-    const r = state.replEngine === "sapl" ? await rsCall("RSAPL_SAVE", "") : await replCall("save");
+    const r = await rsCall("RSAPL_SAVE", "");
     if (!r.success) throw new Error(r.error);
     const existingIdx = state.openTabs.findIndex((t) => t.path === pathArg);
     const tabData = {
@@ -1626,27 +1591,25 @@
   // wasm-exemplaar in de worker (RSAPL_EVAL). Het verwerkt de regel zelf,
   // ook :def/:import/:undo/:reset/:load; de uitvoer komt zoals de
   // terminal-REPL's hem tonen. Eigen sessie, los van de huidige REPL.
-  // Sinds 8 oktober 2026 de standaard; wie bewust de vorige REPL koos, houdt
-  // die (localStorage).
-  const REPL_ENGINE_KEY = "sapl_websapl_repl_engine";
-  state.replEngine = "sapl";
-  try { if (localStorage.getItem(REPL_ENGINE_KEY) === "js") state.replEngine = "js"; } catch (e) {}
-
-  function replEngineName(engine) {
-    return engine === "sapl" ? "REPL in Sapl" : "vorige REPL";
-  }
-
-  function rsCall(type, line) {
+  // De REPL is sinds 8 oktober 2026 de REPL in Sapl (de vorige,
+  // JavaScript-REPL is weggehaald).
+  function rsCall(type, line, files) {
     return new Promise((resolve) => {
       const id = ++state.compileSeq;
       state.pendingCompileCallbacks.set(id, resolve);
-      state.worker.postMessage({ type, id, line });
+      state.worker.postMessage({ type, id, line, files });
     });
   }
 
   async function sendReplLineSapl(line) {
     if (line.startsWith(":save")) return replHandleSave(line.slice(5).trim());
-    const r = await rsCall("RSAPL_EVAL", line);
+    let files;
+    if (line.startsWith(":load")) {
+      const f = await replLoadFile(line.slice(5).trim());
+      files = { [f.path]: f.content };
+      line = ":load " + f.path;
+    }
+    const r = await rsCall("RSAPL_EVAL", line, files);
     if (!r.success) throw new Error(r.error);
     for (const l of String(r.output).split("\n")) {
       if (!l) continue;
@@ -1654,85 +1617,16 @@
     }
   }
 
-  function setReplEngine(engine) {
-    state.replEngine = engine;
-    try { localStorage.setItem(REPL_ENGINE_KEY, engine); } catch (e) {}
-    if (el.selReplEngine) el.selReplEngine.value = engine;
-    replAppendLog(`── engine: ${replEngineName(engine)} (eigen sessie)${engine === "sapl" ? "; de eerste regel laadt de engine" : ""} ──\n`, "repl-line-typed");
-  }
-
-  // Zelfde dispatch-structuur als repl_retag.py's dispatch()/vm.cpp's
-  // dispatchH -- elke tak drukt exact dezelfde meldingen af als de
-  // terminal-versies, zodat het logvenster hier identiek leesbaar is.
+  // Eén regel naar de REPL in Sapl; de statusregel toont de tijd.
   async function sendReplLine(line) {
     if (!line.trim() || !state.replReady || state.replBusy) return;
     replAppendLog(`repl> ${line}\n`, "repl-line-typed");
     setReplBusy(true);
     if (el.replStatus) { el.replStatus.textContent = "Bezig..."; el.replStatus.className = "tool-panel-status busy"; }
     const t0 = performance.now();
-    const doneStatus = () => `Klaar — ${Math.round(performance.now() - t0)} ms (${replEngineName(state.replEngine)})`;
-
-    if (state.replEngine === "sapl") {
-      try {
-        await sendReplLineSapl(line);
-        if (el.replStatus) { el.replStatus.textContent = doneStatus(); el.replStatus.className = "tool-panel-status ok"; }
-      } catch (err) {
-        replAppendLog(`fout: ${err.message}\n`, "repl-line-error");
-        if (el.replStatus) { el.replStatus.textContent = `Fout: ${err.message}`; el.replStatus.className = "tool-panel-status crashed"; }
-      }
-      setReplBusy(false);
-      if (el.txtReplInput) el.txtReplInput.focus();
-      return;
-    }
-
     try {
-      if (line.startsWith(":def")) {
-        const text = line.slice(4).trim();
-        if (!text) throw new Error(":def heeft een clausule/ADT-declaratie nodig, bv. ':def double x = x * 2'");
-        const r = await replCall("def", { text });
-        if (!r.success) throw new Error(r.error);
-        replAppendLog(`gedefinieerd: ${r.name}\n`);
-      } else if (line.startsWith(":import")) {
-        const arg = line.slice(7).trim();
-        if (!arg) throw new Error(`:import heeft een module nodig, bv. ':import "lib/list.spp" as L'`);
-        const r = await replCall("def", { text: "import " + arg });
-        if (!r.success) throw new Error(r.error);
-        replAppendLog(`geïmporteerd: ${r.name.slice(7)}\n`);
-      } else if (line === ":list" || line === ":history") {
-        const r = await replCall("history");
-        if (!r.success) throw new Error(r.error);
-        if (r.entries.length === 0) replAppendLog("  (lege sessie)\n");
-        for (const entry of r.entries) replAppendLog(`  ${entry.name}: ${entry.text}\n`);
-      } else if (line === ":undo") {
-        const r = await replCall("undo");
-        if (!r.success) throw new Error(r.error);
-        replAppendLog("ongedaan gemaakt\n");
-      } else if (line === ":reset") {
-        const r = await replCall("reset");
-        if (!r.success) throw new Error(r.error);
-        replAppendLog("sessie geleegd\n");
-      } else if (line.startsWith(":load")) {
-        await replHandleLoad(line.slice(5).trim());
-      } else if (line.startsWith(":save")) {
-        await replHandleSave(line.slice(5).trim());
-      } else if (line.startsWith(":type")) {
-        const expr = line.slice(5).trim();
-        if (!expr) throw new Error(":type heeft een expressie nodig, bv. ':type res0 * 2'");
-        const r = await replCall("type", { expr });
-        if (!r.success) throw new Error(r.error);
-        replAppendLog(`${expr} :: ${r.inferredType}\n`);
-        for (const note of r.notes) replAppendLog(`  (${note})\n`);
-      } else if (line === ":funcs") {
-        const r = await replCall("funcs");
-        if (!r.success) throw new Error(r.error);
-        if (r.funcs.length === 0) replAppendLog("  (geen functies)\n");
-        for (const f of r.funcs) replAppendLog(`  ${f}\n`);
-      } else {
-        const r = await replCall("eval", { line });
-        if (!r.success) throw new Error(r.error);
-        replAppendLog(`${r.output}\n  (${r.name})\n`);
-      }
-      if (el.replStatus) { el.replStatus.textContent = doneStatus(); el.replStatus.className = "tool-panel-status ok"; }
+      await sendReplLineSapl(line);
+      if (el.replStatus) { el.replStatus.textContent = `Klaar — ${Math.round(performance.now() - t0)} ms`; el.replStatus.className = "tool-panel-status ok"; }
     } catch (err) {
       replAppendLog(`fout: ${err.message}\n`, "repl-line-error");
       if (el.replStatus) { el.replStatus.textContent = `Fout: ${err.message}`; el.replStatus.className = "tool-panel-status crashed"; }
@@ -2088,10 +1982,6 @@
       };
     }
     if (el.btnReplLoad) el.btnReplLoad.onclick = () => sendReplLoad();
-    if (el.selReplEngine) {
-      el.selReplEngine.value = state.replEngine;
-      el.selReplEngine.onchange = () => setReplEngine(el.selReplEngine.value);
-    }
     if (el.selReplExample) {
       el.selReplExample.onchange = () => {
         const chosen = el.selReplExample.value;

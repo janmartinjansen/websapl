@@ -1303,66 +1303,14 @@ async function executeJmvm(contentOrPath, isPath = false, customStdin = "", runI
   });
 }
 
-/**
- * Sapl+ REPL, client-side poort van sapl_compiler/tools/repl_retag.py
- * (repl/README.md/docs/2026-09-13_repl_via_retag_
- * linking_plan.md) -- de C++-poort (vm.cpp's REPL_HOST/repl-host) was al
- * een tweede, gedrag-identieke implementatie op dezelfde ontwerp; dit is
- * een DERDE, met dezelfde sessie-logica maar dan tegen de WASM-VM-
- * instanties hierboven i.p.v. een los resident proces of per-regel
- * subprocessen. Elke turn hergebruikt precies de vijf primitieven die
- * ook de "modules"-backend hierboven al gebruikt: runCompilerStage
- * (defs/typedefs/retag van de VOLLEDIGE sessie, één plat bestand -- een
- * sessie heeft geen aparte modules, dus GEEN saplcomp_module.jmvm
- * hiervoor nodig), runSaplcompModuleStage (de éne turn-regel compileren
- * TEGEN de sessie se defs/typedefs, alsof de sessie zijn enige
- * afhankelijkheid is), runRetagLinkStage (sessie+turn retag-tekst
- * samenvoegen vanaf "start"), runRetagCompStage (naar bytecode), en een
- * nieuwe runJmvmCapture (de bytecode draaien en de volledige uitvoer in
- * één keer teruggeven, i.p.v. executeJmvm's regel-voor-regel
- * postMessage-streaming voor de "Run"-knop).
- *
- * BEWUST GEEN aparte "start"/"stop": de WASM-engine is hier altijd al
- * klaar (initEngine() bij het laden van de pagina), dus er is geen los
- * proces om te starten zoals Workbench's repl-host -- de sessie leeft
- * gewoon in `replSession` hieronder, zolang het tabblad/de pagina open
- * blijft.
- */
-let replSession = null;
+// De REPL draait sinds 8 oktober 2026 als de REPL in Sapl (rsEval hieronder,
+// repl_sapl/). De vorige JavaScript-REPL (replSession, replEvalLine, ...)
+// is weggehaald; zie git-geschiedenis vóór die datum.
 
-const REPL_RESERVED_NAMES = new Set(["start"]);
-
-function replSplitDefinitions(text) {
-  const defs = [];
-  let current = null;
-  for (const raw of text.split("\n")) {
-    const stripped = raw.trim();
-    if (stripped === "" || stripped.startsWith("//")) continue;
-    const indented = raw.length > 0 && (raw[0] === " " || raw[0] === "\t");
-    if (!indented) {
-      if (current !== null) defs.push(current);
-      current = raw;
-    } else {
-      if (current === null) throw new Error(`onverwachte inspringing zonder voorgaande regel: ${raw}`);
-      current += "\n" + raw;
-    }
-  }
-  if (current !== null) defs.push(current);
-  return defs;
-}
-
-// Een gekwalificeerde import (`import "lib/list.spp" as L`) is een
-// sessie-entry `import L` (zelfde regel als repl_retag.py en vm.cpp).
-function replImportEntryName(text) {
-  const m = text.trim().match(/^import\s+"([^"]+)"\s+as\s+([A-Z][A-Za-z0-9_]*)/);
-  if (!m) throw new Error(`verwacht: import "pad" as Naam, bv. :import "lib/list.spp" as L -- niet: '${text}'`);
-  return "import " + m[2];
-}
-
-// De imports als `import extern` voor een turn: namen oplossen, de
-// modulecode zit al in de sessie (preprocess/modules.cfp).
+// De imports als `import extern` (notebook): namen oplossen, de
+// modulecode zit al in de bibliotheekunit (preprocess/modules.cfp).
 // Alleen de imports die `code` nodig heeft (zelfde regel als
-// repl_retag.py's import_needed): `Alias.` komt erin voor, of de import
+// de vroegere Python-REPL): `Alias.` komt erin voor, of de import
 // heeft een open lijst (`as L (sum)`, `(..)`). Elke `import extern` laat de
 // preprocessor het modulebestand parsen, ook als niemand het gebruikt.
 function importNeeded(importText, code) {
@@ -1371,261 +1319,19 @@ function importNeeded(importText, code) {
   return new RegExp("(^|[^A-Za-z0-9_])" + m[1] + "\\.").test(code);
 }
 
-function replExternImports(entries, code) {
-  return entries
-    .filter((e) => e.name.startsWith("import ") && importNeeded(e.text, code))
-    .map((e) => e.text.replace("import ", "import extern ") + "\n").join("");
-}
 
-// Sapl+ -> Sapl via preprocess/driver.jmvm, zoals repl_retag.py en vm.cpp
-// dat per sessie en per turn doen (sinds 27 september 2026 ook hier; nodig
-// voor imports, en zo werkt ook de rest van Sapl+ in deze REPL).
-async function replPreprocess(text, name, tag = "") {
-  const r = await preprocessSpp(text, `/workspace/${name}.spp`, tag);
-  if (!r.success) {
-    const msg = String(r.stdout || "").split("\n")
-      .filter((l) => !/^(VM starting|Reading file|\d+ instr read|execution started|Elapsed time|nr gc|instr executed|calls:|creates:)/.test(l))
-      .join("\n").replace(/stop\s*$/, "").trim();
-    throw new Error(msg || "voorbewerken mislukt");
-  }
-  return r.files[0].content;
-}
 
-function replExtractDefName(text) {
-  const stripped = text.trim();
-  if (stripped.startsWith("import ")) return replImportEntryName(stripped);
-  let m = stripped.match(/^::\s*([A-Za-z_][A-Za-z0-9_]*)/);
-  if (m) return "::" + m[1];
-  m = stripped.match(/^([A-Za-z_][A-Za-z0-9_]*)/);
-  if (m) return m[1];
-  throw new Error(`:def kon geen naam vinden in: ${JSON.stringify(text)}`);
-}
 
-// Zelfde normalisatie als repl_retag.py's normalize_for_compare/vm.cpp's
-// normalizeForCompareH: elke run witruimte plat tot precies één spatie
-// vóór de identiek-aan-de-prelude-vergelijking, zodat een louter
-// cosmetisch verschil (bv. dubbele spatie) een onterechte harde `:load`-
-// fout niet kan veroorzaken.
-function replNormalizeForCompare(text) {
-  return text.trim().replace(/\s+/g, " ");
-}
 
-function replJoinEntries(entries) {
-  return entries.map((e) => e.text).join("\n") + (entries.length ? "\n" : "");
-}
 
-async function replInit() {
-  if (replSession) return;
-  if (!isInitialized) throw new Error("JMVM engine is not initialized.");
 
-  // repl/repl_prelude.cfp is BEWUST zelfstandig (geen #import) gemaakt
-  // (zie dat bestand se eigen headercommentaar) precies om dit soort
-  // hergebruik triviaal te maken -- geen resolveImports() nodig zoals
-  // stdlib.cfp elders in dit bestand wél nodig heeft.
-  let prelude = "";
-  try {
-    const res = await fetch("../repl/repl_prelude.cfp?v=" + Date.now());
-    if (res.ok) prelude = await res.text();
-  } catch (_) {}
-  if (!prelude) throw new Error("kon repl/repl_prelude.cfp niet laden.");
 
-  const preludeDefs = {};
-  const preludeNames = new Set();
-  for (const d of replSplitDefinitions(prelude)) {
-    const name = replExtractDefName(d);
-    preludeDefs[name] = d;
-    preludeNames.add(name);
-  }
 
-  replSession = {
-    entries: [],
-    resCounter: 0,
-    history: [],
-    prelude,
-    preludeDefs,
-    preludeNames,
-    defs: "",
-    typedefs: "",
-    retag: "",
-    // Bibliotheekunits (prelude + imports) per cachesleutel; zie replLibUnit.
-    libCache: new Map(),
-    lib: null
-  };
 
-  await replAtomicRebuild([], 0);
-}
 
-/**
- * De bibliotheekunit voor deze imports (27 september 2026, zelfde opzet
- * als repl_retag.py's Session._lib_unit): prelude + de `import`-regels,
- * voorbewerkt met unit-tag `l` en als complete unit gecompileerd. Bewaard
- * per sleutel = de import-teksten plus de inhoud van alle (transitief)
- * geïmporteerde bestanden.
- */
-async function replLibUnit(imports) {
-  const importText = imports.map((t) => t + "\n").join("");
-  const deps = await collectSppImports(importText);
-  const key = importText + "\0" + Object.keys(deps).sort().map((p) => p + "\0" + deps[p]).join("\0");
-  const cached = replSession.libCache.get(key);
-  if (cached) return cached;
-  const libText = await replPreprocess(replSession.prelude + "\n" + importText, "repl_lib", "l");
-  const lib = {};
-  for (const stage of ["defs", "typedefs", "retag"]) {
-    const r = await runCompilerStage(libText, stage, `/tmp/repl_lib.${stage}.txt`);
-    if (!r.success) throw new Error(`bibliotheek-${stage} mislukt:\n${r.output}`);
-    lib[stage] = r.content;
-  }
-  replSession.libCache.set(key, lib);
-  return lib;
-}
 
-/**
- * Bouwt en compileert `newEntries` als kandidaat-sessie; pas bij volledig
- * succes wordt dat gepromoveerd. Zelfde alles-of-niets-garantie als
- * repl_retag.py's Session._atomic_rebuild/vm.cpp's
- * ReplSession::atomicRebuild -- een mislukte regel raakt de sessie dus
- * nooit. De prelude en de imports zitten in de bibliotheekunit
- * (replLibUnit); de sessie zelf compileert daartegen.
- */
-async function replAtomicRebuild(newEntries, newResCounter) {
-  const oldSnapshot = { entries: replSession.entries, resCounter: replSession.resCounter };
-  const lib = await replLibUnit(newEntries.filter((e) => e.name.startsWith("import ")).map((e) => e.text));
-  const own = newEntries.filter((e) => !e.name.startsWith("import "));
-  const ownText = replJoinEntries(own);
-  const sessionText = await replPreprocess(replExternImports(newEntries, ownText) + ownText, "repl_session");
 
-  const retagRes = await runSaplcompModuleStage(sessionText, "retag", "/tmp/repl_session.retag.txt", [lib.defs], [lib.typedefs]);
-  if (!retagRes.success) throw new Error(`sessie-retag mislukt:\n${retagRes.output}`);
-  const defsRes = await runSaplcompModuleStage(sessionText, "defs", "/tmp/repl_session.defs.txt", [lib.defs], [lib.typedefs]);
-  if (!defsRes.success) throw new Error(`sessie-defs mislukt:\n${defsRes.output}`);
 
-  // Het beeld (zoals repl-host's atomicRebuild): een andere bibliotheekunit
-  // maakt het leeg; een gewijzigde of verdwenen naam wordt ongeldig.
-  if (replSession.lib && lib !== replSession.lib) imageCall("repl", "jmvm_image_reset");
-  else {
-    const old = new Map(replSession.entries.map((e) => [e.name, e.text]));
-    const now = new Set(newEntries.map((e) => e.name));
-    const changed = newEntries.filter((e) => old.has(e.name) && old.get(e.name) !== e.text).map((e) => e.name);
-    for (const n of old.keys()) if (!now.has(n)) changed.push(n);
-    if (changed.length) imageCall("repl", "jmvm_image_invalidate", null, ["string"], [changed.join(" ")]);
-  }
-  replSession.history.push(oldSnapshot);
-  replSession.entries = newEntries;
-  replSession.resCounter = newResCounter;
-  replSession.defs = defsRes.content;
-  // Als typedefs dient de voorbewerkte sessietekst zelf: saplcomp_module
-  // leest daar alleen de ADT-declaraties uit.
-  replSession.typedefs = sessionText;
-  replSession.retag = retagRes.content;
-  replSession.lib = lib;
-}
-
-async function replSetEntries(updates, newResCounter) {
-  for (const [name] of updates) {
-    if (replSession.preludeNames.has(name)) {
-      throw new Error(`'${name}' is al gedefinieerd in de prelude -- kies een andere naam`);
-    }
-    if (REPL_RESERVED_NAMES.has(name)) {
-      throw new Error(`'${name}' is gereserveerd voor de REPL zelf (elke beurt se interne entry point) -- kies een andere naam`);
-    }
-  }
-  let newEntries = replSession.entries.slice();
-  for (const [name, text] of updates) {
-    newEntries = newEntries.filter((e) => e.name !== name);
-    newEntries.push({ name, text });
-  }
-  await replAtomicRebuild(newEntries, newResCounter === undefined ? replSession.resCounter : newResCounter);
-}
-
-async function replUndo() {
-  if (replSession.history.length === 0) throw new Error("niets om ongedaan te maken");
-  const prev = replSession.history.pop();
-  await replAtomicRebuild(prev.entries, prev.resCounter);
-}
-
-async function replReset() {
-  await replAtomicRebuild([], 0);
-}
-
-/**
- * :load -- content/pad komen al opgehaald+eventueel op een .cfp-sibling
- * teruggevallen mee van de hoofdthread (zie app.js's replLoad(), dat
- * dezelfde bestandsresolutie hergebruikt als de "modules"-backend); hier
- * alleen nog de sessie-logica: splitsen, prelude-botsingen (identiek-
- * tekst: overslaan; anders: harde fout via replSetEntries), `start`
- * altijd overslaan.
- */
-async function replLoadContent(content, notes) {
-  const defs = replSplitDefinitions(content);
-  if (defs.length === 0) throw new Error(":load: geen top-level definities gevonden");
-
-  const updates = [];
-  for (const d of defs) {
-    if (d.trim().startsWith("module ")) {
-      notes.push(`'${d.trim()}' overgeslagen: een module-regel betekent in een sessie niets (importeer het bestand met :import).`);
-      continue;
-    }
-    const name = replExtractDefName(d);
-    if (REPL_RESERVED_NAMES.has(name)) {
-      notes.push(`'${name}' is gereserveerd voor de REPL zelf -- overgeslagen (roep de functies die je wil verkennen rechtstreeks aan).`);
-      continue;
-    }
-    if (replSession.preludeNames.has(name) && replNormalizeForCompare(d) === replNormalizeForCompare(replSession.preludeDefs[name])) {
-      notes.push(`'${name}' staat al (woordelijk gelijk) in de prelude -- overgeslagen.`);
-      continue;
-    }
-    updates.push([name, d]);
-  }
-  if (updates.length > 0) await replSetEntries(updates);
-  return updates.map(([name]) => name);
-}
-
-/**
- * `:type <expr>` (25 sep 2026): de huidige sessie (mét prelude) plus
- * `__type = <expr>` door typecheckSource(), zonder de sessie te wijzigen.
- * Zelfde gedrag en meldingen als repl_retag.py's Session.type_of/
- * parse_typecheck_output en vm.cpp's ReplSession::typeOf: een typefout in
- * een eigen sessiedefinitie geeft een notitie (types die ervan afhangen
- * kunnen te algemeen zijn), fouten in de bewust dynamische prelude niet.
- */
-async function replTypeOf(expr) {
-  const source = replSession.prelude + "\n" + replJoinEntries(replSession.entries) + `__type = ${expr}\n`;
-  const result = await typecheckSource(source, "/tmp/repl_type_query.cfp");
-  const raw = result.stdout || "";
-  const lines = raw.split("\n");
-  const userNames = new Set(replSession.entries.map((e) => e.name));
-
-  const okLine = lines.find((l) => l.startsWith("__type :: "));
-  if (okLine) {
-    const failed = lines
-      .filter((l) => l.includes(": FOUT: ") && userNames.has(l.split(":")[0]))
-      .map((l) => l.split(":")[0]);
-    const notes = failed.length
-      ? [`let op: typefout in ${failed.join(", ")} -- een type dat daarvan afhangt kan te algemeen zijn`]
-      : [];
-    return { inferredType: okLine.slice("__type :: ".length).trim(), notes };
-  }
-  const errPrefix = "__type: FOUT: __type: ";
-  const errLine = lines.find((l) => l.startsWith(errPrefix));
-  if (errLine) throw new Error(errLine.slice(errPrefix.length).trim());
-  // Geen __type-regel: de parser van de typechecker faalde; de melding
-  // staat tussen `execution started` en vm.cpp's `stop`.
-  const startMarker = raw.match(/execution started, progsize=\d+\r?\n?/);
-  let body = startMarker ? raw.slice(startMarker.index + startMarker[0].length) : raw;
-  const stopIdx = body.indexOf("stop");
-  if (stopIdx >= 0) body = body.slice(0, stopIdx);
-  body = body.trim();
-  throw new Error(body || "typechecker gaf geen uitvoer");
-}
-
-function replFuncs() {
-  if (!replSession.defs) return [];
-  return replSession.defs
-    .split("\n")
-    .map((l) => l.trim())
-    // Namen met `__` zijn intern (functies uit een geïmporteerde module).
-    .filter((l) => l && !replSession.preludeNames.has(l.split(" ")[0]) && !l.split(" ")[0].includes("__"));
-}
 
 /** Draait een gecompileerd .jmvm-programma en geeft de VOLLEDIGE stdout
  * in één keer terug (geen live per-regel postMessage zoals executeJmvm,
@@ -1838,9 +1544,7 @@ async function runOnImage(jmvmContent, extraFiles = {}, onProgress = null, chunk
   } catch (e) {
     // De VM stopte met een fout (exit, of een wasm-trap zoals bij 1 / 0):
     // de uitvoer tot dan is het resultaat. Het exemplaar is weg, en met
-    // hem de bewaarde momentopnames (zie replSnapshots).
     delete imageInstances[kind];
-    if (kind === "repl") { for (const n of replSnapshots) replExpired.add(n); replSnapshots.clear(); }
     imageLast = { event: "exemplaar gestopt", error: true };
     imageOutput = null;
     return output.join("");
@@ -1893,178 +1597,21 @@ async function runJmvmCapture(jmvmContent, extraFiles = {}, stdinText = "", onPr
   return output.join("");
 }
 
-// Vindt de door printVal geschreven tekst in de VOLLEDIGE callMain-output.
-// `callMain` gaat door de gewone main() (dezelfde als de native ./run-
-// binary), dus staat er EERST nog een vaste "VM starting for .../Reading
-// file .../execution started, progsize=..."-banner vóór het programma se
-// eigen uitvoer -- anders dan vm.cpp's REPL_HOST/repl-host, die run()
-// rechtstreeks aanroept zonder die wrapper. Zelfde twee-staps-aanpak als
-// repl_retag.py's extract_output (die via een echt `./run`-subprocess
-// loopt en dus dezelfde banner ziet): eerst alles vóór en op de vaste
-// "execution started"-regel overslaan, dan pas de LAATSTE letterlijke
-// `res: `-marker zoeken (printVal schrijft geen eigen afsluitende
-// newline, dus de weergegeven waarde staat zonder scheidingsteken vóór
-// `res: <code>`, bv. `Just(5)res: 0`).
-// De melding van een programma dat zonder `res: `-marker stopte (een
-// runtimefout, bv. `error "kapot"`); zelfde regel als vm.cpp's
-// runtimeErrorTextH en repl_retag.py's runtime_error_text (7 oktober 2026).
-function replRuntimeErrorText(out) {
-  const lines = out.split("\n");
-  const startIdx = lines.findIndex((l) => l.startsWith("execution started"));
-  const body = startIdx === -1 ? lines : lines.slice(startIdx + 1);
-  const stats = ["Elapsed time", "nr gc", "instr executed", "calls:", "creates:"];
-  let t = body.filter((l) => !stats.some((p) => l.startsWith(p))).join("\n").trim();
-  if (t.endsWith("stop")) t = t.slice(0, -4).trim();
-  return t || "het programma stopte zonder melding";
-}
 
-// De getoonde waarde, of een fout bij een runtimefout (dan geen resN: de
-// regel wordt alleen vastgelegd als dit lukt).
-function replShownOrError(out) {
-  const body = out.split("\n");
-  const startIdx = body.findIndex((l) => l.startsWith("execution started"));
-  const rest = startIdx === -1 ? out : body.slice(startIdx + 1).join("\n");
-  if (rest.lastIndexOf("res: ") === -1) throw new Error(replRuntimeErrorText(out));
-  return replExtractOutput(out) || "(geen uitvoer)";
-}
 
-function replExtractOutput(out) {
-  const lines = out.split("\n");
-  const startIdx = lines.findIndex((l) => l.startsWith("execution started"));
-  if (startIdx === -1) return "";
-  const body = lines.slice(startIdx + 1).join("\n");
-  const markerIdx = body.lastIndexOf("res: ");
-  if (markerIdx === -1) return "";
-  return body.slice(0, markerIdx).trim();
-}
 
-async function replEvalLine(line0) {
-  // `it` is de vorige resN (zie replSubstIt); hier al vervangen, dan hoeft
-  // `it` zelf niet in het beeld te staan (zelfde als repl-host).
-  const line = replSubstIt(line0, replPrevRes());
-  // Weergave op type (notebookplan fase 3, 5 oktober 2026): bevat het type
-  // van de regel `Bool`, dan toont printValT True/False; mislukt het
-  // typeren, dan gewoon printVal (zelfde als repl_retag.py en repl-host).
-  let shower = "printVal";
-  try {
-    const t = await replTypeOf(line);
-    if (t.inferredType.includes("Bool")) shower = `printValT "${t.inferredType}"`;
-  } catch (_) {}
-  // Beslissing 5 (6 oktober 2026, zoals repl-host): de regel definieert zelf
-  // `resN =: ...`, een momentopname die nu berekend wordt, en toont die; tag
-  // `t<N>` geeft de hulpfuncties van de regel een eigen naam.
-  replCheckNotExpired(line);
-  const resName = `res${replSession.resCounter}`;
-  replLineOnImage = false;
-  const turnSource = await replPreprocess(replExternImports(replSession.entries, line) + `${resName} =: ${line}\nstart = ${shower} ${resName}\n`, "repl_turn", `t${replSession.resCounter}`);
-
-  const lib = replSession.lib;
-  // Het blijvende beeld (notebookplan §6.2, zoals repl-host): eerst alleen de
-  // regel als los stuk tegen wat al in het beeld staat; lukt dat niet, het
-  // volledige gelinkte programma op het beeld; dan pas een vers exemplaar.
-  const useImage = !replSession.noImage;
-  const inst = imageInstances.repl;
-  if (useImage && inst && inst.ccall("jmvm_image_size", "number", [], []) > 0) {
-    const cafs = new Set(inst.UTF8ToString(inst.ccall("jmvm_image_caf_names", "number", [], [])).split(" ").filter((x) => x));
-    for (const e of replSession.entries) if (new RegExp("^\\s*" + e.name.replace(/[^A-Za-z0-9_]/g, "\\$&") + "\\s*=:").test(e.text)) cafs.add(e.name);
-    const chunk = await runSaplcompModuleStage(turnSource, "jmvm", "/tmp/repl_turn.chunk.jmvm", [lib.defs, replSession.defs], [lib.typedefs, replSession.typedefs], [...cafs].join(" "));
-    if (chunk.success) {
-      imageLast = null;
-      const raw = await runOnImage(chunk.content, {}, null, true, "repl");
-      replLastImage = imageLast;
-      if (raw !== null) { replLineOnImage = true; return replShownOrError("execution started\n" + raw); }
-      // Begon het beeld tijdens deze regel opnieuw, dan kan een momentopname
-      // die de regel gebruikt net verlopen zijn.
-      replCheckNotExpired(line);
-    }
-  }
-  const turnRes = await runSaplcompModuleStage(turnSource, "retag", "/tmp/repl_turn.retag.txt", [lib.defs, replSession.defs], [lib.typedefs, replSession.typedefs]);
-  if (!turnRes.success) throw new Error(turnRes.output);
-
-  const linkRes = await runRetagLinkStage([lib.retag, replSession.retag, turnRes.content], "/tmp/repl_linked.retag.txt", "start");
-  if (!linkRes.success) throw new Error(`retaglink.jmvm mislukt:\n${linkRes.output}`);
-
-  const compRes = await runRetagCompStage(linkRes.content, "/tmp/repl_linked.jmvm");
-  if (!compRes.success) throw new Error(`retagcomp.jmvm mislukt:\n${compRes.output}`);
-
-  if (useImage) {
-    const earlier = replLastImage && replLastImage.event ? replLastImage.event : "";
-    imageLast = null;
-    const raw = await runOnImage(compRes.content, {}, null, false, "repl");
-    replLastImage = imageLast && { ...imageLast, event: earlier + imageLast.event };
-    if (raw !== null) {
-      if (imageLast && /opnieuw:/.test(imageLast.event)) replCheckNotExpired(line);
-      replLineOnImage = true;
-      return replShownOrError("execution started\n" + raw);
-    }
-  }
-  const rawOutput = await runJmvmCapture(compRes.content);
-  return replShownOrError(rawOutput);
-}
 
 // Wat het beeld bij de laatste REPL-regel deed (voor tests).
-let replLastImage = null;
 // Draaide de laatste regel op het beeld (dan is `resN` een momentopname daar).
-let replLineOnImage = false;
 
 // De resN die als momentopname in het repl-exemplaar staan, en die verliepen
 // doordat het exemplaar zelf stierf (een wasm-trap, 7 oktober 2026: na `5`,
 // `1 / 0` gaf `res0 + 1` stil een opnieuw berekende waarde). Het nieuwe
 // exemplaar weet daar niets van, dus houdt de worker het bij.
-const replSnapshots = new Set();
-const replExpired = new Set();
 
-// Een momentopname die verloren ging toen het beeld helemaal opnieuw begon:
-// melden i.p.v. stil opnieuw rekenen (zoals repl-host's checkNotExpiredH).
-function replCheckNotExpired(text) {
-  for (const m of text.matchAll(/(^|[^A-Za-z0-9_.])(res\d+)(?![A-Za-z0-9_])/g)) {
-    if (replExpired.has(m[2]) || (imageInstances.repl && imageCall("repl", "jmvm_image_snapshot_state", "number", ["string"], [m[2]]) === 2)) {
-      throw new Error(`${m[2]} is verlopen: het beeld begon opnieuw (bv. na een gewijzigd type), en daarmee ging de bewaarde waarde verloren. Reken hem opnieuw uit.`);
-    }
-  }
-}
 
-// `it` in een vastgelegde regel of `:def` wordt de vorige `resN`: de sessie
-// bewaart tekst en bindt namen pas bij het compileren, en `it` krijgt na elke
-// regel een nieuwe betekenis (anders werd `5`, `it + 1` in de sessie
-// `res1 = it + 1` naast `it = res1`, een kring; 6 oktober 2026). Zelfde
-// regels als repl_retag.py's subst_it.
-function replSubstIt(text, prev) {
-  if (!prev) return text;
-  const isId = (c) => /[A-Za-z0-9_]/.test(c);
-  let out = "", i = 0;
-  const n = text.length;
-  while (i < n) {
-    const c = text[i];
-    if (c === '"' || (c === "'" && !(i > 0 && isId(text[i - 1])))) {
-      let j = i + 1;
-      while (j < n && text[j] !== c) j += text[j] === "\\" ? 2 : 1;
-      out += text.slice(i, j + 1); i = j + 1;
-    } else if (text.startsWith("//", i)) {
-      out += text.slice(i); i = n;
-    } else if (/[A-Za-z_]/.test(c)) {
-      let j = i;
-      while (j < n && isId(text[j])) j++;
-      const word = text.slice(i, j);
-      out += word === "it" && !(i > 0 && text[i - 1] === ".") ? prev : word;
-      i = j;
-    } else { out += c; i++; }
-  }
-  return out;
-}
 
-function replPrevRes() {
-  return replSession.resCounter > 0 ? `res${replSession.resCounter - 1}` : null;
-}
 
-async function replCommit(line) {
-  const name = `res${replSession.resCounter}`;
-  await replSetEntries([[name, `${name} =: ${replSubstIt(line, replPrevRes())}`], ["it", `it = ${name}`]], replSession.resCounter + 1);
-  replExpired.delete(name);
-  if (replLineOnImage) { imageCall("repl", "jmvm_image_mark_snapshot", null, ["string"], [name]); replSnapshots.add(name); }
-  replLineOnImage = false;
-  return name;
-}
 
 /**
  * Notebook in twee delen (27 september 2026, zelfde opzet als de REPL): de
@@ -2137,12 +1684,6 @@ async function notebookCompile(source, prepared = null) {
   return { jmvm: comp.content };
 }
 
-async function replDefine(defText) {
-  replCheckNotExpired(defText);
-  const name = replExtractDefName(defText);
-  await replSetEntries([[name, replSubstIt(defText, replPrevRes())]]);
-  return name;
-}
 
 /**
  * Handle messages from the UI thread
@@ -2354,9 +1895,14 @@ self.onmessage = async function (e) {
       break;
 
     case "RSAPL_EVAL":
-      // De REPL in Sapl (rsEval hierboven); naast de gewone REPL, nog niet
-      // in de interface.
+      // De REPL in Sapl (rsEval hierboven). `files`: bestanden die de
+      // interface al heeft (bv. :load van een open tabblad), eerst in het
+      // bestandssysteem van de engine.
       try {
+        if (msg.files) {
+          if (!rsInstance) await rsStart();
+          for (const [p, c] of Object.entries(msg.files)) { const vp = "/" + p.replace(/^\//, ""); mkdirsFor(rsInstance.FS, vp); rsInstance.FS.writeFile(vp, c); }
+        }
         const r = await rsEval(msg.line);
         postMessage({ type: "RSAPL_RESULT", id: msg.id, success: !r.restarted, output: r.output,
           error: r.restarted ? rsTrapMessage(r.replay) : undefined });
@@ -2384,70 +1930,6 @@ self.onmessage = async function (e) {
       rsInstance = null;
       rsJournal = [];
       postMessage({ type: "RSAPL_RESULT", id: msg.id, success: true, output: "" });
-      break;
-
-    case "REPL_INIT":
-      try {
-        await replInit();
-        postMessage({ type: "REPL_RESULT", id: msg.id, success: true, kind: "init" });
-      } catch (err) {
-        postMessage({ type: "REPL_RESULT", id: msg.id, success: false, error: err.message });
-      }
-      break;
-
-    case "REPL_EVAL":
-      try {
-        if (!replSession) await replInit();
-        let payload = {};
-        switch (msg.cmd) {
-          case "eval": {
-            if (msg.noImage !== undefined) replSession.noImage = !!msg.noImage;
-            replLastImage = null;
-            const output = await replEvalLine(msg.line);
-            const name = await replCommit(msg.line);
-            payload = { output, name, image: replLastImage };
-            break;
-          }
-          case "def": {
-            const name = await replDefine(msg.text);
-            payload = { name };
-            break;
-          }
-          case "history":
-            payload = { entries: replSession.entries.map((e) => ({ name: e.name, text: e.text })) };
-            break;
-          case "undo":
-            await replUndo();
-            break;
-          case "reset":
-            await replReset();
-            imageCall("repl", "jmvm_image_reset");   // :reset is een schone lei, ook voor bewaarde CAF-waarden
-            replSnapshots.clear();
-            replExpired.clear();
-            break;
-          case "funcs":
-            payload = { funcs: replFuncs() };
-            break;
-          case "type":
-            payload = await replTypeOf(msg.expr);
-            break;
-          case "load": {
-            imageCall("repl", "jmvm_image_reset");   // een (opnieuw) geladen bestand rekent zijn CAF's opnieuw uit
-            const notes = [];
-            const names = await replLoadContent(msg.content, notes);
-            payload = { names, notes };
-            break;
-          }
-          case "save":
-            payload = { content: replJoinEntries(replSession.entries) };
-            break;
-          default:
-            throw new Error(`onbekend REPL-commando: ${msg.cmd}`);
-        }
-        postMessage({ type: "REPL_RESULT", id: msg.id, success: true, cmd: msg.cmd, ...payload });
-      } catch (err) {
-        postMessage({ type: "REPL_RESULT", id: msg.id, success: false, cmd: msg.cmd, error: err.message });
-      }
       break;
 
     default:

@@ -1607,7 +1607,7 @@ window.WEBSAPL_TREE = [
             "path": "repl_sapl/build/mini_repl.jmvm",
             "type": "file",
             "ext": ".jmvm",
-            "size": 5683887,
+            "size": 5709470,
             "isBinary": false
           }
         ],
@@ -1901,7 +1901,7 @@ window.WEBSAPL_TREE = [
     "path": "README.md",
     "type": "file",
     "ext": ".md",
-    "size": 10398,
+    "size": 10695,
     "isBinary": false
   }
 ];
