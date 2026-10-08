@@ -148,6 +148,23 @@ const cellsOf = (...srcs) => srcs.map((source) => ({ kind: "code", source }));
   check("databestand gewijzigd: opnieuw gelezen, afhankelijke cel mee", lees(d3) === 1 && /twee!$/.test(val(d3, 2)) && val(d3, 3) === "5",
     `${lees(d3)} ${val(d3, 2)} ${val(d3, 3)}`);
 
+  // Een ADT opnieuw definiëren (andere constructors): een nieuwe versie van
+  // het type; de cellen die de constructors gebruiken gaan mee (ook een
+  // =:-CAF), en terug naar de oude definitie kan ook.
+  await call({ type: "RSAPL_RESET" });
+  cells = cellsOf("::Kleur = Rood | Groen\n\nmooi k = case k (Rood -> 1) (Groen -> 2) (Blauw -> 3)", "g =: Groen", "los = 41", "mooi g", "[g, Rood]", "los + 1");
+  const k0 = await nbRun(cells);
+  cells[0].source = cells[0].source.replace("Rood | Groen", "Blauw | Rood | Groen");
+  const ka = await nbRun(cells);
+  cells[0].source = cells[0].source.replace("Blauw | Rood | Groen", "Rood | Groen");
+  const kb = await nbRun(cells);
+  const kc = await call({ type: "RSAPL_EVAL", line: ":def ::K = A | B" });
+  const v = (x, i) => (x.byCell[i] && x.byCell[i].blocks ? x.byCell[i].blocks[0].content : JSON.stringify(x.byCell[i]));
+  check("ADT opnieuw gedefinieerd: afhankelijke cellen mee", !Object.keys(ka.defErrors).length && v(k0, 3) === "2" && v(ka, 3) === "2" &&
+    v(ka, 4) === "[Groen, Rood]" && v(ka, 5) === "42", JSON.stringify(ka.defErrors) + " " + [3, 4, 5].map((i) => v(ka, i)).join(" "));
+  check("terug naar de oude definitie, en de REPL blijft bruikbaar", !Object.keys(kb.defErrors).length && v(kb, 3) === "2" &&
+    /gedefinieerd: ::K/.test(kc.output), JSON.stringify(kb.defErrors) + kc.output);
+
   // Een cel weg: wie hem gebruikte, geeft een fout.
   await call({ type: "RSAPL_RESET" });
   cells = cellsOf("weg = 5", "blijft = weg + 1", "blijft");
