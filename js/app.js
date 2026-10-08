@@ -1603,7 +1603,7 @@
   // (die schrijven wél meteen echt naar schijf).
   async function replHandleSave(pathArg) {
     if (!pathArg) throw new Error(":save heeft een bestandspad nodig, bv. ':save mijn_sessie.cfp'");
-    const r = await replCall("save");
+    const r = state.replEngine === "sapl" ? await rsCall("RSAPL_SAVE", "") : await replCall("save");
     if (!r.success) throw new Error(r.error);
     const existingIdx = state.openTabs.findIndex((t) => t.path === pathArg);
     const tabData = {
@@ -1626,12 +1626,14 @@
   // wasm-exemplaar in de worker (RSAPL_EVAL). Het verwerkt de regel zelf,
   // ook :def/:import/:undo/:reset/:load; de uitvoer komt zoals de
   // terminal-REPL's hem tonen. Eigen sessie, los van de huidige REPL.
+  // Sinds 8 oktober 2026 de standaard; wie bewust de vorige REPL koos, houdt
+  // die (localStorage).
   const REPL_ENGINE_KEY = "sapl_websapl_repl_engine";
-  state.replEngine = "js";
-  try { if (localStorage.getItem(REPL_ENGINE_KEY) === "sapl") state.replEngine = "sapl"; } catch (e) {}
+  state.replEngine = "sapl";
+  try { if (localStorage.getItem(REPL_ENGINE_KEY) === "js") state.replEngine = "js"; } catch (e) {}
 
   function replEngineName(engine) {
-    return engine === "sapl" ? "REPL in Sapl" : "huidige REPL";
+    return engine === "sapl" ? "REPL in Sapl" : "vorige REPL";
   }
 
   function rsCall(type, line) {
@@ -1643,10 +1645,7 @@
   }
 
   async function sendReplLineSapl(line) {
-    if (line === ":list" || line === ":history" || line === ":funcs" || line.startsWith(":type") || line.startsWith(":save")) {
-      replAppendLog("(nog niet in de REPL in Sapl)\n", "repl-line-error");
-      return;
-    }
+    if (line.startsWith(":save")) return replHandleSave(line.slice(5).trim());
     const r = await rsCall("RSAPL_EVAL", line);
     if (!r.success) throw new Error(r.error);
     for (const l of String(r.output).split("\n")) {

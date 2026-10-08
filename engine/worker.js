@@ -2365,6 +2365,21 @@ self.onmessage = async function (e) {
       }
       break;
 
+    case "RSAPL_SAVE":
+      // :save: de REPL in Sapl schrijft de sessie in zijn eigen
+      // bestandssysteem; de tekst gaat terug (de interface opent hem als
+      // nieuw tabblad, zoals bij de huidige REPL).
+      try {
+        const path = "repl_sapl/gen/websapl_save.cfp";
+        const r = await rsEval(":save " + path);
+        if (r.restarted || !rsInstance) throw new Error("opslaan mislukt");
+        const content = rsInstance.FS.readFile("/" + path, { encoding: "utf8" });
+        postMessage({ type: "RSAPL_RESULT", id: msg.id, success: true, content });
+      } catch (err) {
+        postMessage({ type: "RSAPL_RESULT", id: msg.id, success: false, error: err.message });
+      }
+      break;
+
     case "RSAPL_RESET":
       rsInstance = null;
       rsJournal = [];
