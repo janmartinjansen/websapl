@@ -83,6 +83,7 @@
     btnReplUndo: document.getElementById("btn-repl-undo"),
     btnReplFuncs: document.getElementById("btn-repl-funcs"),
     btnReplReset: document.getElementById("btn-repl-reset"),
+    selReplEngine: document.getElementById("sel-repl-engine"),
     selReplExample: document.getElementById("sel-repl-example"),
     txtReplLoad: document.getElementById("txt-repl-load"),
     btnReplLoad: document.getElementById("btn-repl-load"),
@@ -216,6 +217,7 @@
           }
           break;
 
+        case "RSAPL_RESULT":
         case "REPL_RESULT": {
           const replCb = state.pendingCompileCallbacks.get(msg.id);
           if (replCb) {
@@ -1551,7 +1553,7 @@
         el.replStatus.className = "tool-panel-status ok";
       }
       setReplBusy(false);
-      replAppendLog("Sapl+ REPL klaar. Typ een expressie, of ':def naam ... = ...' voor een eigen functie/ADT.\n");
+      replAppendLog(`Sapl+ REPL klaar (engine: ${replEngineName(state.replEngine)}, te wisselen rechtsboven). Typ een expressie, of ':def naam ... = ...' voor een eigen functie/ADT.\n`);
       if (el.txtReplInput) el.txtReplInput.focus();
     } catch (err) {
       if (el.replStatus) {
@@ -1619,6 +1621,47 @@
     replAppendLog(`sessie geopend als nieuw tabblad (${pathArg}) -- klik op dat tabblad en dan op Opslaan om te bewaren.\n`);
   }
 
+  // --- De REPL in Sapl (experimenteel, 8 oktober 2026) ---
+  // Eén Sapl-programma (repl_sapl/build/mini_repl.jmvm) in een eigen
+  // wasm-exemplaar in de worker (RSAPL_EVAL). Het verwerkt de regel zelf,
+  // ook :def/:import/:undo/:reset/:load; de uitvoer komt zoals de
+  // terminal-REPL's hem tonen. Eigen sessie, los van de huidige REPL.
+  const REPL_ENGINE_KEY = "sapl_websapl_repl_engine";
+  state.replEngine = "js";
+  try { if (localStorage.getItem(REPL_ENGINE_KEY) === "sapl") state.replEngine = "sapl"; } catch (e) {}
+
+  function replEngineName(engine) {
+    return engine === "sapl" ? "REPL in Sapl" : "huidige REPL";
+  }
+
+  function rsCall(type, line) {
+    return new Promise((resolve) => {
+      const id = ++state.compileSeq;
+      state.pendingCompileCallbacks.set(id, resolve);
+      state.worker.postMessage({ type, id, line });
+    });
+  }
+
+  async function sendReplLineSapl(line) {
+    if (line === ":list" || line === ":history" || line === ":funcs" || line.startsWith(":type") || line.startsWith(":save")) {
+      replAppendLog("(nog niet in de REPL in Sapl)\n", "repl-line-error");
+      return;
+    }
+    const r = await rsCall("RSAPL_EVAL", line);
+    if (!r.success) throw new Error(r.error);
+    for (const l of String(r.output).split("\n")) {
+      if (!l) continue;
+      replAppendLog(l + "\n", l.startsWith("fout:") ? "repl-line-error" : undefined);
+    }
+  }
+
+  function setReplEngine(engine) {
+    state.replEngine = engine;
+    try { localStorage.setItem(REPL_ENGINE_KEY, engine); } catch (e) {}
+    if (el.selReplEngine) el.selReplEngine.value = engine;
+    replAppendLog(`── engine: ${replEngineName(engine)} (eigen sessie)${engine === "sapl" ? "; de eerste regel laadt de engine" : ""} ──\n`, "repl-line-typed");
+  }
+
   // Zelfde dispatch-structuur als repl_retag.py's dispatch()/vm.cpp's
   // dispatchH -- elke tak drukt exact dezelfde meldingen af als de
   // terminal-versies, zodat het logvenster hier identiek leesbaar is.
@@ -1627,6 +1670,21 @@
     replAppendLog(`repl> ${line}\n`, "repl-line-typed");
     setReplBusy(true);
     if (el.replStatus) { el.replStatus.textContent = "Bezig..."; el.replStatus.className = "tool-panel-status busy"; }
+    const t0 = performance.now();
+    const doneStatus = () => `Klaar — ${Math.round(performance.now() - t0)} ms (${replEngineName(state.replEngine)})`;
+
+    if (state.replEngine === "sapl") {
+      try {
+        await sendReplLineSapl(line);
+        if (el.replStatus) { el.replStatus.textContent = doneStatus(); el.replStatus.className = "tool-panel-status ok"; }
+      } catch (err) {
+        replAppendLog(`fout: ${err.message}\n`, "repl-line-error");
+        if (el.replStatus) { el.replStatus.textContent = `Fout: ${err.message}`; el.replStatus.className = "tool-panel-status crashed"; }
+      }
+      setReplBusy(false);
+      if (el.txtReplInput) el.txtReplInput.focus();
+      return;
+    }
 
     try {
       if (line.startsWith(":def")) {
@@ -1675,7 +1733,7 @@
         if (!r.success) throw new Error(r.error);
         replAppendLog(`${r.output}\n  (${r.name})\n`);
       }
-      if (el.replStatus) { el.replStatus.textContent = "Klaar."; el.replStatus.className = "tool-panel-status ok"; }
+      if (el.replStatus) { el.replStatus.textContent = doneStatus(); el.replStatus.className = "tool-panel-status ok"; }
     } catch (err) {
       replAppendLog(`fout: ${err.message}\n`, "repl-line-error");
       if (el.replStatus) { el.replStatus.textContent = `Fout: ${err.message}`; el.replStatus.className = "tool-panel-status crashed"; }
@@ -2031,6 +2089,10 @@
       };
     }
     if (el.btnReplLoad) el.btnReplLoad.onclick = () => sendReplLoad();
+    if (el.selReplEngine) {
+      el.selReplEngine.value = state.replEngine;
+      el.selReplEngine.onchange = () => setReplEngine(el.selReplEngine.value);
+    }
     if (el.selReplExample) {
       el.selReplExample.onchange = () => {
         const chosen = el.selReplExample.value;
