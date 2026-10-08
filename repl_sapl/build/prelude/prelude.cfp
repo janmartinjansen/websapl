@@ -1,0 +1,207 @@
+// repl_prelude.cfp -- de vaste prelude van sapl_compiler/tools/
+// repl_retag.py en vm.cpp's REPL_HOST (zie repl/README.md
+// en archive/docs/2026-09-13_repl_via_retag_linking_plan.md #6/showVal).
+//
+// BEWUST GEEN `#import "repl/stddyn.cfp"`: dat bestand doet zelf
+// `#import "lib/stdlib.cfp"`, wat de VOLLEDIGE stdlib meebrengt --
+// inclusief `take`/`filter`/`map`/`drop`/`reverse`/`foldl`/`foldr`, die
+// `showVal`/`printVal` helemaal niet nodig hebben (geverifieerd: hun
+// enige echte afhankelijkheden zijn `itoa`/`list2str`/`strcat`, en die
+// op hun beurt alleen `append`/`length`/`fillStr`/`strls`/`::list`). Elke
+// naam hier is voor `:load` een gereserveerde naam (§6 van het REPL-
+// gebruiksdoc, "prelude-collision"-check) -- en 10 van de 12
+// kernbenchmarks declareren zelf `::list`, en sommige (bv. `primes.cfp`)
+// hun eigen `take`. Met de volledige stdlib als prelude zou `:load` op
+// zulke, overigens heel normale, standalone `.cfp`-bestanden onnodig
+// vaak mislukken (gemeld: `:load benchmarks/primes.jmvm` gaf uiteindelijk
+// een botsing op `take`, een naam die `showVal` nooit gebruikt). Deze
+// file bevat daarom alleen wat `showVal`/`printVal` ECHT nodig hebben,
+// zelfstandig gekopieerd (niet ge-`#import`) uit `lib/stdlib.cfp` en
+// `repl/stddyn.cfp` -- geen wijziging aan die twee bestanden, want beide
+// hebben andere gebruikers (`repl/repl.cfp`, `reflection/serialize.cfp`,
+// `reflection/generic.cfp`, ...) die de volledige stdlib wél nodig hebben.
+
+::list = Nil | Cons !x xs
+
+append xs ys =
+  case xs
+    (Nil -> ys)
+    (Cons x xs -> Cons x (append xs ys))
+
+length xs =
+  case xs
+    (Nil -> 0)
+    (Cons x xs -> 1 + length xs)
+
+strls !n !s = if (n < strlen s) (Cons (strat n s) (strls (n+1) s)) Nil
+
+str2list !s = strls 0 s
+
+strEqual !s1 !s2 = (strlen s1 == strlen s2) /\ strEqualAt 0 s1 s2
+
+strEqualAt !n !s1 !s2 = if (n >= strlen s1) 1 (if (strat n s1 == strat n s2) (strEqualAt (n+1) s1 s2) 0)
+
+fillStr !i !xs !arr =
+  case xs
+    (Nil -> arr)
+    (Cons c cs -> fillStr (i+1) cs (update c i arr))
+
+list2str !cs = fillStr 0 cs (strcreate (length cs))
+
+strcat !s1 !s2 = list2str (append (str2list s1) (str2list s2))
+
+itoa n =
+  if (n < 0) (Cons '-' (itoa (0 - n)))
+  (if (n < 10) (Cons ('0' + n) Nil)
+  (append (itoa (n / 10)) (Cons ('0' + (n % 10)) Nil)))
+
+// --- vanaf hier: repl/stddyn.cfp's eigen showVal/printVal, ongewijzigd ---
+
+TYPE_INT    = 1
+TYPE_FLOAT  = 2
+TYPE_STRING = 3
+TYPE_FUNC   = 4
+// Char (tag 11 in de VM, sinds 5 oktober 2026): -1, want ADT-ids beginnen
+// bij 5 en `typeId x > TYPE_FUNC` betekent overal "een ADT".
+TYPE_CHAR   = 0 - 1
+
+isInt    !x = typeId x == TYPE_INT
+isFloat  !x = typeId x == TYPE_FLOAT
+isString !x = typeId x == TYPE_STRING
+isFunc   !x = typeId x == TYPE_FUNC
+isChar   !x = typeId x == TYPE_CHAR
+isADT    !x = typeId x > TYPE_FUNC
+
+applyDynamicByName !name !args = applyDynamic (lookup name) args
+
+showVal x =
+  let tid = typeId x in if (tid > TYPE_FUNC) (showConstr x) (showValAux tid x)
+
+showValAux !tid !x =
+  if (tid == TYPE_INT) (list2str (itoa x))
+  (if (tid == TYPE_FLOAT) (ftoa x)
+  (if (tid == TYPE_STRING) x
+  (if (tid == TYPE_FUNC) (showFunc x)
+  (if (tid == TYPE_CHAR) (showChar x)
+  (showConstr x)))))
+
+// 'a', met de escapes die de lexers kennen (\n \t \\ \').
+showChar !c = list2str (Cons 39 (append (showCharBody c) (Cons 39 Nil)))
+
+showCharBody !c =
+  if (c == 10) (Cons 92 (Cons 'n' Nil))
+  (if (c == 9) (Cons 92 (Cons 't' Nil))
+  (if (c == 92) (Cons 92 (Cons 92 Nil))
+  (if (c == 39) (Cons 92 (Cons 39 Nil))
+  (Cons c Nil))))
+
+showFunc !x = strcat "<fn:" (strcat (funcName x) (strcat "/" (strcat (list2str (itoa (funcArity x))) ">")))
+
+// ::list (Cons/Nil) krijgt een STATISCHE aanroep naar show_Cons/show_Nil,
+// bewust niet via de lookup+applyDynamic-haak hieronder: een module-gelinkte
+// REPL (sapl_compiler/retaglink.cfp, gebruikt door zowel de websapl-REPL als
+// sapl_compiler/tools/repl_retag.py) snoeit elke functie die vanaf `start`
+// niet STATISCH bereikbaar is (sapl_compiler/reachability.cfp's calledNamesE
+// ziet alleen App/Ct-aanroepen, geen strcat-opgebouwde naam die pas via
+// `lookup` ten uitvoer komt) -- show_Cons/show_Nil zouden anders in precies
+// die context stilzwijgend gesnoeid worden en de lijst-default zou daar
+// onopgemerkt terugvallen op de generieke weergave. Zie
+// docs/2026-09-15_show_specialisatie_hook.md voor de volledige analyse.
+//
+// Specialisatiehaak voor ELKE ANDERE constructor: een zelfgedefinieerde
+// `show_<ConstrName> !x = ...` (exact 1 parameter, retourneert een gepakte
+// string) overschrijft de generieke "Naam(veld1, ...)"-weergave -- maar
+// ALLEEN via een plat `./compile`/`./compile-sapl`; in een module-gelinkte
+// REPL geldt dezelfde pruning-beperking als hierboven, dus daar wordt zo'n
+// haak stilzwijgend genegeerd (bekende, niet (nog) opgeloste beperking).
+showConstr !x =
+  let name = constrName x in
+  if (strEqual name "Cons") (show_Cons x)
+  (if (strEqual name "Nil") (show_Nil x) (showConstrDynamic x name))
+
+showConstrDynamic !x !name =
+  let h = lookup (strcat "show_" name) in
+  if (typeId h == TYPE_FUNC) (applyDynamic h (Cons x Nil)) (showConstrGeneric x name)
+
+// Tupels en moduleconstructors zoals repl/stddyn.cfp (en de notebook) ze
+// tonen: `(1, 2)` i.p.v. `__Tuple2(1, 2)`, `Wel(3)` i.p.v. `Lijst__Wel(3)`.
+// Tot 27 september 2026 kende de REPL-prelude dat niet.
+showConstrGeneric !x !name =
+  let arity = getConstrArity x,
+      shown = displayConName name in
+  if (isTupleName name) (strcat "(" (strcat (showFields x 0 arity) ")"))
+  (if (arity == 0) shown (strcat shown (strcat "(" (strcat (showFields x 0 arity) ")"))))
+
+isTupleName !name = if (strlen name > 7) (strEqualAt 0 "__Tuple" name) False
+
+// `Module__Naam` -> `Naam` (alleen de weergave; de show_-haak en de
+// ariteit zoeken met de volle naam). Zelfde regel als repl/stddyn.cfp.
+displayConName !name =
+  let n = strlen name in
+  if (n > 0) (displayConNameFrom name n (isUpperCode (strat 0 name))) name
+
+displayConNameFrom !name !n !upper = if upper (displayConNameScan name n 1) name
+
+displayConNameScan !name !n !i =
+  if (i + 2 >= n) name
+  (if (isModuleSep name i) (strslice name (i + 2) n) (displayConNameScan name n (i + 1)))
+
+isModuleSep !name !i = (strat i name == '_') /\ (strat (i + 1) name == '_') /\ isUpperCode (strat (i + 2) name)
+
+isUpperCode !c = (c >= 'A') /\ (c <= 'Z')
+
+// Lijst-default: een ::list-waarde (Cons/Nil, hierboven) toont
+// showVal/printVal als "[1, 2, 3]" i.p.v. de generieke
+// "Cons(1, Cons(2, ...))" -- statisch aangeroepen vanuit showConstr
+// hierboven, dus dit werkt overal, ook in een module-gelinkte REPL.
+show_Nil !xs = "[]"
+
+show_Cons !xs = strcat "[" (strcat (showListItems xs) "]")
+
+showListItems !xs =
+  case xs
+    (Cons x rest -> case rest (Nil -> showVal x) (_ -> strcat (showVal x) (strcat ", " (showListItems rest))))
+    (_ -> "")
+
+showFields !x !i !n =
+  if (i == n)
+    ""
+    (if (i == n - 1)
+       (showVal (getField x i))
+       (strcat (showVal (getField x i)) (strcat ", " (showFields x (i + 1) n))))
+
+getConstrArity !x =
+  let c = lookup (constrName x) in if (typeId c == TYPE_FUNC) (funcArity c) 0
+
+printVal !x = printString (showVal x)
+
+// == Weergave op type (5 oktober 2026, notebookplan fase 3) ==================
+// Bools hebben geen eigen runtime-tag (beslissing 3 van het notebookplan):
+// een bool is in de VM gewoon 1/0. De REPL en het notebook typeren daarom de
+// expressie eerst (preprocess/typecheck.jmvm); bevat het type `Bool`, dan
+// tonen ze het resultaat met `printValT "<type>" x`: `Bool` -> True/False,
+// `[T]` -> een lijst met elk element op type T, al het andere via showVal.
+showTyped !ty x =
+  if (strEqual ty "Bool") (showBoolVal x)
+  (if (isListTy ty) (strcat "[" (strcat (showTypedItems (listElemTy ty) x) "]")) (showVal x))
+
+showBoolVal !b = if (b == 0) "False" "True"
+
+isListTy !ty = if (strlen ty < 2) 0 (isListTy2 ty)
+
+isListTy2 !ty = (strat 0 ty == '[') /\ (strat (strlen ty - 1) ty == ']')
+
+listElemTy !ty = strslice ty 1 (strlen ty - 1)
+
+showTypedItems !et !xs =
+  case xs
+    (Nil -> "")
+    (Cons y ys -> showTypedItemsC et y ys)
+
+showTypedItemsC !et y !ys =
+  case ys
+    (Nil -> showTyped et y)
+    (Cons z zs -> strcat (showTyped et y) (strcat ", " (showTypedItems et ys)))
+
+printValT !ty x = printString (showTyped ty x)
+

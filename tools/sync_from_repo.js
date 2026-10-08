@@ -72,6 +72,11 @@ const ENTRIES = [
   { src: "sapl_compiler/retaglink.jmvm", dst: "engine/retaglink.jmvm" },
   { src: "sapl_compiler/saplcomp.jmvm", dst: "engine/saplcomp.jmvm" },
   { src: "sapl_compiler/saplcomp_module.jmvm", dst: "engine/saplcomp_module.jmvm" },
+  // De REPL in Sapl (stap 6, 7 oktober 2026): bytecode en prelude-interface.
+  { src: "repl_sapl/build/mini_repl.jmvm", dst: "repl_sapl/build/mini_repl.jmvm" },
+  { src: "repl_sapl/build/prelude/prelude.cfp", dst: "repl_sapl/build/prelude/prelude.cfp" },
+  { src: "repl_sapl/build/prelude/prelude.pp.cfp", dst: "repl_sapl/build/prelude/prelude.pp.cfp" },
+  { src: "repl_sapl/build/prelude/prelude.defs.txt", dst: "repl_sapl/build/prelude/prelude.defs.txt" },
   { src: "preprocess/typecheck.jmvm", dst: "engine/typecheck.jmvm" },
   { src: "examples/curryvb.cfp", dst: "examples/curryvb.cfp" },
   { src: "examples/curryvbns.cfp", dst: "examples/curryvbns.cfp" },

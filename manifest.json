@@ -1106,7 +1106,7 @@
           "path": "lc_repl/index.html",
           "type": "file",
           "ext": ".html",
-          "size": 14140,
+          "size": 18460,
           "isBinary": false
         },
         {
@@ -1114,7 +1114,7 @@
           "path": "lc_repl/lc_repl.jmvm",
           "type": "file",
           "ext": ".jmvm",
-          "size": 150435,
+          "size": 181646,
           "isBinary": false
         },
         {
@@ -1186,7 +1186,7 @@
           "path": "lib/notebook_glue.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 4442,
+          "size": 5326,
           "isBinary": false
         },
         {
@@ -1218,7 +1218,7 @@
           "path": "lib/stdlib.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 3972,
+          "size": 3559,
           "isBinary": false
         },
         {
@@ -1226,7 +1226,7 @@
           "path": "lib/text.spp",
           "type": "file",
           "ext": ".spp",
-          "size": 8874,
+          "size": 8745,
           "isBinary": false
         }
       ],
@@ -1426,7 +1426,7 @@
           "path": "parser_combinators/saplParse.spp",
           "type": "file",
           "ext": ".spp",
-          "size": 28601,
+          "size": 28784,
           "isBinary": false
         }
       ],
@@ -1474,7 +1474,7 @@
           "path": "repl/repl_prelude.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 5543,
+          "size": 8278,
           "isBinary": false
         },
         {
@@ -1482,7 +1482,7 @@
           "path": "repl/stddyn.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 4845,
+          "size": 6485,
           "isBinary": false
         }
       ],
@@ -1561,6 +1561,62 @@
       "_expanded": false
     },
     {
+      "name": "repl_sapl",
+      "path": "repl_sapl",
+      "type": "directory",
+      "children": [
+        {
+          "name": "build",
+          "path": "repl_sapl/build",
+          "type": "directory",
+          "children": [
+            {
+              "name": "prelude",
+              "path": "repl_sapl/build/prelude",
+              "type": "directory",
+              "children": [
+                {
+                  "name": "prelude.cfp",
+                  "path": "repl_sapl/build/prelude/prelude.cfp",
+                  "type": "file",
+                  "ext": ".cfp",
+                  "size": 8279,
+                  "isBinary": false
+                },
+                {
+                  "name": "prelude.defs.txt",
+                  "path": "repl_sapl/build/prelude/prelude.defs.txt",
+                  "type": "file",
+                  "ext": ".txt",
+                  "size": 1127,
+                  "isBinary": false
+                },
+                {
+                  "name": "prelude.pp.cfp",
+                  "path": "repl_sapl/build/prelude/prelude.pp.cfp",
+                  "type": "file",
+                  "ext": ".cfp",
+                  "size": 8490,
+                  "isBinary": false
+                }
+              ],
+              "_expanded": false
+            },
+            {
+              "name": "mini_repl.jmvm",
+              "path": "repl_sapl/build/mini_repl.jmvm",
+              "type": "file",
+              "ext": ".jmvm",
+              "size": 5683887,
+              "isBinary": false
+            }
+          ],
+          "_expanded": false
+        }
+      ],
+      "_expanded": false
+    },
+    {
       "name": "sapl_compiler",
       "path": "sapl_compiler",
       "type": "directory",
@@ -1570,7 +1626,7 @@
           "path": "sapl_compiler/ast_helpers.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 20624,
+          "size": 21285,
           "isBinary": false
         },
         {
@@ -1578,7 +1634,7 @@
           "path": "sapl_compiler/lexer2.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 11729,
+          "size": 12821,
           "isBinary": false
         },
         {
@@ -1602,7 +1658,7 @@
           "path": "sapl_compiler/stage_dump.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 18432,
+          "size": 19219,
           "isBinary": false
         },
         {
@@ -1610,7 +1666,7 @@
           "path": "sapl_compiler/stage5_codegen.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 68921,
+          "size": 73688,
           "isBinary": false
         }
       ],
@@ -1837,7 +1893,7 @@
       "path": "notebook.html",
       "type": "file",
       "ext": ".html",
-      "size": 27925,
+      "size": 32968,
       "isBinary": false
     },
     {
@@ -1845,7 +1901,7 @@
       "path": "README.md",
       "type": "file",
       "ext": ".md",
-      "size": 9998,
+      "size": 10398,
       "isBinary": false
     }
   ]

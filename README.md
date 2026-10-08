@@ -165,11 +165,16 @@ Wil je de WASM-engine opnieuw compileren vanuit de C++ bronbestanden? Zorg dat d
 
 ```bash
 source ~/emsdk/emsdk_env.sh
-em++ -O3 -fwasm-exceptions -DIMAGE_API -sALLOW_MEMORY_GROWTH=1 -sFORCE_FILESYSTEM=1 -sMODULARIZE=1 \
+em++ -O3 -fwasm-exceptions -DIMAGE_API -DLOAD_CODE_EXPERIMENT -sALLOW_MEMORY_GROWTH=1 -sFORCE_FILESYSTEM=1 -sMODULARIZE=1 \
      -sEXPORT_NAME=createJMVMModule \
      -sEXPORTED_RUNTIME_METHODS='["FS","callMain","stringToUTF8","UTF8ToString","ccall","cwrap"]' \
      -lidbfs.js -DSWITCH_CASE parser.cpp vm.cpp -o websapl/engine/jmvm.js
 ```
+
+`-DLOAD_CODE_EXPERIMENT` (sinds 7 oktober 2026) is voor de REPL in Sapl
+(`repl_sapl/`, de berichten `RSAPL_EVAL`/`RSAPL_RESET` in de worker): de
+lader die zelf gecompileerde stukken in het lopende programma zet, en
+`jmvm_rs_start`/`jmvm_rs_feed` (pauzeren bij `readLine`).
 
 `-DIMAGE_API` en `-fwasm-exceptions` (sinds 6 oktober 2026) zijn voor het
 blijvende beeld van het notebook (`jmvm_image_run`, zie

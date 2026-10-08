@@ -1647,6 +1647,90 @@ function replFuncs() {
 // bestand las, zou anders de oude inhoud houden).
 // Eén exemplaar per gebruik ("notebook", "repl"), zodat hun namen elkaar
 // niet in de weg zitten.
+// == De REPL in Sapl (stap 6 van docs/2026-10-07_repl_in_sapl_plan.md) ======
+// Eén Sapl-programma (repl_sapl/build/mini_repl.jmvm: preprocessor,
+// compiler en typechecker als modules, plus de sessie) in een EIGEN
+// wasm-exemplaar, dat tussen de regels gepauzeerd staat bij readLine
+// (jmvm_rs_start/jmvm_rs_feed in vm.cpp). Dat exemplaar wordt voor niets
+// anders gebruikt: de gepauzeerde run bezit alle globale toestand van de VM.
+// Sterft het (een wasm-trap, bv. 1 / 0), dan is de sessie weg; dat wordt
+// gemeld en de volgende regel begint een nieuwe sessie.
+let rsInstance = null;
+let rsOutput = [];
+const RS_FILES = ["repl_sapl/build/mini_repl.jmvm", "repl_sapl/build/prelude/prelude.cfp",
+  "repl_sapl/build/prelude/prelude.pp.cfp", "repl_sapl/build/prelude/prelude.defs.txt"];
+
+function rsText() {
+  return new TextDecoder().decode(Uint8Array.from(rsOutput));
+}
+
+async function rsStart() {
+  const inst = await createJMVMModule({
+    noInitialRun: true,
+    locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm" : (prefix || "") + p),
+    stdin: () => null,
+    stdout: (c) => rsOutput.push(c & 255),
+    stderr: () => {}
+  });
+  for (const rel of RS_FILES) {
+    const res = await fetch("../" + rel + "?v=" + Date.now());
+    if (!res.ok) throw new Error("REPL in Sapl: " + rel + " niet gevonden");
+    mkdirsFor(inst.FS, "/" + rel);
+    inst.FS.writeFile("/" + rel, new Uint8Array(await res.arrayBuffer()));
+  }
+  mkdirsFor(inst.FS, "/lib/stdlib.cfp");
+  inst.FS.writeFile("/lib/stdlib.cfp", stdlibContent);
+  for (const [p, c] of Object.entries(sppDeps)) { mkdirsFor(inst.FS, p); inst.FS.writeFile(p, c); }
+  mkdirsFor(inst.FS, "/repl_sapl/gen/x");
+  inst.FS.chdir("/");
+  rsOutput = [];
+  const st = inst.ccall("jmvm_rs_start", "number", ["string"], ["repl_sapl/build/mini_repl.jmvm"]);
+  if (st !== 1) throw new Error("REPL in Sapl startte niet: " + rsText());
+  rsInstance = inst;
+}
+
+// Bestanden die een regel nodig heeft vóór hij naar de VM gaat: bij
+// `:import "pad" as X` de module en (transitief) haar imports, bij `:load
+// pad` het bestand en zijn imports. De VM kan in een worker niet zelf
+// ophalen.
+async function rsPrepare(line) {
+  let src = "";
+  const mi = line.match(/^:import\s+(.*)$/);
+  if (mi) src = "import " + mi[1].trim();
+  const ml = line.match(/^:load\s+(\S+)/);
+  if (ml) {
+    const rel = ml[1].startsWith("/") ? ml[1].slice(1) : ml[1];
+    let content = null;
+    for (const cand of ["/" + rel, "/workspace/" + rel]) {
+      if (jmvmModule && jmvmModule.FS.analyzePath(cand).exists) { content = jmvmModule.FS.readFile(cand, { encoding: "utf8" }); break; }
+    }
+    if (content === null) {
+      try { const res = await fetch("../" + rel); if (res.ok) content = await res.text(); } catch (_) {}
+    }
+    if (content !== null) { mkdirsFor(rsInstance.FS, "/" + rel); rsInstance.FS.writeFile("/" + rel, content); src = content; }
+  }
+  if (!src) return;
+  const found = await collectSppImports(src);
+  for (const [p, c] of Object.entries(found)) { mkdirsFor(rsInstance.FS, p); rsInstance.FS.writeFile(p, c); }
+}
+
+// Eén invoerregel: de uitvoer van de REPL tot de volgende prompt.
+async function rsEval(line) {
+  if (!rsInstance) await rsStart();
+  await rsPrepare(line);
+  rsOutput = [];
+  let st;
+  try {
+    st = rsInstance.ccall("jmvm_rs_feed", "number", ["string"], [line]);
+  } catch (e) {
+    rsInstance = null;
+    return { output: rsText(), restarted: true };
+  }
+  if (st !== 1) rsInstance = null;   // het programma stopte (quit)
+  const text = rsText();
+  return { output: text.endsWith("repl> ") ? text.slice(0, -6) : text, restarted: false };
+}
+
 const imageInstances = {};
 const imageDataKeys = {};
 let imageOutput = null;
@@ -2227,6 +2311,23 @@ self.onmessage = async function (e) {
       } catch (err) {
         postMessage({ type: "LC_RESULT", id: msg.id, success: false, error: err.message });
       }
+      break;
+
+    case "RSAPL_EVAL":
+      // De REPL in Sapl (rsEval hierboven); naast de gewone REPL, nog niet
+      // in de interface.
+      try {
+        const r = await rsEval(msg.line);
+        postMessage({ type: "RSAPL_RESULT", id: msg.id, success: !r.restarted, output: r.output,
+          error: r.restarted ? "de REPL-engine stopte (bv. 1 / 0); de sessie is weg, de volgende regel begint opnieuw" : undefined });
+      } catch (err) {
+        postMessage({ type: "RSAPL_RESULT", id: msg.id, success: false, error: err.message });
+      }
+      break;
+
+    case "RSAPL_RESET":
+      rsInstance = null;
+      postMessage({ type: "RSAPL_RESULT", id: msg.id, success: true, output: "" });
       break;
 
     case "REPL_INIT":
