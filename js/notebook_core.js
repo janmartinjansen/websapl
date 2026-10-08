@@ -33,8 +33,8 @@
  *
  * Speciale celtypen, in het bestand als commentaar (zodat het een geldig
  * Sapl+-bestand blijft, net als [markdown]):
- *   //%% [type]  -- elke regel een expressie; toont haar type
- *                   (generateTypeProgram, via de typechecker);
+ *   //%% [type]  -- elke regel een expressie; toont haar type (in de
+ *                   notebookmodus, getypeerd tegen de sessie);
  *   //%% [lc]    -- pure lambda-calculus via lc_repl/lc_repl.jmvm; alle
  *                   lc-cellen samen vormen één sessie (lcInput/parseLcOutput).
  */
@@ -161,14 +161,6 @@
     }
     return { kind: "def" };
   }
-
-  // De kop van het typeprogramma van de type-cellen (generateTypeProgram).
-  const HEADER = [
-    "#import \"repl/stddyn.cfp\"",
-    "#import \"lib/notebook_glue.cfp\"",
-    "import \"lib/display.spp\" as D",
-    "import \"grafisch/graphics.cfp\" as G",
-  ];
 
   const NO_MESSAGE = "De cel stopte zonder melding.";
 
@@ -329,47 +321,6 @@
     return result;
   }
 
-  // == type-cellen ==========================================================
-
-  /**
-   * Programma voor de typechecker: de kop, alle definitiecellen, en per
-   * regel van een type-cel `__typeK = <expressie>`.
-   * { source, typeLines: [{ cell, expr, name }] }
-   */
-  function generateTypeProgram(cells, only) {
-    const body = [...HEADER, ""];
-    const typeLines = [];
-    cells.forEach((c, i) => {
-      if (c.kind === "code" && classifyCell(c.source).kind === "def" && !classifyCell(c.source).error) body.push(c.source, "");
-      if (c.kind === "type" && (!only || only.has(i))) {
-        for (const expr of codeLines(c.source)) {
-          const name = `__type${typeLines.length + 1}`;
-          typeLines.push({ cell: i, expr: expr.trim(), name });
-          body.push(`${name} = ${expr.trim()}`, "");
-        }
-      }
-    });
-    body.push("start = 0");
-    return { source: body.join("\n") + "\n", typeLines };
-  }
-
-  /** { cellIndex: [{ expr, type } | { expr, error }] } uit het typecheckrapport. */
-  function parseTypeReport(report, typeLines) {
-    const byName = {};
-    for (const line of String(report || "").split("\n")) {
-      const ok = line.match(/^(__type\d+) :: (.*)$/);
-      const bad = line.match(/^(__type\d+): FOUT: (?:__type\d+: )?(.*)$/);
-      if (ok) byName[ok[1]] = { type: ok[2] };
-      else if (bad) byName[bad[1]] = { error: bad[2] };
-    }
-    const out = {};
-    for (const t of typeLines) {
-      const r = byName[t.name] || { error: "geen type gevonden (voorbewerken mislukt?)" };
-      (out[t.cell] = out[t.cell] || []).push({ expr: t.expr, ...r });
-    }
-    return out;
-  }
-
   // == lc-cellen ============================================================
 
   /** Alle regels van alle lc-cellen, in volgorde: één lc_repl-sessie. */
@@ -415,7 +366,8 @@
   // docs/2026-10-08_notebook_in_sapl_plan.md: de cellen gaan als één
   // bestand naar `:nb pad` (repl_sapl/mini_repl.spp), dat zelf bepaalt wat
   // er opnieuw gecompileerd moet worden. Alle definitiecellen gaan mee, de
-  // expressiecellen alleen als ze in `only` staan (of alles zonder `only`).
+  // expressie- en type-cellen alleen als ze in `only` staan (of alles zonder
+  // `only`).
   // mode: "any" (in elke volgorde, één letrec) of "top" (van boven naar
   // beneden). Resultaat: { input, exprCells: [{ cell, n }], errors }; errors:
   // cellen die classifyCell afwijst.
@@ -424,6 +376,8 @@
     const exprCells = [];
     const errors = {};
     cells.forEach((c, i) => {
+      // Een type-cel: elke regel een expressie, getypeerd tegen de sessie.
+      if (c.kind === "type" && (!only || only.has(i))) out.push(`@@type ${i}`, c.source);
       if (c.kind !== "code") return;
       const cls = classifyCell(c.source);
       if (cls.error) { errors[i] = cls.error; return; }
@@ -441,30 +395,36 @@
    * De uitvoer van `:nb`: de cellen zoals parseOutput, plus
    * defErrors { cellIndex: melding } (een definitiecel met een fout, of die
    * afhangt van zo'n cel; cel -1 is de uitvoerlaag zelf), error (een fout
-   * buiten de cellen) en done (de regel @@nbdone kwam).
+   * buiten de cellen), types { cellIndex: [{ expr, type } | { expr, error }] }
+   * (de type-cellen) en done (de regel @@nbdone kwam).
    */
   function parseNbOutput(raw) {
     const defErrors = {};
+    const types = {};
     const general = [];
     const rest = [];
     let done = false;
     for (const line of raw.split("\n")) {
       const d = line.match(/^@@deferror (-?\d+) (.*)$/);
       const e = line.match(/^@@error (.*)$/);
-      if (d) defErrors[+d[1]] = defErrors[+d[1]] ? defErrors[+d[1]] + "\n" + d[2] : d[2];
+      const tok = line.match(/^@@typeok (\d+) (.*) :: (.*)$/);
+      const terr = line.match(/^@@typeerr (\d+) (.*?) @@ (.*)$/);
+      if (tok) (types[+tok[1]] = types[+tok[1]] || []).push({ expr: tok[2], type: tok[3] });
+      else if (terr) (types[+terr[1]] = types[+terr[1]] || []).push({ expr: terr[2], error: terr[3] });
+      else if (d) defErrors[+d[1]] = defErrors[+d[1]] ? defErrors[+d[1]] + "\n" + d[2] : d[2];
       else if (e) general.push(e[1]);
       else if (line === "@@nbdone") done = true;
       else rest.push(line);
     }
     const parsed = parseOutput(rest.join("\n"));
     if (defErrors[-1]) general.unshift("uitvoerlaag: " + defErrors[-1]);
-    return { cells: parsed.cells, loose: parsed.loose, defErrors, error: general.join("\n"), done };
+    return { cells: parsed.cells, loose: parsed.loose, defErrors, types, error: general.join("\n"), done };
   }
 
   const api = {
     generateNbInput, parseNbOutput, parseSettings, NO_MESSAGE,
     parseNotebook, serializeNotebook, classifyCell, parseOutput, definedNames, cafHintNames,
-    referencedNames, providedNames, dependents, generateTypeProgram, parseTypeReport, lcInput, parseLcOutput,
+    referencedNames, providedNames, dependents, lcInput, parseLcOutput,
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.SaplNotebook = api;

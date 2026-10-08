@@ -138,9 +138,9 @@
   (function () {
     const NB = window.SaplNotebook;
     // ?engine=server: in de Workbench (workbench/server.js serveert deze
-    // pagina onder /websapl/). Dan draaien voorbewerken, compileren, de
-    // typechecker en lc_repl native via /api/notebook/*, met de repo-root als
-    // werkmap, en gaan openen en opslaan naar echte bestanden.
+    // pagina onder /websapl/). Dan draaien de notebookmodus (een eigen
+    // ./rs-driver-proces) en lc_repl native via /api/notebook/*, met de
+    // repo-root als werkmap, en gaan openen en opslaan naar echte bestanden.
     const SERVER = new URLSearchParams(location.search).get("engine") === "server";
     const STORE_KEY = SERVER ? "workbench_notebook" : "websapl_notebook";
     const TIMEOUT_MS = 30000;
@@ -223,7 +223,6 @@
         }
         return r;
       }
-      if (msg.type === "TYPECHECK") return post("/api/notebook/typecheck", { source: msg.source });
       if (msg.type === "LC_RUN") {
         const r = await post("/api/notebook/lc", { stdin: msg.stdin });
         if (r.timedOut) throw new Error(`lc_repl: geen antwoord binnen ${TIMEOUT_MS / 1000} s (divergente term?).`);
@@ -288,8 +287,7 @@
       const t0 = performance.now();
       let n = 0;
       try {
-        if (exprT.size || defT.length) { n += exprT.size; await runProgram(exprT, defT); }
-        if (typeT.size) { n += typeT.size; await runTypes(typeT); }
+        if (exprT.size || defT.length || typeT.size) { n += exprT.size + typeT.size; await runProgram(exprT, defT, typeT); }
         if (lcT) { n += 1; await runLc(); }
         setStatus(`klaar (${Math.round(performance.now() - t0)} ms, ${targets.size === cells.length ? "alles" : targets.size + " cel" + (targets.size === 1 ? "" : "len")})`);
       } catch (err) {
@@ -305,8 +303,8 @@
     // De notebookmodus van de REPL in Sapl: het hele notebook als `:nb`-
     // invoer; de engine compileert zelf alleen wat veranderde, typeert de
     // expressiecellen (Bool als True/False) en zet elke cel in een eigen try.
-    async function runProgram(exprT, defT) {
-      const gen = NB.generateNbInput(cells, exprT, settings.order);
+    async function runProgram(exprT, defT, typeT) {
+      const gen = NB.generateNbInput(cells, new Set([...exprT, ...typeT]), settings.order);
       progressText = "";
       currentGen = gen;
       let r;
@@ -322,16 +320,19 @@
           else cells[e.cell].output = { notRun: true, afterStop: hung };
         }
         for (const i of defT) cells[i].output = { def: true };
+        for (const i of typeT) cells[i].output = { notRun: true };
         throw err;
       }
       if (!r.success) {
         showBanner(r.error);
         for (const e of gen.exprCells) cells[e.cell].output = { notRun: true };
         for (const i of defT) cells[i].output = { notRun: true };
+        for (const i of typeT) cells[i].output = { notRun: true };
         return;
       }
       const p = NB.parseNbOutput(r.output);
       for (const i of defT) cells[i].output = { def: true };
+      for (const i of typeT) cells[i].output = { types: p.types[i] || [] };
       // Alle definitiecellen gaan mee: een fout ook tonen bij een cel die
       // niet gekozen was (bv. die afhangt van de gewijzigde cel).
       for (const [i, msg] of Object.entries(p.defErrors)) if (+i >= 0 && cells[+i]) cells[+i].output = { error: msg };
@@ -356,13 +357,6 @@
       });
       const banner = [p.error, p.loose].filter(Boolean).join("\n");
       if (banner) showBanner(banner);
-    }
-
-    async function runTypes(typeT) {
-      const tp = NB.generateTypeProgram(cells, typeT);
-      const t = await call({ type: "TYPECHECK", source: tp.source, path: "/workspace/notebook_types.spp" }, TIMEOUT_MS);
-      const byCell = NB.parseTypeReport(t.report, tp.typeLines);
-      for (const i of typeT) cells[i].output = { types: byCell[i] || [] };
     }
 
     async function runLc() {

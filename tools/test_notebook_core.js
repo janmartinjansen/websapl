@@ -94,10 +94,11 @@ check("dependents expressie", [...nb.dependents(dep, 6)], [6]);
 check("dependents #import", nb.dependents(dep, 7).size, 8);
 check("deelprogramma", nb.generateNbInput(dep, new Set([4])).exprCells, [{ cell: 4, n: 1 }]);
 
-// 8. type-cellen.
-const tp = nb.generateTypeProgram(dep);
-check("typeLines", tp.typeLines, [{ cell: 5, expr: "kwadraat", name: "__type1" }]);
-check("typerapport", nb.parseTypeReport("__type1 :: (Num -> Num)\n", tp.typeLines), { 5: [{ expr: "kwadraat", type: "(Num -> Num)" }] });
+// 8. type-cellen (in de notebookmodus).
+check("type-cel in de invoer", nb.generateNbInput(dep).input.includes("@@type 5\nkwadraat"), true);
+check("type-cel niet gekozen", nb.generateNbInput(dep, new Set([4])).input.includes("@@type"), false);
+check("typen uit de uitvoer", nb.parseNbOutput("@@typeok 5 kwadraat :: (Num -> Num)\n@@typeerr 5 x y @@ onbekende functie: x\n@@nbdone\n").types,
+  { 5: [{ expr: "kwadraat", type: "(Num -> Num)" }, { expr: "x y", error: "onbekende functie: x" }] });
 
 // 9. lc-cellen (uitvoer zoals lc_repl die schrijft).
 const lcCells = [{ kind: "lc", source: "I = \\x.x\n:nf I 1" }, { kind: "lc", source: ":nf bad\n:nf 2" }];

@@ -74,6 +74,13 @@ const cellsOf = (...srcs) => srcs.map((source) => ({ kind: "code", source }));
     const deps = NB.dependents(cells, d);
     t = now(); const r4 = await nbRun(cells, deps); const defMs = now() - t;
     const nDeps = [...deps].filter((i) => kinds[i] === "expr").length;
+    if (file.includes("kennismaking")) {
+      const g = NB.generateNbInput(cells);
+      const r = await call({ type: "RSAPL_EVAL", line: ":nb " + NB_PATH, files: { [NB_PATH]: g.input } });
+      const types = NB.parseNbOutput(r.output).types;
+      check("type-cel tegen de sessie", JSON.stringify(types) === JSON.stringify({ 16: [
+        { expr: "zeef", type: "([Num] -> [Num])" }, { expr: "L.take 15 priemen", type: "[Num]" }, { expr: "T.padLeft 4", type: "(Str -> Str)" }] }), JSON.stringify(types));
+    }
     check(`${file}: na wijzigingen nog steeds zonder fouten`, !r3.error && !r4.error && Object.values(r4.byCell).every((c) => c.blocks));
     console.log(`      tijden: eerste run ${firstMs.toFixed(0)} ms, alles opnieuw zonder wijziging ${againMs.toFixed(0)} ms, ` +
       `expressiecel [${e + 1}] ${exprMs.toFixed(0)} ms, definitiecel [${d + 1}] met ${nDeps} expressiecellen ${defMs.toFixed(0)} ms`);
