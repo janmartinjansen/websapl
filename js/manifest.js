@@ -1571,6 +1571,278 @@ window.WEBSAPL_TREE = [
         "type": "directory",
         "children": [
           {
+            "name": "modules",
+            "path": "repl_sapl/build/modules",
+            "type": "directory",
+            "children": [
+              {
+                "name": "index.txt",
+                "path": "repl_sapl/build/modules/index.txt",
+                "type": "file",
+                "ext": ".txt",
+                "size": 525,
+                "isBinary": false
+              },
+              {
+                "name": "mgrafischgraphicscfp.adts.cfp",
+                "path": "repl_sapl/build/modules/mgrafischgraphicscfp.adts.cfp",
+                "type": "file",
+                "ext": ".cfp",
+                "size": 650,
+                "isBinary": false
+              },
+              {
+                "name": "mgrafischgraphicscfp.defs.txt",
+                "path": "repl_sapl/build/modules/mgrafischgraphicscfp.defs.txt",
+                "type": "file",
+                "ext": ".txt",
+                "size": 2543,
+                "isBinary": false
+              },
+              {
+                "name": "mgrafischgraphicscfp.jmvm",
+                "path": "repl_sapl/build/modules/mgrafischgraphicscfp.jmvm",
+                "type": "file",
+                "ext": ".jmvm",
+                "size": 85720,
+                "isBinary": false
+              },
+              {
+                "name": "mgrafischgraphicscfp.pp.cfp",
+                "path": "repl_sapl/build/modules/mgrafischgraphicscfp.pp.cfp",
+                "type": "file",
+                "ext": ".cfp",
+                "size": 23003,
+                "isBinary": false
+              },
+              {
+                "name": "mlibcsvspp.adts.cfp",
+                "path": "repl_sapl/build/modules/mlibcsvspp.adts.cfp",
+                "type": "file",
+                "ext": ".cfp",
+                "size": 28,
+                "isBinary": false
+              },
+              {
+                "name": "mlibcsvspp.defs.txt",
+                "path": "repl_sapl/build/modules/mlibcsvspp.defs.txt",
+                "type": "file",
+                "ext": ".txt",
+                "size": 905,
+                "isBinary": false
+              },
+              {
+                "name": "mlibcsvspp.jmvm",
+                "path": "repl_sapl/build/modules/mlibcsvspp.jmvm",
+                "type": "file",
+                "ext": ".jmvm",
+                "size": 47471,
+                "isBinary": false
+              },
+              {
+                "name": "mlibcsvspp.pp.cfp",
+                "path": "repl_sapl/build/modules/mlibcsvspp.pp.cfp",
+                "type": "file",
+                "ext": ".cfp",
+                "size": 11482,
+                "isBinary": false
+              },
+              {
+                "name": "mlibdisplayspp.adts.cfp",
+                "path": "repl_sapl/build/modules/mlibdisplayspp.adts.cfp",
+                "type": "file",
+                "ext": ".cfp",
+                "size": 116,
+                "isBinary": false
+              },
+              {
+                "name": "mlibdisplayspp.defs.txt",
+                "path": "repl_sapl/build/modules/mlibdisplayspp.defs.txt",
+                "type": "file",
+                "ext": ".txt",
+                "size": 792,
+                "isBinary": false
+              },
+              {
+                "name": "mlibdisplayspp.jmvm",
+                "path": "repl_sapl/build/modules/mlibdisplayspp.jmvm",
+                "type": "file",
+                "ext": ".jmvm",
+                "size": 37768,
+                "isBinary": false
+              },
+              {
+                "name": "mlibdisplayspp.pp.cfp",
+                "path": "repl_sapl/build/modules/mlibdisplayspp.pp.cfp",
+                "type": "file",
+                "ext": ".cfp",
+                "size": 8547,
+                "isBinary": false
+              },
+              {
+                "name": "mliblistspp.adts.cfp",
+                "path": "repl_sapl/build/modules/mliblistspp.adts.cfp",
+                "type": "file",
+                "ext": ".cfp",
+                "size": 28,
+                "isBinary": false
+              },
+              {
+                "name": "mliblistspp.defs.txt",
+                "path": "repl_sapl/build/modules/mliblistspp.defs.txt",
+                "type": "file",
+                "ext": ".txt",
+                "size": 1538,
+                "isBinary": false
+              },
+              {
+                "name": "mliblistspp.jmvm",
+                "path": "repl_sapl/build/modules/mliblistspp.jmvm",
+                "type": "file",
+                "ext": ".jmvm",
+                "size": 57395,
+                "isBinary": false
+              },
+              {
+                "name": "mliblistspp.pp.cfp",
+                "path": "repl_sapl/build/modules/mliblistspp.pp.cfp",
+                "type": "file",
+                "ext": ".cfp",
+                "size": 13786,
+                "isBinary": false
+              },
+              {
+                "name": "mlibplotspp.adts.cfp",
+                "path": "repl_sapl/build/modules/mlibplotspp.adts.cfp",
+                "type": "file",
+                "ext": ".cfp",
+                "size": 28,
+                "isBinary": false
+              },
+              {
+                "name": "mlibplotspp.defs.txt",
+                "path": "repl_sapl/build/modules/mlibplotspp.defs.txt",
+                "type": "file",
+                "ext": ".txt",
+                "size": 1117,
+                "isBinary": false
+              },
+              {
+                "name": "mlibplotspp.jmvm",
+                "path": "repl_sapl/build/modules/mlibplotspp.jmvm",
+                "type": "file",
+                "ext": ".jmvm",
+                "size": 60236,
+                "isBinary": false
+              },
+              {
+                "name": "mlibplotspp.pp.cfp",
+                "path": "repl_sapl/build/modules/mlibplotspp.pp.cfp",
+                "type": "file",
+                "ext": ".cfp",
+                "size": 13772,
+                "isBinary": false
+              },
+              {
+                "name": "mlibstatsspp.adts.cfp",
+                "path": "repl_sapl/build/modules/mlibstatsspp.adts.cfp",
+                "type": "file",
+                "ext": ".cfp",
+                "size": 28,
+                "isBinary": false
+              },
+              {
+                "name": "mlibstatsspp.defs.txt",
+                "path": "repl_sapl/build/modules/mlibstatsspp.defs.txt",
+                "type": "file",
+                "ext": ".txt",
+                "size": 1450,
+                "isBinary": false
+              },
+              {
+                "name": "mlibstatsspp.jmvm",
+                "path": "repl_sapl/build/modules/mlibstatsspp.jmvm",
+                "type": "file",
+                "ext": ".jmvm",
+                "size": 60536,
+                "isBinary": false
+              },
+              {
+                "name": "mlibstatsspp.pp.cfp",
+                "path": "repl_sapl/build/modules/mlibstatsspp.pp.cfp",
+                "type": "file",
+                "ext": ".cfp",
+                "size": 14605,
+                "isBinary": false
+              },
+              {
+                "name": "mlibtextspp.adts.cfp",
+                "path": "repl_sapl/build/modules/mlibtextspp.adts.cfp",
+                "type": "file",
+                "ext": ".cfp",
+                "size": 1,
+                "isBinary": false
+              },
+              {
+                "name": "mlibtextspp.defs.txt",
+                "path": "repl_sapl/build/modules/mlibtextspp.defs.txt",
+                "type": "file",
+                "ext": ".txt",
+                "size": 1901,
+                "isBinary": false
+              },
+              {
+                "name": "mlibtextspp.jmvm",
+                "path": "repl_sapl/build/modules/mlibtextspp.jmvm",
+                "type": "file",
+                "ext": ".jmvm",
+                "size": 86451,
+                "isBinary": false
+              },
+              {
+                "name": "mlibtextspp.pp.cfp",
+                "path": "repl_sapl/build/modules/mlibtextspp.pp.cfp",
+                "type": "file",
+                "ext": ".cfp",
+                "size": 21566,
+                "isBinary": false
+              },
+              {
+                "name": "nbglue.adts.cfp",
+                "path": "repl_sapl/build/modules/nbglue.adts.cfp",
+                "type": "file",
+                "ext": ".cfp",
+                "size": 1,
+                "isBinary": false
+              },
+              {
+                "name": "nbglue.defs.txt",
+                "path": "repl_sapl/build/modules/nbglue.defs.txt",
+                "type": "file",
+                "ext": ".txt",
+                "size": 798,
+                "isBinary": false
+              },
+              {
+                "name": "nbglue.jmvm",
+                "path": "repl_sapl/build/modules/nbglue.jmvm",
+                "type": "file",
+                "ext": ".jmvm",
+                "size": 48670,
+                "isBinary": false
+              },
+              {
+                "name": "nbglue.pp.cfp",
+                "path": "repl_sapl/build/modules/nbglue.pp.cfp",
+                "type": "file",
+                "ext": ".cfp",
+                "size": 9287,
+                "isBinary": false
+              }
+            ],
+            "_expanded": false
+          },
+          {
             "name": "prelude",
             "path": "repl_sapl/build/prelude",
             "type": "directory",
@@ -1607,7 +1879,7 @@ window.WEBSAPL_TREE = [
             "path": "repl_sapl/build/mini_repl.jmvm",
             "type": "file",
             "ext": ".jmvm",
-            "size": 5721050,
+            "size": 6006863,
             "isBinary": false
           }
         ],
@@ -1893,7 +2165,7 @@ window.WEBSAPL_TREE = [
     "path": "notebook.html",
     "type": "file",
     "ext": ".html",
-    "size": 32968,
+    "size": 32977,
     "isBinary": false
   },
   {
@@ -1901,7 +2173,7 @@ window.WEBSAPL_TREE = [
     "path": "README.md",
     "type": "file",
     "ext": ".md",
-    "size": 10695,
+    "size": 10707,
     "isBinary": false
   }
 ];

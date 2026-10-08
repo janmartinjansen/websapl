@@ -1,0 +1,1105 @@
+start_lazy start csv__read_lazy csv__read csv__parse_lazy csv__parse csv__parseWith_lazy csv__parseWith csv__rowsFrom_lazy csv__rowsFrom csv__rowsFrom_else csv__rowNext_lazy csv__rowNext csv__rowNext___Tuple2 csv__rowNext___Tuple2_else csv__isBlankRow_lazy csv__isBlankRow csv__isBlankRow_Nil csv__isBlankRow_Cons csv__isBlankRow_Cons_Nil csv__isBlankRow_Cons_Cons csv__fieldsFrom_lazy csv__fieldsFrom csv__fieldsFrom_else csv__fieldsFrom_else_else csv__plainFrom_lazy csv__plainFrom csv__plainFrom_else csv__plainFrom_else_else csv__isFieldEnd_lazy csv__isFieldEnd csv__isFieldEnd_else csv__isFieldEnd_else_else csv__quotedFrom_lazy csv__quotedFrom csv__quotedFrom_else csv__quotedFrom_else_else csv__quoteEnd_lazy csv__quoteEnd csv__quoteEnd_then_else csv__quoteEnd_else csv__afterQuoted_lazy csv__afterQuoted csv__afterQuoted_else csv__afterQuoted_else_else csv__afterField_lazy csv__afterField csv__afterField_else csv__afterField_else_else csv__afterField_else_else_else csv__skipLf_lazy csv__skipLf csv__skipLf_then_else csv__skipLf_else csv__consField_lazy csv__consField csv__consField___Tuple2 csv__revL_lazy csv__revL csv__revL_Nil csv__revL_Cons csv__header_lazy csv__header csv__header_Nil csv__header_Cons csv__body_lazy csv__body csv__body_Nil csv__body_Cons csv__column_lazy csv__column csv__columnAt_lazy csv__columnAt csv__columnAt_then csv__indexOfName_lazy csv__indexOfName csv__indexOfName_Nil csv__indexOfName_Cons csv__indexOfName_Cons_else csv__nthOr_lazy csv__nthOr csv__nthOr_Nil csv__nthOr_Cons csv__nthOr_Cons_else csv__floats_lazy csv__floats csv__ints_lazy csv__ints csv__select_lazy csv__select csv__selectIdx_lazy csv__selectIdx csv__table_lazy csv__table csv__mapL_lazy csv__mapL csv__mapL_Nil csv__mapL_Cons __deepEq_lazy __deepEq __deepEqDispatch_lazy __deepEqDispatch __deepEqDispatch_else __deepEqDispatch_else_then_else __deepEqDispatch_else_else __deepEqDispatch_else_else_then_else __deepEqDispatch_else_else_else __deepEqDispatch_else_else_else_else __deepEqDispatch_else_else_else_else_else __deepEqDispatch_else_else_else_else_else_else __deepEqMixed_lazy __deepEqMixed __deepEqMixed_then_then_else __deepEqMixed_then_else __deepEqMixed_else __deepEqStr_lazy __deepEqStr __deepEqStrLen_lazy __deepEqStrLen __deepEqStrLen_else __deepEqStrChars_lazy __deepEqStrChars __deepEqStrChars_else __deepEqStrCharsStep_lazy __deepEqStrCharsStep __deepEqStrCharsStep_else __deepEqConstr_lazy __deepEqConstr __deepEqConstrCheck_lazy __deepEqConstrCheck __deepEqConstrCheck_else __deepEqConstrFields_lazy __deepEqConstrFields __deepEqConstrFields_else __deepEqConstrFieldsStep_lazy __deepEqConstrFieldsStep __deepEqConstrFieldsStep_else __deepNeq_lazy __deepNeq __deepNeq_else __lam_mlibcsvspp_3_lazy __lam_mlibcsvspp_3 __lam_mlibcsvspp_2_lazy __lam_mlibcsvspp_2 __lam_mlibcsvspp_1_lazy __lam_mlibcsvspp_1 __lam_mlibcsvspp_0_lazy __lam_mlibcsvspp_0 csv__read_1_lazy csv__read_1 csv__fieldsFrom_1_lazy csv__fieldsFrom_1 csv__fieldsFrom_2_lazy csv__fieldsFrom_2 csv__plainFrom_1_lazy csv__plainFrom_1 csv__quotedFrom_1_lazy csv__quotedFrom_1 csv__quotedFrom_2_lazy csv__quotedFrom_2 csv__quoteEnd_1_lazy csv__quoteEnd_1 csv__afterQuoted_1_lazy csv__afterQuoted_1 csv__afterField_1_lazy csv__afterField_1 csv__afterField_2_lazy csv__afterField_2 csv__afterField_3_lazy csv__afterField_3 csv__afterField_4_lazy csv__afterField_4 csv__afterField_5_lazy csv__afterField_5 csv__skipLf_1_lazy csv__skipLf_1 csv__consField_1_lazy csv__consField_1 csv__nthOr_1_lazy csv__nthOr_1 __deepEqConstr_1_lazy __deepEqConstr_1 __deepEqConstr_2_lazy __deepEqConstr_2 __deepEqConstrFieldsStep_1_lazy __deepEqConstrFieldsStep_1 __deepEqConstrFieldsStep_2_lazy __deepEqConstrFieldsStep_2 display__table display__table_lazy text__isEmpty text__isEmpty_lazy text__empty text__empty_lazy text__slice text__slice_lazy text__fromChars text__fromChars_lazy text__trim text__trim_lazy text__readInt text__readInt_lazy text__readFloat text__readFloat_lazy text__equal text__equal_lazy #
+            call 1                                   || start
+            print 4
+            stop
+0           jmp 1                                    || start || start_lazy
+1           return_const 0 0                         || start
+2           jmp 3                                    || csv__read || csv__read_lazy
+3           load 0                                   || csv__read
+            pushfunc 1 149                           || csv__read_1
+            create 2 3
+            tailcall 1 5                             || csv__parse
+4           jmp 5                                    || csv__parse || csv__parse_lazy
+5           load 0                                   || csv__parse
+            pushc 44
+            tailcall 1 7                             || csv__parseWith
+6           jmp 7                                    || csv__parseWith || csv__parseWith_lazy
+7           load 1                                   || csv__parseWith
+            eval
+            strop 2
+            push 0
+            load 1
+            load 0
+            tailcall 2 9                             || csv__rowsFrom
+8           load 2                                   || csv__rowsFrom_lazy
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+9           load 2                                   || csv__rowsFrom
+            load 3
+            sub
+            iflt 10                                  || csv__rowsFrom_else
+            ccreatet 0 11 7 0
+            return 4
+10          load 3                                   || csv__rowsFrom_else
+            load 2
+            load 1
+            load 0
+            call 22                                  || csv__fieldsFrom
+            load 3
+            load 1
+            load 0
+            tailcall 4 12                            || csv__rowNext
+11          load 3                                   || csv__rowNext_lazy
+            eval
+            store 3
+12          load 3                                   || csv__rowNext
+            jmpt 1 13                                || lbs
+13          load 0                                   || csv__rowNext___Tuple2
+            eval
+            call 16                                  || csv__isBlankRow
+            ifeq 14                                  || csv__rowNext___Tuple2_else
+            load 4
+            eval
+            load 1
+            eval
+            load 3
+            load 2
+            tailcall 6 9                             || csv__rowsFrom
+14          load 4                                   || csv__rowNext___Tuple2_else
+            load 1
+            load 3
+            load 2
+            pushfunc 4 8                             || csv__rowsFrom_lazy
+            create 5 3
+            load 0
+            eval
+            ccreatet 2 11 7 1
+            return 6
+15          load 0                                   || csv__isBlankRow_lazy
+            eval
+            store 0
+16          load 0                                   || csv__isBlankRow
+            jmpt 2 17 18                             || lbs
+17          return_const 1 1                         || csv__isBlankRow_Nil
+18          load 1                                   || csv__isBlankRow_Cons
+            eval
+            jmpt 2 19 20                             || lbs
+19          load 0                                   || csv__isBlankRow_Cons_Nil
+            tailcall 3 190                           || text__isEmpty
+20          return_const 5 0                         || csv__isBlankRow_Cons_Cons
+21          load 2                                   || csv__fieldsFrom_lazy
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+22          load 2                                   || csv__fieldsFrom
+            load 3
+            sub
+            iflt 23                                  || csv__fieldsFrom_else
+            load 3
+            pushfunc 0 151                           || csv__fieldsFrom_1
+            create 1 3
+            ccreatet 2 11 5 0
+            return 4
+23          push 34                                  || csv__fieldsFrom_else
+            load 1
+            load 2
+            pushfunc 2 153                           || csv__fieldsFrom_2
+            create 3 3
+            call 99                                  || __deepEq
+            ifeq 24                                  || csv__fieldsFrom_else_else
+            ccreatet 0 11 7 0
+            load 3
+            loadadd 2 1
+            load 1
+            load 0
+            tailcall 4 34                            || csv__quotedFrom
+24          load 3                                   || csv__fieldsFrom_else_else
+            load 2
+            dup
+            load 1
+            load 0
+            tailcall 4 26                            || csv__plainFrom
+25          load 2                                   || csv__plainFrom_lazy
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+            load 4
+            eval
+            store 4
+26          load 3                                   || csv__plainFrom
+            load 4
+            sub
+            iflt 27                                  || csv__plainFrom_else
+            load 1
+            load 3
+            load 2
+            sub
+            load 2
+            pushfunc 3 194                           || text__slice
+            create 4 3
+            load 4
+            load 3
+            load 1
+            load 0
+            tailcall 5 46                            || csv__afterField
+27          load 1                                   || csv__plainFrom_else
+            load 3
+            pushfunc 2 155                           || csv__plainFrom_1
+            create 3 3
+            load 0
+            call 30                                  || csv__isFieldEnd
+            ifeq 28                                  || csv__plainFrom_else_else
+            load 1
+            load 3
+            load 2
+            sub
+            load 2
+            pushfunc 3 194                           || text__slice
+            create 4 3
+            load 4
+            load 3
+            load 1
+            load 0
+            tailcall 5 46                            || csv__afterField
+28          load 4                                   || csv__plainFrom_else_else
+            loadadd 3 1
+            load 2
+            load 1
+            load 0
+            tailcall 5 26                            || csv__plainFrom
+29          jmp 30                                   || csv__isFieldEnd || csv__isFieldEnd_lazy
+30          load 0                                   || csv__isFieldEnd
+            load 1
+            call 99                                  || __deepEq
+            ifeq 31                                  || csv__isFieldEnd_else
+            return_const 2 1
+31          push 10                                  || csv__isFieldEnd_else
+            load 1
+            call 99                                  || __deepEq
+            ifeq 32                                  || csv__isFieldEnd_else_else
+            return_const 2 1
+32          push 13                                  || csv__isFieldEnd_else_else
+            load 1
+            tailcall 2 99                            || __deepEq
+33          load 2                                   || csv__quotedFrom_lazy
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+34          load 2                                   || csv__quotedFrom
+            load 3
+            sub
+            iflt 35                                  || csv__quotedFrom_else
+            ccreatet 0 11 7 0
+            load 4
+            pushfunc 2 57                            || csv__revL_lazy
+            create 3 3
+            pushfunc 1 197                           || text__fromChars_lazy
+            create 2 3
+            load 3
+            load 2
+            load 1
+            load 0
+            tailcall 5 46                            || csv__afterField
+35          push 34                                  || csv__quotedFrom_else
+            load 1
+            load 2
+            pushfunc 2 157                           || csv__quotedFrom_1
+            create 3 3
+            call 99                                  || __deepEq
+            ifeq 36                                  || csv__quotedFrom_else_else
+            load 4
+            load 3
+            load 2
+            load 1
+            load 0
+            tailcall 5 38                            || csv__quoteEnd
+36          load 4                                   || csv__quotedFrom_else_else
+            load 1
+            load 2
+            pushfunc 3 159                           || csv__quotedFrom_2
+            create 4 3
+            load 3
+            loadadd 2 1
+            load 1
+            load 0
+            tailcall 5 34                            || csv__quotedFrom
+37          load 2                                   || csv__quoteEnd_lazy
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+38          load 3                                   || csv__quoteEnd
+            loadadd 2 1
+            sub
+            ifle 40                                  || csv__quoteEnd_else
+            push 34
+            load 1
+            load 2
+            pushfunc 2 161                           || csv__quoteEnd_1
+            create 3 3
+            call 99                                  || __deepEq
+            ifeq 39                                  || csv__quoteEnd_then_else
+            load 4
+            push 34
+            ccreatet 2 11 7 1
+            load 3
+            loadadd 2 2
+            load 1
+            load 0
+            tailcall 5 34                            || csv__quotedFrom
+39          load 4                                   || csv__quoteEnd_then_else
+            load 3
+            loadadd 2 1
+            load 1
+            load 0
+            tailcall 5 42                            || csv__afterQuoted
+40          load 4                                   || csv__quoteEnd_else
+            load 3
+            loadadd 2 1
+            load 1
+            load 0
+            tailcall 5 42                            || csv__afterQuoted
+41          load 2                                   || csv__afterQuoted_lazy
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+42          load 2                                   || csv__afterQuoted
+            load 3
+            sub
+            iflt 43                                  || csv__afterQuoted_else
+            ccreatet 0 11 7 0
+            load 4
+            pushfunc 2 57                            || csv__revL_lazy
+            create 3 3
+            pushfunc 1 197                           || text__fromChars_lazy
+            create 2 3
+            load 3
+            load 2
+            load 1
+            load 0
+            tailcall 5 46                            || csv__afterField
+43          load 1                                   || csv__afterQuoted_else
+            load 2
+            pushfunc 2 163                           || csv__afterQuoted_1
+            create 3 3
+            load 0
+            call 30                                  || csv__isFieldEnd
+            ifeq 44                                  || csv__afterQuoted_else_else
+            ccreatet 0 11 7 0
+            load 4
+            pushfunc 2 57                            || csv__revL_lazy
+            create 3 3
+            pushfunc 1 197                           || text__fromChars_lazy
+            create 2 3
+            load 3
+            load 2
+            load 1
+            load 0
+            tailcall 5 46                            || csv__afterField
+44          load 4                                   || csv__afterQuoted_else_else
+            load 3
+            loadadd 2 1
+            load 1
+            load 0
+            tailcall 5 42                            || csv__afterQuoted
+45          load 2                                   || csv__afterField_lazy
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+46          load 2                                   || csv__afterField
+            load 3
+            sub
+            iflt 47                                  || csv__afterField_else
+            load 3
+            load 4
+            pushfunc 1 165                           || csv__afterField_1
+            create 2 3
+            ccreatet 2 11 5 0
+            return 5
+47          load 0                                   || csv__afterField_else
+            load 1
+            load 2
+            pushfunc 2 167                           || csv__afterField_2
+            create 3 3
+            call 99                                  || __deepEq
+            ifeq 48                                  || csv__afterField_else_else
+            load 3
+            loadadd 2 1
+            load 1
+            load 0
+            call 22                                  || csv__fieldsFrom
+            load 4
+            tailcall 5 55                            || csv__consField
+48          push 13                                  || csv__afterField_else_else
+            load 1
+            load 2
+            pushfunc 2 169                           || csv__afterField_3
+            create 3 3
+            call 99                                  || __deepEq
+            ifeq 49                                  || csv__afterField_else_else_else
+            load 3
+            loadadd 2 1
+            load 1
+            pushfunc 3 51                            || csv__skipLf
+            create 4 3
+            load 4
+            pushfunc 1 171                           || csv__afterField_4
+            create 2 3
+            ccreatet 2 11 5 0
+            return 5
+49          loadadd 2 1                              || csv__afterField_else_else_else
+            load 4
+            pushfunc 1 173                           || csv__afterField_5
+            create 2 3
+            ccreatet 2 11 5 0
+            return 5
+50          load 1                                   || csv__skipLf_lazy
+            eval
+            store 1
+            load 2
+            eval
+            store 2
+51          load 2                                   || csv__skipLf
+            load 1
+            sub
+            ifle 53                                  || csv__skipLf_else
+            push 10
+            load 0
+            load 1
+            pushfunc 2 175                           || csv__skipLf_1
+            create 3 3
+            call 99                                  || __deepEq
+            ifeq 52                                  || csv__skipLf_then_else
+            loadadd 1 1
+            return 3
+52          load 1                                   || csv__skipLf_then_else
+            return 3
+53          load 1                                   || csv__skipLf_else
+            return 3
+54          load 1                                   || csv__consField_lazy
+            eval
+            store 1
+55          load 1                                   || csv__consField
+            jmpt 1 56                                || lbs
+56          load 1                                   || csv__consField___Tuple2
+            load 0
+            load 2
+            pushfunc 2 177                           || csv__consField_1
+            create 3 3
+            ccreatet 2 11 5 0
+            return 4
+57          load 0                                   || csv__revL_lazy
+            eval
+            store 0
+58          load 0                                   || csv__revL
+            jmpt 2 59 60                             || lbs
+59          load 1                                   || csv__revL_Nil
+            eval
+            return 2
+60          load 3                                   || csv__revL_Cons
+            load 0
+            ccreatet 2 11 7 1
+            load 1
+            eval
+            tailcall 4 58                            || csv__revL
+61          load 0                                   || csv__header_lazy
+            eval
+            store 0
+62          load 0                                   || csv__header
+            jmpt 2 63 64                             || lbs
+63          ccreatet 0 11 7 0                        || csv__header_Nil
+            return 1
+64          load 0                                   || csv__header_Cons
+            return 3
+65          load 0                                   || csv__body_lazy
+            eval
+            store 0
+66          load 0                                   || csv__body
+            jmpt 2 67 68                             || lbs
+67          ccreatet 0 11 7 0                        || csv__body_Nil
+            return 1
+68          load 1                                   || csv__body_Cons
+            eval
+            return 3
+69          load 1                                   || csv__column_lazy
+            eval
+            store 1
+70          load 1                                   || csv__column
+            pushfunc 1 66                            || csv__body
+            create 2 3
+            push 0
+            load 1
+            call 62                                  || csv__header
+            load 0
+            call 75                                  || csv__indexOfName
+            tailcall 2 72                            || csv__columnAt
+71          load 0                                   || csv__columnAt_lazy
+            eval
+            store 0
+72          ifltlv 0 0 73                            || csv__columnAt_then || csv__columnAt
+            load 1
+            eval
+            load 0
+            pushfunc 2 146                           || __lam_mlibcsvspp_0_lazy
+            create 2 7
+            tailcall 2 95                            || csv__mapL
+73          push "Csv.column: onbekende kolom"       || csv__columnAt_then
+            syscall 8
+            return 2
+74          load 1                                   || csv__indexOfName_lazy
+            eval
+            store 1
+            load 2
+            eval
+            store 2
+75          load 1                                   || csv__indexOfName
+            jmpt 2 76 77                             || lbs
+76          push 0                                   || csv__indexOfName_Nil
+            dec
+            return 3
+77          load 2                                   || csv__indexOfName_Cons
+            load 0
+            pushfunc 1 198                           || text__trim
+            create 2 3
+            call 204                                 || text__equal
+            ifeq 78                                  || csv__indexOfName_Cons_else
+            load 4
+            return 5
+78          loadadd 4 1                              || csv__indexOfName_Cons_else
+            load 1
+            eval
+            load 2
+            tailcall 5 75                            || csv__indexOfName
+79          load 1                                   || csv__nthOr_lazy
+            eval
+            store 1
+80          load 1                                   || csv__nthOr
+            jmpt 2 81 82                             || lbs
+81          tailcall 2 192                           || text__empty || csv__nthOr_Nil
+82          load 2                                   || csv__nthOr_Cons
+            eval
+            ifneq 83                                 || csv__nthOr_Cons_else
+            load 0
+            return 4
+83          load 1                                   || csv__nthOr_Cons_else
+            eval
+            load 2
+            pushfunc 1 179                           || csv__nthOr_1
+            create 2 3
+            tailcall 4 80                            || csv__nthOr
+84          load 0                                   || csv__floats_lazy
+            eval
+            store 0
+85          load 0                                   || csv__floats
+            pushfunc 1 202                           || text__readFloat
+            create 1 7
+            tailcall 1 95                            || csv__mapL
+86          load 0                                   || csv__ints_lazy
+            eval
+            store 0
+87          load 0                                   || csv__ints
+            pushfunc 1 200                           || text__readInt
+            create 1 7
+            tailcall 1 95                            || csv__mapL
+88          load 1                                   || csv__select_lazy
+            eval
+            store 1
+89          load 1                                   || csv__select
+            load 0
+            load 1
+            pushfunc 2 144                           || __lam_mlibcsvspp_1_lazy
+            create 2 7
+            pushfunc 2 94                            || csv__mapL_lazy
+            create 3 3
+            tailcall 2 91                            || csv__selectIdx
+90          load 1                                   || csv__selectIdx_lazy
+            eval
+            store 1
+91          load 1                                   || csv__selectIdx
+            load 0
+            pushfunc 2 140                           || __lam_mlibcsvspp_3_lazy
+            create 2 7
+            tailcall 2 95                            || csv__mapL
+92          jmp 93                                   || csv__table || csv__table_lazy
+93          load 0                                   || csv__table
+            pushfunc 1 65                            || csv__body_lazy
+            create 2 3
+            load 0
+            pushfunc 1 61                            || csv__header_lazy
+            create 2 3
+            tailcall 1 188                           || display__table
+94          load 1                                   || csv__mapL_lazy
+            eval
+            store 1
+95          load 1                                   || csv__mapL
+            jmpt 2 96 97                             || lbs
+96          ccreatet 0 11 7 0                        || csv__mapL_Nil
+            return 2
+97          load 1                                   || csv__mapL_Cons
+            load 2
+            pushfunc 2 94                            || csv__mapL_lazy
+            create 3 3
+            load 0
+            load 2
+            eval
+            ccreatet 2 11 7 1
+            return 4
+98          jmp 99                                   || __deepEq || __deepEq_lazy
+99          load 1                                   || __deepEq
+            load 0
+            load 1
+            eval
+            gettypeid
+            load 0
+            eval
+            gettypeid
+            tailcall 2 101                           || __deepEqDispatch
+100         load 0                                   || __deepEqDispatch_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+101         load 0                                   || __deepEqDispatch
+            load 1
+            ifcmp 102                                || __deepEqDispatch_else
+            load 3
+            load 2
+            load 1
+            load 0
+            tailcall 4 111                           || __deepEqMixed
+102         loadadd 0 -1                             || __deepEqDispatch_else
+            ifneq 104                                || __deepEqDispatch_else_else
+            load 2
+            eval
+            load 3
+            eval
+            sub
+            ifneq 103                                || __deepEqDispatch_else_then_else
+            return_const 4 1
+103         return_const 4 0                         || __deepEqDispatch_else_then_else
+104         loadadd 0 -2                             || __deepEqDispatch_else_else
+            ifneq 106                                || __deepEqDispatch_else_else_else
+            load 2
+            eval
+            load 3
+            eval
+            sub
+            ifneq 105                                || __deepEqDispatch_else_else_then_else
+            return_const 4 1
+105         return_const 4 0                         || __deepEqDispatch_else_else_then_else
+106         loadadd 0 -3                             || __deepEqDispatch_else_else_else
+            ifneq 107                                || __deepEqDispatch_else_else_else_else
+            load 3
+            load 2
+            tailcall 4 116                           || __deepEqStr
+107         loadadd 0 -4                             || __deepEqDispatch_else_else_else_else
+            ifle 108                                 || __deepEqDispatch_else_else_else_else_else
+            load 3
+            load 2
+            tailcall 4 127                           || __deepEqConstr
+108         load 2                                   || __deepEqDispatch_else_else_else_else_else
+            eval
+            load 3
+            eval
+            sub
+            ifneq 109                                || __deepEqDispatch_else_else_else_else_else_else
+            return_const 4 1
+109         return_const 4 0                         || __deepEqDispatch_else_else_else_else_else_else
+110         load 0                                   || __deepEqMixed_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+111         load 0                                   || __deepEqMixed
+            load 1
+            add
+            ifneq 114                                || __deepEqMixed_else
+            load 0
+            load 1
+            mult
+            push 0
+            dec
+            sub
+            ifneq 113                                || __deepEqMixed_then_else
+            load 2
+            eval
+            load 3
+            eval
+            sub
+            ifneq 112                                || __deepEqMixed_then_then_else
+            return_const 4 1
+112         return_const 4 0                         || __deepEqMixed_then_then_else
+113         return_const 4 0                         || __deepEqMixed_then_else
+114         return_const 4 0                         || __deepEqMixed_else
+115         jmp 116                                  || __deepEqStr || __deepEqStr_lazy
+116         load 1                                   || __deepEqStr
+            load 0
+            load 1
+            eval
+            strop 2
+            load 0
+            eval
+            strop 2
+            tailcall 2 118                           || __deepEqStrLen
+117         load 0                                   || __deepEqStrLen_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+118         load 0                                   || __deepEqStrLen
+            load 1
+            ifcmp 119                                || __deepEqStrLen_else
+            return_const 4 0
+119         load 0                                   || __deepEqStrLen_else
+            push 0
+            load 3
+            load 2
+            tailcall 4 121                           || __deepEqStrChars
+120         load 2                                   || __deepEqStrChars_lazy
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+121         load 2                                   || __deepEqStrChars
+            load 3
+            sub
+            ifneq 122                                || __deepEqStrChars_else
+            return_const 4 1
+122         load 3                                   || __deepEqStrChars_else
+            load 2
+            load 1
+            load 0
+            tailcall 4 124                           || __deepEqStrCharsStep
+123         jmp 124                                  || __deepEqStrCharsStep || __deepEqStrCharsStep_lazy
+124         load 0                                   || __deepEqStrCharsStep
+            eval
+            load 2
+            eval
+            strop 4
+            load 1
+            eval
+            load 2
+            eval
+            strop 4
+            ifcmp 125                                || __deepEqStrCharsStep_else
+            return_const 4 0
+125         load 3                                   || __deepEqStrCharsStep_else
+            eval
+            load 2
+            eval
+            inc
+            load 1
+            load 0
+            tailcall 4 121                           || __deepEqStrChars
+126         jmp 127                                  || __deepEqConstr || __deepEqConstr_lazy
+127         load 1                                   || __deepEqConstr
+            load 0
+            load 1
+            pushfunc 1 183                           || __deepEqConstr_2
+            create 2 3
+            load 0
+            pushfunc 1 181                           || __deepEqConstr_1
+            create 2 3
+            tailcall 2 129                           || __deepEqConstrCheck
+128         jmp 129                                  || __deepEqConstrCheck || __deepEqConstrCheck_lazy
+129         load 1                                   || __deepEqConstrCheck
+            load 0
+            call 116                                 || __deepEqStr
+            ifneq 130                                || __deepEqConstrCheck_else
+            return_const 4 0
+130         load 0                                   || __deepEqConstrCheck_else
+            eval
+            lookup
+            getfuncarity
+            push 0
+            load 3
+            load 2
+            tailcall 4 132                           || __deepEqConstrFields
+131         load 2                                   || __deepEqConstrFields_lazy
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+132         load 2                                   || __deepEqConstrFields
+            load 3
+            sub
+            ifneq 133                                || __deepEqConstrFields_else
+            return_const 4 1
+133         load 3                                   || __deepEqConstrFields_else
+            load 2
+            load 1
+            load 0
+            tailcall 4 135                           || __deepEqConstrFieldsStep
+134         jmp 135                                  || __deepEqConstrFieldsStep || __deepEqConstrFieldsStep_lazy
+135         load 2                                   || __deepEqConstrFieldsStep
+            load 1
+            pushfunc 2 187                           || __deepEqConstrFieldsStep_2
+            create 3 3
+            load 2
+            load 0
+            pushfunc 2 185                           || __deepEqConstrFieldsStep_1
+            create 3 3
+            call 99                                  || __deepEq
+            ifneq 136                                || __deepEqConstrFieldsStep_else
+            return_const 4 0
+136         load 3                                   || __deepEqConstrFieldsStep_else
+            eval
+            load 2
+            eval
+            inc
+            load 1
+            load 0
+            tailcall 4 132                           || __deepEqConstrFields
+137         jmp 138                                  || __deepNeq || __deepNeq_lazy
+138         load 1                                   || __deepNeq
+            load 0
+            call 99                                  || __deepEq
+            dec
+            ifneq 139                                || __deepNeq_else
+            return_const 2 0
+139         return_const 2 1                         || __deepNeq_else
+140         load 0                                   || __lam_mlibcsvspp_3_lazy
+            eval
+            store 0
+141         load 0                                   || __lam_mlibcsvspp_3
+            load 1
+            pushfunc 2 142                           || __lam_mlibcsvspp_2_lazy
+            create 2 7
+            tailcall 2 95                            || csv__mapL
+142         load 0                                   || __lam_mlibcsvspp_2_lazy
+            eval
+            store 0
+143         load 0                                   || __lam_mlibcsvspp_2
+            load 1
+            tailcall 2 80                            || csv__nthOr
+144         load 0                                   || __lam_mlibcsvspp_1_lazy
+            eval
+            store 0
+145         push 0                                   || __lam_mlibcsvspp_1
+            load 0
+            call 62                                  || csv__header
+            load 1
+            tailcall 2 75                            || csv__indexOfName
+146         load 1                                   || __lam_mlibcsvspp_0_lazy
+            eval
+            store 1
+147         load 1                                   || __lam_mlibcsvspp_0
+            load 0
+            tailcall 2 80                            || csv__nthOr
+148         jmp 149                                  || csv__read_1 || csv__read_1_lazy
+149         load 0                                   || csv__read_1
+            eval
+            syscall 0
+            return 1
+150         jmp 151                                  || csv__fieldsFrom_1 || csv__fieldsFrom_1_lazy
+151         ccreatet 0 11 7 0                        || csv__fieldsFrom_1
+            call 192                                 || text__empty
+            ccreatet 2 11 7 1
+            return 0
+152         jmp 153                                  || csv__fieldsFrom_2 || csv__fieldsFrom_2_lazy
+153         load 1                                   || csv__fieldsFrom_2
+            eval
+            load 0
+            eval
+            strop 4
+            return 2
+154         jmp 155                                  || csv__plainFrom_1 || csv__plainFrom_1_lazy
+155         load 1                                   || csv__plainFrom_1
+            eval
+            load 0
+            eval
+            strop 4
+            return 2
+156         jmp 157                                  || csv__quotedFrom_1 || csv__quotedFrom_1_lazy
+157         load 1                                   || csv__quotedFrom_1
+            eval
+            load 0
+            eval
+            strop 4
+            return 2
+158         jmp 159                                  || csv__quotedFrom_2 || csv__quotedFrom_2_lazy
+159         load 2                                   || csv__quotedFrom_2
+            load 1
+            eval
+            load 0
+            eval
+            strop 4
+            ccreatet 2 11 7 1
+            return 3
+160         jmp 161                                  || csv__quoteEnd_1 || csv__quoteEnd_1_lazy
+161         load 1                                   || csv__quoteEnd_1
+            eval
+            load 0
+            eval
+            inc
+            strop 4
+            return 2
+162         jmp 163                                  || csv__afterQuoted_1 || csv__afterQuoted_1_lazy
+163         load 1                                   || csv__afterQuoted_1
+            eval
+            load 0
+            eval
+            strop 4
+            return 2
+164         jmp 165                                  || csv__afterField_1 || csv__afterField_1_lazy
+165         ccreatet 0 11 7 0                        || csv__afterField_1
+            load 0
+            eval
+            ccreatet 2 11 7 1
+            return 1
+166         jmp 167                                  || csv__afterField_2 || csv__afterField_2_lazy
+167         load 1                                   || csv__afterField_2
+            eval
+            load 0
+            eval
+            strop 4
+            return 2
+168         jmp 169                                  || csv__afterField_3 || csv__afterField_3_lazy
+169         load 1                                   || csv__afterField_3
+            eval
+            load 0
+            eval
+            strop 4
+            return 2
+170         jmp 171                                  || csv__afterField_4 || csv__afterField_4_lazy
+171         ccreatet 0 11 7 0                        || csv__afterField_4
+            load 0
+            eval
+            ccreatet 2 11 7 1
+            return 1
+172         jmp 173                                  || csv__afterField_5 || csv__afterField_5_lazy
+173         ccreatet 0 11 7 0                        || csv__afterField_5
+            load 0
+            eval
+            ccreatet 2 11 7 1
+            return 1
+174         jmp 175                                  || csv__skipLf_1 || csv__skipLf_1_lazy
+175         load 1                                   || csv__skipLf_1
+            eval
+            load 0
+            eval
+            strop 4
+            return 2
+176         jmp 177                                  || csv__consField_1 || csv__consField_1_lazy
+177         load 1                                   || csv__consField_1
+            load 0
+            eval
+            ccreatet 2 11 7 1
+            return 2
+178         jmp 179                                  || csv__nthOr_1 || csv__nthOr_1_lazy
+179         load 0                                   || csv__nthOr_1
+            eval
+            dec
+            return 1
+180         jmp 181                                  || __deepEqConstr_1 || __deepEqConstr_1_lazy
+181         load 0                                   || __deepEqConstr_1
+            eval
+            getconstrname
+            return 1
+182         jmp 183                                  || __deepEqConstr_2 || __deepEqConstr_2_lazy
+183         load 0                                   || __deepEqConstr_2
+            eval
+            getconstrname
+            return 1
+184         jmp 185                                  || __deepEqConstrFieldsStep_1 || __deepEqConstrFieldsStep_1_lazy
+185         load 0                                   || __deepEqConstrFieldsStep_1
+            eval
+            load 1
+            eval
+            getfield
+            eval
+            return 2
+186         jmp 187                                  || __deepEqConstrFieldsStep_2 || __deepEqConstrFieldsStep_2_lazy
+187         load 0                                   || __deepEqConstrFieldsStep_2
+            eval
+            load 1
+            eval
+            getfield
+            eval
+            return 2
+
+.metadata
+types 11
+type 5 __Tuple2 1
+  constr 0 __Tuple2 2
+type 6 __Char 1
+  constr 0 __Char 1
+type 7 list 2
+  constr 0 Nil 0
+  constr 1 Cons 2
+type 6 __Char 1
+  constr 0 __Char 1
+type 9 Graphics__Point 1
+  constr 0 Graphics__Pt 2
+type 10 Graphics__MenuCat 1
+  constr 0 Graphics__MenuCat 2
+type 11 Graphics__Graphics 9
+  constr 0 Graphics__GraphText 3
+  constr 1 Graphics__GraphPolyLine 2
+  constr 2 Graphics__GraphPolygon 2
+  constr 3 Graphics__GraphRectangle 3
+  constr 4 Graphics__GraphEllipse 3
+  constr 5 Graphics__GraphDisc 3
+  constr 6 Graphics__GraphClear 0
+  constr 7 Graphics__GraphMenu 1
+  constr 8 Graphics__GraphPrompt 2
+type 12 Graphics__Event 9
+  constr 0 Graphics__KeyIn 1
+  constr 1 Graphics__MouseDown 1
+  constr 2 Graphics__MouseUp 1
+  constr 3 Graphics__MouseDragged 1
+  constr 4 Graphics__MouseDoubleClick 1
+  constr 5 Graphics__MenuItem 2
+  constr 6 Graphics__PText 1
+  constr 7 Graphics__OpenFile 1
+  constr 8 Graphics__NoInput 0
+type 13 Display__Display 4
+  constr 0 Display__DText 1
+  constr 1 Display__DTable 2
+  constr 2 Display__DMarkdown 1
+  constr 3 Display__DGraphics 1
+type 5 __Tuple2 1
+  constr 0 __Tuple2 2
+type 5 __Tuple2 1
+  constr 0 __Tuple2 2
+functions 130
+  func 1 start 0 0
+  func 0 start 0 0
+  func 3 csv__read 1 00
+  func 2 csv__read 1 00
+  func 5 csv__parse 1 00
+  func 4 csv__parse 1 00
+  func 7 csv__parseWith 2 000
+  func 6 csv__parseWith 2 000
+  func 9 csv__rowsFrom 4 00110
+  func 8 csv__rowsFrom 4 00110
+  func 12 csv__rowNext 4 00010
+  func 11 csv__rowNext 4 00010
+  func 16 csv__isBlankRow 1 10
+  func 15 csv__isBlankRow 1 10
+  func 22 csv__fieldsFrom 4 00110
+  func 21 csv__fieldsFrom 4 00110
+  func 26 csv__plainFrom 5 001110
+  func 25 csv__plainFrom 5 001110
+  func 30 csv__isFieldEnd 2 000
+  func 29 csv__isFieldEnd 2 000
+  func 34 csv__quotedFrom 5 001100
+  func 33 csv__quotedFrom 5 001100
+  func 38 csv__quoteEnd 5 001100
+  func 37 csv__quoteEnd 5 001100
+  func 42 csv__afterQuoted 5 001100
+  func 41 csv__afterQuoted 5 001100
+  func 46 csv__afterField 5 001100
+  func 45 csv__afterField 5 001100
+  func 51 csv__skipLf 3 0110
+  func 50 csv__skipLf 3 0110
+  func 55 csv__consField 2 010
+  func 54 csv__consField 2 010
+  func 58 csv__revL 2 100
+  func 57 csv__revL 2 100
+  func 62 csv__header 1 10
+  func 61 csv__header 1 10
+  func 66 csv__body 1 10
+  func 65 csv__body 1 10
+  func 70 csv__column 2 010
+  func 69 csv__column 2 010
+  func 72 csv__columnAt 2 100
+  func 71 csv__columnAt 2 100
+  func 75 csv__indexOfName 3 0110
+  func 74 csv__indexOfName 3 0110
+  func 80 csv__nthOr 2 010
+  func 79 csv__nthOr 2 010
+  func 85 csv__floats 1 10
+  func 84 csv__floats 1 10
+  func 87 csv__ints 1 10
+  func 86 csv__ints 1 10
+  func 89 csv__select 2 010
+  func 88 csv__select 2 010
+  func 91 csv__selectIdx 2 010
+  func 90 csv__selectIdx 2 010
+  func 93 csv__table 1 00
+  func 92 csv__table 1 00
+  func 95 csv__mapL 2 010
+  func 94 csv__mapL 2 010
+  func 99 __deepEq 2 000
+  func 98 __deepEq 2 000
+  func 101 __deepEqDispatch 4 11000
+  func 100 __deepEqDispatch 4 11000
+  func 111 __deepEqMixed 4 11000
+  func 110 __deepEqMixed 4 11000
+  func 116 __deepEqStr 2 000
+  func 115 __deepEqStr 2 000
+  func 118 __deepEqStrLen 4 11000
+  func 117 __deepEqStrLen 4 11000
+  func 121 __deepEqStrChars 4 00110
+  func 120 __deepEqStrChars 4 00110
+  func 124 __deepEqStrCharsStep 4 00000
+  func 123 __deepEqStrCharsStep 4 00000
+  func 127 __deepEqConstr 2 000
+  func 126 __deepEqConstr 2 000
+  func 129 __deepEqConstrCheck 4 00000
+  func 128 __deepEqConstrCheck 4 00000
+  func 132 __deepEqConstrFields 4 00110
+  func 131 __deepEqConstrFields 4 00110
+  func 135 __deepEqConstrFieldsStep 4 00000
+  func 134 __deepEqConstrFieldsStep 4 00000
+  func 138 __deepNeq 2 000
+  func 137 __deepNeq 2 000
+  func 141 __lam_mlibcsvspp_3 2 100
+  func 140 __lam_mlibcsvspp_3 2 100
+  func 143 __lam_mlibcsvspp_2 2 100
+  func 142 __lam_mlibcsvspp_2 2 100
+  func 145 __lam_mlibcsvspp_1 2 100
+  func 144 __lam_mlibcsvspp_1 2 100
+  func 147 __lam_mlibcsvspp_0 2 010
+  func 146 __lam_mlibcsvspp_0 2 010
+  func 149 csv__read_1 1 00
+  func 148 csv__read_1 1 00
+  func 151 csv__fieldsFrom_1 0 0
+  func 150 csv__fieldsFrom_1 0 0
+  func 153 csv__fieldsFrom_2 2 000
+  func 152 csv__fieldsFrom_2 2 000
+  func 155 csv__plainFrom_1 2 000
+  func 154 csv__plainFrom_1 2 000
+  func 157 csv__quotedFrom_1 2 000
+  func 156 csv__quotedFrom_1 2 000
+  func 159 csv__quotedFrom_2 3 0000
+  func 158 csv__quotedFrom_2 3 0000
+  func 161 csv__quoteEnd_1 2 000
+  func 160 csv__quoteEnd_1 2 000
+  func 163 csv__afterQuoted_1 2 000
+  func 162 csv__afterQuoted_1 2 000
+  func 165 csv__afterField_1 1 00
+  func 164 csv__afterField_1 1 00
+  func 167 csv__afterField_2 2 000
+  func 166 csv__afterField_2 2 000
+  func 169 csv__afterField_3 2 000
+  func 168 csv__afterField_3 2 000
+  func 171 csv__afterField_4 1 00
+  func 170 csv__afterField_4 1 00
+  func 173 csv__afterField_5 1 00
+  func 172 csv__afterField_5 1 00
+  func 175 csv__skipLf_1 2 000
+  func 174 csv__skipLf_1 2 000
+  func 177 csv__consField_1 2 000
+  func 176 csv__consField_1 2 000
+  func 179 csv__nthOr_1 1 00
+  func 178 csv__nthOr_1 1 00
+  func 181 __deepEqConstr_1 1 00
+  func 180 __deepEqConstr_1 1 00
+  func 183 __deepEqConstr_2 1 00
+  func 182 __deepEqConstr_2 1 00
+  func 185 __deepEqConstrFieldsStep_1 2 000
+  func 184 __deepEqConstrFieldsStep_1 2 000
+  func 187 __deepEqConstrFieldsStep_2 2 000
+  func 186 __deepEqConstrFieldsStep_2 2 000
+.endmetadata

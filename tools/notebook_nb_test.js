@@ -30,7 +30,7 @@ async function nbRun(cells, only, mode, extraFiles = {}) {
     const c = p.cells[e.n];
     byCell[e.cell] = !c ? { notRun: true } : c.error ? { error: c.error } : { blocks: c.blocks };
   }
-  return { byCell, defErrors: p.defErrors, error: p.error, raw: r.output };
+  return { byCell, defErrors: p.defErrors, typeWarnings: p.typeWarnings, error: p.error, raw: r.output };
 }
 
 function check(label, ok, detail) {
@@ -64,6 +64,7 @@ const cellsOf = (...srcs) => srcs.map((source) => ({ kind: "code", source }));
     const n = Object.keys(expected).length;
     check(`${file}: ${same}/${n} cellen gelijk aan de vastgelegde uitvoer, geen fouten`,
       same === n && n === exprIdx.length && !Object.keys(r1.defErrors).length && !r1.error, JSON.stringify(r1.defErrors) + r1.error);
+    check(`${file}: geen typewaarschuwingen`, !Object.keys(r1.typeWarnings).length, JSON.stringify(r1.typeWarnings));
 
     t = now(); await nbRun(cells); const againMs = now() - t;
     const e = exprIdx[exprIdx.length - 1];
@@ -101,6 +102,15 @@ const cellsOf = (...srcs) => srcs.map((source) => ({ kind: "code", source }));
   cells[0].source = "kapot x = x + 1";
   r = await nbRun(cells);
   check("na reparatie: afhankelijke cellen weer goed", !Object.keys(r.defErrors).length && r.byCell[3].blocks && r.byCell[3].blocks[0].content === "8", JSON.stringify(r));
+
+  // Typefouten in een definitiecel: een waarschuwing bij die cel, ook als de
+  // cel bij de volgende run niet opnieuw gecompileerd wordt; de code draait.
+  await call({ type: "RSAPL_RESET" });
+  cells = cellsOf("los = 1", "slecht x = x + \"a\"\n\ngoed x = x + 1", "goed 2");
+  const w1 = await nbRun(cells);
+  const w2 = await nbRun(cells);
+  check("typefout: waarschuwing bij de cel, ook in de volgende run", /slecht: kan niet unificeren/.test((w1.typeWarnings[1] || []).join()) &&
+    /slecht/.test((w2.typeWarnings[1] || []).join()) && !w1.typeWarnings[0] && w1.byCell[2].blocks[0].content === "3", JSON.stringify(w1.typeWarnings) + JSON.stringify(w2.typeWarnings));
 
   // Volgorde: een latere cel gebruiken mag in "any", niet in "top".
   await call({ type: "RSAPL_RESET" });

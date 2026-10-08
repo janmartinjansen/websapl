@@ -74,6 +74,7 @@
     .out .print { color: var(--text-2); }
     .out .err { color: var(--err); }
     .out .note { color: var(--muted); font-size: 12px; }
+    .out .warn { color: #d97706; font-size: 13px; }
     .out .ok { color: var(--ok); font-size: 12px; }
     .cell.stale .out { opacity: .45; }
     .cell.stale .gutter::after { content: " •"; color: var(--accent); }
@@ -331,7 +332,7 @@
         return;
       }
       const p = NB.parseNbOutput(r.output);
-      for (const i of defT) cells[i].output = { def: true };
+      for (const i of defT) cells[i].output = { def: true, warnings: p.typeWarnings[i] || [] };
       for (const i of typeT) cells[i].output = { types: p.types[i] || [] };
       // Alle definitiecellen gaan mee: een fout ook tonen bij een cel die
       // niet gekozen was (bv. die afhangt van de gewijzigde cel).
@@ -494,6 +495,9 @@
       }
       if (o.def) {
         pre("ok", "✓ definities");
+        // Typefouten: de code draait wel (Sapl controleert typen niet bij het
+        // uitvoeren), maar het resultaat kan onzin zijn.
+        for (const w of o.warnings || []) pre("warn", "typefout: " + w);
         // Beslissing 4 van het CAF-plan: `=:` niet automatisch, wel een hint.
         const hint = NB.cafHintNames(c.source);
         if (hint.length) pre("note", `tip: ${hint.join(", ")} wordt bij elk gebruik opnieuw uitgerekend; met "=:" (bv. ${hint[0]} =: …) één keer, en gedeeld`);

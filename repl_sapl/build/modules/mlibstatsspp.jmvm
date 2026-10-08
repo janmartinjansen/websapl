@@ -1,0 +1,1444 @@
+start_lazy start stats__toF_lazy stats__toF stats__toF_else stats__floats_lazy stats__floats stats__floats_Nil stats__floats_Cons stats__len_lazy stats__len stats__lenAcc_lazy stats__lenAcc stats__lenAcc_Nil stats__lenAcc_Cons stats__sumF_lazy stats__sumF stats__sumAcc_lazy stats__sumAcc stats__sumAcc_Nil stats__sumAcc_Cons stats__nonEmpty_lazy stats__nonEmpty stats__nonEmpty_Nil stats__nonEmpty_Cons stats__strcatS_lazy stats__strcatS stats__strcatFill_lazy stats__strcatFill stats__strcatAt_lazy stats__strcatAt stats__strcatAt_else stats__sortF_lazy stats__sortF stats__sortLen_lazy stats__sortLen stats__sortLen_else stats__sortSplit_lazy stats__sortSplit stats__merge_lazy stats__merge stats__merge_Nil stats__merge_Cons stats__mergeCons_lazy stats__mergeCons stats__mergeCons_Nil stats__mergeCons_Cons stats__mergeCons_Cons_else stats__takeL_lazy stats__takeL stats__takeL_else stats__takeL_else_Nil stats__takeL_else_Cons stats__dropL_lazy stats__dropL stats__dropL_else stats__dropL_else_Nil stats__dropL_else_Cons stats__nthL_lazy stats__nthL stats__nthL_Nil stats__nthL_Cons stats__nthL_Cons_else stats__mapL_lazy stats__mapL stats__mapL_Nil stats__mapL_Cons stats__zipWithL_lazy stats__zipWithL stats__zipWithL_Nil stats__zipWithL_Cons stats__zipWithL_Cons_Nil stats__zipWithL_Cons_Cons stats__count_lazy stats__count stats__sum_lazy stats__sum stats__mean_lazy stats__mean stats__minimum_lazy stats__minimum stats__minimum_Nil stats__minimum_Cons stats__minFrom_lazy stats__minFrom stats__minFrom_Nil stats__minFrom_Cons stats__maximum_lazy stats__maximum stats__maximum_Nil stats__maximum_Cons stats__maxFrom_lazy stats__maxFrom stats__maxFrom_Nil stats__maxFrom_Cons stats__range_lazy stats__range stats__quantile_lazy stats__quantile stats__quantileSorted_lazy stats__quantileSorted stats__median_lazy stats__median stats__variance_lazy stats__variance stats__populationVariance_lazy stats__populationVariance stats__sumSq_lazy stats__sumSq stats__stdev_lazy stats__stdev stats__covariance_lazy stats__covariance stats__correlation_lazy stats__correlation stats__linearRegression_lazy stats__linearRegression stats__cumulative_lazy stats__cumulative stats__cumFrom_lazy stats__cumFrom stats__cumFrom_Nil stats__cumFrom_Cons stats__histogram_lazy stats__histogram stats__histBins_lazy stats__histBins stats__histBins_else stats__countBin_lazy stats__countBin stats__countBin_Nil stats__countBin_Cons stats__binOf_lazy stats__binOf stats__minInt_lazy stats__minInt stats__minInt_else stats__zscores_lazy stats__zscores __deepEq_lazy __deepEq __deepEqDispatch_lazy __deepEqDispatch __deepEqDispatch_else __deepEqDispatch_else_then_else __deepEqDispatch_else_else __deepEqDispatch_else_else_then_else __deepEqDispatch_else_else_else __deepEqDispatch_else_else_else_else __deepEqDispatch_else_else_else_else_else __deepEqDispatch_else_else_else_else_else_else __deepEqMixed_lazy __deepEqMixed __deepEqMixed_then_then_else __deepEqMixed_then_else __deepEqMixed_else __deepEqStr_lazy __deepEqStr __deepEqStrLen_lazy __deepEqStrLen __deepEqStrLen_else __deepEqStrChars_lazy __deepEqStrChars __deepEqStrChars_else __deepEqStrCharsStep_lazy __deepEqStrCharsStep __deepEqStrCharsStep_else __deepEqConstr_lazy __deepEqConstr __deepEqConstrCheck_lazy __deepEqConstrCheck __deepEqConstrCheck_else __deepEqConstrFields_lazy __deepEqConstrFields __deepEqConstrFields_else __deepEqConstrFieldsStep_lazy __deepEqConstrFieldsStep __deepEqConstrFieldsStep_else __deepNeq_lazy __deepNeq __deepNeq_else __lam_mlibstatsspp_2_lazy __lam_mlibstatsspp_2 __lam_mlibstatsspp_1_lazy __lam_mlibstatsspp_1 __lam_mlibstatsspp_0_lazy __lam_mlibstatsspp_0 __pat_mlibstatsspp_96_lazy __pat_mlibstatsspp_96 __pat_mlibstatsspp_77_lazy __pat_mlibstatsspp_77 __pat_mlibstatsspp_71_lazy __pat_mlibstatsspp_71 __pat_mlibstatsspp_66_lazy __pat_mlibstatsspp_66 __pat_mlibstatsspp_57_lazy __pat_mlibstatsspp_57 __pat_mlibstatsspp_57_else __pat_mlibstatsspp_25_lazy __pat_mlibstatsspp_25 stats__toF_1_lazy stats__toF_1 stats__mergeCons_1_lazy stats__mergeCons_1 stats__nthL_1_lazy stats__nthL_1 stats__minFrom_v1_lazy stats__minFrom_v1 stats__minFrom_v1_else stats__maxFrom_v1_lazy stats__maxFrom_v1 stats__maxFrom_v1_else stats__histBins_1_lazy stats__histBins_1 stats__countBin_v1_lazy stats__countBin_v1 stats__countBin_v1_else __deepEqConstr_1_lazy __deepEqConstr_1 __deepEqConstr_2_lazy __deepEqConstr_2 __deepEqConstrFieldsStep_1_lazy __deepEqConstrFieldsStep_1 __deepEqConstrFieldsStep_2_lazy __deepEqConstrFieldsStep_2 __pat_mlibstatsspp_77_1_lazy __pat_mlibstatsspp_77_1 __pat_mlibstatsspp_77_1_else __pat_mlibstatsspp_71_1_lazy __pat_mlibstatsspp_71_1 __pat_mlibstatsspp_71_2_lazy __pat_mlibstatsspp_71_2 __pat_mlibstatsspp_57_1_lazy __pat_mlibstatsspp_57_1 __pat_mlibstatsspp_57_2_lazy __pat_mlibstatsspp_57_2 __pat_mlibstatsspp_57_3_lazy __pat_mlibstatsspp_57_3 __pat_mlibstatsspp_57_4_lazy __pat_mlibstatsspp_57_4 #
+            call 1                                   || start
+            print 4
+            stop
+0           jmp 1                                    || start || start_lazy
+1           return_const 0 0                         || start
+2           jmp 3                                    || stats__toF || stats__toF_lazy
+3           push 2                                   || stats__toF
+            load 0
+            pushfunc 1 201                           || stats__toF_1
+            create 2 3
+            call 140                                 || __deepEq
+            ifeq 4                                   || stats__toF_else
+            load 0
+            eval
+            return 1
+4           load 0                                   || stats__toF_else
+            eval
+            floatop 14
+            return 1
+5           load 0                                   || stats__floats_lazy
+            eval
+            store 0
+6           load 0                                   || stats__floats
+            jmpt 2 7 8                               || lbs
+7           ccreatet 0 11 6 0                        || stats__floats_Nil
+            return 1
+8           load 1                                   || stats__floats_Cons
+            pushfunc 1 5                             || stats__floats_lazy
+            create 2 3
+            load 0
+            call 3                                   || stats__toF
+            ccreatet 2 11 6 1
+            return 3
+9           load 0                                   || stats__len_lazy
+            eval
+            store 0
+10          push 0                                   || stats__len
+            load 0
+            tailcall 1 12                            || stats__lenAcc
+11          load 0                                   || stats__lenAcc_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+12          load 0                                   || stats__lenAcc
+            jmpt 2 13 14                             || lbs
+13          load 1                                   || stats__lenAcc_Nil
+            return 2
+14          loadadd 3 1                              || stats__lenAcc_Cons
+            load 1
+            eval
+            tailcall 4 12                            || stats__lenAcc
+15          load 0                                   || stats__sumF_lazy
+            eval
+            store 0
+16          push 0.0                                 || stats__sumF
+            load 0
+            tailcall 1 18                            || stats__sumAcc
+17          load 0                                   || stats__sumAcc_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+18          load 0                                   || stats__sumAcc
+            jmpt 2 19 20                             || lbs
+19          load 1                                   || stats__sumAcc_Nil
+            return 2
+20          load 3                                   || stats__sumAcc_Cons
+            load 0
+            call 3                                   || stats__toF
+            add
+            load 1
+            eval
+            tailcall 4 18                            || stats__sumAcc
+21          load 1                                   || stats__nonEmpty_lazy
+            eval
+            store 1
+22          load 1                                   || stats__nonEmpty
+            jmpt 2 23 24                             || lbs
+23          push ": lege lijst"                      || stats__nonEmpty_Nil
+            load 0
+            pushfunc 2 26                            || stats__strcatS
+            create 3 3
+            push "Stats."
+            call 26                                  || stats__strcatS
+            syscall 8
+            return 2
+24          load 3                                   || stats__nonEmpty_Cons
+            return 4
+25          jmp 26                                   || stats__strcatS || stats__strcatS_lazy
+26          load 0                                   || stats__strcatS
+            eval
+            strop 2
+            load 1
+            eval
+            strop 2
+            add
+            array_create_dynamic 1
+            push 0
+            load 0
+            call 28                                  || stats__strcatFill
+            load 0
+            eval
+            strop 2
+            load 1
+            tailcall 2 28                            || stats__strcatFill
+27          load 1                                   || stats__strcatFill_lazy
+            eval
+            store 1
+            load 2
+            eval
+            store 2
+28          load 2                                   || stats__strcatFill
+            load 0
+            eval
+            strop 2
+            push 0
+            load 1
+            load 0
+            tailcall 3 30                            || stats__strcatAt
+29          load 1                                   || stats__strcatAt_lazy
+            eval
+            store 1
+            load 2
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+            load 4
+            eval
+            store 4
+30          load 2                                   || stats__strcatAt
+            load 3
+            sub
+            iflt 31                                  || stats__strcatAt_else
+            load 4
+            return 5
+31          load 4                                   || stats__strcatAt_else
+            load 1
+            load 2
+            add
+            load 0
+            eval
+            load 2
+            strop 4
+            strop 3
+            load 3
+            loadadd 2 1
+            load 1
+            load 0
+            tailcall 5 30                            || stats__strcatAt
+32          load 0                                   || stats__sortF_lazy
+            eval
+            store 0
+33          load 0                                   || stats__sortF
+            call 10                                  || stats__len
+            load 0
+            tailcall 1 35                            || stats__sortLen
+34          load 1                                   || stats__sortLen_lazy
+            eval
+            store 1
+35          push 1                                   || stats__sortLen
+            load 1
+            sub
+            iflt 36                                  || stats__sortLen_else
+            load 0
+            eval
+            return 2
+36          load 1                                   || stats__sortLen_else
+            load 0
+            tailcall 2 38                            || stats__sortSplit
+37          load 1                                   || stats__sortSplit_lazy
+            eval
+            store 1
+38          load 1                                   || stats__sortSplit
+            load 0
+            tailcall 2 199                           || __pat_mlibstatsspp_25
+39          load 0                                   || stats__merge_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+40          load 0                                   || stats__merge
+            jmpt 2 41 42                             || lbs
+41          load 1                                   || stats__merge_Nil
+            return 2
+42          load 3                                   || stats__merge_Cons
+            load 1
+            load 0
+            tailcall 4 44                            || stats__mergeCons
+43          load 2                                   || stats__mergeCons_lazy
+            eval
+            store 2
+44          load 2                                   || stats__mergeCons
+            jmpt 2 45 46                             || lbs
+45          load 1                                   || stats__mergeCons_Nil
+            load 0
+            eval
+            ccreatet 2 11 6 1
+            return 3
+46          load 0                                   || stats__mergeCons_Cons
+            load 2
+            eval
+            sub
+            iflt 47                                  || stats__mergeCons_Cons_else
+            load 4
+            load 3
+            pushfunc 2 39                            || stats__merge_lazy
+            create 3 3
+            load 2
+            eval
+            ccreatet 2 11 6 1
+            return 5
+47          load 1                                   || stats__mergeCons_Cons_else
+            load 3
+            load 2
+            pushfunc 2 203                           || stats__mergeCons_1
+            create 3 3
+            pushfunc 2 39                            || stats__merge_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 6 1
+            return 5
+48          load 0                                   || stats__takeL_lazy
+            eval
+            store 0
+49          push 0                                   || stats__takeL
+            load 0
+            sub
+            iflt 50                                  || stats__takeL_else
+            ccreatet 0 11 6 0
+            return 2
+50          load 1                                   || stats__takeL_else
+            eval
+            jmpt 2 51 52                             || lbs
+51          ccreatet 0 11 6 0                        || stats__takeL_else_Nil
+            return 2
+52          load 1                                   || stats__takeL_else_Cons
+            loadadd 2 -1
+            pushfunc 2 49                            || stats__takeL
+            create 3 3
+            load 0
+            ccreatet 2 11 6 1
+            return 4
+53          load 0                                   || stats__dropL_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+54          push 0                                   || stats__dropL
+            load 0
+            sub
+            iflt 55                                  || stats__dropL_else
+            load 1
+            return 2
+55          load 1                                   || stats__dropL_else
+            jmpt 2 56 57                             || lbs
+56          ccreatet 0 11 6 0                        || stats__dropL_else_Nil
+            return 2
+57          load 1                                   || stats__dropL_else_Cons
+            eval
+            loadadd 2 -1
+            tailcall 4 54                            || stats__dropL
+58          load 1                                   || stats__nthL_lazy
+            eval
+            store 1
+59          load 1                                   || stats__nthL
+            jmpt 2 60 61                             || lbs
+60          push "Stats: index te groot"             || stats__nthL_Nil
+            syscall 8
+            return 2
+61          load 2                                   || stats__nthL_Cons
+            eval
+            ifneq 62                                 || stats__nthL_Cons_else
+            load 0
+            return 4
+62          load 1                                   || stats__nthL_Cons_else
+            eval
+            load 2
+            pushfunc 1 205                           || stats__nthL_1
+            create 2 3
+            tailcall 4 59                            || stats__nthL
+63          load 1                                   || stats__mapL_lazy
+            eval
+            store 1
+64          load 1                                   || stats__mapL
+            jmpt 2 65 66                             || lbs
+65          ccreatet 0 11 6 0                        || stats__mapL_Nil
+            return 2
+66          load 1                                   || stats__mapL_Cons
+            load 2
+            pushfunc 2 63                            || stats__mapL_lazy
+            create 3 3
+            load 0
+            load 2
+            eval
+            ccreatet 2 11 6 1
+            return 4
+67          load 1                                   || stats__zipWithL_lazy
+            eval
+            store 1
+68          load 1                                   || stats__zipWithL
+            jmpt 2 69 70                             || lbs
+69          ccreatet 0 11 6 0                        || stats__zipWithL_Nil
+            return 3
+70          load 4                                   || stats__zipWithL_Cons
+            eval
+            jmpt 2 71 72                             || lbs
+71          ccreatet 0 11 6 0                        || stats__zipWithL_Cons_Nil
+            return 5
+72          load 1                                   || stats__zipWithL_Cons_Cons
+            load 3
+            load 4
+            pushfunc 3 67                            || stats__zipWithL_lazy
+            create 4 3
+            load 0
+            load 2
+            load 4
+            eval
+            ccreatet 2 11 6 1
+            return 7
+73          load 0                                   || stats__count_lazy
+            eval
+            store 0
+74          load 0                                   || stats__count
+            tailcall 1 10                            || stats__len
+75          load 0                                   || stats__sum_lazy
+            eval
+            store 0
+76          load 0                                   || stats__sum
+            tailcall 1 16                            || stats__sumF
+77          load 0                                   || stats__mean_lazy
+            eval
+            store 0
+78          load 0                                   || stats__mean
+            push "mean"
+            call 22                                  || stats__nonEmpty
+            call 16                                  || stats__sumF
+            load 0
+            call 10                                  || stats__len
+            floatop 14
+            div
+            return 1
+79          load 0                                   || stats__minimum_lazy
+            eval
+            store 0
+80          load 0                                   || stats__minimum
+            push "minimum"
+            call 22                                  || stats__nonEmpty
+            jmpt 2 81 82                             || lbs
+81          push "stats__minimum_Nil"                || stats__minimum_Nil
+            debug 2
+            return 1
+82          load 1                                   || stats__minimum_Cons
+            eval
+            load 0
+            call 3                                   || stats__toF
+            tailcall 3 84                            || stats__minFrom
+83          load 0                                   || stats__minFrom_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+84          load 1                                   || stats__minFrom
+            jmpt 2 85 86                             || lbs
+85          load 0                                   || stats__minFrom_Nil
+            return 2
+86          load 1                                   || stats__minFrom_Cons
+            eval
+            load 2
+            load 0
+            call 207                                 || stats__minFrom_v1
+            tailcall 4 84                            || stats__minFrom
+87          load 0                                   || stats__maximum_lazy
+            eval
+            store 0
+88          load 0                                   || stats__maximum
+            push "maximum"
+            call 22                                  || stats__nonEmpty
+            jmpt 2 89 90                             || lbs
+89          push "stats__maximum_Nil"                || stats__maximum_Nil
+            debug 2
+            return 1
+90          load 1                                   || stats__maximum_Cons
+            eval
+            load 0
+            call 3                                   || stats__toF
+            tailcall 3 92                            || stats__maxFrom
+91          load 0                                   || stats__maxFrom_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+92          load 1                                   || stats__maxFrom
+            jmpt 2 93 94                             || lbs
+93          load 0                                   || stats__maxFrom_Nil
+            return 2
+94          load 1                                   || stats__maxFrom_Cons
+            eval
+            load 2
+            load 0
+            call 210                                 || stats__maxFrom_v1
+            tailcall 4 92                            || stats__maxFrom
+95          load 0                                   || stats__range_lazy
+            eval
+            store 0
+96          load 0                                   || stats__range
+            call 88                                  || stats__maximum
+            load 0
+            call 80                                  || stats__minimum
+            sub
+            return 1
+97          load 1                                   || stats__quantile_lazy
+            eval
+            store 1
+98          load 1                                   || stats__quantile
+            call 10                                  || stats__len
+            load 1
+            push "quantile"
+            call 22                                  || stats__nonEmpty
+            call 6                                   || stats__floats
+            call 33                                  || stats__sortF
+            load 0
+            pushfunc 1 3                             || stats__toF
+            create 2 3
+            tailcall 2 100                           || stats__quantileSorted
+99          load 1                                   || stats__quantileSorted_lazy
+            eval
+            store 1
+            load 2
+            eval
+            store 2
+100         load 1                                   || stats__quantileSorted
+            load 2
+            load 0
+            tailcall 3 196                           || __pat_mlibstatsspp_57
+101         load 0                                   || stats__median_lazy
+            eval
+            store 0
+102         load 0                                   || stats__median
+            push 0.5
+            tailcall 1 98                            || stats__quantile
+103         load 0                                   || stats__variance_lazy
+            eval
+            store 0
+104         load 0                                   || stats__variance
+            pushfunc 1 78                            || stats__mean
+            create 2 3
+            load 0
+            push "variance"
+            call 22                                  || stats__nonEmpty
+            call 108                                 || stats__sumSq
+            load 0
+            call 10                                  || stats__len
+            dec
+            floatop 14
+            div
+            return 1
+105         load 0                                   || stats__populationVariance_lazy
+            eval
+            store 0
+106         load 0                                   || stats__populationVariance
+            pushfunc 1 78                            || stats__mean
+            create 2 3
+            load 0
+            push "populationVariance"
+            call 22                                  || stats__nonEmpty
+            call 108                                 || stats__sumSq
+            load 0
+            call 10                                  || stats__len
+            floatop 14
+            div
+            return 1
+107         load 0                                   || stats__sumSq_lazy
+            eval
+            store 0
+108         load 0                                   || stats__sumSq
+            load 1
+            pushfunc 2 185                           || __lam_mlibstatsspp_0_lazy
+            create 2 7
+            call 64                                  || stats__mapL
+            tailcall 2 16                            || stats__sumF
+109         jmp 110                                  || stats__stdev || stats__stdev_lazy
+110         load 0                                   || stats__stdev
+            eval
+            call 104                                 || stats__variance
+            floatop 9
+            return 1
+111         load 0                                   || stats__covariance_lazy
+            eval
+            store 0
+112         load 0                                   || stats__covariance
+            load 1
+            tailcall 2 194                           || __pat_mlibstatsspp_66
+113         load 0                                   || stats__correlation_lazy
+            eval
+            store 0
+114         load 1                                   || stats__correlation
+            load 0
+            call 112                                 || stats__covariance
+            load 0
+            call 110                                 || stats__stdev
+            load 1
+            call 110                                 || stats__stdev
+            mult
+            div
+            return 2
+115         jmp 116                                  || stats__linearRegression || stats__linearRegression_lazy
+116         load 0                                   || stats__linearRegression
+            load 1
+            tailcall 2 192                           || __pat_mlibstatsspp_71
+117         load 0                                   || stats__cumulative_lazy
+            eval
+            store 0
+118         load 0                                   || stats__cumulative
+            push 0.0
+            tailcall 1 120                           || stats__cumFrom
+119         load 0                                   || stats__cumFrom_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+120         load 1                                   || stats__cumFrom
+            jmpt 2 121 122                           || lbs
+121         ccreatet 0 11 6 0                        || stats__cumFrom_Nil
+            return 2
+122         load 1                                   || stats__cumFrom_Cons
+            load 2
+            load 0
+            call 3                                   || stats__toF
+            add
+            pushfunc 2 119                           || stats__cumFrom_lazy
+            create 3 3
+            load 2
+            load 0
+            call 3                                   || stats__toF
+            add
+            ccreatet 2 11 6 1
+            return 4
+123         load 0                                   || stats__histogram_lazy
+            eval
+            store 0
+124         load 1                                   || stats__histogram
+            load 0
+            tailcall 2 190                           || __pat_mlibstatsspp_77
+125         load 0                                   || stats__histBins_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+126         load 0                                   || stats__histBins
+            load 1
+            sub
+            iflt 127                                 || stats__histBins_else
+            ccreatet 0 11 6 0
+            return 5
+127         load 4                                   || stats__histBins_else
+            load 3
+            load 2
+            load 1
+            loadadd 0 1
+            pushfunc 5 126                           || stats__histBins
+            create 6 3
+            push 0
+            load 4
+            load 3
+            load 2
+            load 1
+            load 0
+            pushfunc 6 128                           || stats__countBin_lazy
+            create 7 3
+            load 3
+            load 0
+            load 2
+            pushfunc 3 213                           || stats__histBins_1
+            create 4 3
+            ccreatet 2 11 5 0
+            ccreatet 2 11 6 1
+            return 5
+128         load 4                                   || stats__countBin_lazy
+            eval
+            store 4
+            load 5
+            eval
+            store 5
+129         load 4                                   || stats__countBin
+            jmpt 2 130 131                           || lbs
+130         load 5                                   || stats__countBin_Nil
+            return 6
+131         load 7                                   || stats__countBin_Cons
+            load 2
+            load 5
+            load 4
+            load 3
+            load 0
+            call 215                                 || stats__countBin_v1
+            load 1
+            eval
+            load 5
+            load 4
+            load 3
+            load 2
+            tailcall 8 129                           || stats__countBin
+132         load 1                                   || stats__binOf_lazy
+            eval
+            store 1
+133         load 0                                   || stats__binOf
+            eval
+            load 2
+            eval
+            sub
+            load 3
+            eval
+            div
+            floatop 10
+            floatop 15
+            loadadd 1 -1
+            tailcall 4 135                           || stats__minInt
+134         load 0                                   || stats__minInt_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+135         load 1                                   || stats__minInt
+            load 0
+            sub
+            ifle 136                                 || stats__minInt_else
+            load 0
+            return 2
+136         load 1                                   || stats__minInt_else
+            return 2
+137         load 0                                   || stats__zscores_lazy
+            eval
+            store 0
+138         load 0                                   || stats__zscores
+            tailcall 1 188                           || __pat_mlibstatsspp_96
+139         jmp 140                                  || __deepEq || __deepEq_lazy
+140         load 1                                   || __deepEq
+            load 0
+            load 1
+            eval
+            gettypeid
+            load 0
+            eval
+            gettypeid
+            tailcall 2 142                           || __deepEqDispatch
+141         load 0                                   || __deepEqDispatch_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+142         load 0                                   || __deepEqDispatch
+            load 1
+            ifcmp 143                                || __deepEqDispatch_else
+            load 3
+            load 2
+            load 1
+            load 0
+            tailcall 4 152                           || __deepEqMixed
+143         loadadd 0 -1                             || __deepEqDispatch_else
+            ifneq 145                                || __deepEqDispatch_else_else
+            load 2
+            eval
+            load 3
+            eval
+            sub
+            ifneq 144                                || __deepEqDispatch_else_then_else
+            return_const 4 1
+144         return_const 4 0                         || __deepEqDispatch_else_then_else
+145         loadadd 0 -2                             || __deepEqDispatch_else_else
+            ifneq 147                                || __deepEqDispatch_else_else_else
+            load 2
+            eval
+            load 3
+            eval
+            sub
+            ifneq 146                                || __deepEqDispatch_else_else_then_else
+            return_const 4 1
+146         return_const 4 0                         || __deepEqDispatch_else_else_then_else
+147         loadadd 0 -3                             || __deepEqDispatch_else_else_else
+            ifneq 148                                || __deepEqDispatch_else_else_else_else
+            load 3
+            load 2
+            tailcall 4 157                           || __deepEqStr
+148         loadadd 0 -4                             || __deepEqDispatch_else_else_else_else
+            ifle 149                                 || __deepEqDispatch_else_else_else_else_else
+            load 3
+            load 2
+            tailcall 4 168                           || __deepEqConstr
+149         load 2                                   || __deepEqDispatch_else_else_else_else_else
+            eval
+            load 3
+            eval
+            sub
+            ifneq 150                                || __deepEqDispatch_else_else_else_else_else_else
+            return_const 4 1
+150         return_const 4 0                         || __deepEqDispatch_else_else_else_else_else_else
+151         load 0                                   || __deepEqMixed_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+152         load 0                                   || __deepEqMixed
+            load 1
+            add
+            ifneq 155                                || __deepEqMixed_else
+            load 0
+            load 1
+            mult
+            push 0
+            dec
+            sub
+            ifneq 154                                || __deepEqMixed_then_else
+            load 2
+            eval
+            load 3
+            eval
+            sub
+            ifneq 153                                || __deepEqMixed_then_then_else
+            return_const 4 1
+153         return_const 4 0                         || __deepEqMixed_then_then_else
+154         return_const 4 0                         || __deepEqMixed_then_else
+155         return_const 4 0                         || __deepEqMixed_else
+156         jmp 157                                  || __deepEqStr || __deepEqStr_lazy
+157         load 1                                   || __deepEqStr
+            load 0
+            load 1
+            eval
+            strop 2
+            load 0
+            eval
+            strop 2
+            tailcall 2 159                           || __deepEqStrLen
+158         load 0                                   || __deepEqStrLen_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+159         load 0                                   || __deepEqStrLen
+            load 1
+            ifcmp 160                                || __deepEqStrLen_else
+            return_const 4 0
+160         load 0                                   || __deepEqStrLen_else
+            push 0
+            load 3
+            load 2
+            tailcall 4 162                           || __deepEqStrChars
+161         load 2                                   || __deepEqStrChars_lazy
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+162         load 2                                   || __deepEqStrChars
+            load 3
+            sub
+            ifneq 163                                || __deepEqStrChars_else
+            return_const 4 1
+163         load 3                                   || __deepEqStrChars_else
+            load 2
+            load 1
+            load 0
+            tailcall 4 165                           || __deepEqStrCharsStep
+164         jmp 165                                  || __deepEqStrCharsStep || __deepEqStrCharsStep_lazy
+165         load 0                                   || __deepEqStrCharsStep
+            eval
+            load 2
+            eval
+            strop 4
+            load 1
+            eval
+            load 2
+            eval
+            strop 4
+            ifcmp 166                                || __deepEqStrCharsStep_else
+            return_const 4 0
+166         load 3                                   || __deepEqStrCharsStep_else
+            eval
+            load 2
+            eval
+            inc
+            load 1
+            load 0
+            tailcall 4 162                           || __deepEqStrChars
+167         jmp 168                                  || __deepEqConstr || __deepEqConstr_lazy
+168         load 1                                   || __deepEqConstr
+            load 0
+            load 1
+            pushfunc 1 220                           || __deepEqConstr_2
+            create 2 3
+            load 0
+            pushfunc 1 218                           || __deepEqConstr_1
+            create 2 3
+            tailcall 2 170                           || __deepEqConstrCheck
+169         jmp 170                                  || __deepEqConstrCheck || __deepEqConstrCheck_lazy
+170         load 1                                   || __deepEqConstrCheck
+            load 0
+            call 157                                 || __deepEqStr
+            ifneq 171                                || __deepEqConstrCheck_else
+            return_const 4 0
+171         load 0                                   || __deepEqConstrCheck_else
+            eval
+            lookup
+            getfuncarity
+            push 0
+            load 3
+            load 2
+            tailcall 4 173                           || __deepEqConstrFields
+172         load 2                                   || __deepEqConstrFields_lazy
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+173         load 2                                   || __deepEqConstrFields
+            load 3
+            sub
+            ifneq 174                                || __deepEqConstrFields_else
+            return_const 4 1
+174         load 3                                   || __deepEqConstrFields_else
+            load 2
+            load 1
+            load 0
+            tailcall 4 176                           || __deepEqConstrFieldsStep
+175         jmp 176                                  || __deepEqConstrFieldsStep || __deepEqConstrFieldsStep_lazy
+176         load 2                                   || __deepEqConstrFieldsStep
+            load 1
+            pushfunc 2 224                           || __deepEqConstrFieldsStep_2
+            create 3 3
+            load 2
+            load 0
+            pushfunc 2 222                           || __deepEqConstrFieldsStep_1
+            create 3 3
+            call 140                                 || __deepEq
+            ifneq 177                                || __deepEqConstrFieldsStep_else
+            return_const 4 0
+177         load 3                                   || __deepEqConstrFieldsStep_else
+            eval
+            load 2
+            eval
+            inc
+            load 1
+            load 0
+            tailcall 4 173                           || __deepEqConstrFields
+178         jmp 179                                  || __deepNeq || __deepNeq_lazy
+179         load 1                                   || __deepNeq
+            load 0
+            call 140                                 || __deepEq
+            dec
+            ifneq 180                                || __deepNeq_else
+            return_const 2 0
+180         return_const 2 1                         || __deepNeq_else
+181         load 0                                   || __lam_mlibstatsspp_2_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+182         load 2                                   || __lam_mlibstatsspp_2
+            call 3                                   || stats__toF
+            load 0
+            sub
+            load 1
+            div
+            return 3
+183         load 0                                   || __lam_mlibstatsspp_1_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+184         load 2                                   || __lam_mlibstatsspp_1
+            call 3                                   || stats__toF
+            load 0
+            sub
+            load 3
+            call 3                                   || stats__toF
+            load 1
+            sub
+            mult
+            return 4
+185         load 0                                   || __lam_mlibstatsspp_0_lazy
+            eval
+            store 0
+186         load 1                                   || __lam_mlibstatsspp_0
+            call 3                                   || stats__toF
+            load 0
+            sub
+            load 1
+            call 3                                   || stats__toF
+            load 0
+            sub
+            mult
+            return 2
+187         load 0                                   || __pat_mlibstatsspp_96_lazy
+            eval
+            store 0
+188         updsp 2                                  || __pat_mlibstatsspp_96
+            load 2
+            pushfunc 1 78                            || stats__mean
+            create 2 3
+            store 0
+            load 2
+            pushfunc 1 110                           || stats__stdev
+            create 2 3
+            store 1
+            load 2
+            load 1
+            load 0
+            pushfunc 3 181                           || __lam_mlibstatsspp_2_lazy
+            create 3 7
+            tailcall 3 64                            || stats__mapL
+189         load 0                                   || __pat_mlibstatsspp_77_lazy
+            eval
+            store 0
+190         updsp 3                                  || __pat_mlibstatsspp_77
+            load 4
+            pushfunc 1 79                            || stats__minimum_lazy
+            create 2 3
+            store 0
+            load 4
+            pushfunc 1 87                            || stats__maximum_lazy
+            create 2 3
+            store 1
+            load 3
+            load 0
+            load 1
+            pushfunc 3 226                           || __pat_mlibstatsspp_77_1
+            create 4 3
+            store 2
+            load 4
+            pushfunc 1 5                             || stats__floats_lazy
+            create 2 3
+            load 2
+            load 0
+            load 3
+            push 0
+            tailcall 5 126                           || stats__histBins
+191         jmp 192                                  || __pat_mlibstatsspp_71 || __pat_mlibstatsspp_71_lazy
+192         updsp 2                                  || __pat_mlibstatsspp_71
+            load 3
+            load 2
+            pushfunc 2 229                           || __pat_mlibstatsspp_71_1
+            create 3 3
+            store 0
+            load 3
+            load 0
+            load 2
+            pushfunc 3 231                           || __pat_mlibstatsspp_71_2
+            create 4 3
+            dup
+            store 1
+            load 0
+            ccreatet 2 11 5 0
+            return 4
+193         load 1                                   || __pat_mlibstatsspp_66_lazy
+            eval
+            store 1
+194         updsp 2                                  || __pat_mlibstatsspp_66
+            load 3
+            pushfunc 1 78                            || stats__mean
+            create 2 3
+            store 0
+            load 2
+            pushfunc 1 77                            || stats__mean_lazy
+            create 2 3
+            store 1
+            load 2
+            load 3
+            load 1
+            load 0
+            pushfunc 4 183                           || __lam_mlibstatsspp_1_lazy
+            create 3 7
+            call 68                                  || stats__zipWithL
+            call 16                                  || stats__sumF
+            load 3
+            call 10                                  || stats__len
+            dec
+            floatop 14
+            div
+            return 4
+195         load 1                                   || __pat_mlibstatsspp_57_lazy
+            eval
+            store 1
+            load 2
+            eval
+            store 2
+196         updsp 3                                  || __pat_mlibstatsspp_57
+            load 4
+            load 3
+            pushfunc 2 233                           || __pat_mlibstatsspp_57_1
+            create 3 3
+            dup
+            store 0
+            pushfunc 1 235                           || __pat_mlibstatsspp_57_2
+            create 2 3
+            dup
+            store 1
+            load 0
+            pushfunc 2 237                           || __pat_mlibstatsspp_57_3
+            create 3 3
+            store 2
+            load 1
+            eval
+            loadadd 4 -1
+            sub
+            iflt 197                                 || __pat_mlibstatsspp_57_else
+            load 5
+            loadadd 4 -1
+            tailcall 6 59                            || stats__nthL
+197         load 5                                   || __pat_mlibstatsspp_57_else
+            load 1
+            call 59                                  || stats__nthL
+            load 2
+            eval
+            load 5
+            load 1
+            pushfunc 1 239                           || __pat_mlibstatsspp_57_4
+            create 2 3
+            call 59                                  || stats__nthL
+            load 5
+            load 1
+            call 59                                  || stats__nthL
+            sub
+            mult
+            add
+            return 6
+198         load 1                                   || __pat_mlibstatsspp_25_lazy
+            eval
+            store 1
+199         updsp 1                                  || __pat_mlibstatsspp_25
+            load 2
+            push 2
+            div
+            store 0
+            load 2
+            load 0
+            eval
+            sub
+            load 1
+            load 0
+            pushfunc 2 53                            || stats__dropL_lazy
+            create 3 3
+            call 35                                  || stats__sortLen
+            load 0
+            eval
+            load 1
+            load 0
+            pushfunc 2 48                            || stats__takeL_lazy
+            create 3 3
+            call 35                                  || stats__sortLen
+            tailcall 3 40                            || stats__merge
+200         jmp 201                                  || stats__toF_1 || stats__toF_1_lazy
+201         load 0                                   || stats__toF_1
+            eval
+            gettypeid
+            return 1
+202         jmp 203                                  || stats__mergeCons_1 || stats__mergeCons_1_lazy
+203         load 1                                   || stats__mergeCons_1
+            load 0
+            eval
+            ccreatet 2 11 6 1
+            return 2
+204         jmp 205                                  || stats__nthL_1 || stats__nthL_1_lazy
+205         load 0                                   || stats__nthL_1
+            eval
+            dec
+            return 1
+206         jmp 207                                  || stats__minFrom_v1 || stats__minFrom_v1_lazy
+207         load 1                                   || stats__minFrom_v1
+            eval
+            load 0
+            call 3                                   || stats__toF
+            sub
+            ifle 208                                 || stats__minFrom_v1_else
+            load 0
+            tailcall 2 3                             || stats__toF
+208         load 1                                   || stats__minFrom_v1_else
+            eval
+            return 2
+209         jmp 210                                  || stats__maxFrom_v1 || stats__maxFrom_v1_lazy
+210         load 0                                   || stats__maxFrom_v1
+            call 3                                   || stats__toF
+            load 1
+            eval
+            sub
+            ifle 211                                 || stats__maxFrom_v1_else
+            load 0
+            tailcall 2 3                             || stats__toF
+211         load 1                                   || stats__maxFrom_v1_else
+            eval
+            return 2
+212         jmp 213                                  || stats__histBins_1 || stats__histBins_1_lazy
+213         load 0                                   || stats__histBins_1
+            eval
+            load 1
+            eval
+            floatop 14
+            load 2
+            eval
+            mult
+            add
+            return 3
+214         jmp 215                                  || stats__countBin_v1 || stats__countBin_v1_lazy
+215         load 4                                   || stats__countBin_v1
+            load 3
+            load 2
+            load 1
+            load 0
+            pushfunc 4 132                           || stats__binOf_lazy
+            create 5 3
+            call 140                                 || __deepEq
+            ifeq 216                                 || stats__countBin_v1_else
+            load 5
+            eval
+            inc
+            return 6
+216         load 5                                   || stats__countBin_v1_else
+            eval
+            return 6
+217         jmp 218                                  || __deepEqConstr_1 || __deepEqConstr_1_lazy
+218         load 0                                   || __deepEqConstr_1
+            eval
+            getconstrname
+            return 1
+219         jmp 220                                  || __deepEqConstr_2 || __deepEqConstr_2_lazy
+220         load 0                                   || __deepEqConstr_2
+            eval
+            getconstrname
+            return 1
+221         jmp 222                                  || __deepEqConstrFieldsStep_1 || __deepEqConstrFieldsStep_1_lazy
+222         load 0                                   || __deepEqConstrFieldsStep_1
+            eval
+            load 1
+            eval
+            getfield
+            eval
+            return 2
+223         jmp 224                                  || __deepEqConstrFieldsStep_2 || __deepEqConstrFieldsStep_2_lazy
+224         load 0                                   || __deepEqConstrFieldsStep_2
+            eval
+            load 1
+            eval
+            getfield
+            eval
+            return 2
+225         jmp 226                                  || __pat_mlibstatsspp_77_1 || __pat_mlibstatsspp_77_1_lazy
+226         load 0                                   || __pat_mlibstatsspp_77_1
+            eval
+            load 1
+            eval
+            sub
+            ifle 227                                 || __pat_mlibstatsspp_77_1_else
+            load 0
+            eval
+            load 1
+            eval
+            sub
+            load 2
+            eval
+            floatop 14
+            div
+            return 3
+227         push 1.0                                 || __pat_mlibstatsspp_77_1_else
+            return 3
+228         jmp 229                                  || __pat_mlibstatsspp_71_1 || __pat_mlibstatsspp_71_1_lazy
+229         load 0                                   || __pat_mlibstatsspp_71_1
+            load 1
+            eval
+            call 112                                 || stats__covariance
+            load 1
+            eval
+            call 104                                 || stats__variance
+            div
+            return 2
+230         jmp 231                                  || __pat_mlibstatsspp_71_2 || __pat_mlibstatsspp_71_2_lazy
+231         load 0                                   || __pat_mlibstatsspp_71_2
+            eval
+            call 78                                  || stats__mean
+            load 1
+            eval
+            load 2
+            eval
+            call 78                                  || stats__mean
+            mult
+            sub
+            return 3
+232         jmp 233                                  || __pat_mlibstatsspp_57_1 || __pat_mlibstatsspp_57_1_lazy
+233         load 0                                   || __pat_mlibstatsspp_57_1
+            eval
+            load 1
+            eval
+            dec
+            floatop 14
+            mult
+            return 2
+234         jmp 235                                  || __pat_mlibstatsspp_57_2 || __pat_mlibstatsspp_57_2_lazy
+235         load 0                                   || __pat_mlibstatsspp_57_2
+            eval
+            floatop 10
+            floatop 15
+            return 1
+236         jmp 237                                  || __pat_mlibstatsspp_57_3 || __pat_mlibstatsspp_57_3_lazy
+237         load 0                                   || __pat_mlibstatsspp_57_3
+            eval
+            load 1
+            eval
+            floatop 14
+            sub
+            return 2
+238         jmp 239                                  || __pat_mlibstatsspp_57_4 || __pat_mlibstatsspp_57_4_lazy
+239         load 0                                   || __pat_mlibstatsspp_57_4
+            eval
+            inc
+            return 1
+
+.metadata
+types 9
+type 5 __Tuple2 1
+  constr 0 __Tuple2 2
+type 6 list 2
+  constr 0 Nil 0
+  constr 1 Cons 2
+type 7 __Char 1
+  constr 0 __Char 1
+type 8 Graphics__Point 1
+  constr 0 Graphics__Pt 2
+type 9 Graphics__MenuCat 1
+  constr 0 Graphics__MenuCat 2
+type 10 Graphics__Graphics 9
+  constr 0 Graphics__GraphText 3
+  constr 1 Graphics__GraphPolyLine 2
+  constr 2 Graphics__GraphPolygon 2
+  constr 3 Graphics__GraphRectangle 3
+  constr 4 Graphics__GraphEllipse 3
+  constr 5 Graphics__GraphDisc 3
+  constr 6 Graphics__GraphClear 0
+  constr 7 Graphics__GraphMenu 1
+  constr 8 Graphics__GraphPrompt 2
+type 11 Graphics__Event 9
+  constr 0 Graphics__KeyIn 1
+  constr 1 Graphics__MouseDown 1
+  constr 2 Graphics__MouseUp 1
+  constr 3 Graphics__MouseDragged 1
+  constr 4 Graphics__MouseDoubleClick 1
+  constr 5 Graphics__MenuItem 2
+  constr 6 Graphics__PText 1
+  constr 7 Graphics__OpenFile 1
+  constr 8 Graphics__NoInput 0
+type 12 Display__Display 4
+  constr 0 Display__DText 1
+  constr 1 Display__DTable 2
+  constr 2 Display__DMarkdown 1
+  constr 3 Display__DGraphics 1
+type 5 __Tuple2 1
+  constr 0 __Tuple2 2
+functions 172
+  func 1 start 0 0
+  func 0 start 0 0
+  func 3 stats__toF 1 00
+  func 2 stats__toF 1 00
+  func 6 stats__floats 1 10
+  func 5 stats__floats 1 10
+  func 10 stats__len 1 10
+  func 9 stats__len 1 10
+  func 12 stats__lenAcc 2 110
+  func 11 stats__lenAcc 2 110
+  func 16 stats__sumF 1 10
+  func 15 stats__sumF 1 10
+  func 18 stats__sumAcc 2 110
+  func 17 stats__sumAcc 2 110
+  func 22 stats__nonEmpty 2 010
+  func 21 stats__nonEmpty 2 010
+  func 26 stats__strcatS 2 000
+  func 25 stats__strcatS 2 000
+  func 28 stats__strcatFill 3 0110
+  func 27 stats__strcatFill 3 0110
+  func 30 stats__strcatAt 5 011110
+  func 29 stats__strcatAt 5 011110
+  func 33 stats__sortF 1 10
+  func 32 stats__sortF 1 10
+  func 35 stats__sortLen 2 010
+  func 34 stats__sortLen 2 010
+  func 38 stats__sortSplit 2 010
+  func 37 stats__sortSplit 2 010
+  func 40 stats__merge 2 110
+  func 39 stats__merge 2 110
+  func 44 stats__mergeCons 3 0010
+  func 43 stats__mergeCons 3 0010
+  func 49 stats__takeL 2 100
+  func 48 stats__takeL 2 100
+  func 54 stats__dropL 2 110
+  func 53 stats__dropL 2 110
+  func 59 stats__nthL 2 010
+  func 58 stats__nthL 2 010
+  func 64 stats__mapL 2 010
+  func 63 stats__mapL 2 010
+  func 68 stats__zipWithL 3 0100
+  func 67 stats__zipWithL 3 0100
+  func 74 stats__count 1 10
+  func 73 stats__count 1 10
+  func 76 stats__sum 1 10
+  func 75 stats__sum 1 10
+  func 78 stats__mean 1 10
+  func 77 stats__mean 1 10
+  func 80 stats__minimum 1 10
+  func 79 stats__minimum 1 10
+  func 84 stats__minFrom 2 110
+  func 83 stats__minFrom 2 110
+  func 88 stats__maximum 1 10
+  func 87 stats__maximum 1 10
+  func 92 stats__maxFrom 2 110
+  func 91 stats__maxFrom 2 110
+  func 96 stats__range 1 10
+  func 95 stats__range 1 10
+  func 98 stats__quantile 2 010
+  func 97 stats__quantile 2 010
+  func 100 stats__quantileSorted 3 0110
+  func 99 stats__quantileSorted 3 0110
+  func 102 stats__median 1 10
+  func 101 stats__median 1 10
+  func 104 stats__variance 1 10
+  func 103 stats__variance 1 10
+  func 106 stats__populationVariance 1 10
+  func 105 stats__populationVariance 1 10
+  func 108 stats__sumSq 2 100
+  func 107 stats__sumSq 2 100
+  func 110 stats__stdev 1 00
+  func 109 stats__stdev 1 00
+  func 112 stats__covariance 2 100
+  func 111 stats__covariance 2 100
+  func 114 stats__correlation 2 100
+  func 113 stats__correlation 2 100
+  func 116 stats__linearRegression 2 000
+  func 115 stats__linearRegression 2 000
+  func 118 stats__cumulative 1 10
+  func 117 stats__cumulative 1 10
+  func 120 stats__cumFrom 2 110
+  func 119 stats__cumFrom 2 110
+  func 124 stats__histogram 2 100
+  func 123 stats__histogram 2 100
+  func 126 stats__histBins 5 110000
+  func 125 stats__histBins 5 110000
+  func 129 stats__countBin 6 0000110
+  func 128 stats__countBin 6 0000110
+  func 133 stats__binOf 4 01000
+  func 132 stats__binOf 4 01000
+  func 135 stats__minInt 2 110
+  func 134 stats__minInt 2 110
+  func 138 stats__zscores 1 10
+  func 137 stats__zscores 1 10
+  func 140 __deepEq 2 000
+  func 139 __deepEq 2 000
+  func 142 __deepEqDispatch 4 11000
+  func 141 __deepEqDispatch 4 11000
+  func 152 __deepEqMixed 4 11000
+  func 151 __deepEqMixed 4 11000
+  func 157 __deepEqStr 2 000
+  func 156 __deepEqStr 2 000
+  func 159 __deepEqStrLen 4 11000
+  func 158 __deepEqStrLen 4 11000
+  func 162 __deepEqStrChars 4 00110
+  func 161 __deepEqStrChars 4 00110
+  func 165 __deepEqStrCharsStep 4 00000
+  func 164 __deepEqStrCharsStep 4 00000
+  func 168 __deepEqConstr 2 000
+  func 167 __deepEqConstr 2 000
+  func 170 __deepEqConstrCheck 4 00000
+  func 169 __deepEqConstrCheck 4 00000
+  func 173 __deepEqConstrFields 4 00110
+  func 172 __deepEqConstrFields 4 00110
+  func 176 __deepEqConstrFieldsStep 4 00000
+  func 175 __deepEqConstrFieldsStep 4 00000
+  func 179 __deepNeq 2 000
+  func 178 __deepNeq 2 000
+  func 182 __lam_mlibstatsspp_2 3 1100
+  func 181 __lam_mlibstatsspp_2 3 1100
+  func 184 __lam_mlibstatsspp_1 4 11000
+  func 183 __lam_mlibstatsspp_1 4 11000
+  func 186 __lam_mlibstatsspp_0 2 100
+  func 185 __lam_mlibstatsspp_0 2 100
+  func 188 __pat_mlibstatsspp_96 1 10
+  func 187 __pat_mlibstatsspp_96 1 10
+  func 190 __pat_mlibstatsspp_77 2 100
+  func 189 __pat_mlibstatsspp_77 2 100
+  func 192 __pat_mlibstatsspp_71 2 000
+  func 191 __pat_mlibstatsspp_71 2 000
+  func 194 __pat_mlibstatsspp_66 2 010
+  func 193 __pat_mlibstatsspp_66 2 010
+  func 196 __pat_mlibstatsspp_57 3 0110
+  func 195 __pat_mlibstatsspp_57 3 0110
+  func 199 __pat_mlibstatsspp_25 2 010
+  func 198 __pat_mlibstatsspp_25 2 010
+  func 201 stats__toF_1 1 00
+  func 200 stats__toF_1 1 00
+  func 203 stats__mergeCons_1 2 000
+  func 202 stats__mergeCons_1 2 000
+  func 205 stats__nthL_1 1 00
+  func 204 stats__nthL_1 1 00
+  func 207 stats__minFrom_v1 2 000
+  func 206 stats__minFrom_v1 2 000
+  func 210 stats__maxFrom_v1 2 000
+  func 209 stats__maxFrom_v1 2 000
+  func 213 stats__histBins_1 3 0000
+  func 212 stats__histBins_1 3 0000
+  func 215 stats__countBin_v1 6 0000000
+  func 214 stats__countBin_v1 6 0000000
+  func 218 __deepEqConstr_1 1 00
+  func 217 __deepEqConstr_1 1 00
+  func 220 __deepEqConstr_2 1 00
+  func 219 __deepEqConstr_2 1 00
+  func 222 __deepEqConstrFieldsStep_1 2 000
+  func 221 __deepEqConstrFieldsStep_1 2 000
+  func 224 __deepEqConstrFieldsStep_2 2 000
+  func 223 __deepEqConstrFieldsStep_2 2 000
+  func 226 __pat_mlibstatsspp_77_1 3 0000
+  func 225 __pat_mlibstatsspp_77_1 3 0000
+  func 229 __pat_mlibstatsspp_71_1 2 000
+  func 228 __pat_mlibstatsspp_71_1 2 000
+  func 231 __pat_mlibstatsspp_71_2 3 0000
+  func 230 __pat_mlibstatsspp_71_2 3 0000
+  func 233 __pat_mlibstatsspp_57_1 2 000
+  func 232 __pat_mlibstatsspp_57_1 2 000
+  func 235 __pat_mlibstatsspp_57_2 1 00
+  func 234 __pat_mlibstatsspp_57_2 1 00
+  func 237 __pat_mlibstatsspp_57_3 2 000
+  func 236 __pat_mlibstatsspp_57_3 2 000
+  func 239 __pat_mlibstatsspp_57_4 1 00
+  func 238 __pat_mlibstatsspp_57_4 1 00
+.endmetadata

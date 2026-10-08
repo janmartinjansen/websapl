@@ -1,0 +1,1322 @@
+start_lazy start list__range_lazy list__range list__range_else list__from_lazy list__from list__iterate_lazy list__iterate list__repeat_lazy list__repeat list__replicate_lazy list__replicate list__replicate_else list__length_lazy list__length list__lengthAcc_lazy list__lengthAcc list__lengthAcc_Nil list__lengthAcc_Cons list__append_lazy list__append list__append_Nil list__append_Cons list__reverse_lazy list__reverse list__revAcc_lazy list__revAcc list__revAcc_Nil list__revAcc_Cons list__map_lazy list__map list__map_Nil list__map_Cons list__filter_lazy list__filter list__filter_Nil list__filter_Cons list__filter_Cons_else list__foldl_lazy list__foldl list__foldl_Nil list__foldl_Cons list__foldr_lazy list__foldr list__foldr_Nil list__foldr_Cons list__concat_lazy list__concat list__concatMap_lazy list__concatMap list__concatMap_Nil list__concatMap_Cons list__head_lazy list__head list__head_Nil list__head_Cons list__tail_lazy list__tail list__tail_Nil list__tail_Cons list__last_lazy list__last list__last_Nil list__last_Cons list__last_Cons_Nil list__last_Cons_Cons list__isEmpty_lazy list__isEmpty list__isEmpty_Nil list__isEmpty_Cons list__nth_lazy list__nth list__nth_Nil list__nth_Cons list__nth_Cons_else list__take_lazy list__take list__take_else list__takePos_lazy list__takePos list__takePos_Nil list__takePos_Cons list__drop_lazy list__drop list__drop_else list__dropPos_lazy list__dropPos list__dropPos_Nil list__dropPos_Cons list__takeWhile_lazy list__takeWhile list__takeWhile_Nil list__takeWhile_Cons list__takeWhile_Cons_else list__dropWhile_lazy list__dropWhile list__dropWhile_Nil list__dropWhile_Cons list__dropWhile_Cons_else list__elem_lazy list__elem list__findIndex_lazy list__findIndex list__findIndexFrom_lazy list__findIndexFrom list__findIndexFrom_Nil list__findIndexFrom_Cons list__findIndexFrom_Cons_else list__sum_lazy list__sum list__product_lazy list__product list__maximum_lazy list__maximum list__maximum_Nil list__maximum_Cons list__minimum_lazy list__minimum list__minimum_Nil list__minimum_Cons list__any_lazy list__any list__any_Nil list__any_Cons list__any_Cons_else list__all_lazy list__all list__all_Nil list__all_Cons list__all_Cons_else list__and_lazy list__and list__or_lazy list__or list__count_lazy list__count list__zipWith_lazy list__zipWith list__zipWith_Nil list__zipWith_Cons list__zipWith_Cons_Nil list__zipWith_Cons_Cons list__zip_lazy list__zip list__indexed_lazy list__indexed list__intersperse_lazy list__intersperse list__intersperse_Nil list__intersperse_Cons list__prependAll_lazy list__prependAll list__prependAll_Nil list__prependAll_Cons list__sortBy_lazy list__sortBy list__sortByLen_lazy list__sortByLen list__sortByLen_else list__sortBySplit_lazy list__sortBySplit list__merge_lazy list__merge list__merge_Nil list__merge_Cons list__mergeCons_lazy list__mergeCons list__mergeCons_Nil list__mergeCons_Cons list__mergeCons_Cons_else list__sort_lazy list__sort list__groupBy_lazy list__groupBy list__groupBy_Nil list__groupBy_Cons list__nub_lazy list__nub list__nubSeen_lazy list__nubSeen list__nubSeen_Nil list__nubSeen_Cons list__nubSeen_Cons_else __deepEq_lazy __deepEq __deepEqDispatch_lazy __deepEqDispatch __deepEqDispatch_else __deepEqDispatch_else_then_else __deepEqDispatch_else_else __deepEqDispatch_else_else_then_else __deepEqDispatch_else_else_else __deepEqDispatch_else_else_else_else __deepEqDispatch_else_else_else_else_else __deepEqDispatch_else_else_else_else_else_else __deepEqMixed_lazy __deepEqMixed __deepEqMixed_then_then_else __deepEqMixed_then_else __deepEqMixed_else __deepEqStr_lazy __deepEqStr __deepEqStrLen_lazy __deepEqStrLen __deepEqStrLen_else __deepEqStrChars_lazy __deepEqStrChars __deepEqStrChars_else __deepEqStrCharsStep_lazy __deepEqStrCharsStep __deepEqStrCharsStep_else __deepEqConstr_lazy __deepEqConstr __deepEqConstrCheck_lazy __deepEqConstrCheck __deepEqConstrCheck_else __deepEqConstrFields_lazy __deepEqConstrFields __deepEqConstrFields_else __deepEqConstrFieldsStep_lazy __deepEqConstrFieldsStep __deepEqConstrFieldsStep_else __deepNeq_lazy __deepNeq __deepNeq_else __lam_mliblistspp_10_lazy __lam_mliblistspp_10 __lam_mliblistspp_9_lazy __lam_mliblistspp_9 __lam_mliblistspp_8_lazy __lam_mliblistspp_8 __lam_mliblistspp_8_false __lam_mliblistspp_7_lazy __lam_mliblistspp_7 __lam_mliblistspp_6_lazy __lam_mliblistspp_6 __lam_mliblistspp_5_lazy __lam_mliblistspp_5 __lam_mliblistspp_4_lazy __lam_mliblistspp_4 __lam_mliblistspp_4_else __lam_mliblistspp_3_lazy __lam_mliblistspp_3 __lam_mliblistspp_3_else __lam_mliblistspp_2_lazy __lam_mliblistspp_2 __lam_mliblistspp_1_lazy __lam_mliblistspp_1 __lam_mliblistspp_0_lazy __lam_mliblistspp_0 __pat_mliblistspp_84_lazy __pat_mliblistspp_84 list__from_1_lazy list__from_1 list__nth_1_lazy list__nth_1 list__mergeCons_1_lazy list__mergeCons_1 __deepEqConstr_1_lazy __deepEqConstr_1 __deepEqConstr_2_lazy __deepEqConstr_2 __deepEqConstrFieldsStep_1_lazy __deepEqConstrFieldsStep_1 __deepEqConstrFieldsStep_2_lazy __deepEqConstrFieldsStep_2 __ap2_lazy __ap2 #
+            call 1                                   || start
+            print 4
+            stop
+0           jmp 1                                    || start || start_lazy
+1           return_const 0 0                         || start
+2           load 0                                   || list__range_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+3           load 0                                   || list__range
+            load 1
+            sub
+            ifle 4                                   || list__range_else
+            ccreatet 0 11 6 0
+            return 2
+4           load 1                                   || list__range_else
+            loadadd 0 1
+            pushfunc 2 3                             || list__range
+            create 3 3
+            load 0
+            ccreatet 2 11 6 1
+            return 2
+5           jmp 6                                    || list__from || list__from_lazy
+6           load 0                                   || list__from
+            pushfunc 1 254                           || list__from_1
+            create 2 3
+            pushfunc 1 6                             || list__from
+            create 2 3
+            load 0
+            eval
+            ccreatet 2 11 6 1
+            return 1
+7           jmp 8                                    || list__iterate || list__iterate_lazy
+8           load 1                                   || list__iterate
+            load 0
+            pushfunc 2 268                           || __ap2
+            create 3 3
+            load 0
+            pushfunc 2 8                             || list__iterate
+            create 3 3
+            load 1
+            eval
+            ccreatet 2 11 6 1
+            return 2
+9           jmp 10                                   || list__repeat || list__repeat_lazy
+10          load 0                                   || list__repeat
+            pushfunc 1 10                            || list__repeat
+            create 2 3
+            load 0
+            eval
+            ccreatet 2 11 6 1
+            return 1
+11          load 0                                   || list__replicate_lazy
+            eval
+            store 0
+12          push 0                                   || list__replicate
+            load 0
+            sub
+            iflt 13                                  || list__replicate_else
+            ccreatet 0 11 6 0
+            return 2
+13          load 1                                   || list__replicate_else
+            loadadd 0 -1
+            pushfunc 2 12                            || list__replicate
+            create 3 3
+            load 1
+            eval
+            ccreatet 2 11 6 1
+            return 2
+14          load 0                                   || list__length_lazy
+            eval
+            store 0
+15          load 0                                   || list__length
+            push 0
+            tailcall 1 17                            || list__lengthAcc
+16          load 0                                   || list__lengthAcc_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+17          load 1                                   || list__lengthAcc
+            jmpt 2 18 19                             || lbs
+18          load 0                                   || list__lengthAcc_Nil
+            return 2
+19          load 1                                   || list__lengthAcc_Cons
+            eval
+            loadadd 2 1
+            tailcall 4 17                            || list__lengthAcc
+20          load 0                                   || list__append_lazy
+            eval
+            store 0
+21          load 0                                   || list__append
+            jmpt 2 22 23                             || lbs
+22          load 1                                   || list__append_Nil
+            eval
+            return 2
+23          load 3                                   || list__append_Cons
+            load 1
+            pushfunc 2 20                            || list__append_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 6 1
+            return 4
+24          load 0                                   || list__reverse_lazy
+            eval
+            store 0
+25          ccreatet 0 11 6 0                        || list__reverse
+            load 0
+            tailcall 1 27                            || list__revAcc
+26          load 0                                   || list__revAcc_lazy
+            eval
+            store 0
+27          load 0                                   || list__revAcc
+            jmpt 2 28 29                             || lbs
+28          load 1                                   || list__revAcc_Nil
+            eval
+            return 2
+29          load 3                                   || list__revAcc_Cons
+            load 0
+            ccreatet 2 11 6 1
+            load 1
+            eval
+            tailcall 4 27                            || list__revAcc
+30          load 1                                   || list__map_lazy
+            eval
+            store 1
+31          load 1                                   || list__map
+            jmpt 2 32 33                             || lbs
+32          ccreatet 0 11 6 0                        || list__map_Nil
+            return 2
+33          load 1                                   || list__map_Cons
+            load 2
+            pushfunc 2 30                            || list__map_lazy
+            create 3 3
+            load 0
+            load 2
+            eval
+            ccreatet 2 11 6 1
+            return 4
+34          load 1                                   || list__filter_lazy
+            eval
+            store 1
+35          load 1                                   || list__filter
+            jmpt 2 36 37                             || lbs
+36          ccreatet 0 11 6 0                        || list__filter_Nil
+            return 2
+37          load 0                                   || list__filter_Cons
+            load 2
+            eval
+            ifeq 38                                  || list__filter_Cons_else
+            load 1
+            load 2
+            pushfunc 2 34                            || list__filter_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 6 1
+            return 4
+38          load 1                                   || list__filter_Cons_else
+            eval
+            load 2
+            tailcall 4 35                            || list__filter
+39          load 1                                   || list__foldl_lazy
+            eval
+            store 1
+            load 2
+            eval
+            store 2
+40          load 2                                   || list__foldl
+            jmpt 2 41 42                             || lbs
+41          load 1                                   || list__foldl_Nil
+            return 3
+42          load 1                                   || list__foldl_Cons
+            eval
+            load 0
+            load 3
+            load 2
+            eval
+            load 2
+            tailcall 5 40                            || list__foldl
+43          load 2                                   || list__foldr_lazy
+            eval
+            store 2
+44          load 2                                   || list__foldr
+            jmpt 2 45 46                             || lbs
+45          load 1                                   || list__foldr_Nil
+            eval
+            return 3
+46          load 1                                   || list__foldr_Cons
+            load 3
+            load 2
+            pushfunc 3 43                            || list__foldr_lazy
+            create 4 3
+            load 0
+            load 2
+            eval
+            return 5
+47          load 0                                   || list__concat_lazy
+            eval
+            store 0
+48          load 0                                   || list__concat
+            ccreatet 0 11 6 0
+            pushfunc 2 20                            || list__append_lazy
+            create 1 7
+            tailcall 1 44                            || list__foldr
+49          load 1                                   || list__concatMap_lazy
+            eval
+            store 1
+50          load 1                                   || list__concatMap
+            jmpt 2 51 52                             || lbs
+51          ccreatet 0 11 6 0                        || list__concatMap_Nil
+            return 2
+52          load 1                                   || list__concatMap_Cons
+            load 2
+            pushfunc 2 49                            || list__concatMap_lazy
+            create 3 3
+            load 0
+            load 2
+            eval
+            tailcall 4 21                            || list__append
+53          load 0                                   || list__head_lazy
+            eval
+            store 0
+54          load 0                                   || list__head
+            jmpt 2 55 56                             || lbs
+55          push "List.head: lege lijst"             || list__head_Nil
+            syscall 8
+            return 1
+56          load 0                                   || list__head_Cons
+            return 3
+57          load 0                                   || list__tail_lazy
+            eval
+            store 0
+58          load 0                                   || list__tail
+            jmpt 2 59 60                             || lbs
+59          push "List.tail: lege lijst"             || list__tail_Nil
+            syscall 8
+            return 1
+60          load 1                                   || list__tail_Cons
+            eval
+            return 3
+61          load 0                                   || list__last_lazy
+            eval
+            store 0
+62          load 0                                   || list__last
+            jmpt 2 63 64                             || lbs
+63          push "List.last: lege lijst"             || list__last_Nil
+            syscall 8
+            return 1
+64          load 1                                   || list__last_Cons
+            eval
+            jmpt 2 65 66                             || lbs
+65          load 0                                   || list__last_Cons_Nil
+            return 3
+66          load 3                                   || list__last_Cons_Cons
+            eval
+            tailcall 5 62                            || list__last
+67          load 0                                   || list__isEmpty_lazy
+            eval
+            store 0
+68          load 0                                   || list__isEmpty
+            jmpt 2 69 70                             || lbs
+69          return_const 1 1                         || list__isEmpty_Nil
+70          return_const 3 0                         || list__isEmpty_Cons
+71          load 1                                   || list__nth_lazy
+            eval
+            store 1
+72          load 1                                   || list__nth
+            jmpt 2 73 74                             || lbs
+73          push "List.nth: index te groot"          || list__nth_Nil
+            syscall 8
+            return 2
+74          load 2                                   || list__nth_Cons
+            eval
+            ifneq 75                                 || list__nth_Cons_else
+            load 0
+            return 4
+75          load 1                                   || list__nth_Cons_else
+            eval
+            load 2
+            pushfunc 1 256                           || list__nth_1
+            create 2 3
+            tailcall 4 72                            || list__nth
+76          load 0                                   || list__take_lazy
+            eval
+            store 0
+77          push 0                                   || list__take
+            load 0
+            sub
+            iflt 78                                  || list__take_else
+            ccreatet 0 11 6 0
+            return 2
+78          load 1                                   || list__take_else
+            eval
+            load 0
+            tailcall 2 80                            || list__takePos
+79          load 1                                   || list__takePos_lazy
+            eval
+            store 1
+80          load 1                                   || list__takePos
+            jmpt 2 81 82                             || lbs
+81          ccreatet 0 11 6 0                        || list__takePos_Nil
+            return 2
+82          load 1                                   || list__takePos_Cons
+            load 2
+            eval
+            dec
+            pushfunc 2 77                            || list__take
+            create 3 3
+            load 0
+            ccreatet 2 11 6 1
+            return 4
+83          load 0                                   || list__drop_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+84          push 0                                   || list__drop
+            load 0
+            sub
+            iflt 85                                  || list__drop_else
+            load 1
+            return 2
+85          load 1                                   || list__drop_else
+            load 0
+            tailcall 2 87                            || list__dropPos
+86          load 1                                   || list__dropPos_lazy
+            eval
+            store 1
+87          load 1                                   || list__dropPos
+            jmpt 2 88 89                             || lbs
+88          ccreatet 0 11 6 0                        || list__dropPos_Nil
+            return 2
+89          load 1                                   || list__dropPos_Cons
+            eval
+            load 2
+            eval
+            dec
+            tailcall 4 84                            || list__drop
+90          load 1                                   || list__takeWhile_lazy
+            eval
+            store 1
+91          load 1                                   || list__takeWhile
+            jmpt 2 92 93                             || lbs
+92          ccreatet 0 11 6 0                        || list__takeWhile_Nil
+            return 2
+93          load 0                                   || list__takeWhile_Cons
+            load 2
+            eval
+            ifeq 94                                  || list__takeWhile_Cons_else
+            load 1
+            load 2
+            pushfunc 2 90                            || list__takeWhile_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 6 1
+            return 4
+94          ccreatet 0 11 6 0                        || list__takeWhile_Cons_else
+            return 4
+95          load 1                                   || list__dropWhile_lazy
+            eval
+            store 1
+96          load 1                                   || list__dropWhile
+            jmpt 2 97 98                             || lbs
+97          ccreatet 0 11 6 0                        || list__dropWhile_Nil
+            return 2
+98          load 0                                   || list__dropWhile_Cons
+            load 2
+            eval
+            ifeq 99                                  || list__dropWhile_Cons_else
+            load 1
+            eval
+            load 2
+            tailcall 4 96                            || list__dropWhile
+99          load 3                                   || list__dropWhile_Cons_else
+            return 4
+100         load 1                                   || list__elem_lazy
+            eval
+            store 1
+101         load 1                                   || list__elem
+            load 0
+            pushfunc 2 250                           || __lam_mliblistspp_0
+            create 2 7
+            tailcall 2 122                           || list__any
+102         load 1                                   || list__findIndex_lazy
+            eval
+            store 1
+103         load 1                                   || list__findIndex
+            load 0
+            push 0
+            tailcall 2 105                           || list__findIndexFrom
+104         load 0                                   || list__findIndexFrom_lazy
+            eval
+            store 0
+            load 2
+            eval
+            store 2
+105         load 2                                   || list__findIndexFrom
+            jmpt 2 106 107                           || lbs
+106         push 0                                   || list__findIndexFrom_Nil
+            dec
+            return 3
+107         load 0                                   || list__findIndexFrom_Cons
+            load 3
+            eval
+            ifeq 108                                 || list__findIndexFrom_Cons_else
+            load 2
+            return 5
+108         load 1                                   || list__findIndexFrom_Cons_else
+            eval
+            load 3
+            loadadd 2 1
+            tailcall 5 105                           || list__findIndexFrom
+109         load 0                                   || list__sum_lazy
+            eval
+            store 0
+110         load 0                                   || list__sum
+            push 0
+            pushfunc 2 247                           || __lam_mliblistspp_1_lazy
+            create 1 7
+            tailcall 1 40                            || list__foldl
+111         load 0                                   || list__product_lazy
+            eval
+            store 0
+112         load 0                                   || list__product
+            push 1
+            pushfunc 2 245                           || __lam_mliblistspp_2_lazy
+            create 1 7
+            tailcall 1 40                            || list__foldl
+113         load 0                                   || list__maximum_lazy
+            eval
+            store 0
+114         load 0                                   || list__maximum
+            jmpt 2 115 116                           || lbs
+115         push "List.maximum: lege lijst"          || list__maximum_Nil
+            syscall 8
+            return 1
+116         load 1                                   || list__maximum_Cons
+            eval
+            load 0
+            pushfunc 2 242                           || __lam_mliblistspp_3_lazy
+            create 1 7
+            tailcall 3 40                            || list__foldl
+117         load 0                                   || list__minimum_lazy
+            eval
+            store 0
+118         load 0                                   || list__minimum
+            jmpt 2 119 120                           || lbs
+119         push "List.minimum: lege lijst"          || list__minimum_Nil
+            syscall 8
+            return 1
+120         load 1                                   || list__minimum_Cons
+            eval
+            load 0
+            pushfunc 2 239                           || __lam_mliblistspp_4_lazy
+            create 1 7
+            tailcall 3 40                            || list__foldl
+121         load 1                                   || list__any_lazy
+            eval
+            store 1
+122         load 1                                   || list__any
+            jmpt 2 123 124                           || lbs
+123         return_const 2 0                         || list__any_Nil
+124         load 0                                   || list__any_Cons
+            load 2
+            eval
+            ifeq 125                                 || list__any_Cons_else
+            return_const 4 1
+125         load 1                                   || list__any_Cons_else
+            eval
+            load 2
+            tailcall 4 122                           || list__any
+126         load 1                                   || list__all_lazy
+            eval
+            store 1
+127         load 1                                   || list__all
+            jmpt 2 128 129                           || lbs
+128         return_const 2 1                         || list__all_Nil
+129         load 0                                   || list__all_Cons
+            load 2
+            eval
+            ifeq 130                                 || list__all_Cons_else
+            load 1
+            eval
+            load 2
+            tailcall 4 127                           || list__all
+130         return_const 4 0                         || list__all_Cons_else
+131         load 0                                   || list__and_lazy
+            eval
+            store 0
+132         load 0                                   || list__and
+            pushfunc 1 237                           || __lam_mliblistspp_5_lazy
+            create 1 7
+            tailcall 1 127                           || list__all
+133         load 0                                   || list__or_lazy
+            eval
+            store 0
+134         load 0                                   || list__or
+            pushfunc 1 235                           || __lam_mliblistspp_6_lazy
+            create 1 7
+            tailcall 1 122                           || list__any
+135         load 1                                   || list__count_lazy
+            eval
+            store 1
+136         load 1                                   || list__count
+            load 0
+            call 35                                  || list__filter
+            tailcall 2 15                            || list__length
+137         load 1                                   || list__zipWith_lazy
+            eval
+            store 1
+138         load 1                                   || list__zipWith
+            jmpt 2 139 140                           || lbs
+139         ccreatet 0 11 6 0                        || list__zipWith_Nil
+            return 3
+140         load 4                                   || list__zipWith_Cons
+            eval
+            jmpt 2 141 142                           || lbs
+141         ccreatet 0 11 6 0                        || list__zipWith_Cons_Nil
+            return 5
+142         load 1                                   || list__zipWith_Cons_Cons
+            load 3
+            load 4
+            pushfunc 3 137                           || list__zipWith_lazy
+            create 4 3
+            load 0
+            load 2
+            load 4
+            eval
+            ccreatet 2 11 6 1
+            return 7
+143         load 0                                   || list__zip_lazy
+            eval
+            store 0
+144         load 1                                   || list__zip
+            load 0
+            pushfunc 2 234                           || __lam_mliblistspp_7
+            create 1 7
+            tailcall 2 138                           || list__zipWith
+145         jmp 146                                  || list__indexed || list__indexed_lazy
+146         load 0                                   || list__indexed
+            push 0
+            call 6                                   || list__from
+            tailcall 1 144                           || list__zip
+147         load 1                                   || list__intersperse_lazy
+            eval
+            store 1
+148         load 1                                   || list__intersperse
+            jmpt 2 149 150                           || lbs
+149         ccreatet 0 11 6 0                        || list__intersperse_Nil
+            return 2
+150         load 1                                   || list__intersperse_Cons
+            load 2
+            pushfunc 2 151                           || list__prependAll_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 6 1
+            return 4
+151         load 1                                   || list__prependAll_lazy
+            eval
+            store 1
+152         load 1                                   || list__prependAll
+            jmpt 2 153 154                           || lbs
+153         ccreatet 0 11 6 0                        || list__prependAll_Nil
+            return 2
+154         load 1                                   || list__prependAll_Cons
+            load 2
+            pushfunc 2 151                           || list__prependAll_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 6 1
+            load 2
+            eval
+            ccreatet 2 11 6 1
+            return 4
+155         load 1                                   || list__sortBy_lazy
+            eval
+            store 1
+156         load 1                                   || list__sortBy
+            call 15                                  || list__length
+            load 1
+            load 0
+            tailcall 2 158                           || list__sortByLen
+157         load 2                                   || list__sortByLen_lazy
+            eval
+            store 2
+158         push 1                                   || list__sortByLen
+            load 2
+            sub
+            iflt 159                                 || list__sortByLen_else
+            load 1
+            eval
+            return 3
+159         load 2                                   || list__sortByLen_else
+            load 1
+            load 0
+            tailcall 3 161                           || list__sortBySplit
+160         load 2                                   || list__sortBySplit_lazy
+            eval
+            store 2
+161         load 2                                   || list__sortBySplit
+            load 1
+            load 0
+            tailcall 3 252                           || __pat_mliblistspp_84
+162         load 1                                   || list__merge_lazy
+            eval
+            store 1
+            load 2
+            eval
+            store 2
+163         load 1                                   || list__merge
+            jmpt 2 164 165                           || lbs
+164         load 2                                   || list__merge_Nil
+            return 3
+165         load 4                                   || list__merge_Cons
+            load 1
+            load 0
+            load 2
+            tailcall 5 167                           || list__mergeCons
+166         load 3                                   || list__mergeCons_lazy
+            eval
+            store 3
+167         load 3                                   || list__mergeCons
+            jmpt 2 168 169                           || lbs
+168         load 2                                   || list__mergeCons_Nil
+            load 1
+            eval
+            ccreatet 2 11 6 1
+            return 4
+169         load 0                                   || list__mergeCons_Cons
+            load 3
+            load 2
+            eval
+            ifeq 170                                 || list__mergeCons_Cons_else
+            load 5
+            load 4
+            load 2
+            pushfunc 3 162                           || list__merge_lazy
+            create 4 3
+            load 3
+            eval
+            ccreatet 2 11 6 1
+            return 6
+170         load 1                                   || list__mergeCons_Cons_else
+            load 4
+            load 3
+            pushfunc 2 258                           || list__mergeCons_1
+            create 3 3
+            load 2
+            pushfunc 3 162                           || list__merge_lazy
+            create 4 3
+            load 0
+            ccreatet 2 11 6 1
+            return 6
+171         load 0                                   || list__sort_lazy
+            eval
+            store 0
+172         load 0                                   || list__sort
+            pushfunc 2 230                           || __lam_mliblistspp_8_lazy
+            create 1 7
+            tailcall 1 156                           || list__sortBy
+173         load 1                                   || list__groupBy_lazy
+            eval
+            store 1
+174         load 1                                   || list__groupBy
+            jmpt 2 175 176                           || lbs
+175         ccreatet 0 11 6 0                        || list__groupBy_Nil
+            return 2
+176         load 1                                   || list__groupBy_Cons
+            load 0
+            load 2
+            pushfunc 3 227                           || __lam_mliblistspp_10
+            create 3 7
+            pushfunc 2 95                            || list__dropWhile_lazy
+            create 3 3
+            load 2
+            pushfunc 2 173                           || list__groupBy_lazy
+            create 3 3
+            load 1
+            load 0
+            load 2
+            pushfunc 3 229                           || __lam_mliblistspp_9
+            create 3 7
+            pushfunc 2 90                            || list__takeWhile_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 6 1
+            ccreatet 2 11 6 1
+            return 4
+177         load 0                                   || list__nub_lazy
+            eval
+            store 0
+178         load 0                                   || list__nub
+            ccreatet 0 11 6 0
+            tailcall 1 180                           || list__nubSeen
+179         load 1                                   || list__nubSeen_lazy
+            eval
+            store 1
+180         load 1                                   || list__nubSeen
+            jmpt 2 181 182                           || lbs
+181         ccreatet 0 11 6 0                        || list__nubSeen_Nil
+            return 2
+182         load 2                                   || list__nubSeen_Cons
+            eval
+            load 0
+            call 101                                 || list__elem
+            ifeq 183                                 || list__nubSeen_Cons_else
+            load 1
+            eval
+            load 2
+            tailcall 4 180                           || list__nubSeen
+183         load 1                                   || list__nubSeen_Cons_else
+            load 2
+            load 0
+            ccreatet 2 11 6 1
+            pushfunc 2 179                           || list__nubSeen_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 6 1
+            return 4
+184         jmp 185                                  || __deepEq || __deepEq_lazy
+185         load 1                                   || __deepEq
+            load 0
+            load 1
+            eval
+            gettypeid
+            load 0
+            eval
+            gettypeid
+            tailcall 2 187                           || __deepEqDispatch
+186         load 0                                   || __deepEqDispatch_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+187         load 0                                   || __deepEqDispatch
+            load 1
+            ifcmp 188                                || __deepEqDispatch_else
+            load 3
+            load 2
+            load 1
+            load 0
+            tailcall 4 197                           || __deepEqMixed
+188         loadadd 0 -1                             || __deepEqDispatch_else
+            ifneq 190                                || __deepEqDispatch_else_else
+            load 2
+            eval
+            load 3
+            eval
+            sub
+            ifneq 189                                || __deepEqDispatch_else_then_else
+            return_const 4 1
+189         return_const 4 0                         || __deepEqDispatch_else_then_else
+190         loadadd 0 -2                             || __deepEqDispatch_else_else
+            ifneq 192                                || __deepEqDispatch_else_else_else
+            load 2
+            eval
+            load 3
+            eval
+            sub
+            ifneq 191                                || __deepEqDispatch_else_else_then_else
+            return_const 4 1
+191         return_const 4 0                         || __deepEqDispatch_else_else_then_else
+192         loadadd 0 -3                             || __deepEqDispatch_else_else_else
+            ifneq 193                                || __deepEqDispatch_else_else_else_else
+            load 3
+            load 2
+            tailcall 4 202                           || __deepEqStr
+193         loadadd 0 -4                             || __deepEqDispatch_else_else_else_else
+            ifle 194                                 || __deepEqDispatch_else_else_else_else_else
+            load 3
+            load 2
+            tailcall 4 213                           || __deepEqConstr
+194         load 2                                   || __deepEqDispatch_else_else_else_else_else
+            eval
+            load 3
+            eval
+            sub
+            ifneq 195                                || __deepEqDispatch_else_else_else_else_else_else
+            return_const 4 1
+195         return_const 4 0                         || __deepEqDispatch_else_else_else_else_else_else
+196         load 0                                   || __deepEqMixed_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+197         load 0                                   || __deepEqMixed
+            load 1
+            add
+            ifneq 200                                || __deepEqMixed_else
+            load 0
+            load 1
+            mult
+            push 0
+            dec
+            sub
+            ifneq 199                                || __deepEqMixed_then_else
+            load 2
+            eval
+            load 3
+            eval
+            sub
+            ifneq 198                                || __deepEqMixed_then_then_else
+            return_const 4 1
+198         return_const 4 0                         || __deepEqMixed_then_then_else
+199         return_const 4 0                         || __deepEqMixed_then_else
+200         return_const 4 0                         || __deepEqMixed_else
+201         jmp 202                                  || __deepEqStr || __deepEqStr_lazy
+202         load 1                                   || __deepEqStr
+            load 0
+            load 1
+            eval
+            strop 2
+            load 0
+            eval
+            strop 2
+            tailcall 2 204                           || __deepEqStrLen
+203         load 0                                   || __deepEqStrLen_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+204         load 0                                   || __deepEqStrLen
+            load 1
+            ifcmp 205                                || __deepEqStrLen_else
+            return_const 4 0
+205         load 0                                   || __deepEqStrLen_else
+            push 0
+            load 3
+            load 2
+            tailcall 4 207                           || __deepEqStrChars
+206         load 2                                   || __deepEqStrChars_lazy
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+207         load 2                                   || __deepEqStrChars
+            load 3
+            sub
+            ifneq 208                                || __deepEqStrChars_else
+            return_const 4 1
+208         load 3                                   || __deepEqStrChars_else
+            load 2
+            load 1
+            load 0
+            tailcall 4 210                           || __deepEqStrCharsStep
+209         jmp 210                                  || __deepEqStrCharsStep || __deepEqStrCharsStep_lazy
+210         load 0                                   || __deepEqStrCharsStep
+            eval
+            load 2
+            eval
+            strop 4
+            load 1
+            eval
+            load 2
+            eval
+            strop 4
+            ifcmp 211                                || __deepEqStrCharsStep_else
+            return_const 4 0
+211         load 3                                   || __deepEqStrCharsStep_else
+            eval
+            load 2
+            eval
+            inc
+            load 1
+            load 0
+            tailcall 4 207                           || __deepEqStrChars
+212         jmp 213                                  || __deepEqConstr || __deepEqConstr_lazy
+213         load 1                                   || __deepEqConstr
+            load 0
+            load 1
+            pushfunc 1 262                           || __deepEqConstr_2
+            create 2 3
+            load 0
+            pushfunc 1 260                           || __deepEqConstr_1
+            create 2 3
+            tailcall 2 215                           || __deepEqConstrCheck
+214         jmp 215                                  || __deepEqConstrCheck || __deepEqConstrCheck_lazy
+215         load 1                                   || __deepEqConstrCheck
+            load 0
+            call 202                                 || __deepEqStr
+            ifneq 216                                || __deepEqConstrCheck_else
+            return_const 4 0
+216         load 0                                   || __deepEqConstrCheck_else
+            eval
+            lookup
+            getfuncarity
+            push 0
+            load 3
+            load 2
+            tailcall 4 218                           || __deepEqConstrFields
+217         load 2                                   || __deepEqConstrFields_lazy
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+218         load 2                                   || __deepEqConstrFields
+            load 3
+            sub
+            ifneq 219                                || __deepEqConstrFields_else
+            return_const 4 1
+219         load 3                                   || __deepEqConstrFields_else
+            load 2
+            load 1
+            load 0
+            tailcall 4 221                           || __deepEqConstrFieldsStep
+220         jmp 221                                  || __deepEqConstrFieldsStep || __deepEqConstrFieldsStep_lazy
+221         load 2                                   || __deepEqConstrFieldsStep
+            load 1
+            pushfunc 2 266                           || __deepEqConstrFieldsStep_2
+            create 3 3
+            load 2
+            load 0
+            pushfunc 2 264                           || __deepEqConstrFieldsStep_1
+            create 3 3
+            call 185                                 || __deepEq
+            ifneq 222                                || __deepEqConstrFieldsStep_else
+            return_const 4 0
+222         load 3                                   || __deepEqConstrFieldsStep_else
+            eval
+            load 2
+            eval
+            inc
+            load 1
+            load 0
+            tailcall 4 218                           || __deepEqConstrFields
+223         jmp 224                                  || __deepNeq || __deepNeq_lazy
+224         load 1                                   || __deepNeq
+            load 0
+            call 185                                 || __deepEq
+            dec
+            ifneq 225                                || __deepNeq_else
+            return_const 2 0
+225         return_const 2 1                         || __deepNeq_else
+226         jmp 227                                  || __lam_mliblistspp_10 || __lam_mliblistspp_10_lazy
+227         load 2                                   || __lam_mliblistspp_10
+            load 1
+            load 0
+            eval
+            return 3
+228         jmp 229                                  || __lam_mliblistspp_9 || __lam_mliblistspp_9_lazy
+229         load 2                                   || __lam_mliblistspp_9
+            load 1
+            load 0
+            eval
+            return 3
+230         load 0                                   || __lam_mliblistspp_8_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+231         load 1                                   || __lam_mliblistspp_8
+            load 0
+            sub
+            iflt 232                                 || __lam_mliblistspp_8_false
+            return_const 2 1
+232         return_const 2 0                         || __lam_mliblistspp_8_false
+233         jmp 234                                  || __lam_mliblistspp_7 || __lam_mliblistspp_7_lazy
+234         load 1                                   || __lam_mliblistspp_7
+            load 0
+            ccreatet 2 11 5 0
+            return 2
+235         load 0                                   || __lam_mliblistspp_6_lazy
+            eval
+            store 0
+236         load 0                                   || __lam_mliblistspp_6
+            return 1
+237         load 0                                   || __lam_mliblistspp_5_lazy
+            eval
+            store 0
+238         load 0                                   || __lam_mliblistspp_5
+            return 1
+239         load 0                                   || __lam_mliblistspp_4_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+240         load 0                                   || __lam_mliblistspp_4
+            load 1
+            sub
+            ifle 241                                 || __lam_mliblistspp_4_else
+            load 1
+            return 2
+241         load 0                                   || __lam_mliblistspp_4_else
+            return 2
+242         load 0                                   || __lam_mliblistspp_3_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+243         load 1                                   || __lam_mliblistspp_3
+            load 0
+            sub
+            ifle 244                                 || __lam_mliblistspp_3_else
+            load 1
+            return 2
+244         load 0                                   || __lam_mliblistspp_3_else
+            return 2
+245         load 0                                   || __lam_mliblistspp_2_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+246         load 0                                   || __lam_mliblistspp_2
+            load 1
+            mult
+            return 2
+247         load 0                                   || __lam_mliblistspp_1_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+248         load 0                                   || __lam_mliblistspp_1
+            load 1
+            add
+            return 2
+249         jmp 250                                  || __lam_mliblistspp_0 || __lam_mliblistspp_0_lazy
+250         load 0                                   || __lam_mliblistspp_0
+            load 1
+            tailcall 2 185                           || __deepEq
+251         load 2                                   || __pat_mliblistspp_84_lazy
+            eval
+            store 2
+252         updsp 1                                  || __pat_mliblistspp_84
+            load 3
+            push 2
+            div
+            store 0
+            load 3
+            load 0
+            eval
+            sub
+            load 2
+            load 0
+            pushfunc 2 83                            || list__drop_lazy
+            create 3 3
+            load 1
+            call 158                                 || list__sortByLen
+            load 0
+            eval
+            load 2
+            load 0
+            pushfunc 2 76                            || list__take_lazy
+            create 3 3
+            load 1
+            call 158                                 || list__sortByLen
+            load 1
+            tailcall 4 163                           || list__merge
+253         jmp 254                                  || list__from_1 || list__from_1_lazy
+254         load 0                                   || list__from_1
+            eval
+            inc
+            return 1
+255         jmp 256                                  || list__nth_1 || list__nth_1_lazy
+256         load 0                                   || list__nth_1
+            eval
+            dec
+            return 1
+257         jmp 258                                  || list__mergeCons_1 || list__mergeCons_1_lazy
+258         load 1                                   || list__mergeCons_1
+            load 0
+            eval
+            ccreatet 2 11 6 1
+            return 2
+259         jmp 260                                  || __deepEqConstr_1 || __deepEqConstr_1_lazy
+260         load 0                                   || __deepEqConstr_1
+            eval
+            getconstrname
+            return 1
+261         jmp 262                                  || __deepEqConstr_2 || __deepEqConstr_2_lazy
+262         load 0                                   || __deepEqConstr_2
+            eval
+            getconstrname
+            return 1
+263         jmp 264                                  || __deepEqConstrFieldsStep_1 || __deepEqConstrFieldsStep_1_lazy
+264         load 0                                   || __deepEqConstrFieldsStep_1
+            eval
+            load 1
+            eval
+            getfield
+            eval
+            return 2
+265         jmp 266                                  || __deepEqConstrFieldsStep_2 || __deepEqConstrFieldsStep_2_lazy
+266         load 0                                   || __deepEqConstrFieldsStep_2
+            eval
+            load 1
+            eval
+            getfield
+            eval
+            return 2
+267         jmp 268                                  || __ap2 || __ap2_lazy
+268         load 1                                   || __ap2
+            load 0
+            eval
+            return 2
+
+.metadata
+types 8
+type 5 __Tuple2 1
+  constr 0 __Tuple2 2
+type 6 list 2
+  constr 0 Nil 0
+  constr 1 Cons 2
+type 7 __Char 1
+  constr 0 __Char 1
+type 8 Graphics__Point 1
+  constr 0 Graphics__Pt 2
+type 9 Graphics__MenuCat 1
+  constr 0 Graphics__MenuCat 2
+type 10 Graphics__Graphics 9
+  constr 0 Graphics__GraphText 3
+  constr 1 Graphics__GraphPolyLine 2
+  constr 2 Graphics__GraphPolygon 2
+  constr 3 Graphics__GraphRectangle 3
+  constr 4 Graphics__GraphEllipse 3
+  constr 5 Graphics__GraphDisc 3
+  constr 6 Graphics__GraphClear 0
+  constr 7 Graphics__GraphMenu 1
+  constr 8 Graphics__GraphPrompt 2
+type 11 Graphics__Event 9
+  constr 0 Graphics__KeyIn 1
+  constr 1 Graphics__MouseDown 1
+  constr 2 Graphics__MouseUp 1
+  constr 3 Graphics__MouseDragged 1
+  constr 4 Graphics__MouseDoubleClick 1
+  constr 5 Graphics__MenuItem 2
+  constr 6 Graphics__PText 1
+  constr 7 Graphics__OpenFile 1
+  constr 8 Graphics__NoInput 0
+type 12 Display__Display 4
+  constr 0 Display__DText 1
+  constr 1 Display__DTable 2
+  constr 2 Display__DMarkdown 1
+  constr 3 Display__DGraphics 1
+functions 172
+  func 1 start 0 0
+  func 0 start 0 0
+  func 3 list__range 2 110
+  func 2 list__range 2 110
+  func 6 list__from 1 00
+  func 5 list__from 1 00
+  func 8 list__iterate 2 000
+  func 7 list__iterate 2 000
+  func 10 list__repeat 1 00
+  func 9 list__repeat 1 00
+  func 12 list__replicate 2 100
+  func 11 list__replicate 2 100
+  func 15 list__length 1 10
+  func 14 list__length 1 10
+  func 17 list__lengthAcc 2 110
+  func 16 list__lengthAcc 2 110
+  func 21 list__append 2 100
+  func 20 list__append 2 100
+  func 25 list__reverse 1 10
+  func 24 list__reverse 1 10
+  func 27 list__revAcc 2 100
+  func 26 list__revAcc 2 100
+  func 31 list__map 2 010
+  func 30 list__map 2 010
+  func 35 list__filter 2 010
+  func 34 list__filter 2 010
+  func 40 list__foldl 3 0110
+  func 39 list__foldl 3 0110
+  func 44 list__foldr 3 0010
+  func 43 list__foldr 3 0010
+  func 48 list__concat 1 10
+  func 47 list__concat 1 10
+  func 50 list__concatMap 2 010
+  func 49 list__concatMap 2 010
+  func 54 list__head 1 10
+  func 53 list__head 1 10
+  func 58 list__tail 1 10
+  func 57 list__tail 1 10
+  func 62 list__last 1 10
+  func 61 list__last 1 10
+  func 68 list__isEmpty 1 10
+  func 67 list__isEmpty 1 10
+  func 72 list__nth 2 010
+  func 71 list__nth 2 010
+  func 77 list__take 2 100
+  func 76 list__take 2 100
+  func 80 list__takePos 2 010
+  func 79 list__takePos 2 010
+  func 84 list__drop 2 110
+  func 83 list__drop 2 110
+  func 87 list__dropPos 2 010
+  func 86 list__dropPos 2 010
+  func 91 list__takeWhile 2 010
+  func 90 list__takeWhile 2 010
+  func 96 list__dropWhile 2 010
+  func 95 list__dropWhile 2 010
+  func 101 list__elem 2 010
+  func 100 list__elem 2 010
+  func 103 list__findIndex 2 010
+  func 102 list__findIndex 2 010
+  func 105 list__findIndexFrom 3 1010
+  func 104 list__findIndexFrom 3 1010
+  func 110 list__sum 1 10
+  func 109 list__sum 1 10
+  func 112 list__product 1 10
+  func 111 list__product 1 10
+  func 114 list__maximum 1 10
+  func 113 list__maximum 1 10
+  func 118 list__minimum 1 10
+  func 117 list__minimum 1 10
+  func 122 list__any 2 010
+  func 121 list__any 2 010
+  func 127 list__all 2 010
+  func 126 list__all 2 010
+  func 132 list__and 1 10
+  func 131 list__and 1 10
+  func 134 list__or 1 10
+  func 133 list__or 1 10
+  func 136 list__count 2 010
+  func 135 list__count 2 010
+  func 138 list__zipWith 3 0100
+  func 137 list__zipWith 3 0100
+  func 144 list__zip 2 100
+  func 143 list__zip 2 100
+  func 146 list__indexed 1 00
+  func 145 list__indexed 1 00
+  func 148 list__intersperse 2 010
+  func 147 list__intersperse 2 010
+  func 152 list__prependAll 2 010
+  func 151 list__prependAll 2 010
+  func 156 list__sortBy 2 010
+  func 155 list__sortBy 2 010
+  func 158 list__sortByLen 3 0010
+  func 157 list__sortByLen 3 0010
+  func 161 list__sortBySplit 3 0010
+  func 160 list__sortBySplit 3 0010
+  func 163 list__merge 3 0110
+  func 162 list__merge 3 0110
+  func 167 list__mergeCons 4 00010
+  func 166 list__mergeCons 4 00010
+  func 172 list__sort 1 10
+  func 171 list__sort 1 10
+  func 174 list__groupBy 2 010
+  func 173 list__groupBy 2 010
+  func 178 list__nub 1 10
+  func 177 list__nub 1 10
+  func 180 list__nubSeen 2 010
+  func 179 list__nubSeen 2 010
+  func 185 __deepEq 2 000
+  func 184 __deepEq 2 000
+  func 187 __deepEqDispatch 4 11000
+  func 186 __deepEqDispatch 4 11000
+  func 197 __deepEqMixed 4 11000
+  func 196 __deepEqMixed 4 11000
+  func 202 __deepEqStr 2 000
+  func 201 __deepEqStr 2 000
+  func 204 __deepEqStrLen 4 11000
+  func 203 __deepEqStrLen 4 11000
+  func 207 __deepEqStrChars 4 00110
+  func 206 __deepEqStrChars 4 00110
+  func 210 __deepEqStrCharsStep 4 00000
+  func 209 __deepEqStrCharsStep 4 00000
+  func 213 __deepEqConstr 2 000
+  func 212 __deepEqConstr 2 000
+  func 215 __deepEqConstrCheck 4 00000
+  func 214 __deepEqConstrCheck 4 00000
+  func 218 __deepEqConstrFields 4 00110
+  func 217 __deepEqConstrFields 4 00110
+  func 221 __deepEqConstrFieldsStep 4 00000
+  func 220 __deepEqConstrFieldsStep 4 00000
+  func 224 __deepNeq 2 000
+  func 223 __deepNeq 2 000
+  func 227 __lam_mliblistspp_10 3 0000
+  func 226 __lam_mliblistspp_10 3 0000
+  func 229 __lam_mliblistspp_9 3 0000
+  func 228 __lam_mliblistspp_9 3 0000
+  func 231 __lam_mliblistspp_8 2 110
+  func 230 __lam_mliblistspp_8 2 110
+  func 234 __lam_mliblistspp_7 2 000
+  func 233 __lam_mliblistspp_7 2 000
+  func 236 __lam_mliblistspp_6 1 10
+  func 235 __lam_mliblistspp_6 1 10
+  func 238 __lam_mliblistspp_5 1 10
+  func 237 __lam_mliblistspp_5 1 10
+  func 240 __lam_mliblistspp_4 2 110
+  func 239 __lam_mliblistspp_4 2 110
+  func 243 __lam_mliblistspp_3 2 110
+  func 242 __lam_mliblistspp_3 2 110
+  func 246 __lam_mliblistspp_2 2 110
+  func 245 __lam_mliblistspp_2 2 110
+  func 248 __lam_mliblistspp_1 2 110
+  func 247 __lam_mliblistspp_1 2 110
+  func 250 __lam_mliblistspp_0 2 000
+  func 249 __lam_mliblistspp_0 2 000
+  func 252 __pat_mliblistspp_84 3 0010
+  func 251 __pat_mliblistspp_84 3 0010
+  func 254 list__from_1 1 00
+  func 253 list__from_1 1 00
+  func 256 list__nth_1 1 00
+  func 255 list__nth_1 1 00
+  func 258 list__mergeCons_1 2 000
+  func 257 list__mergeCons_1 2 000
+  func 260 __deepEqConstr_1 1 00
+  func 259 __deepEqConstr_1 1 00
+  func 262 __deepEqConstr_2 1 00
+  func 261 __deepEqConstr_2 1 00
+  func 264 __deepEqConstrFieldsStep_1 2 000
+  func 263 __deepEqConstrFieldsStep_1 2 000
+  func 266 __deepEqConstrFieldsStep_2 2 000
+  func 265 __deepEqConstrFieldsStep_2 2 000
+  func 268 __ap2 2 000
+  func 267 __ap2 2 000
+.endmetadata

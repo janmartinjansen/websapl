@@ -1,0 +1,47 @@
+nbCell __pat_nbglue_0 __pat_nbglue_1 = (nbMark "@@begin " __pat_nbglue_0 <#> nbRender __pat_nbglue_1) <#> nbMark "@@end " __pat_nbglue_0
+nbCellT __pat_nbglue_2 __pat_nbglue_3 __pat_nbglue_4 = (nbMark "@@begin " __pat_nbglue_2 <#> nbValueT __pat_nbglue_3 __pat_nbglue_4) <#> nbMark "@@end " __pat_nbglue_2
+nbValueT __pat_nbglue_5 __pat_nbglue_6 = ((printString "@@value" <#> nbNl) <#> printString (nbShowT 40 __pat_nbglue_5 __pat_nbglue_6)) <#> nbNl
+nbShowT __pat_nbglue_7 __pat_nbglue_8 __pat_nbglue_9 = if (__pat_nbglue_7 == 0) "..." (if (strEqual __pat_nbglue_8 "Bool") (showBoolVal __pat_nbglue_9) (if (isListTy __pat_nbglue_8) (strcat "[" (strcat (nbItemsT (__pat_nbglue_7 - 1) (listElemTy __pat_nbglue_8) 100 __pat_nbglue_9) "]")) (nbShowD __pat_nbglue_7 __pat_nbglue_9)))
+nbItemsT __pat_nbglue_10 __pat_nbglue_11 __pat_nbglue_12 __pat_nbglue_13 = case __pat_nbglue_13 (Nil -> "") (Cons x rest -> if (__pat_nbglue_12 == 0) "..." (strcat (nbShowT __pat_nbglue_10 __pat_nbglue_11 x) (nbMoreT __pat_nbglue_10 __pat_nbglue_11 (__pat_nbglue_12 - 1) rest)))
+nbMoreT __pat_nbglue_14 __pat_nbglue_15 __pat_nbglue_16 __pat_nbglue_17 = case __pat_nbglue_17 (Nil -> "") (Cons x rest -> strcat ", " (nbItemsT __pat_nbglue_14 __pat_nbglue_15 __pat_nbglue_16 __pat_nbglue_17))
+nbMark __pat_nbglue_18 __pat_nbglue_19 = (printString __pat_nbglue_18 <#> printString (list2str (itoa __pat_nbglue_19))) <#> writeChar 1 10
+nbNl = writeChar 1 10
+nbTab = writeChar 1 9
+nbRender __pat_nbglue_20 = if (typeId __pat_nbglue_20 > TYPE_FUNC) (nbRenderAdt __pat_nbglue_20 (constrName __pat_nbglue_20)) (nbValue __pat_nbglue_20)
+nbRenderAdt __pat_nbglue_21 __pat_nbglue_22 = if (nbIsDisplayName __pat_nbglue_22) (nbDisplay __pat_nbglue_21) (nbRenderHook __pat_nbglue_21 (lookup (strcat "render_" __pat_nbglue_22)))
+nbRenderHook __pat_nbglue_23 __pat_nbglue_24 = if (__deepEq (typeId __pat_nbglue_24) TYPE_FUNC) (nbRenderChecked __pat_nbglue_23 (applyDynamic __pat_nbglue_24 (Cons __pat_nbglue_23 Nil))) (nbValue __pat_nbglue_23)
+nbRenderChecked __pat_nbglue_25 __pat_nbglue_26 = if (typeId __pat_nbglue_26 > TYPE_FUNC) (nbRenderCheckedName __pat_nbglue_25 __pat_nbglue_26 (constrName __pat_nbglue_26)) (nbValue __pat_nbglue_25)
+nbRenderCheckedName __pat_nbglue_27 __pat_nbglue_28 __pat_nbglue_29 = if (nbIsDisplayName __pat_nbglue_29) (nbDisplay __pat_nbglue_28) (nbValue __pat_nbglue_27)
+nbIsDisplayName __pat_nbglue_30 = (strlen __pat_nbglue_30 > 9) /\ strEqualAt 0 "Display__" __pat_nbglue_30
+nbDisplay __pat_nbglue_31 = case __pat_nbglue_31 (Display__DText s -> ((printString "@@text" <#> nbNl) <#> printString s) <#> nbNl) (Display__DMarkdown s -> ((printString "@@markdown" <#> nbNl) <#> printString s) <#> nbNl) (Display__DTable hs rows -> ((printString "@@table" <#> nbNl) <#> nbRow hs) <#> nbRows 500 rows) (Display__DGraphics gs -> ((printString "@@graphics" <#> nbNl) <#> printString (display__graphicsText gs)) <#> nbNl)
+nbRows __pat_nbglue_32 __pat_nbglue_33 = case __pat_nbglue_33 (Nil -> 0) (Cons r rest -> if (__pat_nbglue_32 == 0) (printString "..." <#> nbNl) (nbRow r <#> nbRows (__pat_nbglue_32 - 1) rest))
+nbRow __pat_nbglue_34 = case __pat_nbglue_34 (Nil -> nbNl) (Cons c rest -> printString (nbCellText c) <#> nbRowRest rest)
+nbRowRest __pat_nbglue_35 = case __pat_nbglue_35 (Nil -> nbNl) (Cons c rest -> (nbTab <#> printString (nbCellText c)) <#> nbRowRest rest)
+nbCellText __pat_nbglue_36 = if (__deepEq (typeId __pat_nbglue_36) TYPE_STRING) __pat_nbglue_36 (nbShow __pat_nbglue_36)
+nbValue __pat_nbglue_37 = ((printString "@@value" <#> nbNl) <#> printString (nbShow __pat_nbglue_37)) <#> nbNl
+nbShow __pat_nbglue_38 = nbShowD 40 __pat_nbglue_38
+nbShowD __pat_nbglue_39 __pat_nbglue_40 = if (__deepEq __pat_nbglue_39 0) "..." (nbShowTid __pat_nbglue_39 __pat_nbglue_40 (typeId __pat_nbglue_40))
+nbShowTid __pat_nbglue_41 __pat_nbglue_42 __pat_nbglue_43 = if (__pat_nbglue_43 > TYPE_FUNC) (nbShowAdt __pat_nbglue_41 __pat_nbglue_42 (constrName __pat_nbglue_42)) (showVal __pat_nbglue_42)
+nbShowAdt __pat_nbglue_44 __pat_nbglue_45 __pat_nbglue_46 = if (strEqual __pat_nbglue_46 "Cons") (strcat "[" (strcat (nbItems (__pat_nbglue_44 - 1) 100 __pat_nbglue_45) "]")) (if (strEqual __pat_nbglue_46 "Nil") "[]" (nbShowHook __pat_nbglue_44 __pat_nbglue_45 __pat_nbglue_46 (lookup (strcat "show_" __pat_nbglue_46))))
+nbShowHook __pat_nbglue_47 __pat_nbglue_48 __pat_nbglue_49 __pat_nbglue_50 = if (__deepEq (typeId __pat_nbglue_50) TYPE_FUNC) (applyDynamic __pat_nbglue_50 (Cons __pat_nbglue_48 Nil)) (nbShowGeneric __pat_nbglue_47 __pat_nbglue_48 __pat_nbglue_49 (getConstrArity __pat_nbglue_48))
+nbShowGeneric __pat_nbglue_51 __pat_nbglue_52 __pat_nbglue_53 __pat_nbglue_54 = if (isTupleName __pat_nbglue_53) (strcat "(" (strcat (nbFields (__pat_nbglue_51 - 1) __pat_nbglue_52 0 __pat_nbglue_54) ")")) (if (__deepEq __pat_nbglue_54 0) (displayConName __pat_nbglue_53) (strcat (displayConName __pat_nbglue_53) (strcat "(" (strcat (nbFields (__pat_nbglue_51 - 1) __pat_nbglue_52 0 __pat_nbglue_54) ")"))))
+nbFields __pat_nbglue_55 __pat_nbglue_56 __pat_nbglue_57 __pat_nbglue_58 = if (__pat_nbglue_57 >= __pat_nbglue_58) "" (if (__pat_nbglue_57 == (__pat_nbglue_58 - 1)) (nbShowD __pat_nbglue_55 (getField __pat_nbglue_56 __pat_nbglue_57)) (strcat (nbShowD __pat_nbglue_55 (getField __pat_nbglue_56 __pat_nbglue_57)) (strcat ", " (nbFields __pat_nbglue_55 __pat_nbglue_56 (__pat_nbglue_57 + 1) __pat_nbglue_58))))
+nbItems __pat_nbglue_59 __pat_nbglue_60 __pat_nbglue_61 = case __pat_nbglue_61 (Nil -> "") (Cons x rest -> if (__pat_nbglue_60 == 0) "..." (strcat (nbShowD __pat_nbglue_59 x) (nbMore __pat_nbglue_59 (__pat_nbglue_60 - 1) rest)))
+nbMore __pat_nbglue_62 __pat_nbglue_63 __pat_nbglue_64 = case __pat_nbglue_64 (Nil -> "") (Cons x rest -> strcat ", " (nbItems __pat_nbglue_62 __pat_nbglue_63 __pat_nbglue_64))
+nbFailed __pat_nbglue_65 = (printString __pat_nbglue_65 <#> writeChar 1 10) <#> 0
+start = 0
+__rangeStepGo __pat_nbglue_66 __pat_nbglue_67 __pat_nbglue_68 = if (__pat_nbglue_67 >= 0) (if (__pat_nbglue_66 > __pat_nbglue_68) Nil (Cons __pat_nbglue_66 (__rangeStepGo (__pat_nbglue_66 + __pat_nbglue_67) __pat_nbglue_67 __pat_nbglue_68))) (if (__pat_nbglue_66 < __pat_nbglue_68) Nil (Cons __pat_nbglue_66 (__rangeStepGo (__pat_nbglue_66 + __pat_nbglue_67) __pat_nbglue_67 __pat_nbglue_68)))
+__rangeGo __pat_nbglue_69 = Cons __pat_nbglue_69 (__rangeGo (__pat_nbglue_69 + 1))
+__rangeStepGoOpen __pat_nbglue_70 __pat_nbglue_71 = Cons __pat_nbglue_70 (__rangeStepGoOpen (__pat_nbglue_70 + __pat_nbglue_71) __pat_nbglue_71)
+__deepEq __pat_nbglue_72 __pat_nbglue_73 = __deepEqDispatch (typeId __pat_nbglue_72) (typeId __pat_nbglue_73) __pat_nbglue_72 __pat_nbglue_73
+__deepEqDispatch __pat_nbglue_74 __pat_nbglue_75 __pat_nbglue_76 __pat_nbglue_77 = if (__pat_nbglue_74 != __pat_nbglue_75) (__deepEqMixed __pat_nbglue_74 __pat_nbglue_75 __pat_nbglue_76 __pat_nbglue_77) (if (__pat_nbglue_74 == 1) (if (__pat_nbglue_76 == __pat_nbglue_77) 1 0) (if (__pat_nbglue_74 == 2) (if (__pat_nbglue_76 == __pat_nbglue_77) 1 0) (if (__pat_nbglue_74 == 3) (__deepEqStr __pat_nbglue_76 __pat_nbglue_77) (if (__pat_nbglue_74 > 4) (__deepEqConstr __pat_nbglue_76 __pat_nbglue_77) (if (__pat_nbglue_76 == __pat_nbglue_77) 1 0)))))
+__deepEqMixed __pat_nbglue_78 __pat_nbglue_79 __pat_nbglue_80 __pat_nbglue_81 = if ((__pat_nbglue_78 + __pat_nbglue_79) == 0) (if ((__pat_nbglue_78 * __pat_nbglue_79) == (0 - 1)) (if (__pat_nbglue_80 == __pat_nbglue_81) 1 0) 0) 0
+__deepEqStr __pat_nbglue_82 __pat_nbglue_83 = __deepEqStrLen (strlen __pat_nbglue_82) (strlen __pat_nbglue_83) __pat_nbglue_82 __pat_nbglue_83
+__deepEqStrLen __pat_nbglue_84 __pat_nbglue_85 __pat_nbglue_86 __pat_nbglue_87 = if (__pat_nbglue_84 != __pat_nbglue_85) 0 (__deepEqStrChars __pat_nbglue_86 __pat_nbglue_87 0 __pat_nbglue_84)
+__deepEqStrChars __pat_nbglue_88 __pat_nbglue_89 __pat_nbglue_90 __pat_nbglue_91 = if (__pat_nbglue_90 == __pat_nbglue_91) 1 (__deepEqStrCharsStep __pat_nbglue_88 __pat_nbglue_89 __pat_nbglue_90 __pat_nbglue_91)
+__deepEqStrCharsStep __pat_nbglue_92 __pat_nbglue_93 __pat_nbglue_94 __pat_nbglue_95 = if (strat __pat_nbglue_94 __pat_nbglue_92 != strat __pat_nbglue_94 __pat_nbglue_93) 0 (__deepEqStrChars __pat_nbglue_92 __pat_nbglue_93 (__pat_nbglue_94 + 1) __pat_nbglue_95)
+__deepEqConstr __pat_nbglue_96 __pat_nbglue_97 = __deepEqConstrCheck (constrName __pat_nbglue_96) (constrName __pat_nbglue_97) __pat_nbglue_96 __pat_nbglue_97
+__deepEqConstrCheck __pat_nbglue_98 __pat_nbglue_99 __pat_nbglue_100 __pat_nbglue_101 = if (__deepEqStr __pat_nbglue_98 __pat_nbglue_99 == 0) 0 (__deepEqConstrFields __pat_nbglue_100 __pat_nbglue_101 0 (funcArity (lookup __pat_nbglue_98)))
+__deepEqConstrFields __pat_nbglue_102 __pat_nbglue_103 __pat_nbglue_104 __pat_nbglue_105 = if (__pat_nbglue_104 == __pat_nbglue_105) 1 (__deepEqConstrFieldsStep __pat_nbglue_102 __pat_nbglue_103 __pat_nbglue_104 __pat_nbglue_105)
+__deepEqConstrFieldsStep __pat_nbglue_106 __pat_nbglue_107 __pat_nbglue_108 __pat_nbglue_109 = if (__deepEq (getField __pat_nbglue_106 __pat_nbglue_108) (getField __pat_nbglue_107 __pat_nbglue_108) == 0) 0 (__deepEqConstrFields __pat_nbglue_106 __pat_nbglue_107 (__pat_nbglue_108 + 1) __pat_nbglue_109)
+__deepNeq __pat_nbglue_110 __pat_nbglue_111 = if (__deepEq __pat_nbglue_110 __pat_nbglue_111 == 1) 0 1

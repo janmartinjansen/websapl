@@ -1,0 +1,2081 @@
+start_lazy start text__length_lazy text__length text__isEmpty_lazy text__isEmpty text__empty_lazy text__empty text__slice_lazy text__slice text__sliceClamp_lazy text__sliceClamp text__sliceClamp_else_else text__sliceClamp_then text__clampLen_lazy text__clampLen text__clampLen_else_else text__clampLen_then text__take_lazy text__take text__take_else text__drop_lazy text__drop text__drop_else text__at_lazy text__at text__fromChar_lazy text__fromChar text__append_lazy text__append text__concat_lazy text__concat text__concat_Nil text__concat_Cons text__concat_Cons_Nil text__concat_Cons_Cons text__pairUp_lazy text__pairUp text__pairUp_Nil text__pairUp_Cons text__pairUp_Cons_Nil text__pairUp_Cons_Cons text__join_lazy text__join text__intersperse_lazy text__intersperse text__intersperse_Nil text__intersperse_Cons text__prependAll_lazy text__prependAll text__prependAll_Nil text__prependAll_Cons text__repeat_lazy text__repeat text__replicateList_lazy text__replicateList text__replicateList_else text__chars_lazy text__chars text__charsFrom_lazy text__charsFrom text__charsFrom_else text__fromChars_lazy text__fromChars text__listLen_lazy text__listLen text__listLen_Nil text__listLen_Cons text__fillChars_lazy text__fillChars text__fillChars_Nil text__fillChars_Cons text__mapChars_lazy text__mapChars text__mapCharsAt_lazy text__mapCharsAt text__mapCharsAt_else text__filterChars_lazy text__filterChars text__filterList_lazy text__filterList text__filterList_Nil text__filterList_Cons text__filterList_Cons_else text__toUpper_lazy text__toUpper text__toLower_lazy text__toLower text__upperChar_lazy text__upperChar text__upperChar_then_else text__upperChar_else text__lowerChar_lazy text__lowerChar text__lowerChar_then_else text__lowerChar_else text__reverse_lazy text__reverse text__reverseAt_lazy text__reverseAt text__reverseAt_else text__isSpace_lazy text__isSpace text__isSpace_else text__isSpace_else_else text__isSpace_else_else_else text__isDigit_lazy text__isDigit text__isDigit_then_false text__isDigit_else text__lines_lazy text__lines text__linesFrom_lazy text__linesFrom text__linesFrom_then_else text__linesFrom_else text__linesFrom_else_else text__lineSlice_lazy text__lineSlice text__lineSlice_then_else text__lineSlice_else text__unlines_lazy text__unlines text__concatMapList_lazy text__concatMapList text__concatMapList_Nil text__concatMapList_Cons text__appendList_lazy text__appendList text__appendList_Nil text__appendList_Cons text__words_lazy text__words text__wordsFrom_lazy text__wordsFrom text__wordsFrom_else text__wordsFrom_else_else text__wordEnd_lazy text__wordEnd text__wordEnd_else text__wordEnd_else_else text__unwords_lazy text__unwords text__split_lazy text__split text__splitFrom_lazy text__splitFrom text__splitFrom_else text__splitFrom_else_else text__trim_lazy text__trim text__trimStart_lazy text__trimStart text__trimEnd_lazy text__trimEnd text__trimRange_lazy text__trimRange text__trimRange_else text__firstNonSpace_lazy text__firstNonSpace text__firstNonSpace_else text__firstNonSpace_else_else text__lastNonSpace_lazy text__lastNonSpace text__lastNonSpace_else text__lastNonSpace_else_else text__padLeft_lazy text__padLeft text__padLeft_else text__padRight_lazy text__padRight text__padRight_else text__center_lazy text__center text__center_else text__showInt_lazy text__showInt text__showInt_then text__showNat_lazy text__showNat text__natChars_lazy text__natChars text__natChars_then text__showFixed_lazy text__showFixed text__showFixedF_lazy text__showFixedF text__fixedBody_lazy text__fixedBody text__fixedBody_else text__padZero_lazy text__padZero text__padZero_else text__pow10_lazy text__pow10 text__pow10_else text__toF_lazy text__toF text__toF_else text__readInt_lazy text__readInt text__readIntTrimmed_lazy text__readIntTrimmed text__readIntTrimmed_else text__readIntTrimmed_else_else text__digitsFrom_lazy text__digitsFrom text__digitsFrom_else text__digitsFrom_else_else text__readFloat_lazy text__readFloat text__equal_lazy text__equal text__equal_else text__matchAt_lazy text__matchAt text__matchAtI_lazy text__matchAtI text__matchAtI_else text__matchAtI_else_else text__startsWith_lazy text__startsWith text__startsWith_else text__endsWith_lazy text__endsWith text__endsWith_else text__indexOf_lazy text__indexOf text__indexFrom_lazy text__indexFrom text__indexFrom_else text__indexFrom_else_else text__contains_lazy text__contains text__contains_false text__replace_lazy text__replace text__replace_else text__replaceFrom_lazy text__replaceFrom text__replaceFrom_else text__replaceFrom_else_else __deepEq_lazy __deepEq __deepEqDispatch_lazy __deepEqDispatch __deepEqDispatch_else __deepEqDispatch_else_then_else __deepEqDispatch_else_else __deepEqDispatch_else_else_then_else __deepEqDispatch_else_else_else __deepEqDispatch_else_else_else_else __deepEqDispatch_else_else_else_else_else __deepEqDispatch_else_else_else_else_else_else __deepEqMixed_lazy __deepEqMixed __deepEqMixed_then_then_else __deepEqMixed_then_else __deepEqMixed_else __deepEqStr_lazy __deepEqStr __deepEqStrLen_lazy __deepEqStrLen __deepEqStrLen_else __deepEqStrChars_lazy __deepEqStrChars __deepEqStrChars_else __deepEqStrCharsStep_lazy __deepEqStrCharsStep __deepEqStrCharsStep_else __deepEqConstr_lazy __deepEqConstr __deepEqConstrCheck_lazy __deepEqConstrCheck __deepEqConstrCheck_else __deepEqConstrFields_lazy __deepEqConstrFields __deepEqConstrFields_else __deepEqConstrFieldsStep_lazy __deepEqConstrFieldsStep __deepEqConstrFieldsStep_else __deepNeq_lazy __deepNeq __deepNeq_else __lam_mlibtextspp_0_lazy __lam_mlibtextspp_0 __pat_mlibtextspp_118_lazy __pat_mlibtextspp_118 __pat_mlibtextspp_118_then_else __pat_mlibtextspp_118_else text__isEmpty_1_lazy text__isEmpty_1 text__sliceClamp_j1_lazy text__sliceClamp_j1 text__mapCharsAt_1_lazy text__mapCharsAt_1 text__linesFrom_1_lazy text__linesFrom_1 text__lineSlice_1_lazy text__lineSlice_1 text__wordsFrom_1_lazy text__wordsFrom_1 text__wordEnd_1_lazy text__wordEnd_1 text__splitFrom_1_lazy text__splitFrom_1 text__firstNonSpace_1_lazy text__firstNonSpace_1 text__lastNonSpace_1_lazy text__lastNonSpace_1 text__natChars_1_lazy text__natChars_1 text__fixedBody_1_lazy text__fixedBody_1 text__fixedBody_2_lazy text__fixedBody_2 text__toF_1_lazy text__toF_1 text__readIntTrimmed_1_lazy text__readIntTrimmed_1 text__readIntTrimmed_2_lazy text__readIntTrimmed_2 text__equal_1_lazy text__equal_1 text__equal_2_lazy text__equal_2 text__matchAtI_1_lazy text__matchAtI_1 text__matchAtI_2_lazy text__matchAtI_2 text__replace_1_lazy text__replace_1 text__replaceFrom_1_lazy text__replaceFrom_1 __deepEqConstr_1_lazy __deepEqConstr_1 __deepEqConstr_2_lazy __deepEqConstr_2 __deepEqConstrFieldsStep_1_lazy __deepEqConstrFieldsStep_1 __deepEqConstrFieldsStep_2_lazy __deepEqConstrFieldsStep_2 __lam_mlibtextspp_0_1_lazy __lam_mlibtextspp_0_1 __pat_mlibtextspp_118_1_lazy __pat_mlibtextspp_118_1 #
+            call 1                                   || start
+            print 4
+            stop
+0           jmp 1                                    || start || start_lazy
+1           return_const 0 0                         || start
+2           jmp 3                                    || text__length || text__length_lazy
+3           load 0                                   || text__length
+            eval
+            strop 2
+            return 1
+4           jmp 5                                    || text__isEmpty || text__isEmpty_lazy
+5           push 0                                   || text__isEmpty
+            load 0
+            pushfunc 1 291                           || text__isEmpty_1
+            create 2 3
+            tailcall 1 243                           || __deepEq
+6           jmp 7                                    || text__empty || text__empty_lazy
+7           push 0                                   || text__empty
+            array_create_dynamic 1
+            return 0
+8           load 0                                   || text__slice_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+9           load 2                                   || text__slice
+            eval
+            strop 2
+            load 1
+            load 0
+            load 2
+            tailcall 3 11                            || text__sliceClamp
+10          load 1                                   || text__sliceClamp_lazy
+            eval
+            store 1
+            load 2
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+11          ifltlv 1 0 13                            || text__sliceClamp_then || text__sliceClamp
+            load 1
+            load 3
+            sub
+            iflt 12                                  || text__sliceClamp_else_else
+            push 0
+            tailcall 4 293                           || text__sliceClamp_j1
+12          load 1                                   || text__sliceClamp_else_else
+            load 3
+            load 1
+            sub
+            load 2
+            call 15                                  || text__clampLen
+            add
+            load 1
+            load 0
+            eval
+            strop 1
+            return 4
+13          push 0                                   || text__sliceClamp_then
+            tailcall 4 293                           || text__sliceClamp_j1
+14          load 0                                   || text__clampLen_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+15          ifltlv 0 0 17                            || text__clampLen_then || text__clampLen
+            load 0
+            load 1
+            sub
+            ifle 16                                  || text__clampLen_else_else
+            load 1
+            return 2
+16          load 0                                   || text__clampLen_else_else
+            return 2
+17          load 1                                   || text__clampLen_then
+            return 2
+18          load 0                                   || text__take_lazy
+            eval
+            store 0
+19          push 0                                   || text__take
+            load 0
+            sub
+            iflt 20                                  || text__take_else
+            tailcall 2 7                             || text__empty
+20          load 1                                   || text__take_else
+            load 0
+            push 0
+            tailcall 2 9                             || text__slice
+21          load 0                                   || text__drop_lazy
+            eval
+            store 0
+22          push 0                                   || text__drop
+            load 0
+            sub
+            iflt 23                                  || text__drop_else
+            load 1
+            eval
+            return 2
+23          load 1                                   || text__drop_else
+            dup
+            eval
+            strop 2
+            load 0
+            sub
+            load 0
+            tailcall 2 9                             || text__slice
+24          jmp 25                                   || text__at || text__at_lazy
+25          load 1                                   || text__at
+            eval
+            load 0
+            eval
+            strop 4
+            return 2
+26          jmp 27                                   || text__fromChar || text__fromChar_lazy
+27          push 1                                   || text__fromChar
+            array_create_dynamic 1
+            push 0
+            load 0
+            eval
+            strop 3
+            return 1
+28          jmp 29                                   || text__append || text__append_lazy
+29          load 1                                   || text__append
+            eval
+            load 0
+            eval
+            strop 0
+            return 2
+30          load 0                                   || text__concat_lazy
+            eval
+            store 0
+31          load 0                                   || text__concat
+            jmpt 2 32 33                             || lbs
+32          tailcall 1 7                             || text__empty || text__concat_Nil
+33          load 1                                   || text__concat_Cons
+            eval
+            jmpt 2 34 35                             || lbs
+34          load 0                                   || text__concat_Cons_Nil
+            return 3
+35          load 4                                   || text__concat_Cons_Cons
+            call 37                                  || text__pairUp
+            tailcall 5 31                            || text__concat
+36          load 0                                   || text__pairUp_lazy
+            eval
+            store 0
+37          load 0                                   || text__pairUp
+            jmpt 2 38 39                             || lbs
+38          ccreatet 0 11 5 0                        || text__pairUp_Nil
+            return 1
+39          load 1                                   || text__pairUp_Cons
+            eval
+            jmpt 2 40 41                             || lbs
+40          ccreatet 0 11 5 0                        || text__pairUp_Cons_Nil
+            load 0
+            ccreatet 2 11 5 1
+            return 3
+41          load 1                                   || text__pairUp_Cons_Cons
+            pushfunc 1 36                            || text__pairUp_lazy
+            create 2 3
+            load 0
+            load 2
+            strop 0
+            ccreatet 2 11 5 1
+            return 5
+42          load 1                                   || text__join_lazy
+            eval
+            store 1
+43          load 1                                   || text__join
+            load 0
+            call 45                                  || text__intersperse
+            tailcall 2 31                            || text__concat
+44          load 1                                   || text__intersperse_lazy
+            eval
+            store 1
+45          load 1                                   || text__intersperse
+            jmpt 2 46 47                             || lbs
+46          ccreatet 0 11 5 0                        || text__intersperse_Nil
+            return 2
+47          load 1                                   || text__intersperse_Cons
+            load 2
+            pushfunc 2 48                            || text__prependAll_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 4
+48          load 1                                   || text__prependAll_lazy
+            eval
+            store 1
+49          load 1                                   || text__prependAll
+            jmpt 2 50 51                             || lbs
+50          ccreatet 0 11 5 0                        || text__prependAll_Nil
+            return 2
+51          load 1                                   || text__prependAll_Cons
+            load 2
+            pushfunc 2 48                            || text__prependAll_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            load 2
+            eval
+            ccreatet 2 11 5 1
+            return 4
+52          load 0                                   || text__repeat_lazy
+            eval
+            store 0
+53          load 1                                   || text__repeat
+            load 0
+            call 55                                  || text__replicateList
+            tailcall 2 31                            || text__concat
+54          load 0                                   || text__replicateList_lazy
+            eval
+            store 0
+55          push 0                                   || text__replicateList
+            load 0
+            sub
+            iflt 56                                  || text__replicateList_else
+            ccreatet 0 11 5 0
+            return 2
+56          load 1                                   || text__replicateList_else
+            loadadd 0 -1
+            pushfunc 2 55                            || text__replicateList
+            create 3 3
+            load 1
+            eval
+            ccreatet 2 11 5 1
+            return 2
+57          jmp 58                                   || text__chars || text__chars_lazy
+58          load 0                                   || text__chars
+            eval
+            strop 2
+            push 0
+            load 0
+            tailcall 1 60                            || text__charsFrom
+59          load 1                                   || text__charsFrom_lazy
+            eval
+            store 1
+            load 2
+            eval
+            store 2
+60          load 1                                   || text__charsFrom
+            load 2
+            sub
+            iflt 61                                  || text__charsFrom_else
+            ccreatet 0 11 5 0
+            return 3
+61          load 2                                   || text__charsFrom_else
+            loadadd 1 1
+            load 0
+            pushfunc 3 60                            || text__charsFrom
+            create 4 3
+            load 0
+            eval
+            load 1
+            strop 4
+            ccreatet 2 11 5 1
+            return 3
+62          load 0                                   || text__fromChars_lazy
+            eval
+            store 0
+63          push 0                                   || text__fromChars
+            load 0
+            call 65                                  || text__listLen
+            array_create_dynamic 1
+            push 0
+            load 0
+            tailcall 1 69                            || text__fillChars
+64          load 0                                   || text__listLen_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+65          load 0                                   || text__listLen
+            jmpt 2 66 67                             || lbs
+66          load 1                                   || text__listLen_Nil
+            return 2
+67          loadadd 3 1                              || text__listLen_Cons
+            load 1
+            eval
+            tailcall 4 65                            || text__listLen
+68          load 0                                   || text__fillChars_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+            load 2
+            eval
+            store 2
+69          load 0                                   || text__fillChars
+            jmpt 2 70 71                             || lbs
+70          load 2                                   || text__fillChars_Nil
+            return 3
+71          load 4                                   || text__fillChars_Cons
+            load 3
+            load 0
+            strop 3
+            loadadd 3 1
+            load 1
+            eval
+            tailcall 5 69                            || text__fillChars
+72          jmp 73                                   || text__mapChars || text__mapChars_lazy
+73          load 1                                   || text__mapChars
+            eval
+            strop 2
+            array_create_dynamic 1
+            load 1
+            eval
+            strop 2
+            push 0
+            load 1
+            load 0
+            tailcall 2 75                            || text__mapCharsAt
+74          load 2                                   || text__mapCharsAt_lazy
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+            load 4
+            eval
+            store 4
+75          load 2                                   || text__mapCharsAt
+            load 3
+            sub
+            iflt 76                                  || text__mapCharsAt_else
+            load 4
+            return 5
+76          load 4                                   || text__mapCharsAt_else
+            load 2
+            load 1
+            load 2
+            pushfunc 2 295                           || text__mapCharsAt_1
+            create 3 3
+            load 0
+            eval
+            strop 3
+            load 3
+            loadadd 2 1
+            load 1
+            load 0
+            tailcall 5 75                            || text__mapCharsAt
+77          jmp 78                                   || text__filterChars || text__filterChars_lazy
+78          load 1                                   || text__filterChars
+            call 58                                  || text__chars
+            load 0
+            call 80                                  || text__filterList
+            tailcall 2 63                            || text__fromChars
+79          load 1                                   || text__filterList_lazy
+            eval
+            store 1
+80          load 1                                   || text__filterList
+            jmpt 2 81 82                             || lbs
+81          ccreatet 0 11 5 0                        || text__filterList_Nil
+            return 2
+82          load 0                                   || text__filterList_Cons
+            load 2
+            eval
+            ifeq 83                                  || text__filterList_Cons_else
+            load 1
+            load 2
+            pushfunc 2 79                            || text__filterList_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 4
+83          load 1                                   || text__filterList_Cons_else
+            eval
+            load 2
+            tailcall 4 80                            || text__filterList
+84          jmp 85                                   || text__toUpper || text__toUpper_lazy
+85          load 0                                   || text__toUpper
+            pushfunc 1 88                            || text__upperChar_lazy
+            create 1 7
+            tailcall 1 73                            || text__mapChars
+86          jmp 87                                   || text__toLower || text__toLower_lazy
+87          load 0                                   || text__toLower
+            pushfunc 1 92                            || text__lowerChar_lazy
+            create 1 7
+            tailcall 1 73                            || text__mapChars
+88          load 0                                   || text__upperChar_lazy
+            eval
+            store 0
+89          loadadd 0 -97                            || text__upperChar
+            iflt 91                                  || text__upperChar_else
+            push 122
+            load 0
+            sub
+            iflt 90                                  || text__upperChar_then_else
+            loadadd 0 -32
+            return 1
+90          load 0                                   || text__upperChar_then_else
+            return 1
+91          load 0                                   || text__upperChar_else
+            return 1
+92          load 0                                   || text__lowerChar_lazy
+            eval
+            store 0
+93          loadadd 0 -65                            || text__lowerChar
+            iflt 95                                  || text__lowerChar_else
+            push 90
+            load 0
+            sub
+            iflt 94                                  || text__lowerChar_then_else
+            loadadd 0 32
+            return 1
+94          load 0                                   || text__lowerChar_then_else
+            return 1
+95          load 0                                   || text__lowerChar_else
+            return 1
+96          jmp 97                                   || text__reverse || text__reverse_lazy
+97          load 0                                   || text__reverse
+            eval
+            strop 2
+            array_create_dynamic 1
+            load 0
+            eval
+            strop 2
+            push 0
+            load 0
+            tailcall 1 99                            || text__reverseAt
+98          load 1                                   || text__reverseAt_lazy
+            eval
+            store 1
+            load 2
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+99          load 1                                   || text__reverseAt
+            load 2
+            sub
+            iflt 100                                 || text__reverseAt_else
+            load 3
+            return 4
+100         load 3                                   || text__reverseAt_else
+            loadadd 2 -1
+            load 1
+            sub
+            load 0
+            eval
+            load 1
+            strop 4
+            strop 3
+            load 2
+            loadadd 1 1
+            load 0
+            tailcall 4 99                            || text__reverseAt
+101         jmp 102                                  || text__isSpace || text__isSpace_lazy
+102         push 32                                  || text__isSpace
+            load 0
+            call 243                                 || __deepEq
+            ifeq 103                                 || text__isSpace_else
+            return_const 1 1
+103         push 9                                   || text__isSpace_else
+            load 0
+            call 243                                 || __deepEq
+            ifeq 104                                 || text__isSpace_else_else
+            return_const 1 1
+104         push 10                                  || text__isSpace_else_else
+            load 0
+            call 243                                 || __deepEq
+            ifeq 105                                 || text__isSpace_else_else_else
+            return_const 1 1
+105         push 13                                  || text__isSpace_else_else_else
+            load 0
+            tailcall 1 243                           || __deepEq
+106         load 0                                   || text__isDigit_lazy
+            eval
+            store 0
+107         loadadd 0 -48                            || text__isDigit
+            iflt 109                                 || text__isDigit_else
+            push 57
+            load 0
+            sub
+            iflt 108                                 || text__isDigit_then_false
+            return_const 1 1
+108         return_const 1 0                         || text__isDigit_then_false
+109         return_const 1 0                         || text__isDigit_else
+110         jmp 111                                  || text__lines || text__lines_lazy
+111         load 0                                   || text__lines
+            eval
+            strop 2
+            push 0
+            push 0
+            load 0
+            tailcall 1 113                           || text__linesFrom
+112         load 1                                   || text__linesFrom_lazy
+            eval
+            store 1
+            load 2
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+113         load 2                                   || text__linesFrom
+            load 3
+            sub
+            iflt 115                                 || text__linesFrom_else
+            load 2
+            load 1
+            sub
+            ifle 114                                 || text__linesFrom_then_else
+            ccreatet 0 11 5 0
+            load 2
+            load 1
+            load 0
+            call 118                                 || text__lineSlice
+            ccreatet 2 11 5 1
+            return 4
+114         ccreatet 0 11 5 0                        || text__linesFrom_then_else
+            return 4
+115         push 10                                  || text__linesFrom_else
+            load 0
+            load 2
+            pushfunc 2 297                           || text__linesFrom_1
+            create 3 3
+            call 243                                 || __deepEq
+            ifeq 116                                 || text__linesFrom_else_else
+            load 3
+            loadadd 2 1
+            loadadd 2 1
+            load 0
+            pushfunc 4 113                           || text__linesFrom
+            create 5 3
+            load 2
+            load 1
+            load 0
+            call 118                                 || text__lineSlice
+            ccreatet 2 11 5 1
+            return 4
+116         load 3                                   || text__linesFrom_else_else
+            loadadd 2 1
+            load 1
+            load 0
+            tailcall 4 113                           || text__linesFrom
+117         load 1                                   || text__lineSlice_lazy
+            eval
+            store 1
+            load 2
+            eval
+            store 2
+118         load 2                                   || text__lineSlice
+            load 1
+            sub
+            ifle 120                                 || text__lineSlice_else
+            push 13
+            load 0
+            load 2
+            pushfunc 2 299                           || text__lineSlice_1
+            create 3 3
+            call 243                                 || __deepEq
+            ifeq 119                                 || text__lineSlice_then_else
+            load 0
+            loadadd 2 -1
+            load 1
+            sub
+            load 1
+            tailcall 3 9                             || text__slice
+119         load 0                                   || text__lineSlice_then_else
+            load 2
+            load 1
+            sub
+            load 1
+            tailcall 3 9                             || text__slice
+120         tailcall 3 7                             || text__empty || text__lineSlice_else
+121         load 0                                   || text__unlines_lazy
+            eval
+            store 0
+122         load 0                                   || text__unlines
+            pushfunc 1 285                           || __lam_mlibtextspp_0
+            create 1 7
+            call 124                                 || text__concatMapList
+            tailcall 1 31                            || text__concat
+123         load 1                                   || text__concatMapList_lazy
+            eval
+            store 1
+124         load 1                                   || text__concatMapList
+            jmpt 2 125 126                           || lbs
+125         ccreatet 0 11 5 0                        || text__concatMapList_Nil
+            return 2
+126         load 1                                   || text__concatMapList_Cons
+            load 2
+            pushfunc 2 123                           || text__concatMapList_lazy
+            create 3 3
+            load 0
+            load 2
+            eval
+            tailcall 4 128                           || text__appendList
+127         load 0                                   || text__appendList_lazy
+            eval
+            store 0
+128         load 0                                   || text__appendList
+            jmpt 2 129 130                           || lbs
+129         load 1                                   || text__appendList_Nil
+            eval
+            return 2
+130         load 3                                   || text__appendList_Cons
+            load 1
+            pushfunc 2 127                           || text__appendList_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 5 1
+            return 4
+131         jmp 132                                  || text__words || text__words_lazy
+132         load 0                                   || text__words
+            eval
+            strop 2
+            push 0
+            load 0
+            tailcall 1 134                           || text__wordsFrom
+133         load 1                                   || text__wordsFrom_lazy
+            eval
+            store 1
+            load 2
+            eval
+            store 2
+134         load 1                                   || text__wordsFrom
+            load 2
+            sub
+            iflt 135                                 || text__wordsFrom_else
+            ccreatet 0 11 5 0
+            return 3
+135         load 0                                   || text__wordsFrom_else
+            load 1
+            pushfunc 2 301                           || text__wordsFrom_1
+            create 3 3
+            call 102                                 || text__isSpace
+            ifeq 136                                 || text__wordsFrom_else_else
+            load 2
+            loadadd 1 1
+            load 0
+            tailcall 3 134                           || text__wordsFrom
+136         load 2                                   || text__wordsFrom_else_else
+            load 1
+            dup
+            load 0
+            tailcall 3 138                           || text__wordEnd
+137         load 1                                   || text__wordEnd_lazy
+            eval
+            store 1
+            load 2
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+138         load 2                                   || text__wordEnd
+            load 3
+            sub
+            iflt 139                                 || text__wordEnd_else
+            ccreatet 0 11 5 0
+            load 0
+            load 2
+            load 1
+            sub
+            load 1
+            call 9                                   || text__slice
+            ccreatet 2 11 5 1
+            return 4
+139         load 0                                   || text__wordEnd_else
+            load 2
+            pushfunc 2 303                           || text__wordEnd_1
+            create 3 3
+            call 102                                 || text__isSpace
+            ifeq 140                                 || text__wordEnd_else_else
+            load 3
+            load 2
+            load 0
+            pushfunc 3 134                           || text__wordsFrom
+            create 4 3
+            load 0
+            load 2
+            load 1
+            sub
+            load 1
+            call 9                                   || text__slice
+            ccreatet 2 11 5 1
+            return 4
+140         load 3                                   || text__wordEnd_else_else
+            loadadd 2 1
+            load 1
+            load 0
+            tailcall 4 138                           || text__wordEnd
+141         load 0                                   || text__unwords_lazy
+            eval
+            store 0
+142         load 0                                   || text__unwords
+            push " "
+            tailcall 1 43                            || text__join
+143         jmp 144                                  || text__split || text__split_lazy
+144         load 1                                   || text__split
+            eval
+            strop 2
+            push 0
+            push 0
+            load 1
+            load 0
+            tailcall 2 146                           || text__splitFrom
+145         load 2                                   || text__splitFrom_lazy
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+            load 4
+            eval
+            store 4
+146         load 3                                   || text__splitFrom
+            load 4
+            sub
+            iflt 147                                 || text__splitFrom_else
+            ccreatet 0 11 5 0
+            load 1
+            load 3
+            load 2
+            sub
+            load 2
+            call 9                                   || text__slice
+            ccreatet 2 11 5 1
+            return 5
+147         load 0                                   || text__splitFrom_else
+            load 1
+            load 3
+            pushfunc 2 305                           || text__splitFrom_1
+            create 3 3
+            call 243                                 || __deepEq
+            ifeq 148                                 || text__splitFrom_else_else
+            load 4
+            loadadd 3 1
+            loadadd 3 1
+            load 1
+            load 0
+            pushfunc 5 146                           || text__splitFrom
+            create 6 3
+            load 1
+            load 3
+            load 2
+            sub
+            load 2
+            call 9                                   || text__slice
+            ccreatet 2 11 5 1
+            return 5
+148         load 4                                   || text__splitFrom_else_else
+            loadadd 3 1
+            load 2
+            load 1
+            load 0
+            tailcall 5 146                           || text__splitFrom
+149         jmp 150                                  || text__trim || text__trim_lazy
+150         load 0                                   || text__trim
+            eval
+            strop 2
+            load 0
+            call 163                                 || text__lastNonSpace
+            load 0
+            eval
+            strop 2
+            push 0
+            load 0
+            call 159                                 || text__firstNonSpace
+            load 0
+            tailcall 1 156                           || text__trimRange
+151         jmp 152                                  || text__trimStart || text__trimStart_lazy
+152         load 0                                   || text__trimStart
+            dup
+            eval
+            strop 2
+            load 0
+            eval
+            strop 2
+            push 0
+            load 0
+            call 159                                 || text__firstNonSpace
+            tailcall 1 9                             || text__slice
+153         jmp 154                                  || text__trimEnd || text__trimEnd_lazy
+154         load 0                                   || text__trimEnd
+            dup
+            eval
+            strop 2
+            load 0
+            call 163                                 || text__lastNonSpace
+            push 0
+            tailcall 1 9                             || text__slice
+155         load 1                                   || text__trimRange_lazy
+            eval
+            store 1
+            load 2
+            eval
+            store 2
+156         load 2                                   || text__trimRange
+            load 1
+            sub
+            ifle 157                                 || text__trimRange_else
+            load 0
+            load 2
+            load 1
+            sub
+            load 1
+            tailcall 3 9                             || text__slice
+157         tailcall 3 7                             || text__empty || text__trimRange_else
+158         load 1                                   || text__firstNonSpace_lazy
+            eval
+            store 1
+            load 2
+            eval
+            store 2
+159         load 1                                   || text__firstNonSpace
+            load 2
+            sub
+            iflt 160                                 || text__firstNonSpace_else
+            load 2
+            return 3
+160         load 0                                   || text__firstNonSpace_else
+            load 1
+            pushfunc 2 307                           || text__firstNonSpace_1
+            create 3 3
+            call 102                                 || text__isSpace
+            ifeq 161                                 || text__firstNonSpace_else_else
+            load 2
+            loadadd 1 1
+            load 0
+            tailcall 3 159                           || text__firstNonSpace
+161         load 1                                   || text__firstNonSpace_else_else
+            return 3
+162         load 1                                   || text__lastNonSpace_lazy
+            eval
+            store 1
+163         push 0                                   || text__lastNonSpace
+            load 1
+            sub
+            iflt 164                                 || text__lastNonSpace_else
+            return_const 2 0
+164         load 0                                   || text__lastNonSpace_else
+            load 1
+            pushfunc 2 309                           || text__lastNonSpace_1
+            create 3 3
+            call 102                                 || text__isSpace
+            ifeq 165                                 || text__lastNonSpace_else_else
+            loadadd 1 -1
+            load 0
+            tailcall 2 163                           || text__lastNonSpace
+165         load 1                                   || text__lastNonSpace_else_else
+            return 2
+166         load 0                                   || text__padLeft_lazy
+            eval
+            store 0
+167         load 1                                   || text__padLeft
+            eval
+            strop 2
+            load 0
+            sub
+            iflt 168                                 || text__padLeft_else
+            load 1
+            eval
+            return 2
+168         load 1                                   || text__padLeft_else
+            push " "
+            load 0
+            load 1
+            eval
+            strop 2
+            sub
+            pushfunc 2 53                            || text__repeat
+            create 3 3
+            tailcall 2 29                            || text__append
+169         load 0                                   || text__padRight_lazy
+            eval
+            store 0
+170         load 1                                   || text__padRight
+            eval
+            strop 2
+            load 0
+            sub
+            iflt 171                                 || text__padRight_else
+            load 1
+            eval
+            return 2
+171         push " "                                 || text__padRight_else
+            load 0
+            load 1
+            eval
+            strop 2
+            sub
+            pushfunc 2 53                            || text__repeat
+            create 3 3
+            load 1
+            tailcall 2 29                            || text__append
+172         load 0                                   || text__center_lazy
+            eval
+            store 0
+173         load 1                                   || text__center
+            eval
+            strop 2
+            load 0
+            sub
+            iflt 174                                 || text__center_else
+            load 1
+            eval
+            return 2
+174         load 1                                   || text__center_else
+            dup
+            eval
+            strop 2
+            load 0
+            load 1
+            eval
+            strop 2
+            sub
+            push 2
+            div
+            add
+            pushfunc 2 167                           || text__padLeft
+            create 3 3
+            load 0
+            tailcall 2 170                           || text__padRight
+175         load 0                                   || text__showInt_lazy
+            eval
+            store 0
+176         ifltlv 0 0 177                           || text__showInt_then || text__showInt
+            load 0
+            tailcall 1 179                           || text__showNat
+177         push 0                                   || text__showInt_then
+            load 0
+            sub
+            pushfunc 1 179                           || text__showNat
+            create 2 3
+            push "-"
+            tailcall 1 29                            || text__append
+178         load 0                                   || text__showNat_lazy
+            eval
+            store 0
+179         ccreatet 0 11 5 0                        || text__showNat
+            load 0
+            call 181                                 || text__natChars
+            tailcall 1 63                            || text__fromChars
+180         load 0                                   || text__natChars_lazy
+            eval
+            store 0
+181         ifltlv 0 10 182                          || text__natChars_then || text__natChars
+            load 1
+            load 0
+            pushfunc 2 311                           || text__natChars_1
+            create 3 3
+            load 0
+            push 10
+            div
+            tailcall 2 181                           || text__natChars
+182         load 1                                   || text__natChars_then
+            push 48
+            load 0
+            add
+            ccreatet 2 11 5 1
+            return 2
+183         jmp 184                                  || text__showFixed || text__showFixed_lazy
+184         load 1                                   || text__showFixed
+            call 197                                 || text__toF
+            load 0
+            tailcall 2 186                           || text__showFixedF
+185         load 1                                   || text__showFixedF_lazy
+            eval
+            store 1
+186         load 1                                   || text__showFixedF
+            load 0
+            tailcall 2 287                           || __pat_mlibtextspp_118
+187         load 0                                   || text__fixedBody_lazy
+            eval
+            store 0
+188         push 0                                   || text__fixedBody
+            load 0
+            sub
+            iflt 189                                 || text__fixedBody_else
+            load 2
+            eval
+            tailcall 3 179                           || text__showNat
+189         load 1                                   || text__fixedBody_else
+            load 2
+            load 0
+            pushfunc 3 315                           || text__fixedBody_2
+            create 4 3
+            load 2
+            eval
+            load 1
+            eval
+            div
+            call 179                                 || text__showNat
+            ccreatet 2 11 5 1
+            tailcall 3 31                            || text__concat
+190         load 0                                   || text__padZero_lazy
+            eval
+            store 0
+191         load 1                                   || text__padZero
+            eval
+            strop 2
+            load 0
+            sub
+            iflt 192                                 || text__padZero_else
+            load 1
+            eval
+            return 2
+192         load 1                                   || text__padZero_else
+            push "0"
+            load 0
+            load 1
+            eval
+            strop 2
+            sub
+            pushfunc 2 53                            || text__repeat
+            create 3 3
+            tailcall 2 29                            || text__append
+193         load 0                                   || text__pow10_lazy
+            eval
+            store 0
+194         push 0                                   || text__pow10
+            load 0
+            sub
+            iflt 195                                 || text__pow10_else
+            return_const 1 1
+195         push 10                                  || text__pow10_else
+            loadadd 0 -1
+            call 194                                 || text__pow10
+            mult
+            return 1
+196         jmp 197                                  || text__toF || text__toF_lazy
+197         push 2                                   || text__toF
+            load 0
+            pushfunc 1 317                           || text__toF_1
+            create 2 3
+            call 243                                 || __deepEq
+            ifeq 198                                 || text__toF_else
+            load 0
+            eval
+            return 1
+198         load 0                                   || text__toF_else
+            eval
+            floatop 14
+            return 1
+199         jmp 200                                  || text__readInt || text__readInt_lazy
+200         load 0                                   || text__readInt
+            pushfunc 1 150                           || text__trim
+            create 2 3
+            tailcall 1 202                           || text__readIntTrimmed
+201         jmp 202                                  || text__readIntTrimmed || text__readIntTrimmed_lazy
+202         push 0                                   || text__readIntTrimmed
+            load 0
+            pushfunc 1 319                           || text__readIntTrimmed_1
+            create 2 3
+            call 243                                 || __deepEq
+            ifeq 203                                 || text__readIntTrimmed_else
+            return_const 1 0
+203         push 45                                  || text__readIntTrimmed_else
+            load 0
+            pushfunc 1 321                           || text__readIntTrimmed_2
+            create 2 3
+            call 243                                 || __deepEq
+            ifeq 204                                 || text__readIntTrimmed_else_else
+            push 0
+            push 0
+            load 0
+            eval
+            strop 2
+            push 1
+            load 0
+            call 206                                 || text__digitsFrom
+            sub
+            return 1
+204         push 0                                   || text__readIntTrimmed_else_else
+            load 0
+            eval
+            strop 2
+            push 0
+            load 0
+            tailcall 1 206                           || text__digitsFrom
+205         load 1                                   || text__digitsFrom_lazy
+            eval
+            store 1
+            load 2
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+206         load 1                                   || text__digitsFrom
+            load 2
+            sub
+            iflt 207                                 || text__digitsFrom_else
+            load 3
+            return 4
+207         load 0                                   || text__digitsFrom_else
+            eval
+            load 1
+            strop 4
+            call 107                                 || text__isDigit
+            ifeq 208                                 || text__digitsFrom_else_else
+            load 3
+            push 10
+            mult
+            load 0
+            eval
+            load 1
+            strop 4
+            push 48
+            sub
+            add
+            load 2
+            loadadd 1 1
+            load 0
+            tailcall 4 206                           || text__digitsFrom
+208         load 3                                   || text__digitsFrom_else_else
+            return 4
+209         jmp 210                                  || text__readFloat || text__readFloat_lazy
+210         load 0                                   || text__readFloat
+            call 150                                 || text__trim
+            floatop 16
+            return 1
+211         jmp 212                                  || text__equal || text__equal_lazy
+212         load 1                                   || text__equal
+            pushfunc 1 325                           || text__equal_2
+            create 2 3
+            load 0
+            pushfunc 1 323                           || text__equal_1
+            create 2 3
+            call 243                                 || __deepEq
+            ifeq 213                                 || text__equal_else
+            push 0
+            load 1
+            load 0
+            tailcall 2 215                           || text__matchAt
+213         return_const 2 0                         || text__equal_else
+214         load 2                                   || text__matchAt_lazy
+            eval
+            store 2
+215         load 0                                   || text__matchAt
+            eval
+            strop 2
+            push 0
+            load 2
+            load 1
+            load 0
+            tailcall 3 217                           || text__matchAtI
+216         load 2                                   || text__matchAtI_lazy
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+            load 4
+            eval
+            store 4
+217         load 3                                   || text__matchAtI
+            load 4
+            sub
+            iflt 218                                 || text__matchAtI_else
+            return_const 5 1
+218         load 1                                   || text__matchAtI_else
+            load 3
+            load 2
+            pushfunc 3 329                           || text__matchAtI_2
+            create 4 3
+            load 0
+            load 3
+            pushfunc 2 327                           || text__matchAtI_1
+            create 3 3
+            call 243                                 || __deepEq
+            ifeq 219                                 || text__matchAtI_else_else
+            load 4
+            loadadd 3 1
+            load 2
+            load 1
+            load 0
+            tailcall 5 217                           || text__matchAtI
+219         return_const 5 0                         || text__matchAtI_else_else
+220         jmp 221                                  || text__startsWith || text__startsWith_lazy
+221         load 1                                   || text__startsWith
+            eval
+            strop 2
+            load 0
+            eval
+            strop 2
+            sub
+            iflt 222                                 || text__startsWith_else
+            push 0
+            load 1
+            load 0
+            tailcall 2 215                           || text__matchAt
+222         return_const 2 0                         || text__startsWith_else
+223         jmp 224                                  || text__endsWith || text__endsWith_lazy
+224         load 1                                   || text__endsWith
+            eval
+            strop 2
+            load 0
+            eval
+            strop 2
+            sub
+            iflt 225                                 || text__endsWith_else
+            load 1
+            eval
+            strop 2
+            load 0
+            eval
+            strop 2
+            sub
+            load 1
+            load 0
+            tailcall 2 215                           || text__matchAt
+225         return_const 2 0                         || text__endsWith_else
+226         jmp 227                                  || text__indexOf || text__indexOf_lazy
+227         push 0                                   || text__indexOf
+            load 1
+            load 0
+            tailcall 2 229                           || text__indexFrom
+228         load 2                                   || text__indexFrom_lazy
+            eval
+            store 2
+229         load 2                                   || text__indexFrom
+            load 1
+            eval
+            strop 2
+            load 0
+            eval
+            strop 2
+            sub
+            sub
+            ifle 230                                 || text__indexFrom_else
+            push 0
+            dec
+            return 3
+230         load 2                                   || text__indexFrom_else
+            load 1
+            load 0
+            call 215                                 || text__matchAt
+            ifeq 231                                 || text__indexFrom_else_else
+            load 2
+            return 3
+231         loadadd 2 1                              || text__indexFrom_else_else
+            load 1
+            load 0
+            tailcall 3 229                           || text__indexFrom
+232         jmp 233                                  || text__contains || text__contains_lazy
+233         load 1                                   || text__contains
+            load 0
+            call 227                                 || text__indexOf
+            push 0
+            sub
+            iflt 234                                 || text__contains_false
+            return_const 2 1
+234         return_const 2 0                         || text__contains_false
+235         jmp 236                                  || text__replace || text__replace_lazy
+236         push 0                                   || text__replace
+            load 0
+            pushfunc 1 331                           || text__replace_1
+            create 2 3
+            call 243                                 || __deepEq
+            ifeq 237                                 || text__replace_else
+            load 2
+            eval
+            return 3
+237         push 0                                   || text__replace_else
+            push 0
+            load 2
+            load 1
+            load 0
+            call 239                                 || text__replaceFrom
+            tailcall 3 31                            || text__concat
+238         load 3                                   || text__replaceFrom_lazy
+            eval
+            store 3
+            load 4
+            eval
+            store 4
+239         load 4                                   || text__replaceFrom
+            load 2
+            eval
+            strop 2
+            load 0
+            eval
+            strop 2
+            sub
+            sub
+            ifle 240                                 || text__replaceFrom_else
+            ccreatet 0 11 5 0
+            load 2
+            dup
+            eval
+            strop 2
+            load 3
+            sub
+            load 3
+            call 9                                   || text__slice
+            ccreatet 2 11 5 1
+            return 5
+240         load 4                                   || text__replaceFrom_else
+            load 2
+            load 0
+            call 215                                 || text__matchAt
+            ifeq 241                                 || text__replaceFrom_else_else
+            load 0
+            load 4
+            load 2
+            load 1
+            pushfunc 4 333                           || text__replaceFrom_1
+            create 5 3
+            load 2
+            load 4
+            load 3
+            sub
+            load 3
+            call 9                                   || text__slice
+            ccreatet 2 11 5 1
+            return 5
+241         loadadd 4 1                              || text__replaceFrom_else_else
+            load 3
+            load 2
+            load 1
+            load 0
+            tailcall 5 239                           || text__replaceFrom
+242         jmp 243                                  || __deepEq || __deepEq_lazy
+243         load 1                                   || __deepEq
+            load 0
+            load 1
+            eval
+            gettypeid
+            load 0
+            eval
+            gettypeid
+            tailcall 2 245                           || __deepEqDispatch
+244         load 0                                   || __deepEqDispatch_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+245         load 0                                   || __deepEqDispatch
+            load 1
+            ifcmp 246                                || __deepEqDispatch_else
+            load 3
+            load 2
+            load 1
+            load 0
+            tailcall 4 255                           || __deepEqMixed
+246         loadadd 0 -1                             || __deepEqDispatch_else
+            ifneq 248                                || __deepEqDispatch_else_else
+            load 2
+            eval
+            load 3
+            eval
+            sub
+            ifneq 247                                || __deepEqDispatch_else_then_else
+            return_const 4 1
+247         return_const 4 0                         || __deepEqDispatch_else_then_else
+248         loadadd 0 -2                             || __deepEqDispatch_else_else
+            ifneq 250                                || __deepEqDispatch_else_else_else
+            load 2
+            eval
+            load 3
+            eval
+            sub
+            ifneq 249                                || __deepEqDispatch_else_else_then_else
+            return_const 4 1
+249         return_const 4 0                         || __deepEqDispatch_else_else_then_else
+250         loadadd 0 -3                             || __deepEqDispatch_else_else_else
+            ifneq 251                                || __deepEqDispatch_else_else_else_else
+            load 3
+            load 2
+            tailcall 4 260                           || __deepEqStr
+251         loadadd 0 -4                             || __deepEqDispatch_else_else_else_else
+            ifle 252                                 || __deepEqDispatch_else_else_else_else_else
+            load 3
+            load 2
+            tailcall 4 271                           || __deepEqConstr
+252         load 2                                   || __deepEqDispatch_else_else_else_else_else
+            eval
+            load 3
+            eval
+            sub
+            ifneq 253                                || __deepEqDispatch_else_else_else_else_else_else
+            return_const 4 1
+253         return_const 4 0                         || __deepEqDispatch_else_else_else_else_else_else
+254         load 0                                   || __deepEqMixed_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+255         load 0                                   || __deepEqMixed
+            load 1
+            add
+            ifneq 258                                || __deepEqMixed_else
+            load 0
+            load 1
+            mult
+            push 0
+            dec
+            sub
+            ifneq 257                                || __deepEqMixed_then_else
+            load 2
+            eval
+            load 3
+            eval
+            sub
+            ifneq 256                                || __deepEqMixed_then_then_else
+            return_const 4 1
+256         return_const 4 0                         || __deepEqMixed_then_then_else
+257         return_const 4 0                         || __deepEqMixed_then_else
+258         return_const 4 0                         || __deepEqMixed_else
+259         jmp 260                                  || __deepEqStr || __deepEqStr_lazy
+260         load 1                                   || __deepEqStr
+            load 0
+            load 1
+            eval
+            strop 2
+            load 0
+            eval
+            strop 2
+            tailcall 2 262                           || __deepEqStrLen
+261         load 0                                   || __deepEqStrLen_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+262         load 0                                   || __deepEqStrLen
+            load 1
+            ifcmp 263                                || __deepEqStrLen_else
+            return_const 4 0
+263         load 0                                   || __deepEqStrLen_else
+            push 0
+            load 3
+            load 2
+            tailcall 4 265                           || __deepEqStrChars
+264         load 2                                   || __deepEqStrChars_lazy
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+265         load 2                                   || __deepEqStrChars
+            load 3
+            sub
+            ifneq 266                                || __deepEqStrChars_else
+            return_const 4 1
+266         load 3                                   || __deepEqStrChars_else
+            load 2
+            load 1
+            load 0
+            tailcall 4 268                           || __deepEqStrCharsStep
+267         jmp 268                                  || __deepEqStrCharsStep || __deepEqStrCharsStep_lazy
+268         load 0                                   || __deepEqStrCharsStep
+            eval
+            load 2
+            eval
+            strop 4
+            load 1
+            eval
+            load 2
+            eval
+            strop 4
+            ifcmp 269                                || __deepEqStrCharsStep_else
+            return_const 4 0
+269         load 3                                   || __deepEqStrCharsStep_else
+            eval
+            load 2
+            eval
+            inc
+            load 1
+            load 0
+            tailcall 4 265                           || __deepEqStrChars
+270         jmp 271                                  || __deepEqConstr || __deepEqConstr_lazy
+271         load 1                                   || __deepEqConstr
+            load 0
+            load 1
+            pushfunc 1 337                           || __deepEqConstr_2
+            create 2 3
+            load 0
+            pushfunc 1 335                           || __deepEqConstr_1
+            create 2 3
+            tailcall 2 273                           || __deepEqConstrCheck
+272         jmp 273                                  || __deepEqConstrCheck || __deepEqConstrCheck_lazy
+273         load 1                                   || __deepEqConstrCheck
+            load 0
+            call 260                                 || __deepEqStr
+            ifneq 274                                || __deepEqConstrCheck_else
+            return_const 4 0
+274         load 0                                   || __deepEqConstrCheck_else
+            eval
+            lookup
+            getfuncarity
+            push 0
+            load 3
+            load 2
+            tailcall 4 276                           || __deepEqConstrFields
+275         load 2                                   || __deepEqConstrFields_lazy
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+276         load 2                                   || __deepEqConstrFields
+            load 3
+            sub
+            ifneq 277                                || __deepEqConstrFields_else
+            return_const 4 1
+277         load 3                                   || __deepEqConstrFields_else
+            load 2
+            load 1
+            load 0
+            tailcall 4 279                           || __deepEqConstrFieldsStep
+278         jmp 279                                  || __deepEqConstrFieldsStep || __deepEqConstrFieldsStep_lazy
+279         load 2                                   || __deepEqConstrFieldsStep
+            load 1
+            pushfunc 2 341                           || __deepEqConstrFieldsStep_2
+            create 3 3
+            load 2
+            load 0
+            pushfunc 2 339                           || __deepEqConstrFieldsStep_1
+            create 3 3
+            call 243                                 || __deepEq
+            ifneq 280                                || __deepEqConstrFieldsStep_else
+            return_const 4 0
+280         load 3                                   || __deepEqConstrFieldsStep_else
+            eval
+            load 2
+            eval
+            inc
+            load 1
+            load 0
+            tailcall 4 276                           || __deepEqConstrFields
+281         jmp 282                                  || __deepNeq || __deepNeq_lazy
+282         load 1                                   || __deepNeq
+            load 0
+            call 243                                 || __deepEq
+            dec
+            ifneq 283                                || __deepNeq_else
+            return_const 2 0
+283         return_const 2 1                         || __deepNeq_else
+284         jmp 285                                  || __lam_mlibtextspp_0 || __lam_mlibtextspp_0_lazy
+285         pushfunc 0 343                           || __lam_mlibtextspp_0_1 || __lam_mlibtextspp_0
+            create 1 3
+            load 0
+            eval
+            ccreatet 2 11 5 1
+            return 1
+286         load 1                                   || __pat_mlibtextspp_118_lazy
+            eval
+            store 1
+287         updsp 3                                  || __pat_mlibtextspp_118
+            load 3
+            pushfunc 1 193                           || text__pow10_lazy
+            create 2 3
+            dup
+            store 0
+            load 4
+            pushfunc 2 345                           || __pat_mlibtextspp_118_1
+            create 3 3
+            dup
+            store 1
+            load 0
+            load 3
+            pushfunc 3 187                           || text__fixedBody_lazy
+            create 4 3
+            store 2
+            push 0.0
+            load 4
+            sub
+            ifle 289                                 || __pat_mlibtextspp_118_else
+            load 1
+            eval
+            push 0
+            sub
+            ifle 288                                 || __pat_mlibtextspp_118_then_else
+            load 2
+            push "-"
+            tailcall 5 29                            || text__append
+288         load 2                                   || __pat_mlibtextspp_118_then_else
+            eval
+            return 5
+289         load 2                                   || __pat_mlibtextspp_118_else
+            eval
+            return 5
+290         jmp 291                                  || text__isEmpty_1 || text__isEmpty_1_lazy
+291         load 0                                   || text__isEmpty_1
+            eval
+            strop 2
+            return 1
+292         jmp 293                                  || text__sliceClamp_j1 || text__sliceClamp_j1_lazy
+293         tailcall 1 7                             || text__empty || text__sliceClamp_j1
+294         jmp 295                                  || text__mapCharsAt_1 || text__mapCharsAt_1_lazy
+295         load 1                                   || text__mapCharsAt_1
+            eval
+            load 0
+            eval
+            strop 4
+            return 2
+296         jmp 297                                  || text__linesFrom_1 || text__linesFrom_1_lazy
+297         load 1                                   || text__linesFrom_1
+            eval
+            load 0
+            eval
+            strop 4
+            return 2
+298         jmp 299                                  || text__lineSlice_1 || text__lineSlice_1_lazy
+299         load 1                                   || text__lineSlice_1
+            eval
+            load 0
+            eval
+            dec
+            strop 4
+            return 2
+300         jmp 301                                  || text__wordsFrom_1 || text__wordsFrom_1_lazy
+301         load 1                                   || text__wordsFrom_1
+            eval
+            load 0
+            eval
+            strop 4
+            return 2
+302         jmp 303                                  || text__wordEnd_1 || text__wordEnd_1_lazy
+303         load 1                                   || text__wordEnd_1
+            eval
+            load 0
+            eval
+            strop 4
+            return 2
+304         jmp 305                                  || text__splitFrom_1 || text__splitFrom_1_lazy
+305         load 1                                   || text__splitFrom_1
+            eval
+            load 0
+            eval
+            strop 4
+            return 2
+306         jmp 307                                  || text__firstNonSpace_1 || text__firstNonSpace_1_lazy
+307         load 1                                   || text__firstNonSpace_1
+            eval
+            load 0
+            eval
+            strop 4
+            return 2
+308         jmp 309                                  || text__lastNonSpace_1 || text__lastNonSpace_1_lazy
+309         load 1                                   || text__lastNonSpace_1
+            eval
+            load 0
+            eval
+            dec
+            strop 4
+            return 2
+310         jmp 311                                  || text__natChars_1 || text__natChars_1_lazy
+311         load 1                                   || text__natChars_1
+            push 48
+            load 0
+            eval
+            push 10
+            mod
+            add
+            ccreatet 2 11 5 1
+            return 2
+312         jmp 313                                  || text__fixedBody_1 || text__fixedBody_1_lazy
+313         ccreatet 0 11 5 0                        || text__fixedBody_1
+            load 1
+            eval
+            load 2
+            eval
+            mod
+            pushfunc 1 179                           || text__showNat
+            create 2 3
+            load 0
+            eval
+            call 191                                 || text__padZero
+            ccreatet 2 11 5 1
+            return 3
+314         jmp 315                                  || text__fixedBody_2 || text__fixedBody_2_lazy
+315         load 2                                   || text__fixedBody_2
+            load 1
+            load 0
+            pushfunc 3 313                           || text__fixedBody_1
+            create 4 3
+            push "."
+            ccreatet 2 11 5 1
+            return 3
+316         jmp 317                                  || text__toF_1 || text__toF_1_lazy
+317         load 0                                   || text__toF_1
+            eval
+            gettypeid
+            return 1
+318         jmp 319                                  || text__readIntTrimmed_1 || text__readIntTrimmed_1_lazy
+319         load 0                                   || text__readIntTrimmed_1
+            eval
+            strop 2
+            return 1
+320         jmp 321                                  || text__readIntTrimmed_2 || text__readIntTrimmed_2_lazy
+321         load 0                                   || text__readIntTrimmed_2
+            eval
+            push 0
+            strop 4
+            return 1
+322         jmp 323                                  || text__equal_1 || text__equal_1_lazy
+323         load 0                                   || text__equal_1
+            eval
+            strop 2
+            return 1
+324         jmp 325                                  || text__equal_2 || text__equal_2_lazy
+325         load 0                                   || text__equal_2
+            eval
+            strop 2
+            return 1
+326         jmp 327                                  || text__matchAtI_1 || text__matchAtI_1_lazy
+327         load 1                                   || text__matchAtI_1
+            eval
+            load 0
+            eval
+            strop 4
+            return 2
+328         jmp 329                                  || text__matchAtI_2 || text__matchAtI_2_lazy
+329         load 2                                   || text__matchAtI_2
+            eval
+            load 0
+            eval
+            load 1
+            eval
+            add
+            strop 4
+            return 3
+330         jmp 331                                  || text__replace_1 || text__replace_1_lazy
+331         load 0                                   || text__replace_1
+            eval
+            strop 2
+            return 1
+332         jmp 333                                  || text__replaceFrom_1 || text__replaceFrom_1_lazy
+333         load 2                                   || text__replaceFrom_1
+            eval
+            load 3
+            eval
+            strop 2
+            add
+            load 2
+            eval
+            load 3
+            eval
+            strop 2
+            add
+            load 1
+            load 0
+            load 3
+            pushfunc 5 239                           || text__replaceFrom
+            create 6 3
+            load 0
+            eval
+            ccreatet 2 11 5 1
+            return 4
+334         jmp 335                                  || __deepEqConstr_1 || __deepEqConstr_1_lazy
+335         load 0                                   || __deepEqConstr_1
+            eval
+            getconstrname
+            return 1
+336         jmp 337                                  || __deepEqConstr_2 || __deepEqConstr_2_lazy
+337         load 0                                   || __deepEqConstr_2
+            eval
+            getconstrname
+            return 1
+338         jmp 339                                  || __deepEqConstrFieldsStep_1 || __deepEqConstrFieldsStep_1_lazy
+339         load 0                                   || __deepEqConstrFieldsStep_1
+            eval
+            load 1
+            eval
+            getfield
+            eval
+            return 2
+340         jmp 341                                  || __deepEqConstrFieldsStep_2 || __deepEqConstrFieldsStep_2_lazy
+341         load 0                                   || __deepEqConstrFieldsStep_2
+            eval
+            load 1
+            eval
+            getfield
+            eval
+            return 2
+342         jmp 343                                  || __lam_mlibtextspp_0_1 || __lam_mlibtextspp_0_1_lazy
+343         ccreatet 0 11 5 0                        || __lam_mlibtextspp_0_1
+            push "\n"
+            ccreatet 2 11 5 1
+            return 0
+344         jmp 345                                  || __pat_mlibtextspp_118_1 || __pat_mlibtextspp_118_1_lazy
+345         load 0                                   || __pat_mlibtextspp_118_1
+            eval
+            floatop 13
+            load 1
+            eval
+            floatop 14
+            mult
+            floatop 12
+            floatop 15
+            return 2
+
+.metadata
+types 8
+type 5 list 2
+  constr 0 Nil 0
+  constr 1 Cons 2
+type 6 __Char 1
+  constr 0 __Char 1
+type 7 Graphics__Point 1
+  constr 0 Graphics__Pt 2
+type 8 Graphics__MenuCat 1
+  constr 0 Graphics__MenuCat 2
+type 9 Graphics__Graphics 9
+  constr 0 Graphics__GraphText 3
+  constr 1 Graphics__GraphPolyLine 2
+  constr 2 Graphics__GraphPolygon 2
+  constr 3 Graphics__GraphRectangle 3
+  constr 4 Graphics__GraphEllipse 3
+  constr 5 Graphics__GraphDisc 3
+  constr 6 Graphics__GraphClear 0
+  constr 7 Graphics__GraphMenu 1
+  constr 8 Graphics__GraphPrompt 2
+type 10 Graphics__Event 9
+  constr 0 Graphics__KeyIn 1
+  constr 1 Graphics__MouseDown 1
+  constr 2 Graphics__MouseUp 1
+  constr 3 Graphics__MouseDragged 1
+  constr 4 Graphics__MouseDoubleClick 1
+  constr 5 Graphics__MenuItem 2
+  constr 6 Graphics__PText 1
+  constr 7 Graphics__OpenFile 1
+  constr 8 Graphics__NoInput 0
+type 11 Display__Display 4
+  constr 0 Display__DText 1
+  constr 1 Display__DTable 2
+  constr 2 Display__DMarkdown 1
+  constr 3 Display__DGraphics 1
+type 12 __Tuple2 1
+  constr 0 __Tuple2 2
+functions 244
+  func 1 start 0 0
+  func 0 start 0 0
+  func 3 text__length 1 00
+  func 2 text__length 1 00
+  func 5 text__isEmpty 1 00
+  func 4 text__isEmpty 1 00
+  func 7 text__empty 0 0
+  func 6 text__empty 0 0
+  func 9 text__slice 3 1100
+  func 8 text__slice 3 1100
+  func 11 text__sliceClamp 4 01110
+  func 10 text__sliceClamp 4 01110
+  func 15 text__clampLen 2 110
+  func 14 text__clampLen 2 110
+  func 19 text__take 2 100
+  func 18 text__take 2 100
+  func 22 text__drop 2 100
+  func 21 text__drop 2 100
+  func 25 text__at 2 000
+  func 24 text__at 2 000
+  func 27 text__fromChar 1 00
+  func 26 text__fromChar 1 00
+  func 29 text__append 2 000
+  func 28 text__append 2 000
+  func 31 text__concat 1 10
+  func 30 text__concat 1 10
+  func 37 text__pairUp 1 10
+  func 36 text__pairUp 1 10
+  func 43 text__join 2 010
+  func 42 text__join 2 010
+  func 45 text__intersperse 2 010
+  func 44 text__intersperse 2 010
+  func 49 text__prependAll 2 010
+  func 48 text__prependAll 2 010
+  func 53 text__repeat 2 100
+  func 52 text__repeat 2 100
+  func 55 text__replicateList 2 100
+  func 54 text__replicateList 2 100
+  func 58 text__chars 1 00
+  func 57 text__chars 1 00
+  func 60 text__charsFrom 3 0110
+  func 59 text__charsFrom 3 0110
+  func 63 text__fromChars 1 10
+  func 62 text__fromChars 1 10
+  func 65 text__listLen 2 110
+  func 64 text__listLen 2 110
+  func 69 text__fillChars 3 1110
+  func 68 text__fillChars 3 1110
+  func 73 text__mapChars 2 000
+  func 72 text__mapChars 2 000
+  func 75 text__mapCharsAt 5 001110
+  func 74 text__mapCharsAt 5 001110
+  func 78 text__filterChars 2 000
+  func 77 text__filterChars 2 000
+  func 80 text__filterList 2 010
+  func 79 text__filterList 2 010
+  func 85 text__toUpper 1 00
+  func 84 text__toUpper 1 00
+  func 87 text__toLower 1 00
+  func 86 text__toLower 1 00
+  func 89 text__upperChar 1 10
+  func 88 text__upperChar 1 10
+  func 93 text__lowerChar 1 10
+  func 92 text__lowerChar 1 10
+  func 97 text__reverse 1 00
+  func 96 text__reverse 1 00
+  func 99 text__reverseAt 4 01110
+  func 98 text__reverseAt 4 01110
+  func 102 text__isSpace 1 00
+  func 101 text__isSpace 1 00
+  func 107 text__isDigit 1 10
+  func 106 text__isDigit 1 10
+  func 111 text__lines 1 00
+  func 110 text__lines 1 00
+  func 113 text__linesFrom 4 01110
+  func 112 text__linesFrom 4 01110
+  func 118 text__lineSlice 3 0110
+  func 117 text__lineSlice 3 0110
+  func 122 text__unlines 1 10
+  func 121 text__unlines 1 10
+  func 124 text__concatMapList 2 010
+  func 123 text__concatMapList 2 010
+  func 128 text__appendList 2 100
+  func 127 text__appendList 2 100
+  func 132 text__words 1 00
+  func 131 text__words 1 00
+  func 134 text__wordsFrom 3 0110
+  func 133 text__wordsFrom 3 0110
+  func 138 text__wordEnd 4 01110
+  func 137 text__wordEnd 4 01110
+  func 142 text__unwords 1 10
+  func 141 text__unwords 1 10
+  func 144 text__split 2 000
+  func 143 text__split 2 000
+  func 146 text__splitFrom 5 001110
+  func 145 text__splitFrom 5 001110
+  func 150 text__trim 1 00
+  func 149 text__trim 1 00
+  func 152 text__trimStart 1 00
+  func 151 text__trimStart 1 00
+  func 154 text__trimEnd 1 00
+  func 153 text__trimEnd 1 00
+  func 156 text__trimRange 3 0110
+  func 155 text__trimRange 3 0110
+  func 159 text__firstNonSpace 3 0110
+  func 158 text__firstNonSpace 3 0110
+  func 163 text__lastNonSpace 2 010
+  func 162 text__lastNonSpace 2 010
+  func 167 text__padLeft 2 100
+  func 166 text__padLeft 2 100
+  func 170 text__padRight 2 100
+  func 169 text__padRight 2 100
+  func 173 text__center 2 100
+  func 172 text__center 2 100
+  func 176 text__showInt 1 10
+  func 175 text__showInt 1 10
+  func 179 text__showNat 1 10
+  func 178 text__showNat 1 10
+  func 181 text__natChars 2 100
+  func 180 text__natChars 2 100
+  func 184 text__showFixed 2 000
+  func 183 text__showFixed 2 000
+  func 186 text__showFixedF 2 010
+  func 185 text__showFixedF 2 010
+  func 188 text__fixedBody 3 1000
+  func 187 text__fixedBody 3 1000
+  func 191 text__padZero 2 100
+  func 190 text__padZero 2 100
+  func 194 text__pow10 1 10
+  func 193 text__pow10 1 10
+  func 197 text__toF 1 00
+  func 196 text__toF 1 00
+  func 200 text__readInt 1 00
+  func 199 text__readInt 1 00
+  func 202 text__readIntTrimmed 1 00
+  func 201 text__readIntTrimmed 1 00
+  func 206 text__digitsFrom 4 01110
+  func 205 text__digitsFrom 4 01110
+  func 210 text__readFloat 1 00
+  func 209 text__readFloat 1 00
+  func 212 text__equal 2 000
+  func 211 text__equal 2 000
+  func 215 text__matchAt 3 0010
+  func 214 text__matchAt 3 0010
+  func 217 text__matchAtI 5 001110
+  func 216 text__matchAtI 5 001110
+  func 221 text__startsWith 2 000
+  func 220 text__startsWith 2 000
+  func 224 text__endsWith 2 000
+  func 223 text__endsWith 2 000
+  func 227 text__indexOf 2 000
+  func 226 text__indexOf 2 000
+  func 229 text__indexFrom 3 0010
+  func 228 text__indexFrom 3 0010
+  func 233 text__contains 2 000
+  func 232 text__contains 2 000
+  func 236 text__replace 3 0000
+  func 235 text__replace 3 0000
+  func 239 text__replaceFrom 5 000110
+  func 238 text__replaceFrom 5 000110
+  func 243 __deepEq 2 000
+  func 242 __deepEq 2 000
+  func 245 __deepEqDispatch 4 11000
+  func 244 __deepEqDispatch 4 11000
+  func 255 __deepEqMixed 4 11000
+  func 254 __deepEqMixed 4 11000
+  func 260 __deepEqStr 2 000
+  func 259 __deepEqStr 2 000
+  func 262 __deepEqStrLen 4 11000
+  func 261 __deepEqStrLen 4 11000
+  func 265 __deepEqStrChars 4 00110
+  func 264 __deepEqStrChars 4 00110
+  func 268 __deepEqStrCharsStep 4 00000
+  func 267 __deepEqStrCharsStep 4 00000
+  func 271 __deepEqConstr 2 000
+  func 270 __deepEqConstr 2 000
+  func 273 __deepEqConstrCheck 4 00000
+  func 272 __deepEqConstrCheck 4 00000
+  func 276 __deepEqConstrFields 4 00110
+  func 275 __deepEqConstrFields 4 00110
+  func 279 __deepEqConstrFieldsStep 4 00000
+  func 278 __deepEqConstrFieldsStep 4 00000
+  func 282 __deepNeq 2 000
+  func 281 __deepNeq 2 000
+  func 285 __lam_mlibtextspp_0 1 00
+  func 284 __lam_mlibtextspp_0 1 00
+  func 287 __pat_mlibtextspp_118 2 010
+  func 286 __pat_mlibtextspp_118 2 010
+  func 291 text__isEmpty_1 1 00
+  func 290 text__isEmpty_1 1 00
+  func 293 text__sliceClamp_j1 1 00
+  func 292 text__sliceClamp_j1 1 00
+  func 295 text__mapCharsAt_1 2 000
+  func 294 text__mapCharsAt_1 2 000
+  func 297 text__linesFrom_1 2 000
+  func 296 text__linesFrom_1 2 000
+  func 299 text__lineSlice_1 2 000
+  func 298 text__lineSlice_1 2 000
+  func 301 text__wordsFrom_1 2 000
+  func 300 text__wordsFrom_1 2 000
+  func 303 text__wordEnd_1 2 000
+  func 302 text__wordEnd_1 2 000
+  func 305 text__splitFrom_1 2 000
+  func 304 text__splitFrom_1 2 000
+  func 307 text__firstNonSpace_1 2 000
+  func 306 text__firstNonSpace_1 2 000
+  func 309 text__lastNonSpace_1 2 000
+  func 308 text__lastNonSpace_1 2 000
+  func 311 text__natChars_1 2 000
+  func 310 text__natChars_1 2 000
+  func 313 text__fixedBody_1 3 0000
+  func 312 text__fixedBody_1 3 0000
+  func 315 text__fixedBody_2 3 0000
+  func 314 text__fixedBody_2 3 0000
+  func 317 text__toF_1 1 00
+  func 316 text__toF_1 1 00
+  func 319 text__readIntTrimmed_1 1 00
+  func 318 text__readIntTrimmed_1 1 00
+  func 321 text__readIntTrimmed_2 1 00
+  func 320 text__readIntTrimmed_2 1 00
+  func 323 text__equal_1 1 00
+  func 322 text__equal_1 1 00
+  func 325 text__equal_2 1 00
+  func 324 text__equal_2 1 00
+  func 327 text__matchAtI_1 2 000
+  func 326 text__matchAtI_1 2 000
+  func 329 text__matchAtI_2 3 0000
+  func 328 text__matchAtI_2 3 0000
+  func 331 text__replace_1 1 00
+  func 330 text__replace_1 1 00
+  func 333 text__replaceFrom_1 4 00000
+  func 332 text__replaceFrom_1 4 00000
+  func 335 __deepEqConstr_1 1 00
+  func 334 __deepEqConstr_1 1 00
+  func 337 __deepEqConstr_2 1 00
+  func 336 __deepEqConstr_2 1 00
+  func 339 __deepEqConstrFieldsStep_1 2 000
+  func 338 __deepEqConstrFieldsStep_1 2 000
+  func 341 __deepEqConstrFieldsStep_2 2 000
+  func 340 __deepEqConstrFieldsStep_2 2 000
+  func 343 __lam_mlibtextspp_0_1 0 0
+  func 342 __lam_mlibtextspp_0_1 0 0
+  func 345 __pat_mlibtextspp_118_1 2 000
+  func 344 __pat_mlibtextspp_118_1 2 000
+.endmetadata

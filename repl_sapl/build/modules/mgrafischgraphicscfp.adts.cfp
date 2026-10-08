@@ -1,0 +1,4 @@
+::Graphics__Point = Graphics__Pt !x0 !x1
+::Graphics__MenuCat = Graphics__MenuCat !x0 !x1
+::Graphics__Graphics = Graphics__GraphText !x0 !x1 !x2 | Graphics__GraphPolyLine !x0 !x1 | Graphics__GraphPolygon !x0 !x1 | Graphics__GraphRectangle !x0 !x1 !x2 | Graphics__GraphEllipse !x0 !x1 !x2 | Graphics__GraphDisc !x0 !x1 !x2 | Graphics__GraphClear | Graphics__GraphMenu !x0 | Graphics__GraphPrompt !x0 !x1
+::Graphics__Event = Graphics__KeyIn !x0 | Graphics__MouseDown !x0 | Graphics__MouseUp !x0 | Graphics__MouseDragged !x0 | Graphics__MouseDoubleClick !x0 | Graphics__MenuItem !x0 !x1 | Graphics__PText !x0 | Graphics__OpenFile !x0 | Graphics__NoInput

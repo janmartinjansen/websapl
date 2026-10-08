@@ -1340,6 +1340,19 @@ async function rsStart() {
     mkdirsFor(inst.FS, "/" + rel);
     inst.FS.writeFile("/" + rel, new Uint8Array(await res.arrayBuffer()));
   }
+  // De vooraf gebouwde modules en uitvoerlaag (repl_sapl/build/modules/,
+  // zie :prebuild): de index, en per regel de vier bestanden van het stuk.
+  const pbRes = await fetch("../repl_sapl/build/modules/index.txt?v=" + Date.now());
+  if (pbRes.ok) {
+    const index = await pbRes.text();
+    mkdirsFor(inst.FS, "/repl_sapl/build/modules/index.txt");
+    inst.FS.writeFile("/repl_sapl/build/modules/index.txt", index);
+    const bases = index.split("\n").map((l) => l.trim().split(/\s+/)[3]).filter(Boolean);
+    await Promise.all(bases.flatMap((b) => [".jmvm", ".defs.txt", ".pp.cfp", ".adts.cfp"].map(async (ext) => {
+      const r = await fetch("../" + b + ext);
+      if (r.ok) inst.FS.writeFile("/" + b + ext, new Uint8Array(await r.arrayBuffer()));
+    })));
+  }
   mkdirsFor(inst.FS, "/lib/stdlib.cfp");
   inst.FS.writeFile("/lib/stdlib.cfp", stdlibContent);
   for (const [p, c] of Object.entries(sppDeps)) { mkdirsFor(inst.FS, p); inst.FS.writeFile(p, c); }

@@ -48,6 +48,7 @@ check("nb-invoer van boven naar beneden", nb.generateNbInput(nb.parseNotebook("/
   const p = nb.parseNbOutput("@@deferror 0 onbekende naam x\n@@deferror -1 kapot\n@@begin 1\n@@value\n2\n@@end 1\n@@nbdone\n");
   check("nb-uitvoer", [p.defErrors[0], p.cells[1].blocks[0].content, p.done, p.error], ["onbekende naam x", "2", true, "uitvoerlaag: kapot"]);
 }
+check("typewaarschuwingen", nb.parseNbOutput("@@typewarn 2 f: kan niet unificeren: Num met Str\n@@nbdone\n").typeWarnings, { 2: ["f: kan niet unificeren: Num met Str"] });
 check("instellingen", [nb.parseSettings("//%% [instellingen] volgorde=boven-naar-beneden\n//%%\n1\n").order, nb.parseSettings("//%%\n1\n").order], ["top", "any"]);
 
 // 4. Uitvoer uitlezen (zoals de VM die schrijft; cel 3 stopt met `error`).

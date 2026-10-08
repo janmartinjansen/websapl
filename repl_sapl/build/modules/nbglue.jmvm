@@ -1,0 +1,1140 @@
+nbCell_lazy nbCell nbCellT_lazy nbCellT nbValueT_lazy nbValueT nbShowT_lazy nbShowT nbShowT_else nbShowT_else_else nbShowT_else_else_else nbItemsT_lazy nbItemsT nbItemsT_Nil nbItemsT_Cons nbItemsT_Cons_else nbMoreT_lazy nbMoreT nbMoreT_Nil nbMoreT_Cons nbMark_lazy nbMark nbNl_lazy nbNl nbTab_lazy nbTab nbRender_lazy nbRender nbRender_else nbRenderAdt_lazy nbRenderAdt nbRenderAdt_else nbRenderHook_lazy nbRenderHook nbRenderHook_else nbRenderChecked_lazy nbRenderChecked nbRenderChecked_else nbRenderCheckedName_lazy nbRenderCheckedName nbRenderCheckedName_else nbIsDisplayName_lazy nbIsDisplayName nbIsDisplayName_else nbDisplay_lazy nbDisplay nbDisplay_Display__DText nbDisplay_Display__DTable nbDisplay_Display__DMarkdown nbDisplay_Display__DGraphics nbRows_lazy nbRows nbRows_Nil nbRows_Cons nbRows_Cons_else nbRow_lazy nbRow nbRow_Nil nbRow_Cons nbRowRest_lazy nbRowRest nbRowRest_Nil nbRowRest_Cons nbCellText_lazy nbCellText nbCellText_else nbValue_lazy nbValue nbShow_lazy nbShow nbShowD_lazy nbShowD nbShowD_else nbShowTid_lazy nbShowTid nbShowTid_else nbShowAdt_lazy nbShowAdt nbShowAdt_else nbShowAdt_else_else nbShowHook_lazy nbShowHook nbShowHook_else nbShowGeneric_lazy nbShowGeneric nbShowGeneric_else nbShowGeneric_else_else nbFields_lazy nbFields nbFields_else nbFields_else_else nbItems_lazy nbItems nbItems_Nil nbItems_Cons nbItems_Cons_else nbMore_lazy nbMore nbMore_Nil nbMore_Cons nbFailed_lazy nbFailed start_lazy start __rangeStepGo_lazy __rangeStepGo __rangeStepGo_then_else __rangeStepGo_else __rangeStepGo_else_else __rangeGo_lazy __rangeGo __rangeStepGoOpen_lazy __rangeStepGoOpen __deepEq_lazy __deepEq __deepEqDispatch_lazy __deepEqDispatch __deepEqDispatch_else __deepEqDispatch_else_then_else __deepEqDispatch_else_else __deepEqDispatch_else_else_then_else __deepEqDispatch_else_else_else __deepEqDispatch_else_else_else_else __deepEqDispatch_else_else_else_else_else __deepEqDispatch_else_else_else_else_else_else __deepEqMixed_lazy __deepEqMixed __deepEqMixed_then_then_else __deepEqMixed_then_else __deepEqMixed_else __deepEqStr_lazy __deepEqStr __deepEqStrLen_lazy __deepEqStrLen __deepEqStrLen_else __deepEqStrChars_lazy __deepEqStrChars __deepEqStrChars_else __deepEqStrCharsStep_lazy __deepEqStrCharsStep __deepEqStrCharsStep_else __deepEqConstr_lazy __deepEqConstr __deepEqConstrCheck_lazy __deepEqConstrCheck __deepEqConstrCheck_else __deepEqConstrFields_lazy __deepEqConstrFields __deepEqConstrFields_else __deepEqConstrFieldsStep_lazy __deepEqConstrFieldsStep __deepEqConstrFieldsStep_else __deepNeq_lazy __deepNeq __deepNeq_else nbItemsT_1_lazy nbItemsT_1 nbRender_1_lazy nbRender_1 nbRenderAdt_1_lazy nbRenderAdt_1 nbRenderHook_1_lazy nbRenderHook_1 nbRenderHook_2_lazy nbRenderHook_2 nbRenderChecked_1_lazy nbRenderChecked_1 nbRows_1_lazy nbRows_1 nbCellText_1_lazy nbCellText_1 nbShowAdt_1_lazy nbShowAdt_1 nbShowAdt_2_lazy nbShowAdt_2 nbShowHook_1_lazy nbShowHook_1 nbShowGeneric_1_lazy nbShowGeneric_1 nbShowGeneric_2_lazy nbShowGeneric_2 nbFields_1_lazy nbFields_1 nbFields_2_lazy nbFields_2 nbItems_1_lazy nbItems_1 __rangeGo_1_lazy __rangeGo_1 __rangeStepGoOpen_1_lazy __rangeStepGoOpen_1 __deepEqConstr_1_lazy __deepEqConstr_1 __deepEqConstr_2_lazy __deepEqConstr_2 __deepEqConstrFieldsStep_1_lazy __deepEqConstrFieldsStep_1 __deepEqConstrFieldsStep_2_lazy __deepEqConstrFieldsStep_2 strEqual strEqual_lazy strEqualAt strEqualAt_lazy list2str list2str_lazy strcat strcat_lazy itoa itoa_lazy TYPE_STRING TYPE_STRING_lazy TYPE_FUNC TYPE_FUNC_lazy showVal showVal_lazy isTupleName isTupleName_lazy displayConName displayConName_lazy getConstrArity getConstrArity_lazy showBoolVal showBoolVal_lazy isListTy isListTy_lazy listElemTy listElemTy_lazy display__graphicsText display__graphicsText_lazy #
+            call 103                                 || start
+            print 4
+            stop
+0           jmp 1                                    || nbCell || nbCell_lazy
+1           load 0                                   || nbCell
+            push "@@begin "
+            call 21                                  || nbMark
+            pop
+            load 1
+            call 27                                  || nbRender
+            pop
+            load 0
+            push "@@end "
+            tailcall 2 21                            || nbMark
+2           jmp 3                                    || nbCellT || nbCellT_lazy
+3           load 0                                   || nbCellT
+            push "@@begin "
+            call 21                                  || nbMark
+            pop
+            load 2
+            load 1
+            call 5                                   || nbValueT
+            pop
+            load 0
+            push "@@end "
+            tailcall 3 21                            || nbMark
+4           jmp 5                                    || nbValueT || nbValueT_lazy
+5           push "@@value"                           || nbValueT
+            syscall 3
+            pop
+            call 23                                  || nbNl
+            pop
+            load 1
+            load 0
+            push 40
+            call 7                                   || nbShowT
+            syscall 3
+            pop
+            tailcall 2 23                            || nbNl
+6           load 0                                   || nbShowT_lazy
+            eval
+            store 0
+7           load 0                                   || nbShowT
+            ifneq 8                                  || nbShowT_else
+            push "..."
+            return 3
+8           push "Bool"                              || nbShowT_else
+            load 1
+            eval
+            call 199                                 || strEqual
+            ifeq 9                                   || nbShowT_else_else
+            load 2
+            eval
+            tailcall 3 221                           || showBoolVal
+9           load 1                                   || nbShowT_else_else
+            eval
+            call 223                                 || isListTy
+            ifeq 10                                  || nbShowT_else_else_else
+            push "]"
+            load 2
+            eval
+            push 100
+            load 1
+            pushfunc 1 226                           || listElemTy_lazy
+            create 2 3
+            loadadd 0 -1
+            call 12                                  || nbItemsT
+            call 205                                 || strcat
+            push "["
+            tailcall 3 205                           || strcat
+10          load 2                                   || nbShowT_else_else_else
+            load 0
+            tailcall 3 71                            || nbShowD
+11          load 3                                   || nbItemsT_lazy
+            eval
+            store 3
+12          load 3                                   || nbItemsT
+            jmpt 2 13 14                             || lbs
+13          push ""                                  || nbItemsT_Nil
+            return 4
+14          load 4                                   || nbItemsT_Cons
+            eval
+            ifneq 15                                 || nbItemsT_Cons_else
+            push "..."
+            return 6
+15          load 1                                   || nbItemsT_Cons_else
+            eval
+            load 4
+            pushfunc 1 156                           || nbItemsT_1
+            create 2 3
+            load 3
+            load 2
+            call 17                                  || nbMoreT
+            load 0
+            load 3
+            load 2
+            eval
+            call 7                                   || nbShowT
+            tailcall 6 205                           || strcat
+16          load 3                                   || nbMoreT_lazy
+            eval
+            store 3
+17          load 3                                   || nbMoreT
+            jmpt 2 18 19                             || lbs
+18          push ""                                  || nbMoreT_Nil
+            return 4
+19          load 5                                   || nbMoreT_Cons
+            load 4
+            load 3
+            load 2
+            call 12                                  || nbItemsT
+            push ", "
+            tailcall 6 205                           || strcat
+20          jmp 21                                   || nbMark || nbMark_lazy
+21          load 0                                   || nbMark
+            eval
+            syscall 3
+            pop
+            load 1
+            eval
+            call 207                                 || itoa
+            call 203                                 || list2str
+            syscall 3
+            pop
+            push 10
+            push 1
+            syscall 7
+            return 2
+22          jmp 23                                   || nbNl || nbNl_lazy
+23          push 10                                  || nbNl
+            push 1
+            syscall 7
+            return 0
+24          jmp 25                                   || nbTab || nbTab_lazy
+25          push 9                                   || nbTab
+            push 1
+            syscall 7
+            return 0
+26          jmp 27                                   || nbRender || nbRender_lazy
+27          load 0                                   || nbRender
+            eval
+            gettypeid
+            call 211                                 || TYPE_FUNC
+            sub
+            ifle 28                                  || nbRender_else
+            load 0
+            pushfunc 1 158                           || nbRender_1
+            create 2 3
+            load 0
+            tailcall 1 30                            || nbRenderAdt
+28          load 0                                   || nbRender_else
+            tailcall 1 67                            || nbValue
+29          jmp 30                                   || nbRenderAdt || nbRenderAdt_lazy
+30          load 1                                   || nbRenderAdt
+            call 42                                  || nbIsDisplayName
+            ifeq 31                                  || nbRenderAdt_else
+            load 0
+            eval
+            tailcall 2 45                            || nbDisplay
+31          load 1                                   || nbRenderAdt_else
+            pushfunc 1 160                           || nbRenderAdt_1
+            create 2 3
+            load 0
+            tailcall 2 33                            || nbRenderHook
+32          jmp 33                                   || nbRenderHook || nbRenderHook_lazy
+33          pushfunc 0 211                           || TYPE_FUNC || nbRenderHook
+            create 1 3
+            load 1
+            pushfunc 1 162                           || nbRenderHook_1
+            create 2 3
+            call 114                                 || __deepEq
+            ifeq 34                                  || nbRenderHook_else
+            load 0
+            load 1
+            pushfunc 2 164                           || nbRenderHook_2
+            create 3 3
+            load 0
+            tailcall 2 36                            || nbRenderChecked
+34          load 0                                   || nbRenderHook_else
+            tailcall 2 67                            || nbValue
+35          jmp 36                                   || nbRenderChecked || nbRenderChecked_lazy
+36          load 1                                   || nbRenderChecked
+            eval
+            gettypeid
+            call 211                                 || TYPE_FUNC
+            sub
+            ifle 37                                  || nbRenderChecked_else
+            load 1
+            pushfunc 1 166                           || nbRenderChecked_1
+            create 2 3
+            load 1
+            load 0
+            tailcall 2 39                            || nbRenderCheckedName
+37          load 0                                   || nbRenderChecked_else
+            tailcall 2 67                            || nbValue
+38          jmp 39                                   || nbRenderCheckedName || nbRenderCheckedName_lazy
+39          load 2                                   || nbRenderCheckedName
+            call 42                                  || nbIsDisplayName
+            ifeq 40                                  || nbRenderCheckedName_else
+            load 1
+            eval
+            tailcall 3 45                            || nbDisplay
+40          load 0                                   || nbRenderCheckedName_else
+            tailcall 3 67                            || nbValue
+41          jmp 42                                   || nbIsDisplayName || nbIsDisplayName_lazy
+42          load 0                                   || nbIsDisplayName
+            eval
+            strop 2
+            push 9
+            sub
+            ifle 43                                  || nbIsDisplayName_else
+            load 0
+            eval
+            push "Display__"
+            push 0
+            tailcall 1 201                           || strEqualAt
+43          return_const 1 0                         || nbIsDisplayName_else
+44          load 0                                   || nbDisplay_lazy
+            eval
+            store 0
+45          load 0                                   || nbDisplay
+            jmpt 4 46 47 48 49                       || lbs
+46          push "@@text"                            || nbDisplay_Display__DText
+            syscall 3
+            pop
+            call 23                                  || nbNl
+            pop
+            load 0
+            syscall 3
+            pop
+            tailcall 2 23                            || nbNl
+47          push "@@table"                           || nbDisplay_Display__DTable
+            syscall 3
+            pop
+            call 23                                  || nbNl
+            pop
+            load 0
+            call 56                                  || nbRow
+            pop
+            load 1
+            push 500
+            tailcall 3 51                            || nbRows
+48          push "@@markdown"                        || nbDisplay_Display__DMarkdown
+            syscall 3
+            pop
+            call 23                                  || nbNl
+            pop
+            load 0
+            syscall 3
+            pop
+            tailcall 2 23                            || nbNl
+49          push "@@graphics"                        || nbDisplay_Display__DGraphics
+            syscall 3
+            pop
+            call 23                                  || nbNl
+            pop
+            load 0
+            call 227                                 || display__graphicsText
+            syscall 3
+            pop
+            tailcall 2 23                            || nbNl
+50          load 1                                   || nbRows_lazy
+            eval
+            store 1
+51          load 1                                   || nbRows
+            jmpt 2 52 53                             || lbs
+52          return_const 2 0                         || nbRows_Nil
+53          load 2                                   || nbRows_Cons
+            eval
+            ifneq 54                                 || nbRows_Cons_else
+            push "..."
+            syscall 3
+            pop
+            tailcall 4 23                            || nbNl
+54          load 0                                   || nbRows_Cons_else
+            call 56                                  || nbRow
+            pop
+            load 1
+            eval
+            load 2
+            pushfunc 1 168                           || nbRows_1
+            create 2 3
+            tailcall 4 51                            || nbRows
+55          load 0                                   || nbRow_lazy
+            eval
+            store 0
+56          load 0                                   || nbRow
+            jmpt 2 57 58                             || lbs
+57          tailcall 1 23                            || nbNl || nbRow_Nil
+58          load 0                                   || nbRow_Cons
+            call 64                                  || nbCellText
+            syscall 3
+            pop
+            load 1
+            eval
+            tailcall 3 60                            || nbRowRest
+59          load 0                                   || nbRowRest_lazy
+            eval
+            store 0
+60          load 0                                   || nbRowRest
+            jmpt 2 61 62                             || lbs
+61          tailcall 1 23                            || nbNl || nbRowRest_Nil
+62          call 25                                  || nbTab || nbRowRest_Cons
+            pop
+            load 0
+            call 64                                  || nbCellText
+            syscall 3
+            pop
+            load 1
+            eval
+            tailcall 3 60                            || nbRowRest
+63          jmp 64                                   || nbCellText || nbCellText_lazy
+64          pushfunc 0 209                           || TYPE_STRING || nbCellText
+            create 1 3
+            load 0
+            pushfunc 1 170                           || nbCellText_1
+            create 2 3
+            call 114                                 || __deepEq
+            ifeq 65                                  || nbCellText_else
+            load 0
+            eval
+            return 1
+65          load 0                                   || nbCellText_else
+            tailcall 1 69                            || nbShow
+66          jmp 67                                   || nbValue || nbValue_lazy
+67          push "@@value"                           || nbValue
+            syscall 3
+            pop
+            call 23                                  || nbNl
+            pop
+            load 0
+            call 69                                  || nbShow
+            syscall 3
+            pop
+            tailcall 1 23                            || nbNl
+68          jmp 69                                   || nbShow || nbShow_lazy
+69          load 0                                   || nbShow
+            push 40
+            tailcall 1 71                            || nbShowD
+70          jmp 71                                   || nbShowD || nbShowD_lazy
+71          push 0                                   || nbShowD
+            load 0
+            call 114                                 || __deepEq
+            ifeq 72                                  || nbShowD_else
+            push "..."
+            return 2
+72          load 1                                   || nbShowD_else
+            eval
+            gettypeid
+            load 1
+            load 0
+            tailcall 2 74                            || nbShowTid
+73          load 2                                   || nbShowTid_lazy
+            eval
+            store 2
+74          load 2                                   || nbShowTid
+            call 211                                 || TYPE_FUNC
+            sub
+            ifle 75                                  || nbShowTid_else
+            load 1
+            eval
+            getconstrname
+            load 1
+            load 0
+            tailcall 3 77                            || nbShowAdt
+75          load 1                                   || nbShowTid_else
+            eval
+            tailcall 3 213                           || showVal
+76          load 2                                   || nbShowAdt_lazy
+            eval
+            store 2
+77          push "Cons"                              || nbShowAdt
+            load 2
+            call 199                                 || strEqual
+            ifeq 78                                  || nbShowAdt_else
+            push "]"
+            load 1
+            eval
+            push 100
+            load 0
+            pushfunc 1 172                           || nbShowAdt_1
+            create 2 3
+            call 92                                  || nbItems
+            call 205                                 || strcat
+            push "["
+            tailcall 3 205                           || strcat
+78          push "Nil"                               || nbShowAdt_else
+            load 2
+            call 199                                 || strEqual
+            ifeq 79                                  || nbShowAdt_else_else
+            push "[]"
+            return 3
+79          load 2                                   || nbShowAdt_else_else
+            pushfunc 1 174                           || nbShowAdt_2
+            create 2 3
+            load 2
+            load 1
+            load 0
+            tailcall 3 81                            || nbShowHook
+80          jmp 81                                   || nbShowHook || nbShowHook_lazy
+81          pushfunc 0 211                           || TYPE_FUNC || nbShowHook
+            create 1 3
+            load 3
+            pushfunc 1 176                           || nbShowHook_1
+            create 2 3
+            call 114                                 || __deepEq
+            ifeq 82                                  || nbShowHook_else
+            load 3
+            eval
+            ccreatet 0 11 5 0
+            load 1
+            eval
+            ccreatet 2 11 5 1
+            applydynamic
+            return 4
+82          load 1                                   || nbShowHook_else
+            pushfunc 1 220                           || getConstrArity_lazy
+            create 2 3
+            load 2
+            eval
+            load 1
+            load 0
+            tailcall 4 84                            || nbShowGeneric
+83          load 2                                   || nbShowGeneric_lazy
+            eval
+            store 2
+84          load 2                                   || nbShowGeneric
+            call 215                                 || isTupleName
+            ifeq 85                                  || nbShowGeneric_else
+            push ")"
+            load 3
+            eval
+            push 0
+            load 1
+            load 0
+            pushfunc 1 178                           || nbShowGeneric_1
+            create 2 3
+            call 88                                  || nbFields
+            call 205                                 || strcat
+            push "("
+            tailcall 4 205                           || strcat
+85          push 0                                   || nbShowGeneric_else
+            load 3
+            call 114                                 || __deepEq
+            ifeq 86                                  || nbShowGeneric_else_else
+            load 2
+            tailcall 4 217                           || displayConName
+86          push ")"                                 || nbShowGeneric_else_else
+            load 3
+            eval
+            push 0
+            load 1
+            load 0
+            pushfunc 1 180                           || nbShowGeneric_2
+            create 2 3
+            call 88                                  || nbFields
+            call 205                                 || strcat
+            push "("
+            call 205                                 || strcat
+            load 2
+            call 217                                 || displayConName
+            tailcall 4 205                           || strcat
+87          load 2                                   || nbFields_lazy
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+88          load 2                                   || nbFields
+            load 3
+            sub
+            iflt 89                                  || nbFields_else
+            push ""
+            return 4
+89          load 2                                   || nbFields_else
+            loadadd 3 -1
+            sub
+            ifneq 90                                 || nbFields_else_else
+            load 2
+            load 1
+            pushfunc 2 182                           || nbFields_1
+            create 3 3
+            load 0
+            tailcall 4 71                            || nbShowD
+90          load 3                                   || nbFields_else_else
+            loadadd 2 1
+            load 1
+            load 0
+            call 88                                  || nbFields
+            push ", "
+            call 205                                 || strcat
+            load 2
+            load 1
+            pushfunc 2 184                           || nbFields_2
+            create 3 3
+            load 0
+            call 71                                  || nbShowD
+            tailcall 4 205                           || strcat
+91          load 2                                   || nbItems_lazy
+            eval
+            store 2
+92          load 2                                   || nbItems
+            jmpt 2 93 94                             || lbs
+93          push ""                                  || nbItems_Nil
+            return 3
+94          load 3                                   || nbItems_Cons
+            eval
+            ifneq 95                                 || nbItems_Cons_else
+            push "..."
+            return 5
+95          load 1                                   || nbItems_Cons_else
+            eval
+            load 3
+            pushfunc 1 186                           || nbItems_1
+            create 2 3
+            load 2
+            call 97                                  || nbMore
+            load 0
+            load 2
+            call 71                                  || nbShowD
+            tailcall 5 205                           || strcat
+96          load 2                                   || nbMore_lazy
+            eval
+            store 2
+97          load 2                                   || nbMore
+            jmpt 2 98 99                             || lbs
+98          push ""                                  || nbMore_Nil
+            return 3
+99          load 4                                   || nbMore_Cons
+            load 3
+            load 2
+            call 92                                  || nbItems
+            push ", "
+            tailcall 5 205                           || strcat
+100         jmp 101                                  || nbFailed || nbFailed_lazy
+101         load 0                                   || nbFailed
+            eval
+            syscall 3
+            pop
+            push 10
+            push 1
+            syscall 7
+            pop
+            return_const 1 0
+102         jmp 103                                  || start || start_lazy
+103         return_const 0 0                         || start
+104         load 0                                   || __rangeStepGo_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+            load 2
+            eval
+            store 2
+105         loadadd 1 0                              || __rangeStepGo
+            iflt 107                                 || __rangeStepGo_else
+            load 0
+            load 2
+            sub
+            ifle 106                                 || __rangeStepGo_then_else
+            ccreatet 0 11 5 0
+            return 3
+106         load 2                                   || __rangeStepGo_then_else
+            load 1
+            load 0
+            load 1
+            add
+            pushfunc 3 105                           || __rangeStepGo
+            create 4 3
+            load 0
+            ccreatet 2 11 5 1
+            return 3
+107         load 2                                   || __rangeStepGo_else
+            load 0
+            sub
+            ifle 108                                 || __rangeStepGo_else_else
+            ccreatet 0 11 5 0
+            return 3
+108         load 2                                   || __rangeStepGo_else_else
+            load 1
+            load 0
+            load 1
+            add
+            pushfunc 3 105                           || __rangeStepGo
+            create 4 3
+            load 0
+            ccreatet 2 11 5 1
+            return 3
+109         jmp 110                                  || __rangeGo || __rangeGo_lazy
+110         load 0                                   || __rangeGo
+            pushfunc 1 188                           || __rangeGo_1
+            create 2 3
+            pushfunc 1 110                           || __rangeGo
+            create 2 3
+            load 0
+            eval
+            ccreatet 2 11 5 1
+            return 1
+111         jmp 112                                  || __rangeStepGoOpen || __rangeStepGoOpen_lazy
+112         load 1                                   || __rangeStepGoOpen
+            dup
+            load 0
+            pushfunc 2 190                           || __rangeStepGoOpen_1
+            create 3 3
+            pushfunc 2 112                           || __rangeStepGoOpen
+            create 3 3
+            load 0
+            eval
+            ccreatet 2 11 5 1
+            return 2
+113         jmp 114                                  || __deepEq || __deepEq_lazy
+114         load 1                                   || __deepEq
+            load 0
+            load 1
+            eval
+            gettypeid
+            load 0
+            eval
+            gettypeid
+            tailcall 2 116                           || __deepEqDispatch
+115         load 0                                   || __deepEqDispatch_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+116         load 0                                   || __deepEqDispatch
+            load 1
+            ifcmp 117                                || __deepEqDispatch_else
+            load 3
+            load 2
+            load 1
+            load 0
+            tailcall 4 126                           || __deepEqMixed
+117         loadadd 0 -1                             || __deepEqDispatch_else
+            ifneq 119                                || __deepEqDispatch_else_else
+            load 2
+            eval
+            load 3
+            eval
+            sub
+            ifneq 118                                || __deepEqDispatch_else_then_else
+            return_const 4 1
+118         return_const 4 0                         || __deepEqDispatch_else_then_else
+119         loadadd 0 -2                             || __deepEqDispatch_else_else
+            ifneq 121                                || __deepEqDispatch_else_else_else
+            load 2
+            eval
+            load 3
+            eval
+            sub
+            ifneq 120                                || __deepEqDispatch_else_else_then_else
+            return_const 4 1
+120         return_const 4 0                         || __deepEqDispatch_else_else_then_else
+121         loadadd 0 -3                             || __deepEqDispatch_else_else_else
+            ifneq 122                                || __deepEqDispatch_else_else_else_else
+            load 3
+            load 2
+            tailcall 4 131                           || __deepEqStr
+122         loadadd 0 -4                             || __deepEqDispatch_else_else_else_else
+            ifle 123                                 || __deepEqDispatch_else_else_else_else_else
+            load 3
+            load 2
+            tailcall 4 142                           || __deepEqConstr
+123         load 2                                   || __deepEqDispatch_else_else_else_else_else
+            eval
+            load 3
+            eval
+            sub
+            ifneq 124                                || __deepEqDispatch_else_else_else_else_else_else
+            return_const 4 1
+124         return_const 4 0                         || __deepEqDispatch_else_else_else_else_else_else
+125         load 0                                   || __deepEqMixed_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+126         load 0                                   || __deepEqMixed
+            load 1
+            add
+            ifneq 129                                || __deepEqMixed_else
+            load 0
+            load 1
+            mult
+            push 0
+            dec
+            sub
+            ifneq 128                                || __deepEqMixed_then_else
+            load 2
+            eval
+            load 3
+            eval
+            sub
+            ifneq 127                                || __deepEqMixed_then_then_else
+            return_const 4 1
+127         return_const 4 0                         || __deepEqMixed_then_then_else
+128         return_const 4 0                         || __deepEqMixed_then_else
+129         return_const 4 0                         || __deepEqMixed_else
+130         jmp 131                                  || __deepEqStr || __deepEqStr_lazy
+131         load 1                                   || __deepEqStr
+            load 0
+            load 1
+            eval
+            strop 2
+            load 0
+            eval
+            strop 2
+            tailcall 2 133                           || __deepEqStrLen
+132         load 0                                   || __deepEqStrLen_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+133         load 0                                   || __deepEqStrLen
+            load 1
+            ifcmp 134                                || __deepEqStrLen_else
+            return_const 4 0
+134         load 0                                   || __deepEqStrLen_else
+            push 0
+            load 3
+            load 2
+            tailcall 4 136                           || __deepEqStrChars
+135         load 2                                   || __deepEqStrChars_lazy
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+136         load 2                                   || __deepEqStrChars
+            load 3
+            sub
+            ifneq 137                                || __deepEqStrChars_else
+            return_const 4 1
+137         load 3                                   || __deepEqStrChars_else
+            load 2
+            load 1
+            load 0
+            tailcall 4 139                           || __deepEqStrCharsStep
+138         jmp 139                                  || __deepEqStrCharsStep || __deepEqStrCharsStep_lazy
+139         load 0                                   || __deepEqStrCharsStep
+            eval
+            load 2
+            eval
+            strop 4
+            load 1
+            eval
+            load 2
+            eval
+            strop 4
+            ifcmp 140                                || __deepEqStrCharsStep_else
+            return_const 4 0
+140         load 3                                   || __deepEqStrCharsStep_else
+            eval
+            load 2
+            eval
+            inc
+            load 1
+            load 0
+            tailcall 4 136                           || __deepEqStrChars
+141         jmp 142                                  || __deepEqConstr || __deepEqConstr_lazy
+142         load 1                                   || __deepEqConstr
+            load 0
+            load 1
+            pushfunc 1 194                           || __deepEqConstr_2
+            create 2 3
+            load 0
+            pushfunc 1 192                           || __deepEqConstr_1
+            create 2 3
+            tailcall 2 144                           || __deepEqConstrCheck
+143         jmp 144                                  || __deepEqConstrCheck || __deepEqConstrCheck_lazy
+144         load 1                                   || __deepEqConstrCheck
+            load 0
+            call 131                                 || __deepEqStr
+            ifneq 145                                || __deepEqConstrCheck_else
+            return_const 4 0
+145         load 0                                   || __deepEqConstrCheck_else
+            eval
+            lookup
+            getfuncarity
+            push 0
+            load 3
+            load 2
+            tailcall 4 147                           || __deepEqConstrFields
+146         load 2                                   || __deepEqConstrFields_lazy
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+147         load 2                                   || __deepEqConstrFields
+            load 3
+            sub
+            ifneq 148                                || __deepEqConstrFields_else
+            return_const 4 1
+148         load 3                                   || __deepEqConstrFields_else
+            load 2
+            load 1
+            load 0
+            tailcall 4 150                           || __deepEqConstrFieldsStep
+149         jmp 150                                  || __deepEqConstrFieldsStep || __deepEqConstrFieldsStep_lazy
+150         load 2                                   || __deepEqConstrFieldsStep
+            load 1
+            pushfunc 2 198                           || __deepEqConstrFieldsStep_2
+            create 3 3
+            load 2
+            load 0
+            pushfunc 2 196                           || __deepEqConstrFieldsStep_1
+            create 3 3
+            call 114                                 || __deepEq
+            ifneq 151                                || __deepEqConstrFieldsStep_else
+            return_const 4 0
+151         load 3                                   || __deepEqConstrFieldsStep_else
+            eval
+            load 2
+            eval
+            inc
+            load 1
+            load 0
+            tailcall 4 147                           || __deepEqConstrFields
+152         jmp 153                                  || __deepNeq || __deepNeq_lazy
+153         load 1                                   || __deepNeq
+            load 0
+            call 114                                 || __deepEq
+            dec
+            ifneq 154                                || __deepNeq_else
+            return_const 2 0
+154         return_const 2 1                         || __deepNeq_else
+155         jmp 156                                  || nbItemsT_1 || nbItemsT_1_lazy
+156         load 0                                   || nbItemsT_1
+            eval
+            dec
+            return 1
+157         jmp 158                                  || nbRender_1 || nbRender_1_lazy
+158         load 0                                   || nbRender_1
+            eval
+            getconstrname
+            return 1
+159         jmp 160                                  || nbRenderAdt_1 || nbRenderAdt_1_lazy
+160         load 0                                   || nbRenderAdt_1
+            eval
+            push "render_"
+            call 205                                 || strcat
+            lookup
+            return 1
+161         jmp 162                                  || nbRenderHook_1 || nbRenderHook_1_lazy
+162         load 0                                   || nbRenderHook_1
+            eval
+            gettypeid
+            return 1
+163         jmp 164                                  || nbRenderHook_2 || nbRenderHook_2_lazy
+164         load 0                                   || nbRenderHook_2
+            eval
+            ccreatet 0 11 5 0
+            load 1
+            eval
+            ccreatet 2 11 5 1
+            applydynamic
+            return 2
+165         jmp 166                                  || nbRenderChecked_1 || nbRenderChecked_1_lazy
+166         load 0                                   || nbRenderChecked_1
+            eval
+            getconstrname
+            return 1
+167         jmp 168                                  || nbRows_1 || nbRows_1_lazy
+168         load 0                                   || nbRows_1
+            eval
+            dec
+            return 1
+169         jmp 170                                  || nbCellText_1 || nbCellText_1_lazy
+170         load 0                                   || nbCellText_1
+            eval
+            gettypeid
+            return 1
+171         jmp 172                                  || nbShowAdt_1 || nbShowAdt_1_lazy
+172         load 0                                   || nbShowAdt_1
+            eval
+            dec
+            return 1
+173         jmp 174                                  || nbShowAdt_2 || nbShowAdt_2_lazy
+174         load 0                                   || nbShowAdt_2
+            eval
+            push "show_"
+            call 205                                 || strcat
+            lookup
+            return 1
+175         jmp 176                                  || nbShowHook_1 || nbShowHook_1_lazy
+176         load 0                                   || nbShowHook_1
+            eval
+            gettypeid
+            return 1
+177         jmp 178                                  || nbShowGeneric_1 || nbShowGeneric_1_lazy
+178         load 0                                   || nbShowGeneric_1
+            eval
+            dec
+            return 1
+179         jmp 180                                  || nbShowGeneric_2 || nbShowGeneric_2_lazy
+180         load 0                                   || nbShowGeneric_2
+            eval
+            dec
+            return 1
+181         jmp 182                                  || nbFields_1 || nbFields_1_lazy
+182         load 0                                   || nbFields_1
+            eval
+            load 1
+            eval
+            getfield
+            eval
+            return 2
+183         jmp 184                                  || nbFields_2 || nbFields_2_lazy
+184         load 0                                   || nbFields_2
+            eval
+            load 1
+            eval
+            getfield
+            eval
+            return 2
+185         jmp 186                                  || nbItems_1 || nbItems_1_lazy
+186         load 0                                   || nbItems_1
+            eval
+            dec
+            return 1
+187         jmp 188                                  || __rangeGo_1 || __rangeGo_1_lazy
+188         load 0                                   || __rangeGo_1
+            eval
+            inc
+            return 1
+189         jmp 190                                  || __rangeStepGoOpen_1 || __rangeStepGoOpen_1_lazy
+190         load 0                                   || __rangeStepGoOpen_1
+            eval
+            load 1
+            eval
+            add
+            return 2
+191         jmp 192                                  || __deepEqConstr_1 || __deepEqConstr_1_lazy
+192         load 0                                   || __deepEqConstr_1
+            eval
+            getconstrname
+            return 1
+193         jmp 194                                  || __deepEqConstr_2 || __deepEqConstr_2_lazy
+194         load 0                                   || __deepEqConstr_2
+            eval
+            getconstrname
+            return 1
+195         jmp 196                                  || __deepEqConstrFieldsStep_1 || __deepEqConstrFieldsStep_1_lazy
+196         load 0                                   || __deepEqConstrFieldsStep_1
+            eval
+            load 1
+            eval
+            getfield
+            eval
+            return 2
+197         jmp 198                                  || __deepEqConstrFieldsStep_2 || __deepEqConstrFieldsStep_2_lazy
+198         load 0                                   || __deepEqConstrFieldsStep_2
+            eval
+            load 1
+            eval
+            getfield
+            eval
+            return 2
+
+.metadata
+types 7
+type 5 list 2
+  constr 0 Nil 0
+  constr 1 Cons 2
+type 6 __Char 1
+  constr 0 __Char 1
+type 7 Graphics__Point 1
+  constr 0 Graphics__Pt 2
+type 8 Graphics__MenuCat 1
+  constr 0 Graphics__MenuCat 2
+type 9 Graphics__Graphics 9
+  constr 0 Graphics__GraphText 3
+  constr 1 Graphics__GraphPolyLine 2
+  constr 2 Graphics__GraphPolygon 2
+  constr 3 Graphics__GraphRectangle 3
+  constr 4 Graphics__GraphEllipse 3
+  constr 5 Graphics__GraphDisc 3
+  constr 6 Graphics__GraphClear 0
+  constr 7 Graphics__GraphMenu 1
+  constr 8 Graphics__GraphPrompt 2
+type 10 Graphics__Event 9
+  constr 0 Graphics__KeyIn 1
+  constr 1 Graphics__MouseDown 1
+  constr 2 Graphics__MouseUp 1
+  constr 3 Graphics__MouseDragged 1
+  constr 4 Graphics__MouseDoubleClick 1
+  constr 5 Graphics__MenuItem 2
+  constr 6 Graphics__PText 1
+  constr 7 Graphics__OpenFile 1
+  constr 8 Graphics__NoInput 0
+type 11 Display__Display 4
+  constr 0 Display__DText 1
+  constr 1 Display__DTable 2
+  constr 2 Display__DMarkdown 1
+  constr 3 Display__DGraphics 1
+functions 138
+  func 1 nbCell 2 000
+  func 0 nbCell 2 000
+  func 3 nbCellT 3 0000
+  func 2 nbCellT 3 0000
+  func 5 nbValueT 2 000
+  func 4 nbValueT 2 000
+  func 7 nbShowT 3 1000
+  func 6 nbShowT 3 1000
+  func 12 nbItemsT 4 00010
+  func 11 nbItemsT 4 00010
+  func 17 nbMoreT 4 00010
+  func 16 nbMoreT 4 00010
+  func 21 nbMark 2 000
+  func 20 nbMark 2 000
+  func 23 nbNl 0 0
+  func 22 nbNl 0 0
+  func 25 nbTab 0 0
+  func 24 nbTab 0 0
+  func 27 nbRender 1 00
+  func 26 nbRender 1 00
+  func 30 nbRenderAdt 2 000
+  func 29 nbRenderAdt 2 000
+  func 33 nbRenderHook 2 000
+  func 32 nbRenderHook 2 000
+  func 36 nbRenderChecked 2 000
+  func 35 nbRenderChecked 2 000
+  func 39 nbRenderCheckedName 3 0000
+  func 38 nbRenderCheckedName 3 0000
+  func 42 nbIsDisplayName 1 00
+  func 41 nbIsDisplayName 1 00
+  func 45 nbDisplay 1 10
+  func 44 nbDisplay 1 10
+  func 51 nbRows 2 010
+  func 50 nbRows 2 010
+  func 56 nbRow 1 10
+  func 55 nbRow 1 10
+  func 60 nbRowRest 1 10
+  func 59 nbRowRest 1 10
+  func 64 nbCellText 1 00
+  func 63 nbCellText 1 00
+  func 67 nbValue 1 00
+  func 66 nbValue 1 00
+  func 69 nbShow 1 00
+  func 68 nbShow 1 00
+  func 71 nbShowD 2 000
+  func 70 nbShowD 2 000
+  func 74 nbShowTid 3 0010
+  func 73 nbShowTid 3 0010
+  func 77 nbShowAdt 3 0010
+  func 76 nbShowAdt 3 0010
+  func 81 nbShowHook 4 00000
+  func 80 nbShowHook 4 00000
+  func 84 nbShowGeneric 4 00100
+  func 83 nbShowGeneric 4 00100
+  func 88 nbFields 4 00110
+  func 87 nbFields 4 00110
+  func 92 nbItems 3 0010
+  func 91 nbItems 3 0010
+  func 97 nbMore 3 0010
+  func 96 nbMore 3 0010
+  func 101 nbFailed 1 00
+  func 100 nbFailed 1 00
+  func 103 start 0 0
+  func 102 start 0 0
+  func 105 __rangeStepGo 3 1110
+  func 104 __rangeStepGo 3 1110
+  func 110 __rangeGo 1 00
+  func 109 __rangeGo 1 00
+  func 112 __rangeStepGoOpen 2 000
+  func 111 __rangeStepGoOpen 2 000
+  func 114 __deepEq 2 000
+  func 113 __deepEq 2 000
+  func 116 __deepEqDispatch 4 11000
+  func 115 __deepEqDispatch 4 11000
+  func 126 __deepEqMixed 4 11000
+  func 125 __deepEqMixed 4 11000
+  func 131 __deepEqStr 2 000
+  func 130 __deepEqStr 2 000
+  func 133 __deepEqStrLen 4 11000
+  func 132 __deepEqStrLen 4 11000
+  func 136 __deepEqStrChars 4 00110
+  func 135 __deepEqStrChars 4 00110
+  func 139 __deepEqStrCharsStep 4 00000
+  func 138 __deepEqStrCharsStep 4 00000
+  func 142 __deepEqConstr 2 000
+  func 141 __deepEqConstr 2 000
+  func 144 __deepEqConstrCheck 4 00000
+  func 143 __deepEqConstrCheck 4 00000
+  func 147 __deepEqConstrFields 4 00110
+  func 146 __deepEqConstrFields 4 00110
+  func 150 __deepEqConstrFieldsStep 4 00000
+  func 149 __deepEqConstrFieldsStep 4 00000
+  func 153 __deepNeq 2 000
+  func 152 __deepNeq 2 000
+  func 156 nbItemsT_1 1 00
+  func 155 nbItemsT_1 1 00
+  func 158 nbRender_1 1 00
+  func 157 nbRender_1 1 00
+  func 160 nbRenderAdt_1 1 00
+  func 159 nbRenderAdt_1 1 00
+  func 162 nbRenderHook_1 1 00
+  func 161 nbRenderHook_1 1 00
+  func 164 nbRenderHook_2 2 000
+  func 163 nbRenderHook_2 2 000
+  func 166 nbRenderChecked_1 1 00
+  func 165 nbRenderChecked_1 1 00
+  func 168 nbRows_1 1 00
+  func 167 nbRows_1 1 00
+  func 170 nbCellText_1 1 00
+  func 169 nbCellText_1 1 00
+  func 172 nbShowAdt_1 1 00
+  func 171 nbShowAdt_1 1 00
+  func 174 nbShowAdt_2 1 00
+  func 173 nbShowAdt_2 1 00
+  func 176 nbShowHook_1 1 00
+  func 175 nbShowHook_1 1 00
+  func 178 nbShowGeneric_1 1 00
+  func 177 nbShowGeneric_1 1 00
+  func 180 nbShowGeneric_2 1 00
+  func 179 nbShowGeneric_2 1 00
+  func 182 nbFields_1 2 000
+  func 181 nbFields_1 2 000
+  func 184 nbFields_2 2 000
+  func 183 nbFields_2 2 000
+  func 186 nbItems_1 1 00
+  func 185 nbItems_1 1 00
+  func 188 __rangeGo_1 1 00
+  func 187 __rangeGo_1 1 00
+  func 190 __rangeStepGoOpen_1 2 000
+  func 189 __rangeStepGoOpen_1 2 000
+  func 192 __deepEqConstr_1 1 00
+  func 191 __deepEqConstr_1 1 00
+  func 194 __deepEqConstr_2 1 00
+  func 193 __deepEqConstr_2 1 00
+  func 196 __deepEqConstrFieldsStep_1 2 000
+  func 195 __deepEqConstrFieldsStep_1 2 000
+  func 198 __deepEqConstrFieldsStep_2 2 000
+  func 197 __deepEqConstrFieldsStep_2 2 000
+.endmetadata

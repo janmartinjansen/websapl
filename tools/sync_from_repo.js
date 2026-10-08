@@ -168,6 +168,12 @@ const ENTRIES = [
   // wasm_compiler/build_websapl_test.sh en staat hier dus niet.
   { src: "wasm_compiler/host.js", dst: "wasm_test/host.js" },
 ];
+// De vooraf gebouwde stukken van de REPL in Sapl (repl_sapl/build/modules/,
+// build_mini_repl.sh): de hele map, zodat een nieuw stuk vanzelf meegaat.
+for (const f of fs.readdirSync(path.join(REPO, "repl_sapl/build/modules")).sort()) {
+  ENTRIES.push({ src: "repl_sapl/build/modules/" + f, dst: "repl_sapl/build/modules/" + f });
+}
+
 
 function expected(entry) {
   const buf = fs.readFileSync(path.join(REPO, entry.src));

@@ -1,0 +1,1471 @@
+start_lazy start plot__x0_lazy plot__x0 plot__x1_lazy plot__x1 plot__y0_lazy plot__y0 plot__y1_lazy plot__y1 plot__toF_lazy plot__toF plot__toF_else plot__scale_lazy plot__scale plot__scale_else plot__padLo_lazy plot__padLo plot__padLo_else plot__padHi_lazy plot__padHi plot__padHi_else plot__label_lazy plot__label plot__label_else plot__label_else_else plot__axisColor_lazy plot__axisColor plot__textColor_lazy plot__textColor plot__axes_lazy plot__axes plot__axesY_lazy plot__axesY plot__line_lazy plot__line plot__lineColored_lazy plot__lineColored plot__lineY_lazy plot__lineY plot__scatter_lazy plot__scatter plot__scatterFit_lazy plot__scatterFit plot__fitLine_lazy plot__fitLine plot__fitLine___Tuple2 plot__points_lazy plot__points plot__points_Nil plot__points_Cons plot__points_Cons_Nil plot__points_Cons_Cons plot__dots_lazy plot__dots plot__dot_lazy plot__dot plot__dot_Graphics__Pt plot__bars_lazy plot__bars plot__maxZero_lazy plot__maxZero plot__maxZero_Nil plot__maxZero_Cons plot__maxF_lazy plot__maxF plot__maxF_else plot__barsFrom_lazy plot__barsFrom plot__barsFrom_Nil plot__barsFrom_Cons plot__barAt_lazy plot__barAt plot__histogram_lazy plot__histogram plot__histogramBins_lazy plot__histogramBins plot__binLo_lazy plot__binLo plot__binLo___Tuple2 plot__binCount_lazy plot__binCount plot__binCount___Tuple2 plot__appendL_lazy plot__appendL plot__appendL_Nil plot__appendL_Cons plot__mapL_lazy plot__mapL plot__mapL_Nil plot__mapL_Cons plot__listLen_lazy plot__listLen plot__listLen_Nil plot__listLen_Cons plot__indices_lazy plot__indices plot__indices_Nil plot__indices_Cons plot__headOr_lazy plot__headOr plot__headOr_Nil plot__headOr_Cons plot__tailOr_lazy plot__tailOr plot__tailOr_Nil plot__tailOr_Cons __deepEq_lazy __deepEq __deepEqDispatch_lazy __deepEqDispatch __deepEqDispatch_else __deepEqDispatch_else_then_else __deepEqDispatch_else_else __deepEqDispatch_else_else_then_else __deepEqDispatch_else_else_else __deepEqDispatch_else_else_else_else __deepEqDispatch_else_else_else_else_else __deepEqDispatch_else_else_else_else_else_else __deepEqMixed_lazy __deepEqMixed __deepEqMixed_then_then_else __deepEqMixed_then_else __deepEqMixed_else __deepEqStr_lazy __deepEqStr __deepEqStrLen_lazy __deepEqStrLen __deepEqStrLen_else __deepEqStrChars_lazy __deepEqStrChars __deepEqStrChars_else __deepEqStrCharsStep_lazy __deepEqStrCharsStep __deepEqStrCharsStep_else __deepEqConstr_lazy __deepEqConstr __deepEqConstrCheck_lazy __deepEqConstrCheck __deepEqConstrCheck_else __deepEqConstrFields_lazy __deepEqConstrFields __deepEqConstrFields_else __deepEqConstrFieldsStep_lazy __deepEqConstrFieldsStep __deepEqConstrFieldsStep_else __deepNeq_lazy __deepNeq __deepNeq_else __lam_mlibplotspp_0_lazy __lam_mlibplotspp_0 __pat_mlibplotspp_66_lazy __pat_mlibplotspp_66 __pat_mlibplotspp_52_lazy __pat_mlibplotspp_52 __pat_mlibplotspp_29_lazy __pat_mlibplotspp_29 __pat_mlibplotspp_26_lazy __pat_mlibplotspp_26 __pat_mlibplotspp_22_lazy __pat_mlibplotspp_22 plot__toF_1_lazy plot__toF_1 plot__axes_1_lazy plot__axes_1 plot__axesY_1_lazy plot__axesY_1 plot__axesY_2_lazy plot__axesY_2 plot__axesY_3_lazy plot__axesY_3 plot__axesY_4_lazy plot__axesY_4 plot__fitLine_1_lazy plot__fitLine_1 plot__fitLine_2_lazy plot__fitLine_2 plot__fitLine_3_lazy plot__fitLine_3 __deepEqConstr_1_lazy __deepEqConstr_1 __deepEqConstr_2_lazy __deepEqConstr_2 __deepEqConstrFieldsStep_1_lazy __deepEqConstrFieldsStep_1 __deepEqConstrFieldsStep_2_lazy __deepEqConstrFieldsStep_2 __pat_mlibplotspp_66_1_lazy __pat_mlibplotspp_66_1 __pat_mlibplotspp_66_2_lazy __pat_mlibplotspp_66_2 __pat_mlibplotspp_66_3_lazy __pat_mlibplotspp_66_3 __pat_mlibplotspp_66_4_lazy __pat_mlibplotspp_66_4 __pat_mlibplotspp_66_5_lazy __pat_mlibplotspp_66_5 __pat_mlibplotspp_66_6_lazy __pat_mlibplotspp_66_6 __pat_mlibplotspp_66_7_lazy __pat_mlibplotspp_66_7 __pat_mlibplotspp_29_1_lazy __pat_mlibplotspp_29_1 __pat_mlibplotspp_22_1_lazy __pat_mlibplotspp_22_1 __ap2_lazy __ap2 display__picture display__picture_lazy text__length text__length_lazy text__showFixed text__showFixed_lazy stats__minimum stats__minimum_lazy stats__maximum stats__maximum_lazy stats__linearRegression stats__linearRegression_lazy stats__histogram stats__histogram_lazy #
+            call 1                                   || start
+            print 4
+            stop
+0           jmp 1                                    || start || start_lazy
+1           return_const 0 0                         || start
+2           jmp 3                                    || plot__x0 || plot__x0_lazy
+3           push 0.0                                 || plot__x0
+            push 0.72
+            sub
+            return 0
+4           jmp 5                                    || plot__x1 || plot__x1_lazy
+5           push 0.92                                || plot__x1
+            return 0
+6           jmp 7                                    || plot__y0 || plot__y0_lazy
+7           push 0.0                                 || plot__y0
+            push 0.78
+            sub
+            return 0
+8           jmp 9                                    || plot__y1 || plot__y1_lazy
+9           push 0.9                                 || plot__y1
+            return 0
+10          jmp 11                                   || plot__toF || plot__toF_lazy
+11          push 2                                   || plot__toF
+            load 0
+            pushfunc 1 162                           || plot__toF_1
+            create 2 3
+            call 108                                 || __deepEq
+            ifeq 12                                  || plot__toF_else
+            load 0
+            eval
+            return 1
+12          load 0                                   || plot__toF_else
+            eval
+            floatop 14
+            return 1
+13          load 0                                   || plot__scale_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+            load 2
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+14          load 1                                   || plot__scale
+            load 0
+            sub
+            ifle 15                                  || plot__scale_else
+            load 2
+            load 3
+            load 2
+            sub
+            load 4
+            call 11                                  || plot__toF
+            load 0
+            sub
+            load 1
+            load 0
+            sub
+            div
+            mult
+            add
+            return 5
+15          load 2                                   || plot__scale_else
+            load 3
+            add
+            push 2.0
+            div
+            return 5
+16          load 0                                   || plot__padLo_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+17          load 1                                   || plot__padLo
+            load 0
+            sub
+            ifle 18                                  || plot__padLo_else
+            load 0
+            return 2
+18          load 0                                   || plot__padLo_else
+            push 1.0
+            sub
+            return 2
+19          load 0                                   || plot__padHi_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+20          load 1                                   || plot__padHi
+            load 0
+            sub
+            ifle 21                                  || plot__padHi_else
+            load 1
+            return 2
+21          load 1                                   || plot__padHi_else
+            push 1.0
+            add
+            return 2
+22          jmp 23                                   || plot__label || plot__label_lazy
+23          load 0                                   || plot__label
+            eval
+            floatop 13
+            push 1000.0
+            sub
+            iflt 24                                  || plot__label_else
+            load 0
+            push 0
+            tailcall 1 211                           || text__showFixed
+24          load 0                                   || plot__label_else
+            eval
+            floatop 13
+            push 10.0
+            sub
+            iflt 25                                  || plot__label_else_else
+            load 0
+            push 1
+            tailcall 1 211                           || text__showFixed
+25          load 0                                   || plot__label_else_else
+            push 2
+            tailcall 1 211                           || text__showFixed
+26          jmp 27                                   || plot__axisColor || plot__axisColor_lazy
+27          return_const 0 7                         || plot__axisColor
+28          jmp 29                                   || plot__textColor || plot__textColor_lazy
+29          return_const 0 15                        || plot__textColor
+30          jmp 31                                   || plot__axes || plot__axes_lazy
+31          load 3                                   || plot__axes
+            load 2
+            load 1
+            pushfunc 3 164                           || plot__axes_1
+            create 4 3
+            load 0
+            call 23                                  || plot__label
+            call 7                                   || plot__y0
+            push 0.1
+            sub
+            call 3                                   || plot__x0
+            ccreatet 2 11 8 0
+            call 29                                  || plot__textColor
+            ccreatet 3 11 10 0
+            ccreatet 2 11 6 1
+            return 4
+32          jmp 33                                   || plot__axesY || plot__axesY_lazy
+33          load 1                                   || plot__axesY
+            load 0
+            pushfunc 2 172                           || plot__axesY_4
+            create 3 3
+            pushfunc 0 168                           || plot__axesY_2
+            create 1 3
+            call 9                                   || plot__y1
+            call 3                                   || plot__x0
+            ccreatet 2 11 8 0
+            ccreatet 2 11 6 1
+            call 27                                  || plot__axisColor
+            ccreatet 2 11 10 1
+            ccreatet 2 11 6 1
+            return 2
+34          jmp 35                                   || plot__line || plot__line_lazy
+35          load 1                                   || plot__line
+            load 0
+            push 11
+            tailcall 2 37                            || plot__lineColored
+36          jmp 37                                   || plot__lineColored || plot__lineColored_lazy
+37          load 2                                   || plot__lineColored
+            load 1
+            load 0
+            pushfunc 1 207                           || display__picture
+            create 1 7
+            pushfunc 1 216                           || stats__maximum_lazy
+            create 1 7
+            pushfunc 1 214                           || stats__minimum_lazy
+            create 1 7
+            tailcall 3 160                           || __pat_mlibplotspp_22
+38          jmp 39                                   || plot__lineY || plot__lineY_lazy
+39          load 0                                   || plot__lineY
+            dup
+            push 0
+            pushfunc 2 95                            || plot__indices_lazy
+            create 3 3
+            tailcall 1 35                            || plot__line
+40          jmp 41                                   || plot__scatter || plot__scatter_lazy
+41          load 1                                   || plot__scatter
+            load 0
+            pushfunc 1 207                           || display__picture
+            create 1 7
+            pushfunc 1 216                           || stats__maximum_lazy
+            create 1 7
+            pushfunc 1 214                           || stats__minimum_lazy
+            create 1 7
+            tailcall 2 158                           || __pat_mlibplotspp_26
+42          jmp 43                                   || plot__scatterFit || plot__scatterFit_lazy
+43          load 1                                   || plot__scatterFit
+            load 0
+            pushfunc 2 217                           || stats__linearRegression
+            create 1 7
+            pushfunc 1 207                           || display__picture
+            create 1 7
+            pushfunc 1 216                           || stats__maximum_lazy
+            create 1 7
+            pushfunc 1 214                           || stats__minimum_lazy
+            create 1 7
+            tailcall 2 156                           || __pat_mlibplotspp_29
+44          load 4                                   || plot__fitLine_lazy
+            eval
+            store 4
+45          load 4                                   || plot__fitLine
+            jmpt 1 46                                || lbs
+46          load 3                                   || plot__fitLine___Tuple2
+            load 0
+            load 1
+            load 5
+            load 4
+            pushfunc 5 178                           || plot__fitLine_3
+            create 6 3
+            load 2
+            load 0
+            load 1
+            pushfunc 3 174                           || plot__fitLine_1
+            create 4 3
+            call 9                                   || plot__y1
+            call 7                                   || plot__y0
+            load 5
+            eval
+            load 4
+            eval
+            call 14                                  || plot__scale
+            call 3                                   || plot__x0
+            ccreatet 2 11 8 0
+            ccreatet 2 11 6 1
+            push 12
+            ccreatet 2 11 10 1
+            return 7
+47          load 4                                   || plot__points_lazy
+            eval
+            store 4
+48          load 4                                   || plot__points
+            jmpt 2 49 50                             || lbs
+49          ccreatet 0 11 6 0                        || plot__points_Nil
+            return 6
+50          load 7                                   || plot__points_Cons
+            eval
+            jmpt 2 51 52                             || lbs
+51          ccreatet 0 11 6 0                        || plot__points_Cons_Nil
+            return 8
+52          load 1                                   || plot__points_Cons_Cons
+            load 3
+            load 7
+            load 6
+            load 5
+            load 4
+            pushfunc 6 47                            || plot__points_lazy
+            create 7 3
+            load 0
+            call 9                                   || plot__y1
+            call 7                                   || plot__y0
+            load 7
+            eval
+            load 6
+            eval
+            call 14                                  || plot__scale
+            load 2
+            call 5                                   || plot__x1
+            call 3                                   || plot__x0
+            load 5
+            eval
+            load 4
+            eval
+            call 14                                  || plot__scale
+            ccreatet 2 11 8 0
+            ccreatet 2 11 6 1
+            return 10
+53          load 4                                   || plot__dots_lazy
+            eval
+            store 4
+54          load 5                                   || plot__dots
+            load 4
+            load 3
+            load 2
+            load 1
+            load 0
+            call 48                                  || plot__points
+            pushfunc 1 55                            || plot__dot_lazy
+            create 1 7
+            tailcall 6 88                            || plot__mapL
+55          load 0                                   || plot__dot_lazy
+            eval
+            store 0
+56          load 0                                   || plot__dot
+            jmpt 1 57                                || lbs
+57          load 1                                   || plot__dot_Graphics__Pt
+            push 0.018
+            add
+            load 0
+            push 0.018
+            add
+            ccreatet 2 11 8 0
+            load 1
+            push 0.018
+            sub
+            load 0
+            push 0.018
+            sub
+            ccreatet 2 11 8 0
+            push 14
+            ccreatet 3 11 10 5
+            return 3
+58          jmp 59                                   || plot__bars || plot__bars_lazy
+59          load 1                                   || plot__bars
+            load 0
+            pushfunc 1 207                           || display__picture
+            create 1 7
+            tailcall 2 154                           || __pat_mlibplotspp_52
+60          load 0                                   || plot__maxZero_lazy
+            eval
+            store 0
+61          load 0                                   || plot__maxZero
+            jmpt 2 62 63                             || lbs
+62          push 0.0                                 || plot__maxZero_Nil
+            return 1
+63          load 1                                   || plot__maxZero_Cons
+            eval
+            call 61                                  || plot__maxZero
+            load 0
+            call 11                                  || plot__toF
+            tailcall 3 65                            || plot__maxF
+64          load 0                                   || plot__maxF_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+65          load 0                                   || plot__maxF
+            load 1
+            sub
+            ifle 66                                  || plot__maxF_else
+            load 0
+            return 2
+66          load 1                                   || plot__maxF_else
+            return 2
+67          load 0                                   || plot__barsFrom_lazy
+            eval
+            store 0
+            load 4
+            eval
+            store 4
+68          load 4                                   || plot__barsFrom
+            jmpt 2 69 70                             || lbs
+69          ccreatet 0 11 6 0                        || plot__barsFrom_Nil
+            return 5
+70          load 1                                   || plot__barsFrom_Cons
+            load 5
+            pushfunc 1 103                           || plot__tailOr_lazy
+            create 2 3
+            load 4
+            load 3
+            loadadd 2 1
+            pushfunc 5 67                            || plot__barsFrom_lazy
+            create 6 3
+            load 0
+            load 5
+            push ""
+            pushfunc 2 99                            || plot__headOr_lazy
+            create 3 3
+            load 4
+            load 3
+            load 2
+            call 72                                  || plot__barAt
+            tailcall 7 84                            || plot__appendL
+71          jmp 72                                   || plot__barAt || plot__barAt_lazy
+72          load 3                                   || plot__barAt
+            load 4
+            load 2
+            load 0
+            load 1
+            tailcall 5 152                           || __pat_mlibplotspp_66
+73          jmp 74                                   || plot__histogram || plot__histogram_lazy
+74          load 1                                   || plot__histogram
+            load 0
+            pushfunc 2 220                           || stats__histogram_lazy
+            create 3 3
+            tailcall 2 76                            || plot__histogramBins
+75          jmp 76                                   || plot__histogramBins || plot__histogramBins_lazy
+76          load 0                                   || plot__histogramBins
+            pushfunc 1 80                            || plot__binCount_lazy
+            create 1 7
+            pushfunc 2 87                            || plot__mapL_lazy
+            create 3 3
+            load 0
+            pushfunc 1 150                           || __lam_mlibplotspp_0
+            create 1 7
+            pushfunc 2 87                            || plot__mapL_lazy
+            create 3 3
+            tailcall 1 59                            || plot__bars
+77          load 0                                   || plot__binLo_lazy
+            eval
+            store 0
+78          load 0                                   || plot__binLo
+            jmpt 1 79                                || lbs
+79          load 0                                   || plot__binLo___Tuple2
+            eval
+            return 3
+80          load 0                                   || plot__binCount_lazy
+            eval
+            store 0
+81          load 0                                   || plot__binCount
+            jmpt 1 82                                || lbs
+82          load 1                                   || plot__binCount___Tuple2
+            eval
+            return 3
+83          load 0                                   || plot__appendL_lazy
+            eval
+            store 0
+84          load 0                                   || plot__appendL
+            jmpt 2 85 86                             || lbs
+85          load 1                                   || plot__appendL_Nil
+            eval
+            return 2
+86          load 3                                   || plot__appendL_Cons
+            load 1
+            pushfunc 2 83                            || plot__appendL_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 6 1
+            return 4
+87          load 1                                   || plot__mapL_lazy
+            eval
+            store 1
+88          load 1                                   || plot__mapL
+            jmpt 2 89 90                             || lbs
+89          ccreatet 0 11 6 0                        || plot__mapL_Nil
+            return 2
+90          load 1                                   || plot__mapL_Cons
+            load 2
+            pushfunc 2 87                            || plot__mapL_lazy
+            create 3 3
+            load 0
+            load 2
+            eval
+            ccreatet 2 11 6 1
+            return 4
+91          load 0                                   || plot__listLen_lazy
+            eval
+            store 0
+92          load 0                                   || plot__listLen
+            jmpt 2 93 94                             || lbs
+93          return_const 1 0                         || plot__listLen_Nil
+94          push 1                                   || plot__listLen_Cons
+            load 1
+            eval
+            call 92                                  || plot__listLen
+            add
+            return 3
+95          load 0                                   || plot__indices_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+96          load 1                                   || plot__indices
+            jmpt 2 97 98                             || lbs
+97          ccreatet 0 11 6 0                        || plot__indices_Nil
+            return 2
+98          load 1                                   || plot__indices_Cons
+            loadadd 2 1
+            pushfunc 2 95                            || plot__indices_lazy
+            create 3 3
+            load 2
+            ccreatet 2 11 6 1
+            return 4
+99          load 1                                   || plot__headOr_lazy
+            eval
+            store 1
+100         load 1                                   || plot__headOr
+            jmpt 2 101 102                           || lbs
+101         load 0                                   || plot__headOr_Nil
+            eval
+            return 2
+102         load 0                                   || plot__headOr_Cons
+            return 4
+103         load 0                                   || plot__tailOr_lazy
+            eval
+            store 0
+104         load 0                                   || plot__tailOr
+            jmpt 2 105 106                           || lbs
+105         ccreatet 0 11 6 0                        || plot__tailOr_Nil
+            return 1
+106         load 1                                   || plot__tailOr_Cons
+            eval
+            return 3
+107         jmp 108                                  || __deepEq || __deepEq_lazy
+108         load 1                                   || __deepEq
+            load 0
+            load 1
+            eval
+            gettypeid
+            load 0
+            eval
+            gettypeid
+            tailcall 2 110                           || __deepEqDispatch
+109         load 0                                   || __deepEqDispatch_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+110         load 0                                   || __deepEqDispatch
+            load 1
+            ifcmp 111                                || __deepEqDispatch_else
+            load 3
+            load 2
+            load 1
+            load 0
+            tailcall 4 120                           || __deepEqMixed
+111         loadadd 0 -1                             || __deepEqDispatch_else
+            ifneq 113                                || __deepEqDispatch_else_else
+            load 2
+            eval
+            load 3
+            eval
+            sub
+            ifneq 112                                || __deepEqDispatch_else_then_else
+            return_const 4 1
+112         return_const 4 0                         || __deepEqDispatch_else_then_else
+113         loadadd 0 -2                             || __deepEqDispatch_else_else
+            ifneq 115                                || __deepEqDispatch_else_else_else
+            load 2
+            eval
+            load 3
+            eval
+            sub
+            ifneq 114                                || __deepEqDispatch_else_else_then_else
+            return_const 4 1
+114         return_const 4 0                         || __deepEqDispatch_else_else_then_else
+115         loadadd 0 -3                             || __deepEqDispatch_else_else_else
+            ifneq 116                                || __deepEqDispatch_else_else_else_else
+            load 3
+            load 2
+            tailcall 4 125                           || __deepEqStr
+116         loadadd 0 -4                             || __deepEqDispatch_else_else_else_else
+            ifle 117                                 || __deepEqDispatch_else_else_else_else_else
+            load 3
+            load 2
+            tailcall 4 136                           || __deepEqConstr
+117         load 2                                   || __deepEqDispatch_else_else_else_else_else
+            eval
+            load 3
+            eval
+            sub
+            ifneq 118                                || __deepEqDispatch_else_else_else_else_else_else
+            return_const 4 1
+118         return_const 4 0                         || __deepEqDispatch_else_else_else_else_else_else
+119         load 0                                   || __deepEqMixed_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+120         load 0                                   || __deepEqMixed
+            load 1
+            add
+            ifneq 123                                || __deepEqMixed_else
+            load 0
+            load 1
+            mult
+            push 0
+            dec
+            sub
+            ifneq 122                                || __deepEqMixed_then_else
+            load 2
+            eval
+            load 3
+            eval
+            sub
+            ifneq 121                                || __deepEqMixed_then_then_else
+            return_const 4 1
+121         return_const 4 0                         || __deepEqMixed_then_then_else
+122         return_const 4 0                         || __deepEqMixed_then_else
+123         return_const 4 0                         || __deepEqMixed_else
+124         jmp 125                                  || __deepEqStr || __deepEqStr_lazy
+125         load 1                                   || __deepEqStr
+            load 0
+            load 1
+            eval
+            strop 2
+            load 0
+            eval
+            strop 2
+            tailcall 2 127                           || __deepEqStrLen
+126         load 0                                   || __deepEqStrLen_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+127         load 0                                   || __deepEqStrLen
+            load 1
+            ifcmp 128                                || __deepEqStrLen_else
+            return_const 4 0
+128         load 0                                   || __deepEqStrLen_else
+            push 0
+            load 3
+            load 2
+            tailcall 4 130                           || __deepEqStrChars
+129         load 2                                   || __deepEqStrChars_lazy
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+130         load 2                                   || __deepEqStrChars
+            load 3
+            sub
+            ifneq 131                                || __deepEqStrChars_else
+            return_const 4 1
+131         load 3                                   || __deepEqStrChars_else
+            load 2
+            load 1
+            load 0
+            tailcall 4 133                           || __deepEqStrCharsStep
+132         jmp 133                                  || __deepEqStrCharsStep || __deepEqStrCharsStep_lazy
+133         load 0                                   || __deepEqStrCharsStep
+            eval
+            load 2
+            eval
+            strop 4
+            load 1
+            eval
+            load 2
+            eval
+            strop 4
+            ifcmp 134                                || __deepEqStrCharsStep_else
+            return_const 4 0
+134         load 3                                   || __deepEqStrCharsStep_else
+            eval
+            load 2
+            eval
+            inc
+            load 1
+            load 0
+            tailcall 4 130                           || __deepEqStrChars
+135         jmp 136                                  || __deepEqConstr || __deepEqConstr_lazy
+136         load 1                                   || __deepEqConstr
+            load 0
+            load 1
+            pushfunc 1 182                           || __deepEqConstr_2
+            create 2 3
+            load 0
+            pushfunc 1 180                           || __deepEqConstr_1
+            create 2 3
+            tailcall 2 138                           || __deepEqConstrCheck
+137         jmp 138                                  || __deepEqConstrCheck || __deepEqConstrCheck_lazy
+138         load 1                                   || __deepEqConstrCheck
+            load 0
+            call 125                                 || __deepEqStr
+            ifneq 139                                || __deepEqConstrCheck_else
+            return_const 4 0
+139         load 0                                   || __deepEqConstrCheck_else
+            eval
+            lookup
+            getfuncarity
+            push 0
+            load 3
+            load 2
+            tailcall 4 141                           || __deepEqConstrFields
+140         load 2                                   || __deepEqConstrFields_lazy
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+141         load 2                                   || __deepEqConstrFields
+            load 3
+            sub
+            ifneq 142                                || __deepEqConstrFields_else
+            return_const 4 1
+142         load 3                                   || __deepEqConstrFields_else
+            load 2
+            load 1
+            load 0
+            tailcall 4 144                           || __deepEqConstrFieldsStep
+143         jmp 144                                  || __deepEqConstrFieldsStep || __deepEqConstrFieldsStep_lazy
+144         load 2                                   || __deepEqConstrFieldsStep
+            load 1
+            pushfunc 2 186                           || __deepEqConstrFieldsStep_2
+            create 3 3
+            load 2
+            load 0
+            pushfunc 2 184                           || __deepEqConstrFieldsStep_1
+            create 3 3
+            call 108                                 || __deepEq
+            ifneq 145                                || __deepEqConstrFieldsStep_else
+            return_const 4 0
+145         load 3                                   || __deepEqConstrFieldsStep_else
+            eval
+            load 2
+            eval
+            inc
+            load 1
+            load 0
+            tailcall 4 141                           || __deepEqConstrFields
+146         jmp 147                                  || __deepNeq || __deepNeq_lazy
+147         load 1                                   || __deepNeq
+            load 0
+            call 108                                 || __deepEq
+            dec
+            ifneq 148                                || __deepNeq_else
+            return_const 2 0
+148         return_const 2 1                         || __deepNeq_else
+149         jmp 150                                  || __lam_mlibplotspp_0 || __lam_mlibplotspp_0_lazy
+150         load 0                                   || __lam_mlibplotspp_0
+            pushfunc 1 77                            || plot__binLo_lazy
+            create 2 3
+            tailcall 1 23                            || plot__label
+151         jmp 152                                  || __pat_mlibplotspp_66 || __pat_mlibplotspp_66_lazy
+152         updsp 4                                  || __pat_mlibplotspp_66
+            load 4
+            pushfunc 1 188                           || __pat_mlibplotspp_66_1
+            create 2 3
+            store 0
+            load 7
+            pushfunc 0 9                             || plot__y1
+            create 1 3
+            pushfunc 0 7                             || plot__y0
+            create 1 3
+            load 6
+            push 0.0
+            pushfunc 5 13                            || plot__scale_lazy
+            create 6 3
+            store 3
+            load 0
+            load 5
+            pushfunc 2 190                           || __pat_mlibplotspp_66_2
+            create 3 3
+            store 1
+            load 0
+            load 1
+            pushfunc 2 192                           || __pat_mlibplotspp_66_3
+            create 3 3
+            store 2
+            load 8
+            load 1
+            pushfunc 2 200                           || __pat_mlibplotspp_66_7
+            create 3 3
+            load 3
+            load 1
+            load 2
+            pushfunc 3 198                           || __pat_mlibplotspp_66_6
+            create 4 3
+            call 7                                   || plot__y0
+            load 1
+            eval
+            ccreatet 2 11 8 0
+            ccreatet 2 11 6 1
+            push 9
+            ccreatet 2 11 10 2
+            ccreatet 2 11 6 1
+            return 9
+153         jmp 154                                  || __pat_mlibplotspp_52 || __pat_mlibplotspp_52_lazy
+154         updsp 2                                  || __pat_mlibplotspp_52
+            load 4
+            pushfunc 1 60                            || plot__maxZero_lazy
+            create 2 3
+            push 0.0
+            pushfunc 2 19                            || plot__padHi_lazy
+            create 3 3
+            store 0
+            load 4
+            pushfunc 1 91                            || plot__listLen_lazy
+            create 2 3
+            store 1
+            load 4
+            load 3
+            load 0
+            load 1
+            push 0
+            pushfunc 5 67                            || plot__barsFrom_lazy
+            create 6 3
+            load 0
+            push 0.0
+            pushfunc 2 33                            || plot__axesY
+            create 3 3
+            pushfunc 2 83                            || plot__appendL_lazy
+            create 3 3
+            load 2
+            eval
+            return 5
+155         jmp 156                                  || __pat_mlibplotspp_29 || __pat_mlibplotspp_29_lazy
+156         updsp 4                                  || __pat_mlibplotspp_29
+            load 8
+            load 5
+            pushfunc 2 206                           || __ap2
+            create 3 3
+            load 8
+            load 4
+            pushfunc 2 206                           || __ap2
+            create 3 3
+            pushfunc 2 16                            || plot__padLo_lazy
+            create 3 3
+            store 0
+            load 8
+            load 5
+            pushfunc 2 206                           || __ap2
+            create 3 3
+            load 8
+            load 4
+            pushfunc 2 206                           || __ap2
+            create 3 3
+            pushfunc 2 19                            || plot__padHi_lazy
+            create 3 3
+            store 1
+            load 9
+            load 5
+            pushfunc 2 206                           || __ap2
+            create 3 3
+            load 9
+            load 4
+            pushfunc 2 206                           || __ap2
+            create 3 3
+            pushfunc 2 16                            || plot__padLo_lazy
+            create 3 3
+            store 2
+            load 9
+            load 5
+            pushfunc 2 206                           || __ap2
+            create 3 3
+            load 9
+            load 4
+            pushfunc 2 206                           || __ap2
+            create 3 3
+            pushfunc 2 19                            || plot__padHi_lazy
+            create 3 3
+            store 3
+            load 7
+            load 9
+            load 8
+            load 3
+            load 2
+            load 1
+            load 0
+            pushfunc 7 202                           || __pat_mlibplotspp_29_1
+            create 8 3
+            load 9
+            load 8
+            load 3
+            load 2
+            load 1
+            load 0
+            pushfunc 6 53                            || plot__dots_lazy
+            create 7 3
+            pushfunc 2 83                            || plot__appendL_lazy
+            create 3 3
+            load 3
+            load 2
+            load 1
+            load 0
+            pushfunc 4 31                            || plot__axes
+            create 5 3
+            pushfunc 2 83                            || plot__appendL_lazy
+            create 3 3
+            load 6
+            eval
+            return 10
+157         jmp 158                                  || __pat_mlibplotspp_26 || __pat_mlibplotspp_26_lazy
+158         updsp 4                                  || __pat_mlibplotspp_26
+            load 7
+            load 5
+            pushfunc 2 206                           || __ap2
+            create 3 3
+            load 7
+            load 4
+            pushfunc 2 206                           || __ap2
+            create 3 3
+            pushfunc 2 16                            || plot__padLo_lazy
+            create 3 3
+            store 0
+            load 7
+            load 5
+            pushfunc 2 206                           || __ap2
+            create 3 3
+            load 7
+            load 4
+            pushfunc 2 206                           || __ap2
+            create 3 3
+            pushfunc 2 19                            || plot__padHi_lazy
+            create 3 3
+            store 1
+            load 8
+            load 5
+            pushfunc 2 206                           || __ap2
+            create 3 3
+            load 8
+            load 4
+            pushfunc 2 206                           || __ap2
+            create 3 3
+            pushfunc 2 16                            || plot__padLo_lazy
+            create 3 3
+            store 2
+            load 8
+            load 5
+            pushfunc 2 206                           || __ap2
+            create 3 3
+            load 8
+            load 4
+            pushfunc 2 206                           || __ap2
+            create 3 3
+            pushfunc 2 19                            || plot__padHi_lazy
+            create 3 3
+            store 3
+            load 8
+            load 7
+            load 3
+            load 2
+            load 1
+            load 0
+            pushfunc 6 53                            || plot__dots_lazy
+            create 7 3
+            load 3
+            load 2
+            load 1
+            load 0
+            pushfunc 4 31                            || plot__axes
+            create 5 3
+            pushfunc 2 83                            || plot__appendL_lazy
+            create 3 3
+            load 6
+            eval
+            return 9
+159         jmp 160                                  || __pat_mlibplotspp_22 || __pat_mlibplotspp_22_lazy
+160         updsp 4                                  || __pat_mlibplotspp_22
+            load 8
+            load 5
+            pushfunc 2 206                           || __ap2
+            create 3 3
+            load 8
+            load 4
+            pushfunc 2 206                           || __ap2
+            create 3 3
+            pushfunc 2 16                            || plot__padLo_lazy
+            create 3 3
+            store 0
+            load 8
+            load 5
+            pushfunc 2 206                           || __ap2
+            create 3 3
+            load 8
+            load 4
+            pushfunc 2 206                           || __ap2
+            create 3 3
+            pushfunc 2 19                            || plot__padHi_lazy
+            create 3 3
+            store 1
+            load 9
+            load 5
+            pushfunc 2 206                           || __ap2
+            create 3 3
+            load 9
+            load 4
+            pushfunc 2 206                           || __ap2
+            create 3 3
+            pushfunc 2 16                            || plot__padLo_lazy
+            create 3 3
+            store 2
+            load 9
+            load 5
+            pushfunc 2 206                           || __ap2
+            create 3 3
+            load 9
+            load 4
+            pushfunc 2 206                           || __ap2
+            create 3 3
+            pushfunc 2 19                            || plot__padHi_lazy
+            create 3 3
+            store 3
+            load 9
+            load 8
+            load 3
+            load 2
+            load 1
+            load 0
+            load 7
+            pushfunc 7 204                           || __pat_mlibplotspp_22_1
+            create 8 3
+            load 3
+            load 2
+            load 1
+            load 0
+            pushfunc 4 31                            || plot__axes
+            create 5 3
+            pushfunc 2 83                            || plot__appendL_lazy
+            create 3 3
+            load 6
+            eval
+            return 10
+161         jmp 162                                  || plot__toF_1 || plot__toF_1_lazy
+162         load 0                                   || plot__toF_1
+            eval
+            gettypeid
+            return 1
+163         jmp 164                                  || plot__axes_1 || plot__axes_1_lazy
+164         load 2                                   || plot__axes_1
+            load 1
+            pushfunc 2 33                            || plot__axesY
+            create 3 3
+            load 0
+            call 23                                  || plot__label
+            call 7                                   || plot__y0
+            push 0.1
+            sub
+            call 5                                   || plot__x1
+            push 0.04
+            load 0
+            pushfunc 1 23                            || plot__label
+            create 2 3
+            call 209                                 || text__length
+            floatop 14
+            mult
+            sub
+            ccreatet 2 11 8 0
+            call 29                                  || plot__textColor
+            ccreatet 3 11 10 0
+            ccreatet 2 11 6 1
+            return 3
+165         jmp 166                                  || plot__axesY_1 || plot__axesY_1_lazy
+166         ccreatet 0 11 6 0                        || plot__axesY_1
+            call 7                                   || plot__y0
+            call 5                                   || plot__x1
+            ccreatet 2 11 8 0
+            ccreatet 2 11 6 1
+            return 0
+167         jmp 168                                  || plot__axesY_2 || plot__axesY_2_lazy
+168         pushfunc 0 166                           || plot__axesY_1 || plot__axesY_2
+            create 1 3
+            call 7                                   || plot__y0
+            call 3                                   || plot__x0
+            ccreatet 2 11 8 0
+            ccreatet 2 11 6 1
+            return 0
+169         jmp 170                                  || plot__axesY_3 || plot__axesY_3_lazy
+170         ccreatet 0 11 6 0                        || plot__axesY_3
+            load 0
+            call 23                                  || plot__label
+            call 9                                   || plot__y1
+            push 0.03
+            sub
+            call 3                                   || plot__x0
+            push 0.05
+            sub
+            push 0.04
+            load 0
+            pushfunc 1 23                            || plot__label
+            create 2 3
+            call 209                                 || text__length
+            floatop 14
+            mult
+            sub
+            ccreatet 2 11 8 0
+            call 29                                  || plot__textColor
+            ccreatet 3 11 10 0
+            ccreatet 2 11 6 1
+            return 1
+171         jmp 172                                  || plot__axesY_4 || plot__axesY_4_lazy
+172         load 1                                   || plot__axesY_4
+            pushfunc 1 170                           || plot__axesY_3
+            create 2 3
+            load 0
+            call 23                                  || plot__label
+            call 7                                   || plot__y0
+            call 3                                   || plot__x0
+            push 0.05
+            sub
+            push 0.04
+            load 0
+            pushfunc 1 23                            || plot__label
+            create 2 3
+            call 209                                 || text__length
+            floatop 14
+            mult
+            sub
+            ccreatet 2 11 8 0
+            call 29                                  || plot__textColor
+            ccreatet 3 11 10 0
+            ccreatet 2 11 6 1
+            return 2
+173         jmp 174                                  || plot__fitLine_1 || plot__fitLine_1_lazy
+174         load 0                                   || plot__fitLine_1
+            eval
+            load 1
+            eval
+            load 2
+            eval
+            mult
+            add
+            return 3
+175         jmp 176                                  || plot__fitLine_2 || plot__fitLine_2_lazy
+176         load 0                                   || plot__fitLine_2
+            eval
+            load 1
+            eval
+            load 2
+            eval
+            mult
+            add
+            return 3
+177         jmp 178                                  || plot__fitLine_3 || plot__fitLine_3_lazy
+178         ccreatet 0 11 6 0                        || plot__fitLine_3
+            load 4
+            load 3
+            load 2
+            pushfunc 3 176                           || plot__fitLine_2
+            create 4 3
+            call 9                                   || plot__y1
+            call 7                                   || plot__y0
+            load 1
+            eval
+            load 0
+            eval
+            call 14                                  || plot__scale
+            call 5                                   || plot__x1
+            ccreatet 2 11 8 0
+            ccreatet 2 11 6 1
+            return 5
+179         jmp 180                                  || __deepEqConstr_1 || __deepEqConstr_1_lazy
+180         load 0                                   || __deepEqConstr_1
+            eval
+            getconstrname
+            return 1
+181         jmp 182                                  || __deepEqConstr_2 || __deepEqConstr_2_lazy
+182         load 0                                   || __deepEqConstr_2
+            eval
+            getconstrname
+            return 1
+183         jmp 184                                  || __deepEqConstrFieldsStep_1 || __deepEqConstrFieldsStep_1_lazy
+184         load 0                                   || __deepEqConstrFieldsStep_1
+            eval
+            load 1
+            eval
+            getfield
+            eval
+            return 2
+185         jmp 186                                  || __deepEqConstrFieldsStep_2 || __deepEqConstrFieldsStep_2_lazy
+186         load 0                                   || __deepEqConstrFieldsStep_2
+            eval
+            load 1
+            eval
+            getfield
+            eval
+            return 2
+187         jmp 188                                  || __pat_mlibplotspp_66_1 || __pat_mlibplotspp_66_1_lazy
+188         call 5                                   || plot__x1 || __pat_mlibplotspp_66_1
+            call 3                                   || plot__x0
+            sub
+            load 0
+            eval
+            floatop 14
+            div
+            return 1
+189         jmp 190                                  || __pat_mlibplotspp_66_2 || __pat_mlibplotspp_66_2_lazy
+190         call 3                                   || plot__x0 || __pat_mlibplotspp_66_2
+            load 0
+            eval
+            floatop 14
+            load 1
+            eval
+            mult
+            add
+            load 1
+            eval
+            push 0.15
+            mult
+            add
+            return 2
+191         jmp 192                                  || __pat_mlibplotspp_66_3 || __pat_mlibplotspp_66_3_lazy
+192         load 0                                   || __pat_mlibplotspp_66_3
+            eval
+            load 1
+            eval
+            push 0.7
+            mult
+            add
+            return 2
+193         jmp 194                                  || __pat_mlibplotspp_66_4 || __pat_mlibplotspp_66_4_lazy
+194         ccreatet 0 11 6 0                        || __pat_mlibplotspp_66_4
+            load 1
+            eval
+            load 0
+            eval
+            ccreatet 2 11 8 0
+            ccreatet 2 11 6 1
+            return 2
+195         jmp 196                                  || __pat_mlibplotspp_66_5 || __pat_mlibplotspp_66_5_lazy
+196         load 2                                   || __pat_mlibplotspp_66_5
+            load 1
+            pushfunc 2 194                           || __pat_mlibplotspp_66_4
+            create 3 3
+            load 2
+            eval
+            load 0
+            eval
+            ccreatet 2 11 8 0
+            ccreatet 2 11 6 1
+            return 3
+197         jmp 198                                  || __pat_mlibplotspp_66_6 || __pat_mlibplotspp_66_6_lazy
+198         load 2                                   || __pat_mlibplotspp_66_6
+            load 1
+            load 0
+            pushfunc 3 196                           || __pat_mlibplotspp_66_5
+            create 4 3
+            call 7                                   || plot__y0
+            load 0
+            eval
+            ccreatet 2 11 8 0
+            ccreatet 2 11 6 1
+            return 3
+199         jmp 200                                  || __pat_mlibplotspp_66_7 || __pat_mlibplotspp_66_7_lazy
+200         ccreatet 0 11 6 0                        || __pat_mlibplotspp_66_7
+            load 1
+            eval
+            call 7                                   || plot__y0
+            push 0.1
+            sub
+            load 0
+            eval
+            ccreatet 2 11 8 0
+            call 29                                  || plot__textColor
+            ccreatet 3 11 10 0
+            ccreatet 2 11 6 1
+            return 2
+201         jmp 202                                  || __pat_mlibplotspp_29_1 || __pat_mlibplotspp_29_1_lazy
+202         ccreatet 0 11 6 0                        || __pat_mlibplotspp_29_1
+            load 5
+            load 4
+            load 6
+            eval
+            load 3
+            load 2
+            load 1
+            load 0
+            call 45                                  || plot__fitLine
+            ccreatet 2 11 6 1
+            return 7
+203         jmp 204                                  || __pat_mlibplotspp_22_1 || __pat_mlibplotspp_22_1_lazy
+204         ccreatet 0 11 6 0                        || __pat_mlibplotspp_22_1
+            load 6
+            load 5
+            eval
+            load 4
+            load 3
+            load 2
+            load 1
+            call 48                                  || plot__points
+            load 0
+            eval
+            ccreatet 2 11 10 1
+            ccreatet 2 11 6 1
+            return 7
+205         jmp 206                                  || __ap2 || __ap2_lazy
+206         load 1                                   || __ap2
+            load 0
+            eval
+            return 2
+
+.metadata
+types 11
+type 5 __Tuple2 1
+  constr 0 __Tuple2 2
+type 6 list 2
+  constr 0 Nil 0
+  constr 1 Cons 2
+type 7 __Char 1
+  constr 0 __Char 1
+type 8 Graphics__Point 1
+  constr 0 Graphics__Pt 2
+type 9 Graphics__MenuCat 1
+  constr 0 Graphics__MenuCat 2
+type 10 Graphics__Graphics 9
+  constr 0 Graphics__GraphText 3
+  constr 1 Graphics__GraphPolyLine 2
+  constr 2 Graphics__GraphPolygon 2
+  constr 3 Graphics__GraphRectangle 3
+  constr 4 Graphics__GraphEllipse 3
+  constr 5 Graphics__GraphDisc 3
+  constr 6 Graphics__GraphClear 0
+  constr 7 Graphics__GraphMenu 1
+  constr 8 Graphics__GraphPrompt 2
+type 11 Graphics__Event 9
+  constr 0 Graphics__KeyIn 1
+  constr 1 Graphics__MouseDown 1
+  constr 2 Graphics__MouseUp 1
+  constr 3 Graphics__MouseDragged 1
+  constr 4 Graphics__MouseDoubleClick 1
+  constr 5 Graphics__MenuItem 2
+  constr 6 Graphics__PText 1
+  constr 7 Graphics__OpenFile 1
+  constr 8 Graphics__NoInput 0
+type 12 Display__Display 4
+  constr 0 Display__DText 1
+  constr 1 Display__DTable 2
+  constr 2 Display__DMarkdown 1
+  constr 3 Display__DGraphics 1
+type 5 __Tuple2 1
+  constr 0 __Tuple2 2
+type 5 __Tuple2 1
+  constr 0 __Tuple2 2
+type 5 __Tuple2 1
+  constr 0 __Tuple2 2
+functions 158
+  func 1 start 0 0
+  func 0 start 0 0
+  func 3 plot__x0 0 0
+  func 2 plot__x0 0 0
+  func 5 plot__x1 0 0
+  func 4 plot__x1 0 0
+  func 7 plot__y0 0 0
+  func 6 plot__y0 0 0
+  func 9 plot__y1 0 0
+  func 8 plot__y1 0 0
+  func 11 plot__toF 1 00
+  func 10 plot__toF 1 00
+  func 14 plot__scale 5 111100
+  func 13 plot__scale 5 111100
+  func 17 plot__padLo 2 110
+  func 16 plot__padLo 2 110
+  func 20 plot__padHi 2 110
+  func 19 plot__padHi 2 110
+  func 23 plot__label 1 00
+  func 22 plot__label 1 00
+  func 27 plot__axisColor 0 0
+  func 26 plot__axisColor 0 0
+  func 29 plot__textColor 0 0
+  func 28 plot__textColor 0 0
+  func 31 plot__axes 4 00000
+  func 30 plot__axes 4 00000
+  func 33 plot__axesY 2 000
+  func 32 plot__axesY 2 000
+  func 35 plot__line 2 000
+  func 34 plot__line 2 000
+  func 37 plot__lineColored 3 0000
+  func 36 plot__lineColored 3 0000
+  func 39 plot__lineY 1 00
+  func 38 plot__lineY 1 00
+  func 41 plot__scatter 2 000
+  func 40 plot__scatter 2 000
+  func 43 plot__scatterFit 2 000
+  func 42 plot__scatterFit 2 000
+  func 45 plot__fitLine 5 000010
+  func 44 plot__fitLine 5 000010
+  func 48 plot__points 6 0000100
+  func 47 plot__points 6 0000100
+  func 54 plot__dots 6 0000100
+  func 53 plot__dots 6 0000100
+  func 56 plot__dot 1 10
+  func 55 plot__dot 1 10
+  func 59 plot__bars 2 000
+  func 58 plot__bars 2 000
+  func 61 plot__maxZero 1 10
+  func 60 plot__maxZero 1 10
+  func 65 plot__maxF 2 110
+  func 64 plot__maxF 2 110
+  func 68 plot__barsFrom 5 100010
+  func 67 plot__barsFrom 5 100010
+  func 72 plot__barAt 5 000000
+  func 71 plot__barAt 5 000000
+  func 74 plot__histogram 2 000
+  func 73 plot__histogram 2 000
+  func 76 plot__histogramBins 1 00
+  func 75 plot__histogramBins 1 00
+  func 78 plot__binLo 1 10
+  func 77 plot__binLo 1 10
+  func 81 plot__binCount 1 10
+  func 80 plot__binCount 1 10
+  func 84 plot__appendL 2 100
+  func 83 plot__appendL 2 100
+  func 88 plot__mapL 2 010
+  func 87 plot__mapL 2 010
+  func 92 plot__listLen 1 10
+  func 91 plot__listLen 1 10
+  func 96 plot__indices 2 110
+  func 95 plot__indices 2 110
+  func 100 plot__headOr 2 010
+  func 99 plot__headOr 2 010
+  func 104 plot__tailOr 1 10
+  func 103 plot__tailOr 1 10
+  func 108 __deepEq 2 000
+  func 107 __deepEq 2 000
+  func 110 __deepEqDispatch 4 11000
+  func 109 __deepEqDispatch 4 11000
+  func 120 __deepEqMixed 4 11000
+  func 119 __deepEqMixed 4 11000
+  func 125 __deepEqStr 2 000
+  func 124 __deepEqStr 2 000
+  func 127 __deepEqStrLen 4 11000
+  func 126 __deepEqStrLen 4 11000
+  func 130 __deepEqStrChars 4 00110
+  func 129 __deepEqStrChars 4 00110
+  func 133 __deepEqStrCharsStep 4 00000
+  func 132 __deepEqStrCharsStep 4 00000
+  func 136 __deepEqConstr 2 000
+  func 135 __deepEqConstr 2 000
+  func 138 __deepEqConstrCheck 4 00000
+  func 137 __deepEqConstrCheck 4 00000
+  func 141 __deepEqConstrFields 4 00110
+  func 140 __deepEqConstrFields 4 00110
+  func 144 __deepEqConstrFieldsStep 4 00000
+  func 143 __deepEqConstrFieldsStep 4 00000
+  func 147 __deepNeq 2 000
+  func 146 __deepNeq 2 000
+  func 150 __lam_mlibplotspp_0 1 00
+  func 149 __lam_mlibplotspp_0 1 00
+  func 152 __pat_mlibplotspp_66 5 000000
+  func 151 __pat_mlibplotspp_66 5 000000
+  func 154 __pat_mlibplotspp_52 3 0000
+  func 153 __pat_mlibplotspp_52 3 0000
+  func 156 __pat_mlibplotspp_29 6 0000000
+  func 155 __pat_mlibplotspp_29 6 0000000
+  func 158 __pat_mlibplotspp_26 5 000000
+  func 157 __pat_mlibplotspp_26 5 000000
+  func 160 __pat_mlibplotspp_22 6 0000000
+  func 159 __pat_mlibplotspp_22 6 0000000
+  func 162 plot__toF_1 1 00
+  func 161 plot__toF_1 1 00
+  func 164 plot__axes_1 3 0000
+  func 163 plot__axes_1 3 0000
+  func 166 plot__axesY_1 0 0
+  func 165 plot__axesY_1 0 0
+  func 168 plot__axesY_2 0 0
+  func 167 plot__axesY_2 0 0
+  func 170 plot__axesY_3 1 00
+  func 169 plot__axesY_3 1 00
+  func 172 plot__axesY_4 2 000
+  func 171 plot__axesY_4 2 000
+  func 174 plot__fitLine_1 3 0000
+  func 173 plot__fitLine_1 3 0000
+  func 176 plot__fitLine_2 3 0000
+  func 175 plot__fitLine_2 3 0000
+  func 178 plot__fitLine_3 5 000000
+  func 177 plot__fitLine_3 5 000000
+  func 180 __deepEqConstr_1 1 00
+  func 179 __deepEqConstr_1 1 00
+  func 182 __deepEqConstr_2 1 00
+  func 181 __deepEqConstr_2 1 00
+  func 184 __deepEqConstrFieldsStep_1 2 000
+  func 183 __deepEqConstrFieldsStep_1 2 000
+  func 186 __deepEqConstrFieldsStep_2 2 000
+  func 185 __deepEqConstrFieldsStep_2 2 000
+  func 188 __pat_mlibplotspp_66_1 1 00
+  func 187 __pat_mlibplotspp_66_1 1 00
+  func 190 __pat_mlibplotspp_66_2 2 000
+  func 189 __pat_mlibplotspp_66_2 2 000
+  func 192 __pat_mlibplotspp_66_3 2 000
+  func 191 __pat_mlibplotspp_66_3 2 000
+  func 194 __pat_mlibplotspp_66_4 2 000
+  func 193 __pat_mlibplotspp_66_4 2 000
+  func 196 __pat_mlibplotspp_66_5 3 0000
+  func 195 __pat_mlibplotspp_66_5 3 0000
+  func 198 __pat_mlibplotspp_66_6 3 0000
+  func 197 __pat_mlibplotspp_66_6 3 0000
+  func 200 __pat_mlibplotspp_66_7 2 000
+  func 199 __pat_mlibplotspp_66_7 2 000
+  func 202 __pat_mlibplotspp_29_1 7 00000000
+  func 201 __pat_mlibplotspp_29_1 7 00000000
+  func 204 __pat_mlibplotspp_22_1 7 00000000
+  func 203 __pat_mlibplotspp_22_1 7 00000000
+  func 206 __ap2 2 000
+  func 205 __ap2 2 000
+.endmetadata

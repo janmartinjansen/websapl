@@ -1,0 +1,1692 @@
+start_lazy start graphics__col_black_lazy graphics__col_black graphics__col_blue_lazy graphics__col_blue graphics__col_green_lazy graphics__col_green graphics__col_cyan_lazy graphics__col_cyan graphics__col_red_lazy graphics__col_red graphics__col_magenta_lazy graphics__col_magenta graphics__col_brown_lazy graphics__col_brown graphics__col_lightgray_lazy graphics__col_lightgray graphics__col_darkgray_lazy graphics__col_darkgray graphics__col_brightblue_lazy graphics__col_brightblue graphics__col_brightgreen_lazy graphics__col_brightgreen graphics__col_brightcyan_lazy graphics__col_brightcyan graphics__col_brightred_lazy graphics__col_brightred graphics__col_brightmagenta_lazy graphics__col_brightmagenta graphics__col_yellow_lazy graphics__col_yellow graphics__col_white_lazy graphics__col_white graphics__pt_lazy graphics__pt graphics__vergrootPt_lazy graphics__vergrootPt graphics__vergrootPt_Graphics__Pt graphics__draaiPt_lazy graphics__draaiPt graphics__verschuifPt_lazy graphics__verschuifPt graphics__verschuifPt_Graphics__Pt graphics__verschuifPt_Graphics__Pt_Graphics__Pt graphics__addPt_lazy graphics__addPt graphics__addPt_Graphics__Pt graphics__addPt_Graphics__Pt_Graphics__Pt graphics__subPt_lazy graphics__subPt graphics__subPt_Graphics__Pt graphics__subPt_Graphics__Pt_Graphics__Pt graphics__scalePt_lazy graphics__scalePt graphics__scalePt_Graphics__Pt graphics__dotPt_lazy graphics__dotPt graphics__dotPt_Graphics__Pt graphics__dotPt_Graphics__Pt_Graphics__Pt graphics__distPtHelper_lazy graphics__distPtHelper graphics__distPt_lazy graphics__distPt graphics__distPt_Graphics__Pt graphics__distPt_Graphics__Pt_Graphics__Pt graphics__append_lazy graphics__append graphics__append_Nil graphics__append_Cons graphics__revAppend_lazy graphics__revAppend graphics__revAppend_Nil graphics__revAppend_Cons graphics__reverseList_lazy graphics__reverseList graphics__mapList_lazy graphics__mapList graphics__mapList_Nil graphics__mapList_Cons graphics__filterList_lazy graphics__filterList graphics__filterList_Nil graphics__filterList_Cons graphics__filterList_Cons_else graphics__lengthList_lazy graphics__lengthList graphics__lengthList_Nil graphics__lengthList_Cons graphics__forcePt_lazy graphics__forcePt graphics__forcePt_Graphics__Pt graphics__forcePoints_lazy graphics__forcePoints graphics__forcePoints_Nil graphics__forcePoints_Cons graphics__forceItem_lazy graphics__forceItem graphics__forceItem_Graphics__GraphText graphics__forceItem_Graphics__GraphPolyLine graphics__forceItem_Graphics__GraphPolygon graphics__forceItem_Graphics__GraphRectangle graphics__forceItem_Graphics__GraphEllipse graphics__forceItem_Graphics__GraphDisc graphics__forceItem_Graphics__GraphClear graphics__forceItem_Graphics__GraphMenu graphics__forceItem_Graphics__GraphPrompt graphics__forceGraphics_lazy graphics__forceGraphics graphics__forceGraphics_Nil graphics__forceGraphics_Cons graphics__forceMenuCats_lazy graphics__forceMenuCats graphics__forceMenuCats_Nil graphics__forceMenuCats_Cons graphics__forceMenuCat_lazy graphics__forceMenuCat graphics__forceMenuCat_Graphics__MenuCat graphics__graphicsout_lazy graphics__graphicsout graphics__graphicsoutChars_lazy graphics__graphicsoutChars graphics__graphicsoutChars_Nil graphics__graphicsoutChars_Cons graphics__itemChars_lazy graphics__itemChars graphics__itemChars_Graphics__GraphText graphics__itemChars_Graphics__GraphPolyLine graphics__itemChars_Graphics__GraphPolygon graphics__itemChars_Graphics__GraphRectangle graphics__itemChars_Graphics__GraphEllipse graphics__itemChars_Graphics__GraphDisc graphics__itemChars_Graphics__GraphClear graphics__itemChars_Graphics__GraphMenu graphics__itemChars_Graphics__GraphPrompt graphics__menuCatsChars_lazy graphics__menuCatsChars graphics__menuCatsBody_lazy graphics__menuCatsBody graphics__menuCatsBody_Nil graphics__menuCatsBody_Cons graphics__menuCatChars_lazy graphics__menuCatChars graphics__menuCatChars_Graphics__MenuCat graphics__menuItemsChars_lazy graphics__menuItemsChars graphics__menuItemsChars_Nil graphics__menuItemsChars_Cons graphics__pairItemChars_lazy graphics__pairItemChars graphics__pointsItemChars_lazy graphics__pointsItemChars graphics__ptsChars_lazy graphics__ptsChars graphics__ptsChars_Nil graphics__ptsChars_Cons graphics__ptChars_lazy graphics__ptChars graphics__ptChars_Graphics__Pt graphics__tagChars_lazy graphics__tagChars graphics__intChars_lazy graphics__intChars graphics__floatChars_lazy graphics__floatChars graphics__quotedChars_lazy graphics__quotedChars graphics__str2list_lazy graphics__str2list graphics__strls_lazy graphics__strls graphics__strls_else graphics__list2str_lazy graphics__list2str graphics__fillStr_lazy graphics__fillStr graphics__fillStr_Nil graphics__fillStr_Cons graphics__itoa_lazy graphics__itoa graphics__itoa_else_then graphics__itoa_then graphics__strEqual_lazy graphics__strEqual graphics__strEqual_else graphics__strEqualAt_lazy graphics__strEqualAt graphics__strEqualAt_else graphics__strEqualAt_else_else graphics__splitWords_lazy graphics__splitWords graphics__splitWordsChars_lazy graphics__splitWordsChars graphics__splitWordsChars_Nil graphics__splitWordsChars_Cons graphics__splitWordsChars_Cons_else graphics__splitWordsWord_lazy graphics__splitWordsWord graphics__takeWordChars_lazy graphics__takeWordChars graphics__takeWordChars_Nil graphics__takeWordChars_Cons graphics__takeWordChars_Cons_else graphics__dropWordChars_lazy graphics__dropWordChars graphics__dropWordChars_Nil graphics__dropWordChars_Cons graphics__dropWordChars_Cons_else graphics__startsWithPText_lazy graphics__startsWithPText graphics__startsWithPText_else graphics__startsWithOpenFile_lazy graphics__startsWithOpenFile graphics__startsWithOpenFile_else graphics__parseEvent_lazy graphics__parseEvent graphics__parseEvent_else graphics__parseEvent_else_else graphics__dropCharsFromStr_lazy graphics__dropCharsFromStr graphics__dropChars_lazy graphics__dropChars graphics__dropChars_else graphics__dropChars1_lazy graphics__dropChars1 graphics__dropChars1_Nil graphics__dropChars1_Cons graphics__parseEventWords_lazy graphics__parseEventWords graphics__parseEventWords_Nil graphics__parseEventWords_Cons graphics__parseEventTag_lazy graphics__parseEventTag graphics__parseEventTag_else graphics__parseEventTag_else_else graphics__parseEventTag_else_else_else graphics__parseEventTag_else_else_else_else graphics__parseEventTag_else_else_else_else_else graphics__parseEventTag_else_else_else_else_else_else graphics__parseMenuItemEvent_lazy graphics__parseMenuItemEvent graphics__parseMenuItemEvent_Nil graphics__parseMenuItemEvent_Cons graphics__parseMenuItemEventItem_lazy graphics__parseMenuItemEventItem graphics__parseMenuItemEventItem_Nil graphics__parseMenuItemEventItem_Cons graphics__parseEventPt_lazy graphics__parseEventPt graphics__parseEventPt_Nil graphics__parseEventPt_Cons graphics__parseEventPtY_lazy graphics__parseEventPtY graphics__parseEventPtY_Nil graphics__parseEventPtY_Cons graphics__parseEventKey_lazy graphics__parseEventKey graphics__parseEventKey_Nil graphics__parseEventKey_Cons graphics__decodeFloatWords_lazy graphics__decodeFloatWords graphics__decodeFloatWords_Nil graphics__decodeFloatWords_Cons graphics__decodePointList_lazy graphics__decodePointList graphics__decodePointList_Nil graphics__decodePointList_Cons graphics__decodePoints_lazy graphics__decodePoints graphics__decodePoints_else graphics__decodePointsStep_lazy graphics__decodePointsStep graphics__decodePointsStep_Nil graphics__decodePointsStep_Cons graphics__decodePointsStepY_lazy graphics__decodePointsStepY graphics__decodePointsStepY_Nil graphics__decodePointsStepY_Cons __deepEq_lazy __deepEq __deepEqDispatch_lazy __deepEqDispatch __deepEqDispatch_else __deepEqDispatch_else_then_else __deepEqDispatch_else_else __deepEqDispatch_else_else_then_else __deepEqDispatch_else_else_else __deepEqDispatch_else_else_else_else __deepEqDispatch_else_else_else_else_else __deepEqDispatch_else_else_else_else_else_else __deepEqMixed_lazy __deepEqMixed __deepEqMixed_then_then_else __deepEqMixed_then_else __deepEqMixed_else __deepEqStr_lazy __deepEqStr __deepEqStrLen_lazy __deepEqStrLen __deepEqStrLen_else __deepEqStrChars_lazy __deepEqStrChars __deepEqStrChars_else __deepEqStrCharsStep_lazy __deepEqStrCharsStep __deepEqStrCharsStep_else __deepEqConstr_lazy __deepEqConstr __deepEqConstrCheck_lazy __deepEqConstrCheck __deepEqConstrCheck_else __deepEqConstrFields_lazy __deepEqConstrFields __deepEqConstrFields_else __deepEqConstrFieldsStep_lazy __deepEqConstrFieldsStep __deepEqConstrFieldsStep_else __deepNeq_lazy __deepNeq __deepNeq_else __pat_mgrafischgraphicscfp_21_lazy __pat_mgrafischgraphicscfp_21 __pat_mgrafischgraphicscfp_6_lazy __pat_mgrafischgraphicscfp_6 __pat_mgrafischgraphicscfp_6_Graphics__Pt graphics__tagChars_1_lazy graphics__tagChars_1 graphics__floatChars_1_lazy graphics__floatChars_1 graphics__list2str_1_lazy graphics__list2str_1 graphics__fillStr_1_lazy graphics__fillStr_1 graphics__fillStr_2_lazy graphics__fillStr_2 __deepEqConstr_1_lazy __deepEqConstr_1 __deepEqConstr_2_lazy __deepEqConstr_2 __deepEqConstrFieldsStep_1_lazy __deepEqConstrFieldsStep_1 __deepEqConstrFieldsStep_2_lazy __deepEqConstrFieldsStep_2 __pat_mgrafischgraphicscfp_21_1_lazy __pat_mgrafischgraphicscfp_21_1 __pat_mgrafischgraphicscfp_21_2_lazy __pat_mgrafischgraphicscfp_21_2 __pat_mgrafischgraphicscfp_6_1_lazy __pat_mgrafischgraphicscfp_6_1 __pat_mgrafischgraphicscfp_6_2_lazy __pat_mgrafischgraphicscfp_6_2 #
+            call 1                                   || start
+            print 4
+            stop
+0           jmp 1                                    || start || start_lazy
+1           return_const 0 0                         || start
+2           jmp 3                                    || graphics__col_black || graphics__col_black_lazy
+3           return_const 0 0                         || graphics__col_black
+4           jmp 5                                    || graphics__col_blue || graphics__col_blue_lazy
+5           return_const 0 1                         || graphics__col_blue
+6           jmp 7                                    || graphics__col_green || graphics__col_green_lazy
+7           return_const 0 2                         || graphics__col_green
+8           jmp 9                                    || graphics__col_cyan || graphics__col_cyan_lazy
+9           return_const 0 3                         || graphics__col_cyan
+10          jmp 11                                   || graphics__col_red || graphics__col_red_lazy
+11          return_const 0 4                         || graphics__col_red
+12          jmp 13                                   || graphics__col_magenta || graphics__col_magenta_lazy
+13          return_const 0 5                         || graphics__col_magenta
+14          jmp 15                                   || graphics__col_brown || graphics__col_brown_lazy
+15          return_const 0 6                         || graphics__col_brown
+16          jmp 17                                   || graphics__col_lightgray || graphics__col_lightgray_lazy
+17          return_const 0 7                         || graphics__col_lightgray
+18          jmp 19                                   || graphics__col_darkgray || graphics__col_darkgray_lazy
+19          return_const 0 8                         || graphics__col_darkgray
+20          jmp 21                                   || graphics__col_brightblue || graphics__col_brightblue_lazy
+21          return_const 0 9                         || graphics__col_brightblue
+22          jmp 23                                   || graphics__col_brightgreen || graphics__col_brightgreen_lazy
+23          return_const 0 10                        || graphics__col_brightgreen
+24          jmp 25                                   || graphics__col_brightcyan || graphics__col_brightcyan_lazy
+25          return_const 0 11                        || graphics__col_brightcyan
+26          jmp 27                                   || graphics__col_brightred || graphics__col_brightred_lazy
+27          return_const 0 12                        || graphics__col_brightred
+28          jmp 29                                   || graphics__col_brightmagenta || graphics__col_brightmagenta_lazy
+29          return_const 0 13                        || graphics__col_brightmagenta
+30          jmp 31                                   || graphics__col_yellow || graphics__col_yellow_lazy
+31          return_const 0 14                        || graphics__col_yellow
+32          jmp 33                                   || graphics__col_white || graphics__col_white_lazy
+33          return_const 0 15                        || graphics__col_white
+34          jmp 35                                   || graphics__pt || graphics__pt_lazy
+35          load 1                                   || graphics__pt
+            eval
+            load 0
+            eval
+            ccreatet 2 11 5 0
+            return 2
+36          load 1                                   || graphics__vergrootPt_lazy
+            eval
+            store 1
+37          load 1                                   || graphics__vergrootPt
+            jmpt 1 38                                || lbs
+38          load 2                                   || graphics__vergrootPt_Graphics__Pt
+            eval
+            load 1
+            mult
+            load 2
+            eval
+            load 0
+            mult
+            ccreatet 2 11 5 0
+            return 4
+39          load 1                                   || graphics__draaiPt_lazy
+            eval
+            store 1
+40          load 1                                   || graphics__draaiPt
+            load 0
+            tailcall 2 323                           || __pat_mgrafischgraphicscfp_6
+41          load 0                                   || graphics__verschuifPt_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+42          load 0                                   || graphics__verschuifPt
+            jmpt 1 43                                || lbs
+43          load 3                                   || graphics__verschuifPt_Graphics__Pt
+            jmpt 1 44                                || lbs
+44          load 1                                   || graphics__verschuifPt_Graphics__Pt_Graphics__Pt
+            load 3
+            add
+            load 0
+            load 2
+            add
+            ccreatet 2 11 5 0
+            return 6
+45          load 0                                   || graphics__addPt_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+46          load 0                                   || graphics__addPt
+            jmpt 1 47                                || lbs
+47          load 3                                   || graphics__addPt_Graphics__Pt
+            jmpt 1 48                                || lbs
+48          load 3                                   || graphics__addPt_Graphics__Pt_Graphics__Pt
+            load 1
+            add
+            load 2
+            load 0
+            add
+            ccreatet 2 11 5 0
+            return 6
+49          load 0                                   || graphics__subPt_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+50          load 0                                   || graphics__subPt
+            jmpt 1 51                                || lbs
+51          load 3                                   || graphics__subPt_Graphics__Pt
+            jmpt 1 52                                || lbs
+52          load 3                                   || graphics__subPt_Graphics__Pt_Graphics__Pt
+            load 1
+            sub
+            load 2
+            load 0
+            sub
+            ccreatet 2 11 5 0
+            return 6
+53          load 1                                   || graphics__scalePt_lazy
+            eval
+            store 1
+54          load 1                                   || graphics__scalePt
+            jmpt 1 55                                || lbs
+55          load 2                                   || graphics__scalePt_Graphics__Pt
+            eval
+            load 1
+            mult
+            load 2
+            eval
+            load 0
+            mult
+            ccreatet 2 11 5 0
+            return 4
+56          load 0                                   || graphics__dotPt_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+57          load 0                                   || graphics__dotPt
+            jmpt 1 58                                || lbs
+58          load 3                                   || graphics__dotPt_Graphics__Pt
+            jmpt 1 59                                || lbs
+59          load 2                                   || graphics__dotPt_Graphics__Pt_Graphics__Pt
+            load 0
+            mult
+            load 3
+            load 1
+            mult
+            add
+            return 6
+60          jmp 61                                   || graphics__distPtHelper || graphics__distPtHelper_lazy
+61          load 3                                   || graphics__distPtHelper
+            load 1
+            load 2
+            load 0
+            tailcall 4 321                           || __pat_mgrafischgraphicscfp_21
+62          load 0                                   || graphics__distPt_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+63          load 0                                   || graphics__distPt
+            jmpt 1 64                                || lbs
+64          load 3                                   || graphics__distPt_Graphics__Pt
+            jmpt 1 65                                || lbs
+65          load 1                                   || graphics__distPt_Graphics__Pt_Graphics__Pt
+            load 0
+            load 3
+            load 2
+            tailcall 6 61                            || graphics__distPtHelper
+66          load 0                                   || graphics__append_lazy
+            eval
+            store 0
+67          load 0                                   || graphics__append
+            jmpt 2 68 69                             || lbs
+68          load 1                                   || graphics__append_Nil
+            eval
+            return 2
+69          load 3                                   || graphics__append_Cons
+            load 1
+            pushfunc 2 66                            || graphics__append_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 10 1
+            return 4
+70          load 0                                   || graphics__revAppend_lazy
+            eval
+            store 0
+71          load 0                                   || graphics__revAppend
+            jmpt 2 72 73                             || lbs
+72          load 1                                   || graphics__revAppend_Nil
+            eval
+            return 2
+73          load 3                                   || graphics__revAppend_Cons
+            load 0
+            ccreatet 2 11 10 1
+            load 1
+            eval
+            tailcall 4 71                            || graphics__revAppend
+74          load 0                                   || graphics__reverseList_lazy
+            eval
+            store 0
+75          ccreatet 0 11 10 0                       || graphics__reverseList
+            load 0
+            tailcall 1 71                            || graphics__revAppend
+76          load 1                                   || graphics__mapList_lazy
+            eval
+            store 1
+77          load 1                                   || graphics__mapList
+            jmpt 2 78 79                             || lbs
+78          ccreatet 0 11 10 0                       || graphics__mapList_Nil
+            return 2
+79          load 1                                   || graphics__mapList_Cons
+            load 2
+            pushfunc 2 76                            || graphics__mapList_lazy
+            create 3 3
+            load 0
+            load 2
+            eval
+            ccreatet 2 11 10 1
+            return 4
+80          load 1                                   || graphics__filterList_lazy
+            eval
+            store 1
+81          load 1                                   || graphics__filterList
+            jmpt 2 82 83                             || lbs
+82          ccreatet 0 11 10 0                       || graphics__filterList_Nil
+            return 2
+83          load 0                                   || graphics__filterList_Cons
+            load 2
+            eval
+            ifeq 84                                  || graphics__filterList_Cons_else
+            load 1
+            load 2
+            pushfunc 2 80                            || graphics__filterList_lazy
+            create 3 3
+            load 0
+            ccreatet 2 11 10 1
+            return 4
+84          load 1                                   || graphics__filterList_Cons_else
+            eval
+            load 2
+            tailcall 4 81                            || graphics__filterList
+85          load 0                                   || graphics__lengthList_lazy
+            eval
+            store 0
+86          load 0                                   || graphics__lengthList
+            jmpt 2 87 88                             || lbs
+87          return_const 1 0                         || graphics__lengthList_Nil
+88          push 1                                   || graphics__lengthList_Cons
+            load 1
+            eval
+            call 86                                  || graphics__lengthList
+            add
+            return 3
+89          load 0                                   || graphics__forcePt_lazy
+            eval
+            store 0
+90          load 0                                   || graphics__forcePt
+            jmpt 1 91                                || lbs
+91          load 1                                   || graphics__forcePt_Graphics__Pt
+            load 0
+            ccreatet 2 11 5 0
+            return 3
+92          load 0                                   || graphics__forcePoints_lazy
+            eval
+            store 0
+93          load 0                                   || graphics__forcePoints
+            jmpt 2 94 95                             || lbs
+94          ccreatet 0 11 10 0                       || graphics__forcePoints_Nil
+            return 1
+95          load 1                                   || graphics__forcePoints_Cons
+            pushfunc 1 92                            || graphics__forcePoints_lazy
+            create 2 3
+            load 0
+            call 90                                  || graphics__forcePt
+            ccreatet 2 11 10 1
+            return 3
+96          load 0                                   || graphics__forceItem_lazy
+            eval
+            store 0
+97          load 0                                   || graphics__forceItem
+            jmpt 9 98 99 100 101 102 103 104 105 106 || lbs
+98          load 2                                   || graphics__forceItem_Graphics__GraphText
+            load 1
+            call 90                                  || graphics__forcePt
+            load 0
+            ccreatet 3 11 7 0
+            return 4
+99          load 1                                   || graphics__forceItem_Graphics__GraphPolyLine
+            call 93                                  || graphics__forcePoints
+            load 0
+            ccreatet 2 11 7 1
+            return 3
+100         load 1                                   || graphics__forceItem_Graphics__GraphPolygon
+            call 93                                  || graphics__forcePoints
+            load 0
+            ccreatet 2 11 7 2
+            return 3
+101         load 2                                   || graphics__forceItem_Graphics__GraphRectangle
+            call 90                                  || graphics__forcePt
+            load 1
+            call 90                                  || graphics__forcePt
+            load 0
+            ccreatet 3 11 7 3
+            return 4
+102         load 2                                   || graphics__forceItem_Graphics__GraphEllipse
+            call 90                                  || graphics__forcePt
+            load 1
+            call 90                                  || graphics__forcePt
+            load 0
+            ccreatet 3 11 7 4
+            return 4
+103         load 2                                   || graphics__forceItem_Graphics__GraphDisc
+            call 90                                  || graphics__forcePt
+            load 1
+            call 90                                  || graphics__forcePt
+            load 0
+            ccreatet 3 11 7 5
+            return 4
+104         ccreatet 0 11 7 6                        || graphics__forceItem_Graphics__GraphClear
+            return 1
+105         load 0                                   || graphics__forceItem_Graphics__GraphMenu
+            call 112                                 || graphics__forceMenuCats
+            ccreatet 1 11 7 7
+            return 2
+106         load 1                                   || graphics__forceItem_Graphics__GraphPrompt
+            load 0
+            ccreatet 2 11 7 8
+            return 3
+107         load 0                                   || graphics__forceGraphics_lazy
+            eval
+            store 0
+108         load 0                                   || graphics__forceGraphics
+            jmpt 2 109 110                           || lbs
+109         ccreatet 0 11 10 0                       || graphics__forceGraphics_Nil
+            return 1
+110         load 1                                   || graphics__forceGraphics_Cons
+            pushfunc 1 107                           || graphics__forceGraphics_lazy
+            create 2 3
+            load 0
+            call 97                                  || graphics__forceItem
+            ccreatet 2 11 10 1
+            return 3
+111         load 0                                   || graphics__forceMenuCats_lazy
+            eval
+            store 0
+112         load 0                                   || graphics__forceMenuCats
+            jmpt 2 113 114                           || lbs
+113         ccreatet 0 11 10 0                       || graphics__forceMenuCats_Nil
+            return 1
+114         load 1                                   || graphics__forceMenuCats_Cons
+            pushfunc 1 111                           || graphics__forceMenuCats_lazy
+            create 2 3
+            load 0
+            call 116                                 || graphics__forceMenuCat
+            ccreatet 2 11 10 1
+            return 3
+115         load 0                                   || graphics__forceMenuCat_lazy
+            eval
+            store 0
+116         load 0                                   || graphics__forceMenuCat
+            jmpt 1 117                               || lbs
+117         load 1                                   || graphics__forceMenuCat_Graphics__MenuCat
+            load 0
+            ccreatet 2 11 6 0
+            return 3
+118         load 0                                   || graphics__graphicsout_lazy
+            eval
+            store 0
+119         load 0                                   || graphics__graphicsout
+            call 121                                 || graphics__graphicsoutChars
+            tailcall 1 173                           || graphics__list2str
+120         load 0                                   || graphics__graphicsoutChars_lazy
+            eval
+            store 0
+121         load 0                                   || graphics__graphicsoutChars
+            jmpt 2 122 123                           || lbs
+122         ccreatet 0 11 10 0                       || graphics__graphicsoutChars_Nil
+            return 1
+123         load 1                                   || graphics__graphicsoutChars_Cons
+            pushfunc 1 120                           || graphics__graphicsoutChars_lazy
+            create 2 3
+            load 0
+            call 125                                 || graphics__itemChars
+            tailcall 3 67                            || graphics__append
+124         load 0                                   || graphics__itemChars_lazy
+            eval
+            store 0
+125         load 0                                   || graphics__itemChars
+            jmpt 9 126 127 128 129 130 131 132 133 134 || lbs
+126         load 2                                   || graphics__itemChars_Graphics__GraphText
+            pushfunc 1 166                           || graphics__quotedChars
+            create 2 3
+            load 1
+            pushfunc 1 157                           || graphics__ptChars
+            create 2 3
+            pushfunc 2 66                            || graphics__append_lazy
+            create 3 3
+            load 0
+            pushfunc 1 162                           || graphics__intChars
+            create 2 3
+            pushfunc 2 66                            || graphics__append_lazy
+            create 3 3
+            load 3
+            call 160                                 || graphics__tagChars
+            tailcall 4 67                            || graphics__append
+127         load 1                                   || graphics__itemChars_Graphics__GraphPolyLine
+            load 0
+            load 2
+            tailcall 3 151                           || graphics__pointsItemChars
+128         load 1                                   || graphics__itemChars_Graphics__GraphPolygon
+            load 0
+            load 2
+            tailcall 3 151                           || graphics__pointsItemChars
+129         load 2                                   || graphics__itemChars_Graphics__GraphRectangle
+            load 1
+            load 0
+            load 3
+            tailcall 4 149                           || graphics__pairItemChars
+130         load 2                                   || graphics__itemChars_Graphics__GraphEllipse
+            load 1
+            load 0
+            load 3
+            tailcall 4 149                           || graphics__pairItemChars
+131         load 2                                   || graphics__itemChars_Graphics__GraphDisc
+            load 1
+            load 0
+            load 3
+            tailcall 4 149                           || graphics__pairItemChars
+132         load 0                                   || graphics__itemChars_Graphics__GraphClear
+            tailcall 1 160                           || graphics__tagChars
+133         load 0                                   || graphics__itemChars_Graphics__GraphMenu
+            pushfunc 1 136                           || graphics__menuCatsChars
+            create 2 3
+            load 1
+            call 160                                 || graphics__tagChars
+            tailcall 2 67                            || graphics__append
+134         load 1                                   || graphics__itemChars_Graphics__GraphPrompt
+            pushfunc 1 166                           || graphics__quotedChars
+            create 2 3
+            load 0
+            pushfunc 1 166                           || graphics__quotedChars
+            create 2 3
+            pushfunc 2 66                            || graphics__append_lazy
+            create 3 3
+            load 2
+            call 160                                 || graphics__tagChars
+            tailcall 3 67                            || graphics__append
+135         load 0                                   || graphics__menuCatsChars_lazy
+            eval
+            store 0
+136         load 0                                   || graphics__menuCatsChars
+            pushfunc 1 138                           || graphics__menuCatsBody
+            create 2 3
+            load 0
+            call 86                                  || graphics__lengthList
+            call 162                                 || graphics__intChars
+            tailcall 1 67                            || graphics__append
+137         load 0                                   || graphics__menuCatsBody_lazy
+            eval
+            store 0
+138         load 0                                   || graphics__menuCatsBody
+            jmpt 2 139 140                           || lbs
+139         ccreatet 0 11 10 0                       || graphics__menuCatsBody_Nil
+            return 1
+140         load 1                                   || graphics__menuCatsBody_Cons
+            pushfunc 1 137                           || graphics__menuCatsBody_lazy
+            create 2 3
+            load 0
+            call 142                                 || graphics__menuCatChars
+            tailcall 3 67                            || graphics__append
+141         load 0                                   || graphics__menuCatChars_lazy
+            eval
+            store 0
+142         load 0                                   || graphics__menuCatChars
+            jmpt 1 143                               || lbs
+143         load 1                                   || graphics__menuCatChars_Graphics__MenuCat
+            pushfunc 1 145                           || graphics__menuItemsChars
+            create 2 3
+            load 1
+            pushfunc 1 86                            || graphics__lengthList
+            create 2 3
+            pushfunc 1 161                           || graphics__intChars_lazy
+            create 2 3
+            pushfunc 2 66                            || graphics__append_lazy
+            create 3 3
+            load 0
+            call 166                                 || graphics__quotedChars
+            tailcall 3 67                            || graphics__append
+144         load 0                                   || graphics__menuItemsChars_lazy
+            eval
+            store 0
+145         load 0                                   || graphics__menuItemsChars
+            jmpt 2 146 147                           || lbs
+146         ccreatet 0 11 10 0                       || graphics__menuItemsChars_Nil
+            return 1
+147         load 1                                   || graphics__menuItemsChars_Cons
+            pushfunc 1 144                           || graphics__menuItemsChars_lazy
+            create 2 3
+            load 0
+            call 166                                 || graphics__quotedChars
+            tailcall 3 67                            || graphics__append
+148         jmp 149                                  || graphics__pairItemChars || graphics__pairItemChars_lazy
+149         load 3                                   || graphics__pairItemChars
+            pushfunc 1 156                           || graphics__ptChars_lazy
+            create 2 3
+            load 2
+            pushfunc 1 156                           || graphics__ptChars_lazy
+            create 2 3
+            pushfunc 2 66                            || graphics__append_lazy
+            create 3 3
+            load 1
+            pushfunc 1 161                           || graphics__intChars_lazy
+            create 2 3
+            pushfunc 2 66                            || graphics__append_lazy
+            create 3 3
+            load 0
+            call 160                                 || graphics__tagChars
+            tailcall 4 67                            || graphics__append
+150         jmp 151                                  || graphics__pointsItemChars || graphics__pointsItemChars_lazy
+151         load 2                                   || graphics__pointsItemChars
+            pushfunc 1 152                           || graphics__ptsChars_lazy
+            create 2 3
+            load 2
+            pushfunc 1 85                            || graphics__lengthList_lazy
+            create 2 3
+            pushfunc 1 161                           || graphics__intChars_lazy
+            create 2 3
+            pushfunc 2 66                            || graphics__append_lazy
+            create 3 3
+            load 1
+            pushfunc 1 161                           || graphics__intChars_lazy
+            create 2 3
+            pushfunc 2 66                            || graphics__append_lazy
+            create 3 3
+            load 0
+            call 160                                 || graphics__tagChars
+            tailcall 3 67                            || graphics__append
+152         load 0                                   || graphics__ptsChars_lazy
+            eval
+            store 0
+153         load 0                                   || graphics__ptsChars
+            jmpt 2 154 155                           || lbs
+154         ccreatet 0 11 10 0                       || graphics__ptsChars_Nil
+            return 1
+155         load 1                                   || graphics__ptsChars_Cons
+            pushfunc 1 152                           || graphics__ptsChars_lazy
+            create 2 3
+            load 0
+            call 157                                 || graphics__ptChars
+            tailcall 3 67                            || graphics__append
+156         load 0                                   || graphics__ptChars_lazy
+            eval
+            store 0
+157         load 0                                   || graphics__ptChars
+            jmpt 1 158                               || lbs
+158         load 1                                   || graphics__ptChars_Graphics__Pt
+            pushfunc 1 164                           || graphics__floatChars
+            create 2 3
+            load 0
+            call 164                                 || graphics__floatChars
+            tailcall 3 67                            || graphics__append
+159         jmp 160                                  || graphics__tagChars || graphics__tagChars_lazy
+160         ccreatet 0 11 10 0                       || graphics__tagChars
+            pushc 32
+            ccreatet 2 11 10 1
+            load 0
+            pushfunc 1 326                           || graphics__tagChars_1
+            create 2 3
+            call 168                                 || graphics__str2list
+            tailcall 1 67                            || graphics__append
+161         load 0                                   || graphics__intChars_lazy
+            eval
+            store 0
+162         ccreatet 0 11 10 0                       || graphics__intChars
+            pushc 32
+            ccreatet 2 11 10 1
+            load 0
+            call 179                                 || graphics__itoa
+            tailcall 1 67                            || graphics__append
+163         jmp 164                                  || graphics__floatChars || graphics__floatChars_lazy
+164         ccreatet 0 11 10 0                       || graphics__floatChars
+            pushc 32
+            ccreatet 2 11 10 1
+            load 0
+            pushfunc 1 328                           || graphics__floatChars_1
+            create 2 3
+            call 168                                 || graphics__str2list
+            tailcall 1 67                            || graphics__append
+165         jmp 166                                  || graphics__quotedChars || graphics__quotedChars_lazy
+166         ccreatet 0 11 10 0                       || graphics__quotedChars
+            pushc 32
+            ccreatet 2 11 10 1
+            pushc 34
+            ccreatet 2 11 10 1
+            load 0
+            pushfunc 1 168                           || graphics__str2list
+            create 2 3
+            pushfunc 2 66                            || graphics__append_lazy
+            create 3 3
+            pushc 34
+            ccreatet 2 11 10 1
+            return 1
+167         jmp 168                                  || graphics__str2list || graphics__str2list_lazy
+168         load 0                                   || graphics__str2list
+            push 0
+            tailcall 1 170                           || graphics__strls
+169         load 0                                   || graphics__strls_lazy
+            eval
+            store 0
+170         load 1                                   || graphics__strls
+            eval
+            strop 2
+            load 0
+            sub
+            ifle 171                                 || graphics__strls_else
+            load 1
+            loadadd 0 1
+            pushfunc 2 170                           || graphics__strls
+            create 3 3
+            load 1
+            eval
+            load 0
+            strop 4
+            ccreatet 2 11 10 1
+            return 2
+171         ccreatet 0 11 10 0                       || graphics__strls_else
+            return 2
+172         load 0                                   || graphics__list2str_lazy
+            eval
+            store 0
+173         load 0                                   || graphics__list2str
+            pushfunc 1 330                           || graphics__list2str_1
+            create 2 3
+            load 0
+            push 0
+            tailcall 1 175                           || graphics__fillStr
+174         load 1                                   || graphics__fillStr_lazy
+            eval
+            store 1
+175         load 1                                   || graphics__fillStr
+            jmpt 2 176 177                           || lbs
+176         load 2                                   || graphics__fillStr_Nil
+            eval
+            return 3
+177         load 4                                   || graphics__fillStr_Cons
+            load 2
+            load 0
+            pushfunc 3 334                           || graphics__fillStr_2
+            create 4 3
+            load 1
+            eval
+            load 2
+            pushfunc 1 332                           || graphics__fillStr_1
+            create 2 3
+            tailcall 5 175                           || graphics__fillStr
+178         load 0                                   || graphics__itoa_lazy
+            eval
+            store 0
+179         ifltlv 0 0 181                           || graphics__itoa_then || graphics__itoa
+            ifltlv 0 10 180                          || graphics__itoa_else_then
+            ccreatet 0 11 10 0
+            push 48
+            load 0
+            push 10
+            mod
+            add
+            ccreatet 2 11 10 1
+            load 0
+            push 10
+            div
+            call 179                                 || graphics__itoa
+            tailcall 1 67                            || graphics__append
+180         ccreatet 0 11 10 0                       || graphics__itoa_else_then
+            push 48
+            load 0
+            add
+            ccreatet 2 11 10 1
+            return 1
+181         push 0                                   || graphics__itoa_then
+            load 0
+            sub
+            pushfunc 1 179                           || graphics__itoa
+            create 2 3
+            pushc 45
+            ccreatet 2 11 10 1
+            return 1
+182         jmp 183                                  || graphics__strEqual || graphics__strEqual_lazy
+183         load 0                                   || graphics__strEqual
+            eval
+            strop 2
+            load 1
+            eval
+            strop 2
+            sub
+            ifneq 184                                || graphics__strEqual_else
+            load 1
+            load 0
+            push 0
+            tailcall 2 186                           || graphics__strEqualAt
+184         return_const 2 0                         || graphics__strEqual_else
+185         load 0                                   || graphics__strEqualAt_lazy
+            eval
+            store 0
+186         load 0                                   || graphics__strEqualAt
+            load 1
+            eval
+            strop 2
+            sub
+            iflt 187                                 || graphics__strEqualAt_else
+            return_const 3 1
+187         load 1                                   || graphics__strEqualAt_else
+            eval
+            load 0
+            strop 4
+            load 2
+            eval
+            load 0
+            strop 4
+            sub
+            ifneq 188                                || graphics__strEqualAt_else_else
+            load 2
+            load 1
+            loadadd 0 1
+            tailcall 3 186                           || graphics__strEqualAt
+188         return_const 3 0                         || graphics__strEqualAt_else_else
+189         jmp 190                                  || graphics__splitWords || graphics__splitWords_lazy
+190         load 0                                   || graphics__splitWords
+            call 168                                 || graphics__str2list
+            tailcall 1 192                           || graphics__splitWordsChars
+191         load 0                                   || graphics__splitWordsChars_lazy
+            eval
+            store 0
+192         load 0                                   || graphics__splitWordsChars
+            jmpt 2 193 194                           || lbs
+193         ccreatet 0 11 10 0                       || graphics__splitWordsChars_Nil
+            return 1
+194         loadadd 0 -32                            || graphics__splitWordsChars_Cons
+            ifneq 195                                || graphics__splitWordsChars_Cons_else
+            load 1
+            eval
+            tailcall 3 192                           || graphics__splitWordsChars
+195         load 2                                   || graphics__splitWordsChars_Cons_else
+            tailcall 3 197                           || graphics__splitWordsWord
+196         jmp 197                                  || graphics__splitWordsWord || graphics__splitWordsWord_lazy
+197         load 0                                   || graphics__splitWordsWord
+            pushfunc 1 203                           || graphics__dropWordChars_lazy
+            create 2 3
+            pushfunc 1 191                           || graphics__splitWordsChars_lazy
+            create 2 3
+            load 0
+            eval
+            call 199                                 || graphics__takeWordChars
+            call 173                                 || graphics__list2str
+            ccreatet 2 11 10 1
+            return 1
+198         load 0                                   || graphics__takeWordChars_lazy
+            eval
+            store 0
+199         load 0                                   || graphics__takeWordChars
+            jmpt 2 200 201                           || lbs
+200         ccreatet 0 11 10 0                       || graphics__takeWordChars_Nil
+            return 1
+201         loadadd 0 -32                            || graphics__takeWordChars_Cons
+            ifneq 202                                || graphics__takeWordChars_Cons_else
+            ccreatet 0 11 10 0
+            return 3
+202         load 1                                   || graphics__takeWordChars_Cons_else
+            pushfunc 1 198                           || graphics__takeWordChars_lazy
+            create 2 3
+            load 0
+            ccreatet 2 11 10 1
+            return 3
+203         load 0                                   || graphics__dropWordChars_lazy
+            eval
+            store 0
+204         load 0                                   || graphics__dropWordChars
+            jmpt 2 205 206                           || lbs
+205         ccreatet 0 11 10 0                       || graphics__dropWordChars_Nil
+            return 1
+206         loadadd 0 -32                            || graphics__dropWordChars_Cons
+            ifneq 207                                || graphics__dropWordChars_Cons_else
+            load 1
+            eval
+            return 3
+207         load 1                                   || graphics__dropWordChars_Cons_else
+            eval
+            tailcall 3 204                           || graphics__dropWordChars
+208         jmp 209                                  || graphics__startsWithPText || graphics__startsWithPText_lazy
+209         load 0                                   || graphics__startsWithPText
+            eval
+            strop 2
+            push 6
+            sub
+            iflt 210                                 || graphics__startsWithPText_else
+            load 0
+            push "PText "
+            push 0
+            tailcall 1 186                           || graphics__strEqualAt
+210         return_const 1 0                         || graphics__startsWithPText_else
+211         jmp 212                                  || graphics__startsWithOpenFile || graphics__startsWithOpenFile_lazy
+212         load 0                                   || graphics__startsWithOpenFile
+            eval
+            strop 2
+            push 9
+            sub
+            iflt 213                                 || graphics__startsWithOpenFile_else
+            load 0
+            push "OpenFile "
+            push 0
+            tailcall 1 186                           || graphics__strEqualAt
+213         return_const 1 0                         || graphics__startsWithOpenFile_else
+214         jmp 215                                  || graphics__parseEvent || graphics__parseEvent_lazy
+215         load 0                                   || graphics__parseEvent
+            call 209                                 || graphics__startsWithPText
+            ifeq 216                                 || graphics__parseEvent_else
+            load 0
+            push 6
+            call 219                                 || graphics__dropCharsFromStr
+            ccreatet 1 11 8 6
+            return 1
+216         load 0                                   || graphics__parseEvent_else
+            call 212                                 || graphics__startsWithOpenFile
+            ifeq 217                                 || graphics__parseEvent_else_else
+            load 0
+            push 9
+            call 219                                 || graphics__dropCharsFromStr
+            ccreatet 1 11 8 7
+            return 1
+217         load 0                                   || graphics__parseEvent_else_else
+            call 190                                 || graphics__splitWords
+            tailcall 1 228                           || graphics__parseEventWords
+218         load 0                                   || graphics__dropCharsFromStr_lazy
+            eval
+            store 0
+219         load 1                                   || graphics__dropCharsFromStr
+            call 168                                 || graphics__str2list
+            load 0
+            call 221                                 || graphics__dropChars
+            tailcall 2 173                           || graphics__list2str
+220         load 0                                   || graphics__dropChars_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+221         push 0                                   || graphics__dropChars
+            load 0
+            sub
+            iflt 222                                 || graphics__dropChars_else
+            load 1
+            return 2
+222         load 1                                   || graphics__dropChars_else
+            load 0
+            tailcall 2 224                           || graphics__dropChars1
+223         load 1                                   || graphics__dropChars1_lazy
+            eval
+            store 1
+224         load 1                                   || graphics__dropChars1
+            jmpt 2 225 226                           || lbs
+225         ccreatet 0 11 10 0                       || graphics__dropChars1_Nil
+            return 2
+226         load 1                                   || graphics__dropChars1_Cons
+            eval
+            load 2
+            eval
+            dec
+            tailcall 4 221                           || graphics__dropChars
+227         load 0                                   || graphics__parseEventWords_lazy
+            eval
+            store 0
+228         load 0                                   || graphics__parseEventWords
+            jmpt 2 229 230                           || lbs
+229         ccreatet 0 11 8 8                        || graphics__parseEventWords_Nil
+            return 1
+230         load 1                                   || graphics__parseEventWords_Cons
+            load 0
+            tailcall 3 232                           || graphics__parseEventTag
+231         jmp 232                                  || graphics__parseEventTag || graphics__parseEventTag_lazy
+232         push "MouseDown"                         || graphics__parseEventTag
+            load 0
+            call 183                                 || graphics__strEqual
+            ifeq 233                                 || graphics__parseEventTag_else
+            load 1
+            eval
+            call 248                                 || graphics__parseEventPt
+            ccreatet 1 11 8 1
+            return 2
+233         push "MouseUp"                           || graphics__parseEventTag_else
+            load 0
+            call 183                                 || graphics__strEqual
+            ifeq 234                                 || graphics__parseEventTag_else_else
+            load 1
+            eval
+            call 248                                 || graphics__parseEventPt
+            ccreatet 1 11 8 2
+            return 2
+234         push "MouseDragged"                      || graphics__parseEventTag_else_else
+            load 0
+            call 183                                 || graphics__strEqual
+            ifeq 235                                 || graphics__parseEventTag_else_else_else
+            load 1
+            eval
+            call 248                                 || graphics__parseEventPt
+            ccreatet 1 11 8 3
+            return 2
+235         push "MouseDoubleClick"                  || graphics__parseEventTag_else_else_else
+            load 0
+            call 183                                 || graphics__strEqual
+            ifeq 236                                 || graphics__parseEventTag_else_else_else_else
+            load 1
+            eval
+            call 248                                 || graphics__parseEventPt
+            ccreatet 1 11 8 4
+            return 2
+236         push "KeyIn"                             || graphics__parseEventTag_else_else_else_else
+            load 0
+            call 183                                 || graphics__strEqual
+            ifeq 237                                 || graphics__parseEventTag_else_else_else_else_else
+            load 1
+            eval
+            call 256                                 || graphics__parseEventKey
+            ccreatet 1 11 8 0
+            return 2
+237         push "MenuItem"                          || graphics__parseEventTag_else_else_else_else_else
+            load 0
+            call 183                                 || graphics__strEqual
+            ifeq 238                                 || graphics__parseEventTag_else_else_else_else_else_else
+            load 1
+            eval
+            tailcall 2 240                           || graphics__parseMenuItemEvent
+238         ccreatet 0 11 8 8                        || graphics__parseEventTag_else_else_else_else_else_else
+            return 2
+239         load 0                                   || graphics__parseMenuItemEvent_lazy
+            eval
+            store 0
+240         load 0                                   || graphics__parseMenuItemEvent
+            jmpt 2 241 242                           || lbs
+241         ccreatet 0 11 8 8                        || graphics__parseMenuItemEvent_Nil
+            return 1
+242         load 1                                   || graphics__parseMenuItemEvent_Cons
+            eval
+            load 0
+            tailcall 3 244                           || graphics__parseMenuItemEventItem
+243         load 1                                   || graphics__parseMenuItemEventItem_lazy
+            eval
+            store 1
+244         load 1                                   || graphics__parseMenuItemEventItem
+            jmpt 2 245 246                           || lbs
+245         ccreatet 0 11 8 8                        || graphics__parseMenuItemEventItem_Nil
+            return 2
+246         load 0                                   || graphics__parseMenuItemEventItem_Cons
+            load 2
+            eval
+            ccreatet 2 11 8 5
+            return 4
+247         load 0                                   || graphics__parseEventPt_lazy
+            eval
+            store 0
+248         load 0                                   || graphics__parseEventPt
+            jmpt 2 249 250                           || lbs
+249         push 0.0                                 || graphics__parseEventPt_Nil
+            push 0.0
+            ccreatet 2 11 5 0
+            return 1
+250         load 1                                   || graphics__parseEventPt_Cons
+            eval
+            load 0
+            tailcall 3 252                           || graphics__parseEventPtY
+251         load 1                                   || graphics__parseEventPtY_lazy
+            eval
+            store 1
+252         load 1                                   || graphics__parseEventPtY
+            jmpt 2 253 254                           || lbs
+253         push 0.0                                 || graphics__parseEventPtY_Nil
+            load 0
+            eval
+            floatop 16
+            ccreatet 2 11 5 0
+            return 2
+254         load 0                                   || graphics__parseEventPtY_Cons
+            floatop 16
+            load 2
+            eval
+            floatop 16
+            ccreatet 2 11 5 0
+            return 4
+255         load 0                                   || graphics__parseEventKey_lazy
+            eval
+            store 0
+256         load 0                                   || graphics__parseEventKey
+            jmpt 2 257 258                           || lbs
+257         return_const 1 0                         || graphics__parseEventKey_Nil
+258         load 0                                   || graphics__parseEventKey_Cons
+            floatop 16
+            floatop 15
+            return 3
+259         load 0                                   || graphics__decodeFloatWords_lazy
+            eval
+            store 0
+260         load 0                                   || graphics__decodeFloatWords
+            jmpt 2 261 262                           || lbs
+261         ccreatet 0 11 10 0                       || graphics__decodeFloatWords_Nil
+            return 1
+262         load 1                                   || graphics__decodeFloatWords_Cons
+            pushfunc 1 259                           || graphics__decodeFloatWords_lazy
+            create 2 3
+            load 0
+            floatop 16
+            ccreatet 2 11 10 1
+            return 3
+263         load 0                                   || graphics__decodePointList_lazy
+            eval
+            store 0
+264         load 0                                   || graphics__decodePointList
+            jmpt 2 265 266                           || lbs
+265         ccreatet 0 11 10 0                       || graphics__decodePointList_Nil
+            return 1
+266         load 1                                   || graphics__decodePointList_Cons
+            load 0
+            floatop 16
+            floatop 15
+            tailcall 3 268                           || graphics__decodePoints
+267         load 0                                   || graphics__decodePoints_lazy
+            eval
+            store 0
+268         push 0                                   || graphics__decodePoints
+            load 0
+            sub
+            iflt 269                                 || graphics__decodePoints_else
+            ccreatet 0 11 10 0
+            return 2
+269         load 1                                   || graphics__decodePoints_else
+            eval
+            load 0
+            tailcall 2 271                           || graphics__decodePointsStep
+270         load 1                                   || graphics__decodePointsStep_lazy
+            eval
+            store 1
+271         load 1                                   || graphics__decodePointsStep
+            jmpt 2 272 273                           || lbs
+272         ccreatet 0 11 10 0                       || graphics__decodePointsStep_Nil
+            return 2
+273         load 1                                   || graphics__decodePointsStep_Cons
+            eval
+            load 0
+            load 2
+            tailcall 4 275                           || graphics__decodePointsStepY
+274         load 2                                   || graphics__decodePointsStepY_lazy
+            eval
+            store 2
+275         load 2                                   || graphics__decodePointsStepY
+            jmpt 2 276 277                           || lbs
+276         ccreatet 0 11 10 0                       || graphics__decodePointsStepY_Nil
+            return 3
+277         load 1                                   || graphics__decodePointsStepY_Cons
+            load 2
+            eval
+            dec
+            pushfunc 2 268                           || graphics__decodePoints
+            create 3 3
+            load 0
+            floatop 16
+            load 3
+            eval
+            floatop 16
+            ccreatet 2 11 5 0
+            ccreatet 2 11 10 1
+            return 5
+278         jmp 279                                  || __deepEq || __deepEq_lazy
+279         load 1                                   || __deepEq
+            load 0
+            load 1
+            eval
+            gettypeid
+            load 0
+            eval
+            gettypeid
+            tailcall 2 281                           || __deepEqDispatch
+280         load 0                                   || __deepEqDispatch_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+281         load 0                                   || __deepEqDispatch
+            load 1
+            ifcmp 282                                || __deepEqDispatch_else
+            load 3
+            load 2
+            load 1
+            load 0
+            tailcall 4 291                           || __deepEqMixed
+282         loadadd 0 -1                             || __deepEqDispatch_else
+            ifneq 284                                || __deepEqDispatch_else_else
+            load 2
+            eval
+            load 3
+            eval
+            sub
+            ifneq 283                                || __deepEqDispatch_else_then_else
+            return_const 4 1
+283         return_const 4 0                         || __deepEqDispatch_else_then_else
+284         loadadd 0 -2                             || __deepEqDispatch_else_else
+            ifneq 286                                || __deepEqDispatch_else_else_else
+            load 2
+            eval
+            load 3
+            eval
+            sub
+            ifneq 285                                || __deepEqDispatch_else_else_then_else
+            return_const 4 1
+285         return_const 4 0                         || __deepEqDispatch_else_else_then_else
+286         loadadd 0 -3                             || __deepEqDispatch_else_else_else
+            ifneq 287                                || __deepEqDispatch_else_else_else_else
+            load 3
+            load 2
+            tailcall 4 296                           || __deepEqStr
+287         loadadd 0 -4                             || __deepEqDispatch_else_else_else_else
+            ifle 288                                 || __deepEqDispatch_else_else_else_else_else
+            load 3
+            load 2
+            tailcall 4 307                           || __deepEqConstr
+288         load 2                                   || __deepEqDispatch_else_else_else_else_else
+            eval
+            load 3
+            eval
+            sub
+            ifneq 289                                || __deepEqDispatch_else_else_else_else_else_else
+            return_const 4 1
+289         return_const 4 0                         || __deepEqDispatch_else_else_else_else_else_else
+290         load 0                                   || __deepEqMixed_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+291         load 0                                   || __deepEqMixed
+            load 1
+            add
+            ifneq 294                                || __deepEqMixed_else
+            load 0
+            load 1
+            mult
+            push 0
+            dec
+            sub
+            ifneq 293                                || __deepEqMixed_then_else
+            load 2
+            eval
+            load 3
+            eval
+            sub
+            ifneq 292                                || __deepEqMixed_then_then_else
+            return_const 4 1
+292         return_const 4 0                         || __deepEqMixed_then_then_else
+293         return_const 4 0                         || __deepEqMixed_then_else
+294         return_const 4 0                         || __deepEqMixed_else
+295         jmp 296                                  || __deepEqStr || __deepEqStr_lazy
+296         load 1                                   || __deepEqStr
+            load 0
+            load 1
+            eval
+            strop 2
+            load 0
+            eval
+            strop 2
+            tailcall 2 298                           || __deepEqStrLen
+297         load 0                                   || __deepEqStrLen_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+298         load 0                                   || __deepEqStrLen
+            load 1
+            ifcmp 299                                || __deepEqStrLen_else
+            return_const 4 0
+299         load 0                                   || __deepEqStrLen_else
+            push 0
+            load 3
+            load 2
+            tailcall 4 301                           || __deepEqStrChars
+300         load 2                                   || __deepEqStrChars_lazy
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+301         load 2                                   || __deepEqStrChars
+            load 3
+            sub
+            ifneq 302                                || __deepEqStrChars_else
+            return_const 4 1
+302         load 3                                   || __deepEqStrChars_else
+            load 2
+            load 1
+            load 0
+            tailcall 4 304                           || __deepEqStrCharsStep
+303         jmp 304                                  || __deepEqStrCharsStep || __deepEqStrCharsStep_lazy
+304         load 0                                   || __deepEqStrCharsStep
+            eval
+            load 2
+            eval
+            strop 4
+            load 1
+            eval
+            load 2
+            eval
+            strop 4
+            ifcmp 305                                || __deepEqStrCharsStep_else
+            return_const 4 0
+305         load 3                                   || __deepEqStrCharsStep_else
+            eval
+            load 2
+            eval
+            inc
+            load 1
+            load 0
+            tailcall 4 301                           || __deepEqStrChars
+306         jmp 307                                  || __deepEqConstr || __deepEqConstr_lazy
+307         load 1                                   || __deepEqConstr
+            load 0
+            load 1
+            pushfunc 1 338                           || __deepEqConstr_2
+            create 2 3
+            load 0
+            pushfunc 1 336                           || __deepEqConstr_1
+            create 2 3
+            tailcall 2 309                           || __deepEqConstrCheck
+308         jmp 309                                  || __deepEqConstrCheck || __deepEqConstrCheck_lazy
+309         load 1                                   || __deepEqConstrCheck
+            load 0
+            call 296                                 || __deepEqStr
+            ifneq 310                                || __deepEqConstrCheck_else
+            return_const 4 0
+310         load 0                                   || __deepEqConstrCheck_else
+            eval
+            lookup
+            getfuncarity
+            push 0
+            load 3
+            load 2
+            tailcall 4 312                           || __deepEqConstrFields
+311         load 2                                   || __deepEqConstrFields_lazy
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+312         load 2                                   || __deepEqConstrFields
+            load 3
+            sub
+            ifneq 313                                || __deepEqConstrFields_else
+            return_const 4 1
+313         load 3                                   || __deepEqConstrFields_else
+            load 2
+            load 1
+            load 0
+            tailcall 4 315                           || __deepEqConstrFieldsStep
+314         jmp 315                                  || __deepEqConstrFieldsStep || __deepEqConstrFieldsStep_lazy
+315         load 2                                   || __deepEqConstrFieldsStep
+            load 1
+            pushfunc 2 342                           || __deepEqConstrFieldsStep_2
+            create 3 3
+            load 2
+            load 0
+            pushfunc 2 340                           || __deepEqConstrFieldsStep_1
+            create 3 3
+            call 279                                 || __deepEq
+            ifneq 316                                || __deepEqConstrFieldsStep_else
+            return_const 4 0
+316         load 3                                   || __deepEqConstrFieldsStep_else
+            eval
+            load 2
+            eval
+            inc
+            load 1
+            load 0
+            tailcall 4 312                           || __deepEqConstrFields
+317         jmp 318                                  || __deepNeq || __deepNeq_lazy
+318         load 1                                   || __deepNeq
+            load 0
+            call 279                                 || __deepEq
+            dec
+            ifneq 319                                || __deepNeq_else
+            return_const 2 0
+319         return_const 2 1                         || __deepNeq_else
+320         jmp 321                                  || __pat_mgrafischgraphicscfp_21 || __pat_mgrafischgraphicscfp_21_lazy
+321         updsp 2                                  || __pat_mgrafischgraphicscfp_21
+            load 3
+            load 2
+            pushfunc 2 344                           || __pat_mgrafischgraphicscfp_21_1
+            create 3 3
+            store 0
+            load 5
+            load 4
+            pushfunc 2 346                           || __pat_mgrafischgraphicscfp_21_2
+            create 3 3
+            store 1
+            load 0
+            eval
+            load 0
+            eval
+            mult
+            load 1
+            eval
+            load 1
+            eval
+            mult
+            add
+            floatop 9
+            return 6
+322         load 1                                   || __pat_mgrafischgraphicscfp_6_lazy
+            eval
+            store 1
+323         updsp 2                                  || __pat_mgrafischgraphicscfp_6
+            load 2
+            pushfunc 1 348                           || __pat_mgrafischgraphicscfp_6_1
+            create 2 3
+            store 0
+            load 2
+            pushfunc 1 350                           || __pat_mgrafischgraphicscfp_6_2
+            create 2 3
+            store 1
+            load 3
+            jmpt 1 324                               || lbs
+324         push 0.0                                 || __pat_mgrafischgraphicscfp_6_Graphics__Pt
+            load 3
+            eval
+            load 0
+            mult
+            sub
+            load 2
+            eval
+            load 1
+            mult
+            add
+            load 2
+            eval
+            load 0
+            mult
+            load 3
+            eval
+            load 1
+            mult
+            add
+            ccreatet 2 11 5 0
+            return 6
+325         jmp 326                                  || graphics__tagChars_1 || graphics__tagChars_1_lazy
+326         load 0                                   || graphics__tagChars_1
+            eval
+            getconstrname
+            return 1
+327         jmp 328                                  || graphics__floatChars_1 || graphics__floatChars_1_lazy
+328         load 0                                   || graphics__floatChars_1
+            eval
+            floatop 17
+            return 1
+329         jmp 330                                  || graphics__list2str_1 || graphics__list2str_1_lazy
+330         load 0                                   || graphics__list2str_1
+            eval
+            call 86                                  || graphics__lengthList
+            array_create_dynamic 1
+            return 1
+331         jmp 332                                  || graphics__fillStr_1 || graphics__fillStr_1_lazy
+332         load 0                                   || graphics__fillStr_1
+            eval
+            inc
+            return 1
+333         jmp 334                                  || graphics__fillStr_2 || graphics__fillStr_2_lazy
+334         load 2                                   || graphics__fillStr_2
+            eval
+            load 1
+            eval
+            load 0
+            eval
+            strop 3
+            return 3
+335         jmp 336                                  || __deepEqConstr_1 || __deepEqConstr_1_lazy
+336         load 0                                   || __deepEqConstr_1
+            eval
+            getconstrname
+            return 1
+337         jmp 338                                  || __deepEqConstr_2 || __deepEqConstr_2_lazy
+338         load 0                                   || __deepEqConstr_2
+            eval
+            getconstrname
+            return 1
+339         jmp 340                                  || __deepEqConstrFieldsStep_1 || __deepEqConstrFieldsStep_1_lazy
+340         load 0                                   || __deepEqConstrFieldsStep_1
+            eval
+            load 1
+            eval
+            getfield
+            eval
+            return 2
+341         jmp 342                                  || __deepEqConstrFieldsStep_2 || __deepEqConstrFieldsStep_2_lazy
+342         load 0                                   || __deepEqConstrFieldsStep_2
+            eval
+            load 1
+            eval
+            getfield
+            eval
+            return 2
+343         jmp 344                                  || __pat_mgrafischgraphicscfp_21_1 || __pat_mgrafischgraphicscfp_21_1_lazy
+344         load 0                                   || __pat_mgrafischgraphicscfp_21_1
+            eval
+            load 1
+            eval
+            sub
+            return 2
+345         jmp 346                                  || __pat_mgrafischgraphicscfp_21_2 || __pat_mgrafischgraphicscfp_21_2_lazy
+346         load 0                                   || __pat_mgrafischgraphicscfp_21_2
+            eval
+            load 1
+            eval
+            sub
+            return 2
+347         jmp 348                                  || __pat_mgrafischgraphicscfp_6_1 || __pat_mgrafischgraphicscfp_6_1_lazy
+348         load 0                                   || __pat_mgrafischgraphicscfp_6_1
+            eval
+            floatop 1
+            return 1
+349         jmp 350                                  || __pat_mgrafischgraphicscfp_6_2 || __pat_mgrafischgraphicscfp_6_2_lazy
+350         load 0                                   || __pat_mgrafischgraphicscfp_6_2
+            eval
+            floatop 0
+            return 1
+
+.metadata
+types 7
+type 5 Graphics__Point 1
+  constr 0 Graphics__Pt 2
+type 6 Graphics__MenuCat 1
+  constr 0 Graphics__MenuCat 2
+type 7 Graphics__Graphics 9
+  constr 0 Graphics__GraphText 3
+  constr 1 Graphics__GraphPolyLine 2
+  constr 2 Graphics__GraphPolygon 2
+  constr 3 Graphics__GraphRectangle 3
+  constr 4 Graphics__GraphEllipse 3
+  constr 5 Graphics__GraphDisc 3
+  constr 6 Graphics__GraphClear 0
+  constr 7 Graphics__GraphMenu 1
+  constr 8 Graphics__GraphPrompt 2
+type 8 Graphics__Event 9
+  constr 0 Graphics__KeyIn 1
+  constr 1 Graphics__MouseDown 1
+  constr 2 Graphics__MouseUp 1
+  constr 3 Graphics__MouseDragged 1
+  constr 4 Graphics__MouseDoubleClick 1
+  constr 5 Graphics__MenuItem 2
+  constr 6 Graphics__PText 1
+  constr 7 Graphics__OpenFile 1
+  constr 8 Graphics__NoInput 0
+type 9 __Char 1
+  constr 0 __Char 1
+type 10 list 2
+  constr 0 Nil 0
+  constr 1 Cons 2
+type 9 __Char 1
+  constr 0 __Char 1
+functions 222
+  func 1 start 0 0
+  func 0 start 0 0
+  func 3 graphics__col_black 0 0
+  func 2 graphics__col_black 0 0
+  func 5 graphics__col_blue 0 0
+  func 4 graphics__col_blue 0 0
+  func 7 graphics__col_green 0 0
+  func 6 graphics__col_green 0 0
+  func 9 graphics__col_cyan 0 0
+  func 8 graphics__col_cyan 0 0
+  func 11 graphics__col_red 0 0
+  func 10 graphics__col_red 0 0
+  func 13 graphics__col_magenta 0 0
+  func 12 graphics__col_magenta 0 0
+  func 15 graphics__col_brown 0 0
+  func 14 graphics__col_brown 0 0
+  func 17 graphics__col_lightgray 0 0
+  func 16 graphics__col_lightgray 0 0
+  func 19 graphics__col_darkgray 0 0
+  func 18 graphics__col_darkgray 0 0
+  func 21 graphics__col_brightblue 0 0
+  func 20 graphics__col_brightblue 0 0
+  func 23 graphics__col_brightgreen 0 0
+  func 22 graphics__col_brightgreen 0 0
+  func 25 graphics__col_brightcyan 0 0
+  func 24 graphics__col_brightcyan 0 0
+  func 27 graphics__col_brightred 0 0
+  func 26 graphics__col_brightred 0 0
+  func 29 graphics__col_brightmagenta 0 0
+  func 28 graphics__col_brightmagenta 0 0
+  func 31 graphics__col_yellow 0 0
+  func 30 graphics__col_yellow 0 0
+  func 33 graphics__col_white 0 0
+  func 32 graphics__col_white 0 0
+  func 35 graphics__pt 2 000
+  func 34 graphics__pt 2 000
+  func 37 graphics__vergrootPt 2 010
+  func 36 graphics__vergrootPt 2 010
+  func 40 graphics__draaiPt 2 010
+  func 39 graphics__draaiPt 2 010
+  func 42 graphics__verschuifPt 2 110
+  func 41 graphics__verschuifPt 2 110
+  func 46 graphics__addPt 2 110
+  func 45 graphics__addPt 2 110
+  func 50 graphics__subPt 2 110
+  func 49 graphics__subPt 2 110
+  func 54 graphics__scalePt 2 010
+  func 53 graphics__scalePt 2 010
+  func 57 graphics__dotPt 2 110
+  func 56 graphics__dotPt 2 110
+  func 61 graphics__distPtHelper 4 00000
+  func 60 graphics__distPtHelper 4 00000
+  func 63 graphics__distPt 2 110
+  func 62 graphics__distPt 2 110
+  func 67 graphics__append 2 100
+  func 66 graphics__append 2 100
+  func 71 graphics__revAppend 2 100
+  func 70 graphics__revAppend 2 100
+  func 75 graphics__reverseList 1 10
+  func 74 graphics__reverseList 1 10
+  func 77 graphics__mapList 2 010
+  func 76 graphics__mapList 2 010
+  func 81 graphics__filterList 2 010
+  func 80 graphics__filterList 2 010
+  func 86 graphics__lengthList 1 10
+  func 85 graphics__lengthList 1 10
+  func 90 graphics__forcePt 1 10
+  func 89 graphics__forcePt 1 10
+  func 93 graphics__forcePoints 1 10
+  func 92 graphics__forcePoints 1 10
+  func 97 graphics__forceItem 1 10
+  func 96 graphics__forceItem 1 10
+  func 108 graphics__forceGraphics 1 10
+  func 107 graphics__forceGraphics 1 10
+  func 112 graphics__forceMenuCats 1 10
+  func 111 graphics__forceMenuCats 1 10
+  func 116 graphics__forceMenuCat 1 10
+  func 115 graphics__forceMenuCat 1 10
+  func 119 graphics__graphicsout 1 10
+  func 118 graphics__graphicsout 1 10
+  func 121 graphics__graphicsoutChars 1 10
+  func 120 graphics__graphicsoutChars 1 10
+  func 125 graphics__itemChars 1 10
+  func 124 graphics__itemChars 1 10
+  func 136 graphics__menuCatsChars 1 10
+  func 135 graphics__menuCatsChars 1 10
+  func 138 graphics__menuCatsBody 1 10
+  func 137 graphics__menuCatsBody 1 10
+  func 142 graphics__menuCatChars 1 10
+  func 141 graphics__menuCatChars 1 10
+  func 145 graphics__menuItemsChars 1 10
+  func 144 graphics__menuItemsChars 1 10
+  func 149 graphics__pairItemChars 4 00000
+  func 148 graphics__pairItemChars 4 00000
+  func 151 graphics__pointsItemChars 3 0000
+  func 150 graphics__pointsItemChars 3 0000
+  func 153 graphics__ptsChars 1 10
+  func 152 graphics__ptsChars 1 10
+  func 157 graphics__ptChars 1 10
+  func 156 graphics__ptChars 1 10
+  func 160 graphics__tagChars 1 00
+  func 159 graphics__tagChars 1 00
+  func 162 graphics__intChars 1 10
+  func 161 graphics__intChars 1 10
+  func 164 graphics__floatChars 1 00
+  func 163 graphics__floatChars 1 00
+  func 166 graphics__quotedChars 1 00
+  func 165 graphics__quotedChars 1 00
+  func 168 graphics__str2list 1 00
+  func 167 graphics__str2list 1 00
+  func 170 graphics__strls 2 100
+  func 169 graphics__strls 2 100
+  func 173 graphics__list2str 1 10
+  func 172 graphics__list2str 1 10
+  func 175 graphics__fillStr 3 0100
+  func 174 graphics__fillStr 3 0100
+  func 179 graphics__itoa 1 10
+  func 178 graphics__itoa 1 10
+  func 183 graphics__strEqual 2 000
+  func 182 graphics__strEqual 2 000
+  func 186 graphics__strEqualAt 3 1000
+  func 185 graphics__strEqualAt 3 1000
+  func 190 graphics__splitWords 1 00
+  func 189 graphics__splitWords 1 00
+  func 192 graphics__splitWordsChars 1 10
+  func 191 graphics__splitWordsChars 1 10
+  func 197 graphics__splitWordsWord 1 00
+  func 196 graphics__splitWordsWord 1 00
+  func 199 graphics__takeWordChars 1 10
+  func 198 graphics__takeWordChars 1 10
+  func 204 graphics__dropWordChars 1 10
+  func 203 graphics__dropWordChars 1 10
+  func 209 graphics__startsWithPText 1 00
+  func 208 graphics__startsWithPText 1 00
+  func 212 graphics__startsWithOpenFile 1 00
+  func 211 graphics__startsWithOpenFile 1 00
+  func 215 graphics__parseEvent 1 00
+  func 214 graphics__parseEvent 1 00
+  func 219 graphics__dropCharsFromStr 2 100
+  func 218 graphics__dropCharsFromStr 2 100
+  func 221 graphics__dropChars 2 110
+  func 220 graphics__dropChars 2 110
+  func 224 graphics__dropChars1 2 010
+  func 223 graphics__dropChars1 2 010
+  func 228 graphics__parseEventWords 1 10
+  func 227 graphics__parseEventWords 1 10
+  func 232 graphics__parseEventTag 2 000
+  func 231 graphics__parseEventTag 2 000
+  func 240 graphics__parseMenuItemEvent 1 10
+  func 239 graphics__parseMenuItemEvent 1 10
+  func 244 graphics__parseMenuItemEventItem 2 010
+  func 243 graphics__parseMenuItemEventItem 2 010
+  func 248 graphics__parseEventPt 1 10
+  func 247 graphics__parseEventPt 1 10
+  func 252 graphics__parseEventPtY 2 010
+  func 251 graphics__parseEventPtY 2 010
+  func 256 graphics__parseEventKey 1 10
+  func 255 graphics__parseEventKey 1 10
+  func 260 graphics__decodeFloatWords 1 10
+  func 259 graphics__decodeFloatWords 1 10
+  func 264 graphics__decodePointList 1 10
+  func 263 graphics__decodePointList 1 10
+  func 268 graphics__decodePoints 2 100
+  func 267 graphics__decodePoints 2 100
+  func 271 graphics__decodePointsStep 2 010
+  func 270 graphics__decodePointsStep 2 010
+  func 275 graphics__decodePointsStepY 3 0010
+  func 274 graphics__decodePointsStepY 3 0010
+  func 279 __deepEq 2 000
+  func 278 __deepEq 2 000
+  func 281 __deepEqDispatch 4 11000
+  func 280 __deepEqDispatch 4 11000
+  func 291 __deepEqMixed 4 11000
+  func 290 __deepEqMixed 4 11000
+  func 296 __deepEqStr 2 000
+  func 295 __deepEqStr 2 000
+  func 298 __deepEqStrLen 4 11000
+  func 297 __deepEqStrLen 4 11000
+  func 301 __deepEqStrChars 4 00110
+  func 300 __deepEqStrChars 4 00110
+  func 304 __deepEqStrCharsStep 4 00000
+  func 303 __deepEqStrCharsStep 4 00000
+  func 307 __deepEqConstr 2 000
+  func 306 __deepEqConstr 2 000
+  func 309 __deepEqConstrCheck 4 00000
+  func 308 __deepEqConstrCheck 4 00000
+  func 312 __deepEqConstrFields 4 00110
+  func 311 __deepEqConstrFields 4 00110
+  func 315 __deepEqConstrFieldsStep 4 00000
+  func 314 __deepEqConstrFieldsStep 4 00000
+  func 318 __deepNeq 2 000
+  func 317 __deepNeq 2 000
+  func 321 __pat_mgrafischgraphicscfp_21 4 00000
+  func 320 __pat_mgrafischgraphicscfp_21 4 00000
+  func 323 __pat_mgrafischgraphicscfp_6 2 010
+  func 322 __pat_mgrafischgraphicscfp_6 2 010
+  func 326 graphics__tagChars_1 1 00
+  func 325 graphics__tagChars_1 1 00
+  func 328 graphics__floatChars_1 1 00
+  func 327 graphics__floatChars_1 1 00
+  func 330 graphics__list2str_1 1 00
+  func 329 graphics__list2str_1 1 00
+  func 332 graphics__fillStr_1 1 00
+  func 331 graphics__fillStr_1 1 00
+  func 334 graphics__fillStr_2 3 0000
+  func 333 graphics__fillStr_2 3 0000
+  func 336 __deepEqConstr_1 1 00
+  func 335 __deepEqConstr_1 1 00
+  func 338 __deepEqConstr_2 1 00
+  func 337 __deepEqConstr_2 1 00
+  func 340 __deepEqConstrFieldsStep_1 2 000
+  func 339 __deepEqConstrFieldsStep_1 2 000
+  func 342 __deepEqConstrFieldsStep_2 2 000
+  func 341 __deepEqConstrFieldsStep_2 2 000
+  func 344 __pat_mgrafischgraphicscfp_21_1 2 000
+  func 343 __pat_mgrafischgraphicscfp_21_1 2 000
+  func 346 __pat_mgrafischgraphicscfp_21_2 2 000
+  func 345 __pat_mgrafischgraphicscfp_21_2 2 000
+  func 348 __pat_mgrafischgraphicscfp_6_1 1 00
+  func 347 __pat_mgrafischgraphicscfp_6_1 1 00
+  func 350 __pat_mgrafischgraphicscfp_6_2 1 00
+  func 349 __pat_mgrafischgraphicscfp_6_2 1 00
+.endmetadata

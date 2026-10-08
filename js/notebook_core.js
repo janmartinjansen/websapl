@@ -396,11 +396,13 @@
    * defErrors { cellIndex: melding } (een definitiecel met een fout, of die
    * afhangt van zo'n cel; cel -1 is de uitvoerlaag zelf), error (een fout
    * buiten de cellen), types { cellIndex: [{ expr, type } | { expr, error }] }
-   * (de type-cellen) en done (de regel @@nbdone kwam).
+   * (de type-cellen), typeWarnings { cellIndex: [melding] } (typefouten in
+   * definitiecellen; de code draait wel) en done (de regel @@nbdone kwam).
    */
   function parseNbOutput(raw) {
     const defErrors = {};
     const types = {};
+    const typeWarnings = {};
     const general = [];
     const rest = [];
     let done = false;
@@ -409,7 +411,9 @@
       const e = line.match(/^@@error (.*)$/);
       const tok = line.match(/^@@typeok (\d+) (.*) :: (.*)$/);
       const terr = line.match(/^@@typeerr (\d+) (.*?) @@ (.*)$/);
-      if (tok) (types[+tok[1]] = types[+tok[1]] || []).push({ expr: tok[2], type: tok[3] });
+      const tw = line.match(/^@@typewarn (-?\d+) (.*)$/);
+      if (tw) (typeWarnings[+tw[1]] = typeWarnings[+tw[1]] || []).push(tw[2]);
+      else if (tok) (types[+tok[1]] = types[+tok[1]] || []).push({ expr: tok[2], type: tok[3] });
       else if (terr) (types[+terr[1]] = types[+terr[1]] || []).push({ expr: terr[2], error: terr[3] });
       else if (d) defErrors[+d[1]] = defErrors[+d[1]] ? defErrors[+d[1]] + "\n" + d[2] : d[2];
       else if (e) general.push(e[1]);
@@ -418,7 +422,7 @@
     }
     const parsed = parseOutput(rest.join("\n"));
     if (defErrors[-1]) general.unshift("uitvoerlaag: " + defErrors[-1]);
-    return { cells: parsed.cells, loose: parsed.loose, defErrors, types, error: general.join("\n"), done };
+    return { cells: parsed.cells, loose: parsed.loose, defErrors, types, typeWarnings, error: general.join("\n"), done };
   }
 
   const api = {
