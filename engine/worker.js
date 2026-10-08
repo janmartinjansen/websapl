@@ -1420,6 +1420,24 @@ async function rsPrepare(line) {
     }
     if (content !== null) { mkdirsFor(rsInstance.FS, "/" + rel); rsInstance.FS.writeFile("/" + rel, content); src = content; }
   }
+  // `:nb pad` (de notebookmodus): het bestand staat al in het
+  // bestandssysteem van de engine (RSAPL_EVAL's `files`); daarbij de
+  // uitvoerlaag met haar imports, de imports van de cellen en de
+  // databestanden die de cellen noemen.
+  const mn = line.match(/^:nb\s+(\S+)/);
+  if (mn) {
+    const vp = "/" + mn[1].replace(/^\//, "");
+    const nb = rsInstance.FS.analyzePath(vp).exists ? rsInstance.FS.readFile(vp, { encoding: "utf8" }) : "";
+    if (!rsInstance.FS.analyzePath("/lib/notebook_glue.cfp").exists) {
+      const res = await fetch("../lib/notebook_glue.cfp");
+      if (!res.ok) throw new Error("lib/notebook_glue.cfp niet gevonden");
+      mkdirsFor(rsInstance.FS, "/lib/notebook_glue.cfp");
+      rsInstance.FS.writeFile("/lib/notebook_glue.cfp", await res.text());
+    }
+    src = 'import "lib/display.spp" as D\nimport "grafisch/graphics.cfp" as G\n' + nb;
+    const data = await collectDataFiles(nb);
+    for (const [p, c] of Object.entries(data)) { mkdirsFor(rsInstance.FS, p); rsInstance.FS.writeFile(p, c); }
+  }
   // Databestanden die de regel noemt (`C.read "notebooks/data/fruit.csv"`),
   // zoals het notebook (collectDataFiles); anders leest readFile niets.
   const data = await collectDataFiles(line);

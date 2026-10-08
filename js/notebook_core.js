@@ -481,7 +481,58 @@
     return out;
   }
 
+  // == De notebookmodus van de REPL in Sapl (8 oktober 2026) ===============
+  // docs/2026-10-08_notebook_in_sapl_plan.md: de cellen gaan als één
+  // bestand naar `:nb pad` (repl_sapl/mini_repl.spp), dat zelf bepaalt wat
+  // er opnieuw gecompileerd moet worden. Alle definitiecellen gaan mee, de
+  // expressiecellen alleen als ze in `only` staan (of alles zonder `only`).
+  // mode: "any" (in elke volgorde, één letrec) of "top" (van boven naar
+  // beneden). Resultaat: { input, exprCells: [{ cell, n }], errors } zoals
+  // generateProgram.
+  function generateNbInput(cells, only, mode) {
+    const out = [`@@mode ${mode === "top" ? "top" : "any"}`];
+    const exprCells = [];
+    const errors = {};
+    cells.forEach((c, i) => {
+      if (c.kind !== "code") return;
+      const cls = classifyCell(c.source);
+      if (cls.error) { errors[i] = cls.error; return; }
+      if (cls.kind === "def") out.push(`@@def ${i}`, c.source);
+      else if (cls.kind === "expr" && (!only || only.has(i))) {
+        const n = exprCells.length + 1;
+        exprCells.push({ cell: i, n });
+        out.push(`@@expr ${i} ${n}`, c.source);
+      }
+    });
+    return { input: out.join("\n") + "\n", exprCells, errors };
+  }
+
+  /**
+   * De uitvoer van `:nb`: de cellen zoals parseOutput, plus
+   * defErrors { cellIndex: melding } (een definitiecel met een fout, of die
+   * afhangt van zo'n cel; cel -1 is de uitvoerlaag zelf), error (een fout
+   * buiten de cellen) en done (de regel @@nbdone kwam).
+   */
+  function parseNbOutput(raw) {
+    const defErrors = {};
+    const general = [];
+    const rest = [];
+    let done = false;
+    for (const line of raw.split("\n")) {
+      const d = line.match(/^@@deferror (-?\d+) (.*)$/);
+      const e = line.match(/^@@error (.*)$/);
+      if (d) defErrors[+d[1]] = defErrors[+d[1]] ? defErrors[+d[1]] + "\n" + d[2] : d[2];
+      else if (e) general.push(e[1]);
+      else if (line === "@@nbdone") done = true;
+      else rest.push(line);
+    }
+    const parsed = parseOutput(rest.join("\n"));
+    if (defErrors[-1]) general.unshift("uitvoerlaag: " + defErrors[-1]);
+    return { cells: parsed.cells, loose: parsed.loose, defErrors, error: general.join("\n"), done };
+  }
+
   const api = {
+    generateNbInput, parseNbOutput,
     parseNotebook, serializeNotebook, classifyCell, generateProgram, parseOutput, definedNames, cafHintNames, cellErrorsFromTypecheck, generateExprTypeProgram, parseExprTypes,
     referencedNames, providedNames, dependents, generateTypeProgram, parseTypeReport, lcInput, parseLcOutput,
   };
