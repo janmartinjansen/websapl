@@ -19,6 +19,7 @@ const MIME_TYPES = {
   ".pdf": "application/pdf",
   ".cfp": "text/plain",
   ".jmvm": "text/plain",
+  ".jvb": "application/octet-stream",   // het binaire laadformaat (laadformaat/)
   ".txt": "text/plain",
   ".md": "text/plain",
   ".svg": "image/svg+xml",

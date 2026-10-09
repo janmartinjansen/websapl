@@ -29,6 +29,31 @@ let typecheckBytecode = null;
 // een entry-functie. Zie buildModules() verderop in dit bestand.
 let saplcompModuleBytecode = null;
 let retaglinkBytecode = null;
+// Het binaire laadformaat (laadformaat/ANALYSE.md, 9 oktober 2026): een
+// compiler eerst als .jvb ophalen (zo'n 2,7x kleiner, en de VM hoeft niets te
+// tokenizen), anders als .jmvm. enginePath zegt onder welke naam hij in het
+// VFS staat; de VM herkent het formaat aan de extensie.
+const enginePath = { saplcomp: "/saplcomp.jmvm", retagcomp: "/retagcomp.jmvm", driver: "/driver.jmvm",
+  lamlift: "/lamlift.jmvm", typecheck: "/typecheck.jmvm", saplcomp_module: "/saplcomp_module.jmvm",
+  retaglink: "/retaglink.jmvm" };
+// Alleen een echt .jvb-bestand (begint met "JVB0"): een server die voor een
+// ontbrekend bestand een HTML-pagina teruggeeft, mag geen .jvb opleveren.
+function isJvb(bytes) {
+  return bytes.length >= 4 && bytes[0] === 74 && bytes[1] === 86 && bytes[2] === 66 && bytes[3] === 48;
+}
+async function fetchEngine(name) {
+  for (const ext of [".jvb", ".jmvm"]) {
+    try {
+      const res = await fetch("./" + name + ext + "?v=" + Date.now());
+      if (!res.ok) continue;
+      const bytes = new Uint8Array(await res.arrayBuffer());
+      if (ext === ".jvb" && !isJvb(bytes)) continue;
+      enginePath[name] = "/" + name + ext;
+      return bytes;
+    } catch (_) {}
+  }
+  return null;
+}
 // #import dependencies driver.jmvm's own expandImports (preprocess/
 // importexpand.cfp) needs on disk to preprocess the bundled Sapl+ examples
 // (websapl/benchmarks_saplplus/, websapl/parser_combinators/):
@@ -166,85 +191,43 @@ async function initEngine(data = {}) {
   if (data.saplcompBase64) {
     saplcompBytecode = base64ToUint8Array(data.saplcompBase64);
   } else {
-    try {
-      const res = await fetch("./saplcomp.jmvm?v=" + Date.now());
-      if (res.ok) {
-        const buf = await res.arrayBuffer();
-        saplcompBytecode = new Uint8Array(buf);
-      }
-    } catch (_) {}
+    saplcompBytecode = await fetchEngine("saplcomp");
   }
 
   if (data.retagcompBase64) {
     retagcompBytecode = base64ToUint8Array(data.retagcompBase64);
   } else {
-    try {
-      const res = await fetch("./retagcomp.jmvm?v=" + Date.now());
-      if (res.ok) {
-        const buf = await res.arrayBuffer();
-        retagcompBytecode = new Uint8Array(buf);
-      }
-    } catch (_) {}
+    retagcompBytecode = await fetchEngine("retagcomp");
   }
 
   if (data.driverBase64) {
     driverBytecode = base64ToUint8Array(data.driverBase64);
   } else {
-    try {
-      const res = await fetch("./driver.jmvm?v=" + Date.now());
-      if (res.ok) {
-        const buf = await res.arrayBuffer();
-        driverBytecode = new Uint8Array(buf);
-      }
-    } catch (_) {}
+    driverBytecode = await fetchEngine("driver");
   }
 
   if (data.lamliftBase64) {
     lamliftBytecode = base64ToUint8Array(data.lamliftBase64);
   } else {
-    try {
-      const res = await fetch("./lamlift.jmvm?v=" + Date.now());
-      if (res.ok) {
-        const buf = await res.arrayBuffer();
-        lamliftBytecode = new Uint8Array(buf);
-      }
-    } catch (_) {}
+    lamliftBytecode = await fetchEngine("lamlift");
   }
 
   if (data.typecheckBase64) {
     typecheckBytecode = base64ToUint8Array(data.typecheckBase64);
   } else {
-    try {
-      const res = await fetch("./typecheck.jmvm?v=" + Date.now());
-      if (res.ok) {
-        const buf = await res.arrayBuffer();
-        typecheckBytecode = new Uint8Array(buf);
-      }
-    } catch (_) {}
+    typecheckBytecode = await fetchEngine("typecheck");
   }
 
   if (data.saplcompModuleBase64) {
     saplcompModuleBytecode = base64ToUint8Array(data.saplcompModuleBase64);
   } else {
-    try {
-      const res = await fetch("./saplcomp_module.jmvm?v=" + Date.now());
-      if (res.ok) {
-        const buf = await res.arrayBuffer();
-        saplcompModuleBytecode = new Uint8Array(buf);
-      }
-    } catch (_) {}
+    saplcompModuleBytecode = await fetchEngine("saplcomp_module");
   }
 
   if (data.retaglinkBase64) {
     retaglinkBytecode = base64ToUint8Array(data.retaglinkBase64);
   } else {
-    try {
-      const res = await fetch("./retaglink.jmvm?v=" + Date.now());
-      if (res.ok) {
-        const buf = await res.arrayBuffer();
-        retaglinkBytecode = new Uint8Array(buf);
-      }
-    } catch (_) {}
+    retaglinkBytecode = await fetchEngine("retaglink");
   }
 
   // Sapl+ (.spp) #import dependencies -- see the sppDeps declaration above
@@ -299,10 +282,10 @@ async function initEngine(data = {}) {
 
   // Write compiler into /saplcomp.jmvm
   if (saplcompBytecode) {
-    jmvmModule.FS.writeFile("/saplcomp.jmvm", saplcompBytecode);
+    jmvmModule.FS.writeFile(enginePath.saplcomp, saplcompBytecode);
   }
   if (retagcompBytecode) {
-    jmvmModule.FS.writeFile("/retagcomp.jmvm", retagcompBytecode);
+    jmvmModule.FS.writeFile(enginePath.retagcomp, retagcompBytecode);
   }
 
   await warmUpEngine();
@@ -387,7 +370,7 @@ async function runCompilerStage(flattenedSource, stageFlag, outPath) {
   });
 
   // Mount files
-  instance.FS.writeFile("/saplcomp.jmvm", saplcompBytecode);
+  instance.FS.writeFile(enginePath.saplcomp, saplcompBytecode);
   instance.FS.writeFile("/tmp/in.cfp", flattenedSource);
 
   // Ensure output dir exists
@@ -399,7 +382,7 @@ async function runCompilerStage(flattenedSource, stageFlag, outPath) {
   } catch (_) {}
 
   try {
-    instance.callMain(["/saplcomp.jmvm"]);
+    instance.callMain([enginePath.saplcomp]);
   } catch (e) {
     // normal VM exit throws in Emscripten
   }
@@ -520,11 +503,11 @@ async function compileRetag(source, srcPath) {
     }
   });
 
-  instance.FS.writeFile("/retagcomp.jmvm", retagcompBytecode);
+  instance.FS.writeFile(enginePath.retagcomp, retagcompBytecode);
   instance.FS.writeFile("/tmp/in_retag.cfp", source);
 
   try {
-    instance.callMain(["/retagcomp.jmvm"]);
+    instance.callMain([enginePath.retagcomp]);
   } catch (e) {
     // normal exit throws
   }
@@ -688,7 +671,7 @@ async function preprocessSpp(source, srcPath, tag = "") {
     }
   });
 
-  instance.FS.writeFile("/driver.jmvm", driverBytecode);
+  instance.FS.writeFile(enginePath.driver, driverBytecode);
 
   // Mount every #import dependency at the SAME repo-root-relative path
   // driver.jmvm's own expandImports (preprocess/importexpand.cfp) will
@@ -712,7 +695,7 @@ async function preprocessSpp(source, srcPath, tag = "") {
   instance.FS.writeFile("/tmp/in.spp", source);
 
   try {
-    instance.callMain(["/driver.jmvm"]);
+    instance.callMain([enginePath.driver]);
   } catch (e) {
     // normal VM exit throws in Emscripten
   }
@@ -780,11 +763,11 @@ async function preprocessLfp(source, srcPath) {
     }
   });
 
-  instance.FS.writeFile("/lamlift.jmvm", lamliftBytecode);
+  instance.FS.writeFile(enginePath.lamlift, lamliftBytecode);
   instance.FS.writeFile("/tmp/in.lfp", source);
 
   try {
-    instance.callMain(["/lamlift.jmvm"]);
+    instance.callMain([enginePath.lamlift]);
   } catch (e) {
     // normal VM exit throws in Emscripten
   }
@@ -852,7 +835,7 @@ async function typecheckSource(source, srcPath) {
     }
   });
 
-  instance.FS.writeFile("/typecheck.jmvm", typecheckBytecode);
+  instance.FS.writeFile(enginePath.typecheck, typecheckBytecode);
 
   const depDirs = ["/lib", "/sapl_compiler", "/parser_combinators", "/benchmarks_saplplus", "/repl"];
   for (const d of depDirs) {
@@ -874,7 +857,7 @@ async function typecheckSource(source, srcPath) {
   instance.FS.writeFile("/tmp/in.cfp", source);
 
   try {
-    instance.callMain(["/typecheck.jmvm"]);
+    instance.callMain([enginePath.typecheck]);
   } catch (e) {
     // normal VM exit throws in Emscripten
   }
@@ -986,7 +969,7 @@ async function runSaplcompModuleStage(moduleSource, stage, outPath, defsContents
     stderr: (c) => compilerOutput.push(String.fromCharCode(c))
   });
 
-  instance.FS.writeFile("/saplcomp_module.jmvm", saplcompModuleBytecode);
+  instance.FS.writeFile(enginePath.saplcomp_module, saplcompModuleBytecode);
   instance.FS.writeFile("/tmp/mod_in.cfp", moduleSource);
   try { if (!instance.FS.analyzePath("/tmp/deps").exists) instance.FS.mkdir("/tmp/deps"); } catch (_) {}
   defsContents.forEach((c, i) => instance.FS.writeFile(defsPaths[i], c));
@@ -998,7 +981,7 @@ async function runSaplcompModuleStage(moduleSource, stage, outPath, defsContents
   try { if (!instance.FS.analyzePath(outDir).exists) instance.FS.mkdir(outDir); } catch (_) {}
 
   try {
-    instance.callMain(["/saplcomp_module.jmvm"]);
+    instance.callMain([enginePath.saplcomp_module]);
   } catch (e) {
     // normal VM exit throws in Emscripten
   }
@@ -1030,7 +1013,7 @@ async function runRetagLinkStage(retagContents, outPath, entryFunc) {
     stderr: (c) => compilerOutput.push(String.fromCharCode(c))
   });
 
-  instance.FS.writeFile("/retaglink.jmvm", retaglinkBytecode);
+  instance.FS.writeFile(enginePath.retaglink, retaglinkBytecode);
   try { if (!instance.FS.analyzePath("/tmp/retag").exists) instance.FS.mkdir("/tmp/retag"); } catch (_) {}
   retagContents.forEach((c, i) => instance.FS.writeFile(retagPaths[i], c));
 
@@ -1049,7 +1032,7 @@ async function runRetagLinkStage(retagContents, outPath, entryFunc) {
   try { if (!instance.FS.analyzePath(outDir).exists) instance.FS.mkdir(outDir); } catch (_) {}
 
   try {
-    instance.callMain(["/retaglink.jmvm"]);
+    instance.callMain([enginePath.retaglink]);
   } catch (e) {
     // normal VM exit throws in Emscripten
   }
@@ -1082,7 +1065,7 @@ async function runRetagCompStage(retagText, outPath) {
     stderr: (c) => compilerOutput.push(String.fromCharCode(c))
   });
 
-  instance.FS.writeFile("/retagcomp.jmvm", retagcompBytecode);
+  instance.FS.writeFile(enginePath.retagcomp, retagcompBytecode);
   instance.FS.writeFile("/tmp/linked.retag.txt", retagText);
 
   // Zelfde reden als runRetagLinkStage hierboven: een verse VFS per
@@ -1094,7 +1077,7 @@ async function runRetagCompStage(retagText, outPath) {
   try { if (!instance.FS.analyzePath(outDir).exists) instance.FS.mkdir(outDir); } catch (_) {}
 
   try {
-    instance.callMain(["/retagcomp.jmvm"]);
+    instance.callMain([enginePath.retagcomp]);
   } catch (e) {
     // normal VM exit throws in Emscripten
   }
@@ -1319,7 +1302,10 @@ let rsOnChar = null;
 // De regels die de engine verwerkte (zonder de regel die de trap gaf), met
 // de eerste uitvoerregel om na het opnieuw afspelen te vergelijken.
 let rsJournal = [];
-const RS_FILES = ["repl_sapl/build/mini_repl.jmvm", "repl_sapl/build/prelude/prelude.cfp",
+// De REPL zelf als .jvb (het binaire laadformaat: 2,3 i.p.v. 6 MB, en geen
+// tokenizen bij de start); de .jmvm alleen als terugval (rsStart).
+const RS_MAIN = "repl_sapl/build/mini_repl";
+const RS_FILES = ["repl_sapl/build/prelude/prelude.cfp",
   "repl_sapl/build/prelude/prelude.pp.cfp", "repl_sapl/build/prelude/prelude.defs.txt"];
 
 function rsText() {
@@ -1334,6 +1320,18 @@ async function rsStart() {
     stdout: (c) => { rsOutput.push(c & 255); if (rsOnChar) rsOnChar(c & 255); },
     stderr: () => {}
   });
+  let rsMain = null;
+  for (const ext of [".jvb", ".jmvm"]) {
+    const res = await fetch("../" + RS_MAIN + ext + "?v=" + Date.now());
+    if (!res.ok) continue;
+    const bytes = new Uint8Array(await res.arrayBuffer());
+    if (ext === ".jvb" && !isJvb(bytes)) continue;
+    rsMain = RS_MAIN + ext;
+    mkdirsFor(inst.FS, "/" + rsMain);
+    inst.FS.writeFile("/" + rsMain, bytes);
+    break;
+  }
+  if (!rsMain) throw new Error("REPL in Sapl: " + RS_MAIN + ".jvb/.jmvm niet gevonden");
   for (const rel of RS_FILES) {
     const res = await fetch("../" + rel + "?v=" + Date.now());
     if (!res.ok) throw new Error("REPL in Sapl: " + rel + " niet gevonden");
@@ -1359,7 +1357,7 @@ async function rsStart() {
   mkdirsFor(inst.FS, "/repl_sapl/gen/x");
   inst.FS.chdir("/");
   rsOutput = [];
-  const st = inst.ccall("jmvm_rs_start", "number", ["string"], ["repl_sapl/build/mini_repl.jmvm"]);
+  const st = inst.ccall("jmvm_rs_start", "number", ["string"], [rsMain]);
   if (st !== 1) throw new Error("REPL in Sapl startte niet: " + rsText());
   rsInstance = inst;
 }

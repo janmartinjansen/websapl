@@ -41,7 +41,7 @@ function scanDirectory(dirPath, relBase = "") {
       });
     } else if (entry.isFile()) {
       const ext = path.extname(entry.name).toLowerCase();
-      const isBinary = [".pdf", ".wasm", ".png", ".jpg", ".ico"].includes(ext);
+      const isBinary = [".pdf", ".wasm", ".png", ".jpg", ".ico", ".jvb"].includes(ext);
 
       items.push({
         name: entry.name,

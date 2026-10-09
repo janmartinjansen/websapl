@@ -171,6 +171,13 @@ em++ -O3 -fwasm-exceptions -DLOAD_CODE_EXPERIMENT -sALLOW_MEMORY_GROWTH=1 -sFORC
      -lidbfs.js -DSWITCH_CASE parser.cpp vm.cpp -o websapl/engine/jmvm.js
 ```
 
+De engine leest naast `.jmvm` ook het binaire laadformaat `.jvb`
+(`laadformaat/ANALYSE.md`, sinds 9 oktober 2026): de worker haalt de
+compilers in `engine/` en de REPL (`repl_sapl/build/mini_repl.jvb`) eerst als
+`.jvb` op (samen 5,4 i.p.v. 14,1 MB, en niets te tokenizen), en valt terug op
+`.jmvm`. De `.jvb`'s komen met `sync_from_repo.js` uit de repo
+(`laadformaat/jvb_bijwerken.sh`).
+
 `-DLOAD_CODE_EXPERIMENT` (sinds 7 oktober 2026) is voor de REPL in Sapl
 (`repl_sapl/`, de berichten `RSAPL_EVAL`/`RSAPL_RESET` in de worker): de
 lader die zelf gecompileerde stukken in het lopende programma zet, en

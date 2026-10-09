@@ -67,17 +67,25 @@ const ENTRIES = [
   { src: "dict/dict_basic.jmvm", dst: "dict/dict_basic.jmvm" },
   { src: "docs/main.pdf", dst: "docs/main.pdf" },
   { src: "preprocess/driver.jmvm", dst: "engine/driver.jmvm" },
+  { src: "preprocess/driver.jvb", dst: "engine/driver.jvb" },   // het binaire laadformaat (laadformaat/)
   { src: "lamlift/lamlift.jmvm", dst: "engine/lamlift.jmvm" },
+  { src: "lamlift/lamlift.jvb", dst: "engine/lamlift.jvb" },   // het binaire laadformaat (laadformaat/)
   { src: "sapl_compiler/retagcomp.jmvm", dst: "engine/retagcomp.jmvm" },
+  { src: "sapl_compiler/retagcomp.jvb", dst: "engine/retagcomp.jvb" },   // het binaire laadformaat (laadformaat/)
   { src: "sapl_compiler/retaglink.jmvm", dst: "engine/retaglink.jmvm" },
+  { src: "sapl_compiler/retaglink.jvb", dst: "engine/retaglink.jvb" },   // het binaire laadformaat (laadformaat/)
   { src: "sapl_compiler/saplcomp.jmvm", dst: "engine/saplcomp.jmvm" },
+  { src: "sapl_compiler/saplcomp.jvb", dst: "engine/saplcomp.jvb" },   // het binaire laadformaat (laadformaat/)
   { src: "sapl_compiler/saplcomp_module.jmvm", dst: "engine/saplcomp_module.jmvm" },
+  { src: "sapl_compiler/saplcomp_module.jvb", dst: "engine/saplcomp_module.jvb" },   // het binaire laadformaat (laadformaat/)
   // De REPL in Sapl (stap 6, 7 oktober 2026): bytecode en prelude-interface.
   { src: "repl_sapl/build/mini_repl.jmvm", dst: "repl_sapl/build/mini_repl.jmvm" },
+  { src: "repl_sapl/build/mini_repl.jvb", dst: "repl_sapl/build/mini_repl.jvb" },   // het binaire laadformaat (laadformaat/)
   { src: "repl_sapl/build/prelude/prelude.cfp", dst: "repl_sapl/build/prelude/prelude.cfp" },
   { src: "repl_sapl/build/prelude/prelude.pp.cfp", dst: "repl_sapl/build/prelude/prelude.pp.cfp" },
   { src: "repl_sapl/build/prelude/prelude.defs.txt", dst: "repl_sapl/build/prelude/prelude.defs.txt" },
   { src: "preprocess/typecheck.jmvm", dst: "engine/typecheck.jmvm" },
+  { src: "preprocess/typecheck.jvb", dst: "engine/typecheck.jvb" },   // het binaire laadformaat (laadformaat/)
   { src: "examples/curryvb.cfp", dst: "examples/curryvb.cfp" },
   { src: "examples/curryvbns.cfp", dst: "examples/curryvbns.cfp" },
   { src: "examples/fac.cfp", dst: "examples/fac.cfp" },
@@ -175,7 +183,43 @@ for (const f of fs.readdirSync(path.join(REPO, "repl_sapl/build/modules")).sort(
 }
 
 
+// Een .jvb (het binaire laadformaat, laadformaat/ANALYSE.md) hoort bij de
+// .jmvm ernaast: zijn SRC-sectie bewaart hash en lengte van die tekst. In
+// WebSapl staat die .jmvm er niet naast (de worker laadt alleen de .jvb), dus
+// de VM kan het daar niet controleren: dit script doet het, en weigert een
+// .jvb die niet (meer) bij zijn .jmvm hoort. Dezelfde hash als jvbHash in
+// parser.cpp.
+function jvbHash(buf) {
+  const M = (1n << 64n) - 1n, P = 1099511628211n;
+  let h = 1469598103934665603n;
+  let i = 0;
+  for (; i + 8 <= buf.length; i += 8) {
+    h = ((h ^ buf.readBigUInt64LE(i)) * P) & M;
+    h ^= h >> 29n;
+  }
+  for (; i < buf.length; i++) h = ((h ^ BigInt(buf[i])) * P) & M;
+  return h ^ BigInt(buf.length);
+}
+
+function checkJvbSource(src) {
+  const jvb = fs.readFileSync(path.join(REPO, src));
+  const jmvmPath = path.join(REPO, src.replace(/\.jvb$/, ".jmvm"));
+  const fix = "(bash laadformaat/jvb_bijwerken.sh)";
+  if (jvb.length < 16 || jvb.toString("latin1", 0, 4) !== "JVB0") throw new Error(`${src} is geen .jvb`);
+  const ns = jvb.readUInt32LE(12);
+  for (let k = 0; k < ns; k++) {
+    if (jvb.readUInt32LE(16 + 12 * k) !== 7) continue;   // SRC
+    const off = jvb.readUInt32LE(20 + 12 * k);
+    const text = fs.readFileSync(jmvmPath);
+    if (jvb.readBigUInt64LE(off + 8) !== BigInt(text.length) || jvb.readBigUInt64LE(off) !== jvbHash(text))
+      throw new Error(`${src} hoort niet (meer) bij ${path.relative(REPO, jmvmPath)} ${fix}`);
+    return;
+  }
+  throw new Error(`${src} heeft geen SRC-sectie ${fix}`);
+}
+
 function expected(entry) {
+  if (entry.src.endsWith(".jvb")) checkJvbSource(entry.src);
   const buf = fs.readFileSync(path.join(REPO, entry.src));
   if (!entry.rewrite) return buf;
   let text = buf.toString("utf8");
@@ -192,6 +236,7 @@ function main() {
   const check = process.argv.includes("--check");
   let drift = 0;
   let written = 0;
+  let errors = 0;   // een bron die niet gekopieerd mag worden (bv. een verouderde .jvb)
   for (const entry of ENTRIES) {
     const dst = path.join(WEBSAPL, entry.dst);
     let want;
@@ -200,6 +245,7 @@ function main() {
     } catch (err) {
       console.error(`FOUT  ${err.message}`);
       drift++;
+      errors++;
       continue;
     }
     const have = fs.existsSync(dst) ? fs.readFileSync(dst) : null;
@@ -220,6 +266,7 @@ function main() {
     process.exit(drift ? 1 : 0);
   }
   console.log(written ? `${written} bestand(en) bijgewerkt. Nieuw bestand erbij? Draai dan ook: node websapl/tools/build_manifest.js` : `Niets te doen: alle ${ENTRIES.length} kopieën zijn al gelijk.`);
+  if (errors) process.exit(1);
 }
 
 main();
