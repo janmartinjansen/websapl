@@ -37,9 +37,9 @@ strls !n !s = if (n < strlen s) (Cons (strat n s) (strls (n+1) s)) Nil
 
 str2list !s = strls 0 s
 
-strEqual !s1 !s2 = (strlen s1 == strlen s2) /\ strEqualAt 0 s1 s2
+strEqual !s1 !s2 = (eqnum (strlen s1) (strlen s2)) /\ strEqualAt 0 s1 s2
 
-strEqualAt !n !s1 !s2 = if (n >= strlen s1) 1 (if (strat n s1 == strat n s2) (strEqualAt (n+1) s1 s2) 0)
+strEqualAt !n !s1 !s2 = if (n >= strlen s1) 1 (if (eqnum (strat n s1) (strat n s2)) (strEqualAt (n+1) s1 s2) 0)
 
 fillStr !i !xs !arr =
   case xs
@@ -65,11 +65,11 @@ TYPE_FUNC   = 4
 // bij 5 en `typeId x > TYPE_FUNC` betekent overal "een ADT".
 TYPE_CHAR   = 0 - 1
 
-isInt    !x = typeId x == TYPE_INT
-isFloat  !x = typeId x == TYPE_FLOAT
-isString !x = typeId x == TYPE_STRING
-isFunc   !x = typeId x == TYPE_FUNC
-isChar   !x = typeId x == TYPE_CHAR
+isInt    !x = eqnum (typeId x) TYPE_INT
+isFloat  !x = eqnum (typeId x) TYPE_FLOAT
+isString !x = eqnum (typeId x) TYPE_STRING
+isFunc   !x = eqnum (typeId x) TYPE_FUNC
+isChar   !x = eqnum (typeId x) TYPE_CHAR
 isADT    !x = typeId x > TYPE_FUNC
 
 applyDynamicByName !name !args = applyDynamic (lookup name) args
@@ -78,21 +78,21 @@ showVal x =
   let tid = typeId x in if (tid > TYPE_FUNC) (showConstr x) (showValAux tid x)
 
 showValAux !tid !x =
-  if (tid == TYPE_INT) (list2str (itoa x))
-  (if (tid == TYPE_FLOAT) (ftoa x)
-  (if (tid == TYPE_STRING) x
-  (if (tid == TYPE_FUNC) (showFunc x)
-  (if (tid == TYPE_CHAR) (showChar x)
+  if (eqnum tid TYPE_INT) (list2str (itoa x))
+  (if (eqnum tid TYPE_FLOAT) (ftoa x)
+  (if (eqnum tid TYPE_STRING) x
+  (if (eqnum tid TYPE_FUNC) (showFunc x)
+  (if (eqnum tid TYPE_CHAR) (showChar x)
   (showConstr x)))))
 
 // 'a', met de escapes die de lexers kennen (\n \t \\ \').
 showChar !c = list2str (Cons 39 (append (showCharBody c) (Cons 39 Nil)))
 
 showCharBody !c =
-  if (c == 10) (Cons 92 (Cons 'n' Nil))
-  (if (c == 9) (Cons 92 (Cons 't' Nil))
-  (if (c == 92) (Cons 92 (Cons 92 Nil))
-  (if (c == 39) (Cons 92 (Cons 39 Nil))
+  if (eqnum c 10) (Cons 92 (Cons 'n' Nil))
+  (if (eqnum c 9) (Cons 92 (Cons 't' Nil))
+  (if (eqnum c 92) (Cons 92 (Cons 92 Nil))
+  (if (eqnum c 39) (Cons 92 (Cons 39 Nil))
   (Cons c Nil))))
 
 showFunc !x = strcat "<fn:" (strcat (funcName x) (strcat "/" (strcat (list2str (itoa (funcArity x))) ">")))
@@ -121,7 +121,7 @@ showConstr !x =
 
 showConstrDynamic !x !name =
   let h = lookup (strcat "show_" name) in
-  if (typeId h == TYPE_FUNC) (applyDynamic h (Cons x Nil)) (showConstrGeneric x name)
+  if (eqnum (typeId h) TYPE_FUNC) (applyDynamic h (Cons x Nil)) (showConstrGeneric x name)
 
 // Tupels en moduleconstructors zoals repl/stddyn.cfp (en de notebook) ze
 // tonen: `(1, 2)` i.p.v. `__Tuple2(1, 2)`, `Wel(3)` i.p.v. `Lijst__Wel(3)`.
@@ -130,7 +130,7 @@ showConstrGeneric !x !name =
   let arity = getConstrArity x,
       shown = displayConName name in
   if (isTupleName name) (strcat "(" (strcat (showFields x 0 arity) ")"))
-  (if (arity == 0) shown (strcat shown (strcat "(" (strcat (showFields x 0 arity) ")"))))
+  (if (eqnum arity 0) shown (strcat shown (strcat "(" (strcat (showFields x 0 arity) ")"))))
 
 isTupleName !name = if (strlen name > 7) (strEqualAt 0 "__Tuple" name) False
 
@@ -146,7 +146,7 @@ displayConNameScan !name !n !i =
   if (i + 2 >= n) name
   (if (isModuleSep name i) (strslice name (i + 2) n) (displayConNameScan name n (i + 1)))
 
-isModuleSep !name !i = (strat i name == '_') /\ (strat (i + 1) name == '_') /\ isUpperCode (strat (i + 2) name)
+isModuleSep !name !i = (eqnum (strat i name) '_') /\ (eqnum (strat (i + 1) name) '_') /\ isUpperCode (strat (i + 2) name)
 
 isUpperCode !c = (c >= 'A') /\ (c <= 'Z')
 
@@ -164,14 +164,14 @@ showListItems !xs =
     (_ -> "")
 
 showFields !x !i !n =
-  if (i == n)
+  if (eqnum i n)
     ""
-    (if (i == n - 1)
+    (if (eqnum i (n - 1))
        (showVal (getField x i))
        (strcat (showVal (getField x i)) (strcat ", " (showFields x (i + 1) n))))
 
 getConstrArity !x =
-  let c = lookup (constrName x) in if (typeId c == TYPE_FUNC) (funcArity c) 0
+  let c = lookup (constrName x) in if (eqnum (typeId c) TYPE_FUNC) (funcArity c) 0
 
 printVal !x = printString (showVal x)
 
@@ -185,11 +185,11 @@ showTyped !ty x =
   if (strEqual ty "Bool") (showBoolVal x)
   (if (isListTy ty) (strcat "[" (strcat (showTypedItems (listElemTy ty) x) "]")) (showVal x))
 
-showBoolVal !b = if (b == 0) "False" "True"
+showBoolVal !b = if (eqnum b 0) "False" "True"
 
 isListTy !ty = if (strlen ty < 2) 0 (isListTy2 ty)
 
-isListTy2 !ty = (strat 0 ty == '[') /\ (strat (strlen ty - 1) ty == ']')
+isListTy2 !ty = (eqnum (strat 0 ty) '[') /\ (eqnum (strat (strlen ty - 1) ty) ']')
 
 listElemTy !ty = strslice ty 1 (strlen ty - 1)
 
