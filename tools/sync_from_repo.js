@@ -201,9 +201,13 @@ function jvbHash(buf) {
   return h ^ BigInt(buf.length);
 }
 
+// Een stuk van de REPL (repl_sapl/build/modules/, sinds 10 oktober 2026 als
+// .jvb geschreven door de REPL zelf) heeft geen .jmvm ernaast en dus geen
+// SRC-sectie: daar valt niets te controleren.
 function checkJvbSource(src) {
   const jvb = fs.readFileSync(path.join(REPO, src));
   const jmvmPath = path.join(REPO, src.replace(/\.jvb$/, ".jmvm"));
+  if (src.startsWith("repl_sapl/build/modules/") && !fs.existsSync(jmvmPath)) return;
   const fix = "(bash laadformaat/jvb_bijwerken.sh)";
   if (jvb.length < 16 || jvb.toString("latin1", 0, 4) !== "JVB0") throw new Error(`${src} is geen .jvb`);
   const ns = jvb.readUInt32LE(12);

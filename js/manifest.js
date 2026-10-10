@@ -1600,12 +1600,12 @@ window.WEBSAPL_TREE = [
                 "isBinary": false
               },
               {
-                "name": "mgrafischgraphicscfp.jmvm",
-                "path": "repl_sapl/build/modules/mgrafischgraphicscfp.jmvm",
+                "name": "mgrafischgraphicscfp.jvb",
+                "path": "repl_sapl/build/modules/mgrafischgraphicscfp.jvb",
                 "type": "file",
-                "ext": ".jmvm",
-                "size": 85720,
-                "isBinary": false
+                "ext": ".jvb",
+                "size": 30676,
+                "isBinary": true
               },
               {
                 "name": "mgrafischgraphicscfp.pp.cfp",
@@ -1632,12 +1632,12 @@ window.WEBSAPL_TREE = [
                 "isBinary": false
               },
               {
-                "name": "mlibcsvspp.jmvm",
-                "path": "repl_sapl/build/modules/mlibcsvspp.jmvm",
+                "name": "mlibcsvspp.jvb",
+                "path": "repl_sapl/build/modules/mlibcsvspp.jvb",
                 "type": "file",
-                "ext": ".jmvm",
-                "size": 47471,
-                "isBinary": false
+                "ext": ".jvb",
+                "size": 17244,
+                "isBinary": true
               },
               {
                 "name": "mlibcsvspp.pp.cfp",
@@ -1664,12 +1664,12 @@ window.WEBSAPL_TREE = [
                 "isBinary": false
               },
               {
-                "name": "mlibdisplayspp.jmvm",
-                "path": "repl_sapl/build/modules/mlibdisplayspp.jmvm",
+                "name": "mlibdisplayspp.jvb",
+                "path": "repl_sapl/build/modules/mlibdisplayspp.jvb",
                 "type": "file",
-                "ext": ".jmvm",
-                "size": 37768,
-                "isBinary": false
+                "ext": ".jvb",
+                "size": 13880,
+                "isBinary": true
               },
               {
                 "name": "mlibdisplayspp.pp.cfp",
@@ -1696,12 +1696,12 @@ window.WEBSAPL_TREE = [
                 "isBinary": false
               },
               {
-                "name": "mliblistspp.jmvm",
-                "path": "repl_sapl/build/modules/mliblistspp.jmvm",
+                "name": "mliblistspp.jvb",
+                "path": "repl_sapl/build/modules/mliblistspp.jvb",
                 "type": "file",
-                "ext": ".jmvm",
-                "size": 57395,
-                "isBinary": false
+                "ext": ".jvb",
+                "size": 21452,
+                "isBinary": true
               },
               {
                 "name": "mliblistspp.pp.cfp",
@@ -1728,12 +1728,12 @@ window.WEBSAPL_TREE = [
                 "isBinary": false
               },
               {
-                "name": "mlibplotspp.jmvm",
-                "path": "repl_sapl/build/modules/mlibplotspp.jmvm",
+                "name": "mlibplotspp.jvb",
+                "path": "repl_sapl/build/modules/mlibplotspp.jvb",
                 "type": "file",
-                "ext": ".jmvm",
-                "size": 60236,
-                "isBinary": false
+                "ext": ".jvb",
+                "size": 22114,
+                "isBinary": true
               },
               {
                 "name": "mlibplotspp.pp.cfp",
@@ -1760,12 +1760,12 @@ window.WEBSAPL_TREE = [
                 "isBinary": false
               },
               {
-                "name": "mlibstatsspp.jmvm",
-                "path": "repl_sapl/build/modules/mlibstatsspp.jmvm",
+                "name": "mlibstatsspp.jvb",
+                "path": "repl_sapl/build/modules/mlibstatsspp.jvb",
                 "type": "file",
-                "ext": ".jmvm",
-                "size": 60536,
-                "isBinary": false
+                "ext": ".jvb",
+                "size": 21572,
+                "isBinary": true
               },
               {
                 "name": "mlibstatsspp.pp.cfp",
@@ -1792,12 +1792,12 @@ window.WEBSAPL_TREE = [
                 "isBinary": false
               },
               {
-                "name": "mlibtextspp.jmvm",
-                "path": "repl_sapl/build/modules/mlibtextspp.jmvm",
+                "name": "mlibtextspp.jvb",
+                "path": "repl_sapl/build/modules/mlibtextspp.jvb",
                 "type": "file",
-                "ext": ".jmvm",
-                "size": 86451,
-                "isBinary": false
+                "ext": ".jvb",
+                "size": 30152,
+                "isBinary": true
               },
               {
                 "name": "mlibtextspp.pp.cfp",
@@ -1824,12 +1824,12 @@ window.WEBSAPL_TREE = [
                 "isBinary": false
               },
               {
-                "name": "nbglue.jmvm",
-                "path": "repl_sapl/build/modules/nbglue.jmvm",
+                "name": "nbglue.jvb",
+                "path": "repl_sapl/build/modules/nbglue.jvb",
                 "type": "file",
-                "ext": ".jmvm",
-                "size": 48670,
-                "isBinary": false
+                "ext": ".jvb",
+                "size": 17844,
+                "isBinary": true
               },
               {
                 "name": "nbglue.pp.cfp",
@@ -1879,7 +1879,7 @@ window.WEBSAPL_TREE = [
             "path": "repl_sapl/build/mini_repl.jmvm",
             "type": "file",
             "ext": ".jmvm",
-            "size": 6010987,
+            "size": 6265464,
             "isBinary": false
           },
           {
@@ -1887,7 +1887,7 @@ window.WEBSAPL_TREE = [
             "path": "repl_sapl/build/mini_repl.jvb",
             "type": "file",
             "ext": ".jvb",
-            "size": 2277744,
+            "size": 2364696,
             "isBinary": true
           }
         ],
