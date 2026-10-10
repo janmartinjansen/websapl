@@ -1,0 +1,21 @@
+display__text 1 f v0 cDisplay__Display
+display__markdown 1 f v0 cDisplay__Display
+display__table 2 f v0 f v1 cDisplay__Display
+display__picture 1 f v0 cDisplay__Display
+display__bar 1 f l v0 cDisplay__Display
+display__lineChart 1 f l v0 cDisplay__Display
+display__graphicsText 0 f l cGraphics__Graphics cStr
+display__toF 0 edisplay__toF: kan niet unificeren: Num met Float
+display__listLen 1 f l v0 cNum
+display__maxOf 0 edisplay__maxOf: kan niet unificeren: Float met Num
+display__maxFrom 1 f cNum f l v0 cNum
+display__minOf 0 edisplay__minOf: kan niet unificeren: Float met Num
+display__minFrom 1 f cNum f l v0 cNum
+display__left 0 edisplay__left: kan niet unificeren: Num met Float
+display__bottom 0 edisplay__bottom: kan niet unificeren: Num met Float
+display__span 0 cFloat
+display__baseLine 0 edisplay__baseLine: kan niet unificeren: Num met Float
+display__barsFrom 4 f cNum f v0 f v1 f l v2 l v3
+display__barAt 0 edisplay__barAt: kan niet unificeren: Num met Float
+display__linePoints 5 f cNum f v0 f v1 f v2 f l v3 l v4
+display__linePoint 0 edisplay__linePoint: kan niet unificeren: Num met Float

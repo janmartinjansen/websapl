@@ -1,0 +1,46 @@
+stats__toF 0 estats__toF: kan niet unificeren: Num met Float
+stats__floats 2 f l v0 l v1
+stats__len 1 f l v0 cNum
+stats__lenAcc 1 f l v0 f cNum cNum
+stats__sumF 0 estats__sumF: kan niet unificeren: Num met Float
+stats__sumAcc 1 f l v0 f cNum cNum
+stats__nonEmpty 1 f cStr f l v0 l v0
+stats__strcatS 0 f cStr f cStr cStr
+stats__strcatFill 1 f cStr f cNum f v0 v0
+stats__strcatAt 1 f cStr f cNum f cNum f cNum f v0 v0
+stats__sortF 0 f l cNum l cNum
+stats__sortLen 0 f l cNum f cNum l cNum
+stats__sortSplit 0 f l cNum f cNum l cNum
+stats__merge 0 f l cNum f l cNum l cNum
+stats__mergeCons 0 f cNum f l cNum f l cNum l cNum
+stats__takeL 1 f cNum f l v0 l v0
+stats__dropL 1 f cNum f l v0 l v0
+stats__nthL 1 f cNum f l v0 v0
+stats__mapL 2 f f v0 v1 f l v0 l v1
+stats__zipWithL 3 f f v0 f v1 v2 f l v0 f l v1 l v2
+stats__count 1 f l v0 cNum
+stats__sum 2 f v0 v1
+stats__mean 0 estats__mean: kan niet unificeren: Num met Float
+stats__minimum 1 f l v0 cNum
+stats__minFrom 1 f cNum f l v0 cNum
+stats__maximum 1 f l v0 cNum
+stats__maxFrom 1 f cNum f l v0 cNum
+stats__range 1 f l v0 cNum
+stats__quantile 3 f v0 f l v1 v2
+stats__quantileSorted 0 estats__quantileSorted: kan niet unificeren: Num met Float
+stats__median 2 f l v0 v1
+stats__variance 0 estats__variance: kan niet unificeren: Num met Float
+stats__populationVariance 0 estats__populationVariance: kan niet unificeren: Num met Float
+stats__sumSq 2 f l v0 f cNum v1
+stats__stdev 1 f v0 cFloat
+stats__covariance 0 estats__covariance: kan niet unificeren: Num met Float
+stats__correlation 0 estats__correlation: kan niet unificeren: Num met Float
+stats__linearRegression 2 f v0 f v1 c__Tuple2
+stats__cumulative 0 estats__cumulative: kan niet unificeren: Num met Float
+stats__cumFrom 1 f cNum f l v0 l cNum
+stats__histogram 0 estats__histogram: kan niet unificeren: Num met Float
+stats__histBins 0 estats__histBins: kan niet unificeren: Num met Float
+stats__countBin 5 f v0 f v1 f v2 f v3 f l v4 f cNum cNum
+stats__binOf 0 estats__binOf: kan niet unificeren: Float met Num
+stats__minInt 0 f cNum f cNum cNum
+stats__zscores 0 estats__zscores: kan niet unificeren: Num met Float

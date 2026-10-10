@@ -1,0 +1,83 @@
+graphics__col_black 0 cNum
+graphics__col_blue 0 cNum
+graphics__col_green 0 cNum
+graphics__col_cyan 0 cNum
+graphics__col_red 0 cNum
+graphics__col_magenta 0 cNum
+graphics__col_brown 0 cNum
+graphics__col_lightgray 0 cNum
+graphics__col_darkgray 0 cNum
+graphics__col_brightblue 0 cNum
+graphics__col_brightgreen 0 cNum
+graphics__col_brightcyan 0 cNum
+graphics__col_brightred 0 cNum
+graphics__col_brightmagenta 0 cNum
+graphics__col_yellow 0 cNum
+graphics__col_white 0 cNum
+graphics__pt 2 f v0 f v1 cGraphics__Point
+graphics__vergrootPt 0 f cNum f cGraphics__Point cGraphics__Point
+graphics__draaiPt 0 egraphics__draaiPt: kan niet unificeren: Num met Float
+graphics__verschuifPt 0 f cGraphics__Point f cGraphics__Point cGraphics__Point
+graphics__addPt 0 f cGraphics__Point f cGraphics__Point cGraphics__Point
+graphics__subPt 0 f cGraphics__Point f cGraphics__Point cGraphics__Point
+graphics__scalePt 0 f cNum f cGraphics__Point cGraphics__Point
+graphics__dotPt 0 f cGraphics__Point f cGraphics__Point cNum
+graphics__distPtHelper 0 egraphics__distPtHelper: kan niet unificeren: Float met Num
+graphics__distPt 1 f cGraphics__Point f cGraphics__Point v0
+graphics__append 1 f l v0 f l v0 l v0
+graphics__revAppend 1 f l v0 f l v0 l v0
+graphics__reverseList 1 f l v0 l v0
+graphics__mapList 2 f f v0 v1 f l v0 l v1
+graphics__filterList 1 f f v0 cNum f l v0 l v0
+graphics__lengthList 1 f l v0 cNum
+graphics__forcePt 0 f cGraphics__Point cGraphics__Point
+graphics__forcePoints 0 f l cGraphics__Point l cGraphics__Point
+graphics__forceItem 0 f cGraphics__Graphics cGraphics__Graphics
+graphics__forceGraphics 0 f l cGraphics__Graphics l cGraphics__Graphics
+graphics__forceMenuCats 0 f l cGraphics__MenuCat l cGraphics__MenuCat
+graphics__forceMenuCat 0 f cGraphics__MenuCat cGraphics__MenuCat
+graphics__graphicsout 0 f l cGraphics__Graphics cStr
+graphics__graphicsoutChars 0 f l cGraphics__Graphics l cChar
+graphics__itemChars 0 f cGraphics__Graphics l cChar
+graphics__menuCatsChars 0 f l cGraphics__MenuCat l cChar
+graphics__menuCatsBody 0 f l cGraphics__MenuCat l cChar
+graphics__menuCatChars 0 f cGraphics__MenuCat l cChar
+graphics__menuItemsChars 0 f l cStr l cChar
+graphics__pairItemChars 1 f v0 f cNum f cGraphics__Point f cGraphics__Point l cChar
+graphics__pointsItemChars 1 f v0 f cNum f l cGraphics__Point l cChar
+graphics__ptsChars 0 f l cGraphics__Point l cChar
+graphics__ptChars 0 f cGraphics__Point l cChar
+graphics__tagChars 1 f v0 l cChar
+graphics__intChars 0 f cNum l cChar
+graphics__floatChars 0 f cFloat l cChar
+graphics__quotedChars 0 f cStr l cChar
+graphics__str2list 0 f cStr l cChar
+graphics__strls 0 f cNum f cStr l cChar
+graphics__list2str 1 f l v0 cStr
+graphics__fillStr 2 f cNum f l v0 f v1 v1
+graphics__itoa 0 f cNum l cChar
+graphics__strEqual 0 f cStr f cStr cBool
+graphics__strEqualAt 0 f cNum f cStr f cStr cNum
+graphics__splitWords 0 f cStr l cStr
+graphics__splitWordsChars 0 f l cChar l cStr
+graphics__splitWordsWord 0 f l cChar l cStr
+graphics__takeWordChars 0 f l cChar l cChar
+graphics__dropWordChars 0 f l cChar l cChar
+graphics__startsWithPText 0 f cStr cBool
+graphics__startsWithOpenFile 0 f cStr cBool
+graphics__parseEvent 0 f cStr cGraphics__Event
+graphics__dropCharsFromStr 0 f cNum f cStr cStr
+graphics__dropChars 1 f cNum f l v0 l v0
+graphics__dropChars1 1 f cNum f l v0 l v0
+graphics__parseEventWords 0 f l cStr cGraphics__Event
+graphics__parseEventTag 0 f cStr f l cStr cGraphics__Event
+graphics__parseMenuItemEvent 1 f l v0 cGraphics__Event
+graphics__parseMenuItemEventItem 2 f v0 f l v1 cGraphics__Event
+graphics__parseEventPt 0 f l cStr cGraphics__Point
+graphics__parseEventPtY 0 f cStr f l cStr cGraphics__Point
+graphics__parseEventKey 0 f l cStr cNum
+graphics__decodeFloatWords 0 f l cStr l cFloat
+graphics__decodePointList 0 f l cStr l cGraphics__Point
+graphics__decodePoints 0 f cNum f l cStr l cGraphics__Point
+graphics__decodePointsStep 0 f cNum f l cStr l cGraphics__Point
+graphics__decodePointsStepY 0 f cNum f cStr f l cStr l cGraphics__Point

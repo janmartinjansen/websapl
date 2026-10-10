@@ -1346,7 +1346,7 @@ async function rsStart() {
     mkdirsFor(inst.FS, "/repl_sapl/build/modules/index.txt");
     inst.FS.writeFile("/repl_sapl/build/modules/index.txt", index);
     const bases = index.split("\n").map((l) => l.trim().split(/\s+/)[3]).filter(Boolean);
-    await Promise.all(bases.flatMap((b) => [".jvb", ".defs.txt", ".pp.cfp", ".adts.cfp"].map(async (ext) => {
+    await Promise.all(bases.flatMap((b) => [".jvb", ".defs.txt", ".pp.cfp", ".adts.cfp", ".schemes.txt"].map(async (ext) => {
       const r = await fetch("../" + b + ext);
       if (r.ok) inst.FS.writeFile("/" + b + ext, new Uint8Array(await r.arrayBuffer()));
     })));

@@ -1474,7 +1474,7 @@
           "path": "repl/repl_prelude.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 8278,
+          "size": 8388,
           "isBinary": false
         },
         {
@@ -1616,6 +1616,14 @@
                   "isBinary": false
                 },
                 {
+                  "name": "mgrafischgraphicscfp.schemes.txt",
+                  "path": "repl_sapl/build/modules/mgrafischgraphicscfp.schemes.txt",
+                  "type": "file",
+                  "ext": ".txt",
+                  "size": 3980,
+                  "isBinary": false
+                },
+                {
                   "name": "mlibcsvspp.adts.cfp",
                   "path": "repl_sapl/build/modules/mlibcsvspp.adts.cfp",
                   "type": "file",
@@ -1645,6 +1653,14 @@
                   "type": "file",
                   "ext": ".cfp",
                   "size": 11482,
+                  "isBinary": false
+                },
+                {
+                  "name": "mlibcsvspp.schemes.txt",
+                  "path": "repl_sapl/build/modules/mlibcsvspp.schemes.txt",
+                  "type": "file",
+                  "ext": ".txt",
+                  "size": 1206,
                   "isBinary": false
                 },
                 {
@@ -1680,6 +1696,14 @@
                   "isBinary": false
                 },
                 {
+                  "name": "mlibdisplayspp.schemes.txt",
+                  "path": "repl_sapl/build/modules/mlibdisplayspp.schemes.txt",
+                  "type": "file",
+                  "ext": ".txt",
+                  "size": 1105,
+                  "isBinary": false
+                },
+                {
                   "name": "mliblistspp.adts.cfp",
                   "path": "repl_sapl/build/modules/mliblistspp.adts.cfp",
                   "type": "file",
@@ -1709,6 +1733,14 @@
                   "type": "file",
                   "ext": ".cfp",
                   "size": 13786,
+                  "isBinary": false
+                },
+                {
+                  "name": "mliblistspp.schemes.txt",
+                  "path": "repl_sapl/build/modules/mliblistspp.schemes.txt",
+                  "type": "file",
+                  "ext": ".txt",
+                  "size": 1898,
                   "isBinary": false
                 },
                 {
@@ -1744,6 +1776,14 @@
                   "isBinary": false
                 },
                 {
+                  "name": "mlibplotspp.schemes.txt",
+                  "path": "repl_sapl/build/modules/mlibplotspp.schemes.txt",
+                  "type": "file",
+                  "ext": ".txt",
+                  "size": 1739,
+                  "isBinary": false
+                },
+                {
                   "name": "mlibstatsspp.adts.cfp",
                   "path": "repl_sapl/build/modules/mlibstatsspp.adts.cfp",
                   "type": "file",
@@ -1776,6 +1816,14 @@
                   "isBinary": false
                 },
                 {
+                  "name": "mlibstatsspp.schemes.txt",
+                  "path": "repl_sapl/build/modules/mlibstatsspp.schemes.txt",
+                  "type": "file",
+                  "ext": ".txt",
+                  "size": 2119,
+                  "isBinary": false
+                },
+                {
                   "name": "mlibtextspp.adts.cfp",
                   "path": "repl_sapl/build/modules/mlibtextspp.adts.cfp",
                   "type": "file",
@@ -1805,6 +1853,14 @@
                   "type": "file",
                   "ext": ".cfp",
                   "size": 21566,
+                  "isBinary": false
+                },
+                {
+                  "name": "mlibtextspp.schemes.txt",
+                  "path": "repl_sapl/build/modules/mlibtextspp.schemes.txt",
+                  "type": "file",
+                  "ext": ".txt",
+                  "size": 2975,
                   "isBinary": false
                 },
                 {
@@ -1852,7 +1908,7 @@
                   "path": "repl_sapl/build/prelude/prelude.cfp",
                   "type": "file",
                   "ext": ".cfp",
-                  "size": 8279,
+                  "size": 8389,
                   "isBinary": false
                 },
                 {
@@ -1868,7 +1924,7 @@
                   "path": "repl_sapl/build/prelude/prelude.pp.cfp",
                   "type": "file",
                   "ext": ".cfp",
-                  "size": 8490,
+                  "size": 8330,
                   "isBinary": false
                 }
               ],
@@ -1879,7 +1935,7 @@
               "path": "repl_sapl/build/mini_repl.jmvm",
               "type": "file",
               "ext": ".jmvm",
-              "size": 6265464,
+              "size": 6505610,
               "isBinary": false
             },
             {
@@ -1887,7 +1943,7 @@
               "path": "repl_sapl/build/mini_repl.jvb",
               "type": "file",
               "ext": ".jvb",
-              "size": 2364696,
+              "size": 2449264,
               "isBinary": true
             }
           ],

@@ -1,0 +1,79 @@
+text__length 0 f cStr cNum
+text__isEmpty 0 f cStr cBool
+text__empty 0 cStr
+text__slice 0 f cNum f cNum f cStr cStr
+text__sliceClamp 0 f cStr f cNum f cNum f cNum cStr
+text__clampLen 0 f cNum f cNum cNum
+text__take 0 f cNum f cStr cStr
+text__drop 0 f cNum f cStr cStr
+text__at 0 f cNum f cStr cChar
+text__fromChar 1 f v0 cStr
+text__append 0 f cStr f cStr cStr
+text__concat 0 f l cStr cStr
+text__pairUp 0 f l cStr l cStr
+text__join 0 f cStr f l cStr cStr
+text__intersperse 1 f v0 f l v0 l v0
+text__prependAll 1 f v0 f l v0 l v0
+text__repeat 0 f cNum f cStr cStr
+text__replicateList 1 f cNum f v0 l v0
+text__chars 0 f cStr l cChar
+text__charsFrom 0 f cStr f cNum f cNum l cChar
+text__fromChars 1 f l v0 cStr
+text__listLen 1 f l v0 f cNum cNum
+text__fillChars 2 f l v0 f cNum f v1 v1
+text__mapChars 1 f f cChar v0 f cStr cStr
+text__mapCharsAt 2 f f cChar v0 f cStr f cNum f cNum f v1 v1
+text__filterChars 0 f f cChar cNum f cStr cStr
+text__filterList 1 f f v0 cNum f l v0 l v0
+text__toUpper 0 f cStr cStr
+text__toLower 0 f cStr cStr
+text__upperChar 0 f cNum cNum
+text__lowerChar 0 f cNum cNum
+text__reverse 0 f cStr cStr
+text__reverseAt 1 f cStr f cNum f cNum f v0 v0
+text__isSpace 0 f cNum cBool
+text__isDigit 0 f cNum cBool
+text__lines 0 f cStr l cStr
+text__linesFrom 0 f cStr f cNum f cNum f cNum l cStr
+text__lineSlice 0 f cStr f cNum f cNum cStr
+text__unlines 0 f l cStr cStr
+text__concatMapList 2 f f v0 l v1 f l v0 l v1
+text__appendList 1 f l v0 f l v0 l v0
+text__words 0 f cStr l cStr
+text__wordsFrom 0 f cStr f cNum f cNum l cStr
+text__wordEnd 0 f cStr f cNum f cNum f cNum l cStr
+text__unwords 0 f l cStr cStr
+text__split 0 f cChar f cStr l cStr
+text__splitFrom 0 f cChar f cStr f cNum f cNum f cNum l cStr
+text__trim 0 f cStr cStr
+text__trimStart 0 f cStr cStr
+text__trimEnd 0 f cStr cStr
+text__trimRange 0 f cStr f cNum f cNum cStr
+text__firstNonSpace 0 f cStr f cNum f cNum cNum
+text__lastNonSpace 0 f cStr f cNum cNum
+text__padLeft 0 f cNum f cStr cStr
+text__padRight 0 f cNum f cStr cStr
+text__center 0 f cNum f cStr cStr
+text__showInt 0 f cNum cStr
+text__showNat 0 f cNum cStr
+text__natChars 0 f cNum f l cNum l cNum
+text__showFixed 3 f v0 f v1 v2
+text__showFixedF 0 etext__showFixedF: kan niet unificeren: Num met Float
+text__fixedBody 0 f cNum f cNum f cNum cStr
+text__padZero 0 f cNum f cStr cStr
+text__pow10 0 f cNum cNum
+text__toF 0 etext__toF: kan niet unificeren: Num met Float
+text__readInt 0 f cStr cNum
+text__readIntTrimmed 0 f cStr cNum
+text__digitsFrom 0 f cStr f cNum f cNum f cNum cNum
+text__readFloat 0 f cStr cFloat
+text__equal 0 f cStr f cStr cBool
+text__matchAt 0 f cStr f cStr f cNum cBool
+text__matchAtI 0 f cStr f cStr f cNum f cNum f cNum cBool
+text__startsWith 0 f cStr f cStr cBool
+text__endsWith 0 f cStr f cStr cBool
+text__indexOf 0 f cStr f cStr cNum
+text__indexFrom 0 f cStr f cStr f cNum cNum
+text__contains 0 f cStr f cStr cBool
+text__replace 0 f cStr f cStr f cStr cStr
+text__replaceFrom 0 f cStr f cStr f cStr f cNum f cNum l cStr
