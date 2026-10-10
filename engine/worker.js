@@ -1461,6 +1461,16 @@ async function rsReplay() {
 // uitvoer telkens als een regel @@begin/@@end af is (NOTEBOOK_PROGRESS).
 const NB_INPUT = "repl_sapl/gen/notebook_in.txt";
 
+// Notebookruns achter elkaar (10 oktober 2026): NB_WARM (bij het laden van de
+// pagina) en NB_RUN gebruiken dezelfde REPL, en een run mag nooit midden in
+// het opwarmen beginnen.
+let nbChain = Promise.resolve();
+function nbQueued(fn) {
+  const p = nbChain.then(fn, fn);
+  nbChain = p.catch(() => {});
+  return p;
+}
+
 async function nbRun(input, onProgress) {
   if (!rsInstance) await rsStart();
   mkdirsFor(rsInstance.FS, "/" + NB_INPUT);
@@ -1717,13 +1727,25 @@ self.onmessage = async function (e) {
       break;
 
     case "NB_RUN":
-      try {
-        const r = await nbRun(msg.input, (text) => postMessage({ type: "NOTEBOOK_PROGRESS", id: msg.id, text }));
-        postMessage({ type: "NB_RESULT", id: msg.id, success: true, output: r.output, trapped: r.trapped });
-      } catch (err) {
-        rsInstance = null;
-        postMessage({ type: "NB_RESULT", id: msg.id, success: false, error: err.message });
-      }
+      nbQueued(async () => {
+        try {
+          const r = await nbRun(msg.input, (text) => postMessage({ type: "NOTEBOOK_PROGRESS", id: msg.id, text }));
+          postMessage({ type: "NB_RESULT", id: msg.id, success: true, output: r.output, trapped: r.trapped });
+        } catch (err) {
+          rsInstance = null;
+          postMessage({ type: "NB_RESULT", id: msg.id, success: false, error: err.message });
+        }
+      });
+      break;
+
+    // Opwarmen (10 oktober 2026): de REPL starten en een leeg notebook draaien,
+    // zodat de uitvoerlaag met display en graphics al geladen is voordat de
+    // eerste echte run komt (die hergebruikt ze, zoals bij een tweede run).
+    // Geen antwoord; mislukt het, dan begint de eerste run gewoon vers.
+    case "NB_WARM":
+      nbQueued(async () => {
+        try { await nbRun("@@mode any\n"); } catch (_) { rsInstance = null; }
+      });
       break;
 
     case "RSAPL_SAVE":

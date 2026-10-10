@@ -187,6 +187,9 @@
         const m = e.data;
         if (m.type === "INIT_DONE") {
           ready = true; el("btn-run").disabled = false;
+          // Alvast de REPL en de uitvoerlaag laden (de worker zet een run
+          // daarachter in de rij); de eerste run doet dan alleen de cellen.
+          worker.postMessage({ type: "NB_WARM" });
           // Na een tijdslimiet blijft zichtbaar dat de vorige run gestopt is.
           setStatus(el("status").textContent === "gestopt" ? "gestopt (engine opnieuw klaar)" : "klaar");
           // ?run=1: na het laden één keer alles uitvoeren (demo-links,
