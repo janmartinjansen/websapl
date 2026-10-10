@@ -35,6 +35,16 @@ nbCellT n ty v = nbMark "@@begin " n <#> nbValueT ty v <#> nbMark "@@end " n
 
 nbValueT ty v = printString "@@value" <#> nbNl <#> printString (nbShowT 40 ty v) <#> nbNl
 
+// Sinds 10 oktober 2026 roept de REPL dit aan, met `tbl` (per import het
+// modulevoorvoegsel en de alias, "list L text T") en het type van de cel
+// (of ""). Een functie: `<fn:L.map/2> :: <type>` (prelude: showValX); een
+// type met Bool: als nbCellT; de rest als nbCell.
+nbCellX tbl n ty v = nbMark "@@begin " n <#> nbValueX tbl ty v <#> nbMark "@@end " n
+
+nbValueX tbl ty v =
+  if (typeId v == TYPE_FUNC) (printString "@@value" <#> nbNl <#> printString (showValX tbl ty v) <#> nbNl)
+  (if (pvContains ty "Bool") (nbValueT ty v) (nbRender v))
+
 nbShowT d ty v =
   if (d == 0) "..."
   (if (strEqual ty "Bool") (showBoolVal v)

@@ -95,7 +95,67 @@ showCharBody !c =
   (if (eqnum c 39) (Cons 92 (Cons 39 Nil))
   (Cons c Nil))))
 
-showFunc !x = strcat "<fn:" (strcat (funcName x) (strcat "/" (strcat (list2str (itoa (funcArity x))) ">")))
+// Een functiewaarde (10 oktober 2026, docs/2026-10-10_reflectie_en_notebook_
+// plan.md): de naam, een `·` per al gebonden argument, en het aantal
+// argumenten dat nog ontbreekt: `<fn:plus/2>`, `<fn:plus ·/1>`. De gebonden
+// argumenten zelf niet: dat zou een lui argument uitrekenen. Een lambda is
+// `λ`, een modulefunctie `list.map` (showValX zet daar de alias van maken).
+showFunc !x = pvShowFunc (funcName x) (funcArity x) (funcRemaining x)
+
+pvShowFunc name !ar !rem = strcat "<fn:" (strcat (pvFuncName name) (strcat (pvBoundDots (ar - rem)) (strcat "/" (strcat (list2str (itoa rem)) ">"))))
+
+pvBoundDots !k = if (k <= 0) "" (strcat " ·" (pvBoundDots (k - 1)))
+
+pvFuncName name = if (pvIsLam name) "λ" (pvModuleDot name 1 (strlen name))
+
+pvIsLam name = if (strlen name < 6) False (strEqual (strslice name 0 6) "__lam_")
+
+pvModuleDot name !i !n =
+  if (i + 2 >= n) name
+  (if (pvDoubleUnder name i) (strcat (strslice name 0 i) (strcat "." (strslice name (i + 2) n))) (pvModuleDot name (i + 1) n))
+
+pvDoubleUnder name !i = (eqnum (strat i name) '_') /\ (eqnum (strat (i + 1) name) '_')
+
+// Een waarde tonen voor de REPL en het notebook, met `tbl` ("list L text T":
+// per import het modulevoorvoegsel en de alias) en `ty` (het type, of ""):
+// een functie als `<fn:L.map/2> :: <type>`; een Bool (ook in een lijst) op
+// type; de rest zoals showVal. Modulenamen van functies, ook in een lijst,
+// krijgen hun alias.
+showValX tbl ty x =
+  if (eqnum (typeId x) TYPE_FUNC) (strcat (pvAliasFn tbl (showFunc x)) (pvTyPart tbl ty))
+  (pvAliasFn tbl (if (pvContains ty "Bool") (showTyped ty x) (showVal x)))
+
+printValX tbl ty x = printString (showValX tbl ty x)
+
+pvTyPart tbl ty = if (eqnum (strlen ty) 0) "" (strcat " :: " (pvAliasTy tbl ty))
+
+// `<fn:list.` -> `<fn:L.` voor elk paar uit tbl.
+pvAliasFn tbl s = pvAliasFnW s (pvWords tbl)
+pvAliasFnW s ws = case ws (Nil -> s) (Cons c r -> case r (Nil -> s) (Cons a r2 -> pvAliasFnW (pvReplaceAll s (strcat "<fn:" (strcat c ".")) (strcat "<fn:" (strcat a "."))) r2))
+
+// In een type: `list__X` en `List__X` -> `L.X`.
+pvAliasTy tbl s = pvAliasTyW s (pvWords tbl)
+pvAliasTyW s ws = case ws (Nil -> s) (Cons c r -> case r (Nil -> s) (Cons a r2 -> pvAliasTyW (pvReplaceAll (pvReplaceAll s (strcat c "__") (strcat a ".")) (strcat (pvCapFirst c) "__") (strcat a ".")) r2))
+
+pvCapFirst s = if (eqnum (strlen s) 0) s (strcat (list2str (Cons (pvUpper (strat 0 s)) Nil)) (strslice s 1 (strlen s)))
+pvUpper !c = if ((c >= 'a') /\ (c <= 'z')) (c - 32) c
+
+// De woorden van een string (gescheiden door spaties).
+pvWords s = pvWordsFrom s 0 0 (strlen s)
+pvWordsFrom s !start !i !n =
+  if (i >= n) (pvWordEnd s start n Nil)
+  (if (eqnum (strat i s) ' ') (pvWordEnd s start i (pvWordsFrom s (i + 1) (i + 1) n)) (pvWordsFrom s start (i + 1) n))
+pvWordEnd s !start !i rest = if (i > start) (Cons (strslice s start i) rest) rest
+
+pvContains s sub = pvFind s sub 0 (strlen s) (strlen sub) >= 0
+
+// De eerste plaats van `sub` in `s` vanaf i, of -1.
+pvFind s sub !i !n !m = if (i + m > n) (0 - 1) (if (pvMatchAt s sub i 0 m) i (pvFind s sub (i + 1) n m))
+pvMatchAt s sub !i !k !m = if (k >= m) True (if (eqnum (strat (i + k) s) (strat k sub)) (pvMatchAt s sub i (k + 1) m) False)
+
+pvReplaceAll s from to = if (eqnum (strlen from) 0) s (pvReplFrom s from to 0 (strlen s) (strlen from))
+pvReplFrom s from to !i !n !m = pvReplAt s from to i n m (pvFind s from i n m)
+pvReplAt s from to !i !n !m !j = if (j < 0) (strslice s i n) (strcat (strslice s i j) (strcat to (pvReplFrom s from to (j + m) n m)))
 
 // ::list (Cons/Nil) krijgt een STATISCHE aanroep naar show_Cons/show_Nil,
 // bewust niet via de lookup+applyDynamic-haak hieronder: een module-gelinkte
