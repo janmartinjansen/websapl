@@ -221,16 +221,21 @@ readStrLitEscapeChar e =
 readStrLitEscape acc cs3 =
   case cs3
     (Nil -> error "tokenize: unexpected end of input in string escape")
-    (Cons e cs4 -> readStrLit (append acc (Cons (readStrLitEscapeChar e) Nil)) cs4)
+    (Cons e cs4 -> readStrLit (Cons (readStrLitEscapeChar e) acc) cs4)
 
 readStrLit acc cs2 =
   case cs2
     (Nil -> error "tokenize: missing closing \" in string literal")
     (Cons c1 cs3 ->
-       if (c1 == 34) (Lexres (TStr acc) cs3)
-       (if (c1 == 92) (readStrLitEscape acc cs3) (readStrLit (append acc (Cons c1 Nil)) cs3)))
+       if (c1 == 34) (Lexres (TStr (slRevStr acc Nil)) cs3)
+       (if (c1 == 92) (readStrLitEscape acc cs3) (readStrLit (Cons c1 acc) cs3)))
 
 readStringLit cs = readStrLit Nil cs
+
+// De tekens van een string-literal worden omgekeerd verzameld en aan het eind
+// één keer omgedraaid (11 oktober 2026): `append acc [c]` per teken kostte
+// kwadratisch veel werk, merkbaar bij een lange string-literal.
+slRevStr xs acc = case xs (Nil -> acc) (Cons x r -> slRevStr r (Cons x acc))
 
 // Char-list literals (`['abc']`, docs/sapl_programmeer_regels.md #1/#8):
 // mechanical port of pg99.ama's own `readStringList`/`readStrL` -- raw
@@ -251,12 +256,12 @@ readStrListLit acc cs =
 readStrListLitOnChar acc c1 cs2 =
   if (c1 == 39)
     (readStrListLitMaybeClose acc cs2)
-    (readStrListLit (append acc (Cons c1 Nil)) cs2)
+    (readStrListLit (Cons c1 acc) cs2)
 
 readStrListLitMaybeClose acc cs2 =
   case cs2
     (Nil -> error "tokenize: missing closing '] in char-list literal")
-    (Cons c2 cs3 -> if (c2 == ']') (Lexres (TStrList acc) cs3) (readStrListLit (append acc (Cons 39 Nil)) (Cons c2 cs3)))
+    (Cons c2 cs3 -> if (c2 == ']') (Lexres (TStrList (slRevStr acc Nil)) cs3) (readStrListLit (Cons 39 acc) (Cons c2 cs3)))
 
 readStringListLit cs = readStrListLit Nil cs
 
