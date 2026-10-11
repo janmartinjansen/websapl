@@ -1604,7 +1604,7 @@
                   "path": "repl_sapl/build/modules/mgrafischgraphicscfp.jvb",
                   "type": "file",
                   "ext": ".jvb",
-                  "size": 30676,
+                  "size": 31036,
                   "isBinary": true
                 },
                 {
@@ -1644,7 +1644,7 @@
                   "path": "repl_sapl/build/modules/mlibcsvspp.jvb",
                   "type": "file",
                   "ext": ".jvb",
-                  "size": 17244,
+                  "size": 17500,
                   "isBinary": true
                 },
                 {
@@ -1684,7 +1684,7 @@
                   "path": "repl_sapl/build/modules/mlibdisplayspp.jvb",
                   "type": "file",
                   "ext": ".jvb",
-                  "size": 13880,
+                  "size": 14160,
                   "isBinary": true
                 },
                 {
@@ -1724,7 +1724,7 @@
                   "path": "repl_sapl/build/modules/mliblistspp.jvb",
                   "type": "file",
                   "ext": ".jvb",
-                  "size": 21452,
+                  "size": 21700,
                   "isBinary": true
                 },
                 {
@@ -1764,7 +1764,7 @@
                   "path": "repl_sapl/build/modules/mlibplotspp.jvb",
                   "type": "file",
                   "ext": ".jvb",
-                  "size": 22114,
+                  "size": 22378,
                   "isBinary": true
                 },
                 {
@@ -1804,7 +1804,7 @@
                   "path": "repl_sapl/build/modules/mlibstatsspp.jvb",
                   "type": "file",
                   "ext": ".jvb",
-                  "size": 21572,
+                  "size": 21908,
                   "isBinary": true
                 },
                 {
@@ -1844,7 +1844,7 @@
                   "path": "repl_sapl/build/modules/mlibtextspp.jvb",
                   "type": "file",
                   "ext": ".jvb",
-                  "size": 30152,
+                  "size": 30672,
                   "isBinary": true
                 },
                 {
@@ -1884,7 +1884,7 @@
                   "path": "repl_sapl/build/modules/nbglue.jvb",
                   "type": "file",
                   "ext": ".jvb",
-                  "size": 18716,
+                  "size": 19060,
                   "isBinary": true
                 },
                 {
@@ -1935,7 +1935,7 @@
               "path": "repl_sapl/build/mini_repl.jmvm",
               "type": "file",
               "ext": ".jmvm",
-              "size": 6606867,
+              "size": 6614974,
               "isBinary": false
             },
             {
@@ -1943,7 +1943,7 @@
               "path": "repl_sapl/build/mini_repl.jvb",
               "type": "file",
               "ext": ".jvb",
-              "size": 2483288,
+              "size": 2505624,
               "isBinary": true
             }
           ],
@@ -2002,7 +2002,7 @@
           "path": "sapl_compiler/stage5_codegen.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 73688,
+          "size": 74369,
           "isBinary": false
         }
       ],

@@ -172,7 +172,7 @@ genReflectionCall prog adts args n as =
 // `case` op dat veld; op een al geëvalueerde waarde doet `eval` niets.
 reflectionInstrs n =
   if (charListEq n getFieldKw)
-    (Cons (mkI ['getfield']) (Cons (mkI ['eval']) Nil))
+    (Cons (mkI ['getfield']) (Cons (mkI ['force']) Nil))
     (Cons (mkI (reflectionOpcode n)) Nil)
 
 // `error msg`: syscall 8 (7 October 2026) goes to the nearest catch-all
@@ -373,16 +373,22 @@ isEvaluatedExpr args e =
 // (consumes exactly f's own arity off the top), then "eval" on the result
 // (which picks up the surplus arguments still lying underneath via the same
 // curried mechanism as an unknown application).
+// `force` (11 oktober 2026, docs/2026-10-11_force_plan.md) waar alleen een
+// waarde nodig is: `eval` past een gedeeltelijke toepassing toe op de waarden
+// die al in het frame liggen (bv. het andere strikte veld van een
+// constructor), `force` nooit. `eval` blijft waar toepassen de bedoeling is:
+// een onbekende functie met argumenten, en het resultaat van een bekende
+// functie die meer argumenten krijgt dan haar ariteit.
 genEval prog adts args e =
   case e
     (App n as -> genEvalApp prog adts args n as)
     (If a b c -> error "genEval: If inside eval not yet implemented")
     (Let ls b -> error "genEval: Let cannot appear as a subexpression (sapl_programmeer_regels.md sectie 4)")
     (Eval inner -> error "genEval: nested Eval not expected")
-    (Num n -> append (genValue prog adts args (Num n)) (Cons (mkI ['eval']) Nil))
-    (FloatLit s -> append (genValue prog adts args (FloatLit s)) (Cons (mkI ['eval']) Nil))
-    (Str s -> append (genValue prog adts args (Str s)) (Cons (mkI ['eval']) Nil))
-    (Var v -> append (genValue prog adts args (Var v)) (Cons (mkI ['eval']) Nil))
+    (Num n -> append (genValue prog adts args (Num n)) (Cons (mkI ['force']) Nil))
+    (FloatLit s -> append (genValue prog adts args (FloatLit s)) (Cons (mkI ['force']) Nil))
+    (Str s -> append (genValue prog adts args (Str s)) (Cons (mkI ['force']) Nil))
+    (Var v -> append (genValue prog adts args (Var v)) (Cons (mkI ['force']) Nil))
     (_ -> genEvalDefault e)
 
 genEvalDefault e = error (append ['genEval: '] (append (exprConstrNameOf e) [' inside eval not expected']))
@@ -393,7 +399,11 @@ genEvalApp prog adts args n as =
     (append (pushArgsThenFunc prog adts args n as) (Cons (mkI ['eval']) Nil))
 
 genEvalAppKnown prog adts args n as =
-  append (genCallArgs prog adts args as) (append (Cons (mkJ ['call'] n) Nil) (Cons (mkI ['eval']) Nil))
+  append (genCallArgs prog adts args as) (append (Cons (mkJ ['call'] n) Nil) (Cons (mkI (evalOrForce (length as) (funcArityOf (findFunc n prog)))) Nil))
+
+// Meer argumenten dan de ariteit: het resultaat moet de rest nog krijgen
+// (eval past toe); anders is het al de waarde (force).
+evalOrForce !nargs !arity = if (nargs > arity) ['eval'] ['force']
 
 // Condition of an if: special cases for `expr == 0`/`expr != 0`, general
 // fallback for everything else: compute the value, test it for truth

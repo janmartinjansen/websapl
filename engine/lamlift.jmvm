@@ -9,7 +9,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             create 2 3
             dup
             store 0
-            eval
+            force
             push 0
             dec
             sub
@@ -20,7 +20,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             pushfunc 1 1                             || readStream
             create 2 3
             load 0
-            eval
+            force
             ccreatet 2 11 5 1
             return 2
 3           load 1                                   || writeStream_lazy
@@ -29,16 +29,16 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 4           load 1                                   || writeStream
             jmpt 2 5 6                               || lbs
 5           load 0                                   || writeStream_Nil
-            eval
+            force
             syscall 5
             return 2
 6           load 0                                   || writeStream_Cons
             load 2
-            eval
+            force
             syscall 7
             pop
             load 1
-            eval
+            force
             load 2
             tailcall 4 4                             || writeStream
 7           load 0                                   || str2list_lazy
@@ -141,7 +141,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             load 0
             strop 3
             load 1
-            eval
+            force
             loadadd 2 1
             tailcall 5 22                            || fillStr
 25          load 0                                   || strcat_lazy
@@ -328,7 +328,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 56          return_const 1 0                         || length_Nil
 57          push 1                                   || length_Cons
             load 1
-            eval
+            force
             call 55                                  || length
             add
             return 3
@@ -367,7 +367,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             ccreatet 2 11 5 1
             return 4
 66          load 1                                   || filter_Cons_else
-            eval
+            force
             load 2
             tailcall 4 63                            || filter
 67          load 2                                   || foldl_lazy
@@ -379,7 +379,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             eval
             return 3
 70          load 1                                   || foldl_Cons
-            eval
+            force
             load 0
             load 3
             load 2
@@ -427,7 +427,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 81          ccreatet 0 11 5 0                        || take_Nil
             return 2
 82          load 2                                   || take_Cons
-            eval
+            force
             ifneq 83                                 || take_Cons_else
             ccreatet 0 11 5 0
             return 4
@@ -448,14 +448,14 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 86          ccreatet 0 11 5 0                        || drop_Nil
             return 2
 87          load 2                                   || drop_Cons
-            eval
+            force
             ifneq 88                                 || drop_Cons_else
             load 1
             load 0
             ccreatet 2 11 5 1
             return 4
 88          load 1                                   || drop_Cons_else
-            eval
+            force
             load 2
             pushfunc 1 1257                          || drop_1
             create 2 3
@@ -478,7 +478,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             load 0
             ccreatet 2 11 5 1
             load 1
-            eval
+            force
             tailcall 4 92                            || rev
 95          load 0                                   || cat2_lazy
             eval
@@ -590,9 +590,9 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             sub
             ifneq 119                                || nameEq_Cons_Cons_else
             load 1
-            eval
+            force
             load 3
-            eval
+            force
             tailcall 6 112                           || nameEq
 119         return_const 6 0                         || nameEq_Cons_Cons_else
 120         load 1                                   || nameIn_lazy
@@ -603,12 +603,12 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 122         return_const 2 0                         || nameIn_Nil
 123         load 0                                   || nameIn_Cons
             load 2
-            eval
+            force
             call 112                                 || nameEq
             ifeq 124                                 || nameIn_Cons_else
             return_const 4 1
 124         load 1                                   || nameIn_Cons_else
-            eval
+            force
             load 2
             tailcall 4 121                           || nameIn
 125         load 0                                   || namesMinus_lazy
@@ -651,12 +651,12 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 136         ccreatet 0 11 5 0                        || distinctNames_Nil
             return 1
 137         load 1                                   || distinctNames_Cons
-            eval
+            force
             load 0
             call 121                                 || nameIn
             ifeq 138                                 || distinctNames_Cons_else
             load 1
-            eval
+            force
             tailcall 3 135                           || distinctNames
 138         load 1                                   || distinctNames_Cons_else
             pushfunc 1 134                           || distinctNames_lazy
@@ -792,10 +792,10 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             ifneq 190                                || lexSkipHere_else_else_else
             load 2
             load 1
-            eval
+            force
             tailcall 3 192                           || lexSkipSlash
 190         load 2                                   || lexSkipHere_else_else_else
-            eval
+            force
             tailcall 3 202                           || lexToken
 191         load 0                                   || lexSkipSlash_lazy
             eval
@@ -803,16 +803,16 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 192         load 0                                   || lexSkipSlash
             jmpt 2 193 194                           || lbs
 193         load 1                                   || lexSkipSlash_Nil
-            eval
+            force
             tailcall 2 202                           || lexToken
 194         loadadd 0 -47                            || lexSkipSlash_Cons
             ifneq 195                                || lexSkipSlash_Cons_else
             load 1
-            eval
+            force
             call 197                                 || dropLine
             tailcall 4 183                           || lexSkip
 195         load 3                                   || lexSkipSlash_Cons_else
-            eval
+            force
             tailcall 4 202                           || lexToken
 196         load 0                                   || dropLine_lazy
             eval
@@ -828,7 +828,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             eval
             return 3
 200         load 1                                   || dropLine_Cons_else
-            eval
+            force
             tailcall 3 197                           || dropLine
 201         load 0                                   || lexToken_lazy
             eval
@@ -861,7 +861,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 209         loadadd 0 -39                            || lexTokenHere_else_else_else
             ifneq 210                                || lexTokenHere_else_else_else_else
             load 1
-            eval
+            force
             tailcall 3 272                           || lexChar
 210         loadadd 0 -40                            || lexTokenHere_else_else_else_else
             ifneq 211                                || lexTokenHere_else_else_else_else_else
@@ -890,32 +890,32 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 213         loadadd 0 -92                            || lexTokenHere_else_else_else_else_else_else_else
             ifneq 214                                || lexTokenHere_else_else_else_else_else_else_else_else
             load 1
-            eval
+            force
             tailcall 3 280                           || lexBackslash
 214         loadadd 0 -45                            || lexTokenHere_else_else_else_else_else_else_else_else
             ifneq 215                                || lexTokenHere_else_else_else_else_else_else_else_else_else
             load 1
-            eval
+            force
             tailcall 3 285                           || lexMinus
 215         loadadd 0 -60                            || lexTokenHere_else_else_else_else_else_else_else_else_else
             ifneq 216                                || lexTokenHere_else_else_else_else_else_else_else_else_else_else
             load 1
-            eval
+            force
             tailcall 3 290                           || lexLess
 216         loadadd 0 -62                            || lexTokenHere_else_else_else_else_else_else_else_else_else_else
             ifneq 217                                || lexTokenHere_else_else_else_else_else_else_else_else_else_else_else
             load 1
-            eval
+            force
             tailcall 3 303                           || lexGreater
 217         loadadd 0 -61                            || lexTokenHere_else_else_else_else_else_else_else_else_else_else_else
             ifneq 218                                || lexTokenHere_else_else_else_else_else_else_else_else_else_else_else_else
             load 1
-            eval
+            force
             tailcall 3 308                           || lexEquals
 218         loadadd 0 -33                            || lexTokenHere_else_else_else_else_else_else_else_else_else_else_else_else
             ifneq 219                                || lexTokenHere_else_else_else_else_else_else_else_else_else_else_else_else_else
             load 1
-            eval
+            force
             tailcall 3 313                           || lexBang
 219         loadadd 0 -58                            || lexTokenHere_else_else_else_else_else_else_else_else_else_else_else_else_else
             ifneq 220                                || lexTokenHere_else_else_else_else_else_else_else_else_else_else_else_else_else_else
@@ -970,7 +970,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 224         loadadd 0 -47                            || lexTokenHere_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             ifneq 225                                || lexTokenHere_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             load 1
-            eval
+            force
             tailcall 3 318                           || lexSlash
 225         load 0                                   || lexTokenHere_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             tailcall 3 227                           || lexBad
@@ -997,7 +997,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             pushfunc 1 182                           || lexSkip_lazy
             create 2 3
             load 0
-            eval
+            force
             call 231                                 || ndVal
             ccreatet 1 11 6 1
             ccreatet 2 11 5 1
@@ -1023,7 +1023,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             jmpt 2 238 239                           || lbs
 238         ccreatet 0 11 5 0                        || lexDigits_Nil
             load 1
-            eval
+            force
             ccreatet 2 11 7 0
             return 2
 239         load 0                                   || lexDigits_Cons
@@ -1034,11 +1034,11 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             pushfunc 2 1265                          || lexDigits_1
             create 3 3
             load 1
-            eval
+            force
             tailcall 4 237                           || lexDigits
 240         load 2                                   || lexDigits_Cons_else
             load 3
-            eval
+            force
             ccreatet 2 11 7 0
             return 4
 241         jmp 242                                  || lexIdent || lexIdent_lazy
@@ -1053,7 +1053,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             pushfunc 1 182                           || lexSkip_lazy
             create 2 3
             load 0
-            eval
+            force
             call 244                                 || idRes
             call 257                                 || identToken
             ccreatet 2 11 5 1
@@ -1098,13 +1098,13 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             create 2 3
             dup
             store 0
-            eval
+            force
             call 247                                 || idRestOf
             load 0
             pushfunc 1 243                           || idRes_lazy
             create 2 3
             load 1
-            eval
+            force
             ccreatet 2 11 5 1
             ccreatet 2 11 8 0
             return 3
@@ -1150,7 +1150,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             pushfunc 1 182                           || lexSkip_lazy
             create 2 3
             load 0
-            eval
+            force
             call 244                                 || idRes
             ccreatet 1 11 6 2
             ccreatet 2 11 5 1
@@ -1167,7 +1167,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 267         loadadd 0 -34                            || lexStringChars_Cons
             ifneq 268                                || lexStringChars_Cons_else
             load 1
-            eval
+            force
             ccreatet 0 11 5 0
             ccreatet 2 11 8 0
             return 3
@@ -1181,13 +1181,13 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             create 2 3
             dup
             store 0
-            eval
+            force
             call 247                                 || idRestOf
             load 0
             pushfunc 1 243                           || idRes_lazy
             create 2 3
             load 1
-            eval
+            force
             ccreatet 2 11 5 1
             ccreatet 2 11 8 0
             return 3
@@ -1200,7 +1200,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             debug 2
             return 1
 274         load 1                                   || lexChar_Cons
-            eval
+            force
             load 0
             tailcall 3 276                           || lexCharClose
 275         load 1                                   || lexCharClose_lazy
@@ -1215,7 +1215,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             pushfunc 1 182                           || lexSkip_lazy
             create 2 3
             load 2
-            eval
+            force
             ccreatet 1 11 6 1
             ccreatet 2 11 5 1
             return 4
@@ -1309,7 +1309,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             ifneq 296                                || lexLessNext_else_else
             load 2
             load 1
-            eval
+            force
             tailcall 3 298                           || lexSeq
 296         load 2                                   || lexLessNext_else_else
             pushfunc 1 182                           || lexSkip_lazy
@@ -1495,7 +1495,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 333         load 2                                   || psWithToks_PS
             load 1
             load 4
-            eval
+            force
             ccreatet 3 11 13 0
             return 5
 334         load 0                                   || psAddDef_lazy
@@ -1505,7 +1505,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             jmpt 1 336                               || lbs
 336         load 2                                   || psAddDef_PS
             load 4
-            eval
+            force
             ccreatet 2 11 5 1
             loadadd 1 1
             load 0
@@ -1821,7 +1821,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             tailcall 5 538                           || parseIdentAtom
 523         load 2                                   || parseAtomTok_TNum
             load 3
-            eval
+            force
             call 332                                 || psWithToks
             load 0
             ccreatet 1 11 9 0
@@ -1829,7 +1829,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             return 5
 524         load 2                                   || parseAtomTok_TStr
             load 3
-            eval
+            force
             call 332                                 || psWithToks
             load 0
             ccreatet 1 11 9 1
@@ -1894,7 +1894,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             call 112                                 || nameEq
             ifeq 539                                 || parseIdentAtom_else
             load 1
-            eval
+            force
             push 1
             ccreatet 1 11 9 0
             ccreatet 2 11 14 0
@@ -1904,13 +1904,13 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             call 112                                 || nameEq
             ifeq 540                                 || parseIdentAtom_else_else
             load 1
-            eval
+            force
             push 0
             ccreatet 1 11 9 0
             ccreatet 2 11 14 0
             return 2
 540         load 1                                   || parseIdentAtom_else_else
-            eval
+            force
             ccreatet 0 11 5 0
             load 0
             ccreatet 2 11 9 2
@@ -1941,7 +1941,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             load 2
             load 1
             load 0
-            eval
+            force
             tailcall 3 546                           || expectRParenTok
 545         load 0                                   || expectRParenTok_lazy
             eval
@@ -1969,10 +1969,10 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             pushfunc 1 482                           || dropTok_lazy
             create 2 3
             load 2
-            eval
+            force
             call 332                                 || psWithToks
             load 1
-            eval
+            force
             ccreatet 2 11 14 0
             return 3
 553         push "expectRParenTok_TComma"            || expectRParenTok_TComma
@@ -2011,7 +2011,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             store 0
             load 2
             load 0
-            eval
+            force
             call 341                                 || resState
             load 0
             pushfunc 1 337                           || resExpr_lazy
@@ -2030,7 +2030,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             tailcall 3 568                           || parseAppRestMore
 566         load 1                                   || parseAppRest_else
             load 0
-            eval
+            force
             ccreatet 2 11 14 0
             return 3
 567         jmp 568                                  || parseAppRestMore || parseAppRestMore_lazy
@@ -2042,7 +2042,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             store 0
             load 3
             load 0
-            eval
+            force
             call 341                                 || resState
             load 0
             pushfunc 1 337                           || resExpr_lazy
@@ -2063,7 +2063,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             store 0
             load 1
             load 0
-            eval
+            force
             tailcall 2 572                           || expectArrowSkipTok
 571         load 0                                   || expectArrowSkipTok_lazy
             eval
@@ -2134,7 +2134,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             store 0
             load 1
             load 0
-            eval
+            force
             tailcall 2 591                           || expectLParenSkipTok
 590         load 0                                   || expectLParenSkipTok_lazy
             eval
@@ -2205,7 +2205,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             store 0
             load 1
             load 0
-            eval
+            force
             tailcall 2 610                           || expectRParenSkipTok
 609         load 0                                   || expectRParenSkipTok_lazy
             eval
@@ -2276,7 +2276,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             store 0
             load 1
             load 0
-            eval
+            force
             tailcall 2 629                           || expectEqSkipTok
 628         load 0                                   || expectEqSkipTok_lazy
             eval
@@ -2347,7 +2347,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             store 0
             load 1
             load 0
-            eval
+            force
             tailcall 2 648                           || expectInSkipTok
 647         load 0                                   || expectInSkipTok_lazy
             eval
@@ -2462,12 +2462,12 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             ccreatet 3 11 17 0
             return 4
 682         load 3                                   || matchOpTok_TOp
-            eval
+            force
             load 0
             call 121                                 || nameIn
             ifeq 683                                 || matchOpTok_TOp_else
             load 2
-            eval
+            force
             load 0
             push 1
             ccreatet 3 11 17 0
@@ -2595,7 +2595,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 710         updsp 1                                  || chainLeftBinRest
             load 5
             load 2
-            eval
+            force
             call 323                                 || psToks
             call 674                                 || matchOp
             store 0
@@ -2620,9 +2620,9 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             load 0
             tailcall 6 715                           || chainLeftBinMore
 713         load 2                                   || chainLeftBinStep_else
-            eval
+            force
             load 1
-            eval
+            force
             ccreatet 2 11 14 0
             return 6
 714         jmp 715                                  || chainLeftBinMore || chainLeftBinMore_lazy
@@ -2631,7 +2631,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             pushfunc 1 670                           || moRest_lazy
             create 2 3
             load 6
-            eval
+            force
             call 332                                 || psWithToks
             store 0
             load 7
@@ -2678,7 +2678,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 719         updsp 1                                  || chainRightBinRest
             load 5
             load 2
-            eval
+            force
             call 323                                 || psToks
             call 674                                 || matchOp
             store 0
@@ -2703,9 +2703,9 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             load 0
             tailcall 6 724                           || chainRightBinMore
 722         load 2                                   || chainRightBinStep_else
-            eval
+            force
             load 1
-            eval
+            force
             ccreatet 2 11 14 0
             return 6
 723         jmp 724                                  || chainRightBinMore || chainRightBinMore_lazy
@@ -2714,7 +2714,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             pushfunc 1 670                           || moRest_lazy
             create 2 3
             load 6
-            eval
+            force
             call 332                                 || psWithToks
             store 0
             load 9
@@ -2732,9 +2732,9 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             store 3
             load 2
             load 5
-            eval
+            force
             load 4
-            eval
+            force
             call 668                                 || moOp
             ccreatet 3 11 9 3
             ccreatet 2 11 14 0
@@ -2823,72 +2823,72 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             load 0
             tailcall 4 765                           || parseIdentListMore
 750         load 3                                   || parseIdentListTok_TNum
-            eval
+            force
             ccreatet 0 11 5 0
             ccreatet 2 11 18 0
             return 4
 751         load 3                                   || parseIdentListTok_TStr
-            eval
+            force
             ccreatet 0 11 5 0
             ccreatet 2 11 18 0
             return 4
 752         load 3                                   || parseIdentListTok_TOp
-            eval
+            force
             ccreatet 0 11 5 0
             ccreatet 2 11 18 0
             return 4
 753         load 2                                   || parseIdentListTok_TLParen
-            eval
+            force
             ccreatet 0 11 5 0
             ccreatet 2 11 18 0
             return 3
 754         load 2                                   || parseIdentListTok_TRParen
-            eval
+            force
             ccreatet 0 11 5 0
             ccreatet 2 11 18 0
             return 3
 755         load 2                                   || parseIdentListTok_TComma
-            eval
+            force
             ccreatet 0 11 5 0
             ccreatet 2 11 18 0
             return 3
 756         load 2                                   || parseIdentListTok_TEq
-            eval
+            force
             ccreatet 0 11 5 0
             ccreatet 2 11 18 0
             return 3
 757         load 2                                   || parseIdentListTok_TBang
-            eval
+            force
             ccreatet 0 11 5 0
             ccreatet 2 11 18 0
             return 3
 758         load 2                                   || parseIdentListTok_TArrow
-            eval
+            force
             ccreatet 0 11 5 0
             ccreatet 2 11 18 0
             return 3
 759         load 2                                   || parseIdentListTok_TBackslash
-            eval
+            force
             ccreatet 0 11 5 0
             ccreatet 2 11 18 0
             return 3
 760         load 2                                   || parseIdentListTok_TIf
-            eval
+            force
             ccreatet 0 11 5 0
             ccreatet 2 11 18 0
             return 3
 761         load 2                                   || parseIdentListTok_TCase
-            eval
+            force
             ccreatet 0 11 5 0
             ccreatet 2 11 18 0
             return 3
 762         load 2                                   || parseIdentListTok_TLet
-            eval
+            force
             ccreatet 0 11 5 0
             ccreatet 2 11 18 0
             return 3
 763         load 2                                   || parseIdentListTok_TIn
-            eval
+            force
             ccreatet 0 11 5 0
             ccreatet 2 11 18 0
             return 3
@@ -2899,20 +2899,20 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             create 2 3
             dup
             store 0
-            eval
+            force
             call 741                                 || ilRest
             load 0
             pushfunc 1 737                           || ilNames_lazy
             create 2 3
             load 1
-            eval
+            force
             ccreatet 2 11 5 1
             ccreatet 2 11 18 0
             return 3
 766         jmp 767                                  || parseIf || parseIf_lazy
 767         updsp 9                                  || parseIf
             load 9
-            eval
+            force
             call 589                                 || expectLParenSkip
             store 0
             load 10
@@ -2970,13 +2970,13 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             create 3 3
             dup
             store 1
-            eval
+            force
             call 347                                 || rlState
             load 1
-            eval
+            force
             call 344                                 || rlExprs
             load 0
-            eval
+            force
             call 338                                 || resExpr
             ccreatet 2 11 9 5
             ccreatet 2 11 14 0
@@ -3040,13 +3040,13 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             create 3 3
             dup
             store 1
-            eval
+            force
             call 347                                 || rlState
             load 1
             pushfunc 1 343                           || rlExprs_lazy
             create 2 3
             load 0
-            eval
+            force
             call 338                                 || resExpr
             ccreatet 2 11 5 1
             ccreatet 2 11 15 0
@@ -3062,7 +3062,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             load 2
             load 1
             load 0
-            eval
+            force
             tailcall 3 799                           || parseBranchTok
 798         load 0                                   || parseBranchTok_lazy
             eval
@@ -3128,7 +3128,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             pushfunc 1 482                           || dropTok_lazy
             create 2 3
             load 1
-            eval
+            force
             call 332                                 || psWithToks
             ccreatet 0 11 10 1
             ccreatet 2 11 14 0
@@ -3151,7 +3151,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             load 3
             load 0
             load 1
-            eval
+            force
             tailcall 4 821                           || parseBranchPat
 820         load 0                                   || parseBranchPat_lazy
             eval
@@ -3245,9 +3245,9 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             create 2 3
             dup
             store 3
-            eval
+            force
             load 2
-            eval
+            force
             call 338                                 || resExpr
             ccreatet 1 11 10 0
             ccreatet 2 11 14 0
@@ -3301,14 +3301,14 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             create 2 3
             dup
             store 7
-            eval
+            force
             load 6
-            eval
+            force
             call 338                                 || resExpr
             load 3
-            eval
+            force
             load 8
-            eval
+            force
             ccreatet 3 11 10 2
             ccreatet 2 11 14 0
             return 11
@@ -3334,7 +3334,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             store 0
             load 1
             load 0
-            eval
+            force
             tailcall 2 853                           || prescanBindNamesTok
 852         load 0                                   || prescanBindNamesTok_lazy
             eval
@@ -3343,7 +3343,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             call 403                                 || isTIn
             ifeq 854                                 || prescanBindNamesTok_else
             load 1
-            eval
+            force
             ccreatet 0 11 5 0
             ccreatet 2 11 19 0
             return 2
@@ -3361,7 +3361,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             store 1
             load 0
             load 1
-            eval
+            force
             tailcall 3 858                           || prescanOneBindName
 857         load 0                                   || prescanOneBindName_lazy
             eval
@@ -3440,7 +3440,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             create 2 3
             dup
             store 0
-            eval
+            force
             call 437                                 || isTBang
             ifeq 878                                 || skipOptionalBang_else
             load 1
@@ -3456,7 +3456,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             load 2
             load 1
             load 0
-            eval
+            force
             tailcall 3 882                           || skipExprToSepTok
 881         load 0                                   || skipExprToSepTok_lazy
             eval
@@ -3482,7 +3482,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             create 2 3
             tailcall 3 880                           || skipExprToSep
 884         load 2                                   || skipExprToSepTok_else_else
-            eval
+            force
             ifneq 887                                || skipExprToSepTok_else_else_else
             load 0
             call 369                                 || isTComma
@@ -3511,7 +3511,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             load 2
             load 1
             load 0
-            eval
+            force
             tailcall 3 891                           || prescanContinueTok
 890         load 0                                   || prescanContinueTok_lazy
             eval
@@ -3523,10 +3523,10 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             load 1
             tailcall 3 894                           || prescanContinueMore
 892         load 2                                   || prescanContinueTok_else
-            eval
+            force
             ccreatet 0 11 5 0
             load 1
-            eval
+            force
             ccreatet 2 11 5 1
             ccreatet 2 11 19 0
             return 3
@@ -3539,13 +3539,13 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             create 2 3
             dup
             store 0
-            eval
+            force
             call 848                                 || psnToks
             load 0
             pushfunc 1 844                           || psnNames_lazy
             create 2 3
             load 1
-            eval
+            force
             ccreatet 2 11 5 1
             ccreatet 2 11 19 0
             return 3
@@ -3581,13 +3581,13 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             create 3 3
             dup
             store 4
-            eval
+            force
             call 341                                 || resState
             load 4
-            eval
+            force
             call 338                                 || resExpr
             load 2
-            eval
+            force
             call 344                                 || rlExprs
             ccreatet 2 11 9 6
             ccreatet 2 11 14 0
@@ -3615,7 +3615,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             pushfunc 1 337                           || resExpr_lazy
             create 2 3
             load 1
-            eval
+            force
             tailcall 4 900                           || parseBindListRealCont
 899         load 0                                   || parseBindListRealCont_lazy
             eval
@@ -3628,10 +3628,10 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             load 1
             tailcall 4 903                           || parseBindListRealContMore
 901         load 2                                   || parseBindListRealCont_else
-            eval
+            force
             ccreatet 0 11 5 0
             load 1
-            eval
+            force
             ccreatet 2 11 5 1
             ccreatet 2 11 15 0
             return 4
@@ -3652,13 +3652,13 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             create 3 3
             dup
             store 1
-            eval
+            force
             call 347                                 || rlState
             load 1
             pushfunc 1 343                           || rlExprs_lazy
             create 2 3
             load 2
-            eval
+            force
             ccreatet 2 11 5 1
             ccreatet 2 11 15 0
             return 5
@@ -3673,7 +3673,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             load 2
             load 1
             load 0
-            eval
+            force
             tailcall 3 907                           || parseOneBindBang
 906         load 0                                   || parseOneBindBang_lazy
             eval
@@ -3708,7 +3708,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             load 2
             load 1
             load 0
-            eval
+            force
             tailcall 4 912                           || parseOneBindNameTok
 911         load 0                                   || parseOneBindNameTok_lazy
             eval
@@ -3783,15 +3783,15 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             create 3 3
             dup
             store 2
-            eval
+            force
             call 341                                 || resState
             load 2
-            eval
+            force
             call 338                                 || resExpr
             load 5
-            eval
+            force
             load 3
-            eval
+            force
             ccreatet 3 11 11 0
             ccreatet 2 11 14 0
             return 7
@@ -3834,7 +3834,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             return 2
 941         ccreatet 0 11 5 0                        || cvName_else
             load 0
-            eval
+            force
             ccreatet 2 11 5 1
             return 2
 942         load 0                                   || collectVarsEx_lazy
@@ -3853,7 +3853,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             pushfunc 2 936                           || concatMap
             create 3 3
             load 3
-            eval
+            force
             load 0
             call 940                                 || cvName
             tailcall 4 76                            || append
@@ -3957,13 +3957,13 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 965         jmp 966                                  || lam_mkParam || lam_mkParam_lazy
 966         push 0                                   || lam_mkParam
             load 0
-            eval
+            force
             ccreatet 2 11 12 0
             return 1
 967         jmp 968                                  || parseLambda || parseLambda_lazy
 968         updsp 14                                 || parseLambda
             load 14
-            eval
+            force
             call 323                                 || psToks
             call 744                                 || parseIdentList
             dup
@@ -3974,7 +3974,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             pushfunc 1 741                           || ilRest
             create 2 3
             load 14
-            eval
+            force
             call 332                                 || psWithToks
             dup
             store 2
@@ -3982,7 +3982,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             store 3
             load 1
             load 15
-            eval
+            force
             call 76                                  || append
             dup
             store 4
@@ -4035,7 +4035,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 969         jmp 970                                  || lam_mkVarExpr || lam_mkVarExpr_lazy
 970         ccreatet 0 11 5 0                        || lam_mkVarExpr
             load 0
-            eval
+            force
             ccreatet 2 11 9 2
             return 1
 971         load 0                                   || needsParens_lazy
@@ -4169,7 +4169,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             debug 2
             return 1
 1003        load 1                                   || emitArgs_Cons
-            eval
+            force
             load 0
             tailcall 3 1005                          || emitArgsGo
 1004        load 0                                   || emitArgsGo_lazy
@@ -4215,7 +4215,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             debug 2
             return 1
 1013        load 1                                   || emitBranchList_Cons
-            eval
+            force
             load 0
             tailcall 3 1015                          || emitBranchListGo
 1014        load 0                                   || emitBranchListGo_lazy
@@ -4296,7 +4296,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             debug 2
             return 1
 1030        load 1                                   || emitNames_Cons
-            eval
+            force
             load 0
             tailcall 3 1032                          || emitNamesGo
 1031        load 0                                   || emitNamesGo_lazy
@@ -4350,7 +4350,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             debug 2
             return 1
 1043        load 1                                   || emitBinds_Cons
-            eval
+            force
             load 0
             tailcall 3 1045                          || emitBindsGo
 1044        load 0                                   || emitBindsGo_lazy
@@ -4404,7 +4404,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 1056        ccreatet 0 11 5 0                        || emitParams_Nil
             return 1
 1057        load 1                                   || emitParams_Cons
-            eval
+            force
             load 0
             tailcall 3 1059                          || emitParamsGo
 1058        load 0                                   || emitParamsGo_lazy
@@ -4458,7 +4458,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             jmpt 2 1069 1070                         || lbs
 1069        ccreatet 0 11 5 0                        || splitLinesAcc_Nil
             load 1
-            eval
+            force
             call 90                                  || reverse
             ccreatet 2 11 5 1
             return 2
@@ -4476,7 +4476,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             pushfunc 2 1067                          || splitLinesAcc_lazy
             create 3 3
             load 2
-            eval
+            force
             call 90                                  || reverse
             ccreatet 2 11 5 1
             return 3
@@ -4484,7 +4484,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             load 0
             ccreatet 2 11 5 1
             load 1
-            eval
+            force
             tailcall 3 1068                          || splitLinesAcc
 1074        load 0                                   || isBlankOrIndented_lazy
             eval
@@ -4535,7 +4535,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             load 0
             tailcall 3 1093                          || takeContinuationMore
 1091        load 2                                   || takeContinuationLine_else
-            eval
+            force
             ccreatet 0 11 5 0
             ccreatet 2 11 20 0
             return 3
@@ -4546,13 +4546,13 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             create 2 3
             dup
             store 0
-            eval
+            force
             call 1083                                || ccRest
             load 0
             pushfunc 1 1079                          || ccLines_lazy
             create 2 3
             load 1
-            eval
+            force
             ccreatet 2 11 5 1
             ccreatet 2 11 20 0
             return 3
@@ -4565,7 +4565,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             debug 2
             return 1
 1097        load 1                                   || joinLines_Cons
-            eval
+            force
             load 0
             tailcall 3 1099                          || joinLinesGo
 1098        load 0                                   || joinLinesGo_lazy
@@ -4611,7 +4611,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             pushfunc 1 1079                          || ccLines_lazy
             create 2 3
             load 1
-            eval
+            force
             ccreatet 2 11 5 1
             call 1095                                || joinLines
             ccreatet 2 11 5 1
@@ -4631,7 +4631,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 1113        loadadd 0 -58                            || isAdtChunkC1
             ifneq 1114                               || isAdtChunkC1_else
             load 1
-            eval
+            force
             tailcall 2 1116                          || isAdtChunkC2
 1114        return_const 2 0                         || isAdtChunkC1_else
 1115        load 0                                   || isAdtChunkC2_lazy
@@ -4659,7 +4659,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 1125        loadadd 0 -47                            || isCommentChunkC1
             ifneq 1126                               || isCommentChunkC1_else
             load 1
-            eval
+            force
             tailcall 2 1128                          || isCommentChunkC2
 1126        return_const 2 0                         || isCommentChunkC1_else
 1127        load 0                                   || isCommentChunkC2_lazy
@@ -4694,7 +4694,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             store 0
             load 1
             load 0
-            eval
+            force
             tailcall 2 1141                          || parseHeadParamsTok
 1140        load 0                                   || parseHeadParamsTok_lazy
             eval
@@ -4703,7 +4703,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             call 420                                 || isTEq
             ifeq 1142                                || parseHeadParamsTok_else
             load 1
-            eval
+            force
             ccreatet 0 11 5 0
             ccreatet 2 11 21 0
             return 2
@@ -4733,7 +4733,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             load 2
             load 1
             load 0
-            eval
+            force
             tailcall 3 1149                          || parseHeadParamsNameTok
 1148        load 0                                   || parseHeadParamsNameTok_lazy
             eval
@@ -4797,15 +4797,15 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             create 2 3
             dup
             store 1
-            eval
+            force
             call 1136                                || hpToks
             load 1
             pushfunc 1 1132                          || hpParams_lazy
             create 2 3
             load 3
-            eval
+            force
             load 2
-            eval
+            force
             ccreatet 2 11 12 0
             ccreatet 2 11 5 1
             ccreatet 2 11 21 0
@@ -4844,7 +4844,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             load 3
             load 0
             load 1
-            eval
+            force
             tailcall 4 1179                          || parseFuncChunkName
 1178        load 0                                   || parseFuncChunkName_lazy
             eval
@@ -4936,15 +4936,15 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             create 3 3
             dup
             store 7
-            eval
+            force
             call 341                                 || resState
             load 7
-            eval
+            force
             call 338                                 || resExpr
             load 2
-            eval
+            force
             load 8
-            eval
+            force
             ccreatet 3 11 16 0
             ccreatet 2 11 22 0
             return 11
@@ -4968,7 +4968,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 1204        load 0                                   || processChunks
             jmpt 2 1205 1206                         || lbs
 1205        load 1                                   || processChunks_Nil
-            eval
+            force
             ccreatet 0 11 5 0
             ccreatet 2 11 23 0
             return 2
@@ -5005,13 +5005,13 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             create 3 3
             dup
             store 0
-            eval
+            force
             call 1201                                || prState
             load 0
             pushfunc 1 1197                          || prOutputs_lazy
             create 2 3
             load 1
-            eval
+            force
             ccreatet 2 11 5 1
             ccreatet 2 11 23 0
             return 4
@@ -5036,13 +5036,13 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             create 3 3
             dup
             store 2
-            eval
+            force
             call 1201                                || prState
             load 2
             pushfunc 1 1197                          || prOutputs_lazy
             create 2 3
             load 1
-            eval
+            force
             ccreatet 2 11 5 1
             ccreatet 2 11 23 0
             return 6
@@ -5054,7 +5054,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 1217        ccreatet 0 11 5 0                        || joinParts_Nil
             return 1
 1218        load 1                                   || joinParts_Cons
-            eval
+            force
             load 0
             tailcall 3 1220                          || joinPartsGo
 1219        load 0                                   || joinPartsGo_lazy
@@ -5113,7 +5113,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             create 3 3
             dup
             store 5
-            eval
+            force
             tailcall 7 1216                          || joinParts
 1225        jmp 1226                                 || preprocessFile || preprocessFile_lazy
 1226        load 0                                   || preprocessFile
@@ -5124,7 +5124,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             call 1224                                || preprocessLfp
             call 20                                  || list2str
             load 1
-            eval
+            force
             syscall 1
             return 2
 1227        jmp 1228                                 || start || start_lazy
@@ -5183,11 +5183,11 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             syscall 3
             pop
             load 1
-            eval
+            force
             tailcall 3 1247                          || printKinds
 1250        jmp 1251                                 || readStream_1 || readStream_1_lazy
 1251        load 0                                   || readStream_1
-            eval
+            force
             syscall 6
             return 1
 1252        jmp 1253                                 || substrClamp_j1 || substrClamp_j1_lazy
@@ -5196,23 +5196,23 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             return 1
 1254        jmp 1255                                 || take_1 || take_1_lazy
 1255        load 0                                   || take_1
-            eval
+            force
             dec
             return 1
 1256        jmp 1257                                 || drop_1 || drop_1_lazy
 1257        load 0                                   || drop_1
-            eval
+            force
             dec
             return 1
 1258        jmp 1259                                 || isAlphaC_j1 || isAlphaC_j1_lazy
 1259        load 0                                   || isAlphaC_j1
-            eval
+            force
             push 65
             sub
             iflt 1261                                || isAlphaC_j1_else
             push 90
             load 0
-            eval
+            force
             sub
             iflt 1260                                || isAlphaC_j1_then_false
             return_const 1 1
@@ -5220,15 +5220,15 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 1261        return_const 1 0                         || isAlphaC_j1_else
 1262        jmp 1263                                 || lexSkipHere_j1 || lexSkipHere_j1_lazy
 1263        load 0                                   || lexSkipHere_j1
-            eval
+            force
             tailcall 1 183                           || lexSkip
 1264        jmp 1265                                 || lexDigits_1 || lexDigits_1_lazy
 1265        load 0                                   || lexDigits_1
-            eval
+            force
             push 10
             mult
             load 1
-            eval
+            force
             push 48
             sub
             add
@@ -5236,7 +5236,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 1266        jmp 1267                                 || combineApp_1 || combineApp_1_lazy
 1267        ccreatet 0 11 5 0                        || combineApp_1
             load 0
-            eval
+            force
             ccreatet 2 11 5 1
             return 1
 1268        jmp 1269                                 || opsOrAnd_1 || opsOrAnd_1_lazy
@@ -5307,22 +5307,22 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             return 0
 1288        jmp 1289                                 || chainLeftBinMore_1 || chainLeftBinMore_1_lazy
 1289        load 2                                   || chainLeftBinMore_1
-            eval
+            force
             load 1
-            eval
+            force
             load 0
-            eval
+            force
             call 668                                 || moOp
             ccreatet 3 11 9 3
             return 3
 1290        jmp 1291                                 || skipExprToSepTok_1 || skipExprToSepTok_1_lazy
 1291        load 0                                   || skipExprToSepTok_1
-            eval
+            force
             inc
             return 1
 1292        jmp 1293                                 || skipExprToSepTok_2 || skipExprToSepTok_2_lazy
 1293        load 0                                   || skipExprToSepTok_2
-            eval
+            force
             dec
             return 1
 1294        jmp 1295                                 || skipExprToSepTok_j1 || skipExprToSepTok_j1_lazy
@@ -5333,13 +5333,13 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             tailcall 2 880                           || skipExprToSep
 1296        jmp 1297                                 || parseFuncChunkGo_1 || parseFuncChunkGo_1_lazy
 1297        load 1                                   || parseFuncChunkGo_1
-            eval
+            force
             call 329                                 || psDefs
             load 1
-            eval
+            force
             call 326                                 || psCounter
             load 0
-            eval
+            force
             ccreatet 3 11 13 0
             return 2
 1298        jmp 1299                                 || processChunksOne_j1 || processChunksOne_j1_lazy
@@ -5349,7 +5349,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             tailcall 3 1212                          || processChunksAdt
 1300        jmp 1301                                 || preprocessFile_1 || preprocessFile_1_lazy
 1301        load 0                                   || preprocessFile_1
-            eval
+            force
             syscall 0
             return 1
 1302        jmp 1303                                 || __ap3 || __ap3_lazy
