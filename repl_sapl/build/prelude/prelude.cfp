@@ -134,7 +134,10 @@ pvInlineWrap s = if (pvContains s " ") (strcat "(" (strcat s ")")) s
 
 pvSimpleCon !v = if (eqnum (getConstrArity v) 0) (displayConName (constrName v)) "·"
 
-pvFuncName name = if (pvIsLam name) "λ" (pvModuleDot name 1 (strlen name))
+pvFuncName name = if (pvIsLam name) "λ" (if (pvIsCon name) (strslice name 6 (strlen name)) (pvModuleDot name 1 (strlen name)))
+// `__con_Rechthoek`: de functie die gen1 maakt voor een gedeeltelijk
+// toegepaste constructor (sapl_compiler/parser.cfp, ctPartialProgram).
+pvIsCon name = if (strlen name < 7) False (strEqual (strslice name 0 6) "__con_")
 
 pvIsLam name = if (strlen name < 6) False (strEqual (strslice name 0 6) "__lam_")
 

@@ -34,6 +34,7 @@ pvInlineFunc 1 1
 pvInlineWrap 1 1
 pvSimpleCon 1 1
 pvFuncName 1 0
+pvIsCon 1 0
 pvIsLam 1 0
 pvModuleDot 3 011
 pvDoubleUnder 2 01
@@ -101,9 +102,9 @@ __deepEqConstrCheck 4 0000
 __deepEqConstrFields 4 0011
 __deepEqConstrFieldsStep 4 0000
 __deepNeq 2 00
-__pat_l_175 1 0
-__pat_l_156 1 1
-__pat_l_153 2 10
-__pat_l_150 2 00
-__pat_l_147 1 1
+__pat_l_176 1 0
+__pat_l_157 1 1
+__pat_l_154 2 10
+__pat_l_151 2 00
+__pat_l_148 1 1
 __pat_l_27 1 1

@@ -373,6 +373,10 @@
   // cellen die classifyCell afwijst.
   function generateNbInput(cells, only, mode) {
     const out = [`@@mode ${mode === "top" ? "top" : "any"}`];
+    // Het definitiepaneel: de REPL stuurt alleen de regels van opnieuw
+    // gecompileerde cellen (`@@defsame <cel>` voor de rest). Heeft een
+    // definitiecel nog geen paneel (eerste run op deze pagina), dan alles.
+    if (cells.some((c) => c.kind === "code" && classifyCell(c.source).kind === "def" && !(c.output && c.output.defs))) out.push("@@defsall");
     const exprCells = [];
     const errors = {};
     cells.forEach((c, i) => {
@@ -399,13 +403,15 @@
    * (de type-cellen), typeWarnings { cellIndex: [melding] } (typefouten in
    * definitiecellen; de code draait wel), defs { cellIndex: [{ name, type }] }
    * (wat een definitiecel definieert, met het type als dat er is; sinds 10
-   * oktober 2026) en done (de regel @@nbdone kwam).
+   * oktober 2026), defsSame [cellIndex] (cellen die niet opnieuw
+   * gecompileerd zijn: houd hun vorige defs) en done (de regel @@nbdone kwam).
    */
   function parseNbOutput(raw) {
     const defErrors = {};
     const types = {};
     const typeWarnings = {};
     const defs = {};
+    const defsSame = [];
     const general = [];
     const rest = [];
     let done = false;
@@ -416,7 +422,9 @@
       const terr = line.match(/^@@typeerr (\d+) (.*?) @@ (.*)$/);
       const tw = line.match(/^@@typewarn (-?\d+) (.*)$/);
       const df = line.match(/^@@def (-?\d+) (\S+)(?: :: (.*))?$/);
+      const ds = line.match(/^@@defsame (-?\d+)$/);
       if (df) (defs[+df[1]] = defs[+df[1]] || []).push({ name: df[2], type: df[3] || "" });
+      else if (ds) defsSame.push(+ds[1]);
       else if (tw) (typeWarnings[+tw[1]] = typeWarnings[+tw[1]] || []).push(tw[2]);
       else if (tok) (types[+tok[1]] = types[+tok[1]] || []).push({ expr: tok[2], type: tok[3] });
       else if (terr) (types[+terr[1]] = types[+terr[1]] || []).push({ expr: terr[2], error: terr[3] });
@@ -427,7 +435,7 @@
     }
     const parsed = parseOutput(rest.join("\n"));
     if (defErrors[-1]) general.unshift("uitvoerlaag: " + defErrors[-1]);
-    return { cells: parsed.cells, loose: parsed.loose, defErrors, types, typeWarnings, defs, error: general.join("\n"), done };
+    return { cells: parsed.cells, loose: parsed.loose, defErrors, types, typeWarnings, defs, defsSame, error: general.join("\n"), done };
   }
 
   const api = {

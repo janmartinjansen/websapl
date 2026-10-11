@@ -89,6 +89,9 @@ const mark = `window.__mark = document.getElementById("status").textContent;`;
     check("Shift+Enter na de trap: alleen die cel, opnieuw opgebouwd", /1 cel\)/.test(st[0]) && st[5] === "7", st.join("\n"));
     st = await act(`document.getElementById("btn-run").click();`);
     check("daarna alles", st[3] === "42" && st[5] === "7" && st[6] === "7", st.join("\n"));
+    // Cel 0 is niet opnieuw gecompileerd: de REPL stuurt @@defsame, het
+    // paneel blijft staan (11 oktober 2026).
+    check("definitiepaneel blijft bij een ongewijzigde cel", /✓ x :: Num/.test(st[2]), st.join("\n"));
 
     writeNb("eerst = later + 1", "later = 41", "eerst");
     st = await open("notebooks/_browser_test.spp");

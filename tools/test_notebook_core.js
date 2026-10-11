@@ -42,7 +42,15 @@ check("heen en terug", nb.parseNotebook(nb.serializeNotebook(cells)), cells);
 const gen = nb.generateNbInput(nb.parseNotebook("//%%\nf x = x\n//%%\nf 1\n//%%\nstart = 2\n//%%\n2 + 2\n"));
 check("exprCells", gen.exprCells, [{ cell: 1, n: 1 }, { cell: 3, n: 2 }]);
 check("celfouten", Object.keys(gen.errors), ["2"]);
-check("nb-invoer", gen.input, "@@mode any\n@@def 0\nf x = x\n@@expr 1 1\nf 1\n@@expr 3 2\n2 + 2\n");
+check("nb-invoer", gen.input, "@@mode any\n@@defsall\n@@def 0\nf x = x\n@@expr 1 1\nf 1\n@@expr 3 2\n2 + 2\n");
+{
+  // Het definitiepaneel (11 oktober 2026): @@defsall alleen zolang een
+  // definitiecel nog geen paneel heeft; @@defsame <cel> = houd het vorige.
+  const cs = nb.parseNotebook("//%%\nf x = x\n//%%\nf 1\n");
+  cs[0].output = { def: true, defs: [{ name: "f", type: "a -> a" }] };
+  check("geen @@defsall met een paneel", nb.generateNbInput(cs).input.split("\n").includes("@@defsall"), false);
+  check("@@defsame", nb.parseNbOutput("@@defsame 0\n@@def 2 g :: Num\n@@nbdone\n").defsSame, [0]);
+}
 check("nb-invoer van boven naar beneden", nb.generateNbInput(nb.parseNotebook("//%%\n1\n"), undefined, "top").input, "@@mode top\n@@expr 0 1\n1\n");
 {
   const p = nb.parseNbOutput("@@deferror 0 onbekende naam x\n@@deferror -1 kapot\n@@begin 1\n@@value\n2\n@@end 1\n@@nbdone\n");
