@@ -1186,7 +1186,7 @@ window.WEBSAPL_TREE = [
         "path": "lib/notebook_glue.cfp",
         "type": "file",
         "ext": ".cfp",
-        "size": 5326,
+        "size": 5873,
         "isBinary": false
       },
       {
@@ -1474,7 +1474,7 @@ window.WEBSAPL_TREE = [
         "path": "repl/repl_prelude.cfp",
         "type": "file",
         "ext": ".cfp",
-        "size": 8388,
+        "size": 11808,
         "isBinary": false
       },
       {
@@ -1876,7 +1876,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/nbglue.defs.txt",
                 "type": "file",
                 "ext": ".txt",
-                "size": 798,
+                "size": 828,
                 "isBinary": false
               },
               {
@@ -1884,7 +1884,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/nbglue.jvb",
                 "type": "file",
                 "ext": ".jvb",
-                "size": 17844,
+                "size": 18684,
                 "isBinary": true
               },
               {
@@ -1892,7 +1892,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/nbglue.pp.cfp",
                 "type": "file",
                 "ext": ".cfp",
-                "size": 9287,
+                "size": 9859,
                 "isBinary": false
               }
             ],
@@ -1908,7 +1908,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/prelude/prelude.cfp",
                 "type": "file",
                 "ext": ".cfp",
-                "size": 8389,
+                "size": 11809,
                 "isBinary": false
               },
               {
@@ -1916,7 +1916,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/prelude/prelude.defs.txt",
                 "type": "file",
                 "ext": ".txt",
-                "size": 1127,
+                "size": 1518,
                 "isBinary": false
               },
               {
@@ -1924,7 +1924,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/prelude/prelude.pp.cfp",
                 "type": "file",
                 "ext": ".cfp",
-                "size": 8330,
+                "size": 12773,
                 "isBinary": false
               }
             ],
@@ -1935,7 +1935,7 @@ window.WEBSAPL_TREE = [
             "path": "repl_sapl/build/mini_repl.jmvm",
             "type": "file",
             "ext": ".jmvm",
-            "size": 6505610,
+            "size": 6543465,
             "isBinary": false
           },
           {
@@ -1943,7 +1943,7 @@ window.WEBSAPL_TREE = [
             "path": "repl_sapl/build/mini_repl.jvb",
             "type": "file",
             "ext": ".jvb",
-            "size": 2449264,
+            "size": 2462056,
             "isBinary": true
           }
         ],
@@ -1962,7 +1962,7 @@ window.WEBSAPL_TREE = [
         "path": "sapl_compiler/ast_helpers.cfp",
         "type": "file",
         "ext": ".cfp",
-        "size": 21285,
+        "size": 21586,
         "isBinary": false
       },
       {
@@ -2229,7 +2229,7 @@ window.WEBSAPL_TREE = [
     "path": "notebook.html",
     "type": "file",
     "ext": ".html",
-    "size": 32977,
+    "size": 33396,
     "isBinary": false
   },
   {

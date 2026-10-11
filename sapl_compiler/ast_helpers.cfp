@@ -479,8 +479,12 @@ lookupKw = ['lookup']
 // ord (char -> int) en chr (int -> char), 5 oktober 2026: _AUX Ord/Chr.
 ordKw = ['ord']
 chrKw = ['chr']
+// funcAddr (11 oktober 2026): het adres van de functie achter een
+// functiewaarde, of -1 (_AUX FuncAddr). gen1's eigen bron gebruikt het niet,
+// zodat parser.ama gen1 kan blijven bouwen (check_bootstrap).
+funcAddrKw = ['funcAddr']
 
-reflectionKws = Cons typeIdKw (Cons constrNameKw (Cons getFieldKw (Cons makeConstrKw (Cons funcNameKw (Cons funcArityKw (Cons funcRemainingKw (Cons applyDynamicKw (Cons lookupKw (Cons ordKw (Cons chrKw Nil))))))))))
+reflectionKws = Cons typeIdKw (Cons constrNameKw (Cons getFieldKw (Cons makeConstrKw (Cons funcNameKw (Cons funcArityKw (Cons funcRemainingKw (Cons applyDynamicKw (Cons lookupKw (Cons ordKw (Cons chrKw (Cons funcAddrKw Nil)))))))))))
 
 isReflectionCall name = member reflectionKws name
 
@@ -505,7 +509,8 @@ reflectionOpcode name =
   (if (charListEq name lookupKw) ['lookup']
   (if (charListEq name ordKw) ['ord']
   (if (charListEq name chrKw) ['chr']
-  (error "reflectionOpcode: unknown reflection call")))))))))))
+  (if (charListEq name funcAddrKw) ['funcaddr']
+  (error "reflectionOpcode: unknown reflection call"))))))))))))
 
 exprConstrNameOf e =
   case e
