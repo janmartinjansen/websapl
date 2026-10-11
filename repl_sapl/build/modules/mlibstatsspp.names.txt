@@ -1,0 +1,3 @@
+F toF floats len lenAcc sumF sumAcc nonEmpty strcatS strcatFill strcatAt sortF sortLen sortSplit merge mergeCons takeL dropL nthL mapL zipWithL count sum mean minimum minFrom maximum maxFrom range quantile quantileSorted median variance populationVariance sumSq stdev covariance correlation linearRegression cumulative cumFrom histogram histBins countBin binOf minInt zscores
+C 
+module Stats

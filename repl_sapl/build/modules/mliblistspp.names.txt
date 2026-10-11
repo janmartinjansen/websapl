@@ -1,0 +1,3 @@
+F range from iterate repeat replicate length lengthAcc append reverse revAcc map filter foldl foldr concat concatMap head tail last isEmpty nth take takePos drop dropPos takeWhile dropWhile elem findIndex findIndexFrom sum product maximum minimum any all and or count zipWith zip indexed intersperse prependAll sortBy sortByLen sortBySplit merge mergeCons sort groupBy nub nubSeen
+C 
+module List

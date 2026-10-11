@@ -1,0 +1,3 @@
+F length isEmpty empty slice sliceClamp clampLen take drop at fromChar append concat pairUp join intersperse prependAll repeat replicateList chars charsFrom fromChars listLen fillChars mapChars mapCharsAt filterChars filterList toUpper toLower upperChar lowerChar reverse reverseAt isSpace isDigit lines linesFrom lineSlice unlines concatMapList appendList words wordsFrom wordEnd unwords split splitFrom trim trimStart trimEnd trimRange firstNonSpace lastNonSpace padLeft padRight center showInt showNat natChars showFixed showFixedF fixedBody padZero pow10 toF readInt readIntTrimmed digitsFrom readFloat equal matchAt matchAtI startsWith endsWith indexOf indexFrom contains replace replaceFrom
+C 
+module Text

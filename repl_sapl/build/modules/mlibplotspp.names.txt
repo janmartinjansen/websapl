@@ -1,0 +1,7 @@
+F x0 x1 y0 y1 toF scale padLo padHi label axisColor textColor axes axesY line lineColored lineY scatter scatterFit fitLine points dots dot bars maxZero maxF barsFrom barAt histogram histogramBins binLo binCount appendL mapL listLen indices headOr tailOr
+C 
+module Plot
+import "lib/display.spp" as D
+import "grafisch/graphics.cfp" as G
+import "lib/text.spp" as T
+import "lib/stats.spp" as S
