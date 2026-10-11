@@ -201,6 +201,11 @@ pvWordEnd s !start !i rest = if (i > start) (Cons (strslice s start i) rest) res
 
 pvContains s sub = pvFind s sub 0 (strlen s) (strlen sub) >= 0
 
+// Bevat het type Bool? (Openbaar: ook de uitvoerlaag van het notebook,
+// lib/notebook_glue.cfp, gebruikt het; de pv-namen staan niet in de
+// interface van de prelude, zie build_mini_repl.sh.)
+tyHasBool ty = pvContains ty "Bool"
+
 // De eerste plaats van `sub` in `s` vanaf i, of -1.
 pvFind s sub !i !n !m = if (i + m > n) (0 - 1) (if (pvMatchAt s sub i 0 m) i (pvFind s sub (i + 1) n m))
 pvMatchAt s sub !i !k !m = if (k >= m) True (if (eqnum (strat (i + k) s) (strat k sub)) (pvMatchAt s sub i (k + 1) m) False)

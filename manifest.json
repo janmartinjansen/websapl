@@ -1186,7 +1186,7 @@
           "path": "lib/notebook_glue.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 6226,
+          "size": 6218,
           "isBinary": false
         },
         {
@@ -1474,7 +1474,7 @@
           "path": "repl/repl_prelude.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 15548,
+          "size": 15780,
           "isBinary": false
         },
         {
@@ -1580,7 +1580,7 @@
                   "path": "repl_sapl/build/modules/index.txt",
                   "type": "file",
                   "ext": ".txt",
-                  "size": 525,
+                  "size": 582,
                   "isBinary": false
                 },
                 {
@@ -1884,7 +1884,7 @@
                   "path": "repl_sapl/build/modules/nbglue.jvb",
                   "type": "file",
                   "ext": ".jvb",
-                  "size": 18716,
+                  "size": 18692,
                   "isBinary": true
                 },
                 {
@@ -1892,7 +1892,15 @@
                   "path": "repl_sapl/build/modules/nbglue.pp.cfp",
                   "type": "file",
                   "ext": ".cfp",
-                  "size": 10047,
+                  "size": 10039,
+                  "isBinary": false
+                },
+                {
+                  "name": "prelude.schemes.txt",
+                  "path": "repl_sapl/build/modules/prelude.schemes.txt",
+                  "type": "file",
+                  "ext": ".txt",
+                  "size": 3117,
                   "isBinary": false
                 }
               ],
@@ -1908,7 +1916,7 @@
                   "path": "repl_sapl/build/prelude/prelude.cfp",
                   "type": "file",
                   "ext": ".cfp",
-                  "size": 15549,
+                  "size": 15781,
                   "isBinary": false
                 },
                 {
@@ -1916,7 +1924,7 @@
                   "path": "repl_sapl/build/prelude/prelude.defs.txt",
                   "type": "file",
                   "ext": ".txt",
-                  "size": 1817,
+                  "size": 827,
                   "isBinary": false
                 },
                 {
@@ -1924,7 +1932,7 @@
                   "path": "repl_sapl/build/prelude/prelude.pp.cfp",
                   "type": "file",
                   "ext": ".cfp",
-                  "size": 16241,
+                  "size": 16295,
                   "isBinary": false
                 }
               ],
@@ -1935,7 +1943,7 @@
               "path": "repl_sapl/build/mini_repl.jmvm",
               "type": "file",
               "ext": ".jmvm",
-              "size": 6649017,
+              "size": 6659941,
               "isBinary": false
             },
             {
@@ -1943,7 +1951,7 @@
               "path": "repl_sapl/build/mini_repl.jvb",
               "type": "file",
               "ext": ".jvb",
-              "size": 2495712,
+              "size": 2499208,
               "isBinary": true
             }
           ],

@@ -1345,8 +1345,9 @@ async function rsStart() {
     const index = await pbRes.text();
     mkdirsFor(inst.FS, "/repl_sapl/build/modules/index.txt");
     inst.FS.writeFile("/repl_sapl/build/modules/index.txt", index);
-    const bases = index.split("\n").map((l) => l.trim().split(/\s+/)[3]).filter(Boolean);
-    await Promise.all(bases.flatMap((b) => [".jvb", ".defs.txt", ".pp.cfp", ".adts.cfp", ".schemes.txt"].map(async (ext) => {
+    // `@prelude` (sinds 11 oktober 2026) heeft alleen de typeschema's.
+    const rows = index.split("\n").map((l) => l.trim().split(/\s+/)).filter((w) => w[3]);
+    await Promise.all(rows.flatMap(([key, , , b]) => (key === "@prelude" ? [".schemes.txt"] : [".jvb", ".defs.txt", ".pp.cfp", ".adts.cfp", ".schemes.txt"]).map(async (ext) => {
       const r = await fetch("../" + b + ext);
       if (r.ok) inst.FS.writeFile("/" + b + ext, new Uint8Array(await r.arrayBuffer()));
     })));

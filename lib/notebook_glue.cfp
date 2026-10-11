@@ -44,7 +44,7 @@ nbCellX tbl cur n ty v = nbMark "@@begin " n <#> nbValueX tbl cur ty v <#> nbMar
 
 nbValueX tbl cur ty v =
   if (typeId v == TYPE_FUNC) (printString "@@value" <#> nbNl <#> printString (showValX tbl cur ty v) <#> nbNl)
-  (if (pvContains ty "Bool") (nbValueT ty v) (nbRender v))
+  (if (tyHasBool ty) (nbValueT ty v) (nbRender v))
 
 nbShowT d ty v =
   if (d == 0) "..."
