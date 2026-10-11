@@ -335,7 +335,7 @@
         return;
       }
       const p = NB.parseNbOutput(r.output);
-      for (const i of defT) cells[i].output = { def: true, warnings: p.typeWarnings[i] || [] };
+      for (const i of defT) cells[i].output = { def: true, warnings: p.typeWarnings[i] || [], defs: p.defs[i] || [] };
       for (const i of typeT) cells[i].output = { types: p.types[i] || [] };
       // Alle definitiecellen gaan mee: een fout ook tonen bij een cel die
       // niet gekozen was (bv. die afhangt van de gewijzigde cel).
@@ -497,7 +497,9 @@
         return;
       }
       if (o.def) {
-        pre("ok", "✓ definities");
+        // Wat de cel definieert, met het type (het definitiepaneel).
+        const ds = o.defs || [];
+        pre("ok", ds.length ? ds.map((d) => "✓ " + d.name + (d.type ? " :: " + d.type : "")).join("\n") : "✓ definities");
         // Typefouten: de code draait wel (Sapl controleert typen niet bij het
         // uitvoeren), maar het resultaat kan onzin zijn.
         for (const w of o.warnings || []) pre("warn", "typefout: " + w);
