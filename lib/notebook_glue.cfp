@@ -136,7 +136,12 @@ nbShowGeneric d v name arity =
 
 nbFields d v i n =
   if (i >= n) ""
-  (if (i == n - 1) (nbShowD d (getField v i)) (strcat (nbShowD d (getField v i)) (strcat ", " (nbFields d v (i + 1) n))))
+  (if (i == n - 1) (nbFieldAt d v i) (strcat (nbFieldAt d v i) (strcat ", " (nbFields d v (i + 1) n))))
+
+// Een veld in een eigen functie (11 oktober 2026, zoals showFieldAt in de
+// prelude): de getField + eval niet met al een argument van strcat in het
+// frame, anders past `eval` een gedeeltelijke toepassing in het veld toe.
+nbFieldAt d !v !i = nbShowD d (getField v i)
 
 nbItems d k xs =
   case xs

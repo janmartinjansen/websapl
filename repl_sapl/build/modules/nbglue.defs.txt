@@ -28,6 +28,7 @@ nbShowAdt 3 001
 nbShowHook 4 0000
 nbShowGeneric 4 0010
 nbFields 4 0011
+nbFieldAt 3 011
 nbItems 3 001
 nbMore 3 001
 nbFailed 1 0

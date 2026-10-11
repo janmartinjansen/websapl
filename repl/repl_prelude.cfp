@@ -95,16 +95,44 @@ showCharBody !c =
   (if (eqnum c 39) (Cons 92 (Cons 39 Nil))
   (Cons c Nil))))
 
-// Een functiewaarde (10 oktober 2026, docs/2026-10-10_reflectie_en_notebook_
-// plan.md): de naam, een `·` per al gebonden argument, en het aantal
-// argumenten dat nog ontbreekt: `<fn:plus/2>`, `<fn:plus ·/1>`. De gebonden
-// argumenten zelf niet: dat zou een lui argument uitrekenen. Een lambda is
-// `λ`, een modulefunctie `list.map` (showValX zet daar de alias van maken).
-showFunc !x = pvShowFunc (funcName x) (funcArity x) (funcRemaining x)
+// Een functiewaarde (10-11 oktober 2026, docs/2026-10-10_reflectie_en_
+// notebook_plan.md): de naam, de al gebonden argumenten, en het aantal
+// argumenten dat nog ontbreekt: `<fn:plus/2>`, `<fn:plus 1/1>`. Een gebonden
+// argument verschijnt alleen als het al uitgerekend is (fieldIsValue: het
+// wordt er niet voor geforceerd) en eenvoudig (getal, teken, korte string,
+// functie, constructor zonder velden); anders `·`. Een lambda is `λ`, een
+// modulefunctie `list.map` (showValX maakt daar de alias van).
+showFunc !x = pvShowFunc x (funcName x) (funcArity x) (funcRemaining x)
 
-pvShowFunc name !ar !rem = strcat "<fn:" (strcat (pvFuncName name) (strcat (pvBoundDots (ar - rem)) (strcat "/" (strcat (list2str (itoa rem)) ">"))))
+// Alle hulpfuncties hieronder hebben de functiewaarde als STRIKTE parameter
+// (11 oktober 2026). `eval` is in deze VM "uitrekenen en toepassen": op een
+// gedeeltelijke toepassing, met al andere waarden in het frame, neemt het die
+// als argumenten en past toe. Een strikte parameter wordt aan het begin van de
+// functie uitgerekend (een leeg frame), en daarna niet opnieuw. Zie
+// docs/sapl_programmeer_regels.md §10 ("eval op een gedeeltelijke toepassing").
+pvShowFunc !x name !ar !rem = strcat "<fn:" (strcat (pvFuncName name) (strcat (pvBoundArgs x (ar - rem) 0) (strcat "/" (strcat (list2str (itoa rem)) ">"))))
 
-pvBoundDots !k = if (k <= 0) "" (strcat " ·" (pvBoundDots (k - 1)))
+// Argument j (in bronvolgorde) is veld k-1-j: gen1 zet de gebonden
+// argumenten van een gedeeltelijke toepassing omgekeerd neer.
+pvBoundArgs !x !k !j = if (j >= k) "" (strcat " " (strcat (pvBoundArg x (k - 1 - j)) (pvBoundArgs x k (j + 1))))
+
+pvBoundArg !x !i = if (eqnum (fieldIsValue x i) 1) (pvSimple (getField x i)) "·"
+
+pvSimple !v = pvSimpleTid v (typeId v)
+
+pvSimpleTid !v !tid =
+  if (eqnum tid TYPE_INT) (showVal v)
+  (if (eqnum tid TYPE_FLOAT) (showVal v)
+  (if (eqnum tid TYPE_CHAR) (showVal v)
+  (if (eqnum tid TYPE_STRING) (if (strlen v <= 20) (strcat "\"" (strcat v "\"")) "·")
+  (if (eqnum tid TYPE_FUNC) (pvInlineFunc v)
+  (if (tid > TYPE_FUNC) (pvSimpleCon v) "·")))))
+
+// Een functie als argument: `plus` of `(plus 1)`, zonder `<fn:` en ariteit.
+pvInlineFunc !v = pvInlineWrap (strcat (pvFuncName (funcName v)) (pvBoundArgs v (funcArity v - funcRemaining v) 0))
+pvInlineWrap s = if (pvContains s " ") (strcat "(" (strcat s ")")) s
+
+pvSimpleCon !v = if (eqnum (getConstrArity v) 0) (displayConName (constrName v)) "·"
 
 pvFuncName name = if (pvIsLam name) "λ" (pvModuleDot name 1 (strlen name))
 
@@ -148,9 +176,11 @@ pvNumAt s !i !n !acc = if (i >= n) acc (pvNumAt s (i + 1) n (acc * 10 + (ord (st
 
 pvTyPart tbl ty = if (eqnum (strlen ty) 0) "" (strcat " :: " (pvAliasTy tbl ty))
 
-// `<fn:list.` -> `<fn:L.` voor elk paar uit tbl.
+// `<fn:list.` -> `<fn:L.` voor elk paar uit tbl; ook na `(` en een spatie
+// (een functie als gebonden argument: `<fn:L.map (list.take 3)/1>`).
 pvAliasFn tbl s = pvAliasFnW s (pvWords tbl)
-pvAliasFnW s ws = case ws (Nil -> s) (Cons c r -> case r (Nil -> s) (Cons a r2 -> pvAliasFnW (pvReplaceAll s (strcat "<fn:" (strcat c ".")) (strcat "<fn:" (strcat a "."))) r2))
+pvAliasFnW s ws = case ws (Nil -> s) (Cons c r -> case r (Nil -> s) (Cons a r2 -> pvAliasFnW (pvAliasAfter "(" c a (pvAliasAfter " " c a (pvAliasAfter "<fn:" c a s))) r2))
+pvAliasAfter pre c a s = pvReplaceAll s (strcat pre (strcat c ".")) (strcat pre (strcat a "."))
 
 // In een type: `list__X` en `List__X` -> `L.X`.
 pvAliasTy tbl s = pvAliasTyW s (pvWords tbl)
@@ -246,8 +276,14 @@ showFields !x !i !n =
   if (eqnum i n)
     ""
     (if (eqnum i (n - 1))
-       (showVal (getField x i))
-       (strcat (showVal (getField x i)) (strcat ", " (showFields x (i + 1) n))))
+       (showFieldAt x i)
+       (strcat (showFieldAt x i) (strcat ", " (showFields x (i + 1) n))))
+
+// Een veld tonen in een eigen functie (11 oktober 2026): `getField` wordt
+// gevolgd door `eval`, en met al een argument van strcat in het frame paste
+// dat een gedeeltelijke toepassing in het veld toe (`Twee (plus 1) 5` gaf een
+// runtime-fout). Hier staat de getField + eval in staartpositie.
+showFieldAt !x !i = showVal (getField x i)
 
 getConstrArity !x =
   let c = lookup (constrName x) in if (eqnum (typeId c) TYPE_FUNC) (funcArity c) 0

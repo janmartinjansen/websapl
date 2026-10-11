@@ -483,8 +483,11 @@ chrKw = ['chr']
 // functiewaarde, of -1 (_AUX FuncAddr). gen1's eigen bron gebruikt het niet,
 // zodat parser.ama gen1 kan blijven bouwen (check_bootstrap).
 funcAddrKw = ['funcAddr']
+// fieldIsValue obj i (11 oktober 2026): is veld i al een waarde (_AUX
+// FieldIsValue)? Ook dit gebruikt gen1's eigen bron niet.
+fieldIsValueKw = ['fieldIsValue']
 
-reflectionKws = Cons typeIdKw (Cons constrNameKw (Cons getFieldKw (Cons makeConstrKw (Cons funcNameKw (Cons funcArityKw (Cons funcRemainingKw (Cons applyDynamicKw (Cons lookupKw (Cons ordKw (Cons chrKw (Cons funcAddrKw Nil)))))))))))
+reflectionKws = Cons typeIdKw (Cons constrNameKw (Cons getFieldKw (Cons makeConstrKw (Cons funcNameKw (Cons funcArityKw (Cons funcRemainingKw (Cons applyDynamicKw (Cons lookupKw (Cons ordKw (Cons chrKw (Cons funcAddrKw (Cons fieldIsValueKw Nil))))))))))))
 
 isReflectionCall name = member reflectionKws name
 
@@ -510,7 +513,8 @@ reflectionOpcode name =
   (if (charListEq name ordKw) ['ord']
   (if (charListEq name chrKw) ['chr']
   (if (charListEq name funcAddrKw) ['funcaddr']
-  (error "reflectionOpcode: unknown reflection call"))))))))))))
+  (if (charListEq name fieldIsValueKw) ['fieldisvalue']
+  (error "reflectionOpcode: unknown reflection call")))))))))))))
 
 exprConstrNameOf e =
   case e

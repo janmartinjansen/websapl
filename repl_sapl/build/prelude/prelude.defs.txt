@@ -25,8 +25,14 @@ showValAux 2 11
 showChar 1 1
 showCharBody 1 1
 showFunc 1 1
-pvShowFunc 3 011
-pvBoundDots 1 1
+pvShowFunc 4 1011
+pvBoundArgs 3 111
+pvBoundArg 2 11
+pvSimple 1 1
+pvSimpleTid 2 11
+pvInlineFunc 1 1
+pvInlineWrap 1 1
+pvSimpleCon 1 1
 pvFuncName 1 0
 pvIsLam 1 0
 pvModuleDot 3 011
@@ -45,6 +51,7 @@ pvNumAt 4 0111
 pvTyPart 2 00
 pvAliasFn 2 00
 pvAliasFnW 2 01
+pvAliasAfter 4 0000
 pvAliasTy 2 00
 pvAliasTyW 2 01
 pvCapFirst 1 0
@@ -71,6 +78,7 @@ show_Nil 1 1
 show_Cons 1 1
 showListItems 1 1
 showFields 3 111
+showFieldAt 2 11
 getConstrArity 1 1
 printVal 1 1
 showTyped 2 11
@@ -93,9 +101,9 @@ __deepEqConstrCheck 4 0000
 __deepEqConstrFields 4 0011
 __deepEqConstrFieldsStep 4 0000
 __deepNeq 2 00
-__pat_l_158 1 0
-__pat_l_141 1 1
-__pat_l_138 2 10
-__pat_l_135 2 00
-__pat_l_132 1 1
+__pat_l_175 1 0
+__pat_l_156 1 1
+__pat_l_153 2 10
+__pat_l_150 2 00
+__pat_l_147 1 1
 __pat_l_27 1 1
