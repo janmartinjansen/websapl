@@ -168,7 +168,7 @@ source ~/emsdk/emsdk_env.sh
 em++ -O3 -fwasm-exceptions -DLOAD_CODE_EXPERIMENT -sALLOW_MEMORY_GROWTH=1 -sFORCE_FILESYSTEM=1 -sMODULARIZE=1 \
      -sEXPORT_NAME=createJMVMModule \
      -sEXPORTED_RUNTIME_METHODS='["FS","callMain","stringToUTF8","UTF8ToString","ccall","cwrap"]' \
-     -lidbfs.js -DSWITCH_CASE parser.cpp vm.cpp -o websapl/engine/jmvm.js
+     -lidbfs.js -DSWITCH_CASE parser.cpp parser_tekst.cpp vm.cpp -o websapl/engine/jmvm.js
 ```
 
 De engine leest naast `.jmvm` ook het binaire laadformaat `.jvb`
