@@ -14,6 +14,14 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
+        "name": "eval2.cfp",
+        "path": "benchmarks_sapl/eval2.cfp",
+        "type": "file",
+        "ext": ".cfp",
+        "size": 982,
+        "isBinary": false
+      },
+      {
         "name": "fib.cfp",
         "path": "benchmarks_sapl/fib.cfp",
         "type": "file",
@@ -82,7 +90,7 @@ window.WEBSAPL_TREE = [
         "path": "benchmarks_sapl/README.md",
         "type": "file",
         "ext": ".md",
-        "size": 2192,
+        "size": 2515,
         "isBinary": false
       },
       {
@@ -1098,7 +1106,7 @@ window.WEBSAPL_TREE = [
         "path": "lc_repl/driver.js",
         "type": "file",
         "ext": ".js",
-        "size": 9686,
+        "size": 9702,
         "isBinary": false
       },
       {
@@ -1999,7 +2007,7 @@ window.WEBSAPL_TREE = [
             "path": "repl_sapl/build/mini_repl.jmvm",
             "type": "file",
             "ext": ".jmvm",
-            "size": 6688769,
+            "size": 6694821,
             "isBinary": false
           },
           {
@@ -2007,7 +2015,7 @@ window.WEBSAPL_TREE = [
             "path": "repl_sapl/build/mini_repl.jvb",
             "type": "file",
             "ext": ".jvb",
-            "size": 2508792,
+            "size": 2510672,
             "isBinary": true
           }
         ],
@@ -2026,7 +2034,7 @@ window.WEBSAPL_TREE = [
         "path": "sapl_compiler/ast_helpers.cfp",
         "type": "file",
         "ext": ".cfp",
-        "size": 21829,
+        "size": 23042,
         "isBinary": false
       },
       {
@@ -2058,7 +2066,7 @@ window.WEBSAPL_TREE = [
         "path": "sapl_compiler/stage_dump.cfp",
         "type": "file",
         "ext": ".cfp",
-        "size": 19219,
+        "size": 19237,
         "isBinary": false
       },
       {
@@ -2067,6 +2075,46 @@ window.WEBSAPL_TREE = [
         "type": "file",
         "ext": ".cfp",
         "size": 74369,
+        "isBinary": false
+      }
+    ],
+    "_expanded": false
+  },
+  {
+    "name": "Sapl_interpreter",
+    "path": "Sapl_interpreter",
+    "type": "directory",
+    "children": [
+      {
+        "name": "ast.cfp",
+        "path": "Sapl_interpreter/ast.cfp",
+        "type": "file",
+        "ext": ".cfp",
+        "size": 951,
+        "isBinary": false
+      },
+      {
+        "name": "interp.cfp",
+        "path": "Sapl_interpreter/interp.cfp",
+        "type": "file",
+        "ext": ".cfp",
+        "size": 7347,
+        "isBinary": false
+      },
+      {
+        "name": "lexer.cfp",
+        "path": "Sapl_interpreter/lexer.cfp",
+        "type": "file",
+        "ext": ".cfp",
+        "size": 5378,
+        "isBinary": false
+      },
+      {
+        "name": "parser.cfp",
+        "path": "Sapl_interpreter/parser.cfp",
+        "type": "file",
+        "ext": ".cfp",
+        "size": 20778,
         "isBinary": false
       }
     ],

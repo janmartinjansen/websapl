@@ -115,7 +115,7 @@ ppExpr e =
     (Var v -> list2str v)
     (NoMatch -> "nomatch")
     (If c t el -> ppIf c t el)
-    (App n as -> ppJuxtaposed n as)
+    (App n as -> ppJuxtaposed (retagEscapeHead n) as)
     (Prim op as -> ppPrim op as)
     (Ct n as -> ppJuxtaposed n as)
     (Case sc cs -> ppCase sc cs)

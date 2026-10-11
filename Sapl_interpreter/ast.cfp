@@ -1,0 +1,45 @@
+#import "lib/stdlib.cfp"
+
+// ast.cfp - Abstracte Syntaxisboom, Waarden en Omgeving voor de Sapl Interpreter
+
+::expr = ENum !n
+       | EBool !b
+       | EStr !s
+       | EVar !name
+       | EApp !e1 !e2
+       | ELam !param !body
+       | EIf !cond !th !el
+       | ELet !bindings !body
+       | ELetRec !bindings !body
+       | EPrim !op
+       | EConstr !cname !args
+       | ECase !scrut !branches
+
+::binding = BindDef !name !rhs
+
+::branch = CaseBranch !pat !body
+
+::pat = PWild
+      | PVar !name
+      | PNum !n
+      | PBool !b
+      | PConstr !cname !pats
+
+::funcDef = FuncDef !name !params !body
+
+::value = VNum !n
+        | VBool !b
+        | VStr !s
+        | VConstr !cname !vargs
+        | VClosure !param !body cenv
+        | VPrim !op
+        | VPrim1 !op !arg1
+        | VThunk expr tenv
+        | VError !msg
+
+::valBinding = VBind !name val
+
+::matchRes = MatchFail | MatchOk !vbindings
+
+::env = EmptyEnv
+      | EnvCons !name val rest

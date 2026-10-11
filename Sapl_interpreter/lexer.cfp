@@ -1,0 +1,170 @@
+#import "lib/stdlib.cfp"
+
+// lexer.cfp - Tokenizer voor de Sapl Interpreter
+
+::tok = TokIdent !s
+      | TokNum !n
+      | TokStr !s
+      | TokOp !s
+      | TokLParen
+      | TokRParen
+      | TokLBracket
+      | TokRBracket
+      | TokComma
+      | TokSemi
+      | TokBar
+      | TokEOF
+
+::lexRes = LexRes !tok restCs
+
+isSpaceCh c = (c == 32) \/ (c == 9) \/ (c == 10) \/ (c == 13)
+
+isDigitCh c = (c >= '0') /\ (c <= '9')
+
+isAlphaCh c = ((c >= 'a') /\ (c <= 'z')) \/ ((c >= 'A') /\ (c <= 'Z')) \/ (c == '_')
+
+isIdentCh c = (isAlphaCh c) \/ (isDigitCh c) \/ (c == '\'')
+
+skipComment cs =
+  case cs
+    (Nil -> Nil)
+    (Cons c rest ->
+       if (c == 10)
+         rest
+         (skipComment rest))
+
+lexIdent acc cs =
+  case cs
+    (Nil -> LexRes (TokIdent (list2str (reverse acc))) Nil)
+    (Cons c rest ->
+       if (isIdentCh c)
+         (lexIdent (Cons c acc) rest)
+         (LexRes (TokIdent (list2str (reverse acc))) cs))
+
+lexNum acc cs =
+  case cs
+    (Nil -> LexRes (TokNum acc) Nil)
+    (Cons c rest ->
+       if (isDigitCh c)
+         (lexNum (acc * 10 + (c - '0')) rest)
+         (LexRes (TokNum acc) cs))
+
+lexStr acc cs =
+  case cs
+    (Nil -> LexRes (TokStr (list2str (reverse acc))) Nil)
+    (Cons c rest ->
+       if (c == 34) // closing "
+         (LexRes (TokStr (list2str (reverse acc))) rest)
+         (if (c == 92) // backslash
+            (case rest
+               (Nil -> LexRes (TokStr (list2str (reverse acc))) Nil)
+               (Cons esc rest2 ->
+                  if (esc == 'n') (lexStr (Cons 10 acc) rest2)
+                  (if (esc == 't') (lexStr (Cons 9 acc) rest2)
+                  (if (esc == 34) (lexStr (Cons 34 acc) rest2)
+                  (lexStr (Cons esc acc) rest2)))))
+            (lexStr (Cons c acc) rest)))
+
+lexSymbol2 c1 c2 rest2 rest =
+  if ((c1 == '=') /\ (c2 == '=')) (LexRes (TokOp "==") rest2)
+  (if ((c1 == '!') /\ (c2 == '=')) (LexRes (TokOp "!=") rest2)
+  (if ((c1 == '<') /\ (c2 == '=')) (LexRes (TokOp "<=") rest2)
+  (if ((c1 == '>') /\ (c2 == '=')) (LexRes (TokOp ">=") rest2)
+  (if ((c1 == '-') /\ (c2 == '>')) (LexRes (TokOp "->") rest2)
+  (if ((c1 == '&') /\ (c2 == '&')) (LexRes (TokOp "&&") rest2)
+  (if ((c1 == '|') /\ (c2 == '|')) (LexRes (TokOp "||") rest2)
+  (if ((c1 == '/') /\ (c2 == 92)) (LexRes (TokOp "/\\") rest2)
+  (if ((c1 == 92) /\ (c2 == '/')) (LexRes (TokOp "\\/") rest2)
+  (lexSymbol1 c1 rest)))))))))
+
+lexSymbol1 c rest =
+  if (c == '=') (LexRes (TokOp "=") rest)
+  (if (c == '!') (LexRes (TokOp "!") rest)
+  (if (c == '<') (LexRes (TokOp "<") rest)
+  (if (c == '>') (LexRes (TokOp ">") rest)
+  (if (c == '-') (LexRes (TokOp "-") rest)
+  (if (c == '+') (LexRes (TokOp "+") rest)
+  (if (c == '*') (LexRes (TokOp "*") rest)
+  (if (c == '%') (LexRes (TokOp "%") rest)
+  (if (c == ':') (LexRes (TokOp ":") rest)
+  (if (c == 92) (LexRes (TokOp "\\") rest)
+  (if (c == '(') (LexRes TokLParen rest)
+  (if (c == ')') (LexRes TokRParen rest)
+  (if (c == '[') (LexRes TokLBracket rest)
+  (if (c == ']') (LexRes TokRBracket rest)
+  (if (c == ',') (LexRes TokComma rest)
+  (if (c == ';') (LexRes TokSemi rest)
+  (if (c == '|') (LexRes TokBar rest)
+  (LexRes (TokOp (list2str (Cons c Nil))) rest)))))))))))))))))
+
+lexNext cs =
+  case cs
+    (Nil -> LexRes TokEOF Nil)
+    (Cons c rest ->
+       if (isSpaceCh c)
+         (lexNext rest)
+         (if (c == '/')
+            (case rest
+               (Cons c2 rest2 ->
+                  if (c2 == '/')
+                    (lexNext (skipComment rest2))
+                    (if (c2 == 92) // /\ operator
+                       (LexRes (TokOp "/\\") rest2)
+                       (LexRes (TokOp "/") rest)))
+               (Nil -> LexRes (TokOp "/") rest))
+            (if (isDigitCh c)
+               (lexNum (c - '0') rest)
+               (if (isAlphaCh c)
+                  (lexIdent (Cons c Nil) rest)
+                  (if (c == 34) // "
+                     (lexStr Nil rest)
+                     (case rest
+                        (Cons c2 rest2 -> lexSymbol2 c c2 rest2 rest)
+                        (Nil -> lexSymbol1 c rest)))))))
+
+canEndExpr tok =
+  case tok
+    (TokIdent s ->
+       if (strEqual s "then") False
+       (if (strEqual s "else") False
+       (if (strEqual s "in") False
+       (if (strEqual s "of") False
+       (if (strEqual s "if") False
+       (if (strEqual s "let") False
+       (if (strEqual s "case") False
+       True)))))))
+    (TokNum n -> True)
+    (TokStr s -> True)
+    (TokRParen -> True)
+    (TokRBracket -> True)
+    (_ -> False)
+
+tokenizeLoop prevCanEnd cs =
+  case cs
+    (Nil -> Nil)
+    (Cons c rest ->
+       if (c == 10)
+         (if prevCanEnd
+            (Cons TokSemi (tokenizeLoop False rest))
+            (tokenizeLoop False rest))
+         (if ((c == 32) \/ (c == 9) \/ (c == 13))
+            (tokenizeLoop prevCanEnd rest)
+            (if (c == '/')
+               (case rest
+                  (Cons c2 rest2 ->
+                     if (c2 == '/')
+                       (tokenizeLoop prevCanEnd (skipComment rest2))
+                       (lexToken prevCanEnd cs))
+                  (Nil -> lexToken prevCanEnd cs))
+               (lexToken prevCanEnd cs))))
+
+lexToken prevCanEnd cs =
+  case (lexNext cs)
+    (LexRes tok rest ->
+       case tok
+         (TokEOF -> Nil)
+         (_ -> Cons tok (tokenizeLoop (canEndExpr tok) rest)))
+
+tokenize cs = tokenizeLoop False cs
+
+tokenizeStr s = tokenize (str2list s)

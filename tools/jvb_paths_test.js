@@ -28,7 +28,7 @@ function check(name, ok, detail) {
   // jaAssemble rekent 2^31/2^32 zelf uit), de tekst gelijk aan native gen1 en
   // de uitvoer gelijk aan native runfast. Alle 12 kernbenchmarks, een paar
   // ook zonder inferentie, plus floats en CAF's.
-  const progs = fs.readdirSync(path.join(repo, "benchmarks")).filter((n) => n.endsWith(".cfp") && n !== "eval2.cfp")
+  const progs = fs.readdirSync(path.join(repo, "benchmarks")).filter((n) => n.endsWith(".cfp"))
     .map((n) => [`benchmarks/${n}`, true])
     .concat([["benchmarks/fib.cfp", false], ["benchmarks/knights.cfp", false], ["benchmarks/queens.cfp", false],
       ["examples/float_constanten.cfp", true], ["caf/keten.cfp", true], ["caf/gc.cfp", true]]);

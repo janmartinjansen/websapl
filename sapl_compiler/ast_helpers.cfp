@@ -22,6 +22,26 @@ charListEq a b =
     (Nil -> case b (Nil -> True) (Cons y ys -> False))
     (Cons x xs -> case b (Nil -> False) (Cons y ys -> if (x == y) (charListEq xs ys) False))
 
+// eval/thunk/lazy/closure zijn in de retag-notatie markeringen met één
+// argument (Eval/Thunk/Lazy/Closure, retag_parse.cfp's rfinishApp), maar in
+// gewone Sapl gewone namen: Sapl_interpreter/interp.cfp definieert
+// `eval expr env`, en benchmarks/eval2.cfp liep daarom vast in retagcomp
+// ("finishApp: expected exactly one argument", 11 oktober 2026).
+// stage_dump.cfp schrijft zo'n naam als kop van een aanroep daarom als
+// `__user_<naam>`, en retag_parse.cfp maakt er weer <naam> van (in rfinishApp
+// en, voor een aanroep zonder argumenten die als atoom terugkomt, bij Var).
+// Alleen de kop van een aanroep: een definitie of een parameter met zo'n naam
+// is niet dubbelzinnig.
+retagUserPrefix = ['__user_']
+isRetagMarkerName n = charListEq n ['eval'] \/ (charListEq n ['thunk'] \/ (charListEq n ['lazy'] \/ charListEq n ['closure']))
+retagEscapeHead n = if (isRetagMarkerName n) (append retagUserPrefix n) n
+retagUnescapeHead n = retagUnescapeCheck n (retagStripPrefix retagUserPrefix n n)
+retagUnescapeCheck n r = if (isRetagMarkerName r) r n
+retagStripPrefix p n orig =
+  case p
+    (Nil -> n)
+    (Cons c cs -> case n (Nil -> orig) (Cons d ds -> if (c == d) (retagStripPrefix cs ds orig) orig))
+
 // Three-way lexicographic comparison (-1/0/1), one pass -- unlike using
 // charListEq plus a separate "less-than" check (which would walk the same
 // two lists twice), a single case-dispatch per position gives both the

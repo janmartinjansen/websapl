@@ -34,6 +34,14 @@ const WEBSAPL = path.join(REPO, "websapl");
 // src: pad vanaf de repo-root; dst: pad vanaf websapl/.
 const ENTRIES = [
   { src: "benchmarks/eval.cfp", dst: "benchmarks_sapl/eval.cfp" },
+  // eval2: de vervanger van eval in de kernbenchmarks (11 oktober 2026); hij
+  // importeert de interpreter uit Sapl_interpreter/, die de worker met
+  // fetch("../Sapl_interpreter/...") ophaalt.
+  { src: "benchmarks/eval2.cfp", dst: "benchmarks_sapl/eval2.cfp" },
+  { src: "Sapl_interpreter/ast.cfp", dst: "Sapl_interpreter/ast.cfp" },
+  { src: "Sapl_interpreter/interp.cfp", dst: "Sapl_interpreter/interp.cfp" },
+  { src: "Sapl_interpreter/lexer.cfp", dst: "Sapl_interpreter/lexer.cfp" },
+  { src: "Sapl_interpreter/parser.cfp", dst: "Sapl_interpreter/parser.cfp" },
   { src: "benchmarks/fib.cfp", dst: "benchmarks_sapl/fib.cfp" },
   { src: "benchmarks/hamming.cfp", dst: "benchmarks_sapl/hamming.cfp" },
   { src: "benchmarks/knights.cfp", dst: "benchmarks_sapl/knights.cfp" },

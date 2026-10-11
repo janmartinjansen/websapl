@@ -1,0 +1,245 @@
+#import "lib/stdlib.cfp"
+#import "Sapl_interpreter/ast.cfp"
+
+// interp.cfp - Core Evaluator voor de Sapl Interpreter
+
+isUpperChar !c = (c >= 'A') /\ (c <= 'Z')
+
+lookupEnv !name env =
+  case env
+    (EmptyEnv ->
+       if (strlen name > 0)
+         (if (isUpperChar (strat 0 name))
+            (VConstr name Nil)
+            (VError (strcat "Variable not found: " name)))
+         (VError "Empty variable name"))
+    (EnvCons n v rest ->
+       if (strEqual name n)
+         v
+         (lookupEnv name rest))
+
+extendEnv bindings recEnv baseEnv =
+  case bindings
+    (Nil -> baseEnv)
+    (Cons b bs ->
+       case b
+         (BindDef name rhs ->
+            EnvCons name (VThunk rhs recEnv) (extendEnv bs recEnv baseEnv)))
+
+addBindings binds env =
+  case binds
+    (Nil -> env)
+    (Cons b bs ->
+       case b
+         (VBind name val -> EnvCons name val (addBindings bs env)))
+
+matchPatPair p ps fv vs =
+  case (matchPat p fv)
+    (MatchFail -> MatchFail)
+    (MatchOk binds1 ->
+       case (matchPats ps vs)
+         (MatchFail -> MatchFail)
+         (MatchOk binds2 -> MatchOk (append binds1 binds2)))
+
+matchPats pats vargs =
+  case pats
+    (Nil ->
+       case vargs
+         (Nil -> MatchOk Nil)
+         (Cons x xs -> MatchFail))
+    (Cons p ps ->
+       case vargs
+         (Nil -> MatchFail)
+         (Cons v vs -> matchPatPair p ps (force v) vs))
+
+matchPat pat val =
+  case pat
+    (PWild -> MatchOk Nil)
+    (PVar name -> MatchOk (Cons (VBind name val) Nil))
+    (PNum n ->
+       case val
+         (VNum vn -> if (n == vn) (MatchOk Nil) MatchFail)
+         (_ -> MatchFail))
+    (PBool b ->
+       case val
+         (VBool vb -> if (b == vb) (MatchOk Nil) MatchFail)
+         (_ -> MatchFail))
+    (PConstr cname pats ->
+       case val
+         (VConstr vname vargs ->
+            if (strEqual cname vname)
+              (matchPats pats vargs)
+              MatchFail)
+         (_ -> MatchFail))
+
+evalCaseBranch val brs env pat body =
+  case (matchPat pat val)
+    (MatchFail -> evalCase val brs env)
+    (MatchOk binds -> eval body (addBindings binds env))
+
+evalCase val branches env =
+  case branches
+    (Nil -> VError "No matching case branch")
+    (Cons br brs ->
+       case br
+         (CaseBranch pat body -> evalCaseBranch val brs env pat body))
+
+applyHead v =
+  case v
+    (VConstr cname args ->
+       if (strEqual cname "Cons")
+         (case args
+            (Cons x xs -> force x)
+            (Nil -> VError "head: empty Cons args"))
+         (VError "head: not a Cons"))
+    (_ -> VError "head: not a constructor")
+
+applyTail v =
+  case v
+    (VConstr cname args ->
+       if (strEqual cname "Cons")
+         (case args
+            (Cons x xs ->
+               case xs
+                 (Cons t ts -> force t)
+                 (Nil -> VError "tail: no tail"))
+            (Nil -> VError "tail: empty Cons args"))
+         (VError "tail: not a Cons"))
+    (_ -> VError "tail: not a constructor")
+
+applyIsNil v =
+  case v
+    (VConstr cname args -> VBool (strEqual cname "Nil"))
+    (_ -> VBool False)
+
+applyPrim1 !op arg =
+  if (strEqual op "head") (applyHead (force arg))
+  (if (strEqual op "tail") (applyTail (force arg))
+  (if (strEqual op "isnil") (applyIsNil (force arg))
+  (if (strEqual op "not")
+     (case (force arg)
+        (VBool b -> VBool (if b False True))
+        (_ -> VError "not expects boolean"))
+  (VPrim1 op arg))))
+
+applyPrim2Vals !op v1 v2 =
+  case v1
+    (VNum n1 ->
+       case v2
+         (VNum n2 ->
+            if (strEqual op "+") (VNum (n1 + n2))
+            (if (strEqual op "-") (VNum (n1 - n2))
+            (if (strEqual op "*") (VNum (n1 * n2))
+            (if (strEqual op "/") (if (n2 == 0) (VError "Division by zero") (VNum (n1 / n2)))
+            (if (strEqual op "%") (if (n2 == 0) (VError "Modulo by zero") (VNum (n1 % n2)))
+            (if (strEqual op "==") (VBool (n1 == n2))
+            (if (strEqual op "!=") (VBool (n1 != n2))
+            (if (strEqual op "<") (VBool (n1 < n2))
+            (if (strEqual op "<=") (VBool (n1 <= n2))
+            (if (strEqual op ">") (VBool (n1 > n2))
+            (if (strEqual op ">=") (VBool (n1 >= n2))
+            (VError "Unknown binary operator"))))))))))))
+         (_ -> VError "Second operand not a number"))
+    (VBool b1 ->
+       case v2
+         (VBool b2 ->
+            if (strEqual op "&&" \/ strEqual op "/\\") (VBool (b1 /\ b2))
+            (if (strEqual op "||" \/ strEqual op "\\/") (VBool (b1 \/ b2))
+            (if (strEqual op "==") (VBool (b1 == b2))
+            (if (strEqual op "!=") (VBool (b1 != b2))
+            (VError "Unknown boolean binary operator")))))
+         (_ -> VError "Second operand not a boolean"))
+    (_ -> VError "Binary operator expects first operand to be number or boolean")
+
+applyPrim2 !op a1 a2 =
+  if (strEqual op "cons")
+    (VConstr "Cons" (Cons a1 (Cons a2 Nil)))
+    (applyPrim2Vals op (force a1) (force a2))
+
+apply func arg =
+  case func
+    (VClosure param body cenv ->
+       eval body (EnvCons param arg cenv))
+    (VPrim op ->
+       applyPrim1 op arg)
+    (VPrim1 op arg1 ->
+       applyPrim2 op arg1 arg)
+    (VConstr cname vargs ->
+       VConstr cname (append vargs (Cons arg Nil)))
+    (_ -> VError "Cannot apply non-function")
+
+mapThunk args env =
+  case args
+    (Nil -> Nil)
+    (Cons a as -> Cons (VThunk a env) (mapThunk as env))
+
+force val =
+  case val
+    (VThunk e env -> force (eval e env))
+    (_ -> val)
+
+evalRec bindings body env =
+  let recEnv = extendEnv bindings recEnv env in
+  eval body recEnv
+
+eval expr env =
+  case expr
+    (ENum n -> VNum n)
+    (EBool b -> VBool b)
+    (EStr s -> VStr s)
+    (EVar name -> force (lookupEnv name env))
+    (ELam param body -> VClosure param body env)
+    (EPrim op -> VPrim op)
+    (EApp e1 e2 -> apply (force (eval e1 env)) (VThunk e2 env))
+    (EIf cond th el ->
+       case (force (eval cond env))
+         (VBool b -> if b (eval th env) (eval el env))
+         (VNum n -> if (n != 0) (eval th env) (eval el env))
+         (_ -> VError "Condition must be boolean or number"))
+    (ELet bindings body -> eval body (extendEnv bindings env env))
+    (ELetRec bindings body -> evalRec bindings body env)
+    (EConstr cname args -> VConstr cname (mapThunk args env))
+    (ECase scrut branches -> evalCase (force (eval scrut env)) branches env)
+
+initialEnv =
+  EnvCons "+" (VPrim "+")
+  (EnvCons "-" (VPrim "-")
+  (EnvCons "*" (VPrim "*")
+  (EnvCons "/" (VPrim "/")
+  (EnvCons "%" (VPrim "%")
+  (EnvCons "==" (VPrim "==")
+  (EnvCons "!=" (VPrim "!=")
+  (EnvCons "<" (VPrim "<")
+  (EnvCons "<=" (VPrim "<=")
+  (EnvCons ">" (VPrim ">")
+  (EnvCons ">=" (VPrim ">=")
+  (EnvCons "&&" (VPrim "&&")
+  (EnvCons "||" (VPrim "||")
+  (EnvCons "/\\" (VPrim "/\\")
+  (EnvCons "\\/" (VPrim "\\/")
+  (EnvCons "not" (VPrim "not")
+  (EnvCons "cons" (VPrim "cons")
+  (EnvCons "head" (VPrim "head")
+  (EnvCons "tail" (VPrim "tail")
+  (EnvCons "isnil" (VPrim "isnil")
+  (EnvCons "Nil" (VConstr "Nil" Nil)
+  EmptyEnv))))))))))))))))))))
+
+curryLam params body =
+  case params
+    (Nil -> body)
+    (Cons p ps -> ELam p (curryLam ps body))
+
+funcToBind f =
+  case f
+    (FuncDef name params body ->
+       BindDef name (curryLam params body))
+
+funcsToBindings fs =
+  case fs
+    (Nil -> Nil)
+    (Cons f rest -> Cons (funcToBind f) (funcsToBindings rest))
+
+evalProgram funcs startExpr =
+  eval (ELetRec (funcsToBindings funcs) startExpr) initialEnv
+

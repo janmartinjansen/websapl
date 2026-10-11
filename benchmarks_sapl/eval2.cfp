@@ -1,0 +1,25 @@
+#import "lib/stdlib.cfp"
+#import "Sapl_interpreter/ast.cfp"
+#import "Sapl_interpreter/interp.cfp"
+#import "Sapl_interpreter/lexer.cfp"
+#import "Sapl_interpreter/parser.cfp"
+
+// eval2.cfp - Macrobenchmark Eval 2.0 (vervanger van eval.cfp)
+// Interpreteert een volwaardig lui functioneel Sapl-programma (Zeef van Eratosthenes)
+// rechtstreeks vanuit een broncode-string via tokenizer, recursive descent parser,
+// symbolische environments, luie thunk-reductie en tie-the-knot recursie.
+
+prog =
+  strcat "from n = n : from (n + 1)\n"
+  (strcat "filter p xs = case xs of [] -> [] | (y : ys) -> if p y then y : filter p ys else filter p ys\n"
+  (strcat "sieve xs = case xs of (p : ys) -> p : sieve (filter (\\x -> x % p != 0) ys)\n"
+  (strcat "primes = sieve (from 2)\n"
+  (strcat "el n xs = case xs of (y : ys) -> if n == 0 then y else el (n - 1) ys\n"
+  "start = el 200 primes"))))
+
+extractNum v =
+  case (force v)
+    (VNum n -> n)
+    (_ -> 0 - 1)
+
+start = extractNum (runSapl prog)

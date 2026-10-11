@@ -33,6 +33,20 @@ const cases = [
     res: read("caf/modules/hoofd.cfp").match(/verwacht: *(\d+)/)[1],
     contains: "pushcaf",
   },
+  {
+    // Eigen functies die eval/thunk/closure heten: in retag-tekst zijn dat
+    // markeringen. De dump schrijft ze als `__user_...` en de retag-parser
+    // maakt er weer de eigen naam van (11 oktober 2026; daarvoor:
+    // "finishApp: expected exactly one argument", zie benchmarks/eval2.cfp).
+    name: "eigen eval/thunk/closure over de modulegrens",
+    manifest: "namen.cfp:\ngebruik.cfp: namen.cfp\n",
+    entry: "gebruik.cfp",
+    sources: {
+      "namen.cfp": "eval f x = f x + 1\nthunk x = x * 2\nclosure g = g 5\n",
+      "gebruik.cfp": "twice f x = f (f x)\nstart = eval thunk 3 + closure (eval thunk) + twice thunk 1\n",
+    },
+    res: "22",
+  },
 ];
 
 (async () => {

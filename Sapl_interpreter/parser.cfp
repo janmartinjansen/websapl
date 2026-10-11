@@ -1,0 +1,663 @@
+#import "lib/stdlib.cfp"
+#import "Sapl_interpreter/ast.cfp"
+#import "Sapl_interpreter/interp.cfp"
+#import "Sapl_interpreter/lexer.cfp"
+
+// parser.cfp - Parser voor de Sapl Interpreter
+
+::parseRes = PRes val restToks
+           | PFail !msg
+
+isIdentTok !expected tok =
+  case tok
+    (TokIdent s -> strEqual s expected)
+    (_ -> False)
+
+isOpTok !expected tok =
+  case tok
+    (TokOp s -> strEqual s expected)
+    (_ -> False)
+
+isLParenTok tok = case tok (TokLParen -> True) (_ -> False)
+isRParenTok tok = case tok (TokRParen -> True) (_ -> False)
+isLBracketTok tok = case tok (TokLBracket -> True) (_ -> False)
+isRBracketTok tok = case tok (TokRBracket -> True) (_ -> False)
+isCommaTok tok = case tok (TokComma -> True) (_ -> False)
+isSemiTok tok = case tok (TokSemi -> True) (_ -> False)
+isBarTok tok = case tok (TokBar -> True) (_ -> False)
+
+canStartAtom tok =
+  case tok
+    (TokNum n -> True)
+    (TokStr s -> True)
+    (TokLParen -> True)
+    (TokLBracket -> True)
+    (TokIdent s ->
+       if (strEqual s "then") False
+       (if (strEqual s "else") False
+       (if (strEqual s "in") False
+       (if (strEqual s "of") False
+       (if (strEqual s "if") False
+       (if (strEqual s "let") False
+       (if (strEqual s "case") False
+       True)))))))
+    (_ -> False)
+
+parseAtomTok t rest =
+  case t
+    (TokNum n -> PRes (ENum n) rest)
+    (TokStr s -> PRes (EStr s) rest)
+    (TokIdent s ->
+       if (strEqual s "True") (PRes (EBool True) rest)
+       (if (strEqual s "False") (PRes (EBool False) rest)
+       (if (strEqual s "Nil") (PRes (EConstr "Nil" Nil) rest)
+       (PRes (EVar s) rest))))
+    (TokLParen -> parseParenExpr rest)
+    (TokLBracket -> parseListExpr rest)
+    (TokOp op ->
+       if (strEqual op "-")
+         (case rest
+            (Cons t2 rest2 ->
+               case t2
+                 (TokNum n -> PRes (ENum (0 - n)) rest2)
+                 (_ -> PFail "Expected number after unary -"))
+            (Nil -> PFail "Unexpected end of input after -"))
+         (PFail (strcat "Unexpected operator in atom: " op)))
+    (_ -> PFail "Unexpected token, expected expression atom")
+
+parseAtom toks =
+  case toks
+    (Nil -> PFail "Unexpected end of input, expected expression atom")
+    (Cons t rest -> parseAtomTok t rest)
+
+parseParenExpr toks =
+  case toks
+    (Cons t rest ->
+       if (isRParenTok t)
+         (PRes (EConstr "Unit" Nil) rest)
+         (case (parseExpr toks)
+            (PFail msg -> PFail msg)
+            (PRes e1 rest1 ->
+               case rest1
+                 (Nil -> PFail "Missing closing parenthesis )")
+                 (Cons t1 rest2 ->
+                    if (isRParenTok t1)
+                      (PRes e1 rest2)
+                      (if (isCommaTok t1)
+                         (parseTupleTail (Cons e1 Nil) rest2)
+                         (PFail "Expected , or ) after expression in parentheses"))))))
+    (Nil -> PFail "Unexpected end of input after (")
+
+parseTupleTail acc toks =
+  case (parseExpr toks)
+    (PFail msg -> PFail msg)
+    (PRes e rest ->
+       case rest
+         (Nil -> PFail "Missing closing parenthesis ) in tuple")
+         (Cons t rest2 ->
+            if (isRParenTok t)
+              (PRes (EConstr "Tup" (reverse (Cons e acc))) rest2)
+              (if (isCommaTok t)
+                 (parseTupleTail (Cons e acc) rest2)
+                 (PFail "Expected , or ) in tuple"))))
+
+parseListExpr toks =
+  case toks
+    (Cons t rest ->
+       if (isRBracketTok t)
+         (PRes (EConstr "Nil" Nil) rest)
+         (parseListElements toks))
+    (Nil -> PFail "Unexpected end of input after [")
+
+parseListElements toks =
+  case (parseExpr toks)
+    (PFail msg -> PFail msg)
+    (PRes e rest ->
+       case rest
+         (Nil -> PFail "Missing closing bracket ] in list")
+         (Cons t rest2 ->
+            if (isRBracketTok t)
+              (PRes (EConstr "Cons" (Cons e (Cons (EConstr "Nil" Nil) Nil))) rest2)
+              (if (isCommaTok t)
+                 (case (parseListElements rest2)
+                    (PFail msg -> PFail msg)
+                    (PRes tailList rest3 ->
+                       PRes (EConstr "Cons" (Cons e (Cons tailList Nil))) rest3))
+                 (PFail "Expected , or ] in list"))))
+
+parseAppArgs f toks =
+  case toks
+    (Nil -> PRes f Nil)
+    (Cons t rest ->
+       if (canStartAtom t)
+         (case (parseAtom toks)
+            (PFail msg -> PFail msg)
+            (PRes arg rest2 -> parseAppArgs (EApp f arg) rest2))
+         (PRes f toks))
+
+isApplicableExpr e =
+  case e
+    (ENum n -> False)
+    (EBool b -> False)
+    (EStr s -> False)
+    (EConstr cname args ->
+       if (strEqual cname "Nil") False
+       (if (strEqual cname "Unit") False
+       True))
+    (_ -> True)
+
+parseApp toks =
+  case (parseAtom toks)
+    (PFail msg -> PFail msg)
+    (PRes f rest ->
+       if (isApplicableExpr f)
+         (parseAppArgs f rest)
+         (PRes f rest))
+
+isMultOp op = (strEqual op "*") \/ (strEqual op "/") \/ (strEqual op "%")
+
+parseMultRest left toks =
+  case toks
+    (Nil -> PRes left Nil)
+    (Cons t rest ->
+       case t
+         (TokOp op ->
+            if (isMultOp op)
+              (case (parseApp rest)
+                 (PFail msg -> PFail msg)
+                 (PRes right rest2 ->
+                    parseMultRest (EApp (EApp (EPrim op) left) right) rest2))
+              (PRes left toks))
+         (_ -> PRes left toks))
+
+parseMult toks =
+  case (parseApp toks)
+    (PFail msg -> PFail msg)
+    (PRes left rest -> parseMultRest left rest)
+
+isAddOp op = (strEqual op "+") \/ (strEqual op "-")
+
+parseAddRest left toks =
+  case toks
+    (Nil -> PRes left Nil)
+    (Cons t rest ->
+       case t
+         (TokOp op ->
+            if (isAddOp op)
+              (case (parseMult rest)
+                 (PFail msg -> PFail msg)
+                 (PRes right rest2 ->
+                    parseAddRest (EApp (EApp (EPrim op) left) right) rest2))
+              (PRes left toks))
+         (_ -> PRes left toks))
+
+parseAdd toks =
+  case (parseMult toks)
+    (PFail msg -> PFail msg)
+    (PRes left rest -> parseAddRest left rest)
+
+parseCons toks =
+  case (parseAdd toks)
+    (PFail msg -> PFail msg)
+    (PRes left rest ->
+       case rest
+         (Nil -> PRes left Nil)
+         (Cons t rest2 ->
+            case t
+              (TokOp op ->
+                 if (strEqual op ":")
+                   (case (parseCons rest2)
+                      (PFail msg -> PFail msg)
+                      (PRes right rest3 ->
+                         PRes (EConstr "Cons" (Cons left (Cons right Nil))) rest3))
+                   (PRes left rest))
+              (_ -> PRes left rest)))
+
+isRelOp op =
+  (strEqual op "==") \/ (strEqual op "!=") \/
+  (strEqual op "<")  \/ (strEqual op "<=") \/
+  (strEqual op ">")  \/ (strEqual op ">=")
+
+parseRelRest left toks =
+  case toks
+    (Nil -> PRes left Nil)
+    (Cons t rest ->
+       case t
+         (TokOp op ->
+            if (isRelOp op)
+              (case (parseCons rest)
+                 (PFail msg -> PFail msg)
+                 (PRes right rest2 ->
+                    parseRelRest (EApp (EApp (EPrim op) left) right) rest2))
+              (PRes left toks))
+         (_ -> PRes left toks))
+
+parseRel toks =
+  case (parseCons toks)
+    (PFail msg -> PFail msg)
+    (PRes left rest -> parseRelRest left rest)
+
+isAndOp op = (strEqual op "&&") \/ (strEqual op "/\\")
+
+parseAndRest left toks =
+  case toks
+    (Nil -> PRes left Nil)
+    (Cons t rest ->
+       case t
+         (TokOp op ->
+            if (isAndOp op)
+              (case (parseRel rest)
+                 (PFail msg -> PFail msg)
+                 (PRes right rest2 ->
+                    parseAndRest (EApp (EApp (EPrim op) left) right) rest2))
+              (PRes left toks))
+         (_ -> PRes left toks))
+
+parseAnd toks =
+  case (parseRel toks)
+    (PFail msg -> PFail msg)
+    (PRes left rest -> parseAndRest left rest)
+
+isOrOp op = (strEqual op "||") \/ (strEqual op "\\/")
+
+parseOrRest left toks =
+  case toks
+    (Nil -> PRes left Nil)
+    (Cons t rest ->
+       case t
+         (TokOp op ->
+            if (isOrOp op)
+              (case (parseAnd rest)
+                 (PFail msg -> PFail msg)
+                 (PRes right rest2 ->
+                    parseOrRest (EApp (EApp (EPrim op) left) right) rest2))
+              (PRes left toks))
+         (_ -> PRes left toks))
+
+parseOr toks =
+  case (parseAnd toks)
+    (PFail msg -> PFail msg)
+    (PRes left rest -> parseOrRest left rest)
+
+parseLambdaParams acc toks =
+  case toks
+    (Nil -> PFail "Unexpected end of input in lambda parameters")
+    (Cons t rest ->
+       case t
+         (TokIdent p ->
+            parseLambdaParams (Cons p acc) rest)
+         (TokOp op ->
+            if (strEqual op "->")
+              (case acc
+                 (Nil -> PFail "Lambda must have at least one parameter")
+                 (_ ->
+                    case (parseExpr rest)
+                      (PFail msg -> PFail msg)
+                      (PRes body rest2 ->
+                         PRes (curryLam (reverse acc) body) rest2)))
+              (PFail "Expected -> after lambda parameters"))
+         (_ -> PFail "Expected parameter name or -> in lambda"))
+
+parseIf toks =
+  case (parseExpr toks)
+    (PFail msg -> PFail msg)
+    (PRes cond rest ->
+       parseIfThen cond (stripKeyword "then" rest))
+
+stripKeyword kw toks =
+  case toks
+    (Cons t r -> if (isIdentTok kw t) r toks)
+    (Nil -> Nil)
+
+parseIfThen cond toks =
+  case (parseExpr toks)
+    (PFail msg -> PFail msg)
+    (PRes th rest ->
+       parseIfElse cond th (stripKeyword "else" rest))
+
+parseIfElse cond th toks =
+  case (parseExpr toks)
+    (PFail msg -> PFail msg)
+    (PRes el rest ->
+       PRes (EIf cond th el) rest)
+
+parseBindingParams name accParams toks =
+  case toks
+    (Nil -> PFail "Unexpected end of input in binding definition")
+    (Cons t rest ->
+       case t
+         (TokOp op ->
+            if (strEqual op "=")
+              (case (parseExpr rest)
+                 (PFail msg -> PFail msg)
+                 (PRes rhs rest2 ->
+                    PRes (BindDef name (curryLam (reverse accParams) rhs)) rest2))
+              (PFail "Expected = in binding"))
+         (TokIdent p ->
+            parseBindingParams name (Cons p accParams) rest)
+         (_ -> PFail "Expected parameter or = in binding"))
+
+parseBinding toks =
+  case toks
+    (Cons t rest ->
+       case t
+         (TokIdent name ->
+            parseBindingParams name Nil rest)
+         (_ -> PFail "Expected identifier at start of binding"))
+    (Nil -> PFail "Unexpected end of input in binding")
+
+parseLetBody isRec newBinds rest2 =
+  case (parseExpr rest2)
+    (PFail msg -> PFail msg)
+    (PRes body rest3 ->
+       if isRec
+         (PRes (ELetRec (reverse newBinds) body) rest3)
+         (PRes (ELet (reverse newBinds) body) rest3))
+
+parseLetBindingsTail isRec newBinds rest =
+  case rest
+    (Nil -> PFail "Unexpected end of input in let, expected 'in'")
+    (Cons t rest2 ->
+       if (isIdentTok "in" t)
+         (parseLetBody isRec newBinds rest2)
+         (if (isSemiTok t \/ isCommaTok t)
+            (parseLetBindings isRec newBinds rest2)
+            (PFail "Expected ;, , or 'in' in let bindings")))
+
+parseLetBindings isRec accBindings toks =
+  case (parseBinding toks)
+    (PFail msg -> PFail msg)
+    (PRes b rest ->
+       parseLetBindingsTail isRec (Cons b accBindings) rest)
+
+parseLet toks =
+  case toks
+    (Cons t rest ->
+       if (isIdentTok "rec" t)
+         (parseLetBindings True Nil rest)
+         (parseLetBindings True Nil toks))
+    (Nil -> PFail "Unexpected end of input after let")
+
+canStartPatAtom t =
+  case t
+    (TokNum n -> True)
+    (TokLParen -> True)
+    (TokLBracket -> True)
+    (TokIdent s ->
+       if (strEqual s "->") False
+       (if (strEqual s "|") False
+       True))
+    (_ -> False)
+
+parsePatAtom toks =
+  case toks
+    (Cons t rest ->
+       case t
+         (TokIdent s ->
+            if (strEqual s "_")
+              (PRes PWild rest)
+              (if (strEqual s "True")
+                 (PRes (PBool True) rest)
+                 (if (strEqual s "False")
+                    (PRes (PBool False) rest)
+                    (if (strEqual s "Nil")
+                       (PRes (PConstr "Nil" Nil) rest)
+                       (if (isUpperChar (strat 0 s))
+                          (PRes (PConstr s Nil) rest)
+                          (PRes (PVar s) rest))))))
+         (TokNum n -> PRes (PNum n) rest)
+         (TokLParen ->
+            case (parsePat rest)
+              (PFail msg -> PFail msg)
+              (PRes p rest2 ->
+                 case rest2
+                   (Cons t2 rest3 ->
+                      if (isRParenTok t2)
+                        (PRes p rest3)
+                        (PFail "Expected ) after pattern atom"))
+                   (Nil -> PFail "Unexpected end of input in pattern atom")))
+         (TokLBracket ->
+            case rest
+              (Cons t2 rest2 ->
+                 if (isRBracketTok t2)
+                   (PRes (PConstr "Nil" Nil) rest2)
+                   (PFail "Expected ] in list pattern"))
+              (Nil -> PFail "Unexpected end of input after [ in pattern atom"))
+         (_ -> PFail "Invalid pattern atom"))
+    (Nil -> PFail "Unexpected end of input in pattern atom")
+
+parsePatArgs cname accArgs toks =
+  case toks
+    (Nil -> PRes (PConstr cname (reverse accArgs)) Nil)
+    (Cons t rest ->
+       if (canStartPatAtom t)
+         (case (parsePatAtom toks)
+            (PFail msg -> PFail msg)
+            (PRes arg rest2 ->
+               parsePatArgs cname (Cons arg accArgs) rest2))
+         (PRes (PConstr cname (reverse accArgs)) toks))
+
+parsePatPrefix toks =
+  case toks
+    (Cons t rest ->
+       case t
+         (TokIdent s ->
+            if (strEqual s "_")
+              (PRes PWild rest)
+              (if (strEqual s "True")
+                 (PRes (PBool True) rest)
+                 (if (strEqual s "False")
+                    (PRes (PBool False) rest)
+                    (if (strEqual s "Nil")
+                       (PRes (PConstr "Nil" Nil) rest)
+                       (if (isUpperChar (strat 0 s))
+                          (parsePatArgs s Nil rest)
+                          (PRes (PVar s) rest))))))
+         (TokNum n -> PRes (PNum n) rest)
+         (TokLParen ->
+            case (parsePat rest)
+              (PFail msg -> PFail msg)
+              (PRes p rest2 ->
+                 case rest2
+                   (Cons t2 rest3 ->
+                      if (isRParenTok t2)
+                        (PRes p rest3)
+                        (PFail "Expected ) after pattern"))
+                   (Nil -> PFail "Unexpected end of input, expected )")))
+         (TokLBracket ->
+            case rest
+              (Cons t2 rest2 ->
+                 if (isRBracketTok t2)
+                   (PRes (PConstr "Nil" Nil) rest2)
+                   (PFail "Only [] supported in list pattern, use (x : xs)"))
+              (Nil -> PFail "Unexpected end of input after [ in pattern"))
+         (_ -> PFail "Invalid pattern token"))
+    (Nil -> PFail "Unexpected end of input, expected pattern")
+
+parsePat toks =
+  case (parsePatPrefix toks)
+    (PFail msg -> PFail msg)
+    (PRes pLeft rest ->
+       case rest
+         (Cons t rest2 ->
+            if (isOpTok ":" t)
+              (case (parsePat rest2)
+                 (PFail msg -> PFail msg)
+                 (PRes pRight rest3 ->
+                    PRes (PConstr "Cons" (Cons pLeft (Cons pRight Nil))) rest3))
+              (PRes pLeft rest))
+         (Nil -> PRes pLeft rest))
+
+parseParenBranchBody pat rest3 =
+  case (parseExpr rest3)
+    (PFail msg -> PFail msg)
+    (PRes body rest4 ->
+       case rest4
+         (Cons t3 rest5 ->
+            if (isRParenTok t3)
+              (PRes (CaseBranch pat body) rest5)
+              (PFail "Expected ) to close branch"))
+         (Nil -> PFail "Unexpected end of input, expected )"))
+
+parseParenBranchWithPat pat rest2 =
+  case rest2
+    (Cons t2 rest3 ->
+       if (isOpTok "->" t2)
+         (parseParenBranchBody pat rest3)
+         (PFail "Expected -> in branch"))
+    (Nil -> PFail "Unexpected end of input after pattern")
+
+parseParenBranch toks =
+  case toks
+    (Cons t rest ->
+       if (isLParenTok t)
+         (case (parsePat rest)
+            (PFail msg -> PFail msg)
+            (PRes pat rest2 -> parseParenBranchWithPat pat rest2))
+         (PFail "Expected ( at start of branch"))
+    (Nil -> PFail "Unexpected end of input")
+
+parseBareBranch toks =
+  case (parsePat toks)
+    (PFail msg -> PFail msg)
+    (PRes pat rest ->
+       case rest
+         (Cons t rest2 ->
+            if (isOpTok "->" t)
+              (case (parseExpr rest2)
+                 (PFail msg -> PFail msg)
+                 (PRes body rest3 ->
+                    PRes (CaseBranch pat body) rest3))
+              (PFail "Expected -> after pattern"))
+         (Nil -> PFail "Unexpected end of input after pattern"))
+
+parseOneBranch toks =
+  case (parseParenBranch toks)
+    (PRes b rest -> PRes b rest)
+    (PFail _ -> parseBareBranch toks)
+
+parseMoreBranches acc toks =
+  case toks
+    (Nil -> PRes (reverse acc) Nil)
+    (Cons t rest ->
+       if (isBarTok t)
+         (case (parseOneBranch rest)
+            (PFail msg -> PFail msg)
+            (PRes b rest2 -> parseMoreBranches (Cons b acc) rest2))
+         (if (isLParenTok t)
+            (case (parseParenBranch toks)
+               (PRes b rest2 -> parseMoreBranches (Cons b acc) rest2)
+               (PFail _ -> PRes (reverse acc) toks))
+            (PRes (reverse acc) toks)))
+
+parseBranches toks =
+  case (parseOneBranch toks)
+    (PFail msg -> PFail msg)
+    (PRes firstBr rest -> parseMoreBranches (Cons firstBr Nil) rest)
+
+parseCaseScrut scrut rest =
+  case (parseBranches (stripKeyword "of" rest))
+    (PFail msg -> PFail msg)
+    (PRes branches rest2 ->
+       PRes (ECase scrut branches) rest2)
+
+parseCase toks =
+  case (parseExpr toks)
+    (PFail msg -> PFail msg)
+    (PRes scrut rest -> parseCaseScrut scrut rest)
+
+parseExpr toks =
+  case toks
+    (Nil -> PFail "Unexpected end of input, expected expression")
+    (Cons t rest ->
+       if (isOpTok "\\" t)
+         (parseLambdaParams Nil rest)
+         (if (isIdentTok "if" t)
+            (parseIf rest)
+            (if (isIdentTok "let" t)
+               (parseLet rest)
+               (if (isIdentTok "case" t)
+                  (parseCase rest)
+                  (parseOr toks)))))
+
+stripOptionalSemi toks =
+  case toks
+    (Cons t r -> if (isSemiTok t) r toks)
+    (Nil -> Nil)
+
+parseDefBody name accParams body rest2 =
+  PRes (FuncDef name (reverse accParams) body) (stripOptionalSemi rest2)
+
+parseDefRhs name accParams rest =
+  case (parseExpr rest)
+    (PFail msg -> PFail msg)
+    (PRes body rest2 -> parseDefBody name accParams body rest2)
+
+parseDefParams name accParams toks =
+  case toks
+    (Nil -> PFail "Unexpected end of input in function definition")
+    (Cons t rest ->
+       case t
+         (TokOp op ->
+            if (strEqual op "=")
+              (parseDefRhs name accParams rest)
+              (PFail "Expected = after function name and parameters"))
+         (TokIdent p ->
+            parseDefParams name (Cons p accParams) rest)
+         (_ -> PFail "Expected parameter name or = in function definition"))
+
+parseDefs acc toks =
+  case toks
+    (Nil -> PRes (reverse acc) Nil)
+    (Cons t rest ->
+       case t
+         (TokSemi -> parseDefs acc rest)
+         (TokIdent name ->
+            case (parseDefParams name Nil rest)
+              (PFail msg -> PFail msg)
+              (PRes def rest2 ->
+                 parseDefs (Cons def acc) rest2))
+         (_ -> PFail "Expected function definition (identifier = ...)"))
+
+parseProgram toks = parseDefs Nil toks
+
+parseExprStr s =
+  case (parseExpr (tokenizeStr s))
+    (PRes expr rest -> PRes expr rest)
+    (PFail msg -> PFail msg)
+
+parseProgramStr s =
+  case (parseProgram (tokenizeStr s))
+    (PRes defs rest -> PRes defs rest)
+    (PFail msg -> PFail msg)
+
+evalExprStr s =
+  case (parseExprStr s)
+    (PRes expr rest -> eval expr initialEnv)
+    (PFail msg -> VError (strcat "Parse error: " msg))
+
+hasFuncNamed target funcs =
+  case funcs
+    (Nil -> False)
+    (Cons f rest ->
+       case f
+         (FuncDef name params body ->
+            if (strEqual name target)
+              True
+              (hasFuncNamed target rest)))
+
+evalProgramStr s startName =
+  case (parseProgramStr s)
+    (PRes defs rest -> evalProgram defs (EVar startName))
+    (PFail msg -> VError (strcat "Parse error: " msg))
+
+runSapl s =
+  let toks = tokenizeStr s in
+  case (parseProgram toks)
+    (PRes defs rest ->
+       if (hasFuncNamed "start" defs)
+         (evalProgram defs (EVar "start"))
+         (if (hasFuncNamed "main" defs)
+            (evalProgram defs (EVar "main"))
+            (evalExprStr s)))
+    (PFail _ -> evalExprStr s)

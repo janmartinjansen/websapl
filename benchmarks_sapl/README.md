@@ -7,7 +7,7 @@ bestanden die de repo-CI (`allrun`) gebruikt om te controleren dat een
 wijziging aan de compiler of de VM niets stilzwijgend breekt.
 
 Zelf proberen: open een bestand, kies **saplcomp** als Compiler Backend en
-klik **Compileer & Run**. Voor `eval`/`parsetest`/`prolog` (interpreters
+klik **Compileer & Run**. Voor `eval2`/`parsetest`/`prolog` (interpreters
 die zichzelf testdata voeren) duurt dat een fractie van een seconde; voor
 `fib`/`primes`/`queens` kun je in het terminal-paneel de metrieken
 (instructies, calls, creates) vergelijken tussen twee runs om het effect
@@ -28,7 +28,8 @@ van een wijziging te zien.
 | `sort.cfp` | Sorteeralgoritmen op lijsten |
 | `sprimes.cfp` | Priemgetallen met Peano-natuurlijke getallen (`Zero`/`Suc`) i.p.v. ingebouwde `Int` |
 | `twice.cfp` | `twice twice twice twice inc 0` — herhaalde functiesamenstelling, `2^16` toepassingen |
-| `eval.cfp` | Een kleine expressie-evaluator/interpreter |
+| `eval2.cfp` | Een volwaardige interpreter voor een lui functioneel taaltje (tokenizer, parser, environments, thunks; uit `Sapl_interpreter/`) die een zeef van Eratosthenes uit een broncode-string draait. Sinds 11 oktober 2026 de kernbenchmark in plaats van `eval.cfp` |
+| `eval.cfp` | Een kleine expressie-evaluator/interpreter (de vroegere kernbenchmark, blijft als voorbeeld) |
 
 ## Zie ook
 
