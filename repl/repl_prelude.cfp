@@ -127,13 +127,22 @@ showValX tbl cur ty x =
 
 printValX tbl cur ty x = printString (showValX tbl cur ty x)
 
-// `cur`: "naam strikt lui ..." (de huidige adressen uit het Img van de
-// REPL). Wijst een functiewaarde (funcAddr) naar een ander adres dan de
-// huidige versie van haar naam, dan is het een oude versie.
+// `cur`: per naam "naam k s1 l1 ... sk lk" (alle versies uit het Img van de
+// REPL, oudste eerst). Wijst een functiewaarde (funcAddr) naar versie i < k,
+// dan "(versie i van k)"; naar geen van alle (bv. een versie die :undo
+// weghaalde), dan "(oude versie)"; naar de laatste: niets.
 pvOldMark cur name !addr = pvOldMarkW (pvWords cur) name addr
-pvOldMarkW ws name !addr = case ws (Nil -> "") (Cons n r -> case r (Nil -> "") (Cons s r2 -> case r2 (Nil -> "") (Cons l r3 -> pvOldMarkAt n s l r3 name addr)))
-pvOldMarkAt n s l rest name !addr =
-  if (strEqual n name) (if (eqnum addr (pvNum s)) "" (if (eqnum addr (pvNum l)) "" " (oude versie)")) (pvOldMarkW rest name addr)
+pvOldMarkW ws name !addr = case ws (Nil -> "") (Cons n r -> case r (Nil -> "") (Cons k r2 -> pvOldMarkAt n (pvNum k) r2 name addr))
+pvOldMarkAt n !k ws name !addr =
+  if (strEqual n name) (pvVersionMark (pvFindPair ws addr 0 k) k) (pvOldMarkW (pvDrop (2 * k) ws) name addr)
+pvFindPair ws !addr !i !k =
+  if (i >= k) (0 - 1)
+  (case ws (Nil -> 0 - 1) (Cons s r -> case r (Nil -> 0 - 1) (Cons l r2 -> pvFindPairAt s l r2 addr i k)))
+pvFindPairAt s l rest !addr !i !k = if (eqnum addr (pvNum s)) i (if (eqnum addr (pvNum l)) i (pvFindPair rest addr (i + 1) k))
+pvVersionMark !i !k =
+  if (i < 0) " (oude versie)"
+  (if (eqnum (i + 1) k) "" (strcat " (versie " (strcat (list2str (itoa (i + 1))) (strcat " van " (strcat (list2str (itoa k)) ")")))))
+pvDrop !k ws = if (k <= 0) ws (case ws (Nil -> Nil) (Cons w r -> pvDrop (k - 1) r))
 pvNum s = pvNumAt s 0 (strlen s) 0
 pvNumAt s !i !n !acc = if (i >= n) acc (pvNumAt s (i + 1) n (acc * 10 + (ord (strat i s) - 48)))
 

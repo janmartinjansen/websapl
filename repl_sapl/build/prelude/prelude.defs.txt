@@ -35,7 +35,11 @@ showValX 4 0000
 printValX 4 0000
 pvOldMark 3 001
 pvOldMarkW 3 101
-pvOldMarkAt 6 100011
+pvOldMarkAt 5 11011
+pvFindPair 4 0111
+pvFindPairAt 6 000111
+pvVersionMark 2 11
+pvDrop 2 11
 pvNum 1 0
 pvNumAt 4 0111
 pvTyPart 2 00
@@ -89,9 +93,9 @@ __deepEqConstrCheck 4 0000
 __deepEqConstrFields 4 0011
 __deepEqConstrFieldsStep 4 0000
 __deepNeq 2 00
-__pat_l_145 1 0
-__pat_l_128 1 1
-__pat_l_125 2 10
-__pat_l_122 2 00
-__pat_l_119 1 1
+__pat_l_158 1 0
+__pat_l_141 1 1
+__pat_l_138 2 10
+__pat_l_135 2 00
+__pat_l_132 1 1
 __pat_l_27 1 1

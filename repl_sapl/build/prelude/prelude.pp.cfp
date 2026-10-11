@@ -35,64 +35,68 @@ pvDoubleUnder __pat_l_42 !__pat_l_43 = (strat __pat_l_43 __pat_l_42 == '_') /\ (
 showValX __pat_l_44 __pat_l_45 __pat_l_46 __pat_l_47 = if (typeId __pat_l_47 == TYPE_FUNC) (strcat (pvAliasFn __pat_l_44 (strcat (showFunc __pat_l_47) (pvOldMark __pat_l_45 (funcName __pat_l_47) (funcAddr __pat_l_47)))) (pvTyPart __pat_l_44 __pat_l_46)) (pvAliasFn __pat_l_44 (if (pvContains __pat_l_46 "Bool") (showTyped __pat_l_46 __pat_l_47) (showVal __pat_l_47)))
 printValX __pat_l_48 __pat_l_49 __pat_l_50 __pat_l_51 = printString (showValX __pat_l_48 __pat_l_49 __pat_l_50 __pat_l_51)
 pvOldMark __pat_l_52 __pat_l_53 !__pat_l_54 = pvOldMarkW (pvWords __pat_l_52) __pat_l_53 __pat_l_54
-pvOldMarkW __pat_l_55 __pat_l_56 !__pat_l_57 = case __pat_l_55 (Nil -> "") (Cons n r -> case r (Nil -> "") (Cons s r2 -> case r2 (Nil -> "") (Cons l r3 -> pvOldMarkAt n s l r3 __pat_l_56 __pat_l_57)))
-pvOldMarkAt __pat_l_58 __pat_l_59 __pat_l_60 __pat_l_61 __pat_l_62 !__pat_l_63 = if (strEqual __pat_l_58 __pat_l_62) (if (__pat_l_63 == pvNum __pat_l_59) "" (if (__pat_l_63 == pvNum __pat_l_60) "" " (oude versie)")) (pvOldMarkW __pat_l_61 __pat_l_62 __pat_l_63)
-pvNum __pat_l_64 = pvNumAt __pat_l_64 0 (strlen __pat_l_64) 0
-pvNumAt __pat_l_65 !__pat_l_66 !__pat_l_67 !__pat_l_68 = if (__pat_l_66 >= __pat_l_67) __pat_l_68 (pvNumAt __pat_l_65 (__pat_l_66 + 1) __pat_l_67 ((__pat_l_68 * 10) + (ord (strat __pat_l_66 __pat_l_65) - 48)))
-pvTyPart __pat_l_69 __pat_l_70 = if (strlen __pat_l_70 == 0) "" (strcat " :: " (pvAliasTy __pat_l_69 __pat_l_70))
-pvAliasFn __pat_l_71 __pat_l_72 = pvAliasFnW __pat_l_72 (pvWords __pat_l_71)
-pvAliasFnW __pat_l_73 __pat_l_74 = case __pat_l_74 (Nil -> __pat_l_73) (Cons c r -> case r (Nil -> __pat_l_73) (Cons a r2 -> pvAliasFnW (pvReplaceAll __pat_l_73 (strcat "<fn:" (strcat c ".")) (strcat "<fn:" (strcat a "."))) r2))
-pvAliasTy __pat_l_75 __pat_l_76 = pvAliasTyW __pat_l_76 (pvWords __pat_l_75)
-pvAliasTyW __pat_l_77 __pat_l_78 = case __pat_l_78 (Nil -> __pat_l_77) (Cons c r -> case r (Nil -> __pat_l_77) (Cons a r2 -> pvAliasTyW (pvReplaceAll (pvReplaceAll __pat_l_77 (strcat c "__") (strcat a ".")) (strcat (pvCapFirst c) "__") (strcat a ".")) r2))
-pvCapFirst __pat_l_79 = if (strlen __pat_l_79 == 0) __pat_l_79 (strcat (list2str (Cons (pvUpper (strat 0 __pat_l_79)) Nil)) (strslice __pat_l_79 1 (strlen __pat_l_79)))
-pvUpper !__pat_l_80 = if ((__pat_l_80 >= 'a') /\ (__pat_l_80 <= 'z')) (__pat_l_80 - 32) __pat_l_80
-pvWords __pat_l_81 = pvWordsFrom __pat_l_81 0 0 (strlen __pat_l_81)
-pvWordsFrom __pat_l_82 !__pat_l_83 !__pat_l_84 !__pat_l_85 = if (__pat_l_84 >= __pat_l_85) (pvWordEnd __pat_l_82 __pat_l_83 __pat_l_85 Nil) (if (strat __pat_l_84 __pat_l_82 == ' ') (pvWordEnd __pat_l_82 __pat_l_83 __pat_l_84 (pvWordsFrom __pat_l_82 (__pat_l_84 + 1) (__pat_l_84 + 1) __pat_l_85)) (pvWordsFrom __pat_l_82 __pat_l_83 (__pat_l_84 + 1) __pat_l_85))
-pvWordEnd __pat_l_86 !__pat_l_87 !__pat_l_88 __pat_l_89 = if (__pat_l_88 > __pat_l_87) (Cons (strslice __pat_l_86 __pat_l_87 __pat_l_88) __pat_l_89) __pat_l_89
-pvContains __pat_l_90 __pat_l_91 = pvFind __pat_l_90 __pat_l_91 0 (strlen __pat_l_90) (strlen __pat_l_91) >= 0
-pvFind __pat_l_92 __pat_l_93 !__pat_l_94 !__pat_l_95 !__pat_l_96 = if ((__pat_l_94 + __pat_l_96) > __pat_l_95) (0 - 1) (if (pvMatchAt __pat_l_92 __pat_l_93 __pat_l_94 0 __pat_l_96) __pat_l_94 (pvFind __pat_l_92 __pat_l_93 (__pat_l_94 + 1) __pat_l_95 __pat_l_96))
-pvMatchAt __pat_l_97 __pat_l_98 !__pat_l_99 !__pat_l_100 !__pat_l_101 = if (__pat_l_100 >= __pat_l_101) 1 (if (strat (__pat_l_99 + __pat_l_100) __pat_l_97 == strat __pat_l_100 __pat_l_98) (pvMatchAt __pat_l_97 __pat_l_98 __pat_l_99 (__pat_l_100 + 1) __pat_l_101) 0)
-pvReplaceAll __pat_l_102 __pat_l_103 __pat_l_104 = if (strlen __pat_l_103 == 0) __pat_l_102 (pvReplFrom __pat_l_102 __pat_l_103 __pat_l_104 0 (strlen __pat_l_102) (strlen __pat_l_103))
-pvReplFrom __pat_l_105 __pat_l_106 __pat_l_107 !__pat_l_108 !__pat_l_109 !__pat_l_110 = pvReplAt __pat_l_105 __pat_l_106 __pat_l_107 __pat_l_108 __pat_l_109 __pat_l_110 (pvFind __pat_l_105 __pat_l_106 __pat_l_108 __pat_l_109 __pat_l_110)
-pvReplAt __pat_l_111 __pat_l_112 __pat_l_113 !__pat_l_114 !__pat_l_115 !__pat_l_116 !__pat_l_117 = if (__pat_l_117 < 0) (strslice __pat_l_111 __pat_l_114 __pat_l_115) (strcat (strslice __pat_l_111 __pat_l_114 __pat_l_117) (strcat __pat_l_113 (pvReplFrom __pat_l_111 __pat_l_112 __pat_l_113 (__pat_l_117 + __pat_l_116) __pat_l_115 __pat_l_116)))
-showConstr !__pat_l_118 = __pat_l_119 __pat_l_118
-showConstrDynamic !__pat_l_120 !__pat_l_121 = __pat_l_122 __pat_l_120 __pat_l_121
-showConstrGeneric !__pat_l_123 !__pat_l_124 = __pat_l_125 __pat_l_124 __pat_l_123
-isTupleName !__pat_l_126 = if (strlen __pat_l_126 > 7) (strEqualAt 0 "__Tuple" __pat_l_126) 0
-displayConName !__pat_l_127 = __pat_l_128 __pat_l_127
-displayConNameFrom !__pat_l_129 !__pat_l_130 !__pat_l_131 = if __pat_l_131 (displayConNameScan __pat_l_129 __pat_l_130 1) __pat_l_129
-displayConNameScan !__pat_l_132 !__pat_l_133 !__pat_l_134 = if ((__pat_l_134 + 2) >= __pat_l_133) __pat_l_132 (if (isModuleSep __pat_l_132 __pat_l_134) (strslice __pat_l_132 (__pat_l_134 + 2) __pat_l_133) (displayConNameScan __pat_l_132 __pat_l_133 (__pat_l_134 + 1)))
-isModuleSep !__pat_l_135 !__pat_l_136 = ((strat __pat_l_136 __pat_l_135 == '_') /\ (strat (__pat_l_136 + 1) __pat_l_135 == '_')) /\ isUpperCode (strat (__pat_l_136 + 2) __pat_l_135)
-isUpperCode !__pat_l_137 = (__pat_l_137 >= 'A') /\ (__pat_l_137 <= 'Z')
-show_Nil !__pat_l_138 = "[]"
-show_Cons !__pat_l_139 = strcat "[" (strcat (showListItems __pat_l_139) "]")
-showListItems !__pat_l_140 = case __pat_l_140 (Cons x rest -> case rest (Nil -> showVal x) (_ -> strcat (showVal x) (strcat ", " (showListItems rest)))) (_ -> "")
-showFields !__pat_l_141 !__pat_l_142 !__pat_l_143 = if (__pat_l_142 == __pat_l_143) "" (if (__pat_l_142 == (__pat_l_143 - 1)) (showVal (getField __pat_l_141 __pat_l_142)) (strcat (showVal (getField __pat_l_141 __pat_l_142)) (strcat ", " (showFields __pat_l_141 (__pat_l_142 + 1) __pat_l_143))))
-getConstrArity !__pat_l_144 = __pat_l_145 __pat_l_144
-printVal !__pat_l_146 = printString (showVal __pat_l_146)
-showTyped !__pat_l_147 __pat_l_148 = if (strEqual __pat_l_147 "Bool") (showBoolVal __pat_l_148) (if (isListTy __pat_l_147) (strcat "[" (strcat (showTypedItems (listElemTy __pat_l_147) __pat_l_148) "]")) (showVal __pat_l_148))
-showBoolVal !__pat_l_149 = if (__pat_l_149 == 0) "False" "True"
-isListTy !__pat_l_150 = if (strlen __pat_l_150 < 2) 0 (isListTy2 __pat_l_150)
-isListTy2 !__pat_l_151 = (strat 0 __pat_l_151 == '[') /\ (strat (strlen __pat_l_151 - 1) __pat_l_151 == ']')
-listElemTy !__pat_l_152 = strslice __pat_l_152 1 (strlen __pat_l_152 - 1)
-showTypedItems !__pat_l_153 !__pat_l_154 = case __pat_l_154 (Nil -> "") (Cons y ys -> showTypedItemsC __pat_l_153 y ys)
-showTypedItemsC !__pat_l_155 __pat_l_156 !__pat_l_157 = case __pat_l_157 (Nil -> showTyped __pat_l_155 __pat_l_156) (Cons z zs -> strcat (showTyped __pat_l_155 __pat_l_156) (strcat ", " (showTypedItems __pat_l_155 __pat_l_157)))
-printValT !__pat_l_158 __pat_l_159 = printString (showTyped __pat_l_158 __pat_l_159)
-__deepEq __pat_l_160 __pat_l_161 = __deepEqDispatch (typeId __pat_l_160) (typeId __pat_l_161) __pat_l_160 __pat_l_161
-__deepEqDispatch __pat_l_162 __pat_l_163 __pat_l_164 __pat_l_165 = if (__pat_l_162 != __pat_l_163) (__deepEqMixed __pat_l_162 __pat_l_163 __pat_l_164 __pat_l_165) (if (__pat_l_162 == 1) (if (__pat_l_164 == __pat_l_165) 1 0) (if (__pat_l_162 == 2) (if (__pat_l_164 == __pat_l_165) 1 0) (if (__pat_l_162 == 3) (__deepEqStr __pat_l_164 __pat_l_165) (if (__pat_l_162 > 4) (__deepEqConstr __pat_l_164 __pat_l_165) (if (__pat_l_164 == __pat_l_165) 1 0)))))
-__deepEqMixed __pat_l_166 __pat_l_167 __pat_l_168 __pat_l_169 = if ((__pat_l_166 + __pat_l_167) == 0) (if ((__pat_l_166 * __pat_l_167) == (0 - 1)) (if (__pat_l_168 == __pat_l_169) 1 0) 0) 0
-__deepEqStr __pat_l_170 __pat_l_171 = __deepEqStrLen (strlen __pat_l_170) (strlen __pat_l_171) __pat_l_170 __pat_l_171
-__deepEqStrLen __pat_l_172 __pat_l_173 __pat_l_174 __pat_l_175 = if (__pat_l_172 != __pat_l_173) 0 (__deepEqStrChars __pat_l_174 __pat_l_175 0 __pat_l_172)
-__deepEqStrChars __pat_l_176 __pat_l_177 __pat_l_178 __pat_l_179 = if (__pat_l_178 == __pat_l_179) 1 (__deepEqStrCharsStep __pat_l_176 __pat_l_177 __pat_l_178 __pat_l_179)
-__deepEqStrCharsStep __pat_l_180 __pat_l_181 __pat_l_182 __pat_l_183 = if (strat __pat_l_182 __pat_l_180 != strat __pat_l_182 __pat_l_181) 0 (__deepEqStrChars __pat_l_180 __pat_l_181 (__pat_l_182 + 1) __pat_l_183)
-__deepEqConstr __pat_l_184 __pat_l_185 = __deepEqConstrCheck (constrName __pat_l_184) (constrName __pat_l_185) __pat_l_184 __pat_l_185
-__deepEqConstrCheck __pat_l_186 __pat_l_187 __pat_l_188 __pat_l_189 = if (__deepEqStr __pat_l_186 __pat_l_187 == 0) 0 (__deepEqConstrFields __pat_l_188 __pat_l_189 0 (funcArity (lookup __pat_l_186)))
-__deepEqConstrFields __pat_l_190 __pat_l_191 __pat_l_192 __pat_l_193 = if (__pat_l_192 == __pat_l_193) 1 (__deepEqConstrFieldsStep __pat_l_190 __pat_l_191 __pat_l_192 __pat_l_193)
-__deepEqConstrFieldsStep __pat_l_194 __pat_l_195 __pat_l_196 __pat_l_197 = if (__deepEq (getField __pat_l_194 __pat_l_196) (getField __pat_l_195 __pat_l_196) == 0) 0 (__deepEqConstrFields __pat_l_194 __pat_l_195 (__pat_l_196 + 1) __pat_l_197)
-__deepNeq __pat_l_198 __pat_l_199 = if (__deepEq __pat_l_198 __pat_l_199 == 1) 0 1
-__pat_l_145 __pat_l_144 = let c = lookup (constrName __pat_l_144) in if (typeId c == TYPE_FUNC) (funcArity c) 0
-__pat_l_128 __pat_l_127 = let n = strlen __pat_l_127 in if (n > 0) (displayConNameFrom __pat_l_127 n (isUpperCode (strat 0 __pat_l_127))) __pat_l_127
-__pat_l_125 __pat_l_124 __pat_l_123 = let arity = getConstrArity __pat_l_123, shown = displayConName __pat_l_124 in if (isTupleName __pat_l_124) (strcat "(" (strcat (showFields __pat_l_123 0 arity) ")")) (if (arity == 0) shown (strcat shown (strcat "(" (strcat (showFields __pat_l_123 0 arity) ")"))))
-__pat_l_122 __pat_l_120 __pat_l_121 = let h = lookup (strcat "show_" __pat_l_121) in if (typeId h == TYPE_FUNC) (applyDynamic h (Cons __pat_l_120 Nil)) (showConstrGeneric __pat_l_120 __pat_l_121)
-__pat_l_119 __pat_l_118 = let name = constrName __pat_l_118 in if (strEqual name "Cons") (show_Cons __pat_l_118) (if (strEqual name "Nil") (show_Nil __pat_l_118) (showConstrDynamic __pat_l_118 name))
+pvOldMarkW __pat_l_55 __pat_l_56 !__pat_l_57 = case __pat_l_55 (Nil -> "") (Cons n r -> case r (Nil -> "") (Cons k r2 -> pvOldMarkAt n (pvNum k) r2 __pat_l_56 __pat_l_57))
+pvOldMarkAt __pat_l_58 !__pat_l_59 __pat_l_60 __pat_l_61 !__pat_l_62 = if (strEqual __pat_l_58 __pat_l_61) (pvVersionMark (pvFindPair __pat_l_60 __pat_l_62 0 __pat_l_59) __pat_l_59) (pvOldMarkW (pvDrop (2 * __pat_l_59) __pat_l_60) __pat_l_61 __pat_l_62)
+pvFindPair __pat_l_63 !__pat_l_64 !__pat_l_65 !__pat_l_66 = if (__pat_l_65 >= __pat_l_66) (0 - 1) (case __pat_l_63 (Nil -> 0 - 1) (Cons s r -> case r (Nil -> 0 - 1) (Cons l r2 -> pvFindPairAt s l r2 __pat_l_64 __pat_l_65 __pat_l_66)))
+pvFindPairAt __pat_l_67 __pat_l_68 __pat_l_69 !__pat_l_70 !__pat_l_71 !__pat_l_72 = if (__pat_l_70 == pvNum __pat_l_67) __pat_l_71 (if (__pat_l_70 == pvNum __pat_l_68) __pat_l_71 (pvFindPair __pat_l_69 __pat_l_70 (__pat_l_71 + 1) __pat_l_72))
+pvVersionMark !__pat_l_73 !__pat_l_74 = if (__pat_l_73 < 0) " (oude versie)" (if ((__pat_l_73 + 1) == __pat_l_74) "" (strcat " (versie " (strcat (list2str (itoa (__pat_l_73 + 1))) (strcat " van " (strcat (list2str (itoa __pat_l_74)) ")")))))
+pvDrop !__pat_l_75 __pat_l_76 = if (__pat_l_75 <= 0) __pat_l_76 (case __pat_l_76 (Nil -> Nil) (Cons w r -> pvDrop (__pat_l_75 - 1) r))
+pvNum __pat_l_77 = pvNumAt __pat_l_77 0 (strlen __pat_l_77) 0
+pvNumAt __pat_l_78 !__pat_l_79 !__pat_l_80 !__pat_l_81 = if (__pat_l_79 >= __pat_l_80) __pat_l_81 (pvNumAt __pat_l_78 (__pat_l_79 + 1) __pat_l_80 ((__pat_l_81 * 10) + (ord (strat __pat_l_79 __pat_l_78) - 48)))
+pvTyPart __pat_l_82 __pat_l_83 = if (strlen __pat_l_83 == 0) "" (strcat " :: " (pvAliasTy __pat_l_82 __pat_l_83))
+pvAliasFn __pat_l_84 __pat_l_85 = pvAliasFnW __pat_l_85 (pvWords __pat_l_84)
+pvAliasFnW __pat_l_86 __pat_l_87 = case __pat_l_87 (Nil -> __pat_l_86) (Cons c r -> case r (Nil -> __pat_l_86) (Cons a r2 -> pvAliasFnW (pvReplaceAll __pat_l_86 (strcat "<fn:" (strcat c ".")) (strcat "<fn:" (strcat a "."))) r2))
+pvAliasTy __pat_l_88 __pat_l_89 = pvAliasTyW __pat_l_89 (pvWords __pat_l_88)
+pvAliasTyW __pat_l_90 __pat_l_91 = case __pat_l_91 (Nil -> __pat_l_90) (Cons c r -> case r (Nil -> __pat_l_90) (Cons a r2 -> pvAliasTyW (pvReplaceAll (pvReplaceAll __pat_l_90 (strcat c "__") (strcat a ".")) (strcat (pvCapFirst c) "__") (strcat a ".")) r2))
+pvCapFirst __pat_l_92 = if (strlen __pat_l_92 == 0) __pat_l_92 (strcat (list2str (Cons (pvUpper (strat 0 __pat_l_92)) Nil)) (strslice __pat_l_92 1 (strlen __pat_l_92)))
+pvUpper !__pat_l_93 = if ((__pat_l_93 >= 'a') /\ (__pat_l_93 <= 'z')) (__pat_l_93 - 32) __pat_l_93
+pvWords __pat_l_94 = pvWordsFrom __pat_l_94 0 0 (strlen __pat_l_94)
+pvWordsFrom __pat_l_95 !__pat_l_96 !__pat_l_97 !__pat_l_98 = if (__pat_l_97 >= __pat_l_98) (pvWordEnd __pat_l_95 __pat_l_96 __pat_l_98 Nil) (if (strat __pat_l_97 __pat_l_95 == ' ') (pvWordEnd __pat_l_95 __pat_l_96 __pat_l_97 (pvWordsFrom __pat_l_95 (__pat_l_97 + 1) (__pat_l_97 + 1) __pat_l_98)) (pvWordsFrom __pat_l_95 __pat_l_96 (__pat_l_97 + 1) __pat_l_98))
+pvWordEnd __pat_l_99 !__pat_l_100 !__pat_l_101 __pat_l_102 = if (__pat_l_101 > __pat_l_100) (Cons (strslice __pat_l_99 __pat_l_100 __pat_l_101) __pat_l_102) __pat_l_102
+pvContains __pat_l_103 __pat_l_104 = pvFind __pat_l_103 __pat_l_104 0 (strlen __pat_l_103) (strlen __pat_l_104) >= 0
+pvFind __pat_l_105 __pat_l_106 !__pat_l_107 !__pat_l_108 !__pat_l_109 = if ((__pat_l_107 + __pat_l_109) > __pat_l_108) (0 - 1) (if (pvMatchAt __pat_l_105 __pat_l_106 __pat_l_107 0 __pat_l_109) __pat_l_107 (pvFind __pat_l_105 __pat_l_106 (__pat_l_107 + 1) __pat_l_108 __pat_l_109))
+pvMatchAt __pat_l_110 __pat_l_111 !__pat_l_112 !__pat_l_113 !__pat_l_114 = if (__pat_l_113 >= __pat_l_114) 1 (if (strat (__pat_l_112 + __pat_l_113) __pat_l_110 == strat __pat_l_113 __pat_l_111) (pvMatchAt __pat_l_110 __pat_l_111 __pat_l_112 (__pat_l_113 + 1) __pat_l_114) 0)
+pvReplaceAll __pat_l_115 __pat_l_116 __pat_l_117 = if (strlen __pat_l_116 == 0) __pat_l_115 (pvReplFrom __pat_l_115 __pat_l_116 __pat_l_117 0 (strlen __pat_l_115) (strlen __pat_l_116))
+pvReplFrom __pat_l_118 __pat_l_119 __pat_l_120 !__pat_l_121 !__pat_l_122 !__pat_l_123 = pvReplAt __pat_l_118 __pat_l_119 __pat_l_120 __pat_l_121 __pat_l_122 __pat_l_123 (pvFind __pat_l_118 __pat_l_119 __pat_l_121 __pat_l_122 __pat_l_123)
+pvReplAt __pat_l_124 __pat_l_125 __pat_l_126 !__pat_l_127 !__pat_l_128 !__pat_l_129 !__pat_l_130 = if (__pat_l_130 < 0) (strslice __pat_l_124 __pat_l_127 __pat_l_128) (strcat (strslice __pat_l_124 __pat_l_127 __pat_l_130) (strcat __pat_l_126 (pvReplFrom __pat_l_124 __pat_l_125 __pat_l_126 (__pat_l_130 + __pat_l_129) __pat_l_128 __pat_l_129)))
+showConstr !__pat_l_131 = __pat_l_132 __pat_l_131
+showConstrDynamic !__pat_l_133 !__pat_l_134 = __pat_l_135 __pat_l_133 __pat_l_134
+showConstrGeneric !__pat_l_136 !__pat_l_137 = __pat_l_138 __pat_l_137 __pat_l_136
+isTupleName !__pat_l_139 = if (strlen __pat_l_139 > 7) (strEqualAt 0 "__Tuple" __pat_l_139) 0
+displayConName !__pat_l_140 = __pat_l_141 __pat_l_140
+displayConNameFrom !__pat_l_142 !__pat_l_143 !__pat_l_144 = if __pat_l_144 (displayConNameScan __pat_l_142 __pat_l_143 1) __pat_l_142
+displayConNameScan !__pat_l_145 !__pat_l_146 !__pat_l_147 = if ((__pat_l_147 + 2) >= __pat_l_146) __pat_l_145 (if (isModuleSep __pat_l_145 __pat_l_147) (strslice __pat_l_145 (__pat_l_147 + 2) __pat_l_146) (displayConNameScan __pat_l_145 __pat_l_146 (__pat_l_147 + 1)))
+isModuleSep !__pat_l_148 !__pat_l_149 = ((strat __pat_l_149 __pat_l_148 == '_') /\ (strat (__pat_l_149 + 1) __pat_l_148 == '_')) /\ isUpperCode (strat (__pat_l_149 + 2) __pat_l_148)
+isUpperCode !__pat_l_150 = (__pat_l_150 >= 'A') /\ (__pat_l_150 <= 'Z')
+show_Nil !__pat_l_151 = "[]"
+show_Cons !__pat_l_152 = strcat "[" (strcat (showListItems __pat_l_152) "]")
+showListItems !__pat_l_153 = case __pat_l_153 (Cons x rest -> case rest (Nil -> showVal x) (_ -> strcat (showVal x) (strcat ", " (showListItems rest)))) (_ -> "")
+showFields !__pat_l_154 !__pat_l_155 !__pat_l_156 = if (__pat_l_155 == __pat_l_156) "" (if (__pat_l_155 == (__pat_l_156 - 1)) (showVal (getField __pat_l_154 __pat_l_155)) (strcat (showVal (getField __pat_l_154 __pat_l_155)) (strcat ", " (showFields __pat_l_154 (__pat_l_155 + 1) __pat_l_156))))
+getConstrArity !__pat_l_157 = __pat_l_158 __pat_l_157
+printVal !__pat_l_159 = printString (showVal __pat_l_159)
+showTyped !__pat_l_160 __pat_l_161 = if (strEqual __pat_l_160 "Bool") (showBoolVal __pat_l_161) (if (isListTy __pat_l_160) (strcat "[" (strcat (showTypedItems (listElemTy __pat_l_160) __pat_l_161) "]")) (showVal __pat_l_161))
+showBoolVal !__pat_l_162 = if (__pat_l_162 == 0) "False" "True"
+isListTy !__pat_l_163 = if (strlen __pat_l_163 < 2) 0 (isListTy2 __pat_l_163)
+isListTy2 !__pat_l_164 = (strat 0 __pat_l_164 == '[') /\ (strat (strlen __pat_l_164 - 1) __pat_l_164 == ']')
+listElemTy !__pat_l_165 = strslice __pat_l_165 1 (strlen __pat_l_165 - 1)
+showTypedItems !__pat_l_166 !__pat_l_167 = case __pat_l_167 (Nil -> "") (Cons y ys -> showTypedItemsC __pat_l_166 y ys)
+showTypedItemsC !__pat_l_168 __pat_l_169 !__pat_l_170 = case __pat_l_170 (Nil -> showTyped __pat_l_168 __pat_l_169) (Cons z zs -> strcat (showTyped __pat_l_168 __pat_l_169) (strcat ", " (showTypedItems __pat_l_168 __pat_l_170)))
+printValT !__pat_l_171 __pat_l_172 = printString (showTyped __pat_l_171 __pat_l_172)
+__deepEq __pat_l_173 __pat_l_174 = __deepEqDispatch (typeId __pat_l_173) (typeId __pat_l_174) __pat_l_173 __pat_l_174
+__deepEqDispatch __pat_l_175 __pat_l_176 __pat_l_177 __pat_l_178 = if (__pat_l_175 != __pat_l_176) (__deepEqMixed __pat_l_175 __pat_l_176 __pat_l_177 __pat_l_178) (if (__pat_l_175 == 1) (if (__pat_l_177 == __pat_l_178) 1 0) (if (__pat_l_175 == 2) (if (__pat_l_177 == __pat_l_178) 1 0) (if (__pat_l_175 == 3) (__deepEqStr __pat_l_177 __pat_l_178) (if (__pat_l_175 > 4) (__deepEqConstr __pat_l_177 __pat_l_178) (if (__pat_l_177 == __pat_l_178) 1 0)))))
+__deepEqMixed __pat_l_179 __pat_l_180 __pat_l_181 __pat_l_182 = if ((__pat_l_179 + __pat_l_180) == 0) (if ((__pat_l_179 * __pat_l_180) == (0 - 1)) (if (__pat_l_181 == __pat_l_182) 1 0) 0) 0
+__deepEqStr __pat_l_183 __pat_l_184 = __deepEqStrLen (strlen __pat_l_183) (strlen __pat_l_184) __pat_l_183 __pat_l_184
+__deepEqStrLen __pat_l_185 __pat_l_186 __pat_l_187 __pat_l_188 = if (__pat_l_185 != __pat_l_186) 0 (__deepEqStrChars __pat_l_187 __pat_l_188 0 __pat_l_185)
+__deepEqStrChars __pat_l_189 __pat_l_190 __pat_l_191 __pat_l_192 = if (__pat_l_191 == __pat_l_192) 1 (__deepEqStrCharsStep __pat_l_189 __pat_l_190 __pat_l_191 __pat_l_192)
+__deepEqStrCharsStep __pat_l_193 __pat_l_194 __pat_l_195 __pat_l_196 = if (strat __pat_l_195 __pat_l_193 != strat __pat_l_195 __pat_l_194) 0 (__deepEqStrChars __pat_l_193 __pat_l_194 (__pat_l_195 + 1) __pat_l_196)
+__deepEqConstr __pat_l_197 __pat_l_198 = __deepEqConstrCheck (constrName __pat_l_197) (constrName __pat_l_198) __pat_l_197 __pat_l_198
+__deepEqConstrCheck __pat_l_199 __pat_l_200 __pat_l_201 __pat_l_202 = if (__deepEqStr __pat_l_199 __pat_l_200 == 0) 0 (__deepEqConstrFields __pat_l_201 __pat_l_202 0 (funcArity (lookup __pat_l_199)))
+__deepEqConstrFields __pat_l_203 __pat_l_204 __pat_l_205 __pat_l_206 = if (__pat_l_205 == __pat_l_206) 1 (__deepEqConstrFieldsStep __pat_l_203 __pat_l_204 __pat_l_205 __pat_l_206)
+__deepEqConstrFieldsStep __pat_l_207 __pat_l_208 __pat_l_209 __pat_l_210 = if (__deepEq (getField __pat_l_207 __pat_l_209) (getField __pat_l_208 __pat_l_209) == 0) 0 (__deepEqConstrFields __pat_l_207 __pat_l_208 (__pat_l_209 + 1) __pat_l_210)
+__deepNeq __pat_l_211 __pat_l_212 = if (__deepEq __pat_l_211 __pat_l_212 == 1) 0 1
+__pat_l_158 __pat_l_157 = let c = lookup (constrName __pat_l_157) in if (typeId c == TYPE_FUNC) (funcArity c) 0
+__pat_l_141 __pat_l_140 = let n = strlen __pat_l_140 in if (n > 0) (displayConNameFrom __pat_l_140 n (isUpperCode (strat 0 __pat_l_140))) __pat_l_140
+__pat_l_138 __pat_l_137 __pat_l_136 = let arity = getConstrArity __pat_l_136, shown = displayConName __pat_l_137 in if (isTupleName __pat_l_137) (strcat "(" (strcat (showFields __pat_l_136 0 arity) ")")) (if (arity == 0) shown (strcat shown (strcat "(" (strcat (showFields __pat_l_136 0 arity) ")"))))
+__pat_l_135 __pat_l_133 __pat_l_134 = let h = lookup (strcat "show_" __pat_l_134) in if (typeId h == TYPE_FUNC) (applyDynamic h (Cons __pat_l_133 Nil)) (showConstrGeneric __pat_l_133 __pat_l_134)
+__pat_l_132 __pat_l_131 = let name = constrName __pat_l_131 in if (strEqual name "Cons") (show_Cons __pat_l_131) (if (strEqual name "Nil") (show_Nil __pat_l_131) (showConstrDynamic __pat_l_131 name))
 __pat_l_27 __pat_l_26 = let tid = typeId __pat_l_26 in if (tid > TYPE_FUNC) (showConstr __pat_l_26) (showValAux tid __pat_l_26)
