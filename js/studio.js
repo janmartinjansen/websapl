@@ -197,7 +197,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- WEB WORKER (JMVM WASM) ---
   function initWorker() {
     try {
-      state.worker = new Worker("engine/worker.js");
+      state.worker = new Worker("engine/worker.js?v=" + Date.now());
       state.worker.onmessage = handleWorkerMessage;
       state.worker.postMessage({
         type: "INIT",

@@ -25,7 +25,10 @@ global.postMessage = (m) => {
 };
 global.importScripts = (p) => {
   const file = path.join(engineDir, p.split("?")[0]);
-  const code = fs.readFileSync(file, "utf8") + "\n;globalThis.createJMVMModule = createJMVMModule;";
+  // jmvm.js (de VM) of jvbtool.js (de tool-wasm): de fabriek die erin staat.
+  const code = fs.readFileSync(file, "utf8") +
+    "\n;if (typeof createJMVMModule !== 'undefined') globalThis.createJMVMModule = createJMVMModule;" +
+    "\n;if (typeof createJvbTool !== 'undefined') globalThis.createJvbTool = createJvbTool;";
   // Cache-buster (`?v=...`) strippen: in de browser een URL, hier een pad.
   const strip = (f) => (typeof f === "string" ? f.split("?")[0] : f);
   const fsShim = { ...fs, readFileSync: (f, ...rest) => fs.readFileSync(strip(f), ...rest) };

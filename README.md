@@ -160,23 +160,28 @@ Open vervolgens je browser op:
 
 ## Systeemeisen & Bouwen van WebAssembly
 
-De voorgebouwde WASM-bestanden (`websapl/engine/jmvm.wasm` en `websapl/engine/jmvm.js`) zijn al meegeleverd.
-Wil je de WASM-engine opnieuw compileren vanuit de C++ bronbestanden? Zorg dat de Emscripten SDK geïnstalleerd is:
+De voorgebouwde WASM-bestanden (`websapl/engine/jmvm.{js,wasm}`, de VM, en
+`websapl/engine/jvbtool.{js,wasm}`, de tool hieronder) zijn al meegeleverd.
+Wil je ze opnieuw compileren vanuit de C++-bronbestanden? Zorg dat de
+Emscripten SDK geïnstalleerd is (`~/emsdk`) en draai vanuit de repo-root:
 
 ```bash
-source ~/emsdk/emsdk_env.sh
-em++ -O3 -fwasm-exceptions -DLOAD_CODE_EXPERIMENT -sALLOW_MEMORY_GROWTH=1 -sFORCE_FILESYSTEM=1 -sMODULARIZE=1 \
-     -sEXPORT_NAME=createJMVMModule \
-     -sEXPORTED_RUNTIME_METHODS='["FS","callMain","stringToUTF8","UTF8ToString","ccall","cwrap"]' \
-     -lidbfs.js -DSWITCH_CASE parser.cpp parser_tekst.cpp vm.cpp -o websapl/engine/jmvm.js
+bash websapl/tools/build_wasm.sh
 ```
 
-De engine leest naast `.jmvm` ook het binaire laadformaat `.jvb`
-(`laadformaat/ANALYSE.md`, sinds 9 oktober 2026): de worker haalt de
-compilers in `engine/` en de REPL (`repl_sapl/build/mini_repl.jvb`) eerst als
-`.jvb` op (samen 5,4 i.p.v. 14,1 MB, en niets te tokenizen), en valt terug op
-`.jmvm`. De `.jvb`'s komen met `sync_from_repo.js` uit de repo
-(`laadformaat/jvb_bijwerken.sh`).
+De engine leest alleen het binaire laadformaat `.jvb`
+(`laadformaat/ANALYSE.md`; sinds 11 oktober 2026 zonder tekstlezer, net als
+de native VM: `parser_geen_tekst.cpp` in plaats van `parser_tekst.cpp`). De
+worker haalt de compilers in `engine/` en de REPL
+(`repl_sapl/build/mini_repl.jvb`) als `.jvb` op (samen 5,4 i.p.v. 14,1 MB, en
+niets te tokenizen); de `.jvb`'s komen met `sync_from_repo.js` uit de repo
+(`laadformaat/jvb_bijwerken.sh`). gen1 en `retagcomp` schrijven in de worker
+ook `.jvb`. De tekst in het jmvm-tabblad komt uit de tool-wasm `jvbtool`
+(`jvb2jmvm`, byte voor byte de tekst die gen1 native schrijft), en tekst die
+alleen als tekst bestaat (een bewerkt `.jmvm`-tabblad, een `.jmvm` uit de
+bestandsboom) zet dezelfde tool om (`jmvm2jvb`) voordat de VM hem krijgt.
+Toetsen: `node websapl/tools/jvb_paths_test.js` (Node) en
+`node websapl/tools/jvb_browser_test.js` (headless Chrome).
 
 `-DLOAD_CODE_EXPERIMENT` (sinds 7 oktober 2026) is voor de REPL in Sapl
 (`repl_sapl/`, de berichten `RSAPL_EVAL`/`RSAPL_RESET` in de worker): de

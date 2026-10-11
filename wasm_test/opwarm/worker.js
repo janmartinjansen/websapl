@@ -10,23 +10,23 @@ async function run(prog, stdin = '', files = {}) {
     locateFile: (p, prefix) => (p.endsWith('.wasm') ? '../../engine/jmvm.wasm' : (prefix || '') + p),
     stdin: () => (i < stdin.length ? stdin.charCodeAt(i++) : null), stdout: () => {}, stderr: () => {},
   });
-  m.FS.writeFile('/p.jmvm', prog);
+  m.FS.writeFile('/p.jvb', prog);   // de engine leest alleen .jvb (11 okt 2026)
   for (const [k, v] of Object.entries(files)) m.FS.writeFile(k, v);
   const t = performance.now();
-  try { m.callMain(['/p.jmvm']); } catch (e) {}
+  try { m.callMain(['/p.jvb']); } catch (e) {}
   return Math.round(performance.now() - t);
 }
 onmessage = async ({ data: { opwarm, wacht, doel } }) => {
   const log = [];
   const t0 = performance.now();
-  if (opwarm) log.push('opwarm ' + opwarm + ': ' + await run(await fetchBytes(opwarm + '.jmvm')) + ' ms');
+  if (opwarm) log.push('opwarm ' + opwarm + ': ' + await run(await fetchBytes(opwarm + '.jvb')) + ' ms');
   if (wacht) { await new Promise(r => setTimeout(r, wacht)); log.push('wacht ' + wacht + ' ms'); }
   const opwarmTotaal = Math.round(performance.now() - t0);
   let prog, stdin = '', files = {};
   if (doel === 'gen1') {
-    prog = await fetchBytes('../../engine/saplcomp.jmvm');
+    prog = await fetchBytes('../../engine/saplcomp.jvb');
     files['/in.cfp'] = await fetchBytes('../build/gen1_input.cfp'); stdin = '/in.cfp\n/out.jmvm\njmvm\n';
-  } else prog = await fetchBytes('../build/' + doel + '.jmvm');
+  } else prog = await fetchBytes('../build/' + doel + '.jvb');
   const t1 = await run(prog, stdin, files), t2 = await run(prog, stdin, files);
   postMessage(log.join(', ') + (log.length ? ' (samen ' + opwarmTotaal + ' ms) | ' : '') + doel + ' eerste ' + t1 + ' ms, tweede ' + t2 + ' ms');
 };

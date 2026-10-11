@@ -36,7 +36,7 @@ function engineOutput(txt) {
 
 async function runEngine(job) {
   const engineBytes = withNonce(await fetchBytes('../engine/jmvm.wasm'));
-  const prog = await fetchBytes(job.jmvm);
+  const prog = await fetchBytes(job.jmvm.replace(/\.jmvm$/, '.jvb'));   // de engine leest alleen .jvb (11 okt 2026)
   const input = job.gen1 ? await fetchBytes(job.gen1.invoer) : null;
   const t0 = performance.now();
   const mod = await WebAssembly.compile(engineBytes);
@@ -52,10 +52,10 @@ async function runEngine(job) {
       stdout: c => out.push(c), stderr: c => out.push(c),
       print: () => {}, printErr: () => {},
     });
-    m.FS.writeFile('/prog.jmvm', prog);
+    m.FS.writeFile('/prog.jvb', prog);
     if (input) m.FS.writeFile('/in.cfp', input);
     const t = performance.now();
-    try { m.callMain(['/prog.jmvm']); } catch (e) { if (!(e && (e.name === 'ExitStatus' || /exit/i.test(String(e))))) throw e; }
+    try { m.callMain(['/prog.jvb']); } catch (e) { if (!(e && (e.name === 'ExitStatus' || /exit/i.test(String(e))))) throw e; }
     const runMs = performance.now() - t;
     let ok, info;
     if (job.gen1) {

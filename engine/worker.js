@@ -30,12 +30,14 @@ let typecheckBytecode = null;
 let saplcompModuleBytecode = null;
 let retaglinkBytecode = null;
 // Het binaire laadformaat (laadformaat/ANALYSE.md, 9 oktober 2026): een
-// compiler eerst als .jvb ophalen (zo'n 2,7x kleiner, en de VM hoeft niets te
-// tokenizen), anders als .jmvm. enginePath zegt onder welke naam hij in het
+// compiler als .jvb ophalen (zo'n 2,7x kleiner, en de VM hoeft niets te
+// tokenizen). Sinds 11 oktober 2026 leest de VM-wasm alleen nog .jvb
+// (parser_geen_tekst.cpp); is er alleen een .jmvm, dan zet de tool-wasm die
+// eerst om (textToJvb hieronder). enginePath zegt onder welke naam hij in het
 // VFS staat; de VM herkent het formaat aan de extensie.
-const enginePath = { saplcomp: "/saplcomp.jmvm", retagcomp: "/retagcomp.jmvm", driver: "/driver.jmvm",
-  lamlift: "/lamlift.jmvm", typecheck: "/typecheck.jmvm", saplcomp_module: "/saplcomp_module.jmvm",
-  retaglink: "/retaglink.jmvm" };
+const enginePath = { saplcomp: "/saplcomp.jvb", retagcomp: "/retagcomp.jvb", driver: "/driver.jvb",
+  lamlift: "/lamlift.jvb", typecheck: "/typecheck.jvb", saplcomp_module: "/saplcomp_module.jvb",
+  retaglink: "/retaglink.jvb" };
 // Alleen een echt .jvb-bestand (begint met "JVB0"): een server die voor een
 // ontbrekend bestand een HTML-pagina teruggeeft, mag geen .jvb opleveren.
 function isJvb(bytes) {
@@ -48,11 +50,69 @@ async function fetchEngine(name) {
       if (!res.ok) continue;
       const bytes = new Uint8Array(await res.arrayBuffer());
       if (ext === ".jvb" && !isJvb(bytes)) continue;
-      enginePath[name] = "/" + name + ext;
-      return bytes;
+      return await asJvb(bytes);
     } catch (_) {}
   }
   return null;
+}
+
+// .jvb of .jmvm-tekst (bytes) -> .jvb.
+async function asJvb(bytes) {
+  return isJvb(bytes) ? bytes : await textToJvb(new TextDecoder().decode(bytes));
+}
+
+// == De tool-wasm (jvbtool.js: jmvm2jvb + jvb2jmvm, laadformaat/jvbtool_wasm.cpp) ==
+// Zelfde rolverdeling als native: de tekstlezer zit in de converter, niet in
+// de VM. gen1 en retagcomp schrijven hier .jvb (één compileerrun); de tekst
+// voor het jmvm-tabblad komt uit jvb2jmvm (jvbToText). Tekst die alleen als
+// tekst bestaat (een bewerkt .jmvm-tabblad, een .jmvm uit de bestandsboom,
+// lc_repl.jmvm) zet jmvm2jvb om (textToJvb). jvbForText onthoudt per tekst
+// de bytes, zodat Run na Compile niets hoeft om te zetten.
+const jvbForText = new Map();
+function rememberJvb(text, bytes) {
+  jvbForText.delete(text);
+  jvbForText.set(text, bytes);
+  while (jvbForText.size > 32) jvbForText.delete(jvbForText.keys().next().value);
+}
+let jvbToolLoaded = false;
+async function runJvbTool(args, inPath, inData, outPath, asText) {
+  if (!jvbToolLoaded) { importScripts("./jvbtool.js?v=" + Date.now()); jvbToolLoaded = true; }
+  const log = [];
+  const tool = await createJvbTool({
+    locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jvbtool.wasm" : (prefix || "") + p),
+    print: (t) => log.push(t),
+    printErr: (t) => log.push(t)
+  });
+  tool.FS.writeFile(inPath, inData);
+  let status = 0;
+  try { status = tool.callMain(args); } catch (e) { status = (e && typeof e.status === "number") ? e.status : 1; }
+  const meldingen = log.filter((r) => r && !/^Reading file|instr read/.test(r)).join("\n");
+  if (status !== 0 || !tool.FS.analyzePath(outPath).exists) throw new Error(meldingen || args[0] + " mislukt");
+  return tool.FS.readFile(outPath, asText ? { encoding: "utf8" } : undefined);
+}
+async function textToJvb(text) {
+  const known = jvbForText.get(text);
+  if (known) return known;
+  const bytes = await runJvbTool(["jmvm2jvb", "--nosrc", "/in.jmvm", "/out.jvb"], "/in.jmvm", text, "/out.jvb", false);
+  rememberJvb(text, bytes);
+  return bytes;
+}
+async function jvbToText(bytes) {
+  const text = await runJvbTool(["jvb2jmvm", "/in.jvb", "/out.jmvm"], "/in.jvb", bytes, "/out.jmvm", true);
+  rememberJvb(text, bytes);
+  return text;
+}
+// Een .jvb die een compiler in `instance` schreef: de bytes, en in jmvmModule
+// de tekst onder `jmvmPath` en de bytes ernaast (voor RUN met isPath).
+async function takeJvbOutput(instance, jvbPath, jmvmPath) {
+  const bytes = instance.FS.readFile(jvbPath);
+  const text = await jvbToText(bytes);
+  try {
+    mkdirsFor(jmvmModule.FS, jmvmPath);
+    jmvmModule.FS.writeFile(jmvmPath, text);
+    jmvmModule.FS.writeFile(jvbPath, bytes);
+  } catch (_) {}
+  return text;
 }
 // #import dependencies driver.jmvm's own expandImports (preprocess/
 // importexpand.cfp) needs on disk to preprocess the bundled Sapl+ examples
@@ -189,43 +249,43 @@ async function initEngine(data = {}) {
   }
 
   if (data.saplcompBase64) {
-    saplcompBytecode = base64ToUint8Array(data.saplcompBase64);
+    saplcompBytecode = await asJvb(base64ToUint8Array(data.saplcompBase64));
   } else {
     saplcompBytecode = await fetchEngine("saplcomp");
   }
 
   if (data.retagcompBase64) {
-    retagcompBytecode = base64ToUint8Array(data.retagcompBase64);
+    retagcompBytecode = await asJvb(base64ToUint8Array(data.retagcompBase64));
   } else {
     retagcompBytecode = await fetchEngine("retagcomp");
   }
 
   if (data.driverBase64) {
-    driverBytecode = base64ToUint8Array(data.driverBase64);
+    driverBytecode = await asJvb(base64ToUint8Array(data.driverBase64));
   } else {
     driverBytecode = await fetchEngine("driver");
   }
 
   if (data.lamliftBase64) {
-    lamliftBytecode = base64ToUint8Array(data.lamliftBase64);
+    lamliftBytecode = await asJvb(base64ToUint8Array(data.lamliftBase64));
   } else {
     lamliftBytecode = await fetchEngine("lamlift");
   }
 
   if (data.typecheckBase64) {
-    typecheckBytecode = base64ToUint8Array(data.typecheckBase64);
+    typecheckBytecode = await asJvb(base64ToUint8Array(data.typecheckBase64));
   } else {
     typecheckBytecode = await fetchEngine("typecheck");
   }
 
   if (data.saplcompModuleBase64) {
-    saplcompModuleBytecode = base64ToUint8Array(data.saplcompModuleBase64);
+    saplcompModuleBytecode = await asJvb(base64ToUint8Array(data.saplcompModuleBase64));
   } else {
     saplcompModuleBytecode = await fetchEngine("saplcomp_module");
   }
 
   if (data.retaglinkBase64) {
-    retaglinkBytecode = base64ToUint8Array(data.retaglinkBase64);
+    retaglinkBytecode = await asJvb(base64ToUint8Array(data.retaglinkBase64));
   } else {
     retaglinkBytecode = await fetchEngine("retaglink");
   }
@@ -307,26 +367,28 @@ async function initEngine(data = {}) {
  * verschil tussen koud en warm, daar doet dit niets. Gemeten met
  * websapl/wasm_test/opwarm/; zie wasm_compiler/README.md §8.
  */
-const WARMUP_JMVM = `start_lazy start nfib_lazy nfib nfib_then #
-            call 1
-            print 4
-            stop
-0           jmp 1
-1           push 18
-            tailcall 0 3
-2           load 0
-            eval
-            store 0
-3           ifltlv 0 2 4
-            loadadd 0 -1
-            call 3
-            loadadd 0 -2
-            call 3
-            add
-            inc
-            return 1
-4           return_const 1 1
-`;
+// De opwarmrun als .jvb (de VM-wasm leest geen tekst; 11 oktober 2026),
+// gemaakt met `./jmvm2jvb --nosrc` uit deze tekst (nfib 18, res: 8361):
+//   start_lazy start nfib_lazy nfib nfib_then #
+//               call 1
+//               print 4
+//               stop
+//   0           jmp 1
+//   1           push 18
+//               tailcall 0 3
+//   2           load 0
+//               eval
+//               store 0
+//   3           ifltlv 0 2 4
+//               loadadd 0 -1
+//               call 3
+//               loadadd 0 -2
+//               call 3
+//               add
+//               inc
+//               return 1
+//   4           return_const 1 1
+const WARMUP_JVB = "SlZCMAAAAAAEAAAABgAAAAEAAABYAAAAnAAAAAIAAAD4AAAABAAAAAMAAAAAAQAAKgAAAAQAAAAwAQAABAAAAAUAAAA4AQAACAAAAAYAAABAAQAALAAAAAwAAAAHAAAAEgAAAAQAAAAYAAAAIwAAAAIAAAAAAAAAEgAAACQAAAAAAAAAEQAAABMAAAAAAAAAHwAAABQAAAAAAAAABgAAAAAAAAACAAAAEgAAABUAAAAAAAAA/////wwAAAARAAAAFQAAAAAAAAD+////DAAAABEAAAABAAAADwAAAA0AAAABAAAADgAAAAEAAAABAAAAP0IPAAAAAAAAAAAAAAAAAHN0YXJ0X2xhenkAc3RhcnQAbmZpYl9sYXp5AG5maWIAbmZpYl90aGVuAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAAAABQAAAAAAAAAHAAAACwAAAAwAAAARAAAAEQAAABsAAAAjAAAAIAAAAA==";
 
 async function warmUpEngine() {
   try {
@@ -337,8 +399,8 @@ async function warmUpEngine() {
       stdout: () => {},
       stderr: () => {}
     });
-    inst.FS.writeFile("/tmp/warmup.jmvm", WARMUP_JMVM);
-    try { inst.callMain(["/tmp/warmup.jmvm"]); } catch (_) {}
+    inst.FS.writeFile("/tmp/warmup.jvb", base64ToUint8Array(WARMUP_JVB));
+    try { inst.callMain(["/tmp/warmup.jvb"]); } catch (_) {}
   } catch (_) {
     // Opwarmen is alleen een versnelling; een fout hier mag het laden niet breken.
   }
@@ -348,8 +410,13 @@ async function warmUpEngine() {
  * Run compiler instance for a specific stage
  */
 async function runCompilerStage(flattenedSource, stageFlag, outPath) {
+  // De bytecode-stage schrijft .jvb (de VM-wasm leest geen tekst); de tekst
+  // onder outPath komt uit jvb2jmvm (takeJvbOutput).
+  const toJvb = stageFlag === "jmvm" || stageFlag === "jmvm_nostrict";
+  const genPath = toJvb ? outPath.replace(/\.jmvm$/, "") + ".jvb" : outPath;
+  const genFlag = toJvb ? stageFlag.replace("jmvm", "jvb") : stageFlag;
   let compilerOutput = [];
-  let stdinBuffer = `/tmp/in.cfp\n${outPath}\n${stageFlag}\n`.split("");
+  let stdinBuffer = `/tmp/in.cfp\n${genPath}\n${genFlag}\n`.split("");
   let stdinIndex = 0;
 
   const instance = await createJMVMModule({
@@ -387,9 +454,11 @@ async function runCompilerStage(flattenedSource, stageFlag, outPath) {
     // normal VM exit throws in Emscripten
   }
 
-  const outExists = instance.FS.analyzePath(outPath).exists;
+  const outExists = instance.FS.analyzePath(genPath).exists;
   let content = "";
-  if (outExists) {
+  if (outExists && toJvb) {
+    content = await takeJvbOutput(instance, genPath, outPath);
+  } else if (outExists) {
     content = instance.FS.readFile(outPath, { encoding: "utf8" });
     try {
       if (!jmvmModule.FS.analyzePath(dir).exists) jmvmModule.FS.mkdir(dir);
@@ -481,9 +550,10 @@ async function compileRetag(source, srcPath) {
   const startTime = performance.now();
   const baseName = srcPath.split("/").pop().replace(/(\.cfp_retag|\.cfp_decompiled|\.cfp)$/, "");
   const outPath = `/tmp/${baseName}.jmvm`;
+  const jvbPath = `/tmp/${baseName}.jvb`;   // retagcomp schrijft .jvb (doel op .jvb)
 
   let compilerOutput = [];
-  let stdinBuffer = `/tmp/in_retag.cfp\n${outPath}\n`.split("");
+  let stdinBuffer = `/tmp/in_retag.cfp\n${jvbPath}\n`.split("");
   let stdinIndex = 0;
 
   const instance = await createJMVMModule({
@@ -512,14 +582,13 @@ async function compileRetag(source, srcPath) {
     // normal exit throws
   }
 
-  const durationMs = Math.round(performance.now() - startTime);
-  const outExists = instance.FS.analyzePath(outPath).exists;
+  const outExists = instance.FS.analyzePath(jvbPath).exists;
   let content = "";
 
   if (outExists) {
-    content = instance.FS.readFile(outPath, { encoding: "utf8" });
-    jmvmModule.FS.writeFile(outPath, content);
+    content = await takeJvbOutput(instance, jvbPath, outPath);
   }
+  const durationMs = Math.round(performance.now() - startTime);
 
   return {
     success: outExists,
@@ -1052,7 +1121,8 @@ async function runRetagLinkStage(retagContents, outPath, entryFunc) {
 async function runRetagCompStage(retagText, outPath) {
   if (!retagcompBytecode) throw new Error("retagcomp.jmvm kon niet geladen worden.");
 
-  const stdinText = `/tmp/linked.retag.txt\n${outPath}\n`;
+  const jvbPath = outPath.replace(/\.jmvm$/, "") + ".jvb";   // retagcomp schrijft .jvb
+  const stdinText = `/tmp/linked.retag.txt\n${jvbPath}\n`;
   let stdinBuffer = stdinText.split("");
   let stdinIndex = 0;
   let compilerOutput = [];
@@ -1082,8 +1152,8 @@ async function runRetagCompStage(retagText, outPath) {
     // normal VM exit throws in Emscripten
   }
 
-  const outExists = instance.FS.analyzePath(outPath).exists;
-  const content = outExists ? instance.FS.readFile(outPath, { encoding: "utf8" }) : "";
+  const outExists = instance.FS.analyzePath(jvbPath).exists;
+  const content = outExists ? await takeJvbOutput(instance, jvbPath, outPath) : "";
   return { success: outExists, content, output: compilerOutput.join("") };
 }
 
@@ -1181,8 +1251,19 @@ async function buildModules(manifestText, entryModule, entryFunc, moduleSources,
 async function executeJmvm(contentOrPath, isPath = false, customStdin = "", runId = null) {
   if (!isInitialized) throw new Error("JMVM engine is not initialized.");
 
+  // De VM-wasm leest alleen .jvb (sinds 11 oktober 2026): de tekst eerst
+  // omzetten. Na Compile kent jvbForText hem al; anders doet jmvm2jvb het
+  // (een bewerkt .jmvm-tabblad), met zijn foutmelding als het niet lukt.
+  let program;
+  if (isPath) {
+    if (!jmvmModule.FS.analyzePath(contentOrPath).exists) throw new Error(`${contentOrPath} bestaat niet`);
+    program = await asJvb(jmvmModule.FS.readFile(contentOrPath));
+  } else {
+    program = typeof contentOrPath === "string" ? await textToJvb(contentOrPath) : await asJvb(contentOrPath);
+  }
+
   isExecuting = true;
-  const targetPath = isPath ? contentOrPath : "/tmp/run.jmvm";
+  const targetPath = "/tmp/run.jvb";
 
   let outText = "";
   let fullOutput = [];
@@ -1221,11 +1302,7 @@ async function executeJmvm(contentOrPath, isPath = false, customStdin = "", runI
     } catch (_) {}
   }
 
-  if (!isPath) {
-    execInstance.FS.writeFile(targetPath, contentOrPath);
-  } else if (jmvmModule.FS.analyzePath(targetPath).exists) {
-    execInstance.FS.writeFile(targetPath, jmvmModule.FS.readFile(targetPath));
-  }
+  execInstance.FS.writeFile(targetPath, program);
 
   const startTime = performance.now();
   postMessage({ type: "STDOUT", text: `[VM] Starting execution for ${targetPath}...\n` });
@@ -1303,7 +1380,8 @@ let rsOnChar = null;
 // de eerste uitvoerregel om na het opnieuw afspelen te vergelijken.
 let rsJournal = [];
 // De REPL zelf als .jvb (het binaire laadformaat: 2,3 i.p.v. 6 MB, en geen
-// tokenizen bij de start); de .jmvm alleen als terugval (rsStart).
+// tokenizen bij de start); de .jmvm alleen als terugval (rsStart), omgezet
+// met de tool-wasm.
 const RS_MAIN = "repl_sapl/build/mini_repl";
 const RS_FILES = ["repl_sapl/build/prelude/prelude.cfp",
   "repl_sapl/build/prelude/prelude.pp.cfp", "repl_sapl/build/prelude/prelude.defs.txt"];
@@ -1326,9 +1404,9 @@ async function rsStart() {
     if (!res.ok) continue;
     const bytes = new Uint8Array(await res.arrayBuffer());
     if (ext === ".jvb" && !isJvb(bytes)) continue;
-    rsMain = RS_MAIN + ext;
+    rsMain = RS_MAIN + ".jvb";   // de VM-wasm leest alleen .jvb: een .jmvm eerst omzetten
     mkdirsFor(inst.FS, "/" + rsMain);
-    inst.FS.writeFile("/" + rsMain, bytes);
+    inst.FS.writeFile("/" + rsMain, await asJvb(bytes));
     break;
   }
   if (!rsMain) throw new Error("REPL in Sapl: " + RS_MAIN + ".jvb/.jmvm niet gevonden");
@@ -1521,6 +1599,7 @@ function rsTrapMessage(replay) {
 // `@@begin N`/`@@end N` af is. Gebruikt voor de lc-cellen van het notebook
 // (LC_RUN).
 async function runJmvmCapture(jmvmContent, extraFiles = {}, stdinText = "", onProgress = null) {
+  const program = typeof jmvmContent === "string" ? await textToJvb(jmvmContent) : await asJvb(jmvmContent);
   let output = [];
   let lineStart = 0;
   let flushed = 0;
@@ -1543,13 +1622,13 @@ async function runJmvmCapture(jmvmContent, extraFiles = {}, stdinText = "", onPr
     },
     stderr: (c) => output.push(String.fromCharCode(c))
   });
-  instance.FS.writeFile("/tmp/repl_turn.jmvm", jmvmContent);
+  instance.FS.writeFile("/tmp/repl_turn.jvb", program);
   for (const [path, content] of Object.entries(extraFiles)) {
     mkdirsFor(instance.FS, path);
     instance.FS.writeFile(path, content);
   }
   try {
-    instance.callMain(["/tmp/repl_turn.jmvm"]);
+    instance.callMain(["/tmp/repl_turn.jvb"]);
   } catch (e) {
     // normal VM exit throws in Emscripten
   }

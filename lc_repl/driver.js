@@ -95,7 +95,7 @@
   }
 
   function startWorker() {
-    worker = new Worker("../engine/worker.js");
+    worker = new Worker("../engine/worker.js?v=" + Date.now());
     worker.onmessage = onWorkerMessage;
     worker.postMessage({ type: "INIT" });
   }

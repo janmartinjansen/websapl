@@ -189,7 +189,7 @@
 
   // --- WEB WORKER ---
   function initWorker() {
-    state.worker = new Worker("engine/worker.js");
+    state.worker = new Worker("engine/worker.js?v=" + Date.now());
 
     state.worker.onmessage = function (e) {
       const msg = e.data;

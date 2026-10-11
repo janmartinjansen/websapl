@@ -1999,7 +1999,7 @@
               "path": "repl_sapl/build/mini_repl.jmvm",
               "type": "file",
               "ext": ".jmvm",
-              "size": 6691949,
+              "size": 6688769,
               "isBinary": false
             },
             {
@@ -2007,7 +2007,7 @@
               "path": "repl_sapl/build/mini_repl.jvb",
               "type": "file",
               "ext": ".jvb",
-              "size": 2509736,
+              "size": 2508792,
               "isBinary": true
             }
           ],
@@ -2301,7 +2301,7 @@
       "path": "README.md",
       "type": "file",
       "ext": ".md",
-      "size": 11112,
+      "size": 11362,
       "isBinary": false
     }
   ]

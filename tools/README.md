@@ -39,3 +39,17 @@ map zelf al uit van de scan).
   ```bash
   node websapl/tools/repl_test.js
   ```
+
+- **`build_wasm.sh`** — bouwt de VM (`engine/jmvm.{js,wasm}`, leest alleen
+  `.jvb`) en de tool-wasm (`engine/jvbtool.{js,wasm}`: `jmvm2jvb` +
+  `jvb2jmvm`) met emsdk. Zie `laadformaat/ANALYSE.md` §19.
+
+- **`jvb_paths_test.js`** / **`jvb_browser_test.js`** — de paden van de
+  worker sinds de VM-wasm geen tekst meer leest: compile en retag naar
+  `.jvb` (de tekst gelijk aan de native compilers), een losse of kapotte
+  `.jmvm`-tekst, LC_RUN; in Node resp. headless Chrome:
+
+  ```bash
+  node websapl/tools/jvb_paths_test.js
+  node websapl/tools/jvb_browser_test.js
+  ```
