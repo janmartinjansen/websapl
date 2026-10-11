@@ -1,8 +1,8 @@
 nbCell 2 00
 nbCellT 3 000
 nbValueT 2 00
-nbCellX 4 0000
-nbValueX 3 000
+nbCellX 5 00000
+nbValueX 4 0000
 nbShowT 3 100
 nbItemsT 4 0001
 nbMoreT 4 0001

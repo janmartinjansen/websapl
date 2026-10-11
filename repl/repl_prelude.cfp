@@ -121,11 +121,21 @@ pvDoubleUnder name !i = (eqnum (strat i name) '_') /\ (eqnum (strat (i + 1) name
 // een functie als `<fn:L.map/2> :: <type>`; een Bool (ook in een lijst) op
 // type; de rest zoals showVal. Modulenamen van functies, ook in een lijst,
 // krijgen hun alias.
-showValX tbl ty x =
-  if (eqnum (typeId x) TYPE_FUNC) (strcat (pvAliasFn tbl (showFunc x)) (pvTyPart tbl ty))
+showValX tbl cur ty x =
+  if (eqnum (typeId x) TYPE_FUNC) (strcat (pvAliasFn tbl (strcat (showFunc x) (pvOldMark cur (funcName x) (funcAddr x)))) (pvTyPart tbl ty))
   (pvAliasFn tbl (if (pvContains ty "Bool") (showTyped ty x) (showVal x)))
 
-printValX tbl ty x = printString (showValX tbl ty x)
+printValX tbl cur ty x = printString (showValX tbl cur ty x)
+
+// `cur`: "naam strikt lui ..." (de huidige adressen uit het Img van de
+// REPL). Wijst een functiewaarde (funcAddr) naar een ander adres dan de
+// huidige versie van haar naam, dan is het een oude versie.
+pvOldMark cur name !addr = pvOldMarkW (pvWords cur) name addr
+pvOldMarkW ws name !addr = case ws (Nil -> "") (Cons n r -> case r (Nil -> "") (Cons s r2 -> case r2 (Nil -> "") (Cons l r3 -> pvOldMarkAt n s l r3 name addr)))
+pvOldMarkAt n s l rest name !addr =
+  if (strEqual n name) (if (eqnum addr (pvNum s)) "" (if (eqnum addr (pvNum l)) "" " (oude versie)")) (pvOldMarkW rest name addr)
+pvNum s = pvNumAt s 0 (strlen s) 0
+pvNumAt s !i !n !acc = if (i >= n) acc (pvNumAt s (i + 1) n (acc * 10 + (ord (strat i s) - 48)))
 
 pvTyPart tbl ty = if (eqnum (strlen ty) 0) "" (strcat " :: " (pvAliasTy tbl ty))
 
