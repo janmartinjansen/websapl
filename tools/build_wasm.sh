@@ -8,10 +8,10 @@ set -e
 cd "$(dirname "$0")/../.."
 [ -n "$EMSDK" ] || source ~/emsdk/emsdk_env.sh > /dev/null 2>&1
 E=websapl/engine
-em++ -O3 -fwasm-exceptions -DLOAD_CODE_EXPERIMENT -sALLOW_MEMORY_GROWTH=1 -sFORCE_FILESYSTEM=1 -sMODULARIZE=1 \
+em++ -O3 -fwasm-exceptions -sALLOW_MEMORY_GROWTH=1 -sFORCE_FILESYSTEM=1 -sMODULARIZE=1 \
      -sEXPORT_NAME=createJMVMModule \
      -sEXPORTED_RUNTIME_METHODS='["FS","callMain","stringToUTF8","UTF8ToString","ccall","cwrap"]' \
-     -lidbfs.js -DSWITCH_CASE parser.cpp parser_geen_tekst.cpp vm.cpp -o $E/jmvm.js
+     -lidbfs.js -include vm/variant/runswitch.h parser.cpp parser_geen_tekst.cpp vm/main_run.cpp -o $E/jmvm.js
 T=$(mktemp -d)
 em++ -O3 -I. -Dmain=main_jmvm2jvb -c laadformaat/jmvm2jvb.cpp -o $T/a.o
 em++ -O3 -I. -Dmain=main_jvb2jmvm -c laadformaat/jvb2jmvm.cpp -o $T/b.o

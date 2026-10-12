@@ -183,10 +183,11 @@ bestandsboom) zet dezelfde tool om (`jmvm2jvb`) voordat de VM hem krijgt.
 Toetsen: `node websapl/tools/jvb_paths_test.js` (Node) en
 `node websapl/tools/jvb_browser_test.js` (headless Chrome).
 
-`-DLOAD_CODE_EXPERIMENT` (sinds 7 oktober 2026) is voor de REPL in Sapl
-(`repl_sapl/`, de berichten `RSAPL_EVAL`/`RSAPL_RESET` in de worker): de
-lader die zelf gecompileerde stukken in het lopende programma zet, en
-`jmvm_rs_start`/`jmvm_rs_feed` (pauzeren bij `readLine`).
+Voor de REPL in Sapl (`repl_sapl/`, de berichten `RSAPL_EVAL`/`RSAPL_RESET`
+in de worker) heeft de VM de lader die zelf gecompileerde stukken in het
+lopende programma zet, en `jmvm_rs_start`/`jmvm_rs_feed` (pauzeren bij
+`readLine`). Van 7 tot 11 oktober 2026 stond dat achter
+`-DLOAD_CODE_EXPERIMENT`; nu zit het in elke build.
 
 `-fwasm-exceptions` (sinds 6 oktober 2026) is voor de vangbare fouten
 (`try` vangt ook `error` en VM-fouten, `docs/sapl_programmeer_regels.md` §9)

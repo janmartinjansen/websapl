@@ -20,7 +20,7 @@ server-side proces:
   standaard Python-script — er is geen Python-runtime in de browser
   beschikbaar (geen Pyodide of vergelijkbaar meegebouwd).
 - **VM Trace Debugger** draait `runswitch-debug`, een apart, native
-  gecompileerde C++-build van de VM (`-DSWITCH_CASE -DDEBUG_CHECKS`, zie
+  gecompileerde C++-build van de VM (de variant `vm/variant/debug.h`, zie
   [`docs/2026-09-09_vm_trace_debugger_en_ai_diagnose_plan.md`](../../docs/2026-09-09_vm_trace_debugger_en_ai_diagnose_plan.md))
   die naar het echte bestandssysteem schrijft (een crash-trace-bestand, een
   JSON-trace) — geen van beide is iets wat de WASM-VM in de browser-sandbox
