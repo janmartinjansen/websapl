@@ -14,7 +14,8 @@
  * De bron is altijd leidend: pas het bestand daar aan, niet hier. Een paar
  * kopieën krijgen een padvertaling (`rewrite`), omdat websapl sommige
  * mappen anders noemt (benchmarks/ -> benchmarks_sapl/, benchmarks_spp/ ->
- * benchmarks_saplplus/). Voeg je een nieuwe kopie toe: zet hem in ENTRIES
+ * benchmarks_saplplus/; sinds 12 oktober 2026 ook tests/x/ -> x/,
+ * experiments/x/ -> x/: websapl hield de oude indeling). Voeg je een nieuwe kopie toe : zet hem in ENTRIES
  * en draai daarna ook build_manifest.js.
  *
  * Bewust NIET gesynchroniseerd (websapl-eigen inhoud met dezelfde naam):
@@ -63,16 +64,16 @@ const ENTRIES = [
   { src: "benchmarks_spp/prologlib.spp", dst: "benchmarks_saplplus/prologlib.spp" },
   { src: "benchmarks_spp/queens.spp", dst: "benchmarks_saplplus/queens.spp" },
   { src: "benchmarks_spp/sort.spp", dst: "benchmarks_saplplus/sort.spp" },
-  { src: "contracts/contracts.cfp", dst: "contracts/contracts.cfp" },
-  { src: "contracts/phantom_types.cfp", dst: "contracts/phantom_types.cfp" },
-  { src: "contracts/voorbeeld_precondities.cfp", dst: "contracts/voorbeeld_precondities.cfp" },
-  { src: "contracts/voorbeeld_precondities_fout.cfp", dst: "contracts/voorbeeld_precondities_fout.cfp" },
-  { src: "contracts/voorbeeld_refine.cfp", dst: "contracts/voorbeeld_refine.cfp" },
-  { src: "contracts/voorbeeld_safe_makeconstr.cfp", dst: "contracts/voorbeeld_safe_makeconstr.cfp" },
-  { src: "contracts/voorbeeld_safe_makeconstr_fout.cfp", dst: "contracts/voorbeeld_safe_makeconstr_fout.cfp" },
+  { src: "experiments/contracts/contracts.cfp", dst: "contracts/contracts.cfp", rewrite: [["experiments/contracts/", "contracts/"]] },
+  { src: "experiments/contracts/phantom_types.cfp", dst: "contracts/phantom_types.cfp", rewrite: [["experiments/contracts/", "contracts/"]] },
+  { src: "experiments/contracts/voorbeeld_precondities.cfp", dst: "contracts/voorbeeld_precondities.cfp", rewrite: [["experiments/contracts/", "contracts/"]] },
+  { src: "experiments/contracts/voorbeeld_precondities_fout.cfp", dst: "contracts/voorbeeld_precondities_fout.cfp", rewrite: [["experiments/contracts/", "contracts/"]] },
+  { src: "experiments/contracts/voorbeeld_refine.cfp", dst: "contracts/voorbeeld_refine.cfp", rewrite: [["experiments/contracts/", "contracts/"]] },
+  { src: "experiments/contracts/voorbeeld_safe_makeconstr.cfp", dst: "contracts/voorbeeld_safe_makeconstr.cfp", rewrite: [["experiments/contracts/", "contracts/"]] },
+  { src: "experiments/contracts/voorbeeld_safe_makeconstr_fout.cfp", dst: "contracts/voorbeeld_safe_makeconstr_fout.cfp", rewrite: [["experiments/contracts/", "contracts/"]] },
   { src: "workbench/css/codemirror.min.css", dst: "css/codemirror.min.css" },
-  { src: "dict/dict_basic.cfp", dst: "dict/dict_basic.cfp" },
-  { src: "dict/dict_basic.jmvm", dst: "dict/dict_basic.jmvm" },
+  { src: "tests/dict/dict_basic.cfp", dst: "dict/dict_basic.cfp", rewrite: [["tests/dict/", "dict/"]] },
+  { src: "tests/dict/dict_basic.jmvm", dst: "dict/dict_basic.jmvm" },
   { src: "docs/main.pdf", dst: "docs/main.pdf" },
   { src: "preprocess/driver.jmvm", dst: "engine/driver.jmvm" },
   { src: "preprocess/driver.jvb", dst: "engine/driver.jvb" },   // het binaire laadformaat (laadformaat/)
@@ -100,8 +101,8 @@ const ENTRIES = [
   { src: "examples/fib1.cfp", dst: "examples/fib1.cfp" },
   { src: "examples/fib43.cfp", dst: "examples/fib43.cfp" },
   { src: "examples/hanoi.cfp", dst: "examples/hanoi.cfp" },
-  { src: "io/iotest.cfp", dst: "examples/iotest.cfp" },
-  { src: "io/lazy_io_test.cfp", dst: "examples/lazy_io_test.cfp" },
+  { src: "tests/io/iotest.cfp", dst: "examples/iotest.cfp" },
+  { src: "tests/io/lazy_io_test.cfp", dst: "examples/lazy_io_test.cfp", rewrite: [["tests/io/", "io/"]] },
   { src: "examples/maptest.cfp", dst: "examples/maptest.cfp" },
   { src: "examples/print_primes.cfp", dst: "examples/print_primes.cfp", rewrite: [["\"benchmarks/", "\"benchmarks_sapl/"]] },
   { src: "examples/string.cfp", dst: "examples/string.cfp" },
@@ -147,11 +148,11 @@ const ENTRIES = [
   { src: "lib/eqnum.spp", dst: "lib/eqnum.spp" },
   { src: "lib/stdlib.cfp", dst: "lib/stdlib.cfp" },
   { src: "docs/main.pdf", dst: "paper_examples/main.pdf" },
-  { src: "parser_combinators/calc_demo.spp", dst: "parser_combinators/calc_demo.spp" },
-  { src: "parser_combinators/parsecomb.spp", dst: "parser_combinators/parsecomb.spp" },
-  { src: "parser_combinators/saplParse.spp", dst: "parser_combinators/saplParse.spp" },
-  { src: "parser_combinators/saplParse_demo.spp", dst: "parser_combinators/saplParse_demo.spp" },
-  { src: "records/records_showcase.spp", dst: "records/records_showcase.spp" },
+  { src: "experiments/parser_combinators/calc_demo.spp", dst: "parser_combinators/calc_demo.spp", rewrite: [["experiments/parser_combinators/", "parser_combinators/"]] },
+  { src: "experiments/parser_combinators/parsecomb.spp", dst: "parser_combinators/parsecomb.spp" },
+  { src: "experiments/parser_combinators/saplParse.spp", dst: "parser_combinators/saplParse.spp", rewrite: [["experiments/parser_combinators/", "parser_combinators/"]] },
+  { src: "experiments/parser_combinators/saplParse_demo.spp", dst: "parser_combinators/saplParse_demo.spp", rewrite: [["experiments/parser_combinators/", "parser_combinators/"]] },
+  { src: "tests/records/records_showcase.spp", dst: "records/records_showcase.spp" },
   { src: "repl/repl_prelude.cfp", dst: "repl/repl_prelude.cfp" },
   { src: "repl/stddyn.cfp", dst: "repl/stddyn.cfp" },
   { src: "benchmarks/fib.cfp", dst: "repl_examples/fib.cfp" },
@@ -161,14 +162,14 @@ const ENTRIES = [
   { src: "benchmarks/twice.cfp", dst: "repl_examples/twice.cfp" },
   { src: "sapl_compiler/ast_helpers.cfp", dst: "sapl_compiler/ast_helpers.cfp" },
   { src: "sapl_compiler/lexer2.cfp", dst: "sapl_compiler/lexer2.cfp" },
-  { src: "sapl_compiler/newparser_ast.cfp", dst: "sapl_compiler/newparser_ast.cfp" },
+  { src: "sapl_compiler/ast.cfp", dst: "sapl_compiler/ast.cfp" },
   { src: "sapl_compiler/stage5_codegen.cfp", dst: "sapl_compiler/stage5_codegen.cfp" },
   { src: "sapl_compiler/stage_dump.cfp", dst: "sapl_compiler/stage_dump.cfp" },
-  { src: "sapl_plus_demo/sapl_plus_showcase.spp", dst: "sapl_plus_demo/sapl_plus_showcase.spp" },
-  { src: "saplsimple_direct/examples/list_demo.fp", dst: "selfinter/examples/list_demo.fp" },
-  { src: "saplsimple_direct/examples/minimal_primes.fp", dst: "selfinter/examples/minimal_primes.fp" },
-  { src: "saplsimple_direct/examples/self_interpreter.fp", dst: "selfinter/examples/self_interpreter.fp" },
-  { src: "saplsimple_direct/examples/sieve.fp", dst: "selfinter/examples/sieve.fp" },
+  { src: "experiments/sapl_plus_demo/sapl_plus_showcase.spp", dst: "sapl_plus_demo/sapl_plus_showcase.spp", rewrite: [["experiments/parser_combinators/", "parser_combinators/"]] },
+  { src: "experiments/saplsimple_direct/examples/list_demo.fp", dst: "selfinter/examples/list_demo.fp" },
+  { src: "experiments/saplsimple_direct/examples/minimal_primes.fp", dst: "selfinter/examples/minimal_primes.fp" },
+  { src: "experiments/saplsimple_direct/examples/self_interpreter.fp", dst: "selfinter/examples/self_interpreter.fp" },
+  { src: "experiments/saplsimple_direct/examples/sieve.fp", dst: "selfinter/examples/sieve.fp" },
   { src: "typing/01_basis.cfp", dst: "typing/01_basis.cfp" },
   { src: "typing/02_lijsten.cfp", dst: "typing/02_lijsten.cfp" },
   { src: "typing/03_case.cfp", dst: "typing/03_case.cfp" },
@@ -182,7 +183,7 @@ const ENTRIES = [
   { src: "typing/11_vm_primitieven.cfp", dst: "typing/11_vm_primitieven.cfp" },
   // WASM-compiler testbank; wasm_test/build/ zelf is gegenereerd door
   // wasm_compiler/build_websapl_test.sh en staat hier dus niet.
-  { src: "wasm_compiler/host.js", dst: "wasm_test/host.js" },
+  { src: "experiments/wasm_compiler/host.js", dst: "wasm_test/host.js" },
 ];
 // De vooraf gebouwde stukken van de REPL in Sapl (repl_sapl/build/modules/,
 // build_mini_repl.sh): de hele map, zodat een nieuw stuk vanzelf meegaat.

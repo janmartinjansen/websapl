@@ -1,5 +1,5 @@
 #import "parser_combinators/parsecomb.spp"
-#import "sapl_compiler/newparser_ast.cfp"
+#import "sapl_compiler/ast.cfp"
 #import "sapl_compiler/lexer2.cfp"
 #import "sapl_compiler/ast_helpers.cfp"
 
@@ -7,7 +7,7 @@
 // parser-combinator exercise (PLAN.md section 17, 2026-08-29): a
 // parser-combinator-based parser, built on parsecomb.spp, that reproduces
 // sapl_compiler/'s OWN "parse stage" -- the exact `expr`/`func`/`adt`
-// (newparser_ast.cfp) values `sapl_compiler/parser.cfp`'s hand-written
+// (ast.cfp) values `sapl_compiler/parser.cfp`'s hand-written
 // recursive-descent parser produces, i.e. what `./compile-sapl <file>
 // --emit=parse` dumps via stage_dump.cfp's `dumpProgram`. Not a new
 // grammar design: this is a direct structural port of parser.cfp's own

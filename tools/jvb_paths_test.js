@@ -31,7 +31,7 @@ function check(name, ok, detail) {
   const progs = fs.readdirSync(path.join(repo, "benchmarks")).filter((n) => n.endsWith(".cfp"))
     .map((n) => [`benchmarks/${n}`, true])
     .concat([["benchmarks/fib.cfp", false], ["benchmarks/knights.cfp", false], ["benchmarks/queens.cfp", false],
-      ["examples/float_constanten.cfp", true], ["caf/keten.cfp", true], ["caf/gc.cfp", true]]);
+      ["examples/float_constanten.cfp", true], ["tests/caf/keten.cfp", true], ["tests/caf/gc.cfp", true]]);
   for (const [rel, strict] of progs) {
     const name = `${rel}${strict ? "" : " --nostrict"}`;
     const b = path.basename(rel, ".cfp");

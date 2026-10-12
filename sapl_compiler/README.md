@@ -1,6 +1,6 @@
 # `sapl_compiler/` — interne compilermodules, geen voorbeelden
 
-De vijf bestanden hier (`ast_helpers.cfp`, `lexer2.cfp`, `newparser_ast.cfp`,
+De vijf bestanden hier (`ast_helpers.cfp`, `lexer2.cfp`, `ast.cfp`,
 `stage_dump.cfp`, `stage5_codegen.cfp`) zijn **geen zelfstandige voorbeelden** — het zijn kale
 library-modules van de zelf-hostende Sapl-compiler ("gen1"), zonder eigen
 `start`. Open je er één rechtstreeks en klik "Compileer", dan gebeurt er
@@ -13,7 +13,7 @@ deze vijf bestanden bij het opstarten in de virtuele bestandssysteem
 
 - `parser_combinators/saplParse.spp` — een parser-combinator-kloon van de
   ECHTE compiler-parser, geverifieerd byte-voor-byte identieke output op
-  alle kernbenchmarks. Gebruikt `lexer2.cfp` (tokenizer), `newparser_ast.cfp`
+  alle kernbenchmarks. Gebruikt `lexer2.cfp` (tokenizer), `ast.cfp`
   (AST-vorm) en `ast_helpers.cfp`.
 - `parser_combinators/saplParse_demo.spp` — draait `saplParse.spp` en toont
   het resultaat via `stage_dump.cfp`'s `dumpProgram`.

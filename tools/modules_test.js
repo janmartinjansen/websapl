@@ -26,11 +26,11 @@ const cases = [
     // Een naam zonder argumenten uit een andere module (hier een CAF):
     // de defs van hoofd.cfp moeten tegen die van tabel.cfp gemaakt worden,
     // los gaf dat "findArgStrict: unknown variable" (5 oktober 2026).
-    name: "caf/modules (CAF over de modulegrens)",
-    manifest: read("caf/modules/manifest.txt"),
+    name: "tests/caf/modules (CAF over de modulegrens)",
+    manifest: read("tests/caf/modules/manifest.txt"),
     entry: "hoofd.cfp",
-    sources: { "tabel.cfp": read("caf/modules/tabel.cfp"), "hoofd.cfp": read("caf/modules/hoofd.cfp") },
-    res: read("caf/modules/hoofd.cfp").match(/verwacht: *(\d+)/)[1],
+    sources: { "tabel.cfp": read("tests/caf/modules/tabel.cfp"), "hoofd.cfp": read("tests/caf/modules/hoofd.cfp") },
+    res: read("tests/caf/modules/hoofd.cfp").match(/verwacht: *(\d+)/)[1],
     contains: "pushcaf",
   },
   {

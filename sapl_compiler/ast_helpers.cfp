@@ -1,9 +1,9 @@
 #import "lib/stdlib.cfp"
-#import "sapl_compiler/newparser_ast.cfp"
+#import "sapl_compiler/ast.cfp"
 
 // Direct Sapl port of newparser/ast.ama's helper functions (the expr/func/
-// adt ADTs themselves already live in newparser_ast.cfp). Split out here,
-// separately from newparser_ast.cfp, once the driver (docs/
+// adt ADTs themselves already live in ast.cfp). Split out here,
+// separately from ast.cfp, once the driver (docs/
 // bootstrapping_plan.md section 0 step 4) needed to #import all five
 // sapl_compiler/stageN_*.cfp files together: each stage had its own local
 // copy of these (documented at the time as "standalone per stage file,

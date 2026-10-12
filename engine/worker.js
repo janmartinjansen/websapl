@@ -293,7 +293,7 @@ async function initEngine(data = {}) {
   // Sapl+ (.spp) #import dependencies -- see the sppDeps declaration above
   // for why these exact repo-root-relative VFS paths matter.
   const sppDepFiles = [
-    { url: "../sapl_compiler/newparser_ast.cfp", vfsPath: "/sapl_compiler/newparser_ast.cfp" },
+    { url: "../sapl_compiler/ast.cfp", vfsPath: "/sapl_compiler/ast.cfp" },
     { url: "../sapl_compiler/lexer2.cfp", vfsPath: "/sapl_compiler/lexer2.cfp" },
     { url: "../sapl_compiler/ast_helpers.cfp", vfsPath: "/sapl_compiler/ast_helpers.cfp" },
     { url: "../sapl_compiler/stage_dump.cfp", vfsPath: "/sapl_compiler/stage_dump.cfp" },

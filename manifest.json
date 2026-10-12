@@ -322,7 +322,7 @@
           "path": "docs/lokale_tools_niet_in_websapl.md",
           "type": "file",
           "ext": ".md",
-          "size": 2705,
+          "size": 2706,
           "isBinary": false
         },
         {
@@ -1434,7 +1434,7 @@
           "path": "parser_combinators/saplParse.spp",
           "type": "file",
           "ext": ".spp",
-          "size": 28784,
+          "size": 28764,
           "isBinary": false
         }
       ],
@@ -2007,7 +2007,7 @@
               "path": "repl_sapl/build/mini_repl.jmvm",
               "type": "file",
               "ext": ".jmvm",
-              "size": 6694821,
+              "size": 6757175,
               "isBinary": false
             },
             {
@@ -2015,7 +2015,7 @@
               "path": "repl_sapl/build/mini_repl.jvb",
               "type": "file",
               "ext": ".jvb",
-              "size": 2510672,
+              "size": 2537816,
               "isBinary": true
             }
           ],
@@ -2034,7 +2034,15 @@
           "path": "sapl_compiler/ast_helpers.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 23042,
+          "size": 23012,
+          "isBinary": false
+        },
+        {
+          "name": "ast.cfp",
+          "path": "sapl_compiler/ast.cfp",
+          "type": "file",
+          "ext": ".cfp",
+          "size": 1008,
           "isBinary": false
         },
         {
@@ -2042,15 +2050,7 @@
           "path": "sapl_compiler/lexer2.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 13099,
-          "isBinary": false
-        },
-        {
-          "name": "newparser_ast.cfp",
-          "path": "sapl_compiler/newparser_ast.cfp",
-          "type": "file",
-          "ext": ".cfp",
-          "size": 1029,
+          "size": 13089,
           "isBinary": false
         },
         {
@@ -2058,7 +2058,7 @@
           "path": "sapl_compiler/README.md",
           "type": "file",
           "ext": ".md",
-          "size": 1447,
+          "size": 1427,
           "isBinary": false
         },
         {
@@ -2066,7 +2066,7 @@
           "path": "sapl_compiler/stage_dump.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 19237,
+          "size": 19197,
           "isBinary": false
         },
         {
@@ -2074,7 +2074,7 @@
           "path": "sapl_compiler/stage5_codegen.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 74369,
+          "size": 74349,
           "isBinary": false
         }
       ],
@@ -2349,7 +2349,7 @@
       "path": "README.md",
       "type": "file",
       "ext": ".md",
-      "size": 11362,
+      "size": 11417,
       "isBinary": false
     }
   ]

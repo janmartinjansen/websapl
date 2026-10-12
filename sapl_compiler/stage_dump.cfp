@@ -1,5 +1,5 @@
 #import "lib/stdlib.cfp"
-#import "sapl_compiler/newparser_ast.cfp"
+#import "sapl_compiler/ast.cfp"
 // escapeStr (below, ppExpr's Str case) -- explicit, not relying on
 // driver.cfp happening to import both this file and stage5_codegen.cfp
 // together.
@@ -10,7 +10,7 @@
 // above: don't lean on another file's import graph happening to supply it.
 #import "sapl_compiler/ast_helpers.cfp"
 
-// stage_dump.cfp - pretty-printer for newparser_ast.cfp's Func/expr/adt
+// stage_dump.cfp - pretty-printer for ast.cfp's Func/expr/adt
 // types, for the --emit=<stage> CLI flag on ./compile-sapl (see docs/
 // decompiler/2026-08-18_eval_hang_pauze_en_stagevorm_decompiler_plan.md section 4).
 // Renders in the SAME concrete notation as main.pdf's own figures and
@@ -22,7 +22,7 @@
 // was readable enough to spot bugs in, but didn't look like the paper,
 // which was the actual point of --emit=<stage> for an educational site).
 //
-// A plain typed pretty-printer, not reflection-based: newparser_ast.cfp's
+// A plain typed pretty-printer, not reflection-based: ast.cfp's
 // shapes are fully known ahead of time (unlike a truly generic dumper),
 // so ordinary `case` pattern matching is simpler, faster, and needs no
 // runtime type inspection at all. Every name/identifier field (Var's
@@ -375,7 +375,7 @@ writeDefFile outfile fs =
 
 // Type-definitiebestand (archive/docs/2026-09-12_modulariteit_en_linken_plan.md
 // #5.6, gat 2): in tegenstelling tot een functie heeft een ADT-declaratie
-// geen lichaam om weg te laten -- `AdtCon !name !fields` (newparser_ast.cfp)
+// geen lichaam om weg te laten -- `AdtCon !name !fields` (ast.cfp)
 // bevat sowieso alleen een naam en een `[Bool]` (strict-vlag per veld,
 // veldnamen worden door de parser al niet bewaard, zie parser.cfp's
 // `collectConFieldsTok`). Een NIEUW lijnformaat zou dus alleen dupliceren

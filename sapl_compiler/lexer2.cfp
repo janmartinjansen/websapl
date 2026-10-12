@@ -171,7 +171,7 @@ readOp c1 cs =
 
 // Char literals ('a', '\n'): folded straight to their bare character code
 // as a TNum (same constant-folding-at-parse-time as True/False -> Num 1/0
-// downstream) -- ast.ama/newparser_ast.cfp has no separate Char expr
+// downstream) -- ast.ama/ast.cfp has no separate Char expr
 // constructor, and every golden use of a char literal is arithmetic
 // (c - 'a', '0' + n), never printC.
 // squote=39

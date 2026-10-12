@@ -1,5 +1,5 @@
 #import "lib/stdlib.cfp"
-#import "sapl_compiler/newparser_ast.cfp"
+#import "sapl_compiler/ast.cfp"
 #import "sapl_compiler/ast_helpers.cfp"
 
 // Direct Sapl port of newparser/stage5_codegen.ama -- see
@@ -1081,7 +1081,7 @@ genPatchInstr args p =
   (Cons (mkI ['update']) Nil)))
 
 // Own small free-variable collector (not stage3_lift.cfp's collectVars --
-// each stage file only imports newparser_ast.cfp, same discipline as every
+// each stage file only imports ast.cfp, same discipline as every
 // other stage here). Must cover every shape a let-rhs can have AFTER stage
 // 4 (so Thunk/Closure/Eval too), unlike stage3's variant which runs before
 // stage 4.
