@@ -1251,11 +1251,51 @@ window.WEBSAPL_TREE = [
         "type": "directory",
         "children": [
           {
+            "name": "benchmarks.csv",
+            "path": "notebooks/data/benchmarks.csv",
+            "type": "file",
+            "ext": ".csv",
+            "size": 1169,
+            "isBinary": false
+          },
+          {
+            "name": "compiler.csv",
+            "path": "notebooks/data/compiler.csv",
+            "type": "file",
+            "ext": ".csv",
+            "size": 848,
+            "isBinary": false
+          },
+          {
             "name": "fruit.csv",
             "path": "notebooks/data/fruit.csv",
             "type": "file",
             "ext": ".csv",
             "size": 226,
+            "isBinary": false
+          },
+          {
+            "name": "meting_info.csv",
+            "path": "notebooks/data/meting_info.csv",
+            "type": "file",
+            "ext": ".csv",
+            "size": 80,
+            "isBinary": false
+          },
+          {
+            "name": "opcodes.csv",
+            "path": "notebooks/data/opcodes.csv",
+            "type": "file",
+            "ext": ".csv",
+            "size": 885,
+            "isBinary": false
+          },
+          {
+            "name": "schaal_nfib.csv",
+            "path": "notebooks/data/schaal_nfib.csv",
+            "type": "file",
+            "ext": ".csv",
+            "size": 355,
             "isBinary": false
           }
         ],
@@ -1275,6 +1315,14 @@ window.WEBSAPL_TREE = [
         "type": "file",
         "ext": ".spp",
         "size": 2665,
+        "isBinary": false
+      },
+      {
+        "name": "vm_metingen.spp",
+        "path": "notebooks/vm_metingen.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 9662,
         "isBinary": false
       }
     ],
@@ -2341,7 +2389,7 @@ window.WEBSAPL_TREE = [
     "path": "notebook.html",
     "type": "file",
     "ext": ".html",
-    "size": 33467,
+    "size": 33554,
     "isBinary": false
   },
   {

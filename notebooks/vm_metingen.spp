@@ -1,0 +1,217 @@
+//%% [markdown]
+// # Metingen aan de JMVM en de compiler
+//
+// Echte cijfers over de 13 kernbenchmarks (`benchmarks/`): wat de VM doet,
+// hoe snel, wat de strictness-inferentie oplevert, wat de compiler van de
+// bron maakt, en hoe het werk groeit met de invoer.
+//
+// De cijfers komen uit `notebooks/data/*.csv`, geschreven door
+// `python3 notebooks/data/meten.py` (vanuit de repo-root, ~1,5 minuut).
+// Na een nieuwe meting toont de notebook de nieuwe cijfers (in WebSapl
+// pas na `node websapl/tools/sync_from_repo.js`). Tijden zijn
+// wandkloktijd van het hele proces (inclusief laden), de beste van drie.
+//%%
+import "lib/csv.spp" as C
+import "lib/stats.spp" as S
+import "lib/plot.spp" as P
+import "lib/list.spp" as L
+import "lib/text.spp" as T
+
+info =: C.read "notebooks/data/meting_info.csv"
+bench =: C.read "notebooks/data/benchmarks.csv"
+comp =: C.read "notebooks/data/compiler.csv"
+ops =: C.read "notebooks/data/opcodes.csv"
+schaal =: C.read "notebooks/data/schaal_nfib.csv"
+
+// Een kolom als getallen, de namen van de benchmarks.
+kol t naam = C.floats (C.column naam t)
+namen = C.column "benchmark" bench
+
+// Eén veld van een rij r uit tabel t, als tekst of als getal.
+tekst t naam r = L.nth (C.indexOfName naam (C.header t) 0) r
+veld t naam r = T.readFloat (tekst t naam r)
+
+// Onder een staafdiagram is maar plaats voor twee letters per benchmark.
+kort = L.map afkorting namen
+afkorting n = zoekAfk n [("primes", "pm"), ("eval2", "e2"), ("sprimes", "sp"), ("prolog", "pl"), ("parsetest", "pt")]
+zoekAfk n ps = case ps (Nil -> T.take 2 n) (Cons p rest -> kiesAfk n p rest)
+kiesAfk n (a, b) rest = if (T.equal n a) b (zoekAfk n rest)
+
+// Rekenen per element. Bewust zonder float-literals: de typechecker geeft
+// + - * / het type Num en een literal als 1.5 het type Float, en zou hier
+// dan waarschuwen (de VM rekent wel goed met Int en Float door elkaar).
+deel xs ys = L.zipWith (\a b -> a / b) xs ys
+maal k xs = L.map (\x -> k * x) xs
+miljoen xs = L.map (\x -> x / 1000000) xs
+procenten xs = maal (100 / L.sum xs) xs
+perMiljoen x = x / 1000000
+
+// Getallen als tekst voor tabellen.
+f0 x = T.showFixed 0 x
+f1 x = T.showFixed 1 x
+metZonder d a b = T.append (T.showFixed d a) (T.append " / " (T.showFixed d b))
+//%%
+C.table info
+//%% [markdown]
+// Onder de staafdiagrammen staan de benchmarks afgekort tot twee letters:
+//%%
+D.table ["afkorting", "benchmark"] [ [a, n] | (a, n) <- L.zip kort namen ]
+//%% [markdown]
+// ---
+// ## 1. Wat de VM doet per benchmark
+//
+// De VM telt drie dingen: uitgevoerde **instructies**, functie**aanroepen**
+// (`call` en `tailcall`) en **heap-objecten** (`create`/`ccreate`: thunks,
+// closures en constructors). `gc` is het aantal garbage collections.
+//%%
+D.table ["benchmark", "instructies (M)", "aanroepen (M)", "heap-objecten (M)", "gc", "tijd (ms)"]
+  [ [tekst bench "benchmark" r, f1 (perMiljoen (veld bench "instr" r)), f1 (perMiljoen (veld bench "calls" r)),
+     f1 (perMiljoen (veld bench "creates" r)), f0 (veld bench "gc" r), f0 (veld bench "ms_runfast" r)]
+  | r <- C.body bench ]
+//%%
+P.bars kort (miljoen (kol bench "instr"))
+//%% [markdown]
+// Hoeveel heap-objecten per 100 instructies? `fib` rekent alleen met
+// getallen op de stack en maakt er geen; programma's die luie lijsten en
+// datastructuren bouwen, maken er het meest.
+//%%
+P.bars kort (maal 100.0 (deel (kol bench "creates") (kol bench "instr")))
+//%% [markdown]
+// ---
+// ## 2. Hoe snel is de VM?
+//
+// Tijd tegen aantal instructies, met de kleinste-kwadratenlijn. Ligt een
+// punt boven de lijn, dan zijn de instructies van dat programma duurder dan
+// gemiddeld (meer heap, meer `eval`, meer garbage collection).
+//%%
+P.scatterFit (miljoen (kol bench "instr")) (kol bench "ms_runfast")
+//%%
+S.correlation (kol bench "instr") (kol bench "ms_runfast")
+//%% [markdown]
+// Miljoenen instructies per seconde (`runfast`, computed-goto-dispatch):
+//%%
+P.bars kort (maal 0.001 (deel (kol bench "instr") (kol bench "ms_runfast")))
+//%%
+samenvatting xs = D.table ["", "M instructies/s"]
+  [ ["gemiddeld", f0 (S.mean xs)], ["mediaan", f0 (S.median xs)], ["laagste", f0 (S.minimum xs)], ["hoogste", f0 (S.maximum xs)] ]
+//%%
+samenvatting (maal 0.001 (deel (kol bench "instr") (kol bench "ms_runfast")))
+//%% [markdown]
+// ### Dispatch: computed goto tegen switch
+//
+// Dezelfde VM in twee vormen: `runfast` springt met computed goto naar de
+// volgende instructie, `runswitchfast` met een `switch` (de vorm van de
+// WebAssembly-VM). De staaf is de tijd van de switch-vorm in procenten
+// van die van computed goto: boven 100 is goto sneller.
+//%%
+P.bars kort (maal 100.0 (deel (kol bench "ms_runswitchfast") (kol bench "ms_runfast")))
+//%% [markdown]
+// ---
+// ## 3. Wat levert de strictness-inferentie op?
+//
+// Elke benchmark is twee keer gecompileerd: met de automatische
+// strictness-inferentie (de standaard) en met `--nostrict`. Een strikt
+// argument wordt meteen uitgerekend in plaats van als thunk op de heap
+// gezet. De staaf is tijd zonder inferentie gedeeld door tijd met:
+// boven 1 helpt de inferentie, onder 1 is de code zonder inferentie
+// sneller.
+//%%
+P.bars kort (deel (kol bench "ms_nostrict") (kol bench "ms_runfast"))
+//%%
+D.table ["benchmark", "instructies met/zonder", "heap-objecten met/zonder", "gc met/zonder", "tijd met/zonder (ms)"]
+  [ [tekst bench "benchmark" r,
+     metZonder 0 (perMiljoen (veld bench "instr" r)) (perMiljoen (veld bench "instr_nostrict" r)),
+     metZonder 1 (perMiljoen (veld bench "creates" r)) (perMiljoen (veld bench "creates_nostrict" r)),
+     metZonder 0 (veld bench "gc" r) (veld bench "gc_nostrict" r),
+     metZonder 0 (veld bench "ms_runfast" r) (veld bench "ms_nostrict" r)]
+  | r <- C.body bench ]
+//%% [markdown]
+// Instructies en tijd in miljoenen en milliseconden. Hoeveel procent van
+// de functieargumenten vindt de inferentie strikt? De kernbenchmarks zelf
+// hebben geen handmatige `!` op argumenten, maar wat ze importeren soms
+// wel (`eval2`); die tellen hier niet mee.
+//%%
+P.bars kort (maal 100.0 (deel (kol comp "strikt_afgeleid") (kol comp "argumenten")))
+//%%
+D.table ["benchmark", "argumenten", "strikt met de hand", "strikt afgeleid"]
+  [ [tekst comp "benchmark" r, f0 (veld comp "argumenten" r), f0 (veld comp "strikt_handmatig" r), f0 (veld comp "strikt_afgeleid" r)]
+  | r <- C.body comp ]
+//%% [markdown]
+// ---
+// ## 4. Wat de compiler van de bron maakt
+//
+// Van broncode (na het platslaan van `#import`) naar bytecode: het aantal
+// instructies groeit ongeveer evenredig met de bron.
+//%%
+P.scatterFit (kol comp "bronregels") (kol comp "instructies")
+//%%
+D.table ["benchmark", "bronregels", "functies", "na lambda-lifting", "instructies", "instr./regel"]
+  [ [tekst comp "benchmark" r, f0 (veld comp "bronregels" r), f0 (veld comp "functies_bron" r),
+     f0 (veld comp "functies_na_lift" r), f0 (veld comp "instructies" r),
+     f1 (veld comp "instructies" r / veld comp "bronregels" r)]
+  | r <- C.body comp ]
+//%% [markdown]
+// Luie code in het tussenstadium `retag` (`./compile --emit=retag`):
+// **thunks** (een uitgestelde aanroep), **closures** (een gedeeltelijke
+// toepassing) en **evals** (een waarde die eerst uitgerekend moet worden),
+// opgeteld over alle benchmarks:
+//%%
+P.bars ["thunks", "closures", "evals"] [S.sum (kol comp "thunks"), S.sum (kol comp "closures"), S.sum (kol comp "evals")]
+//%% [markdown]
+// Compileertijd (`./compile`, inclusief `#import` platslaan en `.jvb`
+// schrijven) tegen het aantal gegenereerde instructies:
+//%%
+P.scatterFit (kol comp "instructies") (kol comp "compileertijd_ms")
+//%% [markdown]
+// Het binaire laadformaat `.jvb` tegen de tekstvorm `.jmvm`, in procenten:
+//%%
+P.bars kort (maal 100.0 (deel (kol comp "jvb_bytes") (kol comp "jmvm_bytes")))
+//%% [markdown]
+// ---
+// ## 5. Instructiemix
+//
+// Welke instructies staan er in de code (statisch, niet hoe vaak ze
+// uitgevoerd worden)? Per categorie, voor de 13 benchmarks samen en voor
+// gen1, de compiler zelf.
+//%%
+categorieen = ["stack", "aanroep", "heap", "evaluatie", "sprong", "rekenen", "overig"]
+
+opsCat = C.column "categorie" ops
+
+perCat kolom = [ S.sum [ x | (c, x) <- L.zip opsCat (kol ops kolom), T.equal c cat ] | cat <- categorieen ]
+
+// Korte namen onder de staven.
+catKort = ["stack", "aanr", "heap", "eval", "spr", "rek", "rest"]
+//%%
+P.bars catKort (procenten (perCat "benchmarks"))
+//%%
+P.bars catKort (procenten (perCat "gen1"))
+//%%
+D.table ["categorie", "benchmarks (%)", "gen1 (%)"]
+  [ [c, f1 a, f1 b] | (c, (a, b)) <- L.zip categorieen (L.zip (procenten (perCat "benchmarks")) (procenten (perCat "gen1"))) ]
+//%% [markdown]
+// De twaalf meest voorkomende instructies:
+//%%
+D.table ["instructie", "categorie", "benchmarks", "gen1"] (L.take 12 (C.body ops))
+//%% [markdown]
+// ---
+// ## 6. Schaal: `nfib n`
+//
+// `nfib n = if (n < 2) 1 (nfib (n-1) + nfib (n-2) + 1)` telt zijn eigen
+// aanroepen. Het werk groeit exponentieel:
+//%%
+P.line (kol schaal "n") (miljoen (kol schaal "instr"))
+//%% [markdown]
+// Per stap van 2 in `n` wordt het werk ongeveer φ² = 2,6180 keer zo groot
+// (φ is de gulden snede); de kolom "groei" deelt elke rij door de vorige:
+//%%
+D.table ["n", "instructies", "groei", "tijd (ms)"]
+  [ [f0 (veld schaal "n" r), f0 (veld schaal "instr" r),
+     T.showFixed 4 (veld schaal "instr" r / veld schaal "instr" vorige), f1 (veld schaal "ms_runfast" r)]
+  | (vorige, r) <- L.zip (C.body schaal) (L.drop 1 (C.body schaal)) ]
+//%% [markdown]
+// De tijd blijft bij kleine `n` steken op een paar milliseconden: dat is
+// het opstarten en laden van de VM, niet het rekenen. Pas boven een paar
+// miljoen instructies gaat de rekentijd overheersen.
+//%%
+P.line (kol schaal "n") (kol schaal "ms_runfast")
