@@ -89,19 +89,18 @@ if (conditie) (dan-tak) (anders-tak)
 
 Geen `if` zonder `else`. Beide takken moeten echte waarden zijn.
 
-**Belangrijke beperking**: `if` en `case` mogen alleen in **staartpositie**
-staan — als de hele body van een functie, of genest als tak van een
-andere `if`/`case`. Gebruik ze **nooit** als argument van een aanroep of
-als operand van een rekenkundige bewerking:
+`if` en `case` mogen **overal** staan waar een expressie mag: als hele
+body, maar ook als argument, als operand of als veld van een constructor.
+De compiler tilt ze zelf naar een hulpfunctie:
 
 ```sapl
-// FOUT — compileert niet met een duidelijke fout ("unexpected: If")
-g a b c = f (if (a == 0) b c)
-
-// GOED — til de if/case naar een eigen naam
-h a b c = if (a == 0) b c
-g a b c = f (h a b c)
+f a b = a (if (b > 0) 4 6)
+g xs = (case xs (Nil -> 0) (Cons y ys -> y)) + 1
 ```
+
+Eén uitzondering: een `if`/`case` kan niet zelf de functie zijn die je
+aanroept (`(if c h k) a b`). Bind die eerst aan een naam:
+`f a b = let k = if (a > 1) add sub in k a b`.
 
 ## 4. `let`: precies één blok, nooit geketend
 
