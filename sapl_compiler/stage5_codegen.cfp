@@ -396,7 +396,22 @@ genEvalDefault e = error (append ['genEval: '] (append (exprConstrNameOf e) [' i
 genEvalApp prog adts args n as =
   if (isKnownFunc n prog)
     (genEvalAppKnown prog adts args n as)
-    (append (pushArgsThenFunc prog adts args n as) (Cons (mkI ['eval']) Nil))
+    (genEvalAppVar prog adts args n as)
+
+// Een onbekende functie (een lokale variabele) met argumenten, in
+// waardepositie (13 oktober 2026, docs/2026-10-11_force_plan.md, "Vervolg"):
+// `eval` telt alles boven `mark` (het begin van het frame) als beschikbare
+// argumenten. Krijgt f te weinig argumenten, dan nam eval ook een waarde mee
+// die al eerder in dit frame klaarlag (het andere strikte veld, een eerder
+// argument): stil fout. `evalap n` telt alleen de n eigen argumenten. In
+// staartpositie ligt er niets anders klaar; daar blijft het `eval`
+// (genTailEval).
+genEvalAppVar prog adts args n as =
+  case as
+    (Nil -> genEvalAppInline prog adts args n as)
+    (Cons a rest -> append (pushArgsThenFunc prog adts args n as) (Cons (mkI (append ['evalap '] (itoa (length as)))) Nil))
+
+genEvalAppInline prog adts args n as = append (pushArgsThenFunc prog adts args n as) (Cons (mkI ['eval']) Nil)
 
 genEvalAppKnown prog adts args n as =
   append (genCallArgs prog adts args as) (append (Cons (mkJ ['call'] n) Nil) (Cons (mkI (evalOrForce (length as) (funcArityOf (findFunc n prog)))) Nil))
@@ -527,7 +542,19 @@ genTailTry prog adts fname args b h =
   Gencode (Cons setjmpInstr normalInstrs) (Cons (Block catchLabel catchInstrs) Nil)
 
 genTailDefault prog adts args e =
-  Gencode (append (genValue prog adts args e) (Cons (mkI (append ['return '] (itoa (length args)))) Nil)) Nil
+  Gencode (append (genTailValue prog adts args e) (Cons (mkI (append ['return '] (itoa (length args)))) Nil)) Nil
+
+genTailValue prog adts args e =
+  case e
+    (Eval inner -> genTailEval prog adts args inner)
+    (_ -> genValue prog adts args e)
+
+// In staartpositie ligt er boven `mark` niets anders dan de argumenten van
+// deze toepassing: `eval` rechtstreeks, zonder `__apK` (zie genEvalAppVar).
+genTailEval prog adts args inner =
+  case inner
+    (App n as -> if (isKnownFunc n prog) (genEval prog adts args inner) (genEvalAppInline prog adts args n as))
+    (_ -> genEval prog adts args inner)
 
 // nomatch trap, now carrying the enclosing function's name (pushed as a
 // string literal right before "debug 2") so a runtime "nomatch for this
