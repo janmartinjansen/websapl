@@ -61,20 +61,6 @@ f !x = try (g x 0) (handler 1)      // GOED: één open parameter (err)
 compileren zonder klacht en geven onzin. De typechecker (🧪-knop) vangt
 dit wel.
 
-## `!` op een veld dat een gedeeltelijk toegepaste functie bevat
-
-```sapl
-::tup  = Tup !a !b
-t x y = x + y
-dub f x y = Tup (f x) (f y)          // (f x) is een gedeeltelijke toepassing
-start = case (dub t 3 4) (Tup f g -> f 6 + g 6)
-// geeft een leeg resultaat; met ::tup = Tup a b (zonder !) het juiste: 19
-```
-
-Een bekende fout, nog niet opgelost (op 13 oktober 2026 nog steeds zo). Zet geen `!` op
-een veld of parameter die een gedeeltelijk toegepaste functie kan bevatten.
-Zie `examples/curryvb.cfp` en `examples/curryvbns.cfp`.
-
 ## Deling door nul
 
 `a / 0` en `a % 0` worden niet afgevangen. In de browser volgt een trap;
