@@ -30,10 +30,15 @@ naam param1 param2 = body
   functiewaarden.
 - **ADT's** (algebraïsche datatypes): `::Naam = Cons1 v1 v2 | Cons2 v1`.
   De veldnamen na een constructor zijn vrije, cosmetische labels (geen
-  echte typen) — alleen het AANTAL velden telt.
-- **Commentaar**: `//` tot het einde van de regel.
-- **Literalen**: `123` (geheel getal), `'x'` (karakter — is gewoon een
-  int), `"abc"` (string, zie §7), `True`/`False` (zie §2).
+  echte typen) — alleen het AANTAL velden telt. Er zijn geen ingebouwde
+  ADT's: ook `Nil`/`Cons` declareer je zelf (`::list = Nil | Cons !x xs`)
+  of haal je uit `lib/stdlib.cfp`.
+- **Commentaar**: `//` tot het einde van de regel (niet `--` of `||`).
+- **Layout**: een regel in kolom 0 begint een nieuwe definitie; een
+  vervolgregel springt in.
+- **Literalen**: `123` (geheel getal), `1.5` (float), `'x'` (karakter;
+  rekenen ermee geeft een int), `"abc"` (string, zie §7), `True`/`False`
+  (zie §2).
 - **Geen unaire min**: schrijf `(0 - x)`, niet `-x`.
 - **Functie-aanroep**: `f a b c` (naast elkaar zetten, links-
   geassocieerd, bindt STRAKKER dan elke infix-operator — `f n - 1` is
@@ -44,10 +49,12 @@ naam param1 param2 = body
 ```
 * / %
 + - <#>
-:                          (rechts-associatief, cons — bouwt een lijst)
 == != < <= > >=
-/\ \/
+/\ \/                      (en, of)
 ```
+
+Er is geen `:`-operator in `.cfp` (wel in Sapl+), en ook geen `&&`, `||`,
+`$`, `.`, `++`, `/=` of `^`.
 
 `<#>` is de sequencing-operator: evalueer links, geef rechts terug —
 handig om side-effects (`print`, `writeChar`) na elkaar te zetten:
@@ -67,13 +74,17 @@ sumList xs =
     (Nil -> 0)
 ```
 
-- Elke tak matcht **één niveau diep** op één constructor — géén geneste
-  patronen zoals `(Cons x (Cons y ys) -> ...)`. Destructureer in stappen
-  via losse hulpfuncties, of gebruik Sapl+'s patroon-definities
-  (`parser_combinators/README.md`) als je dat vaak nodig hebt.
+- Elke tak matcht **één niveau diep** op één constructor, met variabelen
+  voor de velden — géén geneste patronen zoals `(Cons x (Cons y ys) -> ...)`.
+  Destructureer in stappen, of gebruik Sapl+'s patroon-definities in de
+  functiekop (`parser_combinators/README.md`).
+- **Let op: een constructornaam op een veldplek wordt stil een variabele.**
+  `(Cons x Nil -> ...)` matcht elke `Cons`. Schrijf
+  `(Cons x rest -> case rest (Nil -> ...) (_ -> ...))`.
 - Branches mogen in willekeurige volgorde staan.
 - Je hoeft niet alle constructors af te dekken — een ontbrekende
-  constructor crasht pas als hij ECHT geraakt wordt (`NoMatch`).
+  constructor geeft pas een fout als hij echt geraakt wordt
+  (`nomatch for this case in function ...`).
 - **Catch-all**: `(_ -> expr)` vangt elke niet-genoemde constructor op:
   ```sapl
   case xs (Cons x rest -> 1) (_ -> 0)   // Nil -> 0
@@ -126,7 +137,9 @@ hamming n =
 
 `let` mag alleen de VOLLEDIGE body van een functie zijn — nooit als
 sub-expressie ergens anders (niet rechts van `<#>`, niet als tak van een
-`if`). Zet zo'n `let` in een eigen naamgegeven hulpfunctie.
+`if` of `case`, niet als argument). De compiler meldt dan `'let'/'in' not
+allowed here`. Zet zo'n `let` in een eigen naamgegeven hulpfunctie. Een
+`if` of `case` als waarde van een binding mag wel.
 
 ## 5. Eén clausule per functienaam
 
@@ -145,24 +158,28 @@ evalNode nd =
     (NIdent name -> ...)
 ```
 
+Ook een enkele clausule met een patroon in de kop (`hdOf (Cons x xs) = x`,
+`fib 0 = 0`) gaat niet. **Let op:** een kale constructornaam in de kop
+(`f Nil = 0`) is geen patroon maar een parameternaam; die functie geeft
+stil 0 voor élke lijst.
+
 (Sapl+'s patroon-definities — `parser_combinators/README.md` — versmelten
 zulke clausules zelf al tot precies zo'n `case`-vorm, vóórdat de
 basiscompiler de tekst ooit ziet.)
 
-## 6. Geen operators of constructors als eerste-klas waarde
+## 6. Operators zijn geen waarden; constructors wel
 
-Er is geen `(+)`-syntax om een operator als waarde door te geven, en een
-constructor kun je ook niet zomaar als functiewaarde doorgeven. Wikkel
-altijd in een naam:
+Een constructor mag gewoon als functiewaarde: `map Cirkel xs`, `Rechthoek 2`.
+Een operator niet: er is geen `(+)`- of `(+1)`-syntax. Wikkel een operator
+in een naam:
 
 ```sapl
 add a b = a + b
 // gebruik `add` als waarde, nooit `+` zelf
 ```
 
-Wil je écht een functie op naam kiezen (bijv. uit een tabel)? Gebruik dan
-`lookup`/`applyDynamic` (§10) — nooit een operator/constructor als kale
-Sapl-waarde.
+Wil je een functie op naam kiezen (bijv. uit een tabel)? Gebruik dan
+`lookup`/`applyDynamic` (§10).
 
 ## 7. Strings zijn gepakte arrays, geen char-lijst
 
@@ -171,11 +188,11 @@ Sapl-waarde.
 - Een **char-lijst** (`Cons 'a' (Cons 'b' Nil)`) is een gewone Sapl-lijst
   van karaktercodes.
 
-**Vergelijk nooit een string-literal met `==` — ook niet twee strings
-onderling.** `==` vergelijkt de HEAP-POINTER, niet de inhoud — twee
-inhoudelijk identieke strings uit verschillende allocaties zijn zo goed
-als nooit gelijk via `==`. Gebruik `strEqual` (`lib/README.md`) voor
-echte inhoudsvergelijking van twee strings.
+**Vergelijk geen strings met `==`.** In `.cfp` vergelijkt `==` de
+HEAP-POINTER, niet de inhoud — twee inhoudelijk identieke strings uit
+verschillende allocaties zijn zo goed als nooit gelijk via `==`. Gebruik
+`strEqual` (`lib/README.md`). Hetzelfde geldt voor ADT-waarden (zie
+`veelgemaakte_fouten.md`). In Sapl+ vergelijkt `==` wél de inhoud.
 
 Nuttige functies (`lib/stdlib.cfp`, `#import "lib/stdlib.cfp"`):
 `strlen`, `strat idx s`, `str2list`, `list2str`, `strcat`, `strUpper`,
@@ -192,8 +209,9 @@ Nuttige functies (`lib/stdlib.cfp`, `#import "lib/stdlib.cfp"`):
 
 ## 9. Foutafhandeling: `try`/`throw` versus `error`
 
-- **`error msg`** stopt de hele VM onmiddellijk — niet vangbaar. Gebruik
-  dit alleen als verder draaien zinloos is.
+- **`error msg`** drukt `msg` af en stopt de VM, tenzij een vang-alles-`try`
+  (een handler zonder letterlijk getal, bv. `try body toon`) actief is: die
+  vangt `error` en ook VM-fouten (heap of stack vol, ...).
 - **`throw catchNr payload`** / **`try body handler`** is herstelbaar:
 
   ```sapl
@@ -204,16 +222,19 @@ Nuttige functies (`lib/stdlib.cfp`, `#import "lib/stdlib.cfp"`):
   ```
 
   De handler krijgt **precies één** extra argument (de payload) — geef
-   'm dus zoveel vooraf-gebonden parameters als je nodig hebt, maar laat
-  er precies één open.
+  'm dus zoveel vooraf-gebonden parameters als je nodig hebt, maar laat
+  er precies één open. Met nul of twee open parameters gaat het stil fout.
 
-  `try`/`throw` mogen, anders dan `if`/`case`, WEL op elke
-  expressiepositie staan (ook als argument van een aanroep).
+  Alleen een **letterlijk getal** (`handler 1`) filtert op het
+  throw-nummer; een naam (`handler code`) wordt stil een vang-alles.
+
+  `try`/`throw` mogen, net als `if`/`case`, op elke expressiepositie
+  staan (ook als argument van een aanroep).
 
 ## 10. Reflectie en dynamische dispatch
 
-Elke waarde heeft `typeId x` (1=Int, 2=Float, 3=String, 4=Functie, ≥5=een
-ADT-constructor), `constrName x` (naam als string), `getField x idx`
+Elke waarde heeft `typeId x` (-1=Char, 1=Int, 2=Float, 3=String,
+4=Functie, ≥5=een ADT-constructor), `constrName x` (naam als string), `getField x idx`
 (veld op positie `idx`, brontekst-volgorde), `lookup "naam"` (vind een
 top-level functie/constructor bij naam) en `applyDynamic fn argsLijst`.
 
