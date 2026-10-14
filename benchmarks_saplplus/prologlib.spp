@@ -52,7 +52,7 @@ el n Nil = 111
 
 zip Nil ys = Nil
 zip (x:xs) Nil = Nil
-zip (x:xs) (y:ys) = Cons (x, y) (zip xs ys)
+zip (x:xs) (y:ys) = Cons (ProTup x y) (zip xs ys)
 
 take 0 xs = Nil
 take n xs = takeNonzero n xs
