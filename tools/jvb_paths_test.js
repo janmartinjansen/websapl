@@ -39,7 +39,7 @@ function check(name, ok, detail) {
     const c = await call({ type: "COMPILE", source: src, path: `/workspace/${b}.cfp`, stages: ["jmvm"], strictness: strict });
     const f = c.success && c.files.find((x) => x.stage === "jmvm");
     fs.writeFileSync(path.join(tmp, `${b}.cfp`), src);
-    native(["compile", path.join(tmp, `${b}.cfp`)].concat(strict ? [] : ["--nostrict"]));
+    native(["compile", path.join(tmp, `${b}.cfp`), "--notypecheck"].concat(strict ? [] : ["--nostrict"]));
     const ref = fs.readFileSync(path.join(tmp, `${b}.jmvm`), "utf8");
     check(`${name}: tekst gelijk aan native gen1`, !!f && f.content === ref, f ? `lengte ${f.content.length} tegen ${ref.length}` : c.stderr || c.error);
     if (!f) continue;

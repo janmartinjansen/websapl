@@ -884,7 +884,10 @@ async function typecheckSource(source, srcPath) {
   const startTime = performance.now();
 
   let compilerOutput = [];
-  let stdinBuffer = `/tmp/in.cfp\n`.split("");
+  // De extensie telt: bij een .cfp meldt de checker ook waar gen1 de tekst
+  // anders leest dan hij eruitziet (LET OP-regels); bij een .spp niet.
+  const inPath = (srcPath || "").endsWith(".spp") ? "/tmp/in.spp" : "/tmp/in.cfp";
+  let stdinBuffer = `${inPath}\n`.split("");
   let stdinIndex = 0;
 
   const instance = await createJMVMModule({
@@ -923,7 +926,7 @@ async function typecheckSource(source, srcPath) {
     instance.FS.writeFile(depPath, content);
   }
 
-  instance.FS.writeFile("/tmp/in.cfp", source);
+  instance.FS.writeFile(inPath, source);
 
   try {
     instance.callMain([enginePath.typecheck]);

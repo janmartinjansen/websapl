@@ -967,7 +967,7 @@
       } else {
         logTerminal("(geen uitvoer -- leeg bestand of geen topniveaufuncties?)\n", "info");
       }
-      const hasFout = /FOUT:/.test(report);
+      const hasFout = /FOUT:|LET OP:/.test(report);
       setStatus(hasFout ? "ready" : "ready", `Typecheck klaar (${data.durationMs}ms)`);
       logTerminal(`✓ Typecheck klaar in ${data.durationMs}ms${hasFout ? " -- zie meldingen hierboven" : ", geen meldingen"}.\n`, hasFout ? "warning" : "success");
     });
