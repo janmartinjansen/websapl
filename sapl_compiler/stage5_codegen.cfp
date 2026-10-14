@@ -416,9 +416,11 @@ genEvalAppInline prog adts args n as = append (pushArgsThenFunc prog adts args n
 genEvalAppKnown prog adts args n as =
   append (genCallArgs prog adts args as) (append (Cons (mkJ ['call'] n) Nil) (Cons (mkI (evalOrForce (length as) (funcArityOf (findFunc n prog)))) Nil))
 
-// Meer argumenten dan de ariteit: het resultaat moet de rest nog krijgen
-// (eval past toe); anders is het al de waarde (force).
-evalOrForce !nargs !arity = if (nargs > arity) ['eval'] ['force']
+// Meer argumenten dan de ariteit: het resultaat moet de rest nog krijgen;
+// anders is het al de waarde (force). Sinds 14 oktober 2026 `evalap m` met m
+// de rest i.p.v. `eval`: eval telde ook waarden mee die al in het frame
+// lagen (`P (p0 x) 7` met `p0 = plus`).
+evalOrForce !nargs !arity = if (nargs > arity) (append ['evalap '] (itoa (nargs - arity))) ['force']
 
 // Condition of an if: special cases for `expr == 0`/`expr != 0`, general
 // fallback for everything else: compute the value, test it for truth

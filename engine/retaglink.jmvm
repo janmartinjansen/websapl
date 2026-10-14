@@ -8641,8 +8641,14 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             load 1
             sub
             ifle 2198                                || evalOrForce_else
-            push "eval"
-            tailcall 2 8                             || str2list
+            load 0
+            load 1
+            sub
+            pushfunc 1 51                            || itoa
+            create 2 3
+            push "evalap "
+            call 8                                   || str2list
+            tailcall 2 76                            || append
 2198        push "force"                             || evalOrForce_else
             tailcall 2 8                             || str2list
 2199        load 3                                   || genCond_lazy
