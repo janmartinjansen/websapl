@@ -391,7 +391,7 @@ genEval prog adts args e =
     (Var v -> append (genValue prog adts args (Var v)) (Cons (mkI ['force']) Nil))
     (_ -> genEvalDefault e)
 
-genEvalDefault e = error (append ['genEval: '] (append (exprConstrNameOf e) [' inside eval not expected']))
+genEvalDefault e = error (list2str (append ['genEval: '] (append (exprConstrNameOf e) [' inside eval not expected'])))
 
 genEvalApp prog adts args n as =
   if (isKnownFunc n prog)
@@ -1018,7 +1018,7 @@ genPatchedRhs prog adts args avail slot e =
     (Lazy inner -> error "genLet: Lazy should not reach codegen")
     (Thunk inner -> genPatchedRhsThunk prog adts args avail slot inner)
     (Closure inner -> genPatchedRhsClosure prog adts args avail slot inner)
-    (_ -> error (append ['genLet: cyclic let binding rhs must be Ct/Thunk(App)/Closure(App), '] (append (exprConstrNameOf e) [' not supported'])))
+    (_ -> error (list2str (append ['genLet: cyclic let binding rhs must be Ct/Thunk(App)/Closure(App), '] (append (exprConstrNameOf e) [' not supported']))))
 
 genPatchedRhsThunk prog adts args avail slot inner =
   case inner

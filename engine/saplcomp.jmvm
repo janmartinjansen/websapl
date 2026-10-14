@@ -19228,6 +19228,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             push "genEval: "
             call 8                                   || str2list
             call 76                                  || append
+            call 20                                  || list2str
             syscall 8
             return 1
 4242        load 0                                   || genEvalApp_lazy
@@ -22165,6 +22166,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             push "genLet: cyclic let binding rhs must be Ct/Thunk(App)/Closure(App), "
             call 8                                   || str2list
             call 76                                  || append
+            call 20                                  || list2str
             syscall 8
             return 7
 4853        push " not supported"                    || genPatchedRhs_FloatLit
@@ -22178,6 +22180,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             push "genLet: cyclic let binding rhs must be Ct/Thunk(App)/Closure(App), "
             call 8                                   || str2list
             call 76                                  || append
+            call 20                                  || list2str
             syscall 8
             return 7
 4854        push " not supported"                    || genPatchedRhs_Str
@@ -22191,6 +22194,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             push "genLet: cyclic let binding rhs must be Ct/Thunk(App)/Closure(App), "
             call 8                                   || str2list
             call 76                                  || append
+            call 20                                  || list2str
             syscall 8
             return 7
 4855        push "genLet: cyclic let binding rhs must be Ct/Thunk(App)/Closure(App), bare Var alias not supported" || genPatchedRhs_Var
@@ -22207,6 +22211,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             push "genLet: cyclic let binding rhs must be Ct/Thunk(App)/Closure(App), "
             call 8                                   || str2list
             call 76                                  || append
+            call 20                                  || list2str
             syscall 8
             return 9
 4857        push "genLet: cyclic let binding rhs must be Ct/Thunk(App)/Closure(App), bare (strict) App not supported" || genPatchedRhs_App
@@ -22223,6 +22228,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             push "genLet: cyclic let binding rhs must be Ct/Thunk(App)/Closure(App), "
             call 8                                   || str2list
             call 76                                  || append
+            call 20                                  || list2str
             syscall 8
             return 8
 4859        load 1                                   || genPatchedRhs_Ct
@@ -22244,6 +22250,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             push "genLet: cyclic let binding rhs must be Ct/Thunk(App)/Closure(App), "
             call 8                                   || str2list
             call 76                                  || append
+            call 20                                  || list2str
             syscall 8
             return 8
 4861        push "genLet: nested Let not expected (sapl_programmeer_regels.md sectie 4)" || genPatchedRhs_Let
@@ -22260,6 +22267,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             push "genLet: cyclic let binding rhs must be Ct/Thunk(App)/Closure(App), "
             call 8                                   || str2list
             call 76                                  || append
+            call 20                                  || list2str
             syscall 8
             return 6
 4863        push "genLet: Lazy should not reach codegen" || genPatchedRhs_Lazy
@@ -22290,6 +22298,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             push "genLet: cyclic let binding rhs must be Ct/Thunk(App)/Closure(App), "
             call 8                                   || str2list
             call 76                                  || append
+            call 20                                  || list2str
             syscall 8
             return 7
 4867        push " not supported"                    || genPatchedRhs_Try
@@ -22303,6 +22312,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             push "genLet: cyclic let binding rhs must be Ct/Thunk(App)/Closure(App), "
             call 8                                   || str2list
             call 76                                  || append
+            call 20                                  || list2str
             syscall 8
             return 8
 4868        push " not supported"                    || genPatchedRhs_Throw
@@ -22316,6 +22326,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             push "genLet: cyclic let binding rhs must be Ct/Thunk(App)/Closure(App), "
             call 8                                   || str2list
             call 76                                  || append
+            call 20                                  || list2str
             syscall 8
             return 8
 4869        load 5                                   || genPatchedRhsThunk_lazy
