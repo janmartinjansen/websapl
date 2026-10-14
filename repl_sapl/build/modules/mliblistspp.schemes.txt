@@ -1,10 +1,10 @@
-list__range 0 f cNum f cNum l cNum
-list__from 0 f cNum l cNum
+list__range 0 f cNum? f cNum? l cNum?
+list__from 0 f cNum? l cNum?
 list__iterate 1 f f v0 v0 f v0 l v0
 list__repeat 1 f v0 l v0
-list__replicate 1 f cNum f v0 l v0
-list__length 1 f l v0 cNum
-list__lengthAcc 1 f cNum f l v0 cNum
+list__replicate 1 f cNum? f v0 l v0
+list__length 1 f l v0 cNum?
+list__lengthAcc 1 f cNum? f l v0 cNum?
 list__append 1 f l v0 f l v0 l v0
 list__reverse 1 f l v0 l v0
 list__revAcc 1 f l v0 f l v0 l v0
@@ -19,35 +19,35 @@ list__tail 1 f l v0 l v0
 list__last 1 f l v0 v0
 list__isEmpty 1 f l v0 cBool
 list__nth 1 f cNum f l v0 v0
-list__take 1 f cNum f l v0 l v0
-list__takePos 1 f cNum f l v0 l v0
-list__drop 1 f cNum f l v0 l v0
-list__dropPos 1 f cNum f l v0 l v0
+list__take 1 f cNum? f l v0 l v0
+list__takePos 1 f cNum? f l v0 l v0
+list__drop 1 f cNum? f l v0 l v0
+list__dropPos 1 f cNum? f l v0 l v0
 list__takeWhile 1 f f v0 cNum f l v0 l v0
 list__dropWhile 1 f f v0 cNum f l v0 l v0
 list__elem 1 f v0 f l v0 cBool
 list__findIndex 1 f f v0 cNum f l v0 cNum
 list__findIndexFrom 1 f cNum f f v0 cNum f l v0 cNum
-list__sum 0 f l cNum cNum
-list__product 0 f l cNum cNum
-list__maximum 0 f l cNum cNum
-list__minimum 0 f l cNum cNum
+list__sum 0 f l cNum? cNum?
+list__product 0 f l cNum? cNum?
+list__maximum 0 f l cNum? cNum?
+list__minimum 0 f l cNum? cNum?
 list__any 1 f f v0 cNum f l v0 cBool
 list__all 1 f f v0 cNum f l v0 cBool
 list__and 0 f l cNum cBool
 list__or 0 f l cNum cBool
-list__count 1 f f v0 cNum f l v0 cNum
+list__count 1 f f v0 cNum f l v0 cNum?
 list__zipWith 3 f f v0 f v1 v2 f l v0 f l v1 l v2
 list__zip 2 f l v0 f l v1 l c__Tuple2
 list__indexed 1 f l v0 l c__Tuple2
 list__intersperse 1 f v0 f l v0 l v0
 list__prependAll 1 f v0 f l v0 l v0
 list__sortBy 1 f f v0 f v0 cNum f l v0 l v0
-list__sortByLen 1 f f v0 f v0 cNum f l v0 f cNum l v0
-list__sortBySplit 1 f f v0 f v0 cNum f l v0 f cNum l v0
+list__sortByLen 1 f f v0 f v0 cNum f l v0 f cNum? l v0
+list__sortBySplit 1 f f v0 f v0 cNum f l v0 f cNum? l v0
 list__merge 1 f f v0 f v0 cNum f l v0 f l v0 l v0
 list__mergeCons 1 f f v0 f v0 cNum f v0 f l v0 f l v0 l v0
-list__sort 0 f l cNum l cNum
+list__sort 0 f l cNum? l cNum?
 list__groupBy 1 f f v0 f v0 cNum f l v0 l l v0
 list__nub 1 f l v0 l v0
 list__nubSeen 1 f l v0 f l v0 l v0

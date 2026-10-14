@@ -1,37 +1,37 @@
-plot__x0 0 eplot__x0: kan niet unificeren: Num met Float
+plot__x0 0 cFloat
 plot__x1 0 cFloat
-plot__y0 0 eplot__y0: kan niet unificeren: Num met Float
+plot__y0 0 cFloat
 plot__y1 0 cFloat
 plot__toF 0 eplot__toF: kan niet unificeren: Num met Float
-plot__scale 0 eplot__scale: kan niet unificeren: Num met Float
-plot__padLo 0 eplot__padLo: kan niet unificeren: Num met Float
-plot__padHi 0 eplot__padHi: kan niet unificeren: Num met Float
-plot__label 0 eplot__label: kan niet unificeren: Num met Float
+plot__scale 1 f cNum? f cNum? f cNum? f cNum? f v0 cNum?
+plot__padLo 0 f cNum? f cNum? cNum?
+plot__padHi 0 f cNum? f cNum? cNum?
+plot__label 0 f cNum? cStr
 plot__axisColor 0 cNum
 plot__textColor 0 cNum
-plot__axes 0 eplot__axes: kan niet unificeren: Num met Float
-plot__axesY 0 eplot__axesY: kan niet unificeren: Num met Float
+plot__axes 0 f cNum? f cNum? f cNum? f cNum? l cGraphics__Graphics
+plot__axesY 0 f cNum? f cNum? l cGraphics__Graphics
 plot__line 2 f l v0 f l v1 cDisplay__Display
 plot__lineColored 3 f v0 f l v1 f l v2 cDisplay__Display
 plot__lineY 1 f l v0 cDisplay__Display
 plot__scatter 2 f l v0 f l v1 cDisplay__Display
 plot__scatterFit 2 f l v0 f l v1 cDisplay__Display
-plot__fitLine 2 f cNum f cNum f v0 f v1 f c__Tuple2 cGraphics__Graphics
-plot__points 6 f v0 f v1 f v2 f v3 f l v4 f l v5 l cGraphics__Point
-plot__dots 7 f v0 f v1 f v2 f v3 f l v4 f l v5 l v6
-plot__dot 0 eplot__dot: kan niet unificeren: Num met Float
+plot__fitLine 0 f cNum? f cNum? f cNum? f cNum? f c__Tuple2 cGraphics__Graphics
+plot__points 2 f cNum? f cNum? f cNum? f cNum? f l v0 f l v1 l cGraphics__Point
+plot__dots 2 f cNum? f cNum? f cNum? f cNum? f l v0 f l v1 l cGraphics__Graphics
+plot__dot 0 f cGraphics__Point cGraphics__Graphics
 plot__bars 1 f l cStr f l v0 cDisplay__Display
-plot__maxZero 0 eplot__maxZero: kan niet unificeren: Float met Num
-plot__maxF 0 f cNum f cNum cNum
-plot__barsFrom 4 f cNum f v0 f v1 f l cStr f l v2 l v3
-plot__barAt 0 eplot__barAt: kan niet unificeren: Num met Float
-plot__histogram 2 f v0 f v1 cDisplay__Display
+plot__maxZero 1 f l v0 cFloat
+plot__maxF 0 f cNum? f cNum? cNum?
+plot__barsFrom 1 f cNum f cNum f cNum? f l cStr f l v0 l cGraphics__Graphics
+plot__barAt 2 f cNum f cNum f cNum? f v0 f v1 l cGraphics__Graphics
+plot__histogram 1 f cNum f l v0 cDisplay__Display
 plot__histogramBins 0 f l c__Tuple2 cDisplay__Display
 plot__binLo 1 f c__Tuple2 v0
 plot__binCount 1 f c__Tuple2 v0
 plot__appendL 1 f l v0 f l v0 l v0
 plot__mapL 2 f f v0 v1 f l v0 l v1
 plot__listLen 1 f l v0 cNum
-plot__indices 1 f cNum f l v0 l cNum
+plot__indices 1 f cNum? f l v0 l cNum?
 plot__headOr 1 f v0 f l v0 v0
 plot__tailOr 1 f l v0 l v0

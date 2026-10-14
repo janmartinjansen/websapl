@@ -1,23 +1,23 @@
 csv__read 0 f cStr l l cStr
 csv__parse 0 f cStr l l cStr
 csv__parseWith 0 f cNum f cStr l l cStr
-csv__rowsFrom 0 f cNum f cStr f cNum f cNum l l cStr
-csv__rowNext 0 f cNum f cStr f cNum f c__Tuple2 l l cStr
+csv__rowsFrom 0 f cNum f cStr f cNum? f cNum? l l cStr
+csv__rowNext 0 f cNum f cStr f cNum? f c__Tuple2 l l cStr
 csv__isBlankRow 0 f l cStr cBool
-csv__fieldsFrom 0 f cNum f cStr f cNum f cNum c__Tuple2
-csv__plainFrom 0 f cNum f cStr f cNum f cNum f cNum c__Tuple2
+csv__fieldsFrom 0 f cNum f cStr f cNum? f cNum? c__Tuple2
+csv__plainFrom 0 f cNum f cStr f cNum? f cNum? f cNum? c__Tuple2
 csv__isFieldEnd 0 f cNum f cNum cBool
-csv__quotedFrom 0 f cNum f cStr f cNum f cNum f l cChar c__Tuple2
-csv__quoteEnd 0 f cNum f cStr f cNum f cNum f l cNum c__Tuple2
-csv__afterQuoted 0 f cNum f cStr f cNum f cNum f l cNum c__Tuple2
-csv__afterField 0 f cChar f cStr f cNum f cNum f cStr c__Tuple2
-csv__skipLf 0 f cStr f cNum f cNum cNum
+csv__quotedFrom 0 f cNum f cStr f cNum? f cNum? f l cChar c__Tuple2
+csv__quoteEnd 0 f cNum f cStr f cNum? f cNum? f l cNum c__Tuple2
+csv__afterQuoted 0 f cNum f cStr f cNum? f cNum? f l cNum c__Tuple2
+csv__afterField 0 f cChar f cStr f cNum? f cNum? f cStr c__Tuple2
+csv__skipLf 0 f cStr f cNum? f cNum? cNum
 csv__consField 1 f v0 f c__Tuple2 c__Tuple2
 csv__revL 1 f l v0 f l v0 l v0
 csv__header 1 f l l v0 l v0
 csv__body 1 f l v0 l v0
 csv__column 0 f cStr f l l cStr l cStr
-csv__columnAt 0 f cNum f l l cStr l cStr
+csv__columnAt 0 f cNum? f l l cStr l cStr
 csv__indexOfName 0 f cStr f l cStr f cNum cNum
 csv__nthOr 0 f cNum f l cStr cStr
 csv__floats 0 f l cStr l cFloat

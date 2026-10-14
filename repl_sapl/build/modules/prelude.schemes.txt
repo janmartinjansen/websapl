@@ -1,13 +1,13 @@
 append 1 f l v0 f l v0 l v0
 length 1 f l v0 cNum
-strls 0 f cNum f cStr l cChar
+strls 0 f cNum? f cStr l cChar
 str2list 0 f cStr l cChar
 strEqual 0 f cStr f cStr cBool
-strEqualAt 0 f cNum f cStr f cStr cNum
-fillStr 2 f cNum f l v0 f v1 v1
+strEqualAt 0 f cNum? f cStr f cStr cNum
+fillStr 2 f cNum? f l v0 f v1 v1
 list2str 1 f l v0 cStr
 strcat 0 f cStr f cStr cStr
-itoa 0 f cNum l cChar
+itoa 0 f cNum? l cChar
 TYPE_INT 0 cNum
 TYPE_FLOAT 0 cNum
 TYPE_STRING 0 cNum
@@ -21,12 +21,12 @@ isChar 1 f v0 cNum
 isADT 1 f v0 cBool
 applyDynamicByName 2 f cStr f l v0 v1
 showVal 0 f cStr cStr
-showValAux 0 eshowValAux: kan niet unificeren: Float met Num
+showValAux 0 eshowValAux: kan niet unificeren: Str met Num
 showChar 0 f cNum cStr
 showCharBody 0 f cNum l cNum
 showFunc 0 f cStr cStr
-pvShowFunc 0 f cStr f cStr f cNum f cNum cStr
-pvBoundArgs 0 f cStr f cNum f cNum cStr
+pvShowFunc 0 f cStr f cStr f cNum? f cNum? cStr
+pvBoundArgs 0 f cStr f cNum? f cNum? cStr
 pvBoundArg 0 f cStr f cNum cStr
 pvSimple 0 f cStr cStr
 pvSimpleTid 0 f cStr f cNum cStr
@@ -36,19 +36,19 @@ pvSimpleCon 1 f v0 cStr
 pvFuncName 0 f cStr cStr
 pvIsCon 0 f cStr cBool
 pvIsLam 0 f cStr cBool
-pvModuleDot 0 f cStr f cNum f cNum cStr
+pvModuleDot 0 f cStr f cNum? f cNum? cStr
 pvDoubleUnder 0 f cStr f cNum cBool
 showValX 0 f cStr f cStr f cStr f cStr cStr
 printValX 0 f cStr f cStr f cStr f cStr cNum
-pvOldMark 0 f cStr f cStr f cNum cStr
-pvOldMarkW 0 f l cStr f cStr f cNum cStr
-pvOldMarkAt 0 f cStr f cNum f l cStr f cStr f cNum cStr
-pvFindPair 0 f l cStr f cNum f cNum f cNum cNum
-pvFindPairAt 0 f cStr f cStr f l cStr f cNum f cNum f cNum cNum
-pvVersionMark 0 f cNum f cNum cStr
-pvDrop 1 f cNum f l v0 l v0
-pvNum 0 f cStr cNum
-pvNumAt 0 f cStr f cNum f cNum f cNum cNum
+pvOldMark 0 f cStr f cStr f cNum? cStr
+pvOldMarkW 0 f l cStr f cStr f cNum? cStr
+pvOldMarkAt 0 f cStr f cNum? f l cStr f cStr f cNum? cStr
+pvFindPair 0 f l cStr f cNum? f cNum? f cNum? cNum
+pvFindPairAt 0 f cStr f cStr f l cStr f cNum? f cNum? f cNum? cNum?
+pvVersionMark 0 f cNum? f cNum cStr
+pvDrop 1 f cNum? f l v0 l v0
+pvNum 0 f cStr cNum?
+pvNumAt 0 f cStr f cNum? f cNum? f cNum? cNum?
 pvTyPart 0 f cStr f cStr cStr
 pvAliasFn 0 f cStr f cStr cStr
 pvAliasFnW 0 f cStr f l cStr cStr
@@ -56,30 +56,30 @@ pvAliasAfter 0 f cStr f cStr f cStr f cStr cStr
 pvAliasTy 0 f cStr f cStr cStr
 pvAliasTyW 0 f cStr f l cStr cStr
 pvCapFirst 0 f cStr cStr
-pvUpper 0 f cNum cNum
+pvUpper 0 f cChar cNum
 pvWords 0 f cStr l cStr
-pvWordsFrom 0 f cStr f cNum f cNum f cNum l cStr
-pvWordEnd 0 f cStr f cNum f cNum f l cStr l cStr
+pvWordsFrom 0 f cStr f cNum? f cNum? f cNum? l cStr
+pvWordEnd 0 f cStr f cNum? f cNum? f l cStr l cStr
 pvContains 0 f cStr f cStr cBool
 tyHasBool 0 f cStr cBool
-pvFind 0 f cStr f cStr f cNum f cNum f cNum cNum
-pvMatchAt 0 f cStr f cStr f cNum f cNum f cNum cBool
+pvFind 0 f cStr f cStr f cNum? f cNum? f cNum? cNum
+pvMatchAt 0 f cStr f cStr f cNum? f cNum? f cNum? cBool
 pvReplaceAll 0 f cStr f cStr f cStr cStr
-pvReplFrom 0 f cStr f cStr f cStr f cNum f cNum f cNum cStr
-pvReplAt 0 f cStr f cStr f cStr f cNum f cNum f cNum f cNum cStr
+pvReplFrom 0 f cStr f cStr f cStr f cNum? f cNum? f cNum? cStr
+pvReplAt 0 f cStr f cStr f cStr f cNum f cNum f cNum? f cNum? cStr
 showConstr 0 f cStr cStr
 showConstrDynamic 0 f cStr f cStr cStr
 showConstrGeneric 0 f cStr f cStr cStr
 isTupleName 0 f cStr cNum
 displayConName 0 f cStr cStr
-displayConNameFrom 0 f cStr f cNum f cNum cStr
-displayConNameScan 0 f cStr f cNum f cNum cStr
+displayConNameFrom 0 f cStr f cNum? f cNum cStr
+displayConNameScan 0 f cStr f cNum? f cNum? cStr
 isModuleSep 0 f cStr f cNum cBool
-isUpperCode 0 f cNum cBool
+isUpperCode 0 f cChar cBool
 show_Nil 1 f v0 cStr
 show_Cons 0 f cStr cStr
 showListItems 0 eshowListItems: kan niet unificeren: Str met [Str]
-showFields 0 f cStr f cNum f cNum cStr
+showFields 0 f cStr f cNum? f cNum? cStr
 showFieldAt 0 f cStr f cNum cStr
 getConstrArity 1 f v0 cNum
 printVal 0 f cStr cNum
@@ -88,6 +88,6 @@ showBoolVal 0 f cNum cStr
 isListTy 0 f cStr cNum
 isListTy2 0 f cStr cBool
 listElemTy 0 f cStr cStr
-showTypedItems 0 eshowTypedItems: kan niet unificeren: Num met [t1781]
-showTypedItemsC 0 eshowTypedItemsC: kan niet unificeren: Num met [t1798]
+showTypedItems 0 eshowTypedItems: kan niet unificeren: Num met [t1960]
+showTypedItemsC 0 eshowTypedItemsC: kan niet unificeren: Num met [t1977]
 printValT 2 f v0 f v1 cNum
