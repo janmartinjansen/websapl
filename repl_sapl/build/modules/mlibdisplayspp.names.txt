@@ -1,6 +1,4 @@
-F text markdown table picture records recordsTable recordRow recordCells bar lineChart graphicsText form formOf formFields formField slider choice kindOf tabs esc escFrom escChar revC toF listLen maxOf maxFrom minOf minFrom left bottom span baseLine barsFrom barAt linePoints linePoint
-C DText DTable DMarkdown DGraphics DForm
+F text markdown table picture records bar lineChart graphicsText form slider choice toF listLen maxOf maxFrom minOf minFrom left bottom span baseLine barsFrom barAt linePoints linePoint
+C DText DTable DMarkdown DGraphics DForm DSlider DChoice DRecords
 module Display
 import "grafisch/graphics.cfp" as G
-import "lib/shape.spp" as Sh
-import "lib/text.spp" as T

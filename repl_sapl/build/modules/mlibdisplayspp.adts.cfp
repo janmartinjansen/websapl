@@ -1,1 +1,1 @@
-::Display__Display = Display__DText !x0 | Display__DTable !x0 !x1 | Display__DMarkdown !x0 | Display__DGraphics !x0 | Display__DForm !x0
+::Display__Display = Display__DText !x0 | Display__DTable !x0 !x1 | Display__DMarkdown !x0 | Display__DGraphics !x0 | Display__DForm !x0 | Display__DSlider !x0 !x1 !x2 | Display__DChoice !x0 !x1 | Display__DRecords !x0

@@ -92,9 +92,77 @@ nbDisplay d =
     (D.DMarkdown s -> printString "@@markdown" <#> nbNl <#> printString s <#> nbNl)
     (D.DTable hs rows -> printString "@@table" <#> nbNl <#> nbRow hs <#> nbRows 500 rows)
     (D.DGraphics gs -> printString "@@graphics" <#> nbNl <#> printString (D.graphicsText gs) <#> nbNl)
-    (D.DForm ls -> printString "@@form" <#> nbNl <#> nbLines ls)
+    (D.DForm v -> printString "@@form" <#> nbNl <#> nbForm v)
+    (D.DSlider lo hi v -> printString "@@form" <#> nbNl <#> nbLine (Cons "slider" (Cons (nbKind v) (Cons (nbPlain v) (Cons (nbPlain lo) (Cons (nbPlain hi) Nil))))))
+    (D.DChoice opts v -> printString "@@form" <#> nbNl <#> nbLine (Cons "choice" (Cons v opts)))
+    (D.DRecords xs -> nbRecords xs)
 
-nbLines ls = case ls (Nil -> 0) (Cons l rest -> printString l <#> nbNl <#> nbLines rest)
+// == Formulieren (D.form, D.slider, D.choice; lib/display.spp) ==============
+// Protocol na `@@form`: één regel per onderdeel, velden gescheiden door een
+// tab (\t, \n en \\ in een waarde geëscapet; websapl/js/notebook_core.js
+// parseForm):
+//   record <Constructor>
+//   field <naam> <soort> <waarde>      soort: int float str bool char other
+//   value <soort> <waarde>             een losse waarde (geen record)
+//   slider <soort> <waarde> <lo> <hi>
+//   choice <waarde> <optie> <optie> ...
+// Een record herkennen we aan __fields_<Naam> (preprocess/records.cfp): de
+// veldtypen staan daar als tekst, want een Bool heeft geen eigen tag.
+nbForm v = if (typeId v > TYPE_FUNC) (nbFormAdt v (constrName v) (lookup (strcat "__fields_" (constrName v)))) (nbFormValue v)
+
+nbFormAdt v name h =
+  if (typeId h == TYPE_FUNC) (nbLine (Cons "record" (Cons (displayConName name) Nil)) <#> nbFormFields v 0 (applyDynamic h Nil))
+  (nbFormValue v)
+
+nbFormValue v = nbLine (Cons "value" (Cons (nbKind v) (Cons (nbPlain v) Nil)))
+
+nbFormFields v !i fs = case fs (Nil -> 0) (Cons p rest -> nbFormField v i p <#> nbFormFields v (i + 1) rest)
+
+nbFormField v !i p = case p (Cons n r -> case r (Cons ty r2 -> nbLine (Cons "field" (Cons n (Cons (nbKindOfTy ty) (Cons (nbRecCell v i ty) Nil))))))
+
+nbKind v = nbKindTid (typeId v)
+
+nbKindTid tid = if (tid == TYPE_INT) "int" (if (tid == TYPE_FLOAT) "float" (if (tid == TYPE_STRING) "str" (if (tid == TYPE_CHAR) "char" "other")))
+
+nbKindOfTy ty =
+  if (strEqual ty "Int") "int"
+  (if (strEqual ty "Float") "float"
+  (if (strEqual ty "String" \/ strEqual ty "Str") "str"
+  (if (strEqual ty "Bool") "bool"
+  (if (strEqual ty "Char") "char" "other"))))
+
+// Een waarde als tekst: een string zoals hij is, een teken als zichzelf.
+nbPlain x = if (typeId x == TYPE_STRING) x (if (typeId x == TYPE_CHAR) (list2str (Cons x Nil)) (nbShow x))
+
+// Veld i van een record als tekst; een Bool-veld als True/False. In een eigen
+// functie, zoals nbFieldAt (getField + eval niet midden in een strcat).
+nbRecCell !v !i ty = if (strEqual ty "Bool") (showBoolVal (getField v i)) (nbPlain (getField v i))
+
+nbLine xs = printString (nbTabbed xs) <#> nbNl
+
+nbTabbed xs = case xs (Nil -> "") (Cons x rest -> case rest (Nil -> nbEsc x) (Cons y r2 -> strcat (nbEsc x) (strcat "\t" (nbTabbed rest))))
+
+nbEsc s = list2str (nbEscFrom s 0 (strlen s))
+
+nbEscFrom s !i !n = if (i >= n) Nil (nbEscChar (strat i s) (nbEscFrom s (i + 1) n))
+
+nbEscChar c rest =
+  if (c == 92) (Cons 92 (Cons 92 rest))
+  (if (c == 9) (Cons 92 (Cons 't' rest))
+  (if (c == 10) (Cons 92 (Cons 'n' rest)) (Cons c rest)))
+
+// D.records xs: een tabel met de veldnamen als kop.
+nbRecords xs = case xs (Nil -> printString "@@text" <#> nbNl <#> printString "(geen rijen)" <#> nbNl) (Cons r rest -> nbRecordsH xs (lookup (strcat "__fields_" (constrName r))))
+
+nbRecordsH xs h = if (typeId h == TYPE_FUNC) (nbRecordsF xs (applyDynamic h Nil)) (nbValue xs)
+
+nbRecordsF xs fs = printString "@@table" <#> nbNl <#> nbRow (nbFieldNames fs) <#> nbRows 500 (nbRecRows fs xs)
+
+nbFieldNames fs = case fs (Nil -> Nil) (Cons p rest -> case p (Cons n r -> Cons n (nbFieldNames rest)))
+
+nbRecRows fs xs = case xs (Nil -> Nil) (Cons r rest -> Cons (nbRecRow fs r 0) (nbRecRows fs rest))
+
+nbRecRow fs r !i = case fs (Nil -> Nil) (Cons p rest -> case p (Cons n t -> case t (Cons ty t2 -> Cons (nbRecCell r i ty) (nbRecRow rest r (i + 1)))))
 
 nbRows k rows =
   case rows
