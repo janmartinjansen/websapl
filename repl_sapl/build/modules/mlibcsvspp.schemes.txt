@@ -25,4 +25,48 @@ csv__ints 0 f l cStr l cNum
 csv__select 0 f l cStr f l l cStr l l cStr
 csv__selectIdx 0 f l cNum f l l cStr l l cStr
 csv__table 1 f l l v0 cDisplay__Display
+csv__load 0 f cStr cCsv__Table
+csv__typed 0 f l l cStr cCsv__Table
+csv__typedWith 1 f l v0 f l l cStr cCsv__Table
+csv__typedTypes 1 f v0 f l l cStr f l cShape__Ty cCsv__Table
+csv__names 1 f cCsv__Table v0
+csv__types 1 f cCsv__Table v0
+csv__rowsOf 1 f cCsv__Table v0
+csv__typeNames 0 f cCsv__Table l cStr
+csv__colTypes 0 f cNum? f cNum? f l l cStr l cShape__Ty
+csv__colType 0 f l cStr cShape__Ty
+csv__nonEmpty 0 f l cStr l cStr
+csv__toValues 0 f l cShape__Ty f l cStr l cCsv__Value
+csv__toValue 0 f cShape__Ty f cStr cCsv__Value
+csv__values 0 f cStr f cCsv__Table l cCsv__Value
+csv__valuesAt 0 f cStr f cNum? f cCsv__Table l cCsv__Value
+csv__nthValue 0 f cNum f l cCsv__Value cCsv__Value
+csv__asInt 0 f cCsv__Value cNum
+csv__asFloat 0 f cCsv__Value cFloat
+csv__asStr 0 f cCsv__Value cStr
+csv__asBool 1 f cCsv__Value v0
+csv__isEmptyValue 0 f cCsv__Value cBool
+csv__intsOf 0 f cStr f cCsv__Table l cNum
+csv__floatsOf 0 f cStr f cCsv__Table l cFloat
+csv__strsOf 0 f cStr f cCsv__Table l cStr
+csv__showValue 0 f cCsv__Value cStr
+csv__showTable 0 f cCsv__Table cDisplay__Display
+csv__loadAs 2 f v0 f cStr l v1
+csv__recordsFrom 2 f v0 f l l cStr l v1
+csv__recordsWith 2 f v0 f l cShape__Field f l cStr f l l cStr l v1
+csv__fieldColumn 0 f cShape__Field f l cStr cNum?
+csv__fieldColumnAt 0 f cShape__Field f cNum? cNum?
+csv__recordsIdx 2 f v0 f l cShape__Field f l cNum f l l cStr f cNum? l v1
+csv__fieldValues 1 f l cShape__Field f l cNum f l cStr f cNum? l v0
+csv__fieldValue 1 f cShape__Field f cStr f cNum? v0
+csv__fieldText 0 f cShape__Ty f cStr cStr
+csv__cellError 1 f cStr f cNum? f cStr v0
 csv__mapL 2 f f v0 v1 f l v0 l v1
+csv__lenL 1 f l v0 cNum
+csv__isNilL 1 f l v0 cBool
+csv__headOr 0 f l cStr cStr
+csv__tailL 1 f l v0 l v0
+csv__allL 1 f f v0 cNum f l v0 cBool
+csv__filterL 1 f f v0 cNum f l v0 l v0
+csv__zipWithL 3 f f v0 f v1 v2 f l v0 f l v1 l v2
+csv__notB 0 f cNum cBool

@@ -185,7 +185,7 @@
     for (const line of body) {
       const begin = line.match(/^@@begin (\d+)$/);
       const end = line.match(/^@@end (\d+)$/);
-      const kind = line.match(/^@@(value|text|markdown|table|graphics)$/);
+      const kind = line.match(/^@@(value|text|markdown|table|graphics|form)$/);
       if (begin) {
         cur = { blocks: [], ended: false };
         result[+begin[1]] = cur;
@@ -249,9 +249,19 @@
       const m = l.match(/^([a-z_][A-Za-z0-9_']*)\s*=(?![=:])(.*)$/);
       if (!m || m[1] === "start") continue;
       if (/^\s*(-?\d+(\.\d+)?|"[^"]*"|'.'|True|False)?\s*$/.test(m[2])) continue;
+      // Een constructor met alleen letterlijke waarden (`golf = Golf 1.0 3
+      // True`, zoals een formulier ze schrijft): ook niets uit te rekenen.
+      if (isLiteralCon(m[2].replace(/\s*\/\/.*$/, ""))) continue;
       if (!names.includes(m[1])) names.push(m[1]);
     }
     return names;
+  }
+
+  const LITERAL_RE = /^(-?\d+(\.\d+)?|\((0|0\.0) - \d+(\.\d+)?\)|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])'|True|False)$/;
+
+  function isLiteralCon(rhs) {
+    const parts = splitArgs(rhs.trim());
+    return parts.length > 1 && /^[A-Z]/.test(parts[0]) && parts.slice(1).every((p) => LITERAL_RE.test(p));
   }
 
   // == Afhankelijkheden ======================================================
@@ -284,7 +294,16 @@
       if (/^#import\b/.test(l)) global = true;
       const imp = l.match(/^import\s+"[^"]*"\s+as\s+([A-Z][A-Za-z0-9_]*)/);
       if (imp) names.add(imp[1]);
-      if (/^::/.test(l)) {
+      const rec = l.match(/^::\s*([A-Z][A-Za-z0-9_]*)\s*=\s*\{([^}]*)\}?/);
+      if (rec) {
+        // Een record: de constructor (de typenaam) en per veld een getter en
+        // een setter (preprocess/records.cfp).
+        names.add(rec[1]);
+        for (const f of rec[2].split(",")) {
+          const m = f.trim().match(/^!?\s*([a-z_][A-Za-z0-9_']*)/);
+          if (m) { names.add(m[1]); names.add("set" + m[1][0].toUpperCase() + m[1].slice(1)); }
+        }
+      } else if (/^::/.test(l)) {
         const rhs = l.split("=").slice(1).join("=");
         for (const alt of rhs.split("|")) {
           const c = alt.trim().match(/^([A-Z][A-Za-z0-9_]*)/);
@@ -438,10 +457,145 @@
     return { cells: parsed.cells, loose: parsed.loose, defErrors, types, typeWarnings, defs, defsSame, error: general.join("\n"), done };
   }
 
+  // == Formulieren (fase C van docs/2026-10-15_notebook_integraal_plan.md) ==
+  // Een expressiecel `D.form x` / `D.slider lo hi x` / `D.choice opties x`
+  // toont een formulier (@@form, lib/display.spp). Een wijziging schrijft de
+  // pagina terug in de definitie `x = ...` (brontekst), en draait die cel
+  // opnieuw met wat ervan afhangt.
+
+  function unescapeField(s) {
+    return s.replace(/\\(\\|t|n)/g, (_, c) => (c === "t" ? "\t" : c === "n" ? "\n" : "\\"));
+  }
+
+  /** Het @@form-blok als object; null als het niet te lezen is. */
+  function parseForm(content) {
+    const rows = content.split("\n").filter((l) => l !== "").map((l) => l.split("\t").map(unescapeField));
+    if (!rows.length) return null;
+    const [head, ...rest] = rows;
+    if (head[0] === "record") {
+      return { kind: "record", con: head[1], fields: rest.filter((r) => r[0] === "field").map((r) => ({ name: r[1], type: r[2], value: r[3] })) };
+    }
+    if (head[0] === "value") return { kind: "value", type: head[1], value: head[2] };
+    if (head[0] === "slider") return { kind: "slider", type: head[1], value: head[2], lo: head[3], hi: head[4] };
+    if (head[0] === "choice") return { kind: "choice", type: "str", value: head[1], options: head.slice(2) };
+    return null;
+  }
+
+  /** De naam die een formuliercel bewerkt: het laatste argument, als dat een kale naam is. */
+  function formBinding(source) {
+    const text = codeLines(source).join(" ").trim();
+    const m = text.match(/^D\.(form|slider|choice)\b.*?\s([a-z_][A-Za-z0-9_']*)$/);
+    return m ? m[2] : null;
+  }
+
+  // De regel `naam = ...` (of `naam =: ...`) op kolom 0, met de vervolgregels.
+  function defLineRe(name) {
+    return new RegExp("^" + name.replace(/'/g, "\\'") + "\\s*(=:|=)(?![=>])\\s*(.*)$");
+  }
+
+  /** De definitiecel van `name` (een definitie zonder argumenten): { cell } of null. */
+  function findDefinition(cells, name) {
+    const re = defLineRe(name);
+    for (let i = 0; i < cells.length; i++) {
+      const c = cells[i];
+      if (c.kind !== "code" || classifyCell(c.source).kind !== "def") continue;
+      if (c.source.split("\n").some((l) => re.test(l))) return { cell: i };
+    }
+    return null;
+  }
+
+  /** Een waarde uit een invoerveld als Sapl-tekst; null als ze niet past. */
+  function saplLiteral(type, raw) {
+    const t = String(raw).trim();
+    if (type === "int") {
+      if (!/^-?\d+$/.test(t)) return null;
+      const n = parseInt(t, 10);
+      return n < 0 ? `(0 - ${-n})` : String(n);
+    }
+    if (type === "float") {
+      if (!/^-?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?$/.test(t)) return null;
+      const x = parseFloat(t);
+      let a = String(Math.abs(x));
+      if (/e/i.test(a)) a = Math.abs(x).toFixed(12).replace(/0+$/, "").replace(/\.$/, ".0");
+      if (!a.includes(".")) a += ".0";
+      return x < 0 ? `(0.0 - ${a})` : a;
+    }
+    if (type === "bool") return raw === true || t === "True" ? "True" : "False";
+    if (type === "char") return t.length === 1 ? (t === "'" || t === "\\" ? `'\\${t}'` : `'${t}'`) : null;
+    if (type === "str") return '"' + String(raw).replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n").replace(/\t/g, "\\t") + '"';
+    return null;
+  }
+
+  // De argumenten op het hoogste niveau van `Con a (b c) "d e" [1, 2]`.
+  function splitArgs(text) {
+    const out = [];
+    let i = 0;
+    while (i < text.length) {
+      while (i < text.length && /\s/.test(text[i])) i++;
+      if (i >= text.length) break;
+      const start = i;
+      let depth = 0;
+      while (i < text.length && (depth > 0 || !/\s/.test(text[i]))) {
+        const c = text[i];
+        if (c === '"' || c === "'") {
+          i++;
+          while (i < text.length && text[i] !== c) { if (text[i] === "\\") i++; i++; }
+        } else if (c === "(" || c === "[" || c === "{") depth++;
+        else if (c === ")" || c === "]" || c === "}") depth--;
+        i++;
+      }
+      out.push(text.slice(start, i));
+    }
+    return out;
+  }
+
+  /**
+   * Zet in `source` de definitie van `name` op `literal` (field null) of
+   * vervangt alleen argument `field` van de constructor (`x = Con a b c`).
+   * Geeft { source } of { error }.
+   */
+  function rewriteDefinition(source, name, field, literal) {
+    const lines = source.split("\n");
+    const re = defLineRe(name);
+    const k = lines.findIndex((l) => re.test(l));
+    if (k < 0) return { error: `geen definitie ${name} = ... gevonden` };
+    let end = k + 1;
+    while (end < lines.length && /^\s+\S/.test(lines[end]) && !/^\s*\/\//.test(lines[end])) end++;
+    const m = lines[k].match(re);
+    const head = lines[k].slice(0, lines[k].length - m[2].length);
+    let rhs = [m[2], ...lines.slice(k + 1, end).map((l) => l.trim())].join(" ").replace(/\s*\/\/.*$/, "").trim();
+    if (field === null || field === undefined) rhs = literal;
+    else {
+      let inner = rhs;
+      while (/^\(.*\)$/.test(inner) && splitArgs(inner).length === 1 && balancedOuter(inner)) inner = inner.slice(1, -1).trim();
+      const parts = splitArgs(inner);
+      if (parts.length < 2 || !/^[A-Z]/.test(parts[0]) || field + 1 >= parts.length) {
+        return { error: `${name} is geen constructor met argumenten (${rhs}); schrijf ${name} = Constructor veld1 veld2 ...` };
+      }
+      parts[field + 1] = literal;
+      rhs = parts.join(" ");
+    }
+    lines.splice(k, end - k, head + rhs);
+    return { source: lines.join("\n") };
+  }
+
+  // `(a) (b)` begint en eindigt met haakjes, maar die horen niet bij elkaar.
+  function balancedOuter(text) {
+    let depth = 0;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (c === '"' || c === "'") { i++; while (i < text.length && text[i] !== c) { if (text[i] === "\\") i++; i++; } continue; }
+      if (c === "(") depth++;
+      else if (c === ")") { depth--; if (depth === 0 && i < text.length - 1) return false; }
+    }
+    return true;
+  }
+
   const api = {
     generateNbInput, parseNbOutput, parseSettings, NO_MESSAGE,
     parseNotebook, serializeNotebook, classifyCell, parseOutput, definedNames, cafHintNames,
     referencedNames, providedNames, dependents, lcInput, parseLcOutput,
+    parseForm, formBinding, findDefinition, saplLiteral, splitArgs, rewriteDefinition,
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.SaplNotebook = api;

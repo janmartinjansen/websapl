@@ -82,6 +82,19 @@
     .out table { border-collapse: collapse; font-size: 13px; font-family: var(--font-mono); margin: 2px 0; }
     .out th, .out td { border: 1px solid var(--border); padding: 3px 10px; text-align: right; }
     .out th { background: var(--bg-card); color: var(--text-2); font-weight: 600; }
+    .nb-form { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 12px; align-items: center; margin: 4px 0; font-size: 13px; max-width: 520px; }
+    .nb-form .con { grid-column: 1 / -1; color: var(--text-2); font-family: var(--font-mono); font-size: 12px; }
+    .nb-form label { color: var(--text-2); font-family: var(--font-mono); }
+    .nb-form input[type=text], .nb-form input[type=number], .nb-form select {
+      width: 100%; box-sizing: border-box; background: var(--bg-code); color: var(--text); border: 1px solid var(--border);
+      border-radius: 6px; padding: 3px 7px; font-family: var(--font-mono); font-size: 13px;
+    }
+    .nb-form input[type=checkbox] { justify-self: start; }
+    .nb-form .slider { display: flex; gap: 10px; align-items: center; }
+    .nb-form .slider input { flex: 1; min-width: 0; }
+    .nb-form .slider span { font-family: var(--font-mono); min-width: 48px; text-align: right; }
+    .nb-form .bad { border-color: var(--err) !important; }
+    .nb-form .ro { color: var(--muted); font-family: var(--font-mono); }
     .out canvas { width: min(100%, 380px); aspect-ratio: 1; display: block; border-radius: 8px; border: 1px solid var(--border); }
     .add-row { display: flex; gap: 8px; margin-left: 52px; }
     .help { color: var(--muted); font-size: 12px; margin: 30px 0 0 52px; }
@@ -98,6 +111,7 @@
         <option value="">Voorbeeld…</option>
         <option value="notebooks/kennismaking.spp">Kennismaking</option>
         <option value="notebooks/data_verkennen.spp">Data verkennen</option>
+        <option value="notebooks/formulieren.spp">Formulieren</option>
         <option value="notebooks/vm_metingen.spp">Metingen aan VM en compiler</option>
       </select>
       <label class="btn" title="Een .spp-notebook openen">Openen<input type="file" id="file-open" accept=".spp,.txt" /></label>
@@ -303,6 +317,7 @@
       renderOutputs();
       running = false;
       el("btn-run").disabled = !ready;
+      if (formRunQueued !== null) { const k = formRunQueued; formRunQueued = null; runCell(k); }
     }
 
     // De notebookmodus van de REPL in Sapl: het hele notebook als `:nb`-
@@ -477,8 +492,17 @@
     }
 
     function fillOutput(out, c) {
-      out.innerHTML = "";
       const o = c.output;
+      // Een formulier blijft staan terwijl zijn cel opnieuw draait, en krijgt
+      // daarna alleen nieuwe waarden als het verder gelijk is: anders zou een
+      // schuifbalk die je versleept onder je vinger vervangen worden.
+      if (out._form && o && (o.pending || (c.stale && !o.blocks))) return;
+      if (out._form && o && o.blocks && o.blocks.length === 1 && o.blocks[0].kind === "form" && formSignature(c, o.blocks[0]) === out._form.sig) {
+        out._form.update(NB.parseForm(o.blocks[0].content));
+        return;
+      }
+      out._form = null;
+      out.innerHTML = "";
       if (!o || c.kind === "markdown") return;
       const pre = (cls, text) => { const p = document.createElement("pre"); p.className = cls; p.textContent = text; out.appendChild(p); };
       if (o.pending) return pre("note", "…");
@@ -516,12 +540,132 @@
         else if (b.kind === "print") pre("print", b.content);
         else if (b.kind === "markdown") { const d = document.createElement("div"); d.className = "md-view"; d.innerHTML = marked.parse(b.content); out.appendChild(d); }
         else if (b.kind === "table") out.appendChild(renderTable(b.content));
+        else if (b.kind === "form") renderForm(out, c, b);
         else if (b.kind === "graphics") {
           const cv = document.createElement("canvas");
           out.appendChild(cv);
           requestAnimationFrame(() => new SaplGraphicsRenderer(cv).renderOutput(b.content));
         }
       }
+    }
+
+    // ---- formulieren (D.form, D.slider, D.choice; lib/display.spp) -------
+    // Een wijziging wordt Sapl-tekst in de definitie die de cel noemt
+    // (`D.form opties` -> `opties = Opties 3 10 True`), en die cel draait
+    // opnieuw met wat ervan afhangt. De waarde staat zo in het notebook zelf.
+    function formSignature(c, b) {
+      const f = NB.parseForm(b.content);
+      if (!f) return "";
+      const shape = f.kind === "record" ? f.fields.map((x) => x.name + ":" + x.type).join(",") + "|" + f.con
+        : f.kind === "slider" ? [f.type, f.lo, f.hi].join(",") : f.kind === "choice" ? f.options.join("\t") : f.type;
+      return [NB.formBinding(c.source), f.kind, shape].join("|");
+    }
+
+    function renderForm(out, c, b) {
+      const f = NB.parseForm(b.content);
+      if (!f) { const p = document.createElement("pre"); p.className = "err"; p.textContent = "onleesbaar formulier"; out.appendChild(p); return; }
+      const name = NB.formBinding(c.source);
+      const def = name ? NB.findDefinition(cells, name) : null;
+      const box = document.createElement("div");
+      box.className = "nb-form";
+      const inputs = [];   // per veld: { set(value) }
+      if (f.kind === "record") {
+        const con = document.createElement("div");
+        con.className = "con";
+        con.textContent = (name ? name + " :: " : "") + f.con;
+        box.appendChild(con);
+        f.fields.forEach((fl, k) => inputs.push(addInput(box, fl.name, fl.type, fl.value, null, def ? (raw) => formEdit(name, k, fl.type, raw) : null)));
+      } else {
+        inputs.push(addInput(box, name || "", f.type, f.value, f, def ? (raw) => formEdit(name, null, f.type, raw) : null));
+      }
+      out.appendChild(box);
+      if (!def) {
+        const p = document.createElement("pre");
+        p.className = "note";
+        p.textContent = name ? `alleen lezen: geen definitie ${name} = ... in een codecel` : "alleen lezen: geef als laatste argument de naam van een definitie, bv. x = 5 en D.slider 0 10 x";
+        out.appendChild(p);
+      }
+      out._form = {
+        sig: formSignature(c, b),
+        update: (g) => {
+          const vals = g.kind === "record" ? g.fields.map((x) => x.value) : [g.value];
+          vals.forEach((v, k) => inputs[k] && inputs[k].set(v));
+        },
+      };
+    }
+
+    // Eén invoerelement; `extra` is het slider-/keuzeformulier zelf.
+    function addInput(box, label, type, value, extra, onChange) {
+      const lab = document.createElement("label");
+      lab.textContent = label;
+      box.appendChild(lab);
+      let input, set;
+      const ro = !onChange;
+      if (extra && extra.kind === "slider") {
+        const wrap = document.createElement("div");
+        wrap.className = "slider";
+        input = document.createElement("input");
+        input.type = "range";
+        input.min = extra.lo; input.max = extra.hi;
+        input.step = type === "int" ? "1" : String((parseFloat(extra.hi) - parseFloat(extra.lo)) / 100 || 0.01);
+        input.value = value;
+        const shown = document.createElement("span");
+        shown.textContent = value;
+        input.addEventListener("input", () => { shown.textContent = input.value; if (onChange) onChange(input.value); });
+        wrap.append(input, shown);
+        box.appendChild(wrap);
+        set = (v) => { if (document.activeElement !== input) input.value = v; if (document.activeElement !== input) shown.textContent = v; };
+      } else if (extra && extra.kind === "choice") {
+        input = document.createElement("select");
+        for (const o of extra.options) { const op = document.createElement("option"); op.value = o; op.textContent = o; input.appendChild(op); }
+        input.value = value;
+        input.addEventListener("change", () => onChange && onChange(input.value));
+        box.appendChild(input);
+        set = (v) => { input.value = v; };
+      } else if (type === "bool") {
+        input = document.createElement("input");
+        input.type = "checkbox";
+        input.checked = value === "True";
+        input.addEventListener("change", () => onChange && onChange(input.checked));
+        box.appendChild(input);
+        set = (v) => { input.checked = v === "True"; };
+      } else if (type === "int" || type === "float" || type === "str" || type === "char") {
+        input = document.createElement("input");
+        input.type = type === "int" || type === "float" ? "number" : "text";
+        if (type === "float") input.step = "any";
+        input.value = value;
+        input.addEventListener("change", () => onChange && onChange(input.value));
+        box.appendChild(input);
+        set = (v) => { if (document.activeElement !== input) input.value = v; };
+      } else {
+        // Een veld zonder bekend type (een lijst, een ander record): tonen.
+        const span = document.createElement("span");
+        span.className = "ro";
+        span.textContent = value;
+        box.appendChild(span);
+        return { set: (v) => { span.textContent = v; } };
+      }
+      if (ro) input.disabled = true;
+      input._bad = (bad) => input.classList.toggle("bad", bad);
+      return { set: (v) => { input.classList.remove("bad"); set(v); }, input };
+    }
+
+    let formRunQueued = null;
+
+    function formEdit(name, field, type, raw) {
+      const lit = NB.saplLiteral(type, raw);
+      const def = NB.findDefinition(cells, name);
+      if (lit === null || !def) return;   // ongeldige invoer: niets doen (het veld blijft staan)
+      const r = NB.rewriteDefinition(cells[def.cell].source, name, field, lit);
+      if (r.error) { showBanner(r.error); return; }
+      cells[def.cell].source = r.source;
+      const ta = document.querySelector(`.cell[data-index="${def.cell}"] textarea`);
+      if (ta) { ta.value = r.source; autoGrow(ta); }
+      save();
+      // Draait er al iets (een schuifbalk geeft veel wijzigingen achter
+      // elkaar), dan daarna één keer, met de laatste waarde.
+      if (running) formRunQueued = def.cell;
+      else runCell(def.cell);
     }
 
     function renderTable(content) {

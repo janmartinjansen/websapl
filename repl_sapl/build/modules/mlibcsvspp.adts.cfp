@@ -1,1 +1,3 @@
 ::__Tuple2 = __Tuple2 x0 x1
+::Csv__Value = Csv__VInt !x0 | Csv__VFloat !x0 | Csv__VStr !x0 | Csv__VBool !x0 | Csv__VEmpty
+::Csv__Table = Csv__Table !x0 !x1 !x2

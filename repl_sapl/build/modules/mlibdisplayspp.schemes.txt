@@ -2,9 +2,25 @@ display__text 1 f v0 cDisplay__Display
 display__markdown 1 f v0 cDisplay__Display
 display__table 2 f v0 f v1 cDisplay__Display
 display__picture 1 f v0 cDisplay__Display
+display__records 1 f l v0 cDisplay__Display
+display__recordsTable 1 f cShape__Ty f l v0 cDisplay__Display
+display__recordRow 1 f l cShape__Field f v0 l cStr
+display__recordCells 1 f l cShape__Field f v0 f cNum l cStr
 display__bar 1 f l v0 cDisplay__Display
 display__lineChart 1 f l v0 cDisplay__Display
 display__graphicsText 0 f l cGraphics__Graphics cStr
+display__form 1 f v0 cDisplay__Display
+display__formOf 1 f cShape__Ty f v0 cDisplay__Display
+display__formFields 1 f l cShape__Field f v0 f cNum l cStr
+display__formField 1 f cShape__Field f v0 cStr
+display__slider 3 f v0 f v1 f v2 cDisplay__Display
+display__choice 0 f l cStr f cStr cDisplay__Display
+display__kindOf 0 f cShape__Ty cStr
+display__tabs 0 f l cStr cStr
+display__esc 0 f cStr cStr
+display__escFrom 0 f cStr f cNum? f cNum? f l cNum cStr
+display__escChar 0 f cNum f l cNum l cNum
+display__revC 1 f l v0 f l v0 l v0
 display__toF 0 edisplay__toF: kan niet unificeren: Num met Float
 display__listLen 1 f l v0 cNum
 display__maxOf 1 f l v0 cFloat

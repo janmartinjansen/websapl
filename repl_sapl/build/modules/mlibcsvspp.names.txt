@@ -1,5 +1,6 @@
-F read parse parseWith rowsFrom rowNext isBlankRow fieldsFrom plainFrom isFieldEnd quotedFrom quoteEnd afterQuoted afterField skipLf consField revL header body column columnAt indexOfName nthOr floats ints select selectIdx table mapL
-C 
+F read parse parseWith rowsFrom rowNext isBlankRow fieldsFrom plainFrom isFieldEnd quotedFrom quoteEnd afterQuoted afterField skipLf consField revL header body column columnAt indexOfName nthOr floats ints select selectIdx table load typed typedWith typedTypes names types rowsOf typeNames colTypes colType nonEmpty toValues toValue values valuesAt nthValue asInt asFloat asStr asBool isEmptyValue intsOf floatsOf strsOf showValue showTable loadAs recordsFrom recordsWith fieldColumn fieldColumnAt recordsIdx fieldValues fieldValue fieldText cellError mapL lenL isNilL headOr tailL allL filterL zipWithL notB
+C VInt VFloat VStr VBool VEmpty Table
 module Csv
 import "lib/text.spp" as T
 import "lib/display.spp" as D
+import "lib/shape.spp" as Sh

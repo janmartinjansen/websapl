@@ -16,6 +16,7 @@ nbRenderChecked 2 00
 nbRenderCheckedName 3 000
 nbIsDisplayName 1 0
 nbDisplay 1 1
+nbLines 1 1
 nbRows 2 01
 nbRow 1 1
 nbRowRest 1 1
@@ -27,6 +28,11 @@ nbShowTid 3 001
 nbShowAdt 3 001
 nbShowHook 4 0000
 nbShowGeneric 4 0010
+nbShowRec 5 00100
+nbRecFields 4 0001
+nbRecField 4 0111
+nbRecValue 4 0111
+nbShowPlain 4 0010
 nbFields 4 0011
 nbFieldAt 3 011
 nbItems 3 001

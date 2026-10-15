@@ -86,7 +86,7 @@
    "blocks": [
     {
      "kind": "table",
-     "content": "week\tfruit\tkilo\tprijs\topmerking\n1\tappels\t120\t1.20\t\n1\tperen\t80\t1.45\trijp, zacht\n2\tappels\t135\t1.15\t\n2\tperen\t70\t1.50\t\n3\tappels\t150\t1.10\taanbieding \"3 halen\"\n3\tperen\t95\t1.40\t\n4\tappels\t142\t1.10\t\n4\tperen\t110\t1.35\tlaatste week"
+     "content": "week\tfruit\tkilo\tprijs\topmerking\n1\tappels\t120\t1.2\t\n1\tperen\t80\t1.45\trijp, zacht\n2\tappels\t135\t1.15\t\n2\tperen\t70\t1.5\t\n3\tappels\t150\t1.1\taanbieding \"3 halen\"\n3\tperen\t95\t1.4\t\n4\tappels\t142\t1.1\t\n4\tperen\t110\t1.35\tlaatste week"
     }
    ]
   },
@@ -127,6 +127,14 @@
     {
      "kind": "graphics",
      "content": "Graphics__GraphText 15 -0.72 -0.88 \"1.00\" Graphics__GraphText 15 0.76 -0.88 \"4.00\" Graphics__GraphPolyLine 7 3 -0.72 0.9 -0.72 -0.78 0.92 -0.78 Graphics__GraphText 15 -0.93 -0.78 \"1.10\" Graphics__GraphText 15 -0.93 0.87 \"1.20\" Graphics__GraphPolyLine 11 4 -0.72 0.9 -0.173333 0.059999 0.373333 -0.78 0.92 -0.78 "
+    }
+   ]
+  },
+  "10": {
+   "blocks": [
+    {
+     "kind": "table",
+     "content": "week : Int\tfruit : String\tkilo : Int\tprijs : Float\topmerking : String\n1\tappels\t120\t1.2\t\n1\tperen\t80\t1.45\trijp, zacht\n2\tappels\t135\t1.15\t\n2\tperen\t70\t1.5\t\n3\tappels\t150\t1.1\taanbieding \"3 halen\"\n3\tperen\t95\t1.4\t\n4\tappels\t142\t1.1\t\n4\tperen\t110\t1.35\tlaatste week"
     }
    ]
   }

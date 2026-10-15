@@ -1,0 +1,3 @@
+::Shape__Ty = Shape__TInt | Shape__TFloat | Shape__TStr | Shape__TBool | Shape__TChar | Shape__TList !x0 | Shape__TRec !x0 x1 | Shape__TUnknown !x0
+::Shape__Field = Shape__Field !x0 !x1
+::Shape__Dyn = Shape__Dyn x0

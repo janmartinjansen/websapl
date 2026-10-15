@@ -34,7 +34,9 @@ const STATE = `[document.getElementById("status").textContent,
   document.getElementById("banner").hidden ? "" : document.getElementById("banner").textContent,
   ...[...document.querySelectorAll(".cell")].map((c) => ((c.querySelector(".out") ? c.querySelector(".out").innerText.replace(/\\s+/g, " ") : "") + (c.querySelector("canvas") ? " [canvas]" : "")).trim())]`;
 const DONE = `document.getElementById("status").textContent.startsWith("klaar (") && document.getElementById("status").textContent !== window.__mark`;
-const mark = `window.__mark = document.getElementById("status").textContent;`;
+// Vóór een actie de status op een vaste tekst: twee runs na elkaar kunnen
+// precies dezelfde "klaar (36 ms, alles)" geven (15 oktober 2026).
+const mark = `document.getElementById("status").textContent = "(wacht)"; window.__mark = "(wacht)";`;
 
 (async () => {
   const server = WB ? spawn("node", ["workbench/server.js", String(HTTP_PORT)], { cwd: repo, stdio: "ignore" })
@@ -100,6 +102,26 @@ const mark = `window.__mark = document.getElementById("status").textContent;`;
     const saved = await ev(`JSON.parse(localStorage.getItem("${STORE_KEY}")).text.split("\\n")[0]`);
     check("van boven naar beneden: fout bij de cel, en in het bestand", /latere cel \[2\]/.test(st[2]) && /niet uitgevoerd/.test(st[4]) &&
       saved === "//%% [instellingen] volgorde=boven-naar-beneden", st.join("\n") + "\n" + saved);
+    // Formulieren (fase C van docs/2026-10-15_notebook_integraal_plan.md):
+    // een wijziging komt in de definitie terecht, en wat ervan afhangt draait.
+    writeNb("::Opties = { !aantal : Int, !aan : Bool }\n\nopties = Opties 3 False\nk = 5", "D.form opties",
+      "aantal opties * 10 + (if (aan opties) 1 0)", "D.slider 0 10 k", "k * 2");
+    st = await open("notebooks/_browser_test.spp");
+    const formIn = (sel) => `document.querySelectorAll(".cell")[1].querySelector("${sel}")`;
+    const src0 = `document.querySelectorAll(".cell")[0].querySelector("textarea").value`;
+    check("formulier: getoond, afhankelijke cellen goed", st[4] === "30" && st[6] === "10" && await ev(`!!${formIn("input[type=number]")}`), st.join("\n"));
+    st = await act(`const i = ${formIn("input[type=number]")}; i.value = "7"; i.dispatchEvent(new Event("change"));`);
+    check("formulier: getal gewijzigd, in de bron en in de afhankelijke cel", st[4] === "70" && /opties = Opties 7 False/.test(await ev(src0)), st.join("\n") + "\n" + await ev(src0));
+    st = await act(`${formIn("input[type=checkbox]")}.click();`);
+    check("formulier: vinkje", st[4] === "71" && /opties = Opties 7 True/.test(await ev(src0)), st.join("\n"));
+    st = await act(`const r = document.querySelectorAll(".cell")[3].querySelector("input[type=range]"); r.value = "8"; r.dispatchEvent(new Event("input"));`);
+    check("schuifbalk: k = 8 in de bron, k * 2 = 16", st[6] === "16" && /\bk = 8\b/.test(await ev(src0)), st.join("\n") + "\n" + await ev(src0));
+
+    writeNb("::Kaart = { !titel : String }\n\nkaart = Kaart \"x\"", "D.form kaart", "strlen (titel kaart)");
+    st = await open("notebooks/_browser_test.spp");
+    st = await act(`const i = ${formIn("input[type=text]")}; i.value = 'a "b"\\\\c'; i.dispatchEvent(new Event("change"));`);
+    check("formulier: tekst met \" en \\ terug in de bron, lengte 7", st[4] === "7" && (await ev(src0)).includes('kaart = Kaart "a \\"b\\"\\\\c"'), st.join("\n") + "\n" + await ev(src0));
+
     await ev(`localStorage.clear()`);
     ws.close();
   } catch (e) {

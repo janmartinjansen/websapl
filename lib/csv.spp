@@ -7,6 +7,13 @@
 //           C.floats (C.column "prijs" rijen)  -- [1.2, 0.45, ...]
 //           C.table rijen                      -- als tabel in de notebook
 //
+// Getypeerd (15 oktober 2026, docs/2026-10-15_notebook_integraal_plan.md fase B):
+//           ::Verkoop = { !week : Int, !fruit : String, !kilo : Int, !prijs : Float, !opmerking : String }
+//           verkopen = C.loadAs Verkoop "notebooks/data/fruit.csv"   -- [Verkoop]
+//           t = C.load "notebooks/data/fruit.csv"   -- een Table: per kolom een herkend type
+//           C.showTable t                           -- kop met de typen, bv. "prijs : Float"
+//           C.floatsOf "prijs" t                    -- [1.2, 1.45, ...]
+//
 // Een tabel is een lijst rijen, een rij een lijst velden (gepakte strings);
 // de eerste rij is de kop. Velden tussen aanhalingstekens mogen de
 // scheider, regeleinden en `""` (een aanhalingsteken) bevatten. Regeleinden
@@ -14,6 +21,7 @@
 module Csv
 import "lib/text.spp" as T
 import "lib/display.spp" as D
+import "lib/shape.spp" as Sh
 
 ::list = Nil | Cons !x xs
 
@@ -96,6 +104,135 @@ selectIdx idxs rows = mapL (\r -> mapL (\i -> nthOr i r) idxs) rows
 // Als tabel in de notebook: de kop boven, dan de rijen.
 table rows = D.table (header rows) (body rows)
 
+// == Getypeerd: zonder vorm (verkennen) =======================================
+
+// Een veld met een herkend type; VEmpty voor een leeg veld.
+::Value = VInt !n | VFloat !x | VStr !s | VBool !b | VEmpty
+
+// names: de kop; types: per kolom een Sh.Ty; rows: per rij een lijst Value.
+::Table = Table !names !types !rows
+
+load path = typed (read path)
+
+typed rows = typedWith (header rows) (body rows)
+
+typedWith hs rs = typedTypes hs rs (colTypes 0 (lenL hs) rs)
+
+typedTypes hs rs types = Table hs types (mapL (toValues types) rs)
+
+names t = case t (Table n ty r -> n)
+
+types t = case t (Table n ty r -> ty)
+
+rowsOf t = case t (Table n ty r -> r)
+
+typeNames t = mapL Sh.tyName (types t)
+
+// Het type van een kolom: alles een geheel getal -> Int, anders alles een
+// getal -> Float, anders alles true/false -> Bool, anders String. Lege
+// velden tellen niet mee; een kolom zonder waarden is String.
+colTypes !i n rs = if (i >= n) Nil (Cons (colType (nonEmpty (mapL (\r -> nthOr i r) rs))) (colTypes (i + 1) n rs))
+
+colType vs =
+  if (isNilL vs) Sh.TStr
+  (if (allL Sh.isIntText vs) Sh.TInt
+  (if (allL Sh.isNumText vs) Sh.TFloat
+  (if (allL Sh.isBoolText vs) Sh.TBool Sh.TStr)))
+
+nonEmpty vs = filterL (\v -> notB (T.isEmpty (T.trim v))) vs
+
+toValues types r = case types (Nil -> Nil) (Cons ty rest -> Cons (toValue ty (headOr r)) (toValues rest (tailL r)))
+
+toValue ty s =
+  if (T.isEmpty (T.trim s)) VEmpty
+  (case ty
+    (Sh.TInt -> VInt (T.readInt s))
+    (Sh.TFloat -> VFloat (T.readFloat s))
+    (Sh.TBool -> VBool (T.equal (T.toLower (T.trim s)) "true"))
+    (_ -> VStr s))
+
+// De waarden van één kolom, op naam.
+values name t = valuesAt name (indexOfName name (names t) 0) t
+
+valuesAt name i t = if (i < 0) (error (T.concat ["Csv.values: onbekende kolom \"", name, "\""])) (mapL (\r -> nthValue i r) (rowsOf t))
+
+nthValue i r = case r (Nil -> VEmpty) (Cons v rest -> if (i == 0) v (nthValue (i - 1) rest))
+
+asInt v = case v (VInt n -> n) (VFloat x -> ftoi x) (_ -> error (T.append "Csv.asInt: geen getal: " (showValue v)))
+
+asFloat v = case v (VInt n -> itof n) (VFloat x -> x) (_ -> error (T.append "Csv.asFloat: geen getal: " (showValue v)))
+
+asStr v = showValue v
+
+asBool v = case v (VBool b -> b) (_ -> error (T.append "Csv.asBool: geen Bool: " (showValue v)))
+
+isEmptyValue v = case v (VEmpty -> True) (_ -> False)
+
+intsOf name t = mapL asInt (values name t)
+
+floatsOf name t = mapL asFloat (values name t)
+
+strsOf name t = mapL asStr (values name t)
+
+showValue v =
+  case v
+    (VInt n -> T.showInt n)
+    (VFloat x -> ftoa x)
+    (VStr s -> s)
+    (VBool b -> if b "True" "False")
+    (VEmpty -> "")
+
+// Als tabel in de notebook, met het type in de kop.
+showTable t = D.table (zipWithL (\n ty -> T.concat [n, " : ", Sh.tyName ty]) (names t) (types t)) (mapL (mapL showValue) (rowsOf t))
+
+// == Getypeerd: met een vorm (een record) =====================================
+
+// loadAs Verkoop pad: elke rij een Verkoop. De kolommen worden op veldnaam
+// gezocht (de volgorde in het bestand doet er niet toe, extra kolommen
+// worden genegeerd) en omgezet volgens het veldtype. Een ontbrekende kolom
+// of een veld dat niet past geeft een fout met de rij en de kolom.
+loadAs con path = recordsFrom con (read path)
+
+recordsFrom con rows = recordsWith con (Sh.fields (Sh.ofCon con)) (header rows) (body rows)
+
+recordsWith con fs hs rs =
+  if (isNilL fs) (error (T.concat ["Csv.loadAs: ", funcName con, " is geen record"]))
+  (recordsIdx con fs (mapL (\f -> fieldColumn f hs) fs) rs 2)
+
+fieldColumn f hs = fieldColumnAt f (indexOfName (Sh.fieldName f) hs 0)
+
+fieldColumnAt f i = if (i < 0) (error (T.concat ["Csv.loadAs: geen kolom \"", Sh.fieldName f, "\" in het bestand"])) i
+
+recordsIdx con fs idxs rs !nr = case rs (Nil -> Nil) (Cons r rest -> Cons (Sh.make con (fieldValues fs idxs r nr)) (recordsIdx con fs idxs rest (nr + 1)))
+
+fieldValues fs idxs r nr =
+  case fs
+    (Nil -> Nil)
+    (Cons f frest -> case idxs (Cons i irest -> Cons (fieldValue f (nthOr i r) nr) (fieldValues frest irest r nr)) (Nil -> Nil))
+
+fieldValue f s nr = try (Sh.fromText (Sh.fieldTy f) (fieldText (Sh.fieldTy f) s)) (cellError (Sh.fieldName f) nr)
+
+// Een tekstveld houdt zijn spaties; een getal of Bool wordt eerst getrimd.
+fieldText ty s = case ty (Sh.TStr -> s) (_ -> T.trim s)
+
+cellError name nr msg = error (T.concat ["Csv.loadAs: rij ", T.showInt nr, ", kolom ", name, ": ", msg])
+
 // == Lijsthulpjes ============================================================
 
 mapL f xs = case xs (Nil -> Nil) (Cons y ys -> Cons (f y) (mapL f ys))
+
+lenL xs = case xs (Nil -> 0) (Cons y ys -> 1 + lenL ys)
+
+isNilL xs = case xs (Nil -> True) (_ -> False)
+
+headOr xs = case xs (Nil -> T.empty) (Cons y ys -> y)
+
+tailL xs = case xs (Nil -> Nil) (Cons y ys -> ys)
+
+allL p xs = case xs (Nil -> True) (Cons y ys -> if (p y) (allL p ys) False)
+
+filterL p xs = case xs (Nil -> Nil) (Cons y ys -> if (p y) (Cons y (filterL p ys)) (filterL p ys))
+
+zipWithL f xs ys = case xs (Nil -> Nil) (Cons a as -> case ys (Nil -> Nil) (Cons b bs -> Cons (f a b) (zipWithL f as bs)))
+
+notB b = if b False True

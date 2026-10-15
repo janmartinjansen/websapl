@@ -1,0 +1,4 @@
+F ofCon conName ofValue ofValueTid ofName ofNameH fieldsFrom fieldOf parseTy isListName isRec recName fields fieldName fieldTy fieldNames tyName dyn make strictList revL fromText boolText isIntText isIntT digitsAt isNumText isNumT numFrom expFrom notB isBoolText showAs showFields showPlain ofPlainTid mapL
+C TInt TFloat TStr TBool TChar TList TRec TUnknown Field Dyn
+module Shape
+import "lib/text.spp" as T

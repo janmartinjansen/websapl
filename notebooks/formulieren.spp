@@ -1,0 +1,39 @@
+//%% [markdown]
+// # Formulieren: een waarde instellen en zien wat er verandert
+//
+// `D.form x` toont de definitie `x` als formulier, `D.slider lo hi x` als
+// schuifbalk en `D.choice opties x` als keuzelijst. Een wijziging komt in de
+// brontekst van die definitie terecht (kijk naar de cel erboven), en alleen
+// wat ervan afhangt wordt opnieuw uitgerekend. De waarden staan dus gewoon
+// in het notebook: opslaan en opnieuw openen geeft hetzelfde.
+//%%
+import "lib/plot.spp" as P
+import "lib/list.spp" as L
+import "lib/text.spp" as T
+
+::Golf = { !amplitude : Float, !frequentie : Int, !gedempt : Bool }
+
+golf = Golf 1.0 3 False
+//%%
+D.form golf
+//%%
+punten = 80
+//%%
+D.slider 10 200 punten
+//%%
+vorm = "sinus"
+//%%
+D.choice ["sinus", "blok", "zaagtand"] vorm
+//%%
+xs = [ itof i / itof punten | i <- L.range 0 punten ]
+
+basis x = if (T.equal vorm "blok") (if (sin x >= 0.0) 1.0 (0.0 - 1.0))
+  (if (T.equal vorm "zaagtand") (zaag x) (sin x))
+
+zaag x = (x / 3.14159) - (2.0 * floor ((x + 3.14159) / 6.28318))
+
+hoogte g x = amplitude g * basis (6.28318 * itof (frequentie g) * x) * (if (gedempt g) (exp (0.0 - (3.0 * x))) 1.0)
+//%%
+P.line xs (L.map (hoogte golf) xs)
+//%%
+golf

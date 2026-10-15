@@ -118,5 +118,42 @@ check("lc uitvoer", nb.parseLcOutput("execution started, progsize=1\nbanner\nlc>
   1: [{ line: ":nf bad", error: "onbekende variabele: bad" }, { line: ":nf 2", notRun: true }],
 });
 
+// 10. Formulieren (@@form, D.form/D.slider/D.choice; fase C van
+// docs/2026-10-15_notebook_integraal_plan.md).
+check("form record", nb.parseForm("record\tOpties\nfield\tnaam\tstr\ta\\tb \"c\"\nfield\tn\tint\t3\nfield\taan\tbool\tTrue"),
+  { kind: "record", con: "Opties", fields: [{ name: "naam", type: "str", value: "a\tb \"c\"" }, { name: "n", type: "int", value: "3" }, { name: "aan", type: "bool", value: "True" }] });
+check("form slider", nb.parseForm("slider\tfloat\t0.25\t0\t1"), { kind: "slider", type: "float", value: "0.25", lo: "0", hi: "1" });
+check("form choice", nb.parseForm("choice\tgroen\trood\tgroen"), { kind: "choice", type: "str", value: "groen", options: ["rood", "groen"] });
+check("form value", nb.parseForm("value\tint\t12"), { kind: "value", type: "int", value: "12" });
+check("binding form", nb.formBinding("D.form opties"), "opties");
+check("binding slider", nb.formBinding("D.slider 0 100 n'"), "n'");
+check("binding choice", nb.formBinding("D.choice [\"a\", \"b\"] kleur"), "kleur");
+check("binding geen naam", nb.formBinding("D.form (Opties 1 2)"), null);
+check("binding geen formulier", nb.formBinding("L.sum xs"), null);
+const fcells = [{ kind: "code", source: "x = 5\nopties = Opties 3 10 True\nf a = a" }, { kind: "code", source: "D.form opties" }, { kind: "markdown", source: "opties = 1" }];
+check("definitie gevonden", nb.findDefinition(fcells, "opties"), { cell: 0 });
+check("definitie niet in een expressiecel of markdown", nb.findDefinition(fcells, "D"), null);
+check("definitie met =:", nb.findDefinition([{ kind: "code", source: "n =: 4" }], "n"), { cell: 0 });
+check("niet n == 4", nb.findDefinition([{ kind: "code", source: "m = 1\nn == 4" }], "n"), null);
+check("literal int", [nb.saplLiteral("int", "42"), nb.saplLiteral("int", "-3"), nb.saplLiteral("int", "4.5")], ["42", "(0 - 3)", null]);
+check("literal float", [nb.saplLiteral("float", "2"), nb.saplLiteral("float", "-0.5"), nb.saplLiteral("float", "1e-7"), nb.saplLiteral("float", "x")], ["2.0", "(0.0 - 0.5)", "0.0000001", null]);
+check("literal str", nb.saplLiteral("str", 'a "b"\\c\n'), '"a \\"b\\"\\\\c\\n"');
+check("literal bool", [nb.saplLiteral("bool", true), nb.saplLiteral("bool", false)], ["True", "False"]);
+check("args", nb.splitArgs('Con a (b c) "d e" [1, 2] \'x\''), ["Con", "a", "(b c)", '"d e"', "[1, 2]", "'x'"]);
+check("herschrijf veld", nb.rewriteDefinition("x = 5\nopties = Opties 3 10 True  // standaard\nf a = a", "opties", 1, "11"),
+  { source: "x = 5\nopties = Opties 3 11 True\nf a = a" });
+check("herschrijf tussen haakjes", nb.rewriteDefinition("o = (Opties \"a b\" (0 - 1) True)", "o", 2, "False"), { source: "o = Opties \"a b\" (0 - 1) False" });
+check("herschrijf vervolgregel", nb.rewriteDefinition("o =: Opties 1\n  2 3\ng = 1", "o", 0, "7"), { source: "o =: Opties 7 2 3\ng = 1" });
+check("herschrijf geheel", nb.rewriteDefinition("n = 5\nm = n", "n", null, "6"), { source: "n = 6\nm = n" });
+check("herschrijf geen constructor", nb.rewriteDefinition("o = maak 1 2", "o", 0, "3").error !== undefined, true);
+check("herschrijf ontbreekt", nb.rewriteDefinition("p = 1", "o", null, "3").error !== undefined, true);
+check("@@form in de uitvoer", nb.parseOutput("@@begin 1\n@@form\nvalue\tint\t12\n@@end 1\n").cells[1].blocks, [{ kind: "form", content: "value\tint\t12" }]);
+
+check("record: constructor, getters en setters", [...nb.providedNames("::Opties = { !aantal : Int, aan : Bool }\nopties = Opties 3 True").names].sort(),
+  ["Opties", "aan", "aantal", "opties", "setAan", "setAantal"]);
+check("record: een cel met alleen een getter hangt ervan af", [...nb.dependents([{ kind: "code", source: "::P = { !px : Int }" }, { kind: "code", source: "px" }], 0)], [0, 1]);
+
+check("geen =:-tip bij een constructor met letterlijke waarden", nb.cafHintNames("golf = Golf 1.0 3 True\no = Opties \"a b\" (0 - 1) 'c'\np = Punt (f 1) 2"), ["p"]);
+
 console.log(failures ? `${failures} fout(en)` : "notebook_core: alles goed");
 process.exit(failures ? 1 : 0);

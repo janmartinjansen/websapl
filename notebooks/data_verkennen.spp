@@ -3,6 +3,10 @@
 //
 // De gegevens staan in `notebooks/data/fruit.csv` (verzonnen cijfers).
 // `lib/csv.spp` leest ze, `lib/stats.spp` rekent, `lib/plot.spp` tekent.
+//
+// Een rij is een `Verkoop`, een record met een type per veld; `C.loadAs`
+// zoekt de kolommen op naam en zet elk veld om (een fout zegt welke rij en
+// kolom niet past).
 //%%
 import "lib/csv.spp" as C
 import "lib/stats.spp" as S
@@ -10,24 +14,31 @@ import "lib/plot.spp" as P
 import "lib/list.spp" as L
 import "lib/text.spp" as T
 
-rijen = C.read "notebooks/data/fruit.csv"
+::Verkoop = { !week : Int, !fruit : String, !kilo : Int, !prijs : Float, !opmerking : String }
 
-appels = [ r | r <- C.body rijen, T.equal (L.nth 1 r) "appels" ]
-peren  = [ r | r <- C.body rijen, T.equal (L.nth 1 r) "peren" ]
+verkopen = C.loadAs Verkoop "notebooks/data/fruit.csv"
 
-kilo rs = C.ints (C.column "kilo" (Cons (C.header rijen) rs))
-prijs rs = C.floats (C.column "prijs" (Cons (C.header rijen) rs))
+appels = [ v | v <- verkopen, T.equal (fruit v) "appels" ]
+peren  = [ v | v <- verkopen, T.equal (fruit v) "peren" ]
+
+kilos vs = L.map kilo vs
+prijzen vs = L.map prijs vs
 //%%
-C.table rijen
+D.records verkopen
 //%%
-D.table ["", "appels", "peren"] [["kilo totaal", S.sum (kilo appels), S.sum (kilo peren)], ["gem. prijs", T.showFixed 2 (S.mean (prijs appels)), T.showFixed 2 (S.mean (prijs peren))]]
+D.table ["", "appels", "peren"] [["kilo totaal", S.sum (kilos appels), S.sum (kilos peren)], ["gem. prijs", T.showFixed 2 (S.mean (prijzen appels)), T.showFixed 2 (S.mean (prijzen peren))]]
 //%% [markdown]
 // Verkopen de peren beter naarmate ze goedkoper worden?
 //%%
-P.scatterFit (prijs peren) (kilo peren)
+P.scatterFit (prijzen peren) (kilos peren)
 //%%
-S.correlation (prijs peren) (kilo peren)
+S.correlation (prijzen peren) (kilos peren)
 //%%
-P.bars ["w1", "w2", "w3", "w4"] (kilo appels)
+P.bars ["w1", "w2", "w3", "w4"] (kilos appels)
 //%%
-P.line [1, 2, 3, 4] (prijs appels)
+P.line [1, 2, 3, 4] (prijzen appels)
+//%% [markdown]
+// Zonder record: `C.load` herkent per kolom zelf het type (alles een geheel
+// getal: `Int`, alles een getal: `Float`, anders `String`).
+//%%
+C.showTable (C.load "notebooks/data/fruit.csv")

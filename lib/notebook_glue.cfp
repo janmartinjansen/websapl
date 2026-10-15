@@ -15,7 +15,7 @@
 //
 // Protocol op stdout, per expressiecel:
 //   @@begin N
-//   @@<soort>            (value, text, markdown, table of graphics)
+//   @@<soort>            (value, text, markdown, table, graphics of form)
 //   <inhoud>
 //   @@end N
 // Stopt een cel met `error`, dan ontbreekt haar @@end: de pagina markeert
@@ -92,6 +92,9 @@ nbDisplay d =
     (D.DMarkdown s -> printString "@@markdown" <#> nbNl <#> printString s <#> nbNl)
     (D.DTable hs rows -> printString "@@table" <#> nbNl <#> nbRow hs <#> nbRows 500 rows)
     (D.DGraphics gs -> printString "@@graphics" <#> nbNl <#> printString (D.graphicsText gs) <#> nbNl)
+    (D.DForm ls -> printString "@@form" <#> nbNl <#> nbLines ls)
+
+nbLines ls = case ls (Nil -> 0) (Cons l rest -> printString l <#> nbNl <#> nbLines rest)
 
 nbRows k rows =
   case rows
@@ -130,7 +133,26 @@ nbShowAdt d v name =
 
 nbShowHook d v name h = if (typeId h == TYPE_FUNC) (applyDynamic h (Cons v Nil)) (nbShowGeneric d v name (getConstrArity v))
 
-nbShowGeneric d v name arity =
+// Een record (er is een __fields_<Naam>, preprocess/records.cfp) als
+// `Naam { veld = waarde, ... }`, met een Bool-veld als True/False (15 oktober
+// 2026; in een cel maakt de preprocessor geen show_<Naam>, want de cel
+// definieert geen showVal).
+nbShowGeneric d v name arity = nbShowRec d v name arity (lookup (strcat "__fields_" name))
+
+nbShowRec d v name arity h =
+  if (typeId h == TYPE_FUNC) (strcat (displayConName name) (strcat " { " (strcat (nbRecFields (d - 1) v 0 (applyDynamic h Nil)) " }")))
+  (nbShowPlain d v name arity)
+
+nbRecFields d v i fs =
+  case fs
+    (Nil -> "")
+    (Cons p rest -> case rest (Nil -> nbRecField d v i p) (_ -> strcat (nbRecField d v i p) (strcat ", " (nbRecFields d v (i + 1) rest))))
+
+nbRecField d v i p = case p (Cons n r -> case r (Cons ty r2 -> strcat n (strcat " = " (nbRecValue d v i ty))))
+
+nbRecValue d !v !i ty = if (strEqual ty "Bool") (showBoolVal (getField v i)) (nbFieldAt d v i)
+
+nbShowPlain d v name arity =
   if (isTupleName name) (strcat "(" (strcat (nbFields (d - 1) v 0 arity) ")"))
   (if (arity == 0) (displayConName name) (strcat (displayConName name) (strcat "(" (strcat (nbFields (d - 1) v 0 arity) ")"))))
 

@@ -1,0 +1,37 @@
+shape__ofCon 1 f v0 cShape__Ty
+shape__conName 0 f cStr cStr
+shape__ofValue 1 f v0 cShape__Ty
+shape__ofValueTid 1 f v0 f cNum? cShape__Ty
+shape__ofName 0 f cStr cShape__Ty
+shape__ofNameH 1 f cStr f v0 cShape__Ty
+shape__fieldsFrom 0 f l l cStr l cShape__Field
+shape__fieldOf 0 f l cStr cShape__Field
+shape__parseTy 0 f cStr cShape__Ty
+shape__isListName 0 f cStr cBool
+shape__isRec 0 f cShape__Ty cBool
+shape__recName 0 f cShape__Ty cStr
+shape__fields 1 f cShape__Ty l v0
+shape__fieldName 1 f cShape__Field v0
+shape__fieldTy 1 f cShape__Field v0
+shape__fieldNames 1 f cShape__Ty l v0
+shape__tyName 0 f cShape__Ty cStr
+shape__dyn 2 f v0 v1
+shape__make 3 f v0 f l v1 v2
+shape__strictList 1 f l v0 l v0
+shape__revL 1 f l v0 f l v0 l v0
+shape__fromText 1 f cShape__Ty f cStr v0
+shape__boolText 1 f cStr v0
+shape__isIntText 0 f cStr cBool
+shape__isIntT 0 f cStr cBool
+shape__digitsAt 0 f cStr f cNum? f cNum? f cBool cBool
+shape__isNumText 0 f cStr cBool
+shape__isNumT 0 f cStr cBool
+shape__numFrom 0 f cStr f cNum? f cNum? f cBool f cNum f cNum cBool
+shape__expFrom 0 f cStr f cNum? f cNum? cBool
+shape__notB 0 f cNum cBool
+shape__isBoolText 0 f cStr cBool
+shape__showAs 1 f cShape__Ty f v0 cStr
+shape__showFields 1 f l cShape__Field f v0 f cNum l cStr
+shape__showPlain 1 f v0 cStr
+shape__ofPlainTid 1 f v0 f cNum cStr
+shape__mapL 2 f f v0 v1 f l v0 l v1

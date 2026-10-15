@@ -16,8 +16,10 @@
 // WebSapl's coördinaten: x en y van -1.0 tot 1.0, (0,0) in het midden.
 module Display
 import "grafisch/graphics.cfp" as G
+import "lib/shape.spp" as Sh
+import "lib/text.spp" as T
 
-::Display = DText !s | DTable !headers !rows | DMarkdown !s | DGraphics !gs
+::Display = DText !s | DTable !headers !rows | DMarkdown !s | DGraphics !gs | DForm !lines
 
 // == Bouwfuncties ============================================================
 
@@ -31,6 +33,16 @@ table headers rows = DTable headers rows
 
 picture gs = DGraphics gs
 
+// Een lijst records als tabel: de veldnamen als kop, elk veld volgens zijn
+// type getoond (een Bool als True/False). Zie lib/shape.spp.
+records xs = case xs (Nil -> DText "(geen rijen)") (Cons r rest -> recordsTable (Sh.ofValue r) xs)
+
+recordsTable ty xs = DTable (Sh.fieldNames ty) (Sh.mapL (recordRow (Sh.fields ty)) xs)
+
+recordRow fs r = recordCells fs r 0
+
+recordCells fs r !i = case fs (Nil -> Nil) (Cons f rest -> Cons (Sh.showAs (Sh.fieldTy f) (getField r i)) (recordCells rest r (i + 1)))
+
 // Staafdiagram van een lijst getallen (Int of Float, niet negatief).
 bar values = DGraphics (Cons baseLine (barsFrom 0 (listLen values) (maxOf values) values))
 
@@ -39,6 +51,67 @@ lineChart values = DGraphics (Cons baseLine (Cons (G.GraphPolyLine 11 (linePoint
 
 // Voor lib/notebook_glue.cfp: de tekst die WebSapl's graphics-renderer leest.
 graphicsText gs = G.graphicsout gs
+
+// == Invoer: formulieren (fase C van docs/2026-10-15_notebook_integraal_plan.md)
+//
+// Een formulier toont een waarde om te bewerken. De notebookpagina koppelt
+// het aan de definitie die het laatste argument noemt:
+//
+//   opties = Opties 3 10 True        -- ::Opties = { !min : Int, !max : Int, !aan : Bool }
+//   D.form opties                    -- een veld per recordveld
+//
+//   n = 5
+//   D.slider 0 100 n                 -- een schuifbalk (Int of Float)
+//   kleur = "rood"
+//   D.choice ["rood", "groen"] kleur -- een keuzelijst (strings)
+//
+// Een wijziging schrijft de pagina terug in de brontekst van die definitie
+// (`opties = Opties 4 10 True`) en voert het notebook opnieuw uit: alleen
+// wat ervan afhangt. De waarde staat dus in het bestand.
+//
+// Het protocol (DForm, `@@form` in lib/notebook_glue.cfp): één regel per
+// onderdeel, velden gescheiden door een tab (\t, \n en \\ in een waarde
+// geëscapet):
+//   record <Constructor>
+//   field <naam> <soort> <waarde>      soort: int float str bool char other
+//   value <soort> <waarde>             een losse waarde (geen record)
+//   slider <soort> <waarde> <lo> <hi>
+//   choice <waarde> <optie> <optie> ...
+form v = formOf (Sh.ofValue v) v
+
+formOf ty v =
+  if (Sh.isRec ty) (DForm (Cons (tabs ["record", Sh.recName ty]) (formFields (Sh.fields ty) v 0)))
+  (DForm (Cons (tabs ["value", kindOf ty, Sh.showAs ty v]) Nil))
+
+formFields fs v !i = case fs (Nil -> Nil) (Cons f rest -> Cons (formField f (getField v i)) (formFields rest v (i + 1)))
+
+formField f x = tabs ["field", Sh.fieldName f, kindOf (Sh.fieldTy f), Sh.showAs (Sh.fieldTy f) x]
+
+slider lo hi v = DForm (Cons (tabs ["slider", kindOf (Sh.ofValue v), Sh.showAs (Sh.ofValue v) v, Sh.showAs (Sh.ofValue lo) lo, Sh.showAs (Sh.ofValue hi) hi]) Nil)
+
+choice opts v = DForm (Cons (tabs (Cons "choice" (Cons v opts))) Nil)
+
+kindOf ty =
+  case ty
+    (Sh.TInt -> "int")
+    (Sh.TFloat -> "float")
+    (Sh.TStr -> "str")
+    (Sh.TBool -> "bool")
+    (Sh.TChar -> "char")
+    (_ -> "other")
+
+tabs xs = case xs (Nil -> "") (Cons x rest -> case rest (Nil -> esc x) (_ -> strappend (esc x) (strappend "\t" (tabs rest))))
+
+esc s = escFrom s 0 (strlen s) Nil
+
+escFrom s !i !n acc = if (i >= n) (T.fromChars (revC acc Nil)) (escFrom s (i + 1) n (escChar (strat i s) acc))
+
+escChar c acc =
+  if (c == 92) (Cons 92 (Cons 92 acc))
+  (if (c == 9) (Cons 't' (Cons 92 acc))
+  (if (c == 10) (Cons 'n' (Cons 92 acc)) (Cons c acc)))
+
+revC xs acc = case xs (Nil -> acc) (Cons y ys -> revC ys (Cons y acc))
 
 // == Rekenwerk voor de diagrammen ============================================
 
