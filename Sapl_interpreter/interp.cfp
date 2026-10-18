@@ -143,8 +143,8 @@ applyPrim2Vals !op v1 v2 =
     (VBool b1 ->
        case v2
          (VBool b2 ->
-            if (strEqual op "&&" \/ strEqual op "/\\") (VBool (b1 /\ b2))
-            (if (strEqual op "||" \/ strEqual op "\\/") (VBool (b1 \/ b2))
+            if (strEqual op "&&" \/ strEqual op "/\\") (VBool (boolAnd b1 b2))
+            (if (strEqual op "||" \/ strEqual op "\\/") (VBool (boolOr b1 b2))
             (if (strEqual op "==") (VBool (b1 == b2))
             (if (strEqual op "!=") (VBool (b1 != b2))
             (VError "Unknown boolean binary operator")))))
@@ -243,3 +243,8 @@ funcsToBindings fs =
 evalProgram funcs startExpr =
   eval (ELetRec (funcsToBindings funcs) startExpr) initialEnv
 
+
+// /\ en \/ als functie: de preprocessor van Sapl+ weigert een bool-keten
+// als argument (VBool (b1 /\ b2)), en zo kan een .spp dit bestand importeren
+boolAnd !a b = a /\ b
+boolOr !a b = a \/ b
