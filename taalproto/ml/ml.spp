@@ -1,0 +1,185 @@
+#import "taalproto/taal.spp"
+
+// ml.spp - MiniML: een kleine ML-achtige taal (stap 3 van
+// docs/2026-10-17_taalprototypes_plan.md). Anders dan de while-taal: functies
+// als waarden, `match` met geneste patronen, eigen constructors (type), en
+// lijsten. Ongetypeerd; `type` dient alleen om constructors en hun aantal
+// argumenten te declareren.
+//
+//   type shape = Circle int | Rect int int;
+//   let rec len xs = match xs with | [] -> 0 | x :: r -> 1 + len r;
+//   let area s = match s with | Circle r -> 3 * r * r | Rect w h -> w * h;
+//   let main = len [1, 2, 3] + area (Rect 2 3);
+
+::mexp = MNum !n | MBool !b | MVar !x | MApp !f !a | MFun xs !body
+       | MLet !x !e !b | MLetRec !f xs !e !b | MIf !c !a !b | MMatch !e arms
+       | MBin !op !a !b | MNeg !a | MList es
+::marm = MArm !pat !body
+::mpat = MPVar !x | MPNum !n | MPCon !c ps | MPList ps | MPCons !h !t
+::mdecl = MDef !name params !body | MType !name cons
+::mcon = MCon !name !arity
+
+// --- de grammatica ---
+// Trefwoord-expressies (fun, let, if, match) binden het zwakst en reiken zo
+// ver mogelijk, net als in OCaml: een match binnen een arm zet je tussen haakjes.
+
+mlGram = Gram "prog"
+  [ Rule "prog" [Alt [Many (N "decl")] id]
+  , Rule "decl" [ Alt [K "type", Id, K "=", SepBy1 (N "con") "|", K ";"] MType
+                , Alt [K "let", Opt (K "rec"), Id, Many Id, K "=", N "exp", K ";"] mkDef ]
+  , Rule "con" [Alt [Id, Many Id] mkCon]
+  , Rule "exp" [ Alt [K "fun", Many1 Id, K "->", N "exp"] MFun
+               , Alt [K "let", K "rec", Id, Many Id, K "=", N "exp", K "in", N "exp"] MLetRec
+               , Alt [K "let", Id, Many Id, K "=", N "exp", K "in", N "exp"] mkLet
+               , Alt [K "if", N "exp", K "then", N "exp", K "else", N "exp"] MIf
+               , Alt [K "match", N "exp", K "with", Many1 (N "arm")] MMatch
+               , Alt [N "ops"] id ]
+  , Rule "arm" [Alt [K "|", N "pat", K "->", N "exp"] MArm]
+  , OpRule "ops" "app"
+      [ Op "||" 2 0 (MBin "||"), Op "&&" 3 0 (MBin "&&")
+      , Op "==" 4 0 (MBin "=="), Op "!=" 4 0 (MBin "!="), Op "<" 4 0 (MBin "<")
+      , Op "<=" 4 0 (MBin "<="), Op ">" 4 0 (MBin ">"), Op ">=" 4 0 (MBin ">=")
+      , Op "::" 5 1 (MBin "::")
+      , Op "+" 6 0 (MBin "+"), Op "-" 6 0 (MBin "-")
+      , Op "*" 7 0 (MBin "*"), Op "/" 7 0 (MBin "/"), Op "%" 7 0 (MBin "%")
+      , Pre "-" 7 MNeg ]
+  , Rule "app" [Alt [Many1 (N "aexp")] foldApp]
+  , Rule "aexp" [ Alt [Num] MNum
+                , Alt [K "true"] (MBool True), Alt [K "false"] (MBool False)
+                , Alt [Id] MVar
+                , Alt [K "[", SepBy (N "exp") ",", K "]"] MList
+                , Alt [K "(", N "exp", K ")"] id ]
+  , OpRule "pat" "papp" [Op "::" 5 1 MPCons]
+  , Rule "papp" [Alt [Id, Many1 (N "apat")] mkPCon, Alt [N "apat"] id]
+  , Rule "apat" [ Alt [Num] MPNum
+                , Alt [Id] mkPVar
+                , Alt [K "[", SepBy (N "pat") ",", K "]"] MPList
+                , Alt [K "(", N "pat", K ")"] id ] ]
+
+mkDef recs name params body = MDef name params body
+mkCon name args = MCon name (length args)
+mkLet x params e b
+  | length params == 0 = MLet x e b
+  | otherwise = MLet x (MFun params e) b
+
+foldApp (f : as) = foldl MApp f as
+
+// een losse naam met een hoofdletter is een constructor zonder argumenten
+mkPVar x
+  | isConName x = MPCon x []
+  | otherwise = MPVar x
+mkPCon c ps = MPCon c ps
+
+// --- de vertaling naar de kerntaal ---
+// Een top-level let wordt een globale functie (alle globals zien elkaar);
+// main wordt start. Een constructor met argumenten wordt EConstr, lijsten
+// gebruiken Nil/Cons, een match wordt ECase met dezelfde (geneste) patronen.
+
+mlDefs (MType n cs : ds) = mlDefs ds
+mlDefs (MDef n ps b : ds) = FuncDef n ps (trM b) : mlDefs ds
+mlDefs [] = [FuncDef "start" [] (EVar "main")]
+
+trM (MNum n) = ENum n
+trM (MBool b) = EBool b
+trM (MVar x)
+  | isConName x = EConstr x []
+  | otherwise = EVar x
+trM (MApp f a) = trSpine f [a]
+trM (MFun xs b) = lams xs (trM b)
+trM (MLet x e b) = let1 x (trM e) (trM b)
+trM (MLetRec f xs e b) = letrec1 f (lams xs (trM e)) (trM b)
+trM (MIf c a b) = EIf (trM c) (trM a) (trM b)
+trM (MMatch e arms) = ECase (trM e) (map trArm arms)
+trM (MNeg a) = bin "-" (ENum 0) (trM a)
+trM (MList es) = foldr consE (EConstr "Nil" []) (map trM es)
+trM (MBin op a b)
+  | strEqual op "::" = consE (trM a) (trM b)
+  | otherwise = bin op (trM a) (trM b)
+
+consE h t = EConstr "Cons" [h, t]
+
+// de toepassingsketen: een constructor als kop wordt EConstr met alle argumenten
+trSpine (MApp f a) as = trSpine f (a : as)
+trSpine (MVar c) as
+  | isConName c = EConstr c (map trM as)
+trSpine f as = apps (trM f) (map trM as)
+
+trArm (MArm p b) = CaseBranch (trP p) (trM b)
+
+trP (MPVar x)
+  | strEqual x "_" = PWild
+  | otherwise = PVar x
+trP (MPNum n) = PNum n
+trP (MPCon c ps) = PConstr c (map trP ps)
+trP (MPList ps) = foldr consP (PConstr "Nil" []) (map trP ps)
+trP (MPCons h t) = consP (trP h) (trP t)
+
+consP h t = PConstr "Cons" [h, t]
+
+// --- de eigen controle: constructors ---
+// Scope (namen) controleert kernScope generiek; constructors niet, want een
+// hoofdletter geldt daar altijd als gebonden. Hier: elke constructor moet
+// gedeclareerd zijn (Nil en Cons zijn ingebouwd), met het juiste aantal
+// argumenten, in expressies en in patronen. En er moet een main zijn.
+
+mlCheck ds = append (mlMain ds) (chkDecls (mlCons ds) ds)
+
+mlMain ds
+  | mlHeeftMain ds = []
+  | otherwise = ["geen main"]
+mlHeeftMain [] = False
+mlHeeftMain (MDef n ps b : ds) = strEqual n "main" \/ mlHeeftMain ds
+mlHeeftMain (d : ds) = mlHeeftMain ds
+
+mlCons [] = [MCon "Nil" 0, MCon "Cons" 2]
+mlCons (MType n cs : ds) = append cs (mlCons ds)
+mlCons (d : ds) = mlCons ds
+
+conArity c [] = 0 - 1
+conArity c (MCon n a : cs)
+  | strEqual c n = a
+  | otherwise = conArity c cs
+
+chkCon cons c k
+  | conArity c cons < 0 = [strcat "onbekende constructor " c]
+  | conArity c cons == k = []
+  | otherwise = [strcat3 c (strcat3 " verwacht " (list2str (itoa (conArity c cons))) " argument(en), kreeg ") (list2str (itoa k))]
+
+chkDecls cons [] = []
+chkDecls cons (MDef n ps b : ds) = append (chkE cons b) (chkDecls cons ds)
+chkDecls cons (d : ds) = chkDecls cons ds
+
+chkE cons (MVar x)
+  | isConName x = chkCon cons x 0
+  | otherwise = []
+chkE cons (MApp f a) = chkSpine cons f [a]
+chkE cons (MFun xs b) = chkE cons b
+chkE cons (MLet x e b) = append (chkE cons e) (chkE cons b)
+chkE cons (MLetRec f xs e b) = append (chkE cons e) (chkE cons b)
+chkE cons (MIf c a b) = append (chkE cons c) (append (chkE cons a) (chkE cons b))
+chkE cons (MMatch e arms) = append (chkE cons e) (chkArms cons arms)
+chkE cons (MBin op a b) = append (chkE cons a) (chkE cons b)
+chkE cons (MNeg a) = chkE cons a
+chkE cons (MList es) = chkEs cons es
+chkE cons e = []
+
+chkEs cons [] = []
+chkEs cons (e : es) = append (chkE cons e) (chkEs cons es)
+
+chkSpine cons (MApp f a) as = chkSpine cons f (a : as)
+chkSpine cons (MVar c) as
+  | isConName c = append (chkCon cons c (length as)) (chkEs cons as)
+chkSpine cons f as = append (chkE cons f) (chkEs cons as)
+
+chkArms cons [] = []
+chkArms cons (MArm p b : arms) = append (chkP cons p) (append (chkE cons b) (chkArms cons arms))
+
+chkP cons (MPCon c ps) = append (chkCon cons c (length ps)) (chkPs cons ps)
+chkP cons (MPList ps) = chkPs cons ps
+chkP cons (MPCons h t) = append (chkP cons h) (chkP cons t)
+chkP cons p = []
+
+chkPs cons [] = []
+chkPs cons (p : ps) = append (chkP cons p) (chkPs cons ps)
+
+mlLang = Lang "miniml" mlGram mlCheck mlDefs

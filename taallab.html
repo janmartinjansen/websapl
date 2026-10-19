@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="nl" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Taallab</title>
+  <script>
+    try { document.documentElement.setAttribute("data-theme", localStorage.getItem("websapl_theme") || "dark"); } catch (_) {}
+  </script>
+  <link rel="stylesheet" href="css/codemirror.min.css" />
+  <link rel="stylesheet" href="css/workbench.css" />
+  <style>
+    .tl-toolbar {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+      padding: 8px 14px; border-bottom: 1px solid var(--border-color);
+      background: var(--bg-secondary);
+    }
+    .tl-toolbar label { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary); }
+    .tl-toolbar select {
+      background: var(--bg-primary); color: var(--text-primary);
+      border: 1px solid var(--border-color); border-radius: 6px; padding: 4px 8px; font: inherit;
+    }
+    .tl-status { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary); margin-left: auto; }
+    .tl-main {
+      flex: 1; min-height: 0; display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    }
+    .tl-col { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+    .tl-col + .tl-col { border-left: 1px solid var(--border-color); }
+    .tl-pane { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+    .tl-pane + .tl-pane { border-top: 1px solid var(--border-color); }
+    .tl-pane-head {
+      display: flex; align-items: baseline; gap: 10px; padding: 6px 12px;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--text-muted); background: var(--bg-secondary); border-bottom: 1px solid var(--border-color);
+    }
+    .tl-pane-head span.note { text-transform: none; letter-spacing: 0; font-weight: 400; }
+    .tl-editor { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .tl-out {
+      flex: 1; min-height: 0; overflow: auto; margin: 0; padding: 12px;
+      font-family: var(--font-mono); font-size: 13px; white-space: pre-wrap; word-break: break-word;
+      background: var(--terminal-bg); color: var(--terminal-text);
+    }
+    .tl-out .fout { color: var(--error); }
+    .tl-out .info { color: var(--text-muted); }
+    .tl-metrics { padding: 6px 12px; color: var(--text-muted); font-size: 12px; border-top: 1px solid var(--border-color); }
+    .tl-help { color: var(--text-secondary); font-size: 12px; }
+    .tl-help a { color: var(--accent); }
+    @media (max-width: 760px) {
+      body { height: auto; overflow: auto; }
+      .tl-main { grid-template-columns: minmax(0, 1fr); }
+      .tl-col + .tl-col { border-left: none; border-top: 1px solid var(--border-color); }
+      .tl-col:first-child .tl-editor { height: 55vh; flex: none; }
+      .tl-col:last-child .tl-pane:first-child .tl-editor { height: 30vh; flex: none; }
+      .tl-out { min-height: 25vh; }
+      .tl-toolbar { padding: 8px 16px; }
+      .tl-status { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-icon">🧪</div>
+      <span>Taallab</span>
+      <span class="brand-badge">eigen taal in Sapl+</span>
+    </div>
+    <div class="header-actions">
+      <a class="btn" href="ide.html?file=docs/language_prototyping_guide.md" target="_blank" title="De handleiding (Engels): stap voor stap een eigen taal">📖 Handleiding</a>
+      <a class="btn" href="index.html" title="Terug naar de WebSapl-beginpagina">← Start</a>
+      <button class="btn" id="btn-theme"></button>
+    </div>
+  </header>
+
+  <div class="tl-toolbar">
+    <label>Taal <select id="sel-lang"></select></label>
+    <label>Programma <select id="sel-prog"></select></label>
+    <button class="btn btn-success" id="btn-run" title="Draaien (Ctrl/Cmd+Enter)">▶ Draaien</button>
+    <button class="btn" id="btn-stop" title="Een programma dat niet stopt afbreken" disabled>⏹ Stop</button>
+    <button class="btn" id="btn-reset" title="Je wijzigingen aan deze taal en dit programma weggooien">↺ Voorbeeld herstellen</button>
+    <span class="tl-status"><span class="status-dot busy" id="status-dot"></span><span id="status-text">Engine laden…</span></span>
+  </div>
+
+  <div class="tl-main">
+    <div class="tl-col">
+      <div class="tl-pane">
+        <div class="tl-pane-head">Taal (.spp) <span class="note" id="lang-note"></span></div>
+        <div class="tl-editor" id="ed-lang"></div>
+      </div>
+    </div>
+    <div class="tl-col">
+      <div class="tl-pane">
+        <div class="tl-pane-head">Programma <span class="note">wordt gelezen door de taal links</span></div>
+        <div class="tl-editor" id="ed-prog"></div>
+      </div>
+      <div class="tl-pane">
+        <div class="tl-pane-head">Uitvoer</div>
+        <pre class="tl-out" id="out"><span class="info">Kies een taal en een programma en klik ▶ Draaien.
+
+De taal links is gewoon Sapl+: een grammatica als data, een vertaling naar
+de kerntaal en een waarde  naam = Lang ... . Verander je de taal, dan wordt
+die opnieuw gecompileerd (een paar seconden); een ander programma draait
+meteen. Je wijzigingen blijven in deze browser bewaard.</span></pre>
+        <div class="tl-metrics" id="metrics">&nbsp;</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/codemirror.min.js"></script>
+  <script src="js/matchbrackets.min.js"></script>
+  <script src="js/closebrackets.min.js"></script>
+  <script src="js/clike_mode.js"></script>
+  <script src="js/sapl_mode.js"></script>
+  <script src="js/taallab_core.js"></script>
+  <script>
+  (function () {
+    const TL = window.TaalLab;
+    const $ = (id) => document.getElementById(id);
+
+    // --- thema ---
+    const themeBtn = $("btn-theme");
+    const themeLabel = () => { themeBtn.textContent = document.documentElement.getAttribute("data-theme") === "dark" ? "☀️ Light" : "🌙 Dark"; };
+    themeBtn.onclick = () => {
+      const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", next);
+      try { localStorage.setItem("websapl_theme", next); } catch (_) {}
+      themeLabel();
+    };
+    themeLabel();
+
+    // --- opslag (alleen een gemak: zonder localStorage werkt alles ook) ---
+    const store = {
+      get(k) { try { return localStorage.getItem("taallab_" + k); } catch (_) { return null; } },
+      set(k, v) { try { localStorage.setItem("taallab_" + k, v); } catch (_) {} },
+      del(k) { try { localStorage.removeItem("taallab_" + k); } catch (_) {} },
+    };
+
+    // --- editors ---
+    const cmOpts = { lineNumbers: true, matchBrackets: true, autoCloseBrackets: true, tabSize: 2, indentUnit: 2,
+      extraKeys: { "Ctrl-Enter": () => run(), "Cmd-Enter": () => run() } };
+    const edLang = CodeMirror($("ed-lang"), { ...cmOpts, mode: "sapl" });
+    const edProg = CodeMirror($("ed-prog"), { ...cmOpts, mode: null });
+
+    // --- de worker ---
+    let worker = null, ready = false, seq = 0;
+    const pending = new Map();
+    const compiled = new Map();   // hash van de samengestelde bron -> .jmvm
+    function startWorker() {
+      ready = false;
+      setStatus("busy", "Engine laden…");
+      worker = new Worker("engine/worker.js?v=" + Date.now());
+      worker.onmessage = (e) => {
+        const m = e.data;
+        if (m.type === "INIT_DONE") { ready = true; setStatus("ready", "Klaar"); return; }
+        if (m.id !== undefined && pending.has(m.id) && (m.type === "COMPILE_COMPLETE" || m.type === "RUN_COMPLETE")) {
+          pending.get(m.id)(m); pending.delete(m.id);
+        }
+      };
+      worker.postMessage({ type: "INIT" });
+    }
+    function call(msg) {
+      return new Promise((resolve) => { const id = ++seq; pending.set(id, resolve); worker.postMessage({ ...msg, id }); });
+    }
+    function setStatus(kind, text) { $("status-dot").className = "status-dot " + kind; $("status-text").textContent = text; }
+
+    // --- voorbeelden ---
+    let preset = null, progName = null;
+    const fileCache = new Map();
+    async function fetchText(p) {
+      if (!fileCache.has(p)) {
+        const r = await fetch(p);
+        if (!r.ok) throw new Error(p + " niet gevonden");
+        fileCache.set(p, await r.text());
+      }
+      return fileCache.get(p);
+    }
+    const progLabel = (p) => (typeof p === "string" ? p.split("/").pop() : p.name);
+    async function progOriginal(p) { return typeof p === "string" ? fetchText(p) : p.text; }
+
+    for (const p of TL.PRESETS) $("sel-lang").add(new Option(p.label, p.id));
+
+    async function selectLang(id) {
+      saveEdits();
+      preset = TL.PRESETS.find((p) => p.id === id) || TL.PRESETS[0];
+      $("sel-lang").value = preset.id;
+      store.set("lang", preset.id);
+      const sel = $("sel-prog");
+      sel.innerHTML = "";
+      for (const p of preset.programs) sel.add(new Option(progLabel(p), progLabel(p)));
+      const saved = store.get("lang_" + preset.id);
+      edLang.setValue(saved !== null ? saved : await fetchText(preset.lang));
+      edLang.clearHistory();
+      $("lang-note").textContent = preset.lang + (saved !== null ? " (gewijzigd)" : "");
+      progName = null;
+      await selectProg(store.get("prog_" + preset.id) || progLabel(preset.programs[0]));
+    }
+    async function selectProg(name) {
+      saveEdits();
+      const p = preset.programs.find((q) => progLabel(q) === name) || preset.programs[0];
+      progName = progLabel(p);
+      $("sel-prog").value = progName;
+      store.set("prog_" + preset.id, progName);
+      const saved = store.get(`src_${preset.id}_${progName}`);
+      edProg.setValue(saved !== null ? saved : await progOriginal(p));
+      edProg.clearHistory();
+    }
+    // Alles vastleggen vóór het wachten op het origineel: daarna kan de
+    // editor al een andere taal of een ander programma tonen.
+    function saveEdits() {
+      if (!preset) return;
+      const id = preset.id, langPath = preset.lang, langText = edLang.getValue();
+      fetchText(langPath).then((orig) => {
+        if (langText !== orig) store.set("lang_" + id, langText); else store.del("lang_" + id);
+      }).catch(() => {});
+      if (progName) {
+        const name = progName, p = preset.programs.find((q) => progLabel(q) === name), progText = edProg.getValue();
+        progOriginal(p).then((orig) => {
+          if (progText !== orig) store.set(`src_${id}_${name}`, progText); else store.del(`src_${id}_${name}`);
+        }).catch(() => {});
+      }
+    }
+    let saveTimer = null;
+    const saveSoon = () => { clearTimeout(saveTimer); saveTimer = setTimeout(saveEdits, 600); };
+    edLang.on("change", saveSoon);
+    edProg.on("change", saveSoon);
+    window.addEventListener("beforeunload", saveEdits);
+
+    $("sel-lang").onchange = (e) => selectLang(e.target.value);
+    $("sel-prog").onchange = (e) => selectProg(e.target.value);
+    $("btn-reset").onclick = async () => {
+      if (!confirm("Je wijzigingen aan deze taal en dit programma weggooien?")) return;
+      store.del("lang_" + preset.id);
+      store.del(`src_${preset.id}_${progName}`);
+      const keep = progName;
+      edLang.setValue(await fetchText(preset.lang));
+      const p = preset.programs.find((q) => progLabel(q) === keep);
+      edProg.setValue(await progOriginal(p));
+      $("lang-note").textContent = preset.lang;
+    };
+
+    // --- uitvoer ---
+    const out = $("out");
+    function show(text, cls) {
+      out.innerHTML = "";
+      const s = document.createElement("span");
+      if (cls) s.className = cls;
+      s.textContent = text;
+      out.appendChild(s);
+    }
+    // de meldingen van de VM zelf weg, de melding van de compiler houden
+    function compilerText(raw) {
+      return String(raw || "").split("\n").filter((l) =>
+        !/^(\[Stage|VM starting|Reading file|\d+ instr read|execution started|Elapsed time|nr gc|instr executed|calls: |creates: |stop$)/.test(l) && l.trim() !== ""
+      ).join("\n").replace(/stop$/, "");
+    }
+
+    // --- draaien ---
+    let busy = false, runSeq = 0;
+    async function run() {
+      if (busy) return;
+      if (!ready) { show("De engine is nog aan het laden; probeer het zo opnieuw.", "info"); return; }
+      saveEdits();
+      const c = TL.composeSource(edLang.getValue());
+      if (c.error) { show(c.error, "fout"); return; }
+      busy = true; $("btn-run").disabled = true; $("btn-stop").disabled = false;
+      const me = ++runSeq;
+      const gone = () => me !== runSeq;   // afgebroken met Stop
+      try {
+        const key = TL.hashText(c.source);
+        let jmvm = compiled.get(key), tCompile = null;
+        if (!jmvm) {
+          setStatus("busy", "Taal compileren…");
+          show("Taal compileren…", "info");
+          const t0 = performance.now();
+          const pp = await call({ type: "PREPROCESS", source: c.source, path: "/workspace/taal.spp" });
+          if (gone()) return;
+          if (!pp.success) { show("De taal (Sapl+) is niet in orde:\n\n" + compilerText(pp.stdout || pp.stderr), "fout"); setStatus("error", "Fout in de taal"); return; }
+          const cc = await call({ type: "COMPILE", source: pp.files[0].content, path: "/workspace/taal.cfp", stages: ["jmvm"] });
+          if (gone()) return;
+          if (!cc.success) { show("De taal compileert niet:\n\n" + compilerText(cc.stderr), "fout"); setStatus("error", "Fout in de taal"); return; }
+          jmvm = cc.files.find((f) => f.name.endsWith(".jmvm")).content;
+          compiled.set(key, jmvm);
+          tCompile = Math.round(performance.now() - t0);
+        }
+        setStatus("busy", "Draaien…");
+        const t1 = performance.now();
+        const r = await call({ type: "RUN", contentOrPath: jmvm, isPath: false, files: { [TL.PROGRAM_PATH]: edProg.getValue() } });
+        if (gone()) return;
+        const tRun = Math.round(performance.now() - t1);
+        const res = TL.parseRunOutput(r.output);
+        if (res.ok) show(res.text || "(geen uitvoer)");
+        else show(res.text, "fout");
+        const instr = r.metrics && r.metrics.instr_executed;
+        $("metrics").textContent = (tCompile !== null ? `taal gecompileerd in ${tCompile} ms · ` : "taal al gecompileerd · ") +
+          `programma (vertalen + draaien) ${tRun} ms` + (instr ? ` · ${instr.toLocaleString("nl-NL")} instructies` : "");
+        setStatus(res.ok ? "ready" : "error", res.ok ? "Klaar" : "Fout in het programma");
+      } finally {
+        busy = false; $("btn-run").disabled = false; $("btn-stop").disabled = true;
+      }
+    }
+    $("btn-run").onclick = run;
+    $("btn-stop").onclick = () => {
+      // de worker afbreken en opnieuw starten; de gecompileerde talen blijven
+      worker.terminate();
+      runSeq++;
+      for (const resolve of pending.values()) resolve({ success: false, output: "", stderr: "afgebroken" });
+      pending.clear();
+      show("Afgebroken.", "info");
+      startWorker();
+    };
+
+    startWorker();
+    selectLang(store.get("lang") || "tiny");
+  })();
+  </script>
+</body>
+</html>

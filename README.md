@@ -63,6 +63,27 @@ In de Workbench:
    Programma's die stdin lezen kun je invoer sturen via de prompt-balk
    onderaan.
 
+### Taallab (`taallab.html`)
+
+Een eigen programmeertaal maken en meteen uitproberen (19 oktober 2026). Links
+staat de taal: een gewoon Sapl+-bestand met een grammatica als data, een
+vertaling naar de kerntaal en een waarde `naam = Lang ...` (het raamwerk van
+`taalproto/`, zie de Engelse handleiding `docs/language_prototyping_guide.md`,
+knop **📖 Handleiding**). Rechts staat een programma in die taal. **▶ Draaien**
+(of Ctrl/Cmd+Enter) zet er `start = runLang naam (readFile ...)` onder,
+compileert dat (preprocessor en gen1, ~1 s, alleen als de taal veranderd is)
+en draait het programma via de hybride route van `sapl_naar_lc/`; een ander
+programma draait dus meteen. Voorbeelden: tiny, calc, while en MiniML, met hun
+programma's. Wijzigingen blijven in `localStorage` bewaard; **↺ Voorbeeld
+herstellen** gooit ze weg. **⏹ Stop** breekt een programma af dat niet stopt
+(de worker begint opnieuw).
+
+De logica staat in `js/taallab_core.js`; toetsen: `node
+websapl/tools/taallab_test.js` (de worker in Node) en `node
+websapl/tools/taallab_browser_test.js` (de pagina in headless Chrome). De
+kopieën van `taalproto/`, `sapl_naar_lc/` en de handleiding houdt
+`tools/sync_from_repo.js` bij.
+
 ### Modulegewijs compileren (backend "modules")
 
 Een client-side poort van `sapl_compiler/tools/build_modules.py` (zie

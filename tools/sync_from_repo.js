@@ -192,6 +192,30 @@ const ENTRIES = [
   // WASM-compiler testbank; wasm_test/build/ zelf is gegenereerd door
   // wasm_compiler/build_websapl_test.sh en staat hier dus niet.
   { src: "experiments/wasm_compiler/host.js", dst: "wasm_test/host.js" },
+  // Het taallab (taallab.html, 19 oktober 2026): het raamwerk van taalproto/,
+  // de hybride route waar het op draait, de vier voorbeeldtalen en hun programma's.
+  { src: "docs/2026-10-19_language_prototyping_guide.md", dst: "docs/language_prototyping_guide.md" },
+  { src: "sapl_naar_lc/hybride.cfp", dst: "sapl_naar_lc/hybride.cfp" },
+  { src: "sapl_naar_lc/compiler.cfp", dst: "sapl_naar_lc/compiler.cfp" },
+  { src: "sapl_naar_lc/seval.cfp", dst: "sapl_naar_lc/seval.cfp" },
+  { src: "taalproto/taal.spp", dst: "taalproto/taal.spp" },
+  { src: "taalproto/grammatica.spp", dst: "taalproto/grammatica.spp" },
+  { src: "taalproto/calc/calc.spp", dst: "taalproto/calc/calc.spp" },
+  { src: "taalproto/while/while.spp", dst: "taalproto/while/while.spp" },
+  { src: "taalproto/ml/ml.spp", dst: "taalproto/ml/ml.spp" },
+  { src: "taalproto/tiny/tiny.spp", dst: "taalproto/tiny/tiny.spp" },
+  { src: "taalproto/tiny/progs/higher.tiny", dst: "taalproto/tiny/progs/higher.tiny" },
+  { src: "taalproto/tiny/progs/primes.tiny", dst: "taalproto/tiny/progs/primes.tiny" },
+  { src: "taalproto/tiny/progs/queens.tiny", dst: "taalproto/tiny/progs/queens.tiny" },
+  { src: "taalproto/ml/progs/boom.ml", dst: "taalproto/ml/progs/boom.ml" },
+  { src: "taalproto/ml/progs/lijsten.ml", dst: "taalproto/ml/progs/lijsten.ml" },
+  { src: "taalproto/ml/progs/queens.ml", dst: "taalproto/ml/progs/queens.ml" },
+  { src: "taalproto/ml/progs/vormen.ml", dst: "taalproto/ml/progs/vormen.ml" },
+  { src: "taalproto/while/progs/collatz.while", dst: "taalproto/while/progs/collatz.while" },
+  { src: "taalproto/while/progs/fib.while", dst: "taalproto/while/progs/fib.while" },
+  { src: "taalproto/while/progs/ggd.while", dst: "taalproto/while/progs/ggd.while" },
+  { src: "taalproto/while/progs/priemen.while", dst: "taalproto/while/progs/priemen.while" },
+  { src: "taalproto/while/progs/priemen_groot.while", dst: "taalproto/while/progs/priemen_groot.while" },
 ];
 // De vooraf gebouwde stukken van de REPL in Sapl (repl_sapl/build/modules/,
 // build_mini_repl.sh): de hele map, zodat een nieuw stuk vanzelf meegaat.

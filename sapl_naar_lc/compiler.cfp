@@ -1,0 +1,418 @@
+#import "lib/stdlib.cfp"
+#import "Sapl_interpreter/ast.cfp"
+#import "Sapl_interpreter/interp.cfp"
+#import "Sapl_interpreter/lexer.cfp"
+#import "Sapl_interpreter/parser.cfp"
+#import "sapl_naar_lc/seval.cfp"
+
+// compiler.cfp - vertaalt de AST van Sapl_interpreter naar lambda-termen
+// (var/app/abs/lit), zodat de self-interpreter seval ze kan uitvoeren.
+// Zie sapl_naar_lc/README.md.
+
+// --- de doeltaal ---
+// LLit heeft een naam (voor het afdrukken) en een luie waarde: een lit kan
+// een fout zijn die pas afgaat als de tak gekozen wordt.
+::lc = LVar !n | LApp !f !a | LAbs !body | LLit !name v
+
+// --- de constructortabel ---
+// De brontaal heeft geen typedeclaraties, dus alle constructors van het
+// programma vormen samen één som: met n constructors wordt constructor k
+// met ariteit a de term \x1..xa. \c1..cn. ck x1..xa.
+::con = Con !name !arity
+::ctx = Ctx cons !n
+
+// --- de scope: naam -> niveau (binder-diepte); index = diepte - niveau + 1 ---
+// Een patroonvariabele is een alias voor een bestaand niveau, zonder binder.
+::bnd = Bnd !name !lvl
+::scope = Sc names !depth
+
+// een paar (niveau, patroon) dat nog gematcht moet worden
+::mp = MP !lvl pat
+
+// --- hulpjes voor termen ---
+lcApps f args =
+  case args
+    (Nil -> f)
+    (Cons a as -> lcApps (LApp f a) as)
+
+lcAbsN !k t = if (k == 0) t (LAbs (lcAbsN (k - 1) t))
+
+lcRef sc !lvl =
+  case sc
+    (Sc names depth -> LVar (depth - lvl + 1))
+
+scPush sc name =
+  case sc
+    (Sc names depth -> Sc (Cons (Bnd name (depth + 1)) names) (depth + 1))
+
+scAlias sc name !lvl =
+  case sc
+    (Sc names depth -> Sc (Cons (Bnd name lvl) names) depth)
+
+scDepth sc = case sc (Sc names depth -> depth)
+
+// een binder zonder naam (scrutinee, faalvoortzetting, tupel)
+scAnon sc = scPush sc ""
+
+scFind name names =
+  case names
+    (Nil -> 0 - 1)
+    (Cons b rest ->
+       case b
+         (Bnd n lvl -> if (strEqual n name) lvl (scFind name rest)))
+
+lcFail = LLit "nomatch" (error "geen passende case-tak")
+
+// --- constructortabel opbouwen ---
+conAdd !name !a cons =
+  case cons
+    (Nil -> Cons (Con name a) Nil)
+    (Cons c rest ->
+       case c
+         (Con n ar ->
+            if (strEqual n name)
+              (Cons (Con n (if (a > ar) a ar)) rest)
+              (Cons c (conAdd name a rest))))
+
+isConName !s = (strlen s > 0) /\ isUpperChar (strat 0 s)
+
+// het hoofd en het aantal argumenten van een applicatie
+collApp e !k acc =
+  case e
+    (EApp f x -> collApp f (k + 1) (collE x acc))
+    (EVar s -> if (isConName s) (conAdd s k acc) acc)
+    (_ -> collE e acc)
+
+collE e acc =
+  case e
+    (EApp f x -> collApp e 0 acc)
+    (EVar s -> if (isConName s) (conAdd s 0 acc) acc)
+    (ELam p b -> collE b acc)
+    (EIf c t f -> collE c (collE t (collE f acc)))
+    (ELet bs b -> collBinds bs (collE b acc))
+    (ELetRec bs b -> collBinds bs (collE b acc))
+    (EConstr c args -> collList args (conAdd c (length args) acc))
+    (ECase s brs -> collE s (collBranches brs acc))
+    (_ -> acc)
+
+collList es acc =
+  case es
+    (Nil -> acc)
+    (Cons e rest -> collList rest (collE e acc))
+
+collBinds bs acc =
+  case bs
+    (Nil -> acc)
+    (Cons b rest -> case b (BindDef n r -> collBinds rest (collE r acc)))
+
+collBranches brs acc =
+  case brs
+    (Nil -> acc)
+    (Cons br rest ->
+       case br
+         (CaseBranch p body -> collBranches rest (collP p (collE body acc))))
+
+collP p acc =
+  case p
+    (PConstr c ps -> collPs ps (conAdd c (length ps) acc))
+    (_ -> acc)
+
+collPs ps acc =
+  case ps
+    (Nil -> acc)
+    (Cons p rest -> collPs rest (collP p acc))
+
+// Nil en Cons staan altijd vooraan (head/tail/isnil en [..] gebruiken ze)
+mkCtx e =
+  let cons = collE e (Cons (Con "Nil" 0) (Cons (Con "Cons" 2) Nil)) in
+  Ctx cons (length cons)
+
+conLookup !name !k cons =
+  case cons
+    (Nil -> ConAt (0 - 1) 0)
+    (Cons c rest ->
+       case c
+         (Con n a -> if (strEqual n name) (ConAt k a) (conLookup name (k + 1) rest)))
+
+::conAt = ConAt !k !arity
+
+conInfo ctx !name = case ctx (Ctx cons n -> conLookup name 1 cons)
+
+// de gesloten term van een constructor
+conTerm ctx !name =
+  case ctx
+    (Ctx cons n ->
+       case (conInfo ctx name)
+         (ConAt k a ->
+            if (k < 0) (LLit name (error "onbekende constructor"))
+              (lcAbsN a (lcAbsN n (lcApps (LVar (n - k + 1)) (conFields n a 1))))))
+
+conFields !n !a !i = if (i > a) Nil (Cons (LVar (n + a - i + 1)) (conFields n a (i + 1)))
+
+// --- de vertaling ---
+lcExpr ctx sc e =
+  case e
+    (ENum n -> LLit "num" n)
+    (EStr s -> LLit "str" s)
+    (EBool b -> lcBool b)
+    (EVar name -> lcVar ctx sc name)
+    (EPrim op -> lcPrim ctx op)
+    (EApp f x -> LApp (lcExpr ctx sc f) (lcExpr ctx sc x))
+    (ELam p body -> LAbs (lcExpr ctx (scPush sc p) body))
+    (EIf c t f -> LApp (LApp (lcExpr ctx sc c) (lcExpr ctx sc t)) (lcExpr ctx sc f))
+    (ELet bs body -> lcLetPar ctx sc sc bs body)
+    (ELetRec bs body -> lcLetRec ctx sc bs body)
+    (EConstr c args -> lcApps (conTerm ctx c) (lcList ctx sc args))
+    (ECase s brs ->
+       LApp (LAbs (lcBranches ctx (scAnon sc) (scDepth sc + 1) brs)) (lcExpr ctx sc s))
+
+lcList ctx sc es =
+  case es
+    (Nil -> Nil)
+    (Cons e rest -> Cons (lcExpr ctx sc e) (lcList ctx sc rest))
+
+lcBool b = if b (LAbs (LAbs (LVar 2))) (LAbs (LAbs (LVar 1)))
+
+lcVar ctx sc name =
+  case sc
+    (Sc names depth -> lcVarAt ctx name depth (scFind name names))
+
+lcVarAt ctx name !depth !lvl =
+  if (lvl >= 0) (LVar (depth - lvl + 1))
+  (if (isConName name) (conTerm ctx name)
+  (lcPrim ctx name))
+
+// de ingebouwde namen van initialEnv
+lcPrim ctx op =
+  if (strEqual op "+") (LLit op sc_add)
+  (if (strEqual op "-") (LLit op sc_sub)
+  (if (strEqual op "*") (LLit op sc_mul)
+  (if (strEqual op "/") (LLit op sc_div)
+  (if (strEqual op "%") (LLit op sc_mod)
+  (if (strEqual op "==") (LLit op sc_eq)
+  (if (strEqual op "!=") (LLit op sc_ne)
+  (if (strEqual op "<") (LLit op sc_lt)
+  (if (strEqual op "<=") (LLit op sc_le)
+  (if (strEqual op ">") (LLit op sc_gt)
+  (if (strEqual op ">=") (LLit op sc_ge)
+  (if (strEqual op "&&" \/ strEqual op "/\\") (lcSrc ctx (ELam "a" (ELam "b" (EIf (EVar "a") (EVar "b") (EBool False)))))
+  (if (strEqual op "||" \/ strEqual op "\\/") (lcSrc ctx (ELam "a" (ELam "b" (EIf (EVar "a") (EBool True) (EVar "b")))))
+  (if (strEqual op "not") (lcSrc ctx (ELam "a" (EIf (EVar "a") (EBool False) (EBool True))))
+  (if (strEqual op "cons") (conTerm ctx "Cons")
+  (if (strEqual op "head") (lcSrc ctx (ELam "l" (ECase (EVar "l") (Cons (CaseBranch (PConstr "Cons" (Cons (PVar "h") (Cons PWild Nil))) (EVar "h")) Nil))))
+  (if (strEqual op "tail") (lcSrc ctx (ELam "l" (ECase (EVar "l") (Cons (CaseBranch (PConstr "Cons" (Cons PWild (Cons (PVar "t") Nil))) (EVar "t")) Nil))))
+  (if (strEqual op "isnil") (lcSrc ctx (ELam "l" (ECase (EVar "l") (Cons (CaseBranch (PConstr "Nil" Nil) (EBool True)) (Cons (CaseBranch PWild (EBool False)) Nil)))))
+  (LLit op (error (strcat "onbekende naam: " op))))))))))))))))))))
+
+// een ingebouwde functie, zelf in de brontaal geschreven (gesloten term)
+lcSrc ctx e = lcExpr ctx (Sc Nil 0) e
+
+// let (niet recursief): alle rechterkanten in de oorspronkelijke scope,
+// maar op de diepte waarop ze staan
+lcLetPar ctx sc0 sc bs body =
+  case bs
+    (Nil -> lcExpr ctx sc body)
+    (Cons b rest ->
+       case b
+         (BindDef name rhs ->
+            LApp (LAbs (lcLetPar ctx sc0 (scPush sc name) rest body))
+                 (lcExpr ctx (Sc (scNames sc0) (scDepth sc)) rhs)))
+
+scNames sc = case sc (Sc names depth -> names)
+
+// letrec: t = fix (\t. let xi = sel_i t in \c. c r1..rk), daarna
+// let xi = sel_i t in body. Bij één binding: x = fix (\x. r).
+lcLetRec ctx sc bs body =
+  case bs
+    (Cons b rest ->
+       case rest
+         (Nil ->
+            case b
+              (BindDef name rhs ->
+                 LApp (LAbs (lcExpr ctx (scPush sc name) body))
+                      (LApp (LLit "fix" sc_fix) (LAbs (lcExpr ctx (scPush sc name) rhs)))))
+         (_ -> lcLetRecN ctx sc bs body))
+    (Nil -> lcExpr ctx sc body)
+
+lcLetRecN ctx sc bs body =
+  let k = length bs,
+      tLvl = scDepth sc + 1,
+      tsc = scAnon sc in
+  LApp (LAbs (lcSels ctx tsc tLvl k 1 bs (LetBody body)))
+       (LApp (LLit "fix" sc_fix) (LAbs (lcSels ctx tsc tLvl k 1 bs (LetTuple bs))))
+
+::letRest = LetBody e | LetTuple bs
+
+lcSels ctx sc !tLvl !k !i bs rest =
+  if (i > k)
+    (case rest
+       (LetBody e -> lcExpr ctx sc e)
+       (LetTuple tbs -> LAbs (lcApps (LVar 1) (lcRhss ctx (scAnon sc) tbs))))
+    (LApp (LAbs (lcSels ctx (scPush sc (bindName (nth i bs))) tLvl k (i + 1) bs rest))
+          (LApp (lcRef sc tLvl) (lcAbsN k (LVar (k - i + 1)))))
+
+lcRhss ctx sc bs =
+  case bs
+    (Nil -> Nil)
+    (Cons b rest -> case b (BindDef n r -> Cons (lcExpr ctx sc r) (lcRhss ctx sc rest)))
+
+bindName b = case b (BindDef n r -> n)
+
+nth !i xs =
+  case xs
+    (Cons x rest -> if (i == 1) x (nth (i - 1) rest))
+    (Nil -> error "nth: lijst te kort")
+
+// --- case: elke tak krijgt de rest van de takken als faalvoortzetting ---
+// sLvl is het niveau van de scrutinee
+lcBranches ctx sc !sLvl brs =
+  case brs
+    (Nil -> lcFail)
+    (Cons br rest ->
+       case br
+         (CaseBranch p body ->
+            case rest
+              (Nil -> lcMatch ctx sc (Cons (MP sLvl p) Nil) body (0 - 1))
+              (_ ->
+                 LApp (LAbs (lcMatch ctx (scAnon sc) (Cons (MP sLvl p) Nil) body (scDepth sc + 1)))
+                      (lcBranches ctx sc sLvl rest))))
+
+// fLvl < 0: geen faalvoortzetting meer, dan is falen een fout
+lcFailRef sc !fLvl = if (fLvl < 0) lcFail (lcRef sc fLvl)
+
+lcMatch ctx sc mps body !fLvl =
+  case mps
+    (Nil -> lcExpr ctx sc body)
+    (Cons m rest ->
+       case m
+         (MP lvl p ->
+            case p
+              (PWild -> lcMatch ctx sc rest body fLvl)
+              (PVar x -> lcMatch ctx (scAlias sc x lvl) rest body fLvl)
+              (PNum n ->
+                 lcApps (LLit "==" sc_eq) (Cons (lcRef sc lvl) (Cons (LLit "num" n)
+                   (Cons (lcMatch ctx sc rest body fLvl) (Cons (lcFailRef sc fLvl) Nil)))))
+              (PBool b ->
+                 if b
+                   (lcApps (lcRef sc lvl) (Cons (lcMatch ctx sc rest body fLvl) (Cons (lcFailRef sc fLvl) Nil)))
+                   (lcApps (lcRef sc lvl) (Cons (lcFailRef sc fLvl) (Cons (lcMatch ctx sc rest body fLvl) Nil))))
+              (PConstr c ps ->
+                 case ctx
+                   (Ctx cons n -> lcApps (lcRef sc lvl) (lcSlots ctx sc c ps rest body fLvl cons)))))
+
+// één tak per constructor van de tabel; alleen die van c matcht verder
+lcSlots ctx sc c ps rest body !fLvl cons =
+  case cons
+    (Nil -> Nil)
+    (Cons k more ->
+       case k
+         (Con name a ->
+            Cons (if (strEqual name c)
+                    (lcAbsN a (lcMatch ctx (scDepthAdd sc a) (fieldMps (scDepth sc + 1) (padPats a ps) rest) body fLvl))
+                    (lcAbsN a (lcFailRef (scDepthAdd sc a) fLvl)))
+                 (lcSlots ctx sc c ps rest body fLvl more)))
+
+scDepthAdd sc !a = case sc (Sc names depth -> Sc names (depth + a))
+
+// de velden x1..xa krijgen de niveaus d+1..d+a
+fieldMps !lvl ps rest =
+  case ps
+    (Nil -> rest)
+    (Cons p more -> Cons (MP lvl p) (fieldMps (lvl + 1) more rest))
+
+padPats !a ps =
+  if (a == 0) Nil
+  (case ps
+     (Nil -> Cons PWild (padPats (a - 1) Nil))
+     (Cons p more -> Cons p (padPats (a - 1) more)))
+
+// --- programma's ---
+lcProgramExpr funcs = ELetRec (funcsToBindings funcs) (EVar "start")
+
+lcCompile e = let ctx = mkCtx e in LcProg ctx (lcExpr ctx (Sc Nil 0) e)
+
+::lcProg = LcProg ctx term
+
+lcCompileStr s =
+  case (parseProgramStr s)
+    (PRes defs rest -> lcCompile (lcProgramExpr defs))
+    (PFail msg -> error (strcat "parse error: " msg))
+
+// --- naar de Scott-term van seval ---
+lcToScott t =
+  case t
+    (LVar n -> sc_var n)
+    (LApp f a -> sc_app (lcToScott f) (lcToScott a))
+    (LAbs b -> sc_abs (lcToScott b))
+    (LLit name v -> sc_lit v)
+
+lcRun p = case p (LcProg ctx t -> sc_seval (lcToScott t))
+
+// --- afdrukken van een term (de Bruijn) ---
+lcShow t =
+  case t
+    (LVar n -> printString (list2str (itoa n)))
+    (LApp f a -> lcShowFun f <#> printString " " <#> lcShowArg a)
+    (LAbs b -> printString "\\ " <#> lcShow b)
+    (LLit name v -> printString "[" <#> printString name <#> printString "]")
+
+lcShowFun t =
+  case t
+    (LAbs b -> printString "(" <#> lcShow t <#> printString ")")
+    (_ -> lcShow t)
+
+lcShowArg t =
+  case t
+    (LApp f a -> printString "(" <#> lcShow t <#> printString ")")
+    (LAbs b -> printString "(" <#> lcShow t <#> printString ")")
+    (_ -> lcShow t)
+
+lcSize t =
+  case t
+    (LVar n -> 1)
+    (LApp f a -> 1 + lcSize f + lcSize a)
+    (LAbs b -> 1 + lcSize b)
+    (LLit name v -> 1)
+
+// --- een resultaat terugvertalen: getal, string of constructor ---
+::dval = DInt !n | DStr !s | DCon !name args | DFun
+
+// v toepassen op één verzamelaar per constructor
+lcDecode ctx v =
+  let tid = typeId v in
+  if (tid == 1) (DInt v)
+  (if (tid == 3) (DStr v)
+  (if (tid == 4) (case ctx (Ctx cons n -> decApply v (decCollectors cons)))
+  DFun))
+
+decApply v cs =
+  case cs
+    (Nil -> v)
+    (Cons c rest -> decApply (v c) rest)
+
+decCollectors cons =
+  case cons
+    (Nil -> Nil)
+    (Cons c rest -> case c (Con name a -> Cons (decColl a name Nil) (decCollectors rest)))
+
+decColl !n name acc = if (n == 0) (DCon name (reverse acc)) (decCollK n name acc)
+decCollK !n name acc x = decColl (n - 1) name (Cons x acc)
+
+// afdrukken tot een bepaalde diepte (een lijst kan oneindig zijn)
+lcPrintVal ctx !d v = decPrint ctx d (lcDecode ctx v)
+
+decPrint ctx !d dv =
+  case dv
+    (DInt n -> printString (list2str (itoa n)))
+    (DStr s -> printString "\"" <#> printString s <#> printString "\"")
+    (DFun -> printString "<functie>")
+    (DCon name args ->
+       if (d == 0) (printString "..")
+       (case args
+          (Nil -> printString name)
+          (_ -> printString "(" <#> printString name <#> decPrintArgs ctx (d - 1) args <#> printString ")")))
+
+decPrintArgs ctx !d args =
+  case args
+    (Nil -> 0)
+    (Cons a rest -> printString " " <#> lcPrintVal ctx d a <#> decPrintArgs ctx d rest)

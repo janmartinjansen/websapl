@@ -1,0 +1,40 @@
+#import "taalproto/taal.spp"
+
+// calc.spp - de eerste toets van de generieke delen: rekenen met
+// operatoren, haakjes, unaire min en let.
+//
+//   let x = 3 * 4 in x - (2 - 1) * -x
+
+::cexp = CNum !n | CVar !x | CBin !op !a !b | CNeg !a | CLet !x !e !body
+
+calcGram = Gram "exp"
+  [ Rule "exp"  [ Alt [K "let", Id, K "=", N "exp", K "in", N "exp"] CLet
+                , Alt [N "sum"] id ]
+  , OpRule "sum" "atom"
+      [ Op "+" 6 0 (CBin "+"), Op "-" 6 0 (CBin "-")
+      , Op "*" 7 0 (CBin "*"), Op "/" 7 0 (CBin "/"), Op "%" 7 0 (CBin "%")
+      , Op "^" 8 1 (CBin "^")
+      , Pre "-" 7 CNeg ]                 // -2 ^ 2 = -(2 ^ 2), -a * b = (-a) * b
+  , Rule "atom" [ Alt [Num] CNum
+                , Alt [Id] CVar
+                , Alt [K "(", N "exp", K ")"] id ] ]
+
+trC (CNum n) = ENum n
+trC (CVar x) = EVar x
+trC (CNeg a) = bin "-" (ENum 0) (trC a)
+trC (CLet x e b) = let1 x (trC e) (trC b)
+trC (CBin o a b)
+  | strEqual o "^" = apps (EVar "pow") [trC a, trC b]
+  | otherwise = bin o (trC a) (trC b)
+
+// machtsverheffen is geen primitief: een functie in de kerntaal zelf;
+// een negatieve exponent: 1 / a^(-b), in gehele getallen
+calcDefs e = [FuncDef "start" [] (trC e), powDef]
+powDef = FuncDef "pow" ["a", "b"]
+  (EIf (bin "<" (EVar "b") (ENum 0)) (bin "/" (ENum 1) (apps (EVar "pow") [EVar "a", bin "-" (ENum 0) (EVar "b")]))
+  (EIf (bin "==" (EVar "b") (ENum 0)) (ENum 1)
+       (bin "*" (EVar "a") (apps (EVar "pow") [EVar "a", bin "-" (EVar "b") (ENum 1)]))))
+
+// scope: geen eigen controle nodig, kernScope (taal.spp) vindt de
+// onbekende namen in de vertaling (let x = e in body bindt x alleen in body)
+calcLang = Lang "calc" calcGram noCheck calcDefs

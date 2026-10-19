@@ -318,6 +318,14 @@
       "type": "directory",
       "children": [
         {
+          "name": "language_prototyping_guide.md",
+          "path": "docs/language_prototyping_guide.md",
+          "type": "file",
+          "ext": ".md",
+          "size": 31648,
+          "isBinary": false
+        },
+        {
           "name": "lokale_tools_niet_in_websapl.md",
           "path": "docs/lokale_tools_niet_in_websapl.md",
           "type": "file",
@@ -1170,7 +1178,7 @@
           "path": "lib/display.spp",
           "type": "file",
           "ext": ".spp",
-          "size": 6312,
+          "size": 4625,
           "isBinary": false
         },
         {
@@ -1194,7 +1202,7 @@
           "path": "lib/notebook_glue.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 7313,
+          "size": 10916,
           "isBinary": false
         },
         {
@@ -1652,7 +1660,7 @@
                   "path": "repl_sapl/build/modules/index.txt",
                   "type": "file",
                   "ext": ".txt",
-                  "size": 648,
+                  "size": 649,
                   "isBinary": false
                 },
                 {
@@ -1724,7 +1732,7 @@
                   "path": "repl_sapl/build/modules/mlibcsvspp.jvb",
                   "type": "file",
                   "ext": ".jvb",
-                  "size": 36116,
+                  "size": 36196,
                   "isBinary": true
                 },
                 {
@@ -1756,7 +1764,7 @@
                   "path": "repl_sapl/build/modules/mlibdisplayspp.adts.cfp",
                   "type": "file",
                   "ext": ".cfp",
-                  "size": 137,
+                  "size": 219,
                   "isBinary": false
                 },
                 {
@@ -1764,7 +1772,7 @@
                   "path": "repl_sapl/build/modules/mlibdisplayspp.defs.txt",
                   "type": "file",
                   "ext": ".txt",
-                  "size": 1143,
+                  "size": 874,
                   "isBinary": false
                 },
                 {
@@ -1772,7 +1780,7 @@
                   "path": "repl_sapl/build/modules/mlibdisplayspp.jvb",
                   "type": "file",
                   "ext": ".jvb",
-                  "size": 22544,
+                  "size": 14576,
                   "isBinary": true
                 },
                 {
@@ -1780,7 +1788,7 @@
                   "path": "repl_sapl/build/modules/mlibdisplayspp.names.txt",
                   "type": "file",
                   "ext": ".txt",
-                  "size": 434,
+                  "size": 303,
                   "isBinary": false
                 },
                 {
@@ -1788,7 +1796,7 @@
                   "path": "repl_sapl/build/modules/mlibdisplayspp.pp.cfp",
                   "type": "file",
                   "ext": ".cfp",
-                  "size": 12928,
+                  "size": 9126,
                   "isBinary": false
                 },
                 {
@@ -1796,7 +1804,7 @@
                   "path": "repl_sapl/build/modules/mlibdisplayspp.schemes.txt",
                   "type": "file",
                   "ext": ".txt",
-                  "size": 1696,
+                  "size": 1129,
                   "isBinary": false
                 },
                 {
@@ -1820,7 +1828,7 @@
                   "path": "repl_sapl/build/modules/mliblistspp.jvb",
                   "type": "file",
                   "ext": ".jvb",
-                  "size": 21900,
+                  "size": 21716,
                   "isBinary": true
                 },
                 {
@@ -1868,7 +1876,7 @@
                   "path": "repl_sapl/build/modules/mlibplotspp.jvb",
                   "type": "file",
                   "ext": ".jvb",
-                  "size": 22666,
+                  "size": 22738,
                   "isBinary": true
                 },
                 {
@@ -1916,7 +1924,7 @@
                   "path": "repl_sapl/build/modules/mlibshapespp.jvb",
                   "type": "file",
                   "ext": ".jvb",
-                  "size": 32484,
+                  "size": 32740,
                   "isBinary": true
                 },
                 {
@@ -1964,7 +1972,7 @@
                   "path": "repl_sapl/build/modules/mlibstatsspp.jvb",
                   "type": "file",
                   "ext": ".jvb",
-                  "size": 22092,
+                  "size": 21908,
                   "isBinary": true
                 },
                 {
@@ -2012,7 +2020,7 @@
                   "path": "repl_sapl/build/modules/mlibtextspp.jvb",
                   "type": "file",
                   "ext": ".jvb",
-                  "size": 30120,
+                  "size": 30376,
                   "isBinary": true
                 },
                 {
@@ -2052,7 +2060,7 @@
                   "path": "repl_sapl/build/modules/nbglue.defs.txt",
                   "type": "file",
                   "ext": ".txt",
-                  "size": 950,
+                  "size": 1244,
                   "isBinary": false
                 },
                 {
@@ -2060,7 +2068,7 @@
                   "path": "repl_sapl/build/modules/nbglue.jvb",
                   "type": "file",
                   "ext": ".jvb",
-                  "size": 21716,
+                  "size": 32996,
                   "isBinary": true
                 },
                 {
@@ -2068,7 +2076,7 @@
                   "path": "repl_sapl/build/modules/nbglue.pp.cfp",
                   "type": "file",
                   "ext": ".cfp",
-                  "size": 11713,
+                  "size": 16062,
                   "isBinary": false
                 },
                 {
@@ -2119,7 +2127,7 @@
               "path": "repl_sapl/build/mini_repl.jmvm",
               "type": "file",
               "ext": ".jmvm",
-              "size": 6914170,
+              "size": 6911798,
               "isBinary": false
             },
             {
@@ -2127,7 +2135,7 @@
               "path": "repl_sapl/build/mini_repl.jvb",
               "type": "file",
               "ext": ".jvb",
-              "size": 2591768,
+              "size": 2590896,
               "isBinary": true
             }
           ],
@@ -2210,7 +2218,7 @@
           "path": "Sapl_interpreter/interp.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 7347,
+          "size": 7552,
           "isBinary": false
         },
         {
@@ -2227,6 +2235,38 @@
           "type": "file",
           "ext": ".cfp",
           "size": 20778,
+          "isBinary": false
+        }
+      ],
+      "_expanded": false
+    },
+    {
+      "name": "sapl_naar_lc",
+      "path": "sapl_naar_lc",
+      "type": "directory",
+      "children": [
+        {
+          "name": "compiler.cfp",
+          "path": "sapl_naar_lc/compiler.cfp",
+          "type": "file",
+          "ext": ".cfp",
+          "size": 14020,
+          "isBinary": false
+        },
+        {
+          "name": "hybride.cfp",
+          "path": "sapl_naar_lc/hybride.cfp",
+          "type": "file",
+          "ext": ".cfp",
+          "size": 28002,
+          "isBinary": false
+        },
+        {
+          "name": "seval.cfp",
+          "path": "sapl_naar_lc/seval.cfp",
+          "type": "file",
+          "ext": ".cfp",
+          "size": 1583,
           "isBinary": false
         }
       ],
@@ -2339,6 +2379,214 @@
           "type": "file",
           "ext": ".js",
           "size": 94953,
+          "isBinary": false
+        }
+      ],
+      "_expanded": false
+    },
+    {
+      "name": "taalproto",
+      "path": "taalproto",
+      "type": "directory",
+      "children": [
+        {
+          "name": "calc",
+          "path": "taalproto/calc",
+          "type": "directory",
+          "children": [
+            {
+              "name": "calc.spp",
+              "path": "taalproto/calc/calc.spp",
+              "type": "file",
+              "ext": ".spp",
+              "size": 1669,
+              "isBinary": false
+            }
+          ],
+          "_expanded": false
+        },
+        {
+          "name": "ml",
+          "path": "taalproto/ml",
+          "type": "directory",
+          "children": [
+            {
+              "name": "progs",
+              "path": "taalproto/ml/progs",
+              "type": "directory",
+              "children": [
+                {
+                  "name": "boom.ml",
+                  "path": "taalproto/ml/progs/boom.ml",
+                  "type": "file",
+                  "ext": ".ml",
+                  "size": 605,
+                  "isBinary": false
+                },
+                {
+                  "name": "lijsten.ml",
+                  "path": "taalproto/ml/progs/lijsten.ml",
+                  "type": "file",
+                  "ext": ".ml",
+                  "size": 475,
+                  "isBinary": false
+                },
+                {
+                  "name": "queens.ml",
+                  "path": "taalproto/ml/progs/queens.ml",
+                  "type": "file",
+                  "ext": ".ml",
+                  "size": 888,
+                  "isBinary": false
+                },
+                {
+                  "name": "vormen.ml",
+                  "path": "taalproto/ml/progs/vormen.ml",
+                  "type": "file",
+                  "ext": ".ml",
+                  "size": 316,
+                  "isBinary": false
+                }
+              ],
+              "_expanded": false
+            },
+            {
+              "name": "ml.spp",
+              "path": "taalproto/ml/ml.spp",
+              "type": "file",
+              "ext": ".spp",
+              "size": 7407,
+              "isBinary": false
+            }
+          ],
+          "_expanded": false
+        },
+        {
+          "name": "tiny",
+          "path": "taalproto/tiny",
+          "type": "directory",
+          "children": [
+            {
+              "name": "progs",
+              "path": "taalproto/tiny/progs",
+              "type": "directory",
+              "children": [
+                {
+                  "name": "higher.tiny",
+                  "path": "taalproto/tiny/progs/higher.tiny",
+                  "type": "file",
+                  "ext": ".tiny",
+                  "size": 393,
+                  "isBinary": false
+                },
+                {
+                  "name": "primes.tiny",
+                  "path": "taalproto/tiny/progs/primes.tiny",
+                  "type": "file",
+                  "ext": ".tiny",
+                  "size": 269,
+                  "isBinary": false
+                },
+                {
+                  "name": "queens.tiny",
+                  "path": "taalproto/tiny/progs/queens.tiny",
+                  "type": "file",
+                  "ext": ".tiny",
+                  "size": 859,
+                  "isBinary": false
+                }
+              ],
+              "_expanded": false
+            },
+            {
+              "name": "tiny.spp",
+              "path": "taalproto/tiny/tiny.spp",
+              "type": "file",
+              "ext": ".spp",
+              "size": 5129,
+              "isBinary": false
+            }
+          ],
+          "_expanded": false
+        },
+        {
+          "name": "while",
+          "path": "taalproto/while",
+          "type": "directory",
+          "children": [
+            {
+              "name": "progs",
+              "path": "taalproto/while/progs",
+              "type": "directory",
+              "children": [
+                {
+                  "name": "collatz.while",
+                  "path": "taalproto/while/progs/collatz.while",
+                  "type": "file",
+                  "ext": ".while",
+                  "size": 165,
+                  "isBinary": false
+                },
+                {
+                  "name": "fib.while",
+                  "path": "taalproto/while/progs/fib.while",
+                  "type": "file",
+                  "ext": ".while",
+                  "size": 113,
+                  "isBinary": false
+                },
+                {
+                  "name": "ggd.while",
+                  "path": "taalproto/while/progs/ggd.while",
+                  "type": "file",
+                  "ext": ".while",
+                  "size": 130,
+                  "isBinary": false
+                },
+                {
+                  "name": "priemen_groot.while",
+                  "path": "taalproto/while/progs/priemen_groot.while",
+                  "type": "file",
+                  "ext": ".while",
+                  "size": 285,
+                  "isBinary": false
+                },
+                {
+                  "name": "priemen.while",
+                  "path": "taalproto/while/progs/priemen.while",
+                  "type": "file",
+                  "ext": ".while",
+                  "size": 258,
+                  "isBinary": false
+                }
+              ],
+              "_expanded": false
+            },
+            {
+              "name": "while.spp",
+              "path": "taalproto/while/while.spp",
+              "type": "file",
+              "ext": ".spp",
+              "size": 3484,
+              "isBinary": false
+            }
+          ],
+          "_expanded": false
+        },
+        {
+          "name": "grammatica.spp",
+          "path": "taalproto/grammatica.spp",
+          "type": "file",
+          "ext": ".spp",
+          "size": 15452,
+          "isBinary": false
+        },
+        {
+          "name": "taal.spp",
+          "path": "taalproto/taal.spp",
+          "type": "file",
+          "ext": ".spp",
+          "size": 13803,
           "isBinary": false
         }
       ],
@@ -2462,6 +2710,14 @@
       "type": "file",
       "ext": ".md",
       "size": 11417,
+      "isBinary": false
+    },
+    {
+      "name": "taallab.html",
+      "path": "taallab.html",
+      "type": "file",
+      "ext": ".html",
+      "size": 14831,
       "isBinary": false
     }
   ]

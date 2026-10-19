@@ -1,0 +1,119 @@
+#import "taalproto/taal.spp"
+
+// tiny.spp - the example language of docs/2026-10-19_language_prototyping_guide.md:
+// functions with C-style calls, if/then/else, let, anonymous functions, lists
+// and match. About 80 lines; every example in the guide is in test_tiny.spp.
+//
+//   fun len(xs) = match xs { [] -> 0 | x :: r -> 1 + len(r) };
+//   fun main() = len([1, 2, 3]);
+
+// --- 1. the AST of the language ---------------------------------------------
+::texp = TNum !n | TBool !b | TVar !x | TCall !f args | TBin !op !a !b | TNeg !a
+       | TIf !c !a !b | TLet !x !e !b | TFn params !body | TList es
+       | TMatch !e arms
+::tarm = TArm !pat !body
+::tpat = TPNum !n | TPVar !x | TPNil | TPCons !h !t
+::tdecl = TFun !name params !body
+
+// --- 2. the grammar, as data --------------------------------------------------
+tinyGram = Gram "prog"
+  [ Rule "prog" [Alt [Many (N "fun")] id]
+  , Rule "fun"  [Alt [K "fun", Id, K "(", SepBy Id ",", K ")", K "=", N "exp", K ";"] TFun]
+  , Rule "exp"  [ Alt [K "if", N "exp", K "then", N "exp", K "else", N "exp"] TIf
+                , Alt [K "let", Id, K "=", N "exp", K "in", N "exp"] TLet
+                , Alt [K "fn", K "(", SepBy Id ",", K ")", K "->", N "exp"] TFn
+                , Alt [K "match", N "exp", K "{", SepBy1 (N "arm") "|", K "}"] TMatch
+                , Alt [N "ops"] id ]
+  , Rule "arm"  [Alt [N "pat", K "->", N "exp"] TArm]
+  , OpRule "ops" "atom"
+      [ Op "||" 1 0 (TBin "||"), Op "&&" 2 0 (TBin "&&")
+      , Op "==" 3 0 (TBin "=="), Op "!=" 3 0 (TBin "!="), Op "<" 3 0 (TBin "<")
+      , Op "<=" 3 0 (TBin "<="), Op ">" 3 0 (TBin ">"), Op ">=" 3 0 (TBin ">=")
+      , Op "::" 4 1 (TBin "::")
+      , Op "+" 5 0 (TBin "+"), Op "-" 5 0 (TBin "-")
+      , Op "*" 6 0 (TBin "*"), Op "/" 6 0 (TBin "/"), Op "%" 6 0 (TBin "%")
+      , Pre "-" 6 TNeg ]
+  , Rule "atom" [ Alt [Num] TNum
+                , Alt [K "true"] (TBool True), Alt [K "false"] (TBool False)
+                , Alt [Id, K "(", SepBy (N "exp") ",", K ")"] TCall
+                , Alt [Id] TVar
+                , Alt [K "[", SepBy (N "exp") ",", K "]"] TList
+                , Alt [K "(", N "exp", K ")"] id ]
+  , OpRule "pat" "apat" [Op "::" 4 1 TPCons]
+  , Rule "apat" [ Alt [Num] TPNum
+                , Alt [K "[", K "]"] TPNil
+                , Alt [Id] TPVar
+                , Alt [K "(", N "pat", K ")"] id ] ]
+
+// --- 3. the translation to the kernel language --------------------------------
+tinyDefs ds = FuncDef "start" [] (EVar "main") : map tiDecl ds
+
+tiDecl (TFun f ps b) = FuncDef f ps (tiE b)
+
+tiE (TNum n) = ENum n
+tiE (TBool b) = EBool b
+tiE (TVar x) = EVar x
+tiE (TCall f as) = apps (EVar f) (map tiE as)
+tiE (TBin op a b)
+  | strEqual op "::" = tiCons (tiE a) (tiE b)
+  | otherwise = bin op (tiE a) (tiE b)
+tiE (TNeg a) = bin "-" (ENum 0) (tiE a)
+tiE (TIf c a b) = EIf (tiE c) (tiE a) (tiE b)
+tiE (TLet x e b) = let1 x (tiE e) (tiE b)
+tiE (TFn ps b) = lams ps (tiE b)
+tiE (TList es) = foldr tiCons (EConstr "Nil" []) (map tiE es)
+tiE (TMatch e arms) = ECase (tiE e) (map tiArm arms)
+
+tiCons h t = EConstr "Cons" [h, t]
+
+tiArm (TArm p b) = CaseBranch (tiP p) (tiE b)
+
+tiP (TPNum n) = PNum n
+tiP (TPVar x)
+  | strEqual x "_" = PWild
+  | otherwise = PVar x
+tiP TPNil = PConstr "Nil" []
+tiP (TPCons h t) = PConstr "Cons" [tiP h, tiP t]
+
+// --- 4. an own check: main exists, calls of a global function have the right
+// number of arguments (kernScope already reports unknown names) ---------------
+tinyCheck ds = append (tiMain ds) (tiCalls ds ds)
+
+tiMain ds
+  | tiArity "main" ds == 0 = []
+  | otherwise = ["no function main()"]
+
+// the arity of a global function, -1 if there is none
+tiArity f [] = 0 - 1
+tiArity f (TFun g ps b : ds)
+  | strEqual f g = length ps
+  | otherwise = tiArity f ds
+
+tiCalls ds [] = []
+tiCalls ds (TFun f ps b : rest) = append (tiChk ds ps b) (tiCalls ds rest)
+
+// locals: parameters and let/fn names shadow a global function
+tiChk ds locals (TCall f as) = append (tiChkCall ds locals f (length as)) (tiChkL ds locals as)
+tiChk ds locals (TBin op a b) = append (tiChk ds locals a) (tiChk ds locals b)
+tiChk ds locals (TNeg a) = tiChk ds locals a
+tiChk ds locals (TIf c a b) = append (tiChk ds locals c) (tiChkL ds locals [a, b])
+tiChk ds locals (TLet x e b) = append (tiChk ds locals e) (tiChk ds (x : locals) b)
+tiChk ds locals (TFn ps b) = tiChk ds (append ps locals) b
+tiChk ds locals (TList es) = tiChkL ds locals es
+tiChk ds locals (TMatch e arms) = append (tiChk ds locals e) (tiChkArms ds locals arms)
+tiChk ds locals e = []
+
+tiChkL ds locals [] = []
+tiChkL ds locals (e : es) = append (tiChk ds locals e) (tiChkL ds locals es)
+
+tiChkArms ds locals [] = []
+tiChkArms ds locals (TArm p b : arms) = append (tiChk ds (append (patNames (tiP p)) locals) b) (tiChkArms ds locals arms)
+
+tiChkCall ds locals f n
+  | tpStrMember f locals = []
+  | tiArity f ds < 0 = []
+  | tiArity f ds == n = []
+  | otherwise = [strcat3 f (strcat3 " expects " (list2str (itoa (tiArity f ds))) " argument(s), got ") (list2str (itoa n))]
+
+// --- 5. the language as a value ------------------------------------------------
+tinyLang = Lang "tiny" tinyGram tinyCheck tinyDefs

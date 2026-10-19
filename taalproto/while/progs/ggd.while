@@ -1,0 +1,5 @@
+// grootste gemene deler, met aftrekken
+a := 1071; b := 462;
+while a != b do
+  if a > b then a := a - b else b := b - a;
+return a

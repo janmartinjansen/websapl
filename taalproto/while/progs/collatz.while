@@ -1,0 +1,7 @@
+// het aantal stappen van 27 naar 1
+x := 27; steps := 0;
+while x != 1 do {
+  if x % 2 == 0 then x := x / 2 else x := 3 * x + 1;
+  steps := steps + 1
+};
+return steps

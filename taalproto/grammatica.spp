@@ -1,0 +1,409 @@
+#import "lib/stdlib.cfp"
+
+// grammatica.spp - een grammatica als Sapl-waarde, en een generieke lexer
+// en parser die zo'n grammatica interpreteren (docs/2026-10-17_taalprototypes_plan.md, §3).
+//
+// Een alternatief heeft een actie: een constructor of functie die wordt
+// toegepast op de waarden van de symbolen, in volgorde. Een K-symbool
+// (trefwoord of leesteken) levert geen waarde. De keuze tussen alternatieven
+// is committed (PEG): het eerste alternatief dat slaagt, wint.
+//
+// Voorvoegsel tp (taalproto): alles wordt samen met Sapl_interpreter en
+// sapl_naar_lc geïmporteerd, en #import kent geen namespaces.
+
+::gram = Gram !start rules
+::rule = Rule !name alts
+       | OpRule !name !atom ops      // binaire operatoren boven niet-terminaal atom
+::alt  = Alt syms action
+::sym  = K !text                     // trefwoord of leesteken, geeft geen waarde
+       | N !name                     // niet-terminaal
+       | Id                          // naam (geen trefwoord), geeft een string
+       | Num                         // getal
+       | Str                         // stringliteral "..."
+       | Many sym                    // nul of meer, geeft een lijst
+       | Many1 sym                   // een of meer
+       | SepBy sym !sep              // nul of meer, gescheiden door leesteken sep
+       | SepBy1 sym !sep             // een of meer
+       | Opt sym                     // nul of een, als lijst
+::op   = Op !text !prio !assoc action   // assoc: 0 links, 1 rechts
+       | Pre !text !prio action         // prefix: de operand bindt sterker dan prio
+
+// een token: soort (0 naam, 1 getal, 2 leesteken, 3 string, 4 einde),
+// tekst, getalwaarde, regel en volgnummer
+::tk = Tk !kind !text num !line !pos
+
+// de verste fout tot nu toe (pos -1: geen): wat er verwacht werd (alle
+// alternatieven die op die plek faalden) en wat er stond
+::fail = Fail exps !seen !line !pos
+::gres = GOk v toks far | GErr far
+
+// wat de parser over de grammatica moet weten
+::penv = PEnv gram kws
+
+tkKind (Tk k t n l p) = k
+tkText (Tk k t n l p) = t
+tkNum (Tk k t n l p) = n
+tkLine (Tk k t n l p) = l
+tkPos (Tk k t n l p) = p
+
+noFail = Fail [] "" 0 (0 - 1)
+
+// de verste van twee; op dezelfde plek de verwachtingen van allebei
+tpFar (Fail e1 s1 l1 p1) (Fail e2 s2 l2 p2)
+  | p2 > p1 = Fail e2 s2 l2 p2
+  | p2 == p1 = Fail (tpNub (append e1 e2)) s1 l1 p1
+  | otherwise = Fail e1 s1 l1 p1
+
+tpVerwacht what tk = Fail [what] (tpShowTk tk) (tkLine tk) (tkPos tk)
+
+// ---------------------------------------------------------------------------
+// Trefwoorden en leestekens, afgeleid uit de grammatica
+
+tpIsAlpha c = ((c >= 'a') /\ (c <= 'z')) \/ ((c >= 'A') /\ (c <= 'Z')) \/ (c == '_')
+tpIsDigit c = (c >= '0') /\ (c <= '9')
+tpIsIdCh c = tpIsAlpha c \/ tpIsDigit c \/ (c == 39)
+tpIsSpace c = (c == 32) \/ (c == 9) \/ (c == 13)
+
+tpIsWord t = (strlen t > 0) /\ tpIsAlpha (strat 0 t)
+
+// alle teksten van K-symbolen en operatoren
+tpTexts (Gram st rules) = tpRuleTexts rules
+
+tpRuleTexts [] = []
+tpRuleTexts (Rule n alts : rs) = append (tpAltTexts alts) (tpRuleTexts rs)
+tpRuleTexts (OpRule n a ops : rs) = append (tpOpTexts ops) (tpRuleTexts rs)
+
+tpOpTexts [] = []
+tpOpTexts (Op t p a f : os) = t : tpOpTexts os
+tpOpTexts (Pre t p f : os) = t : tpOpTexts os
+
+tpAltTexts [] = []
+tpAltTexts (Alt syms f : as) = append (tpSymTexts syms) (tpAltTexts as)
+
+tpSymTexts [] = []
+tpSymTexts (s : ss) = append (tpSymText s) (tpSymTexts ss)
+
+tpSymText (K t) = [t]
+tpSymText (Many s) = tpSymText s
+tpSymText (Many1 s) = tpSymText s
+tpSymText (SepBy s sep) = sep : tpSymText s
+tpSymText (SepBy1 s sep) = sep : tpSymText s
+tpSymText (Opt s) = tpSymText s
+tpSymText s = []
+
+tpStrMember t [] = False
+tpStrMember t (x : xs)
+  | strEqual t x = True
+  | otherwise = tpStrMember t xs
+
+tpNub [] = []
+tpNub (x : xs)
+  | tpStrMember x xs = tpNub xs
+  | otherwise = x : tpNub xs
+
+tpWords [] = []
+tpWords (t : ts)
+  | tpIsWord t = t : tpWords ts
+  | otherwise = tpWords ts
+
+tpSymbols [] = []
+tpSymbols (t : ts)
+  | tpIsWord t = tpSymbols ts
+  | otherwise = str2list t : tpSymbols ts
+
+tpKeywords g = tpNub (tpWords (tpTexts g))
+tpSymbolList g = tpSymbols (tpNub (tpTexts g))
+
+// ---------------------------------------------------------------------------
+// De lexer: namen, getallen, strings, leestekens (langste eerst), // commentaar
+
+tpLex syms src = tpLexGo syms (str2list src) 1 0
+
+tpLexGo syms [] line pos = [Tk 4 "het einde van de invoer" 0 line pos]
+tpLexGo syms (c : cs) line pos
+  | c == 10 = tpLexGo syms cs (line + 1) pos
+  | tpIsSpace c = tpLexGo syms cs line pos
+  | (c == '/') /\ tpStartsSlash cs = tpLexGo syms (tpSkipLine cs) line pos
+  | tpIsAlpha c = tpLexWord syms (c : cs) line pos
+  | tpIsDigit c = tpLexNum syms (c : cs) line pos
+  | c == 34 = tpLexStr syms cs line pos
+  | otherwise = tpLexSym syms (c : cs) line pos (tpLongest syms (c : cs) 0)
+
+tpStartsSlash [] = False
+tpStartsSlash (c : cs) = c == '/'
+
+tpSkipLine [] = []
+tpSkipLine (c : cs)
+  | c == 10 = c : cs
+  | otherwise = tpSkipLine cs
+
+tpTakeW p [] = []
+tpTakeW p (c : cs)
+  | p c = c : tpTakeW p cs
+  | otherwise = []
+
+tpDropW p [] = []
+tpDropW p (c : cs)
+  | p c = tpDropW p cs
+  | otherwise = c : cs
+
+tpLexWord syms cs line pos =
+  Tk 0 (list2str (tpTakeW tpIsIdCh cs)) 0 line pos : tpLexGo syms (tpDropW tpIsIdCh cs) line (pos + 1)
+
+tpDigits acc [] = acc
+tpDigits acc (c : cs) = tpDigits (acc * 10 + (c - '0')) cs
+
+tpLexNum syms cs line pos =
+  Tk 1 (list2str (tpTakeW tpIsDigit cs)) (tpDigits 0 (tpTakeW tpIsDigit cs)) line pos
+  : tpLexGo syms (tpDropW tpIsDigit cs) line (pos + 1)
+
+tpNotQuote c = c != 34
+
+tpLexStr syms cs line pos = tpLexStrRest syms (tpTakeW tpNotQuote cs) (tpDropW tpNotQuote cs) line pos
+
+// geen sluitend " meer: een fout; regels binnen de string tellen mee
+tpLexStrRest syms inh [] line pos = [Tk 2 "string niet afgesloten" 0 line (0 - 1)]
+tpLexStrRest syms inh rest line pos = Tk 3 (list2str inh) 0 line pos : tpLexGo syms (tpDrop1 rest) (line + tpTelNl inh) (pos + 1)
+
+tpTelNl [] = 0
+tpTelNl (c : cs)
+  | c == 10 = 1 + tpTelNl cs
+  | otherwise = tpTelNl cs
+
+tpDrop1 [] = []
+tpDrop1 (c : cs) = cs
+
+// de lengte van het langste leesteken waarmee cs begint (0: geen)
+tpLongest [] cs best = best
+tpLongest (s : ss) cs best
+  | tpPrefix s cs /\ (length s > best) = tpLongest ss cs (length s)
+  | otherwise = tpLongest ss cs best
+
+tpPrefix [] cs = True
+tpPrefix (p : ps) [] = False
+tpPrefix (p : ps) (c : cs)
+  | p == c = tpPrefix ps cs
+  | otherwise = False
+
+tpLexSym syms cs line pos n
+  | n == 0 = [Tk 2 (strcat "onbekend teken " (list2str (take 1 cs))) 0 line (0 - 1)]
+  | otherwise = Tk 2 (list2str (take n cs)) 0 line pos : tpLexGo syms (drop n cs) line (pos + 1)
+
+// ---------------------------------------------------------------------------
+// De parser: interpreteert de grammatica
+
+tpFindRule (PEnv (Gram st rules) kws) name = tpFindIn rules name
+
+tpFindIn [] name = error (strcat "grammatica: onbekende niet-terminaal " name)
+tpFindIn (r : rs) name
+  | strEqual (tpRuleName r) name = r
+  | otherwise = tpFindIn rs name
+
+tpRuleName (Rule n alts) = n
+tpRuleName (OpRule n a ops) = n
+
+tpParseNT pe name toks = tpRule pe (tpFindRule pe name) toks
+
+tpRule pe (Rule n alts) toks = tpAlts pe alts toks noFail
+tpRule pe (OpRule n atom ops) toks = tpOpExpr pe atom ops 0 toks
+
+tpAlts pe [] toks best = GErr best
+tpAlts pe (a : as) toks best = tpAltsRes pe as toks best (tpAlt pe a toks)
+
+tpAltsRes pe as toks best (GOk v r far) = GOk v r (tpFar best far)
+tpAltsRes pe as toks best (GErr f) = tpAlts pe as toks (tpFar best f)
+
+tpAlt pe (Alt syms act) toks = tpSeq pe syms act toks noFail
+
+tpSeq pe [] f toks far = GOk f toks far
+tpSeq pe (s : ss) f toks far = tpSeqStep pe ss f (tpIsK s) far (tpSym pe s toks)
+
+tpSeqStep pe ss f isK far (GErr f2) = GErr (tpFar far f2)
+tpSeqStep pe ss f isK far (GOk v r far2)
+  | isK = tpSeq pe ss f r (tpFar far far2)
+  | otherwise = tpSeq pe ss (f v) r (tpFar far far2)
+
+tpIsK (K t) = True
+tpIsK s = False
+
+tpIsKw (PEnv g kws) t = tpStrMember t kws
+
+tpSym pe (K t) (tk : r)
+  | (tkKind tk != 3) /\ (tkKind tk != 4) /\ strEqual (tkText tk) t = GOk 0 r noFail
+  | otherwise = GErr (tpVerwacht (strcat3 "'" t "'") tk)
+tpSym pe Id (tk : r)
+  | (tkKind tk == 0) /\ (tpIsKw pe (tkText tk) == False) = GOk (tkText tk) r noFail
+  | otherwise = GErr (tpVerwacht "een naam" tk)
+tpSym pe Num (tk : r)
+  | tkKind tk == 1 = GOk (tkNum tk) r noFail
+  | otherwise = GErr (tpVerwacht "een getal" tk)
+tpSym pe Str (tk : r)
+  | tkKind tk == 3 = GOk (tkText tk) r noFail
+  | otherwise = GErr (tpVerwacht "een string" tk)
+tpSym pe (N n) toks = tpParseNT pe n toks
+tpSym pe (Many s) toks = tpMany pe s toks [] noFail
+tpSym pe (Many1 s) toks = tpConsRes (tpSym pe s toks) (\r -> tpMany pe s r [] noFail)
+tpSym pe (SepBy1 s sep) toks = tpConsRes (tpSym pe s toks) (\r -> tpSepMany pe s sep r [] noFail)
+tpSym pe (SepBy s sep) toks = tpOrNil (tpSym pe (SepBy1 s sep) toks) toks
+tpSym pe (Opt s) toks = tpOptRes (tpSym pe s toks) toks
+
+
+tpShowTk tk
+  | tkKind tk == 4 = tkText tk
+  | tkKind tk == 3 = strcat3 "\"" (tkText tk) "\""
+  | otherwise = strcat3 "'" (tkText tk) "'"
+
+strcat3 a b c = strcat a (strcat b c)
+
+// eerste element, dan de rest via een functie op de resttokens
+tpConsRes (GErr f) k = GErr f
+tpConsRes (GOk v r far) k = tpConsRest v far (k r)
+tpConsRest v far (GOk vs r far2) = GOk (v : vs) r (tpFar far far2)
+tpConsRest v far (GErr f) = GErr (tpFar far f)
+
+tpOrNil (GOk v r far) toks = GOk v r far
+tpOrNil (GErr f) toks = GOk [] toks f
+
+tpOptRes (GOk v r far) toks = GOk [v] r far
+tpOptRes (GErr f) toks = GOk [] toks f
+
+tpMany pe s toks acc far = tpManyRes pe s toks acc far (tpSym pe s toks)
+tpManyRes pe s toks acc far (GOk v r far2)
+  | tpZelfdePlek toks r = GOk (reverse (v : acc)) r (tpFar far far2)   // geen voortgang: anders eindeloos
+  | otherwise = tpMany pe s r (v : acc) (tpFar far far2)
+tpManyRes pe s toks acc far (GErr f) = GOk (reverse acc) toks (tpFar far f)
+
+// (sep s)*: lukt sep wel maar s niet, dan eindigt de lijst vóór sep
+tpSepMany pe s sep toks acc far = tpSepAfter pe s sep toks acc far (tpSym pe (K sep) toks)
+tpSepAfter pe s sep toks acc far (GErr f) = GOk (reverse acc) toks (tpFar far f)
+tpSepAfter pe s sep toks acc far (GOk x r far1) = tpSepItem pe s sep toks acc (tpFar far far1) (tpSym pe s r)
+tpSepItem pe s sep toks acc far (GOk v r far2) = tpSepMany pe s sep r (v : acc) (tpFar far far2)
+tpSepItem pe s sep toks acc far (GErr f) = GOk (reverse acc) toks (tpFar far f)
+
+tpZelfdePlek (a : as) (b : bs) = tkPos a == tkPos b
+tpZelfdePlek as bs = False
+
+// operatoren: precedence climbing
+tpOpExpr pe atom ops minP toks = tpOpPre pe atom ops minP toks (tpFindPre ops (kop1 toks) minP)
+
+// een prefix-operator vooraan: zijn operand met alles wat sterker bindt
+tpOpPre pe atom ops minP toks [] = tpOpStart pe atom ops minP (tpPreErbij ops toks (tpParseNT pe atom toks))
+
+tpOpPre pe atom ops minP (tk : r) (Pre t p f : x) = tpOpPreRes pe atom ops minP f (tpOpExpr pe atom ops (p + 1) r)
+
+tpOpPreRes pe atom ops minP f (GErr e) = GErr e
+tpOpPreRes pe atom ops minP f (GOk v r far) = tpOpLoop pe atom ops minP (f v) r far
+
+kop1 (tk : r) = tk
+
+// faalt de operand, dan had er op die plek ook een prefix-operator gekund
+tpPreErbij ops toks (GErr f) = GErr (tpFar (tpPreVerwacht ops (kop1 toks)) f)
+tpPreErbij ops toks res = res
+
+tpPreVerwacht ops tk = Fail (tpPreTeksten ops) (tpShowTk tk) (tkLine tk) (tkPos tk)
+tpPreTeksten [] = []
+tpPreTeksten (Op t p a f : os) = tpPreTeksten os
+tpPreTeksten (Pre t p f : os) = strcat3 "'" t "'" : tpPreTeksten os
+
+tpFindPre [] tk minP = []
+tpFindPre (Op t p a f : os) tk minP = tpFindPre os tk minP
+// vooraan een operand altijd (2 ^ -1 is 2 ^ (-1)); p bepaalt alleen hoe ver
+// de operand reikt (-2 ^ 2 is -(2 ^ 2) als ^ sterker bindt dan p)
+tpFindPre (Pre t p f : os) tk minP
+  | (tkKind tk != 3) /\ (tkKind tk != 4) /\ strEqual (tkText tk) t = [Pre t p f]
+  | otherwise = tpFindPre os tk minP
+
+tpOpStart pe atom ops minP (GErr f) = GErr f
+tpOpStart pe atom ops minP (GOk lhs r far) = tpOpLoop pe atom ops minP lhs r far
+
+tpOpLoop pe atom ops minP lhs (tk : r) far = tpOpFound pe atom ops minP lhs (tk : r) far (tpFindOp ops tk minP)
+
+tpOpFound pe atom ops minP lhs toks far [] = GOk lhs toks far
+tpOpFound pe atom ops minP lhs (tk : r) far (Op t p a f : x) =
+  tpOpRhs pe atom ops minP lhs f far (tpOpExpr pe atom ops (if (a == 0) (p + 1) p) r)
+
+tpOpRhs pe atom ops minP lhs f far (GErr f2) = GErr (tpFar far f2)
+tpOpRhs pe atom ops minP lhs f far (GOk rhs r far2) = tpOpLoop pe atom ops minP (f lhs rhs) r (tpFar far far2)
+
+tpFindOp [] tk minP = []
+tpFindOp (Pre t p f : os) tk minP = tpFindOp os tk minP
+tpFindOp (Op t p a f : os) tk minP
+  | (tkKind tk != 3) /\ (tkKind tk != 4) /\ strEqual (tkText tk) t /\ (p >= minP) = [Op t p a f]
+  | otherwise = tpFindOp os tk minP
+
+// ---------------------------------------------------------------------------
+// Ingang: tekst -> waarde van de startregel, of een foutmelding
+
+::presult = ParseOk v | ParseErr !msg
+
+tpPenv g = PEnv g (tpKeywords g)
+
+tpParse g src = tpParseToks (tpPenv g) g (tpLex (tpSymbolList g) src)
+
+tpParseToks pe (Gram st rules) toks
+  | tpLexErr toks = ParseErr (tpLexErrMsg toks)
+  | otherwise = tpParseEnd (tpParseNT pe st toks)
+
+tpLexErr [] = False
+tpLexErr (tk : r)
+  | tkPos tk < 0 = True
+  | otherwise = tpLexErr r
+
+tpLexErrMsg (tk : r)
+  | tkPos tk < 0 = strcat3 (strcat "regel " (list2str (itoa (tkLine tk)))) ": " (tkText tk)
+  | otherwise = tpLexErrMsg r
+
+tpParseEnd (GErr f) = ParseErr (tpFailMsg f)
+tpParseEnd (GOk v (tk : r) far)
+  | tkKind tk == 4 = ParseOk v
+  | otherwise = ParseErr (tpFailMsg (tpFar (tpVerwacht "het einde van de invoer" tk) far))
+
+tpFailMsg (Fail es seen l p) = strcat3 (strcat "regel " (list2str (itoa l))) ": " (strcat3 (strcat "verwacht " (tpOf es)) ", maar zag " seen)
+
+// "a", "a of b", "a, b of c"
+tpOf [] = "iets anders"
+tpOf [x] = x
+tpOf (x : xs) = tpOfN x xs
+tpOfN x [y] = strcat3 x " of " y
+tpOfN x (y : ys) = strcat3 x ", " (tpOfN y ys)
+
+// ---------------------------------------------------------------------------
+// Controle bij het laden: onbekende niet-terminalen en directe linksrecursie
+
+tpCheck (Gram st rules) = append (tpCheckStart rules st) (tpCheckRules rules rules)
+
+tpCheckStart rules st
+  | tpHasRule rules st = []
+  | otherwise = [strcat "startregel bestaat niet: " st]
+
+tpHasRule [] n = False
+tpHasRule (r : rs) n
+  | strEqual (tpRuleName r) n = True
+  | otherwise = tpHasRule rs n
+
+tpCheckRules all [] = []
+tpCheckRules all (Rule n alts : rs) = append (tpCheckAlts all n alts) (tpCheckRules all rs)
+tpCheckRules all (OpRule n a ops : rs)
+  | tpHasRule all a = tpCheckRules all rs
+  | otherwise = strcat3 n ": onbekende niet-terminaal " a : tpCheckRules all rs
+
+tpCheckAlts all n [] = []
+tpCheckAlts all n (Alt syms f : as) = append (tpLeftRec n syms) (append (tpCheckSyms all n syms) (tpCheckAlts all n as))
+
+tpLeftRec n (N m : ss)
+  | strEqual n m = [strcat n ": linksrecursief (gebruik een OpRule of Many)"]
+  | otherwise = []
+tpLeftRec n ss = []
+
+tpCheckSyms all n [] = []
+tpCheckSyms all n (s : ss) = append (tpCheckSym all n s) (tpCheckSyms all n ss)
+
+tpCheckSym all n (N m)
+  | tpHasRule all m = []
+  | otherwise = [strcat3 n ": onbekende niet-terminaal " m]
+tpCheckSym all n (Many s) = tpCheckSym all n s
+tpCheckSym all n (Many1 s) = tpCheckSym all n s
+tpCheckSym all n (SepBy s sep) = tpCheckSym all n s
+tpCheckSym all n (SepBy1 s sep) = tpCheckSym all n s
+tpCheckSym all n (Opt s) = tpCheckSym all n s
+tpCheckSym all n s = []

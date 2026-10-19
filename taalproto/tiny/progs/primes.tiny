@@ -1,0 +1,4 @@
+// how many primes below 5000 (669)
+fun isprime(n, d) = if d * d > n then true else if n % d == 0 then false else isprime(n, d + 1);
+fun count(i, n, acc) = if i >= n then acc else count(i + 1, n, if isprime(i, 2) then acc + 1 else acc);
+fun main() = count(2, 5000, 0);

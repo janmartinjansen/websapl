@@ -159,11 +159,19 @@ async function resolveImports(source, currentFile = "/workspace/main.cfp", seen 
     const trimmed = line.trim();
     if (trimmed.startsWith("||")) continue;
 
-    // Strip trailing || comments outside string literals
+    // Strip trailing || comments outside string literals. In een string slaat
+    // een backslash het volgende teken over (19 oktober 2026: "/\\" eindigt
+    // op een escape, niet op een escaped quote; daarna werd een "||" in een
+    // string voor commentaar gehouden en de regel afgekapt).
     let inStr = false;
     let cleanLine = "";
     for (let i = 0; i < line.length; i++) {
-      if (line[i] === '"' && (i === 0 || line[i - 1] !== "\\")) {
+      if (inStr && line[i] === "\\" && i + 1 < line.length) {
+        cleanLine += line[i] + line[i + 1];
+        i++;
+        continue;
+      }
+      if (line[i] === '"') {
         inStr = !inStr;
       }
       if (!inStr && line[i] === "|" && i + 1 < line.length && line[i + 1] === "|") {
@@ -1251,7 +1259,9 @@ async function buildModules(manifestText, entryModule, entryFunc, moduleSources,
 /**
  * Execute a compiled .jmvm file on JMVM WASM
  */
-async function executeJmvm(contentOrPath, isPath = false, customStdin = "", runId = null) {
+// `files`: optioneel {pad: inhoud}, in het bestandssysteem van de run gezet
+// (de taallab-pagina geeft zo het programma mee, voor readFile).
+async function executeJmvm(contentOrPath, isPath = false, customStdin = "", runId = null, files = null) {
   if (!isInitialized) throw new Error("JMVM engine is not initialized.");
 
   // De VM-wasm leest alleen .jvb (sinds 11 oktober 2026): de tekst eerst
@@ -1306,6 +1316,13 @@ async function executeJmvm(contentOrPath, isPath = false, customStdin = "", runI
   }
 
   execInstance.FS.writeFile(targetPath, program);
+  if (files) {
+    for (const [p, c] of Object.entries(files)) {
+      const vp = "/" + p.replace(/^\//, "");
+      mkdirsFor(execInstance.FS, vp);
+      execInstance.FS.writeFile(vp, c);
+    }
+  }
 
   const startTime = performance.now();
   postMessage({ type: "STDOUT", text: `[VM] Starting execution for ${targetPath}...\n` });
@@ -1763,7 +1780,7 @@ self.onmessage = async function (e) {
 
     case "RUN":
       try {
-        await executeJmvm(msg.contentOrPath, msg.isPath, msg.stdin || "", msg.id);
+        await executeJmvm(msg.contentOrPath, msg.isPath, msg.stdin || "", msg.id, msg.files || null);
       } catch (err) {
         postMessage({ type: "STDERR", text: `VM Error: ${err.message}\n` });
         postMessage({

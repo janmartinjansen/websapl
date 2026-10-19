@@ -1,0 +1,379 @@
+#import "sapl_naar_lc/hybride.cfp"
+#import "taalproto/grammatica.spp"
+
+// taal.spp - een taal als waarde, en de generieke ingang
+// (docs/2026-10-17_taalprototypes_plan.md, §2 en §5).
+//
+// Een taal is een grammatica, een eigen controle van de taal-AST (een lijst
+// foutmeldingen, leeg als alles klopt; meestal noCheck) en een vertaling van
+// de taal-AST naar de kerntaal: een lijst [funcDef] van Sapl_interpreter (met
+// een functie start). Scope hoeft een taal niet zelf te controleren: na de
+// vertaling zoekt kernScope (onderaan) de namen die nergens gebonden zijn.
+// Uitvoeren gaat via de hybride route van sapl_naar_lc; ter controle draait
+// ook Sapl_interpreter (eval2) zelf op dezelfde funcDefs.
+
+::lang = Lang !name gram check translate
+
+langName (Lang n g c t) = n
+
+// tekst -> [funcDef], of een foutmelding (grammatica, lexer of parser)
+::lres = LangOk defs | LangErr !msg
+
+langDefs (Lang n g chk tr) src = langDefsChecked g chk tr src (tpCheck g)
+
+langDefsChecked g chk tr src [] = langDefsParsed chk tr (tpParse g src)
+langDefsChecked g chk tr src errs = LangErr (strcat "grammatica: " (tpJoin errs))
+
+langDefsParsed chk tr (ParseOk ast) = langDefsScoped tr ast (chk ast)
+langDefsParsed chk tr (ParseErr m) = LangErr m
+
+langDefsScoped tr ast [] = langDefsKern (tr ast)
+langDefsScoped tr ast errs = LangErr (tpJoin errs)
+
+langDefsKern defs = langDefsKernRes defs (kernScope defs)
+langDefsKernRes defs [] = LangOk defs
+langDefsKernRes defs errs = LangErr (tpJoin errs)
+
+// voor een taal zonder controle
+noCheck ast = []
+
+tpJoin [] = ""
+tpJoin [x] = x
+tpJoin (x : xs) = strcat3 x "; " (tpJoin xs)
+
+// uitvoeren via de hybride route en het resultaat afdrukken
+runLang lang src = runLangRes (langDefs lang src)
+
+runLangRes (LangErr m) = printString (strcat3 "fout: " m "\n")
+runLangRes (LangOk defs) = runHProg (hCompileDefs (kernOptDefs defs))
+
+runHProg (HProg ctx ts st) = hPrintVal ctx 20 (hRun (HProg ctx ts st)) <#> printString "\n"
+
+// de waarde als getal (voor tests), via de hybride route en via eval2
+// de hybride route draait de geoptimaliseerde kerntaal, eval2 de vertaling
+// zelf: zo controleren ze ook de optimalisatie
+langNumH defs = hRun (hCompileDefs (kernOptDefs defs))
+
+langNumI defs = langRefNum (force (evalProgram defs (EVar "start")))
+
+langRefNum (VNum n) = n
+langRefNum (VBool b) = if b 1 0
+langRefNum v = 0 - 999
+
+// een test: naam, taal, programma, verwachte uitkomst
+checkLang name lang src want = checkLangRes name want (langDefs lang src)
+
+checkLangRes name want (LangErr m) = printString (strcat3 name ": FOUT, " (strcat m "\n"))
+checkLangRes name want (LangOk defs) = checkLangNums name want (langNumH defs) (langNumI defs)
+
+checkLangNums name want h i =
+  printString name <#> printString ": " <#> print h
+  <#> printString " (eval2: " <#> print i <#> printString ", verwacht: " <#> print want
+  <#> printString (if ((h == want) /\ (i == want)) ") ok\n" ") FOUT\n")
+
+// een test die een fout moet geven (begint met de verwachte melding)
+checkLangErr name lang src want = checkLangErrRes name want (langDefs lang src)
+
+checkLangErrRes name want (LangOk defs) = printString (strcat name ": FOUT, geen foutmelding\n")
+checkLangErrRes name want (LangErr m) =
+  printString name <#> printString ": " <#> printString m
+  <#> printString (if (strEqual m want) " ok\n" (strcat3 " FOUT (verwacht: " want ")\n"))
+
+// alleen via de hybride route (voor programma's die voor eval2 te zwaar zijn)
+checkLangH name lang src want = checkLangHRes name want (langDefs lang src)
+
+checkLangHRes name want (LangErr m) = printString (strcat3 name ": FOUT, " (strcat m "\n"))
+checkLangHRes name want (LangOk defs) = checkLangH1 name want (langNumH defs)
+
+checkLangH1 name want h =
+  printString name <#> printString ": " <#> print h <#> printString ", verwacht: " <#> print want
+  <#> printString (if (h == want) " ok\n" " FOUT\n")
+
+// ---------------------------------------------------------------------------
+// Hulpjes om kerntaal te bouwen
+
+// \x1 .. xn -> e
+lams [] e = e
+lams (x : xs) e = ELam x (lams xs e)
+
+// f e1 .. en
+apps f [] = f
+apps f (e : es) = apps (EApp f e) es
+
+// f x1 .. xn, met namen als argumenten
+call f xs = apps (EVar f) (map EVar xs)
+
+bin op a b = EApp (EApp (EPrim op) a) b
+
+let1 x e body = ELet [BindDef x e] body
+
+letrec1 f e body = ELetRec [BindDef f e] body
+
+startDef e = [FuncDef "start" [] e]
+
+// namenlijsten als verzamelingen (strEqual, geen pointervergelijking)
+union [] ys = ys
+union (x : xs) ys
+  | tpStrMember x ys = union xs ys
+  | otherwise = x : union xs ys
+
+addName x xs
+  | tpStrMember x xs = xs
+  | otherwise = x : xs
+
+// de namen uit xs die ook in env staan, in de volgorde van xs
+known env [] = []
+known env (x : xs)
+  | tpStrMember x env = x : known env xs
+  | otherwise = known env xs
+
+// de identiteit, als actie voor een alternatief dat alleen doorgeeft
+id x = x
+
+// ---------------------------------------------------------------------------
+// Scope, generiek: welke namen in de kerntaal zijn nergens gebonden?
+// (docs/2026-10-18_taalprototypes_analyse.md, §3) Een taal die haar binders
+// afbeeldt op ELam, ELet, ELetRec en patroonvariabelen, krijgt zo haar
+// scopecontrole cadeau, ook voor een tak die nooit draait (de hybride route
+// meldt een onbekende naam pas als hij gebruikt wordt). Gebonden zijn: de
+// globale functies, hun parameters, de binders, constructors (hoofdletter)
+// en de ingebouwde namen van de hybride route.
+
+kernScope defs = tpNub (kernDefs (map defName defs) defs)
+
+defName (FuncDef n ps b) = n
+
+kernDefs globs [] = []
+kernDefs globs (FuncDef n ps b : ds) = append (kernE (append ps globs) b) (kernDefs globs ds)
+
+kernE env (EVar x)
+  | kernBekend env x = []
+  | otherwise = [strcat "onbekende naam " x]
+kernE env (EApp f a) = append (kernE env f) (kernE env a)
+kernE env (ELam x b) = kernE (x : env) b
+kernE env (EIf c a b) = append (kernE env c) (append (kernE env a) (kernE env b))
+kernE env (ELet bs b) = append (kernBinds env bs) (kernE (append (bindNames bs) env) b)
+kernE env (ELetRec bs b) = kernELetRec (append (bindNames bs) env) bs b
+kernE env (EConstr c as) = kernEs env as
+kernE env (ECase e brs) = append (kernE env e) (kernBrs env brs)
+kernE env e = []
+
+kernELetRec env bs b = append (kernBinds env bs) (kernE env b)
+
+kernEs env [] = []
+kernEs env (e : es) = append (kernE env e) (kernEs env es)
+
+kernBinds env [] = []
+kernBinds env (BindDef x e : bs) = append (kernE env e) (kernBinds env bs)
+
+bindNames [] = []
+bindNames (BindDef x e : bs) = x : bindNames bs
+
+kernBrs env [] = []
+kernBrs env (CaseBranch p e : brs) = append (kernE (append (patNames p) env) e) (kernBrs env brs)
+
+patNames (PVar x) = [x]
+patNames (PConstr c ps) = patNamesL ps
+patNames p = []
+
+patNamesL [] = []
+patNamesL (p : ps) = append (patNames p) (patNamesL ps)
+
+kernBekend env x = tpStrMember x env \/ isConName x \/ isPrimName x \/ tpStrMember x kernIngebouwd
+
+// de namen die hPrimFun (sapl_naar_lc/hybride.cfp) naast de operatoren kent
+kernIngebouwd = ["not", "cons", "head", "tail", "isnil"]
+
+
+// ---------------------------------------------------------------------------
+// Optimalisatie van de kerntaal, generiek (18 oktober 2026). Drie regels, alle
+// drie geldig in een luie taal:
+//   1. let j = \v.. in b, met een kleine lambda: j invullen waar hij gebruikt
+//      wordt (een lambda is een waarde: geen werk dubbel), zoals de join-punten
+//      van de while-taal;
+//   2. (\v. b) a  =>  let v = a in b;
+//   3. let x = e in b invullen als e triviaal is (naam, getal), of als x
+//      precies een keer voorkomt en niet onder een lambda (het werk blijft
+//      dus een keer, en alleen als die plek bereikt wordt).
+// Een substitutie die een naam zou vangen, gaat niet door: dan blijft de let.
+// Gemeten op de priemlus van de while-taal (docs/2026-10-18_taalprototypes_stap1_2_verslag.md):
+// regel 1 alleen -23%, regel 3 alleen -24%, samen -50%, op het niveau van
+// met de hand geschreven kerntaal.
+
+::kmb = KNee | KJa v
+
+kernOptDefs [] = []
+kernOptDefs (FuncDef n ps b : ds) = FuncDef n ps (optE b) : kernOptDefs ds
+
+// kinderen eerst, dan de regels op deze knoop
+optE e = optRegel (optKind e)
+
+optKind (EApp f a) = EApp (optE f) (optE a)
+optKind (ELam x b) = ELam x (optE b)
+optKind (EIf c a b) = EIf (optE c) (optE a) (optE b)
+optKind (ELet bs b) = ELet (optBinds bs) (optE b)
+optKind (ELetRec bs b) = ELetRec (optBinds bs) (optE b)
+optKind (EConstr c as) = EConstr c (map optE as)
+optKind (ECase s brs) = ECase (optE s) (optBrs brs)
+optKind e = e
+
+optBinds [] = []
+optBinds (BindDef x e : bs) = BindDef x (optE e) : optBinds bs
+
+optBrs [] = []
+optBrs (CaseBranch p e : brs) = CaseBranch p (optE e) : optBrs brs
+
+// regel 2
+optRegel (EApp (ELam v b) a) = optRegel (ELet [BindDef v a] b)
+// regels 1 en 3: een let met een binding
+optRegel (ELet (BindDef x e : rest) b) = optRegelLet x e rest b
+optRegel e = e
+
+optRegelLet x e [] b = optLet x e b (optMag x e b)
+optRegelLet x e rest b = ELet (BindDef x e : rest) b
+
+optMag x e b
+  | isLam e = (kSize e <= 40) /\ (kTel x b <= 4)
+  | isTriviaal e = True
+  | otherwise = kTel x b == 1
+
+optLet x e b False = ELet [BindDef x e] b
+optLet x e b True = optLetSub x e b (substE x e b)
+
+optLetSub x e b KNee = ELet [BindDef x e] b
+optLetSub x e b (KJa b2) = optE b2
+
+isLam (ELam x b) = True
+isLam e = False
+
+isTriviaal (EVar x) = True
+isTriviaal (ENum n) = True
+isTriviaal (EBool b) = True
+isTriviaal (EStr s) = True
+isTriviaal e = False
+
+// het aantal vrije voorkomens van x; onder een lambda telt een voorkomen
+// voor 2 (de lambda kan vaker draaien), zodat regel 3 daar niet invult
+kTel x (EVar y)
+  | strEqual x y = 1
+  | otherwise = 0
+kTel x (EApp f a) = kTel x f + kTel x a
+kTel x (ELam y b)
+  | strEqual x y = 0
+  | otherwise = 2 * kTel x b
+kTel x (EIf c a b) = kTel x c + kTel x a + kTel x b
+kTel x (ELet bs b)
+  | tpStrMember x (bindNames bs) = kTelBinds x bs
+  | otherwise = kTelBinds x bs + kTel x b
+kTel x (ELetRec bs b)
+  | tpStrMember x (bindNames bs) = 0
+  | otherwise = 2 * (kTelBinds x bs + kTel x b)
+kTel x (EConstr c as) = kTelL x as
+kTel x (ECase s brs) = kTel x s + kTelBrs x brs
+kTel x e = 0
+
+kTelBinds x [] = 0
+kTelBinds x (BindDef y e : bs) = kTel x e + kTelBinds x bs
+kTelL x [] = 0
+kTelL x (e : es) = kTel x e + kTelL x es
+kTelBrs x [] = 0
+kTelBrs x (CaseBranch p e : brs)
+  | tpStrMember x (patNames p) = kTelBrs x brs
+  | otherwise = kTel x e + kTelBrs x brs
+
+kSize (EApp f a) = 1 + kSize f + kSize a
+kSize (ELam x b) = 1 + kSize b
+kSize (EIf c a b) = 1 + kSize c + kSize a + kSize b
+kSize (ELet bs b) = 1 + kSizeBinds bs + kSize b
+kSize (ELetRec bs b) = 1 + kSizeBinds bs + kSize b
+kSize (EConstr c as) = 1 + kSizeL as
+kSize (ECase s brs) = 1 + kSize s + kSizeBrs brs
+kSize e = 1
+
+kSizeBinds [] = 0
+kSizeBinds (BindDef y e : bs) = kSize e + kSizeBinds bs
+kSizeL [] = 0
+kSizeL (e : es) = kSize e + kSizeL es
+kSizeBrs [] = 0
+kSizeBrs (CaseBranch p e : brs) = kSize e + kSizeBrs brs
+
+// de vrije namen van een expressie
+kVrij (EVar y) = [y]
+kVrij (EApp f a) = append (kVrij f) (kVrij a)
+kVrij (ELam y b) = kZonder y (kVrij b)
+kVrij (EIf c a b) = append (kVrij c) (append (kVrij a) (kVrij b))
+kVrij (ELet bs b) = append (kVrijBinds bs) (kZonderL (bindNames bs) (kVrij b))
+kVrij (ELetRec bs b) = kZonderL (bindNames bs) (append (kVrijBinds bs) (kVrij b))
+kVrij (EConstr c as) = kVrijL as
+kVrij (ECase s brs) = append (kVrij s) (kVrijBrs brs)
+kVrij e = []
+
+kVrijBinds [] = []
+kVrijBinds (BindDef y e : bs) = append (kVrij e) (kVrijBinds bs)
+kVrijL [] = []
+kVrijL (e : es) = append (kVrij e) (kVrijL es)
+kVrijBrs [] = []
+kVrijBrs (CaseBranch p e : brs) = append (kZonderL (patNames p) (kVrij e)) (kVrijBrs brs)
+
+kZonder y [] = []
+kZonder y (z : zs)
+  | strEqual y z = kZonder y zs
+  | otherwise = z : kZonder y zs
+
+kZonderL [] zs = zs
+kZonderL (y : ys) zs = kZonderL ys (kZonder y zs)
+
+// een gemeenschappelijke naam?
+kRaakt [] zs = False
+kRaakt (y : ys) zs
+  | tpStrMember y zs = True
+  | otherwise = kRaakt ys zs
+
+// substE x a e: e met a voor de vrije x, of KNee als een binder in e een
+// vrije naam van a zou vangen
+substE x a e = substS x a (kVrij a) e
+
+substS x a fa (EVar y)
+  | strEqual x y = KJa a
+  | otherwise = KJa (EVar y)
+substS x a fa (EApp f g) = kJa2 EApp (substS x a fa f) (substS x a fa g)
+substS x a fa (ELam y b)
+  | strEqual x y = KJa (ELam y b)
+  | tpStrMember y fa /\ (kTel x b > 0) = KNee
+  | otherwise = kJa1 (ELam y) (substS x a fa b)
+substS x a fa (EIf c t f) = kJa3 EIf (substS x a fa c) (substS x a fa t) (substS x a fa f)
+substS x a fa (ELet bs b) = kJa2 ELet (substBinds x a fa bs) (substLetBody x a fa (bindNames bs) b)
+substS x a fa (ELetRec bs b)
+  | tpStrMember x (bindNames bs) = KJa (ELetRec bs b)
+  | kRaakt (bindNames bs) fa /\ (kTel x (ELetRec bs b) > 0) = KNee
+  | otherwise = kJa2 ELetRec (substBinds x a fa bs) (substS x a fa b)
+substS x a fa (EConstr c as) = kJa1 (EConstr c) (substL x a fa as)
+substS x a fa (ECase s brs) = kJa2 ECase (substS x a fa s) (substBrs x a fa brs)
+substS x a fa e = KJa e
+
+substLetBody x a fa ns b
+  | tpStrMember x ns = KJa b
+  | kRaakt ns fa /\ (kTel x b > 0) = KNee
+  | otherwise = substS x a fa b
+
+substBinds x a fa [] = KJa []
+substBinds x a fa (BindDef y e : bs) = kJa2 kBindCons (kJa1 (BindDef y) (substS x a fa e)) (substBinds x a fa bs)
+kBindCons b bs = b : bs
+
+substL x a fa [] = KJa []
+substL x a fa (e : es) = kJa2 kCons (substS x a fa e) (substL x a fa es)
+kCons e es = e : es
+
+substBrs x a fa [] = KJa []
+substBrs x a fa (CaseBranch p e : brs) = kJa2 kCons (substBr x a fa p e) (substBrs x a fa brs)
+substBr x a fa p e
+  | tpStrMember x (patNames p) = KJa (CaseBranch p e)
+  | kRaakt (patNames p) fa /\ (kTel x e > 0) = KNee
+  | otherwise = kJa1 (CaseBranch p) (substS x a fa e)
+
+kJa1 f KNee = KNee
+kJa1 f (KJa v) = KJa (f v)
+kJa2 f KNee m = KNee
+kJa2 f (KJa v) m = kJa1 (f v) m
+kJa3 f KNee m n = KNee
+kJa3 f (KJa v) m n = kJa2 (f v) m n

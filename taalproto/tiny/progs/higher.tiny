@@ -1,0 +1,6 @@
+// functions as values: compose, fold, and a closure over a parameter
+fun compose(f, g) = fn(x) -> f(g(x));
+fun foldr(f, z, xs) = match xs { [] -> z | x :: r -> f(x, foldr(f, z, r)) };
+fun sum(xs) = foldr(fn(a, b) -> a + b, 0, xs);
+fun scale(k, xs) = foldr(fn(a, r) -> a * k :: r, [], xs);
+fun main() = let inc2 = compose(fn(x) -> x + 1, fn(x) -> x + 1) in inc2(sum(scale(10, [1, 2, 3, 4])));

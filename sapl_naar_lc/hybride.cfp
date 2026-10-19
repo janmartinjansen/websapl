@@ -1,0 +1,662 @@
+#import "sapl_naar_lc/compiler.cfp"
+
+// hybride.cfp - dezelfde brontaal als compiler.cfp, maar naar de AST van de
+// closure-compiler uit experiments/Scott_experiments/adt_interp/ (strategie
+// B): functies worden echte Sapl-closures, maar constructors worden echte
+// Sapl-waarden (V0..V3, VN), een case kiest op de tag, booleans zijn 1/0 en
+// if is de native if. Overgenomen en aangepast: eigen namen (interp.cfp
+// declareert zelf ::list/::expr/::env), meer dan twee velden, een letrec met
+// meerdere bindingen. Zie sapl_naar_lc/README.md.
+
+// --- de doel-AST ---
+// HVar n: 1 = binnenste binding. HCase: de velden komen op de omgeving, het
+// laatste veld als HVar 1. HLetRec ds b: ds binnenste eerst; alle bindingen
+// zien elkaar.
+// HGlob i: de i-de top-level definitie (0-based). HCase e alts dflt: alts
+// is een lijst TAlt tag body op oplopende tag, alleen voor de constructors
+// met een eigen tak; elke andere tag gaat naar dflt (zonder velden).
+::hx = HVar !n | HApp f a | HAbs body | HLit v | HPrim !op a b
+     | HIf c t e | HCon !tag args | HCase e alts dflt | HLetRec defs body | HGlob !i
+::talt = TAlt !tag body
+// de alternatieven als zoekboom op de tag (gebouwd bij het compileren)
+::htree = TL !tag code | TN !mid left right
+// een tabel met een alternatief per tag 0..15, gekozen met getField
+::altTab = AT a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15
+
+::henv = HNil | HEC x rest
+
+::hval = V0 !tag | V1 !tag a | V2 !tag a b | V3 !tag a b c | VN !tag fields
+
+hNth !i xs = case xs (Cons x r -> if (i == 0) x (hNth (i - 1) r)) (Nil -> error "hNth: lijst te kort")
+
+hLook !n env = case env (HEC x r -> if (n == 1) x (hLook (n - 1) r))
+hLookK !n env k = case env (HEC x r -> if (n == 1) (k x) (hLookK (n - 1) r k))
+
+// ---------------------------------------------------------------------------
+// De closure-compiler (strategie B van adt_interp)
+// ---------------------------------------------------------------------------
+
+// gv is de (luie) lijst van de waarden van de globals: een knoop, want de
+// globals worden zelf met gv gecompileerd. Een HGlob wordt bij het
+// compileren aan zijn waarde gekoppeld; bij het uitvoeren is er niets meer
+// op te zoeken.
+hComp gv e = case e
+  (HVar n -> hVarC n)
+  (HApp f a -> hCompApp gv f (hCompArg gv a))
+  (HAbs b -> hCompAbs gv 1 b)
+  (HLit v -> hLitC v)
+  (HPrim op a b -> hCompPrimAt gv op a b)
+  (HIf c t f -> hIfC (hComp gv c) (hComp gv t) (hComp gv f))
+  (HCon t as -> hCompCon gv t as)
+  (HCase s alts d -> hCompCase gv s alts d)
+  (HLetRec ds b -> hLetRecC (hCompList gv ds) (hComp gv b))
+  (HGlob i -> hLitC (hGNth i gv))
+
+hCompList gv xs = case xs (Nil -> Nil) (Cons x r -> Cons (hComp gv x) (hCompList gv r))
+
+hCompAlts gv as = case as (Nil -> Nil) (Cons a r -> case a (TAlt t b -> Cons (TAlt t (hComp gv b)) (hCompAlts gv r)))
+
+// een gebalanceerde boom over n (gesorteerde) alternatieven
+hTreeOf alts !n =
+  if (n == 1) (case alts (Cons a r -> case a (TAlt t c -> TL t c)))
+  (hTreeSplit alts (n / 2) n)
+hTreeSplit alts !k !n =
+  let right = drop k alts in
+  TN (hAltTag right) (hTreeOf (take k alts) k) (hTreeOf right (n - k))
+hAltTag as = case as (Cons a r -> case a (TAlt t c -> t))
+
+hVarC !n = if (n == 1) hVar1C (if (n == 2) hVar2C (if (n == 3) hVar3C (if (n == 4) hVar4C (hLookC n))))
+hVar1C env = case env (HEC x r -> x)
+hVar2C env = case env (HEC x r -> hVar1C r)
+hVar3C env = case env (HEC x r -> hVar2C r)
+hVar4C env = case env (HEC x r -> hVar3C r)
+hLookC n env = hLook n env
+
+// een argument: een variabele of literal zonder nieuwe thunk doorgeven
+hCompArg gv e = case e
+  (HVar n -> hArgVarSel n)
+  (HLit v -> hArgLitC v)
+  (HGlob i -> hArgLitC (hGNth i gv))
+  (_ -> hArgGenC (hComp gv e))
+hArgVarSel !n = if (n == 1) hArgVar1C (if (n == 2) hArgVar2C (if (n == 3) hArgVar3C (if (n == 4) hArgVar4C (hArgVarC n))))
+hArgVarC n env k = hLookK n env k
+hArgVar1C env k = case env (HEC x r -> k x)
+hArgVar2C env k = case env (HEC x r -> hArgVar1C r k)
+hArgVar3C env k = case env (HEC x r -> hArgVar2C r k)
+hArgVar4C env k = case env (HEC x r -> hArgVar3C r k)
+hArgLitC v env k = k v
+hArgGenC c env k = k (c env)
+
+// zonder let (18 oktober 2026): de preprocessor van Sapl+ tilt de body van een
+// let naar een eigen functie, en dat was een aanroep extra per toepassing
+hAppC cf ca env = ca env (cf env)
+
+hAbsC cb env x = cb (HEC x env)
+
+// een applicatie met een global of een variabele als functie: de functie
+// direct doorgeven, zonder hem eerst via een aanroep op te halen
+hCompApp gv f ca =
+  case f
+    (HGlob i -> hAppGC (hGNth i gv) ca)
+    (HVar n -> if (n == 1) (hAppV1C ca) (if (n == 2) (hAppV2C ca) (hAppC (hVarC n) ca)))
+    (_ -> hAppC (hComp gv f) ca)
+hAppGC g ca env = ca env g
+hAppV1C ca env = case env (HEC x r -> ca env x)
+hAppV2C ca env = case env (HEC x r -> case r (HEC y r2 -> ca env y))
+
+// geneste abstracties (tot vier) worden één closure; de omgeving is
+// dezelfde als bij losse HAbs (de laatste parameter is HVar 1)
+hCompAbs gv !k b =
+  case b
+    (HAbs b2 -> if (k < 4) (hCompAbs gv (k + 1) b2) (hAbsK k (hComp gv b)))
+    (_ -> hAbsK k (hComp gv b))
+hAbsK !k cb = if (k == 1) (hAbsC cb) (if (k == 2) (hAbs2C cb) (if (k == 3) (hAbs3C cb) (hAbs4C cb)))
+hAbs2C cb env x y = cb (HEC y (HEC x env))
+hAbs3C cb env x y z = cb (HEC z (HEC y (HEC x env)))
+hAbs4C cb env x y z w = cb (HEC w (HEC z (HEC y (HEC x env))))
+hLitC v env = v
+
+hIfC cc ct cf env = if (cc env) (ct env) (cf env)
+
+// Prim op: 0..10 = + - * / % == != < <= > >=
+hCompPrim !op ca cb =
+  if (op < 5)
+    (if (op == 0) (hAddC ca cb) (if (op == 1) (hSubC ca cb) (if (op == 2) (hMulC ca cb) (if (op == 3) (hDivC ca cb) (hModC ca cb)))))
+    (if (op == 5) (hEqC ca cb) (if (op == 6) (hNeC ca cb) (if (op == 7) (hLtC ca cb) (if (op == 8) (hLeC ca cb) (if (op == 9) (hGtC ca cb) (hGeC ca cb))))))
+// varianten: een getal rechts (CL), en de binnenste variabele links met een
+// getal rechts (VL), zonder aanroep om de operanden op te halen
+hCompPrimAt gv !op a b =
+  case b
+    (HLit k ->
+       case a
+         (HVar n -> if (n == 1) (hPrimVL op k) (hPrimCL op (hComp gv a) k))
+         (_ -> hPrimCL op (hComp gv a) k))
+    (_ -> hCompPrim op (hComp gv a) (hComp gv b))
+
+hPrimCL !op ca k =
+  if (op == 0) (hAddCL ca k) (if (op == 1) (hSubCL ca k) (if (op == 2) (hMulCL ca k) (if (op == 3) (hDivCL ca k)
+  (if (op == 4) (hModCL ca k) (if (op == 5) (hEqCL ca k) (if (op == 6) (hNeCL ca k) (if (op == 7) (hLtCL ca k)
+  (if (op == 8) (hLeCL ca k) (if (op == 9) (hGtCL ca k) (hGeCL ca k))))))))))
+hPrimVL !op k =
+  if (op == 0) (hAddVL k) (if (op == 1) (hSubVL k) (if (op == 2) (hMulVL k) (if (op == 3) (hDivVL k)
+  (if (op == 4) (hModVL k) (if (op == 5) (hEqVL k) (if (op == 6) (hNeVL k) (if (op == 7) (hLtVL k)
+  (if (op == 8) (hLeVL k) (if (op == 9) (hGtVL k) (hGeVL k))))))))))
+hAddCL ca k env = ca env + k
+hSubCL ca k env = ca env - k
+hMulCL ca k env = ca env * k
+hDivCL ca k env = ca env / k
+hModCL ca k env = ca env % k
+hEqCL ca k env = (ca env - k) == 0
+hNeCL ca k env = (ca env - k) != 0
+hLtCL ca k env = ca env < k
+hLeCL ca k env = ca env <= k
+hGtCL ca k env = ca env > k
+hGeCL ca k env = ca env >= k
+hAddVL k env = case env (HEC x r -> x + k)
+hSubVL k env = case env (HEC x r -> x - k)
+hMulVL k env = case env (HEC x r -> x * k)
+hDivVL k env = case env (HEC x r -> x / k)
+hModVL k env = case env (HEC x r -> x % k)
+hEqVL k env = case env (HEC x r -> (x - k) == 0)
+hNeVL k env = case env (HEC x r -> (x - k) != 0)
+hLtVL k env = case env (HEC x r -> x < k)
+hLeVL k env = case env (HEC x r -> x <= k)
+hGtVL k env = case env (HEC x r -> x > k)
+hGeVL k env = case env (HEC x r -> x >= k)
+
+// == en != als (a - b) == 0 (18 oktober 2026): dezelfde betekenis voor
+// getallen (en booleans en chars), en de enige die de kerntaal kent (eval2
+// vergelijkt alleen die). Zo laat de preprocessor van Sapl+ ze staan als
+// hybride.cfp vanuit een .spp geïmporteerd wordt; een kale == werd daar
+// __deepEq (structureel), en kostte de while-taal 18% (taalproto/README.md).
+hAddC ca cb env = ca env + cb env
+hSubC ca cb env = ca env - cb env
+hMulC ca cb env = ca env * cb env
+hDivC ca cb env = ca env / cb env
+hModC ca cb env = ca env % cb env
+hEqC ca cb env  = (ca env - cb env) == 0
+hNeC ca cb env  = (ca env - cb env) != 0
+hLtC ca cb env  = ca env < cb env
+hLeC ca cb env  = ca env <= cb env
+hGtC ca cb env  = ca env > cb env
+hGeC ca cb env  = ca env >= cb env
+
+hMk1 t x = V1 t x
+hMk2 t x y = V2 t x y
+hMk3 t x y z = V3 t x y z
+hId x = x
+
+hCompCon gv !t as = case as
+  (Nil -> hCon0C t)
+  (Cons a r -> case r
+    (Nil -> hCon1C t (hCompArg gv a))
+    (Cons b r2 -> case r2
+      (Nil -> hCon2C t (hCompArg gv a) (hCompArg gv b))
+      (Cons c r3 -> case r3
+        (Nil -> hCon3C t (hCompArg gv a) (hCompArg gv b) (hCompArg gv c))
+        (_ -> hConNC t (hCompArgs gv as)))))
+hCompArgs gv as = case as (Nil -> Nil) (Cons a r -> Cons (hCompArg gv a) (hCompArgs gv r))
+
+hCon0C t env = V0 t
+hCon1C t a1 env = a1 env (hMk1 t)
+hCon2C t a1 a2 env = a1 env (hCon2b t a2 env)
+hCon2b t a2 env x = a2 env (hMk2 t x)
+hCon3C t a1 a2 a3 env = a1 env (hCon3b t a2 a3 env)
+hCon3b t a2 a3 env x = a2 env (hCon3c t a3 env x)
+hCon3c t a3 env x y = a3 env (hMk3 t x y)
+hConNC t cas env = VN t (hArgs cas env)
+hArgs cas env = case cas (Nil -> Nil) (Cons c r -> Cons (c env hId) (hArgs r env))
+
+// tags 0..15: een tabel (constante tijd); anders de zoekboom
+hCompCase gv s alts d =
+  let calts = hCompAlts gv alts, cd = hComp gv d in
+  if (hMaxTag alts < 16) (hCaseTabAt gv s (hMkTab calts cd) cd)
+    (hCaseC (hComp gv s) (hTreeOf calts (length alts)) cd)
+
+// de scrutinee is bijna altijd een variabele: direct uit de omgeving
+hCaseTabAt gv s tab cd =
+  case s
+    (HVar n -> if (n == 1) (hCaseTabV1C tab cd) (if (n == 2) (hCaseTabV2C tab cd) (if (n == 3) (hCaseTabV3C tab cd) (hCaseTabC (hComp gv s) tab cd))))
+    (_ -> hCaseTabC (hComp gv s) tab cd)
+// (de dispatch staat in elke variant zelf: een extra aanroep kost evenveel
+// als het ophalen van de variabele)
+hCaseTabV1C tab cd env = case env (HEC x r ->
+  case x
+    (V0 t -> hTabSel t tab cd env env)
+    (V1 t a -> hTabSel t tab cd env (HEC a env))
+    (V2 t a b -> hTabSel t tab cd env (HEC b (HEC a env)))
+    (V3 t a b c -> hTabSel t tab cd env (HEC c (HEC b (HEC a env))))
+    (VN t fs -> hTabSel t tab cd env (hPushAll fs env)))
+hCaseTabV2C tab cd env = case env (HEC x r -> case r (HEC y r2 ->
+  case y
+    (V0 t -> hTabSel t tab cd env env)
+    (V1 t a -> hTabSel t tab cd env (HEC a env))
+    (V2 t a b -> hTabSel t tab cd env (HEC b (HEC a env)))
+    (V3 t a b c -> hTabSel t tab cd env (HEC c (HEC b (HEC a env))))
+    (VN t fs -> hTabSel t tab cd env (hPushAll fs env))))
+hCaseTabV3C tab cd env = case env (HEC x r -> case r (HEC y r2 -> case r2 (HEC z r3 ->
+  case z
+    (V0 t -> hTabSel t tab cd env env)
+    (V1 t a -> hTabSel t tab cd env (HEC a env))
+    (V2 t a b -> hTabSel t tab cd env (HEC b (HEC a env)))
+    (V3 t a b c -> hTabSel t tab cd env (HEC c (HEC b (HEC a env))))
+    (VN t fs -> hTabSel t tab cd env (hPushAll fs env)))))
+
+hMaxTag as = case as (Nil -> 0 - 1) (Cons a r -> case a (TAlt t b -> if (t > hMaxTag r) t (hMaxTag r)))
+
+// een veld is een functie van (omgeving zonder velden, omgeving met velden)
+hAltE c env0 env1 = c env1
+hDefE cd env0 env1 = cd env0
+hTabEntry calts cd !i = case calts
+  (Nil -> hDefE cd)
+  (Cons a r -> case a (TAlt t c -> if (t == i) (hAltE c) (hTabEntry r cd i)))
+hMkTab calts cd =
+  AT (hTabEntry calts cd 0) (hTabEntry calts cd 1) (hTabEntry calts cd 2) (hTabEntry calts cd 3)
+     (hTabEntry calts cd 4) (hTabEntry calts cd 5) (hTabEntry calts cd 6) (hTabEntry calts cd 7)
+     (hTabEntry calts cd 8) (hTabEntry calts cd 9) (hTabEntry calts cd 10) (hTabEntry calts cd 11)
+     (hTabEntry calts cd 12) (hTabEntry calts cd 13) (hTabEntry calts cd 14) (hTabEntry calts cd 15)
+
+hCaseTabC cs tab cd env = hCaseDisp (cs env) tab cd env
+hCaseDisp v tab cd env = case v
+  (V0 t -> hTabSel t tab cd env env)
+  (V1 t a -> hTabSel t tab cd env (HEC a env))
+  (V2 t a b -> hTabSel t tab cd env (HEC b (HEC a env)))
+  (V3 t a b c -> hTabSel t tab cd env (HEC c (HEC b (HEC a env))))
+  (VN t fs -> hTabSel t tab cd env (hPushAll fs env))
+// een tag vanaf 16 (een programma met meer constructors) heeft hier geen tak
+hTabSel !t tab cd env0 env1 =
+  if (t < 16) (hTabGo (getField tab t) env0 env1) (cd env0)
+hTabGo f env0 env1 = f env0 env1
+
+// case: zoek de tag op in de boom; zonder eigen tak naar het standaard-
+// alternatief, met de omgeving zonder de velden
+hCaseC cs tree cd env = case (cs env)
+  (V0 t -> hTree t tree cd env env)
+  (V1 t a -> hTree t tree cd env (HEC a env))
+  (V2 t a b -> hTree t tree cd env (HEC b (HEC a env)))
+  (V3 t a b c -> hTree t tree cd env (HEC c (HEC b (HEC a env))))
+  (VN t fs -> hTree t tree cd env (hPushAll fs env))
+hTree !t tree cd env0 env1 = case tree
+  (TL tag c -> if ((t - tag) == 0) (c env1) (cd env0))
+  (TN mid l r -> if (t < mid) (hTree t l cd env0 env1) (hTree t r cd env0 env1))
+hPushAll fs env = case fs (Nil -> env) (Cons f r -> hPushAll r (HEC f env))
+
+// letrec: een cyclische omgeving, zoals evalRec in Sapl_interpreter
+hLetRecC cds cb env =
+  let env2 = hExtend cds env2 env in
+  cb env2
+hExtend cds env2 env = case cds (Nil -> env) (Cons cd r -> HEC (cd env2) (hExtend r env2 env))
+
+
+// ---------------------------------------------------------------------------
+// De vertaling van de Sapl-AST (Sapl_interpreter) naar hx. De scope en de
+// constructortabel komen uit compiler.cfp.
+// ---------------------------------------------------------------------------
+
+hRef sc !lvl = case sc (Sc names depth -> HVar (depth - lvl + 1))
+
+// Een global staat onderaan in de scope met niveau -10 - i (zodat een lokale
+// naam hem verbergt); scFind geeft -1 als een naam nergens staat.
+hIsGlob !lvl = lvl <= 0 - 10
+hGlobIdx !lvl = 0 - 10 - lvl
+
+hFail = HLit (error "geen passende case-tak")
+
+hBoolLit b = HLit (if b 1 0)
+
+// tag 0-based en ariteit, of tag -1
+hConTag ctx !name = case (conInfo ctx name) (ConAt k a -> k - 1)
+hConArity ctx !name = case (conInfo ctx name) (ConAt k a -> a)
+
+// een constructor als functie: \x1..xa. Con t [x1..xa]
+hConFun ctx !name =
+  let a = hConArity ctx name, t = hConTag ctx name in
+  if (t < 0) (HLit (error (strcat "onbekende constructor " name)))
+    (lcAbsNH a (HCon t (hConVars a a)))
+hConVars !a !i = if (i == 0) Nil (Cons (HVar i) (hConVars a (i - 1)))
+lcAbsNH !k t = if (k == 0) t (HAbs (lcAbsNH (k - 1) t))
+
+hApps f args = case args (Nil -> f) (Cons a as -> hApps (HApp f a) as)
+
+hExpr ctx sc e =
+  case e
+    (ENum n -> HLit n)
+    (EStr s -> HLit s)
+    (EBool b -> hBoolLit b)
+    (EVar name -> hVar ctx sc name)
+    (EPrim op -> hPrimFun ctx op)
+    (EApp f x -> hSpine ctx sc f (Cons x Nil))
+    (ELam p body -> HAbs (hExpr ctx (scPush sc p) body))
+    (EIf c t f -> HIf (hExpr ctx sc c) (hExpr ctx sc t) (hExpr ctx sc f))
+    (ELet bs body -> hLetPar ctx sc sc bs body)
+    (ELetRec bs body -> hLetRec ctx sc bs body)
+    (EConstr c args -> hConApp ctx sc c (hList ctx sc args))
+    (ECase s brs -> hCase ctx sc s brs)
+
+hList ctx sc es = case es (Nil -> Nil) (Cons e rest -> Cons (hExpr ctx sc e) (hList ctx sc rest))
+
+// een applicatie: verzamel de argumenten, en kijk naar het hoofd
+hSpine ctx sc f args =
+  case f
+    (EApp g x -> hSpine ctx sc g (Cons x args))
+    (EPrim op -> hPrimApp ctx sc op args)
+    (EVar name -> hVarApp ctx sc name args (scFind name (scNames sc)))
+    (_ -> hApps (hExpr ctx sc f) (hList ctx sc args))
+
+// volgorde: lokaal, global, constructor, ingebouwd
+hVarApp ctx sc name args !lvl =
+  if (lvl >= 0) (hApps (hRef sc lvl) (hList ctx sc args))
+  (if (hIsGlob lvl) (hApps (HGlob (hGlobIdx lvl)) (hList ctx sc args))
+  (if (isConName name) (hConApp ctx sc name (hList ctx sc args))
+  (if (isPrimName name) (hPrimApp ctx sc name args)
+  (hApps (hVar ctx sc name) (hList ctx sc args)))))
+
+// verzadigd: een HCon; anders de constructor als functie toepassen
+hConApp ctx sc name args =
+  if (length args == hConArity ctx name /\ hConTag ctx name >= 0)
+    (HCon (hConTag ctx name) args)
+    (hApps (hConFun ctx name) args)
+
+isPrimName name = hPrimOp name >= 0 \/ strEqual name "&&" \/ strEqual name "/\\" \/ strEqual name "||" \/ strEqual name "\\/"
+
+hPrimOp name =
+  if (strEqual name "+") 0 (if (strEqual name "-") 1 (if (strEqual name "*") 2
+  (if (strEqual name "/") 3 (if (strEqual name "%") 4 (if (strEqual name "==") 5
+  (if (strEqual name "!=") 6 (if (strEqual name "<") 7 (if (strEqual name "<=") 8
+  (if (strEqual name ">") 9 (if (strEqual name ">=") 10 (0 - 1)))))))))))
+
+// een binaire operator met precies twee argumenten wordt een HPrim of HIf
+hPrimApp ctx sc op args =
+  case args
+    (Cons a r -> case r
+      (Cons b r2 -> case r2
+        (Nil -> hBin ctx sc op (hExpr ctx sc a) (hExpr ctx sc b))
+        (_ -> hApps (hPrimFun ctx op) (hList ctx sc args)))
+      (Nil -> hApps (hPrimFun ctx op) (hList ctx sc args)))
+    (Nil -> hPrimFun ctx op)
+
+hBin ctx sc op a b =
+  if (strEqual op "&&" \/ strEqual op "/\\") (HIf a b (HLit 0))
+  (if (strEqual op "||" \/ strEqual op "\\/") (HIf a (HLit 1) b)
+  (if (hPrimOp op >= 0) (HPrim (hPrimOp op) a b)
+  (hApps (hPrimFun ctx op) (Cons a (Cons b Nil)))))
+
+// een ingebouwde naam als waarde
+hPrimFun ctx op =
+  if (hPrimOp op >= 0) (HAbs (HAbs (HPrim (hPrimOp op) (HVar 2) (HVar 1))))
+  (if (strEqual op "&&" \/ strEqual op "/\\") (HAbs (HAbs (HIf (HVar 2) (HVar 1) (HLit 0))))
+  (if (strEqual op "||" \/ strEqual op "\\/") (HAbs (HAbs (HIf (HVar 2) (HLit 1) (HVar 1))))
+  (if (strEqual op "not") (HAbs (HIf (HVar 1) (HLit 0) (HLit 1)))
+  (if (strEqual op "cons") (hConFun ctx "Cons")
+  (if (strEqual op "head") (hSrc ctx (ELam "l" (ECase (EVar "l") (Cons (CaseBranch (PConstr "Cons" (Cons (PVar "h") (Cons PWild Nil))) (EVar "h")) Nil))))
+  (if (strEqual op "tail") (hSrc ctx (ELam "l" (ECase (EVar "l") (Cons (CaseBranch (PConstr "Cons" (Cons PWild (Cons (PVar "t") Nil))) (EVar "t")) Nil))))
+  (if (strEqual op "isnil") (hSrc ctx (ELam "l" (ECase (EVar "l") (Cons (CaseBranch (PConstr "Nil" Nil) (EBool True)) (Cons (CaseBranch PWild (EBool False)) Nil)))))
+  (HLit (error (strcat "onbekende naam: " op))))))))))
+
+hSrc ctx e = hExpr ctx (Sc Nil 0) e
+
+hVar ctx sc name =
+  case sc
+    (Sc names depth -> hVarAt ctx name depth (scFind name names))
+
+hVarAt ctx name !depth !lvl =
+  if (lvl >= 0) (HVar (depth - lvl + 1))
+  (if (hIsGlob lvl) (HGlob (hGlobIdx lvl))
+  (if (isConName name) (hConApp ctx (Sc Nil depth) name Nil)
+  (hPrimFun ctx name)))
+
+// let (niet recursief): elke rechterkant in de oorspronkelijke scope
+hLetPar ctx sc0 sc bs body =
+  case bs
+    (Nil -> hExpr ctx sc body)
+    (Cons b rest ->
+       case b
+         (BindDef name rhs ->
+            HApp (HAbs (hLetPar ctx sc0 (scPush sc name) rest body))
+                 (hExpr ctx (Sc (scNames sc0) (scDepth sc)) rhs)))
+
+// letrec: x1..xk krijgen de niveaus d+1..d+k (xk is HVar 1)
+hLetRec ctx sc bs body =
+  let sc2 = hPushNames sc bs in
+  HLetRec (reverse (hRhss ctx sc2 bs)) (hExpr ctx sc2 body)
+
+hPushNames sc bs = case bs (Nil -> sc) (Cons b rest -> hPushNames (scPush sc (bindName b)) rest)
+hRhss ctx sc bs = case bs (Nil -> Nil) (Cons b rest -> case b (BindDef n r -> Cons (hExpr ctx sc r) (hRhss ctx sc rest)))
+
+// ---------------------------------------------------------------------------
+// case: een match-compiler over rijen (zoals in Wadler, "Efficient
+// compilation of pattern matching"). Een rij is een lijst (niveau, patroon)
+// die nog gematcht moet worden, de aliassen voor de patroonvariabelen die al
+// gebonden zijn, en de body. Alle rijen hebben dezelfde kolommen (niveaus).
+// De takken worden in groepen van dezelfde soort verdeeld; elke groep krijgt
+// de groepen erna als faalvoortzetting (één keer gebonden). Een groep met
+// constructorpatronen wordt één HCase: elke rij gaat naar het alternatief van
+// zijn constructor, met de velden als nieuwe kolommen vooraan.
+// ---------------------------------------------------------------------------
+
+::row = Row aliases mps body
+
+// een variabele als scrutinee wordt niet opnieuw gebonden
+hCase ctx sc s brs =
+  case s
+    (EVar name -> hCaseVar ctx sc s brs (scFind name (scNames sc)))
+    (_ -> hCaseBind ctx sc s brs)
+
+hCaseVar ctx sc s brs !lvl =
+  if (lvl >= 0) (hMatchRows ctx sc (hRows lvl brs) (0 - 1)) (hCaseBind ctx sc s brs)
+
+hCaseBind ctx sc s brs =
+  HApp (HAbs (hMatchRows ctx (scAnon sc) (hRows (scDepth sc + 1) brs) (0 - 1))) (hExpr ctx sc s)
+
+hRows !lvl brs =
+  case brs
+    (Nil -> Nil)
+    (Cons br rest -> case br (CaseBranch p body -> Cons (Row Nil (Cons (MP lvl p) Nil) body) (hRows lvl rest)))
+
+// fLvl < 0: geen faalvoortzetting meer, dan is falen een fout
+hFailRef sc !fLvl = if (fLvl < 0) hFail (hRef sc fLvl)
+
+// de soort van een patroon: 0 variabele of _, 1 constructor, 2 getal/boolean
+hKind p = case p (PWild -> 0) (PVar x -> 0) (PConstr c ps -> 1) (_ -> 2)
+
+hRowKind r = case r (Row al mps b -> case mps (Cons m ms -> case m (MP lvl p -> hKind p)) (Nil -> 0 - 1))
+
+hMatchRows ctx sc rows !fLvl =
+  case rows
+    (Nil -> hFailRef sc fLvl)
+    (Cons r rest ->
+       case r
+         (Row al mps body ->
+            case mps
+              (Nil -> hExpr ctx (hApplyAliases sc (reverse al)) body)
+              (_ -> hGroups ctx sc (hRowKind r) rows fLvl)))
+
+hApplyAliases sc al =
+  case al
+    (Nil -> sc)
+    (Cons b rest -> case b (Bnd x lvl -> hApplyAliases (scAlias sc x lvl) rest))
+
+// de eerste groep: de rijen van soort k vooraan (bij soort 2 één rij)
+hGroups ctx sc !k rows !fLvl =
+  let grp = hTakeKind k rows, rest = hDropKind k rows in
+  case rest
+    (Nil -> hGroup ctx sc k grp fLvl)
+    (_ -> HApp (HAbs (hGroup ctx (scAnon sc) k grp (scDepth sc + 1)))
+               (hMatchRows ctx sc rest fLvl))
+
+hTakeKind !k rows =
+  if (k == 2) (case rows (Cons r rest -> Cons r Nil) (Nil -> Nil))
+  (case rows
+     (Nil -> Nil)
+     (Cons r rest -> if (hRowKind r == k) (Cons r (hTakeKind k rest)) Nil))
+
+hDropKind !k rows =
+  if (k == 2) (case rows (Cons r rest -> rest) (Nil -> Nil))
+  (case rows
+     (Nil -> Nil)
+     (Cons r rest -> if (hRowKind r == k) (hDropKind k rest) rows))
+
+hGroup ctx sc !k grp !fLvl =
+  if (k == 0) (hMatchRows ctx sc (hStripVars grp) fLvl)
+  (if (k == 1) (hConGroup ctx sc grp fLvl)
+  (hLitRow ctx sc grp fLvl))
+
+// variabelen: alias naar het niveau van de kolom, kolom weg
+hStripVars rows =
+  case rows
+    (Nil -> Nil)
+    (Cons r rest ->
+       case r
+         (Row al mps body ->
+            case mps
+              (Cons m ms -> case m (MP lvl p -> Cons (Row (hAliasPat p lvl al) ms body) (hStripVars rest)))))
+
+hAliasPat p !lvl al = case p (PVar x -> Cons (Bnd x lvl) al) (_ -> al)
+
+// een getal- of booleanpatroon: één rij, met een if
+hLitRow ctx sc grp !fLvl =
+  case grp
+    (Cons r rest ->
+       case r
+         (Row al mps body ->
+            case mps
+              (Cons m ms ->
+                 case m
+                   (MP lvl p ->
+                      case p
+                        (PNum n -> HIf (HPrim 5 (hRef sc lvl) (HLit n)) (hMatchRows ctx sc (Cons (Row al ms body) Nil) fLvl) (hFailRef sc fLvl))
+                        (PBool b ->
+                           if b (HIf (hRef sc lvl) (hMatchRows ctx sc (Cons (Row al ms body) Nil) fLvl) (hFailRef sc fLvl))
+                                (HIf (hRef sc lvl) (hFailRef sc fLvl) (hMatchRows ctx sc (Cons (Row al ms body) Nil) fLvl)))))))
+
+// constructoren: één HCase op de kolom van de eerste rij, met een tak voor
+// elke constructor die in de groep voorkomt (op tag-volgorde)
+hConGroup ctx sc grp !fLvl =
+  case ctx
+    (Ctx cons n -> hConCase ctx sc grp fLvl (hConAlts ctx sc grp fLvl cons 0))
+
+hConCase ctx sc grp !fLvl alts =
+  case alts
+    (Nil -> hFailRef sc fLvl)
+    (_ -> HCase (hRef sc (hFirstLvl grp)) alts (hFailRef sc fLvl))
+
+hFirstLvl rows = case rows (Cons r rest -> case r (Row al mps b -> case mps (Cons m ms -> case m (MP lvl p -> lvl))))
+
+hConAlts ctx sc grp !fLvl cons !t =
+  case cons
+    (Nil -> Nil)
+    (Cons k more ->
+       case k
+         (Con name a ->
+            hConAltIf ctx (scDepthAdd sc a) t (hRowsFor name a (scDepth sc + 1) grp) fLvl
+              (hConAlts ctx sc grp fLvl more (t + 1))))
+
+hConAltIf ctx sc !t rows !fLvl rest =
+  case rows (Nil -> rest) (_ -> Cons (TAlt t (hMatchRows ctx sc rows fLvl)) rest)
+
+// de rijen voor constructor c, met de velden (niveaus lvl..) als kolommen vooraan
+hRowsFor c !a !lvl rows =
+  case rows
+    (Nil -> Nil)
+    (Cons r rest ->
+       case r
+         (Row al mps body ->
+            case mps
+              (Cons m ms ->
+                 case m
+                   (MP l p ->
+                      case p
+                        (PConstr pc ps ->
+                           if (strEqual pc c)
+                             (Cons (Row al (fieldMps lvl (padPats a ps) ms) body) (hRowsFor c a lvl rest))
+                             (hRowsFor c a lvl rest))))))
+
+// --- programma's ---
+// de top-level definities worden globals; start (of main) is het resultaat
+::hProg = HProg ctx terms !startIdx
+
+hGlobBnds defs !i =
+  case defs
+    (Nil -> Nil)
+    (Cons d rest -> case d (FuncDef name ps b -> Cons (Bnd name (0 - 10 - i)) (hGlobBnds rest (i + 1))))
+
+hFindDef !name defs !i =
+  case defs
+    (Nil -> 0 - 1)
+    (Cons d rest -> case d (FuncDef n ps b -> if (strEqual n name) i (hFindDef name rest (i + 1))))
+
+hStartIdx defs = if (hFindDef "start" defs 0 >= 0) (hFindDef "start" defs 0) (hFindDef "main" defs 0)
+
+hCompileDefs defs =
+  let ctx = mkCtx (lcProgramExpr defs),
+      sc = Sc (reverse (hGlobBnds defs 0)) 0 in
+  HProg ctx (hDefTerms ctx sc defs) (hStartIdx defs)
+
+hDefTerms ctx sc defs =
+  case defs
+    (Nil -> Nil)
+    (Cons d rest -> case d (FuncDef name ps b -> Cons (hExpr ctx sc (curryLam ps b)) (hDefTerms ctx sc rest)))
+
+hCompileStr s =
+  case (parseProgramStr s)
+    (PRes defs rest -> hCompileDefs defs)
+    (PFail msg -> error (strcat "parse error: " msg))
+
+// de knoop: elke global wordt gecompileerd met de lijst van alle globals
+hRun p =
+  case p
+    (HProg ctx ts start ->
+       if (start < 0) (error "geen start of main") (hRunGlobs ts start))
+
+// een eigen, luie lijst: Cons uit stdlib heeft een strikte kop, en dan zou
+// een global zonder argumenten (primes = ...) al tijdens de knoop rekenen
+::glist = GNil | GCons x rest
+
+hGNth !i xs = case xs (GCons x r -> if (i == 0) x (hGNth (i - 1) r)) (GNil -> error "hGNth: lijst te kort")
+
+hRunGlobs ts !start =
+  let gv = hCompGlobals gv ts in
+  hGNth start gv
+
+hCompGlobals gv ts = case ts (Nil -> GNil) (Cons t r -> GCons (hComp gv t HNil) (hCompGlobals gv r))
+
+hProgSize p = case p (HProg ctx ts start -> hSizes ts)
+
+hSize t =
+  case t
+    (HVar n -> 1)
+    (HApp f a -> 1 + hSize f + hSize a)
+    (HAbs b -> 1 + hSize b)
+    (HLit v -> 1)
+    (HPrim op a b -> 1 + hSize a + hSize b)
+    (HIf c a b -> 1 + hSize c + hSize a + hSize b)
+    (HCon t as -> 1 + hSizes as)
+    (HCase s alts d -> 1 + hSize s + hAltSizes alts + hSize d)
+    (HLetRec ds b -> 1 + hSizes ds + hSize b)
+    (HGlob i -> 1)
+hAltSizes as = case as (Nil -> 0) (Cons a r -> case a (TAlt t b -> hSize b + hAltSizes r))
+hSizes ts = case ts (Nil -> 0) (Cons t r -> hSize t + hSizes r)
+
+// --- een resultaat afdrukken tot een bepaalde diepte ---
+hConName ctx !t = case ctx (Ctx cons n -> case (hNth t cons) (Con name a -> name))
+
+hPrintVal ctx !d v =
+  let tid = typeId v in
+  if (tid == 1) (printString (list2str (itoa v)))
+  (if (tid == 3) (printString "\"" <#> printString v <#> printString "\"")
+  (if (tid == 4) (printString "<functie>")
+  (hPrintCon ctx d v)))
+
+hPrintCon ctx !d v =
+  case v
+    (V0 t -> printString (hConName ctx t))
+    (V1 t a -> hPrintFields ctx d t (Cons a Nil))
+    (V2 t a b -> hPrintFields ctx d t (Cons a (Cons b Nil)))
+    (V3 t a b c -> hPrintFields ctx d t (Cons a (Cons b (Cons c Nil))))
+    (VN t fs -> hPrintFields ctx d t fs)
+
+hPrintFields ctx !d !t fs =
+  if (d == 0) (printString "..")
+  (printString "(" <#> printString (hConName ctx t) <#> hPrintArgs ctx (d - 1) fs <#> printString ")")
+
+hPrintArgs ctx !d fs = case fs (Nil -> 0) (Cons f r -> printString " " <#> hPrintVal ctx d f <#> hPrintArgs ctx d r)

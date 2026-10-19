@@ -1,0 +1,17 @@
+// eight queens, the same algorithm as taalproto/ml/progs/queens.ml
+fun length(xs) = match xs { [] -> 0 | x :: r -> 1 + length(r) };
+fun fromto(n, m) = if n > m then [] else n :: fromto(n + 1, m);
+fun safe(xs, d, x) = match xs {
+    [] -> true
+  | y :: ys -> x != y && x + d != y && x - d != y && safe(ys, d + 1, x) };
+fun concat(xss) = match xss {
+    [] -> []
+  | [] :: yss -> concat(yss)
+  | (a :: as) :: yss -> a :: concat(as :: yss) };
+fun mapfil(p, f, xs) = match xs {
+    [] -> []
+  | a :: as -> if p(a) then f(a) :: mapfil(p, f, as) else mapfil(p, f, as) };
+fun map(f, xs) = match xs { [] -> [] | x :: r -> f(x) :: map(f, r) };
+fun extend(k, xs) = mapfil(fn(x) -> safe(xs, 1, x), fn(x) -> x :: xs, fromto(1, k));
+fun qqueens(k, n) = if n == 0 then [[]] else concat(map(fn(xs) -> extend(k, xs), qqueens(k, n - 1)));
+fun main() = length(qqueens(8, 8));

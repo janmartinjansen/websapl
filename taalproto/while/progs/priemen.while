@@ -1,0 +1,12 @@
+// het aantal priemgetallen onder n: twee geneste lussen
+n := 100; count := 0; i := 2;
+while i < n do {
+  d := 2; p := 1;
+  while d * d <= i && p == 1 do {
+    if i % d == 0 then p := 0;
+    d := d + 1
+  };
+  count := count + p;
+  i := i + 1
+};
+return count

@@ -1,0 +1,4 @@
+// fib n, iteratief
+n := 30; a := 0; b := 1;
+while n > 0 do { t := a + b; a := b; b := t; n := n - 1 };
+return a

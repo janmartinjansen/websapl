@@ -1,0 +1,49 @@
+#import "lib/stdlib.cfp"
+
+// seval.cfp - de self-interpreter met lit (lamlift/lam25.lfp), lambda-vrij
+// geschreven voor .cfp: elke lambda is een gedeeltelijke toepassing van een
+// benoemde functie. De term is Scott-gecodeerd met vier constructors:
+//   var n | app a b | abs t | lit v
+// var n is 1-based de Bruijn (var 1 = de binnenste binder).
+
+sc_var n f g h k = f (sc_makeSel n)
+sc_app a b f g h k = g a b
+sc_abs t f g h k = h t
+sc_lit e f g h k = k e
+
+// de omgeving is een Scott-lijst; makeSel n kiest het n-de element
+sc_cons h t f = f h t
+sc_makeSel n = if (n == 1) sc_s1 (sc_i (sc_makeSel (n - 1)))
+sc_i f xs = xs (sc_iH f)
+sc_iH f h t = f t
+sc_s1 xs = xs sc_fst2
+sc_fst2 h t = h
+
+// seval maakt van een representatie de functie die de representatie representeert
+sc_seval t = sc_makeLam t 0
+sc_makeLam e bs = e (sc_varC bs) (sc_appC bs) (sc_absC bs) sc_litC
+sc_varC bs sel = sel bs
+sc_appC bs a b = (sc_makeLam a bs) (sc_makeLam b bs)
+sc_absC bs t x = sc_makeLam t (sc_cons x bs)
+sc_litC v = v
+
+// --- waarden die de vertaalde code als lit gebruikt ---
+// booleans zijn selectors, net als in de vertaalde code zelf
+sc_tru a b = a
+sc_fls a b = b
+sc_bool !c = if c sc_tru sc_fls
+
+sc_add !a !b = a + b
+sc_sub !a !b = a - b
+sc_mul !a !b = a * b
+sc_div !a !b = a / b
+sc_mod !a !b = a % b
+sc_eq !a !b = sc_bool (a == b)
+sc_ne !a !b = sc_bool (a != b)
+sc_lt !a !b = sc_bool (a < b)
+sc_le !a !b = sc_bool (a <= b)
+sc_gt !a !b = sc_bool (a > b)
+sc_ge !a !b = sc_bool (a >= b)
+
+// het fixpunt voor letrec: een cyclische let legt de knoop, zoals evalRec
+sc_fix f = let x = f x in x

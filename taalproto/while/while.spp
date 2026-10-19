@@ -1,0 +1,81 @@
+#import "taalproto/taal.spp"
+
+// while.spp - een imperatieve taal met toewijzing, if en while, vertaald
+// naar de luie, pure kerntaal (docs/2026-10-17_taalprototypes_plan.md, §5).
+//
+//   n := 10; a := 0; b := 1;
+//   while n > 0 do { t := a + b; a := b; b := t; n := n - 1 };
+//   return a
+
+::stmt = Assign !x !e | If !c !s1 !s2 | While !c !s | Block !ss
+::wexp = WNum !n | WVar !x | WBin !op !a !b | WNeg !a
+::wprog = WProg !body !result
+
+skip = Block []
+ifThen c s = If c s skip
+
+whileGram = Gram "prog"
+  [ Rule "prog"  [Alt [N "stmts", K "return", N "exp"] WProg]
+  , Rule "stmts" [Alt [Many (N "stmtSemi")] Block]
+  , Rule "stmtSemi" [Alt [N "stmt", K ";"] id]
+  , Rule "stmt"  [ Alt [K "while", N "exp", K "do", N "stmt"] While
+                 , Alt [K "if", N "exp", K "then", N "stmt", K "else", N "stmt"] If
+                 , Alt [K "if", N "exp", K "then", N "stmt"] ifThen
+                 , Alt [K "{", SepBy (N "stmt") ";", K "}"] Block
+                 , Alt [Id, K ":=", N "exp"] Assign ]
+  , OpRule "exp" "atom"
+      [ Op "||" 2 0 (WBin "||"), Op "&&" 3 0 (WBin "&&")
+      , Op "==" 4 0 (WBin "=="), Op "!=" 4 0 (WBin "!=")
+      , Op "<" 4 0 (WBin "<"), Op "<=" 4 0 (WBin "<="), Op ">" 4 0 (WBin ">"), Op ">=" 4 0 (WBin ">=")
+      , Op "+" 6 0 (WBin "+"), Op "-" 6 0 (WBin "-")
+      , Op "*" 7 0 (WBin "*"), Op "/" 7 0 (WBin "/"), Op "%" 7 0 (WBin "%")
+      , Pre "-" 7 WNeg ]
+  , Rule "atom"  [ Alt [Num] WNum
+                 , Alt [Id] WVar
+                 , Alt [K "(", N "exp", K ")"] id ] ]
+
+// --- de vertaling ---
+// trS env p s k: env zijn de variabelen die al een waarde hebben, p is de
+// plek van s in de boom (voor verse namen: "loop#1.2" kan geen naam van de
+// gebruiker zijn), k maakt de rest van het programma uit de nieuwe env.
+
+trProg (WProg body res) = startDef (trS [] "1" body (\env -> trE res))
+
+trS env p (Assign x e) k = let1 x (trE e) (k (addName x env))
+trS env p (Block ss) k = trSs env p 1 ss k
+trS env p (While c b) k = trWhile (known env (assigned b)) (strcat "loop#" p) env p c b k
+trS env p (If c a b) k = trIf (known env (union (assigned a) (assigned b))) (strcat "join#" p) env p c a b k
+
+trSs env p i [] k = k env
+trSs env p i (s : ss) k = trS env (sub p i) s (\env2 -> trSs env2 p (i + 1) ss k)
+
+// een lus is een lokale recursieve functie over de variabelen die erin
+// veranderen en al bestonden; wat pas in de lus ontstaat, is daar lokaal
+trWhile vs f env p c b k =
+  letrec1 f (lams vs (EIf (trE c) (trS env (sub p 1) b (\e2 -> call f vs)) (k env)))
+          (call f vs)
+
+// een if krijgt een join-punt, zodat k niet in beide takken gekopieerd wordt
+trIf vs j env p c a b k =
+  let1 j (lams vs (k env))
+       (EIf (trE c) (trS env (sub p 1) a (\e2 -> call j vs)) (trS env (sub p 2) b (\e2 -> call j vs)))
+
+sub p i = strcat3 p "." (list2str (itoa i))
+
+assigned (Assign x e) = [x]
+assigned (Block ss) = foldr union [] (map assigned ss)
+assigned (While c b) = assigned b
+assigned (If c a b) = union (assigned a) (assigned b)
+
+trE (WNum n) = ENum n
+trE (WVar x) = EVar x
+trE (WNeg a) = bin "-" (ENum 0) (trE a)
+trE (WBin o a b) = bin o (trE a) (trE b)
+
+// --- scope ---
+// Geen eigen controle: kernScope (taal.spp) vindt in de vertaling elke naam
+// die nergens gebonden is. Een variabele die pas in een lus of tak ontstaat
+// en daarna gebruikt wordt, is in de kerntaal vrij (de lus geeft hem niet
+// door), en wordt zo ook gemeld, ook in een tak die nooit draait.
+
+whileLang = Lang "while" whileGram noCheck trProg
