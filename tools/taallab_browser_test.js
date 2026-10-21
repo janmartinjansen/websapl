@@ -2,7 +2,7 @@
 // worker, via het DevTools-protocol (zoals notebook_browser_test.js). Een
 // statische server op websapl/ en Chrome (macOS-pad, of CHROME=...).
 // Scenario's: tiny met queens; een ander programma zonder opnieuw te
-// compileren; een programmafout; een fout in de taal zelf; calc; en de
+// compileren; de JIT-route en beide routes naast elkaar; de REPL-tab; een programmafout; een fout in de taal zelf; calc; en de
 // bewaarde wijziging na herladen. Met --screenshot=<pad.png> ook een plaatje.
 //
 //   node websapl/tools/taallab_browser_test.js   (vanuit de repo-root)
@@ -68,6 +68,21 @@ const STATE = `({ status: document.getElementById("status-text").textContent,
     st = await run();
     check("ander programma zonder opnieuw compileren: 669", st.out === "669" && /taal al gecompileerd/.test(st.metrics), JSON.stringify(st));
 
+    // de JIT-route: uitschrijven als Sapl+, gen1 in de browser, draaien
+    const setRoute = (r) => ev(`(() => { const s = document.getElementById("sel-route"); s.value = "${r}"; s.onchange(); })()`);
+    await setRoute("jit");
+    st = await run();
+    const sapl = await ev(`document.getElementById("sapl").textContent`);
+    check("JIT-route: 669, met de uitgeschreven Sapl+", st.out === "669" && /JIT: .*compileren \(gen1\)/.test(st.metrics) && /f_main/.test(sapl) &&
+      !(await ev(`document.getElementById("tab-sapl").disabled`)), JSON.stringify(st));
+    st = await run();
+    check("JIT-route opnieuw: al gecompileerd", st.out === "669" && /JIT: .*al gecompileerd/.test(st.metrics), JSON.stringify(st));
+    await setRoute("beide");
+    await setProg("fun main() = [1, 2 < 3];\n");
+    st = await run();
+    check("beide: hybride en JIT gelijk", /hybride: \(Cons 1 \(Cons 1 Nil\)\)/.test(st.out) && /JIT: +\(Cons 1 \(Cons 1 Nil\)\)/.test(st.out) && /gelijk$/.test(st.out), JSON.stringify(st));
+    await setRoute("hybride");
+
     await setProg("fun main() = sq(2);\n");
     st = await run();
     check("programmafout: onbekende naam", st.fout && st.out === "onbekende naam sq", JSON.stringify(st));
@@ -107,6 +122,32 @@ const STATE = `({ status: document.getElementById("status-text").textContent,
     await sleep(300);
     check("terug naar tiny: de taal ongewijzigd", (await getLang()) === lang && !/gewijzigd/.test(await ev(`document.getElementById("lang-note").textContent`)));
 
+    // de REPL-tab: de taal in de REPL in Sapl (:lang), definities en
+    // expressies via de JIT-route
+    const replIn = async (line) => {
+      await ev(`(() => { const i = document.getElementById("repl-in"); i.value = ${JSON.stringify(line)};
+        i.onkeydown(new KeyboardEvent("keydown", { key: "Enter" })); })()`);
+      await sleep(100);
+      await waitFor(`!document.getElementById("repl-in").disabled`, 120000);
+      return ev(`document.getElementById("repl-log").textContent.trim().split(String.fromCharCode(10)).pop()`);
+    };
+    await ev(`document.getElementById("tab-repl").click()`);
+    const tReplStart = Date.now();
+    let rl = await replIn("fun sq(x) = x * x;");
+    const tLang = Date.now() - tReplStart;
+    check(`REPL: definitie (taal geladen in ${tLang} ms)`, rl === "gedefinieerd", rl);
+    const tExpr = Date.now();
+    rl = await replIn("sq(7) + 1");
+    check(`REPL: expressie met de definitie: 50 (${Date.now() - tExpr} ms)`, rl === "50", rl);
+    rl = await replIn("[sq(2), 1 < 0]");
+    check("REPL: een lijst", rl === "(Cons 4 (Cons 0 Nil))", rl);
+    rl = await replIn("sq(y)");
+    check("REPL: een fout in de taal", rl === "fout: onbekende naam y", rl);
+    rl = await replIn(":undo");
+    rl = await replIn("sq(2)");
+    check("REPL: :undo haalt de definitie weg", rl === "fout: onbekende naam sq", rl);
+    await ev(`document.getElementById("tab-out").click()`);
+
     if (SHOT) {
       await ev(`(() => { const s = document.getElementById("sel-lang"); s.value = "tiny"; s.onchange({ target: s }); })()`);
       await waitFor(`${editors}[0].CodeMirror.getValue().indexOf("tinyLang") >= 0`);
@@ -115,6 +156,12 @@ const STATE = `({ status: document.getElementById("status-text").textContent,
       const shot = await send("Page.captureScreenshot", { format: "png" });
       fs.writeFileSync(SHOT, Buffer.from(shot.result.data, "base64"));
       console.log("      plaatje: " + SHOT);
+      await ev(`document.getElementById("tab-repl").click()`);
+      await sleep(200);
+      const shotR = await send("Page.captureScreenshot", { format: "png" });
+      fs.writeFileSync(SHOT.replace(/\.png$/, "_repl.png"), Buffer.from(shotR.result.data, "base64"));
+      console.log("      plaatje: " + SHOT.replace(/\.png$/, "_repl.png"));
+      await ev(`document.getElementById("tab-out").click()`);
       // smal (telefoon): geen horizontale scroll
       await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
       await sleep(500);

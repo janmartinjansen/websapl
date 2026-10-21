@@ -46,5 +46,18 @@ const { call, init, repo } = require("./worker_harness.js");
   const okTrap = JSON.stringify(out) === JSON.stringify(want);
   console.log(`${okTrap ? "ok  " : "FOUT"}  rs sessie overleeft een wasm-trap`);
   if (!okTrap) { fail = 1; console.log(out.join("\n")); }
+  // Een trap in de taalmodus (:lang, 20 oktober 2026): 1 / 0 in tiny gaat via
+  // de JIT-route naar een Sapl-deling; het opnieuw afspelen moet de taal en
+  // haar bestanden (taalproto/...) weer vinden.
+  await call({ type: "RSAPL_RESET" });
+  const seqT = [':lang "taalproto/tiny/tiny.spp" tinyLang "fun main() = %;"', "fun sq(x) = x * x;", "1 / 0", "sq(3)"];
+  const outT = [];
+  for (const line of seqT) {
+    const r = await call({ type: "RSAPL_EVAL", line });
+    outT.push(r.success ? String(r.output).split("\n")[0] : `fout: ${r.error}`);
+  }
+  const okT = outT[0].startsWith("taal: tinyLang") && outT[1] === "gedefinieerd" && /^fout: de REPL-engine stopte/.test(outT[2]) && outT[3] === "9";
+  console.log(`${okT ? "ok  " : "FOUT"}  rs taalmodus overleeft een wasm-trap`);
+  if (!okT) { fail = 1; console.log(outT.join("\n")); }
   process.exit(fail);
 })();

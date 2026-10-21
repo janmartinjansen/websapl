@@ -78,6 +78,16 @@ programma's. Wijzigingen blijven in `localStorage` bewaard; **↺ Voorbeeld
 herstellen** gooit ze weg. **⏹ Stop** breekt een programma af dat niet stopt
 (de worker begint opnieuw).
 
+Sinds 20 oktober 2026 zijn er twee routes (menu **Route**): **hybride** (zoals
+hierboven), **JIT (via gen1)**, waarbij de taal het programma uitschrijft als
+Sapl+ (`taalproto/naar_sapl.spp`) en gen1 dat in de browser compileert
+(20-30 ms, gecachet) en de VM het draait (tab **Uitgeschreven Sapl+**), en
+**beide vergelijken**. De start van de taal leest de route uit een tweede
+bestand, zodat de taal maar een keer compileert. De tab **REPL** laadt de taal
+in de REPL in Sapl van de worker (`:lang`, `repl/README.md`) en voert regel
+voor regel definities en expressies uit, met een sjabloon dat zegt hoe een
+expressie een programma wordt (tiny: `fun main() = %;`).
+
 De logica staat in `js/taallab_core.js`; toetsen: `node
 websapl/tools/taallab_test.js` (de worker in Node) en `node
 websapl/tools/taallab_browser_test.js` (de pagina in headless Chrome). De

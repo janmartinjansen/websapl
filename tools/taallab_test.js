@@ -23,10 +23,8 @@ async function buildLang(langSrc) {
   return { jmvm: cc.files.find((f) => f.name.endsWith(".jmvm")).content };
 }
 
-async function run(jmvm, program) {
-  const r = await call({ type: "RUN", contentOrPath: jmvm, isPath: false, files: { [TL.PROGRAM_PATH]: program } });
-  return TL.parseRunOutput(r.output);
-}
+const run = (jmvm, program) => TL.runHybride(call, jmvm, program);
+const runJit = (jmvm, program) => TL.runJit(call, jmvm, program, null);
 
 (async () => {
   await init();
@@ -47,9 +45,10 @@ async function run(jmvm, program) {
       const name = typeof prog === "string" ? path.basename(prog) : prog.name;
       if (!(name in want)) continue;
       const text = typeof prog === "string" ? web(prog) : prog.text;
-      const t2 = Date.now();
       const r = await run(b.jmvm, text);
-      check(`${p.id} ${name} (${Date.now() - t2} ms)`, r.ok ? r.text : `fout: ${r.text}`, want[name]);
+      check(`${p.id} ${name} hybride (${r.ms} ms, ${r.instr} instr.)`, r.ok ? r.text : `fout: ${r.text}`, want[name]);
+      const j = await runJit(b.jmvm, text);
+      check(`${p.id} ${name} JIT (uitschrijven ${j.tWrite} ms, compileren ${j.tCompile} ms, draaien ${j.ms} ms, ${j.instr} instr.)`, j.ok ? j.text : `fout: ${j.text}`, want[name]);
     }
   }
   // fouten: syntaxis en scope, als melding (geen crash)
@@ -58,6 +57,11 @@ async function run(jmvm, program) {
   check("tiny syntaxfout", e1.ok ? "geen fout" : e1.text, "regel 1: verwacht '-', een getal, 'true', 'false', een naam, '[' of '(', maar zag ';'");
   const e2 = await run(tiny.jmvm, "fun main() = y;");
   check("tiny scopefout", e2.ok ? "geen fout" : e2.text, "onbekende naam y");
+  const e4 = await runJit(tiny.jmvm, "fun main() = y;");
+  check("tiny scopefout via JIT", e4.ok ? "geen fout" : e4.text, "onbekende naam y");
+  // lijsten en booleans: de JIT-route toont ze zoals de hybride route
+  const l1 = await run(tiny.jmvm, "fun main() = [1 < 2, false];"), l2 = await runJit(tiny.jmvm, "fun main() = [1 < 2, false];");
+  check("tiny lijst via JIT gelijk aan hybride", l2.text, l1.text);
   // een taal zonder Lang-waarde
   const e3 = await buildLang("f x = x\n");
   check("geen taal", e3.error ? "fout" : "geen fout", "fout");

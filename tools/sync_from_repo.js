@@ -199,6 +199,8 @@ const ENTRIES = [
   { src: "sapl_naar_lc/compiler.cfp", dst: "sapl_naar_lc/compiler.cfp" },
   { src: "sapl_naar_lc/seval.cfp", dst: "sapl_naar_lc/seval.cfp" },
   { src: "taalproto/taal.spp", dst: "taalproto/taal.spp" },
+  { src: "taalproto/naar_sapl.spp", dst: "taalproto/naar_sapl.spp" },
+  { src: "taalproto/repl_taal.spp", dst: "taalproto/repl_taal.spp" },
   { src: "taalproto/grammatica.spp", dst: "taalproto/grammatica.spp" },
   { src: "taalproto/calc/calc.spp", dst: "taalproto/calc/calc.spp" },
   { src: "taalproto/while/while.spp", dst: "taalproto/while/while.spp" },

@@ -1399,6 +1399,10 @@ let rsOnChar = null;
 // De regels die de engine verwerkte (zonder de regel die de trap gaf), met
 // de eerste uitvoerregel om na het opnieuw afspelen te vergelijken.
 let rsJournal = [];
+// De bestanden die de interface meegaf (RSAPL_EVAL's `files`, bv. de taal van
+// het taallab): ook in een vers exemplaar, zodat het opnieuw afspelen na een
+// trap ze nog vindt.
+const rsGivenFiles = {};
 // De REPL zelf als .jvb (het binaire laadformaat: 2,3 i.p.v. 6 MB, en geen
 // tokenizen bij de start); de .jmvm alleen als terugval (rsStart), omgezet
 // met de tool-wasm.
@@ -1453,6 +1457,7 @@ async function rsStart() {
   mkdirsFor(inst.FS, "/lib/stdlib.cfp");
   inst.FS.writeFile("/lib/stdlib.cfp", stdlibContent);
   for (const [p, c] of Object.entries(sppDeps)) { mkdirsFor(inst.FS, p); inst.FS.writeFile(p, c); }
+  for (const [p, c] of Object.entries(rsGivenFiles)) { mkdirsFor(inst.FS, p); inst.FS.writeFile(p, c); }
   mkdirsFor(inst.FS, "/repl_sapl/gen/x");
   inst.FS.chdir("/");
   rsOutput = [];
@@ -1470,17 +1475,17 @@ async function rsPrepare(line) {
   const mi = line.match(/^:import\s+(.*)$/);
   if (mi) src = "import " + mi[1].trim();
   const ml = line.match(/^:load\s+(\S+)/);
-  if (ml) {
-    const rel = ml[1].startsWith("/") ? ml[1].slice(1) : ml[1];
-    let content = null;
-    for (const cand of ["/" + rel, "/workspace/" + rel]) {
-      if (jmvmModule && jmvmModule.FS.analyzePath(cand).exists) { content = jmvmModule.FS.readFile(cand, { encoding: "utf8" }); break; }
-    }
-    if (content === null) {
-      try { const res = await fetch("../" + rel); if (res.ok) content = await res.text(); } catch (_) {}
-    }
-    if (content !== null) { mkdirsFor(rsInstance.FS, "/" + rel); rsInstance.FS.writeFile("/" + rel, content); src = content; }
+  if (ml) { const content = await rsFetchFile(ml[1]); if (content !== null) src = content; }
+  // `:lang "pad" naam ...` (een eigen taal, taalproto/): de taal en
+  // repl_taal.spp met hun #imports; `:prog pad`: een programma in die taal.
+  const mg = line.match(/^:lang\s+"([^"]+)"/);
+  if (mg) {
+    const lp = "/" + mg[1].replace(/^\//, "");
+    const lang = rsInstance.FS.analyzePath(lp).exists ? rsInstance.FS.readFile(lp, { encoding: "utf8" }) : (await rsFetchFile(mg[1])) || "";
+    src = `#import "taalproto/repl_taal.spp"\n` + lang;
   }
+  const mp = line.match(/^:prog\s+(\S+)/);
+  if (mp) await rsFetchFile(mp[1]);
   // `:nb pad` (de notebookmodus): het bestand staat al in het
   // bestandssysteem van de engine (RSAPL_EVAL's `files`); daarbij de
   // uitvoerlaag met haar imports, de imports van de cellen en de
@@ -1506,6 +1511,21 @@ async function rsPrepare(line) {
   if (!src) return;
   const found = await collectSppImports(src);
   for (const [p, c] of Object.entries(found)) { mkdirsFor(rsInstance.FS, p); rsInstance.FS.writeFile(p, c); }
+}
+
+// Een bestand in het bestandssysteem van de engine zetten (uit de werkmap van
+// de worker, of van de server); geeft de inhoud, of null.
+async function rsFetchFile(p) {
+  const rel = p.startsWith("/") ? p.slice(1) : p;
+  let content = null;
+  for (const cand of ["/" + rel, "/workspace/" + rel]) {
+    if (jmvmModule && jmvmModule.FS.analyzePath(cand).exists) { content = jmvmModule.FS.readFile(cand, { encoding: "utf8" }); break; }
+  }
+  if (content === null) {
+    try { const res = await fetch("../" + rel); if (res.ok) content = await res.text(); } catch (_) {}
+  }
+  if (content !== null) { mkdirsFor(rsInstance.FS, "/" + rel); rsInstance.FS.writeFile("/" + rel, content); }
+  return content;
 }
 
 function rsFirstLine(text) {
@@ -1816,7 +1836,7 @@ self.onmessage = async function (e) {
       try {
         if (msg.files) {
           if (!rsInstance) await rsStart();
-          for (const [p, c] of Object.entries(msg.files)) { const vp = "/" + p.replace(/^\//, ""); mkdirsFor(rsInstance.FS, vp); rsInstance.FS.writeFile(vp, c); }
+          for (const [p, c] of Object.entries(msg.files)) { const vp = "/" + p.replace(/^\//, ""); mkdirsFor(rsInstance.FS, vp); rsInstance.FS.writeFile(vp, c); rsGivenFiles[vp] = c; }
         }
         const r = await rsEval(msg.line);
         postMessage({ type: "RSAPL_RESULT", id: msg.id, success: !r.restarted, output: r.output,

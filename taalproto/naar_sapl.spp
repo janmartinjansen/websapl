@@ -1,0 +1,557 @@
+#import "taalproto/taal.spp"
+
+// naar_sapl.spp - de kerntaal ([funcDef]) uitschrijven als Sapl+-tekst, om met
+// de echte compiler (gen1) te compileren: stap 1 van
+// docs/2026-10-18_taalprototypes_jit_en_linken_plan.md. Zie de nakijksectie
+// daar en taalproto/ml/README.md voor wat hier anders moet dan in de kerntaal:
+//
+//   1. Namen. Elke lokale binder krijgt zijn diepte in de naam (v3_d): langs
+//      een pad heeft geen enkele binder dezelfde naam, dus niets overschaduwt
+//      iets. Dat is nodig omdat een let in Sapl recursief is (let d = d + 1
+//      verwijst naar zichzelf). Globale functies krijgen f_, constructors K_:
+//      geen botsing met trefwoorden of andere namen.
+//   2. Een lokale letrec (een of meer lambda's) wordt een globale functie met
+//      de vrije variabelen als extra parameters (lambda-liften), zodat een
+//      recursieve aanroep een directe aanroep is.
+//   3. Een niet-recursieve let wordt (\x -> b) e: een let midden in een
+//      expressie mag in Sapl+ niet.
+//   4. Een case met geneste patronen of getallen gaat door een kleine
+//      matchcompiler: geneste platte case's en if's (een case van Sapl matcht
+//      een niveau diep, zonder literals), elke waarde een keer bekeken; een
+//      case met alleen platte constructorpatronen blijft een case.
+//   5. Eén ADT ::V met alle constructors uit het programma; geen stdlib, dus
+//      geen botsing met map, length, Cons.
+//   6. == en != worden eqnum/neqnum: numeriek, zoals in de kerntaal, en zonder
+//      het __deepEq van de preprocessor.
+
+// voor een eigen taal: het programma src als Sapl+-tekst (na kernOptDefs), of
+// een commentaarregel met de fout
+langSapl lang src = langSaplP "" lang src
+
+// met een voorvoegsel voor alle globale namen (zie voorvoegsel hieronder):
+// zo kunnen meer programma's naast elkaar in een sessie staan
+langSaplP pre lang src = langSaplR pre (langDefs lang src)
+langSaplR pre (LangOk defs) = naarSaplP pre (kernOptDefs defs)
+langSaplR pre (LangErr m) = strcat3 "// fout: " m "\n"
+
+naarSapl defs = naarSaplP "" defs
+
+naarSaplP pre defs = voorvoegsel pre (naarSaplR (map (rnDef (map defName defs)) defs))
+
+naarSaplR defs = naarSaplL (liftDefs defs)
+
+naarSaplL defs = naarSaplC (nconNub (NCon "Nil" 0 : NCon "Cons" 2 : adtDefs defs)) defs
+
+naarSaplC cs defs =
+  strcat (adtRegel cs) (strcat (emitDefs defs) (strcat prelude (toner cs)))
+
+// Het voorvoegsel. Elke globale naam die het uitschrijven maakt, bevat een
+// backquote op de plek van het voorvoegsel: `f_len, K`_Cons, ::V`, `b_ap
+// (ook de namen die daarvan afgeleid zijn, zoals gf_len_0 van een gelifte
+// letrec). Aan het eind wordt de backquote overal vervangen door pre (buiten
+// stringliterals): met "" is de tekst zoals altijd, met "j3_" heet alles
+// j3_f_len, Kj3__Cons, ::Vj3_. start wordt `b_main plus `start, dat de waarde
+// toont zoals de hybride route.
+voorvoegsel pre s = list2str (vvL (str2list pre) (str2list s))
+
+vvL pre [] = []
+vvL pre (c : cs)
+  | c == '`' = append pre (vvL pre cs)
+  | c == '"' = c : vvStr pre cs
+  | otherwise = c : vvL pre cs
+
+vvStr pre [] = []
+vvStr pre (c : cs)
+  | c == '\\' = c : vvEsc pre cs
+  | c == '"' = c : vvL pre cs
+  | otherwise = c : vvStr pre cs
+
+vvEsc pre [] = []
+vvEsc pre (c : cs) = c : vvStr pre cs
+
+// --- 1. hernoemen -------------------------------------------------------------
+
+san s = list2str (sanL (str2list s))
+sanL [] = []
+sanL (c : cs)
+  | tpIsAlpha c \/ tpIsDigit c = c : sanL cs
+  | otherwise = '_' : sanL cs
+
+globNaam x
+  | strEqual x "start" = "`b_main"
+  | otherwise = strcat "`f_" (san x)
+
+lokNaam !d x = strcat3 (strcat "v" (list2str (itoa d))) "_" (san x)
+
+conNaam c = strcat "K`_" (san c)
+
+::rnv = Rn !van !naar
+
+rnZoek x [] = KNee
+rnZoek x (Rn a b : r)
+  | strEqual x a = KJa b
+  | otherwise = rnZoek x r
+
+rnDef globs (FuncDef n ps b) = rnDefP globs n (rnParams 0 ps) ps b
+rnDefP globs n nps ps b = FuncDef (globNaam n) nps (rnE globs (length ps) (reverse (rnEnv 0 ps)) b)
+
+rnParams !d [] = []
+rnParams !d (p : ps) = lokNaam d p : rnParams (d + 1) ps
+
+rnEnv !d [] = []
+rnEnv !d (p : ps) = Rn p (lokNaam d p) : rnEnv (d + 1) ps
+
+rnE globs d env (EVar x) = rnVar globs x (rnZoek x env)
+rnE globs d env (EApp f a) = EApp (rnE globs d env f) (rnE globs d env a)
+rnE globs d env (ELam x b) = ELam (lokNaam d x) (rnE globs (d + 1) (Rn x (lokNaam d x) : env) b)
+rnE globs d env (EIf c a b) = EIf (rnE globs d env c) (rnE globs d env a) (rnE globs d env b)
+rnE globs d env (ELet bs b) = rnLet globs d env bs b (append (reverse (rnEnv d (bindNames bs))) env)
+rnE globs d env (ELetRec bs b) = rnLetRec globs d bs b (append (reverse (rnEnv d (bindNames bs))) env)
+rnE globs d env (EConstr c as) = EConstr c (map (rnE globs d env) as)
+rnE globs d env (ECase s brs) = ECase (rnE globs d env s) (map (rnBr globs d env) brs)
+rnE globs d env e = e
+
+rnVar globs x (KJa n) = EVar n
+rnVar globs x KNee
+  | tpStrMember x globs = EVar (globNaam x)
+  | otherwise = EVar x            // ingebouwd (not, head, ...) of een constructornaam
+
+// parallel: de rechterkanten in de oude omgeving
+rnLet globs d env bs b env2 = ELet (rnBinds globs (d + length bs) env d bs) (rnE globs (d + length bs) env2 b)
+rnLetRec globs d bs b env2 = ELetRec (rnBinds globs (d + length bs) env2 d bs) (rnE globs (d + length bs) env2 b)
+
+rnBinds globs dr env !d [] = []
+rnBinds globs dr env !d (BindDef x e : bs) = BindDef (lokNaam d x) (rnE globs dr env e) : rnBinds globs dr env (d + 1) bs
+
+rnBr globs d env (CaseBranch p e) = rnBrP globs d env p e (patNames p)
+rnBrP globs d env p e ns = CaseBranch (rnPat d ns p) (rnE globs (d + length ns) (append (reverse (rnEnv d ns)) env) e)
+
+// patroonvariabelen in volgorde van patNames
+rnPat d ns p = rnPatW (rnEnvR d ns) p
+rnEnvR d ns = rnEnv d ns
+rnPatW env (PVar x) = PVar (rnPatNaam x (rnZoek x env))
+rnPatW env (PConstr c ps) = PConstr c (map (rnPatW env) ps)
+rnPatW env p = p
+rnPatNaam x (KJa n) = n
+rnPatNaam x KNee = x
+
+// --- 2. lokale letrec liften ---------------------------------------------------
+
+liftDefs defs = liftDefsW defs 0
+liftDefsW [] !k = []
+liftDefsW (FuncDef n ps b : ds) !k = liftDef n ps (liftE n 0 b) ds
+
+liftDef n ps (LR b extra k) ds = FuncDef n ps b : append (liftDefsW extra k) (liftDefsW ds k)
+
+// LR: de nieuwe expressie, de gelifte functies (zelf nog te liften), de teller
+::liftres = LR e extra !k
+
+// pre: de naam van de omringende functie (voor unieke namen); k: teller
+liftE pre !k (ELetRec bs b) = liftLetRec pre k bs b (lrVrij bs)
+liftE pre !k (EApp f a) = lr2 EApp pre k f a
+liftE pre !k (ELam x b) = lr1 (ELam x) pre k b
+liftE pre !k (EIf c a b) = lr3 EIf pre k c a b
+liftE pre !k (ELet bs b) = lrLet pre k bs b
+liftE pre !k (EConstr c as) = lrL (EConstr c) pre k as
+liftE pre !k (ECase s brs) = lrCase pre k s brs
+liftE pre !k e = LR e [] k
+
+lr1 f pre !k a = lr1R f (liftE pre k a)
+lr1R f (LR a x k) = LR (f a) x k
+lr2 f pre !k a b = lr2R f pre (liftE pre k a) b
+lr2R f pre (LR a x k) b = lr2S f a x (liftE pre k b)
+lr2S f a x (LR b y k) = LR (f a b) (append x y) k
+lr3 f pre !k a b c = lr3R f pre (liftE pre k a) b c
+lr3R f pre (LR a x k) b c = lr3S f a x pre (liftE pre k b) c
+lr3S f a x pre (LR b y k) c = lr3T f a b (append x y) (liftE pre k c)
+lr3T f a b x (LR c y k) = LR (f a b c) (append x y) k
+
+lrL f pre !k es = lrLR f (lrList pre k es)
+lrLR f (LR es x k) = LR (f es) x k
+lrList pre !k [] = LR [] [] k
+lrList pre !k (e : es) = lrListR pre (liftE pre k e) es
+lrListR pre (LR e x k) es = lrListS e x (lrList pre k es)
+lrListS e x (LR es y k) = LR (e : es) (append x y) k
+
+lrLet pre !k bs b = lrLetR pre (lrList pre k (bindRhs bs)) bs b
+lrLetR pre (LR es x k) bs b = lrLetS (zipBinds bs es) x (liftE pre k b)
+lrLetS bs2 x (LR b y k) = LR (ELet bs2 b) (append x y) k
+
+lrCase pre !k s brs = lrCaseR pre (liftE pre k s) brs
+lrCaseR pre (LR s x k) brs = lrCaseS s x brs (lrList pre k (brBodies brs))
+lrCaseS s x brs (LR es y k) = LR (ECase s (zipBrs brs es)) (append x y) k
+
+bindRhs [] = []
+bindRhs (BindDef x e : bs) = e : bindRhs bs
+zipBinds [] es = []
+zipBinds (BindDef x e : bs) (e2 : es) = BindDef x e2 : zipBinds bs es
+brBodies [] = []
+brBodies (CaseBranch p e : brs) = e : brBodies brs
+zipBrs [] es = []
+zipBrs (CaseBranch p e : brs) (e2 : es) = CaseBranch p e2 : zipBrs brs es
+
+// de vrije lokale namen van een letrec (globals f_..., constructors en de
+// ingebouwde namen tellen niet)
+lrVrij bs = filter isLokaal (tpNub (kZonderL (bindNames bs) (kVrijBinds bs)))
+isLokaal x = (strlen x > 0) /\ (strat 0 x == 'v')
+
+// elke binding g wordt een globale functie G fv.. params.., en g overal G fv..
+liftLetRec pre !k bs b fv = liftLetRecS pre (k + length bs) bs b fv (lrSubst pre k bs fv)
+
+lrSubst pre !k [] fv = []
+lrSubst pre !k (BindDef g e : bs) fv = Rn g (strcat3 (strcat "g" pre) "_" (list2str (itoa k))) : lrSubst pre (k + 1) bs fv
+
+liftLetRecS pre !k bs b fv sub = liftLetRecT (liftNieuw sub fv bs) (liftE pre k (substGs sub fv b))
+liftLetRecT nieuw (LR b x k) = LR b (append nieuw x) k
+
+liftNieuw sub fv [] = []
+liftNieuw sub fv (BindDef g e : bs) = liftNieuw1 sub fv g e (lamParams e) : liftNieuw sub fv bs
+liftNieuw1 sub fv g e (LP ps body) = FuncDef (rnNaar g sub) (append fv ps) (substGs sub fv body)
+
+rnNaar g sub = rnPatNaam g (rnZoek g sub)
+
+::lp = LP ps body
+lamParams (ELam x b) = lamParamsR x (lamParams b)
+lamParams e = LP [] e
+lamParamsR x (LP ps b) = LP (x : ps) b
+
+// g -> G fv.. (de namen zijn uniek, dus geen vangst)
+substGs sub fv (EVar x) = substGVar fv x (rnZoek x sub)
+substGs sub fv (EApp f a) = EApp (substGs sub fv f) (substGs sub fv a)
+substGs sub fv (ELam x b) = ELam x (substGs sub fv b)
+substGs sub fv (EIf c a b) = EIf (substGs sub fv c) (substGs sub fv a) (substGs sub fv b)
+substGs sub fv (ELet bs b) = ELet (substGBinds sub fv bs) (substGs sub fv b)
+substGs sub fv (ELetRec bs b) = ELetRec (substGBinds sub fv bs) (substGs sub fv b)
+substGs sub fv (EConstr c as) = EConstr c (map (substGs sub fv) as)
+substGs sub fv (ECase s brs) = ECase (substGs sub fv s) (substGBrs sub fv brs)
+substGs sub fv e = e
+
+substGVar fv x (KJa g) = call g fv
+substGVar fv x KNee = EVar x
+substGBinds sub fv [] = []
+substGBinds sub fv (BindDef x e : bs) = BindDef x (substGs sub fv e) : substGBinds sub fv bs
+substGBrs sub fv [] = []
+substGBrs sub fv (CaseBranch p e : brs) = CaseBranch p (substGs sub fv e) : substGBrs sub fv brs
+
+// --- 5. het ADT ----------------------------------------------------------------
+
+::ncon = NCon !naam !arity
+
+adtDefs [] = []
+adtDefs (FuncDef n ps b : ds) = append (adtE b) (adtDefs ds)
+
+adtE (EConstr c as) = NCon c (length as) : concatMapL adtE as
+adtE (EApp f a) = append (adtE f) (adtE a)
+adtE (ELam x b) = adtE b
+adtE (EIf c a b) = append (adtE c) (append (adtE a) (adtE b))
+adtE (ELet bs b) = append (concatMapL adtE (bindRhs bs)) (adtE b)
+adtE (ELetRec bs b) = append (concatMapL adtE (bindRhs bs)) (adtE b)
+adtE (ECase s brs) = append (adtE s) (adtBrs brs)
+adtE e = []
+
+adtBrs [] = []
+adtBrs (CaseBranch p e : brs) = append (adtP p) (append (adtE e) (adtBrs brs))
+adtP (PConstr c ps) = NCon c (length ps) : concatMapL adtP ps
+adtP p = []
+
+concatMapL f [] = []
+concatMapL f (x : xs) = append (f x) (concatMapL f xs)
+
+nconNub [] = []
+nconNub (NCon n a : cs)
+  | nconIn n cs = nconNub cs
+  | otherwise = NCon n a : nconNub cs
+nconIn n [] = False
+nconIn n (NCon m a : cs) = strEqual n m \/ nconIn n cs
+
+adtRegel [] = "::V` = K`__leeg\n"
+adtRegel cs = strcat3 "::V` = " (adtCons cs) "\n"
+adtCons (NCon n a : cs) = adtConsR (adtCon n a) cs
+adtConsR t [] = t
+adtConsR t cs = strcat3 t " | " (adtCons cs)
+adtCon n a = strcat (conNaam n) (veldNamen a)
+veldNamen !a
+  | a == 0 = ""
+  | otherwise = strcat (veldNamen (a - 1)) (strcat " x" (list2str (itoa a)))
+
+// --- uitschrijven --------------------------------------------------------------
+
+emitDefs [] = ""
+emitDefs (FuncDef n ps b : ds) = strcat3 (emitKop n ps) (emitE n b) (strcat "\n" (emitDefs ds))
+
+emitKop n ps = strcat3 n (spatieLijst ps) " = "
+spatieLijst [] = ""
+spatieLijst (p : ps) = strcat3 " " p (spatieLijst ps)
+
+haakjes s = strcat3 "(" s ")"
+
+// (\x -> b) a mag in Sapl+ niet direct: b_ap (\x -> b) a (de lambda als argument)
+lamAp lam = strcat "`b_ap " (haakjes lam)
+
+// p: een uniek voorvoegsel voor de namen die het uitschrijven zelf maakt
+emitE p (ENum n) = getalTekst n
+emitE p (EBool b) = if b "True" "False"
+emitE p (EStr s) = emitStr s
+emitE p (EVar x) = emitVar x
+emitE p (EPrim op) = emitPrimWaarde op
+emitE p (EApp (EApp (EPrim op) a) b) = emitBin p op a b
+emitE p (EApp f a) = emitSpine p f [a]
+emitE p (ELam x b) = haakjes (strcat3 (strcat "\\" x) " -> " (emitE p b))
+emitE p (EIf c a b) = haakjes (strcat3 (strcat "if " (emitE (strcat p "c") c)) (strcat " " (emitE (strcat p "t") a)) (strcat " " (emitE (strcat p "e") b)))
+emitE p (ELet bs b) = emitLet p bs b
+emitE p (ELetRec bs b) = error "naar_sapl: een letrec die niet gelift is (een binding die geen lambda is?)"
+emitE p (EConstr c as) = emitCon p c as
+emitE p (ECase s brs) = emitCase p s brs
+
+// een toepassing plat: (f a b), zodat gen1 een bekende functie direct aanroept
+emitSpine p (EApp f a) as = emitSpine p f (a : as)
+emitSpine p f as = haakjes (strcat (emitE (strcat p "h") f) (emitArgs p 0 as))
+
+getalTekst n
+  | n < 0 = haakjes (strcat "0 - " (list2str (itoa (0 - n))))
+  | otherwise = list2str (itoa n)
+
+emitVar x
+  | isConName x = conNaam x
+  | otherwise = emitIngebouwd x
+
+// de ingebouwde namen van de kerntaal: functies uit de prelude
+emitIngebouwd x
+  | tpStrMember x kernIngebouwd = strcat "`b_" x
+  | otherwise = x
+
+emitCon p c [] = conNaam c
+emitCon p c as = haakjes (strcat (conNaam c) (emitArgs p 0 as))
+emitArgs p !i [] = ""
+emitArgs p !i (a : as) = strcat3 " " (emitE (strcat3 p "k" (list2str (itoa i))) a) (emitArgs p (i + 1) as)
+
+// let x = e in b  =>  (\x -> b) e   (parallel: de rechterkanten buiten)
+emitLet p [] b = emitE p b
+emitLet p (BindDef x e : bs) b = haakjes (strcat3 (lamAp (strcat3 (strcat "\\" x) " -> " (emitLet (strcat p "l") bs b))) " " (emitE (strcat p "r") e))
+
+emitBin p op a b
+  | strEqual op "==" = haakjes (strcat3 "eqnum " (emitE (strcat p "x") a) (strcat " " (emitE (strcat p "y") b)))
+  | strEqual op "!=" = haakjes (strcat3 "neqnum " (emitE (strcat p "x") a) (strcat " " (emitE (strcat p "y") b)))
+  | strEqual op "&&" = haakjes (strcat3 (strcat "if " (emitE (strcat p "x") a)) (strcat " " (emitE (strcat p "y") b)) " False")
+  | strEqual op "||" = haakjes (strcat3 (strcat "if " (emitE (strcat p "x") a)) " True " (emitE (strcat p "y") b))
+  | otherwise = haakjes (strcat3 (emitE (strcat p "x") a) (strcat3 " " op " ") (emitE (strcat p "y") b))
+
+emitPrimWaarde op = haakjes (strcat3 "\\pa -> \\pb -> " (emitBin "pw" op (EVar "pa") (EVar "pb")) "")
+
+// --- 4. case ---------------------------------------------------------------------
+// De scrutinee eerst aan een naam (s_p); een case met alleen platte
+// constructorpatronen (velden: namen of _) en hooguit een naam of _ als
+// laatste tak wordt een case van Sapl; anders gaat hij door de matchcompiler
+// hieronder.
+
+emitCase p s brs = emitCaseS p (emitE (strcat p "s") s) brs (isVar s)
+isVar (EVar x) = True
+isVar e = False
+
+emitCaseS p st brs True = emitRijen p st brs
+emitCaseS p st brs False = haakjes (strcat3 (lamAp (strcat3 (strcat3 "\\s" p " -> ") (emitRijen p (strcat "s" p) brs) "")) " " st)
+
+emitRijen p x brs
+  | allesPlat brs = emitPlat p x brs
+  | otherwise = emitKeten (strcat p "M") x brs
+
+// plat: de eerste tak een constructor (anders is de scrutinee misschien geen
+// constructor, en een case daarop gaat mis), en verder constructoren met namen
+// of _ als velden, met hooguit een naam of _ als laatste tak
+allesPlat (CaseBranch (PConstr c ps) e : brs) = allesVelden ps /\ allesPlatR brs
+allesPlat brs = False
+
+allesPlatR [] = True
+allesPlatR (CaseBranch p e : brs) = platTak p brs
+
+platTak (PConstr c ps) brs = allesVelden ps /\ allesPlatR brs
+platTak (PVar v) brs = isLeegL brs
+platTak PWild brs = isLeegL brs
+platTak p brs = False
+
+isLeegL [] = True
+isLeegL xs = False
+
+
+allesVelden [] = True
+allesVelden (PVar v : ps) = allesVelden ps
+allesVelden (PWild : ps) = allesVelden ps
+allesVelden ps = False
+
+emitPlat p x brs = haakjes (strcat (strcat "case " x) (emitTakken p x 0 brs))
+
+// elke tak met een spatie ervoor
+emitTakken p x !i [] = ""
+emitTakken p x !i (CaseBranch (PConstr c ps) e : brs) =
+  strcat3 " " (haakjes (strcat3 (strcat (conNaam c) (veldenTekst x 0 ps)) " -> " (emitE (strcat3 p "_" (list2str (itoa i))) e))) (emitTakken p x (i + 1) brs)
+emitTakken p x !i (CaseBranch PWild e : brs) = strcat " " (haakjes (strcat "_ -> " (emitE (strcat p "w") e)))
+emitTakken p x !i (CaseBranch (PVar v) e : brs) = strcat " " (haakjes (strcat "_ -> " (haakjes (strcat3 (lamAp (strcat3 (strcat "\\" v) " -> " (emitE (strcat p "w") e))) " " x))))
+
+// de veldnamen van een platte tak: de naam uit het patroon, of x_k voor _
+veldenTekst x !k [] = ""
+veldenTekst x !k (PVar v : ps) = strcat3 " " v (veldenTekst x (k + 1) ps)
+veldenTekst x !k (p : ps) = strcat3 " " (veldNaam x k) (veldenTekst x (k + 1) ps)
+veldNaam x !k = strcat3 x "_" (list2str (itoa k))
+
+// De andere case's: een kleine matchcompiler (een matrix van rijen, zoals de
+// matchcompiler van sapl_naar_lc). Een rij is de patronen voor de
+// plekken os (namen van waarden die al bekend zijn) met een body. De rijen
+// worden gesplitst in blokken van dezelfde soort in de eerste kolom; de rest na
+// een blok is de terugval van dat blok (aan een naam, dus een keer uitgeschreven).
+//   - constructors: een case op de plek, per constructor de rijen met die
+//     constructor (de velden worden nieuwe plekken), _ -> terugval;
+//   - getallen en booleans: een keten van if's, per waarde de rijen ervan;
+//   - namen en _: de naam wordt de plek (substV), de kolom valt weg.
+// Zo bekijkt de code elke waarde een keer per blok, en niet per tak opnieuw.
+// Namen: plekken w<p>_<k>, terugvallen f<p>_0; p krijgt per stap een
+// hoofdletter erbij (R, C, N, V, B), die emitE zelf niet gebruikt.
+
+::rij = Rij ps e
+::blokrest = BR blok rest
+
+emitKeten p x brs = mc p [x] (map takRij brs) "(error \"geen passende case-tak\")"
+takRij (CaseBranch pat e) = Rij [pat] e
+
+mc p os [] fl = fl
+mc p [] (Rij ps e : rs) fl = emitE (strcat p "B") e
+mc p (o : os) (r : rs) fl = mcSplit p o os (rijSoort r) (spanSoort (rijSoort r) (r : rs)) fl
+
+// 0: naam of _, 1: constructor, 2: getal of boolean
+rijSoort (Rij (q : qs) e) = patSoort q
+patSoort (PConstr c ps) = 1
+patSoort (PNum n) = 2
+patSoort (PBool b) = 2
+patSoort p = 0
+
+spanSoort !k [] = BR [] []
+spanSoort !k (r : rs)
+  | rijSoort r == k = spanSoortR r (spanSoort k rs)
+  | otherwise = BR [] (r : rs)
+spanSoortR r (BR b rest) = BR (r : b) rest
+
+mcSplit p o os !k (BR blok []) fl = mcBlok p o os k blok fl
+mcSplit p o os !k (BR blok rest) fl =
+  emitMetTerugval (fNaam p) (mc (strcat p "R") (o : os) rest fl) (mcBlok p o os k blok (fNaam p))
+fNaam p = strcat3 "f" p "_0"
+
+mcBlok p o os !k blok fl
+  | k == 0 = mc (strcat p "V") os (map (rijNaam o) blok) fl
+  | k == 1 = haakjes (strcat3 (strcat "case " o) (mcCons p o os 0 (nconNub (reverse (map rijCon blok))) blok fl) (strcat " " (haakjes (strcat "_ -> " fl))))
+  | otherwise = mcLits p o os 0 (litNub (map rijKop blok)) blok fl
+
+// naam of _: de kolom weg, de naam is voortaan de plek
+rijNaam o (Rij (PVar v : qs) e) = Rij qs (substV v o e)
+rijNaam o (Rij (q : qs) e) = Rij qs e
+
+// de constructors in volgorde van eerste voorkomen (nconNub houdt de laatste)
+rijCon (Rij (PConstr c ps : qs) e) = NCon c (length ps)
+rijKop (Rij (q : qs) e) = q
+
+mcCons p o os !i [] blok fl = ""
+mcCons p o os !i (NCon c a : cs) blok fl =
+  strcat3 " " (mcCon (strcat3 p "C" (list2str (itoa i))) o os c a blok fl) (mcCons p o os (i + 1) cs blok fl)
+
+mcCon pc o os c a blok fl = mcConV pc os c (plekken pc 0 a) blok fl
+mcConV pc os c fs blok fl =
+  haakjes (strcat3 (strcat (conNaam c) (spatieLijst fs)) " -> " (mc pc (append fs os) (rijenVan c blok) fl))
+
+plekken pc !k !a
+  | k == a = []
+  | otherwise = strcat3 (strcat "w" pc) "_" (list2str (itoa k)) : plekken pc (k + 1) a
+
+// de rijen met constructor c, de velden vooraan
+rijenVan c [] = []
+rijenVan c (Rij (PConstr d ps : qs) e : rs)
+  | strEqual c d = Rij (append ps qs) e : rijenVan c rs
+  | otherwise = rijenVan c rs
+
+// getallen en booleans: if (test) (de rijen met die waarde) (de volgende waarde)
+mcLits p o os !i [] blok fl = fl
+mcLits p o os !i (q : qs) blok fl =
+  haakjes (strcat3 (strcat "if " (litTest o q))
+                   (strcat " " (mc (strcat3 p "N" (list2str (itoa i))) os (rijenLit q blok) fl))
+                   (strcat " " (mcLits p o os (i + 1) qs blok fl)))
+
+litTest o (PNum n) = strcat3 "(eqnum " o (strcat3 " " (getalTekst n) ")")
+litTest o (PBool b) = if b o (strcat3 "(`b_not " o ")")
+
+litGelijk (PNum a) (PNum b) = eqnum a b
+litGelijk (PBool a) (PBool b) = if a b (if b False True)
+litGelijk q r = False
+
+litNub [] = []
+litNub (q : qs) = q : litNub (filter (\r -> if (litGelijk q r) False True) qs)
+
+rijenLit q [] = []
+rijenLit q (Rij (r : qs) e : rs)
+  | litGelijk q r = Rij qs e : rijenLit q rs
+  | otherwise = rijenLit q rs
+
+emitMetTerugval f rest body = haakjes (strcat3 (lamAp (strcat3 (strcat "\\" f) " -> " body)) " " rest)
+
+// v -> o in een expressie: de namen zijn na het hernoemen uniek langs een pad,
+// en een plek w... wordt nergens gebonden, dus zonder vangst
+substV v o (EVar x)
+  | strEqual x v = EVar o
+  | otherwise = EVar x
+substV v o (EApp f a) = EApp (substV v o f) (substV v o a)
+substV v o (ELam x b) = ELam x (substV v o b)
+substV v o (EIf c a b) = EIf (substV v o c) (substV v o a) (substV v o b)
+substV v o (ELet bs b) = ELet (substVBinds v o bs) (substV v o b)
+substV v o (ELetRec bs b) = ELetRec (substVBinds v o bs) (substV v o b)
+substV v o (EConstr c as) = EConstr c (map (substV v o) as)
+substV v o (ECase s brs) = ECase (substV v o s) (substVBrs v o brs)
+substV v o e = e
+substVBinds v o [] = []
+substVBinds v o (BindDef x e : bs) = BindDef x (substV v o e) : substVBinds v o bs
+substVBrs v o [] = []
+substVBrs v o (CaseBranch q e : brs) = CaseBranch q (substV v o e) : substVBrs v o brs
+
+// Een stringliteral. De preprocessor van .spp zoekt f" en .. in de ruwe tekst
+// (ook binnen strings) en voegt dan een hulpfunctie toe die de stdlib nodig
+// heeft (__fstrShow, __rangeChars): zonder stdlib compileert het programma dan
+// niet. Daarom: na elke . die voor een . staat een nieuw stuk, en eindigt de
+// string op f, dan een spatie erachter en strslice.
+emitStr s = emitStrStukken (strStukken (str2list s))
+
+emitStrStukken [st] = emitStrStuk st
+emitStrStukken (st : sts) = haakjes (strcat3 "strappend " (emitStrStuk st) (strcat " " (emitStrStukken sts)))
+
+emitStrStuk cs
+  | eindigtOpF cs = haakjes (strcat3 "strslice \"" (list2str cs) (strcat3 " \" 0 " (list2str (itoa (length cs))) ""))
+  | otherwise = strcat3 "\"" (list2str cs) "\""
+
+eindigtOpF [] = False
+eindigtOpF [c] = c == 'f'
+eindigtOpF (c : cs) = eindigtOpF cs
+
+// de stukken: knippen tussen twee punten
+strStukken [] = [[]]
+strStukken ('.' : '.' : cs) = strStukkenR '.' (strStukken ('.' : cs))
+strStukken (c : cs) = strStukkenK c (strStukken cs)
+strStukkenR c sts = [c] : sts
+strStukkenK c (st : sts) = (c : st) : sts
+
+// --- de prelude: de ingebouwde namen van de kerntaal --------------------------
+prelude = "\n`b_ap f x = f x\n`b_not a = if a False True\n`b_cons h t = K`_Cons h t\n`b_head l = case l (K`_Cons h t -> h)\n`b_tail l = case l (K`_Cons h t -> t)\n`b_isnil l = case l (K`_Nil -> True) (_ -> False)\n"
+
+// --- de waarde tonen zoals de hybride route (hPrintVal: diepte 20) -------------
+// Bewust zonder typen: `b_showT kiest op typeId (de typechecker meldt hem, dat
+// is verwacht).
+// `start toont de waarde van `b_main; zonder stdlib, met de primitieven
+// typeId, getField en strappend, en eqnum (== zou in .spp __deepEq worden).
+// ".." als string geeft in .spp "findAdtByCon: unknown constructor", vandaar
+// strappend "." ".".
+toner cs = strcat tonerVast (strcat (tonerNamen cs) (tonerAriteiten cs))
+
+tonerVast = "`start = printString (`b_show 20 `b_main) <#> printString \"\\n\" <#> 0\n`b_show !d v = `b_showT d (typeId v) v\n`b_showT !d !t v = if (eqnum t 1) (`b_num v) (if (eqnum t 3) (strappend \"\\\"\" (strappend v \"\\\"\")) (if (eqnum t 4) \"<functie>\" (`b_con d (`b_ar v) v)))\n`b_con !d !a v = if (eqnum a 0) (`b_cn v) (if (eqnum d 0) (strappend \".\" \".\") (strappend \"(\" (strappend (`b_cn v) (strappend (`b_fs (d - 1) 0 a v) \")\"))))\n`b_fs !d !i !a v = if (eqnum i a) \"\" (strappend \" \" (strappend (`b_show d (getField v i)) (`b_fs d (i + 1) a v)))\n`b_num !n = if (n < 0) (strappend \"-\" (`b_nump (0 - n))) (`b_nump n)\n`b_nump !n = if (n < 10) (strslice \"0123456789\" n (n + 1)) (strappend (`b_nump (n / 10)) (strslice \"0123456789\" (n % 10) (n % 10 + 1)))\n"
+
+// de naam via constrName (K`_Leaf), zonder de K`_ ervoor (zo lang als die van
+// K`_Nil, dat er altijd is, min 3): zo staat de naam niet als string in de
+// tekst (zie emitStr)
+tonerNamen cs = "`b_cn v = strslice (constrName v) (strlen (constrName K`_Nil) - 3) (strlen (constrName v))\n"
+tonerAriteiten cs = strcat3 "`b_ar v = case v" (tonerTakken cs tonerAr) "\n"
+tonerAr (NCon n a) = list2str (itoa a)
+
+tonerTakken [] f = ""
+tonerTakken (NCon n a : cs) f = strcat3 " (" (strcat3 (adtCon n a) " -> " (f (NCon n a))) (strcat ")" (tonerTakken cs f))

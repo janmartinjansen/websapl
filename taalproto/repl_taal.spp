@@ -1,0 +1,52 @@
+#import "taalproto/naar_sapl.spp"
+
+// repl_taal.spp - een stap van een REPL voor een eigen taal (stap 3 van
+// docs/2026-10-18_taalprototypes_jit_en_linken_plan.md). De REPL in Sapl
+// (repl_sapl/mini_repl.spp, `:lang`) laadt dit bestand samen met de taal als
+// module, en roept replStap aan; alles gaat als string heen en terug, zodat
+// de REPL geen typen van de taal hoeft te kennen.
+//
+// De sessie van de taal is de tekst van alle definities tot nu toe (acc).
+// Elke expressie wordt het hele programma: acc plus de expressie in het
+// sjabloon (bv. "fun main() = %;"), vertaald en uitgeschreven als Sapl+ met
+// een eigen voorvoegsel (pre); de REPL compileert dat als een stuk en draait
+// het. Zo kan een nieuwe constructor of een nieuwe versie van een functie
+// niet botsen met een eerder geladen stuk.
+//
+// replStap lang sjabloon pre acc invoer geeft een string; het eerste teken
+// zegt wat het is:
+//   D<acc>     de invoer zijn definities; de nieuwe acc
+//   E<sapl>    een programma om te draaien (Sapl+, met voorvoegsel pre)
+//   F<melding> een fout
+// Zonder sjabloon ("") is elke invoer een heel programma (E of F).
+
+replStap lang sjabloon pre acc invoer
+  | strlen sjabloon == 0 = replProg lang pre (replPlak acc invoer)
+  | otherwise = replMetSjabloon lang sjabloon pre acc invoer (replParseert lang (replPlak acc invoer))
+
+// definities als de invoer erbij nog parseert; dan meteen controleren met een
+// expressie 0 in het sjabloon (zo meldt een scopefout zich bij de definitie)
+replMetSjabloon lang sjabloon pre acc invoer True = replDefs lang (replPlak acc invoer) (langDefs lang (replPlak (replPlak acc invoer) (replVul sjabloon "0")))
+replMetSjabloon lang sjabloon pre acc invoer False = replProg lang pre (replPlak acc (replVul sjabloon invoer))
+
+replDefs lang nieuw (LangOk defs) = strcat "D" nieuw
+replDefs lang nieuw (LangErr m) = strcat "F" m
+
+replProg lang pre src = replProgR pre (langDefs lang src)
+replProgR pre (LangOk defs) = strcat "E" (naarSaplP pre (kernOptDefs defs))
+replProgR pre (LangErr m) = strcat "F" m
+
+replParseert (Lang n g c t) src = replIsOk (tpParse g src)
+replIsOk (ParseOk ast) = True
+replIsOk (ParseErr m) = False
+
+replPlak acc invoer
+  | strlen acc == 0 = invoer
+  | otherwise = strcat3 acc "\n" invoer
+
+// % in het sjabloon vervangen door de expressie
+replVul sjabloon e = list2str (replVulL (str2list sjabloon) (str2list e))
+replVulL [] e = []
+replVulL (c : cs) e
+  | c == '%' = append e (replVulL cs e)
+  | otherwise = c : replVulL cs e

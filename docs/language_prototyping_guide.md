@@ -590,7 +590,7 @@ start = printString (langSapl tinyLang (readFile readLine))
 
 ```bash
 bash taalproto/jit/jit.sh taalproto/tiny/jit_tiny.spp taalproto/tiny/progs/queens.tiny
-# res: 92, instr executed: 2298459
+# 92  (printed like runLang does), instr executed: 2298506
 
 bash taalproto/jit/jit.sh -o /tmp/q.spp taalproto/tiny/jit_tiny.spp taalproto/tiny/progs/queens.tiny
 # the same, and keeps the generated Sapl+ in /tmp/q.spp
@@ -609,14 +609,20 @@ becomes
 
 ```
 ::V = K_Nil | K_Cons x1 x2
-start = f_main
+b_main = f_main
 f_length v0_xs = (case v0_xs (K_Nil -> 0) (K_Cons v1_x v2_r -> (1 + (f_length v2_r))))
 f_extend v0_k v1_xs = (f_mapfil (\v2_x -> (f_safe v1_xs 1 v2_x)) (\v2_x -> (K_Cons v2_x v1_xs)) (f_fromto 1 v0_k))
 ...
 b_ap f x = f x
 b_not a = if a False True
 ...
+start = printString (b_show 20 b_main) <#> printString "\n" <#> 0
+b_show !d v = ...
 ```
+
+`start` prints the value the way `runLang` does (`(Cons 1 (Cons 2 Nil))`,
+`..` below depth 20), so both routes give the same text, also for lists and
+data.
 
 `naar_sapl.spp` does the following for this:
 
@@ -651,7 +657,12 @@ b_not a = if a False True
 
    The two `Cons` branches share one `case` on `xss`. Before 19 October
    2026 every branch tested `xss` again, in a chain of fallbacks.
-5. **Small things.**
+5. **A prefix per program.** `langSaplP pre lang src` (and `naarSaplP pre`)
+   puts `pre` in front of every global name: `j3_f_length`, `Kj3__Cons`,
+   `::Vj3_`, `j3_start`. Then several programs can live in one session
+   without clashing; the REPL uses this (section 8.5). `langSapl` is
+   `langSaplP ""`.
+6. **Small things.**
    - `==` becomes `eqnum` (numeric, like the kernel).
    - `&&` and `||` become `if`.
    - A non-recursive `let` becomes `b_ap (\x -> body) e`, because Sapl+
@@ -669,12 +680,15 @@ Instructions executed (`./run`), on 19 October 2026:
 | `tiny/progs/queens.tiny` | 1.7M | 2.30M (1.4×) | 26.3M |
 
 Writing the program out and compiling it takes about 0.04 s.
-`bash taalproto/jit/run_jit.sh -v` runs all 18 example programs of the four
-languages through both routes and checks that the results are equal.
+`bash taalproto/jit/run_jit.sh -v` runs 22 programs (the example programs
+of the four languages and small tests in `taalproto/jit/proef/`, among them
+lists, booleans, trees and strings) through both routes and checks that they
+print the same.
 
-The remaining gap to native comes from two things: a `b_ap` call per `let`,
-and code that a person would write differently (a strict accumulator, for
-example).
+The remaining gap to native comes from code that a person would write
+differently: `a && b` as `if a b False` inside another `if`, no strict
+accumulator, and so on. The `b_ap` call per `let` does not show up here:
+`kernOptDefs` has already inlined the `let`s in these hot loops.
 
 ### 8.4 What the JIT route needs from your translation
 
@@ -687,8 +701,71 @@ example).
     list is built anew as far as it is used, instead of being one cycle.
 - A constructor name must keep the same number of fields in the whole
   program, because there is one data type.
-- Strings (`EStr`) are written out as Sapl string literals. None of the
-  example languages use strings, so that path is untested.
+- Strings (`EStr`) are written out as Sapl string literals. A string that
+  ends in `f` or contains `..` is split up (`strslice`/`strappend`): the
+  Sapl+ preprocessor looks for `f"` (an f-string) and `..` (a range) in the
+  raw text, also inside strings, and then adds a helper that needs the
+  standard library. The test language `strs` in `taalproto/jit/schrijf.spp`
+  checks this.
+
+### 8.5 In the REPL: `:lang`
+
+The REPL in Sapl (`./rs-driver repl_sapl/build/mini_repl.jmvm`, and the REPL
+of WebSapl) can load your language. After that, every line that does not
+start with `:` is input in your language:
+
+```
+repl> :lang "taalproto/tiny/tiny.spp" tinyLang "fun main() = %;"
+taal: tinyLang (elke regel is nu invoer in die taal; :sapl voor Sapl)
+repl> fun sq(x) = x * x;
+gedefinieerd
+repl> sq(7) + 1
+50
+repl> [sq(2), 1 < 0]
+(Cons 4 (Cons 0 Nil))
+repl> sq(y)
+fout: onbekende naam y
+repl> :prog taalproto/tiny/progs/queens.tiny
+92
+repl> :undo
+ongedaan gemaakt
+```
+
+- The third argument is a **template**: how an expression becomes a program.
+  `%` is the place of the expression. For MiniML that is `"let main = %;"`.
+  Without a template, every line is a whole program (calc, while).
+- A line that still parses as a program together with the definitions so far
+  is a **definition** and is kept. Anything else is an **expression**: the
+  definitions plus the template become one program.
+- That program takes the JIT route **in memory**: your translation, then
+  `naar_sapl` with a prefix `j<n>_`, then the REPL's own compiler, linker and
+  loader (the same chain as an ordinary REPL line). No file, no new process.
+- `:undo` removes the last definition. `:sapl` goes back to Sapl, `:lang`
+  (without arguments) back to your language. `:prog file` runs a whole
+  program.
+- Loading the language takes a few seconds, once (`taalproto/repl_taal.spp`
+  and your language are flattened and loaded as a module). After that a line
+  takes about 50 ms, nearly all of it compiling.
+
+The step itself is a plain function in `taalproto/repl_taal.spp`:
+`replStap lang template prefix definitions line` gives a string that starts
+with `D` (the new definitions), `E` (the Sapl+ program to run) or `F` (an
+error). You can call it from your own driver as well.
+
+### 8.6 In the browser: the Taallab
+
+`websapl/taallab.html` (WebSapl, 🧪 Taallab) shows your language on the
+left and a program on the right. The **Route** menu chooses between:
+
+- **hybride**: the hybrid route (`runLang`);
+- **JIT (via gen1)**: `langSapl`, then gen1 compiles the text in the browser
+  (20-30 ms), then the VM runs it; the tab *Uitgeschreven Sapl+* shows the
+  generated text;
+- **beide vergelijken**: both, side by side, with "gelijk" when the results
+  are the same.
+
+The tab **REPL** is the REPL of section 8.5 for the language in the editor,
+with the template in a field above it.
 
 ---
 
@@ -775,7 +852,8 @@ has the complete list. These are the ones that come up here:
 |---|---|
 | `taalproto/grammatica.spp` | the grammar types, the lexer `tpLex`, the parser `tpParse`, the grammar check `tpCheck` |
 | `taalproto/taal.spp` | `::lang`, `langDefs`, `runLang`, the test helpers, the kernel helpers, `kernScope`, `kernOptDefs` |
-| `taalproto/naar_sapl.spp` | `langSapl`, `naarSapl`: kernel → Sapl+ text |
+| `taalproto/naar_sapl.spp` | `langSapl`, `naarSapl`: kernel → Sapl+ text (`langSaplP`/`naarSaplP` with a prefix) |
+| `taalproto/repl_taal.spp` | `replStap`: one REPL step for your language (section 8.5) |
 | `taalproto/jit/jit.sh` | run a program of your language through gen1 |
 | `taalproto/jit/run_jit.sh` | all example programs through both routes, compared |
 | `taalproto/run_tests.sh` | the tests of all example languages |
@@ -791,6 +869,8 @@ has the complete list. These are the ones that come up here:
 | `langDefs lang src` | `LangOk defs` or `LangErr msg`: the whole front end |
 | `runLang lang src` | run via the hybrid route and print the result |
 | `langSapl lang src` | the program as Sapl+ text (for gen1) |
+| `langSaplP pre lang src` | the same, with prefix `pre` on every global name |
+| `replStap lang template pre defs line` | one REPL step: `D`, `E` or `F` plus text (section 8.5) |
 | `checkLang` / `checkLangErr` / `checkLangH` | tests (section 7) |
 | `kernOptDefs defs` | the generic optimiser (`runLang` and `langSapl` call it for you) |
 | `lams`, `apps`, `call`, `bin`, `let1`, `letrec1`, `startDef` | kernel helpers (section 5.2) |
@@ -813,6 +893,7 @@ route.
 
 - `taalproto/README.md`: the framework in Dutch, with measurements and findings.
 - `docs/2026-10-17_taalprototypes_plan.md`: the plan and the design decisions.
-- `docs/2026-10-18_taalprototypes_jit_en_linken_plan.md`: the JIT route and
-  what comes next (compiling in memory, for the REPL and the notebook).
+- `docs/2026-10-18_taalprototypes_jit_en_linken_plan.md`: the JIT route, the
+  in-memory route of the REPL, and what comes next (the notebook).
+- `repl/README.md`, "Een eigen taal: `:lang`": the REPL side.
 - `taalproto/ml/README.md`: what MiniML taught about the design.

@@ -322,7 +322,7 @@ window.WEBSAPL_TREE = [
         "path": "docs/language_prototyping_guide.md",
         "type": "file",
         "ext": ".md",
-        "size": 31648,
+        "size": 35527,
         "isBinary": false
       },
       {
@@ -2127,7 +2127,7 @@ window.WEBSAPL_TREE = [
             "path": "repl_sapl/build/mini_repl.jmvm",
             "type": "file",
             "ext": ".jmvm",
-            "size": 6911798,
+            "size": 6964249,
             "isBinary": false
           },
           {
@@ -2135,7 +2135,7 @@ window.WEBSAPL_TREE = [
             "path": "repl_sapl/build/mini_repl.jvb",
             "type": "file",
             "ext": ".jvb",
-            "size": 2590896,
+            "size": 2608680,
             "isBinary": true
           }
         ],
@@ -2582,6 +2582,22 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
+        "name": "naar_sapl.spp",
+        "path": "taalproto/naar_sapl.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 25207,
+        "isBinary": false
+      },
+      {
+        "name": "repl_taal.spp",
+        "path": "taalproto/repl_taal.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 2498,
+        "isBinary": false
+      },
+      {
         "name": "taal.spp",
         "path": "taalproto/taal.spp",
         "type": "file",
@@ -2709,7 +2725,7 @@ window.WEBSAPL_TREE = [
     "path": "README.md",
     "type": "file",
     "ext": ".md",
-    "size": 11417,
+    "size": 13281,
     "isBinary": false
   },
   {
@@ -2717,7 +2733,7 @@ window.WEBSAPL_TREE = [
     "path": "taallab.html",
     "type": "file",
     "ext": ".html",
-    "size": 14831,
+    "size": 23133,
     "isBinary": false
   }
 ];

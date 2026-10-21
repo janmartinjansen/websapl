@@ -44,6 +44,31 @@
     .tl-out .fout { color: var(--error); }
     .tl-out .info { color: var(--text-muted); }
     .tl-metrics { padding: 6px 12px; color: var(--text-muted); font-size: 12px; border-top: 1px solid var(--border-color); }
+    .tl-metrics div + div { margin-top: 2px; }
+    .tl-tab {
+      background: none; border: none; padding: 0; font: inherit; letter-spacing: inherit; text-transform: inherit;
+      color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent;
+    }
+    .tl-tab.active { color: var(--text-primary); border-bottom-color: var(--accent); }
+    .tl-tab:disabled { opacity: 0.45; cursor: default; }
+    .tl-out .gelijk { color: var(--success, #3fb950); }
+    .tl-out .invoer { color: var(--accent); }
+    .tl-repl { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .tl-repl-bar {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 6px 12px;
+      font-size: 12px; color: var(--text-secondary); border-bottom: 1px solid var(--border-color);
+    }
+    .tl-repl-bar input { flex: 1; min-width: 120px; }
+    .tl-repl input {
+      background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color);
+      border-radius: 6px; padding: 4px 8px; font-family: var(--font-mono); font-size: 13px;
+    }
+    .tl-repl-in {
+      display: flex; align-items: center; gap: 8px; padding: 6px 12px;
+      border-top: 1px solid var(--border-color); background: var(--terminal-bg);
+      font-family: var(--font-mono); font-size: 13px; color: var(--accent);
+    }
+    .tl-repl-in input { flex: 1; min-width: 0; }
     .tl-help { color: var(--text-secondary); font-size: 12px; }
     .tl-help a { color: var(--accent); }
     @media (max-width: 760px) {
@@ -75,6 +100,11 @@
   <div class="tl-toolbar">
     <label>Taal <select id="sel-lang"></select></label>
     <label>Programma <select id="sel-prog"></select></label>
+    <label title="Hybride: de kerntaal draait meteen via de closure-compiler (sapl_naar_lc). JIT: de kerntaal wordt Sapl+ (taalproto/naar_sapl.spp), gen1 compileert die in de browser, en de VM draait de bytecode. Beide: allebei, met de uitkomsten naast elkaar.">Route <select id="sel-route">
+      <option value="hybride">hybride</option>
+      <option value="jit">JIT (via gen1)</option>
+      <option value="beide">beide vergelijken</option>
+    </select></label>
     <button class="btn btn-success" id="btn-run" title="Draaien (Ctrl/Cmd+Enter)">▶ Draaien</button>
     <button class="btn" id="btn-stop" title="Een programma dat niet stopt afbreken" disabled>⏹ Stop</button>
     <button class="btn" id="btn-reset" title="Je wijzigingen aan deze taal en dit programma weggooien">↺ Voorbeeld herstellen</button>
@@ -94,13 +124,26 @@
         <div class="tl-editor" id="ed-prog"></div>
       </div>
       <div class="tl-pane">
-        <div class="tl-pane-head">Uitvoer</div>
+        <div class="tl-pane-head"><button class="tl-tab active" id="tab-out">Uitvoer</button><button class="tl-tab" id="tab-sapl" disabled title="De Sapl+-tekst die de JIT-route uitschrijft en compileert">Uitgeschreven Sapl+</button><button class="tl-tab" id="tab-repl" title="Regel voor regel in de taal: definities en expressies, via de JIT-route in de REPL in Sapl">REPL</button></div>
+        <div class="tl-repl" id="repl" hidden>
+          <div class="tl-repl-bar"><span title="Hoe een expressie een programma wordt: % is de plek van de expressie. Leeg: elke regel is een heel programma.">sjabloon</span><input id="repl-tmpl" spellcheck="false" /></div>
+          <pre class="tl-out" id="repl-log"><span class="info">Typ een definitie of een expressie in de taal links. Een definitie
+blijft staan; een expressie wordt met de definities tot nu toe een programma
+(via het sjabloon), dat de REPL compileert en draait (de JIT-route).
+:undo haalt de laatste definitie weg, :prog pad draait een heel programma.
+De eerste regel laadt de taal (een paar seconden).
+</span></pre>
+          <div class="tl-repl-in"><span id="repl-prompt">&gt;</span><input id="repl-in" spellcheck="false" autocomplete="off" placeholder="bv. fun sq(x) = x * x;" /></div>
+        </div>
+        <pre class="tl-out" id="sapl" hidden></pre>
         <pre class="tl-out" id="out"><span class="info">Kies een taal en een programma en klik ▶ Draaien.
 
 De taal links is gewoon Sapl+: een grammatica als data, een vertaling naar
 de kerntaal en een waarde  naam = Lang ... . Verander je de taal, dan wordt
 die opnieuw gecompileerd (een paar seconden); een ander programma draait
-meteen. Je wijzigingen blijven in deze browser bewaard.</span></pre>
+meteen. Met de route JIT wordt het programma eerst Sapl+ en dan bytecode
+(zie de tab Uitgeschreven Sapl+). Je wijzigingen blijven in deze browser
+bewaard.</span></pre>
         <div class="tl-metrics" id="metrics">&nbsp;</div>
       </div>
     </div>
@@ -152,7 +195,7 @@ meteen. Je wijzigingen blijven in deze browser bewaard.</span></pre>
       worker.onmessage = (e) => {
         const m = e.data;
         if (m.type === "INIT_DONE") { ready = true; setStatus("ready", "Klaar"); return; }
-        if (m.id !== undefined && pending.has(m.id) && (m.type === "COMPILE_COMPLETE" || m.type === "RUN_COMPLETE")) {
+        if (m.id !== undefined && pending.has(m.id) && (m.type === "COMPILE_COMPLETE" || m.type === "RUN_COMPLETE" || m.type === "RSAPL_RESULT")) {
           pending.get(m.id)(m); pending.delete(m.id);
         }
       };
@@ -191,6 +234,7 @@ meteen. Je wijzigingen blijven in deze browser bewaard.</span></pre>
       edLang.setValue(saved !== null ? saved : await fetchText(preset.lang));
       edLang.clearHistory();
       $("lang-note").textContent = preset.lang + (saved !== null ? " (gewijzigd)" : "");
+      setTemplate();
       progName = null;
       await selectProg(store.get("prog_" + preset.id) || progLabel(preset.programs[0]));
     }
@@ -242,11 +286,90 @@ meteen. Je wijzigingen blijven in deze browser bewaard.</span></pre>
     const out = $("out");
     function show(text, cls) {
       out.innerHTML = "";
+      append(text, cls);
+      showTab("out");
+    }
+    function append(text, cls) {
       const s = document.createElement("span");
       if (cls) s.className = cls;
       s.textContent = text;
       out.appendChild(s);
     }
+    // de tab met de uitgeschreven Sapl+ (alleen na de JIT-route)
+    function showTab(which) {
+      for (const t of ["out", "sapl", "repl"]) {
+        $(t).hidden = which !== t;
+        $("tab-" + t).classList.toggle("active", which === t);
+      }
+      if (which === "repl") $("repl-in").focus();
+    }
+    function setSapl(text) {
+      $("sapl").textContent = text || "";
+      $("tab-sapl").disabled = !text;
+    }
+    $("tab-out").onclick = () => showTab("out");
+    $("tab-sapl").onclick = () => showTab("sapl");
+    $("tab-repl").onclick = () => showTab("repl");
+
+    // --- de REPL van de taal ---
+    let replKey = null, replBusy = false;
+    const replHist = [];
+    let replPos = 0;
+    const replLog = $("repl-log");
+    function replAppend(text, cls) {
+      const s = document.createElement("span");
+      if (cls) s.className = cls;
+      s.textContent = text.endsWith("\n") ? text : text + "\n";
+      replLog.appendChild(s);
+      replLog.scrollTop = replLog.scrollHeight;
+    }
+    const replOut = (text) => replAppend(text || "", /^fout: /.test(text || "") ? "fout" : "");
+    function setTemplate() {
+      const saved = store.get("tmpl_" + preset.id);
+      $("repl-tmpl").value = saved !== null ? saved : (preset.template || "");
+    }
+    $("repl-tmpl").oninput = () => store.set("tmpl_" + preset.id, $("repl-tmpl").value);
+    async function replLine(line) {
+      if (!ready || replBusy) return;
+      replBusy = true; $("repl-in").disabled = true;
+      try {
+        const langText = edLang.getValue(), name = TL.langName(langText), tmpl = $("repl-tmpl").value;
+        if (!name) { replAppend("fout: geen taal gevonden (naam = Lang ...)", "fout"); return; }
+        const key = TL.hashText(langText + "\u0000" + tmpl);
+        if (key !== replKey) {
+          setStatus("busy", "Taal laden in de REPL…");
+          replAppend(replKey ? "(de taal of het sjabloon is veranderd: opnieuw laden; de definities van de REPL beginnen leeg)" : "(taal laden…)", "info");
+          const r = await call({ type: "RSAPL_EVAL", line: TL.replLangCommand(name, tmpl), files: { [TL.REPL_LANG_PATH]: TL.withoutStart(langText) } });
+          const text = r.success ? r.output : "fout: " + r.error;
+          replOut(text.trim());
+          if (/^fout: /.test(text)) { setStatus("error", "Fout bij het laden van de taal"); return; }
+          replKey = key;
+        }
+        $("repl-prompt").textContent = name + ">";
+        replAppend(name + "> " + line, "invoer");
+        setStatus("busy", "REPL…");
+        const r = await call({ type: "RSAPL_EVAL", line });
+        replOut((r.success ? r.output : "fout: " + r.error).replace(/\n+$/, ""));
+        setStatus("ready", "Klaar");
+      } finally {
+        replBusy = false; $("repl-in").disabled = false; $("repl-in").focus();
+      }
+    }
+    $("repl-in").onkeydown = (e) => {
+      const inp = $("repl-in");
+      if (e.key === "Enter" && inp.value.trim()) {
+        const line = inp.value;
+        replHist.push(line); replPos = replHist.length;
+        inp.value = "";
+        replLine(line);
+      } else if (e.key === "ArrowUp" && replPos > 0) { inp.value = replHist[--replPos]; e.preventDefault(); }
+      else if (e.key === "ArrowDown") { replPos = Math.min(replHist.length, replPos + 1); inp.value = replHist[replPos] || ""; e.preventDefault(); }
+    };
+    const route = () => $("sel-route").value;
+    $("sel-route").value = ["hybride", "jit", "beide"].includes(store.get("route")) ? store.get("route") : "hybride";
+    $("sel-route").onchange = () => store.set("route", route());
+    const jitCache = new Map();   // hash van de uitgeschreven Sapl+ -> .jmvm
+    const nl = (n) => n.toLocaleString("nl-NL");
     // de meldingen van de VM zelf weg, de melding van de compiler houden
     function compilerText(raw) {
       return String(raw || "").split("\n").filter((l) =>
@@ -282,18 +405,43 @@ meteen. Je wijzigingen blijven in deze browser bewaard.</span></pre>
           compiled.set(key, jmvm);
           tCompile = Math.round(performance.now() - t0);
         }
-        setStatus("busy", "Draaien…");
-        const t1 = performance.now();
-        const r = await call({ type: "RUN", contentOrPath: jmvm, isPath: false, files: { [TL.PROGRAM_PATH]: edProg.getValue() } });
-        if (gone()) return;
-        const tRun = Math.round(performance.now() - t1);
-        const res = TL.parseRunOutput(r.output);
-        if (res.ok) show(res.text || "(geen uitvoer)");
-        else show(res.text, "fout");
-        const instr = r.metrics && r.metrics.instr_executed;
-        $("metrics").textContent = (tCompile !== null ? `taal gecompileerd in ${tCompile} ms · ` : "taal al gecompileerd · ") +
-          `programma (vertalen + draaien) ${tRun} ms` + (instr ? ` · ${instr.toLocaleString("nl-NL")} instructies` : "");
-        setStatus(res.ok ? "ready" : "error", res.ok ? "Klaar" : "Fout in het programma");
+        const kind = route();
+        const head = tCompile !== null ? `taal gecompileerd in ${tCompile} ms` : "taal al gecompileerd";
+        const prog = edProg.getValue();
+        let h = null, jt = null;
+        setSapl("");
+        if (kind !== "jit") {
+          setStatus("busy", "Draaien (hybride)…");
+          h = await TL.runHybride(call, jmvm, prog);
+          if (gone()) return;
+        }
+        if (kind !== "hybride") {
+          setStatus("busy", "Draaien (JIT)…");
+          jt = await TL.runJit(call, jmvm, prog, jitCache);
+          if (gone()) return;
+          setSapl(jt.sapl);
+        }
+        const lines = [];
+        if (h) lines.push(`hybride: vertalen + draaien ${h.ms} ms` + (h.instr ? ` · ${nl(h.instr)} instructies` : ""));
+        if (jt && jt.ok) lines.push(`JIT: vertalen + uitschrijven ${jt.tWrite} ms · ` +
+          (jt.tCompile !== null ? `compileren (gen1) ${jt.tCompile} ms` : "al gecompileerd") +
+          ` · draaien ${jt.ms} ms` + (jt.instr ? ` · ${nl(jt.instr)} instructies` : ""));
+        if (kind === "beide" && h && jt) {
+          out.innerHTML = "";
+          showTab("out");
+          append("hybride: ", "info"); append((h.ok ? h.text : "fout: " + h.text) + "\n", h.ok ? "" : "fout");
+          append("JIT:     ", "info"); append((jt.ok ? jt.text : "fout: " + jt.text) + "\n", jt.ok ? "" : "fout");
+          const same = h.ok === jt.ok && h.text === jt.text;
+          append(same ? "\ngelijk" : "\nVERSCHILLEND", same ? "gelijk" : "fout");
+        } else {
+          const r = h || jt;
+          if (r.ok) show(r.text || "(geen uitvoer)"); else show(r.text, "fout");
+        }
+        const m = $("metrics");
+        m.innerHTML = "";
+        for (const l of [head, ...lines]) { const d = document.createElement("div"); d.textContent = l; m.appendChild(d); }
+        const ok = (!h || h.ok) && (!jt || jt.ok);
+        setStatus(ok ? "ready" : "error", ok ? "Klaar" : "Fout in het programma");
       } finally {
         busy = false; $("btn-run").disabled = false; $("btn-stop").disabled = true;
       }
@@ -305,6 +453,7 @@ meteen. Je wijzigingen blijven in deze browser bewaard.</span></pre>
       runSeq++;
       for (const resolve of pending.values()) resolve({ success: false, output: "", stderr: "afgebroken" });
       pending.clear();
+      replKey = null; replBusy = false; $("repl-in").disabled = false;
       show("Afgebroken.", "info");
       startWorker();
     };
