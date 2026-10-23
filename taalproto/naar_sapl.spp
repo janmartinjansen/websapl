@@ -507,30 +507,8 @@ substVBinds v o (BindDef x e : bs) = BindDef x (substV v o e) : substVBinds v o 
 substVBrs v o [] = []
 substVBrs v o (CaseBranch q e : brs) = CaseBranch q (substV v o e) : substVBrs v o brs
 
-// Een stringliteral. De preprocessor van .spp zoekt f" en .. in de ruwe tekst
-// (ook binnen strings) en voegt dan een hulpfunctie toe die de stdlib nodig
-// heeft (__fstrShow, __rangeChars): zonder stdlib compileert het programma dan
-// niet. Daarom: na elke . die voor een . staat een nieuw stuk, en eindigt de
-// string op f, dan een spatie erachter en strslice.
-emitStr s = emitStrStukken (strStukken (str2list s))
-
-emitStrStukken [st] = emitStrStuk st
-emitStrStukken (st : sts) = haakjes (strcat3 "strappend " (emitStrStuk st) (strcat " " (emitStrStukken sts)))
-
-emitStrStuk cs
-  | eindigtOpF cs = haakjes (strcat3 "strslice \"" (list2str cs) (strcat3 " \" 0 " (list2str (itoa (length cs))) ""))
-  | otherwise = strcat3 "\"" (list2str cs) "\""
-
-eindigtOpF [] = False
-eindigtOpF [c] = c == 'f'
-eindigtOpF (c : cs) = eindigtOpF cs
-
-// de stukken: knippen tussen twee punten
-strStukken [] = [[]]
-strStukken ('.' : '.' : cs) = strStukkenR '.' (strStukken ('.' : cs))
-strStukken (c : cs) = strStukkenK c (strStukken cs)
-strStukkenR c sts = [c] : sts
-strStukkenK c (st : sts) = (c : st) : sts
+// Een stringliteral.
+emitStr s = strcat3 "\"" s "\""
 
 // --- de prelude: de ingebouwde namen van de kerntaal --------------------------
 prelude = "\n`b_ap f x = f x\n`b_not a = if a False True\n`b_cons h t = K`_Cons h t\n`b_head l = case l (K`_Cons h t -> h)\n`b_tail l = case l (K`_Cons h t -> t)\n`b_isnil l = case l (K`_Nil -> True) (_ -> False)\n"
@@ -540,15 +518,13 @@ prelude = "\n`b_ap f x = f x\n`b_not a = if a False True\n`b_cons h t = K`_Cons 
 // is verwacht).
 // `start toont de waarde van `b_main; zonder stdlib, met de primitieven
 // typeId, getField en strappend, en eqnum (== zou in .spp __deepEq worden).
-// ".." als string geeft in .spp "findAdtByCon: unknown constructor", vandaar
-// strappend "." ".".
 toner cs = strcat tonerVast (strcat (tonerNamen cs) (tonerAriteiten cs))
 
-tonerVast = "`start = printString (`b_show 20 `b_main) <#> printString \"\\n\" <#> 0\n`b_show !d v = `b_showT d (typeId v) v\n`b_showT !d !t v = if (eqnum t 1) (`b_num v) (if (eqnum t 3) (strappend \"\\\"\" (strappend v \"\\\"\")) (if (eqnum t 4) \"<functie>\" (`b_con d (`b_ar v) v)))\n`b_con !d !a v = if (eqnum a 0) (`b_cn v) (if (eqnum d 0) (strappend \".\" \".\") (strappend \"(\" (strappend (`b_cn v) (strappend (`b_fs (d - 1) 0 a v) \")\"))))\n`b_fs !d !i !a v = if (eqnum i a) \"\" (strappend \" \" (strappend (`b_show d (getField v i)) (`b_fs d (i + 1) a v)))\n`b_num !n = if (n < 0) (strappend \"-\" (`b_nump (0 - n))) (`b_nump n)\n`b_nump !n = if (n < 10) (strslice \"0123456789\" n (n + 1)) (strappend (`b_nump (n / 10)) (strslice \"0123456789\" (n % 10) (n % 10 + 1)))\n"
+tonerVast = "`start = printString (`b_show 20 `b_main) <#> printString \"\\n\" <#> 0\n`b_show !d v = `b_showT d (typeId v) v\n`b_showT !d !t v = if (eqnum t 1) (`b_num v) (if (eqnum t 3) (strappend \"\\\"\" (strappend v \"\\\"\")) (if (eqnum t 4) \"<functie>\" (`b_con d (`b_ar v) v)))\n`b_con !d !a v = if (eqnum a 0) (`b_cn v) (if (eqnum d 0) \"..\" (strappend \"(\" (strappend (`b_cn v) (strappend (`b_fs (d - 1) 0 a v) \")\"))))\n`b_fs !d !i !a v = if (eqnum i a) \"\" (strappend \" \" (strappend (`b_show d (getField v i)) (`b_fs d (i + 1) a v)))\n`b_num !n = if (n < 0) (strappend \"-\" (`b_nump (0 - n))) (`b_nump n)\n`b_nump !n = if (n < 10) (strslice \"0123456789\" n (n + 1)) (strappend (`b_nump (n / 10)) (strslice \"0123456789\" (n % 10) (n % 10 + 1)))\n"
 
 // de naam via constrName (K`_Leaf), zonder de K`_ ervoor (zo lang als die van
-// K`_Nil, dat er altijd is, min 3): zo staat de naam niet als string in de
-// tekst (zie emitStr)
+// K`_Nil, dat er altijd is, min 3): het voorvoegsel vervangt de ` alleen
+// buiten strings (vvStr), dus "K`_" als string zou niet meeveranderen
 tonerNamen cs = "`b_cn v = strslice (constrName v) (strlen (constrName K`_Nil) - 3) (strlen (constrName v))\n"
 tonerAriteiten cs = strcat3 "`b_ar v = case v" (tonerTakken cs tonerAr) "\n"
 tonerAr (NCon n a) = list2str (itoa a)

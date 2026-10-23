@@ -59,9 +59,6 @@ nbItems 3 001
 nbMore 3 001
 nbFailed 1 0
 start 0 0
-__rangeStepGo 3 111
-__rangeGo 1 0
-__rangeStepGoOpen 2 00
 __deepEq 2 00
 __deepEqDispatch 4 1100
 __deepEqMixed 4 1100
