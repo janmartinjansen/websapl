@@ -1590,11 +1590,63 @@ function nbQueued(fn) {
   return p;
 }
 
+// Bewaarde waarden van het notebook (fase F, docs/2026-10-23_waarden_bewaren_
+// plan.md): pad -> bytes. Hier en niet alleen in het bestandssysteem van het
+// exemplaar: na een trap begint een vers exemplaar met een leeg
+// bestandssysteem. De pagina stuurt ze één keer per worker (NB_RUN.values,
+// uit IndexedDB); de worker zet ze vóór elke run in het bestandssysteem, met
+// een regel `@@restore <naam> <hash> <pad>` per bestand in de map van
+// `@@values` (de REPL zet een waarde alleen terug als de hash klopt).
+const nbValueStore = new Map();
+
+function nbValuesDir(input) {
+  const m = input.match(/^@@values (\S+)$/m);
+  return m ? m[1] : null;
+}
+
+function nbWithRestores(input) {
+  const dir = nbValuesDir(input);
+  if (!dir) return input;
+  mkdirsFor(rsInstance.FS, dir + "/x");
+  const lines = [];
+  for (const [p, bytes] of nbValueStore) {
+    const m = p.startsWith(dir + "/") && p.slice(dir.length + 1).match(/^([^./]+)\.([^/]+)\.val$/);
+    if (!m) continue;
+    rsInstance.FS.writeFile(p, bytes);
+    lines.push(`@@restore ${m[1]} ${m[2]} ${p}`);
+  }
+  return lines.length ? input + (input.endsWith("\n") ? "" : "\n") + lines.join("\n") + "\n" : input;
+}
+
+// Na een run: de nieuw bewaarde waarden (`@@saved <naam> <hash> <pad>`) in de
+// opslag, en per naam de oudere versies weg (ook uit het bestandssysteem).
+function nbCollectSaved(output) {
+  const saved = [];
+  for (const m of output.matchAll(/^@@saved (\S+) (\S+) (\S+)$/gm)) {
+    const [, name, hash, p] = m;
+    let bytes;
+    try { bytes = rsInstance.FS.readFile(p); } catch (_) { continue; }
+    const dir = p.slice(0, p.lastIndexOf("/"));
+    const removed = [];
+    for (const q of [...nbValueStore.keys()]) {
+      if (q !== p && q.startsWith(`${dir}/${name}.`) && q.endsWith(".val")) {
+        nbValueStore.delete(q);
+        removed.push(q);
+        try { rsInstance.FS.unlink(q); } catch (_) {}
+      }
+    }
+    nbValueStore.set(p, bytes);
+    saved.push({ name, hash, path: p, bytes, removed });
+  }
+  return saved;
+}
+
 async function nbRun(input, onProgress) {
   // Een verse sessie (de eerste run, of na een trap): de sleutels van de
   // interactieve cellen beginnen dan opnieuw, dus de pagina stopt de oude.
   const restarted = !rsInstance;
   if (!rsInstance) await rsStart();
+  input = nbWithRestores(input);
   mkdirsFor(rsInstance.FS, "/" + NB_INPUT);
   rsInstance.FS.writeFile("/" + NB_INPUT, input);
   const line = ":nb " + NB_INPUT;
@@ -1622,7 +1674,7 @@ async function nbRun(input, onProgress) {
     rsOnChar = null;
   }
   const text = rsText();
-  return { trapped: false, restarted, output: text.endsWith("repl> ") ? text.slice(0, -6) : text };
+  return { trapped: false, restarted, output: text.endsWith("repl> ") ? text.slice(0, -6) : text, saved: nbCollectSaved(text) };
 }
 
 // Een gebeurtenis voor een interactieve cel (fase E van het notebookplan,
@@ -1873,8 +1925,9 @@ self.onmessage = async function (e) {
     case "NB_RUN":
       nbQueued(async () => {
         try {
+          for (const v of msg.values || []) nbValueStore.set(v.path, v.bytes);
           const r = await nbRun(msg.input, (text) => postMessage({ type: "NOTEBOOK_PROGRESS", id: msg.id, text }));
-          postMessage({ type: "NB_RESULT", id: msg.id, success: true, output: r.output, trapped: r.trapped, restarted: r.restarted });
+          postMessage({ type: "NB_RESULT", id: msg.id, success: true, output: r.output, trapped: r.trapped, restarted: r.restarted, saved: r.saved || [] });
         } catch (err) {
           rsInstance = null;
           postMessage({ type: "NB_RESULT", id: msg.id, success: false, error: err.message });

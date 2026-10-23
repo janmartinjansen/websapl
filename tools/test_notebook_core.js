@@ -59,6 +59,15 @@ check("nb-invoer van boven naar beneden", nb.generateNbInput(nb.parseNotebook("/
 check("typewaarschuwingen", nb.parseNbOutput("@@typewarn 2 f: kan niet unificeren: Num met Str\n@@nbdone\n").typeWarnings, { 2: ["f: kan niet unificeren: Num met Str"] });
 check("instellingen", [nb.parseSettings("//%% [instellingen] volgorde=boven-naar-beneden\n//%%\n1\n").order, nb.parseSettings("//%%\n1\n").order], ["top", "any"]);
 
+// Waarden bewaren (fase F, docs/2026-10-23_waarden_bewaren_plan.md).
+check("instelling waarden=uit", [nb.parseSettings("//%% [instellingen] volgorde=boven-naar-beneden waarden=uit\n").values, nb.parseSettings("//%%\n1\n").values], [false, true]);
+check("waarden=uit in het bestand", nb.serializeNotebook([{ kind: "code", source: "1" }], { order: "top", values: false }).split("\n")[0], "//%% [instellingen] volgorde=boven-naar-beneden waarden=uit");
+check("@@values in de invoer", nb.generateNbInput([{ kind: "code", source: "x =: 1" }], null, "any", "/nbwaarden/a").input.split("\n").slice(0, 2), ["@@mode any", "@@values /nbwaarden/a"]);
+{
+  const p = nb.parseNbOutput("@@restored x\n@@restorestale y\n@@restorefailed z onbekende functie f\n@@saved x 12-34 /nbwaarden/a/x.12-34.val\n@@nbdone\n");
+  check("@@saved, @@restored en fouten", [p.saved, p.restored, p.valueErrors, p.loose || ""], [[{ name: "x", hash: "12-34", path: "/nbwaarden/a/x.12-34.val" }], ["x"], [{ name: "z", error: "onbekende functie f" }], ""]);
+}
+
 // 4. Uitvoer uitlezen (zoals de VM die schrijft; cel 3 stopt met `error`).
 const raw = [
   "VM starting for x", "execution started, progsize=10",
@@ -121,7 +130,7 @@ check("lc uitvoer", nb.parseLcOutput("execution started, progsize=1\nbanner\nlc>
 // 10. Formulieren (@@form, D.form/D.slider/D.choice; fase C van
 // docs/2026-10-15_notebook_integraal_plan.md).
 check("form record", nb.parseForm("record\tOpties\nfield\tnaam\tstr\ta\\tb \"c\"\nfield\tn\tint\t3\nfield\taan\tbool\tTrue"),
-  { kind: "record", con: "Opties", fields: [{ name: "naam", type: "str", value: "a\tb \"c\"" }, { name: "n", type: "int", value: "3" }, { name: "aan", type: "bool", value: "True" }] });
+  { kind: "record", con: "Opties", fields: [{ name: "naam", type: "str", value: "a\tb \"c\"", opts: [] }, { name: "n", type: "int", value: "3", opts: [] }, { name: "aan", type: "bool", value: "True", opts: [] }] });
 check("form slider", nb.parseForm("slider\tfloat\t0.25\t0\t1"), { kind: "slider", type: "float", value: "0.25", lo: "0", hi: "1" });
 check("form choice", nb.parseForm("choice\tgroen\trood\tgroen"), { kind: "choice", type: "str", value: "groen", options: ["rood", "groen"] });
 check("form value", nb.parseForm("value\tint\t12"), { kind: "value", type: "int", value: "12" });

@@ -45,6 +45,7 @@
       padding: 6px 12px; font: inherit; font-size: 13px; cursor: pointer;
     }
     button:hover, label.btn:hover { background: var(--bg-hover); }
+    label.chk { font-size: 13px; color: var(--text-2); display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
     button.primary { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
     button:disabled { opacity: .5; cursor: default; }
     .status { font-size: 12px; color: var(--muted); min-width: 110px; text-align: right; }
@@ -125,6 +126,7 @@
         <option value="any">in elke volgorde</option>
         <option value="top">van boven naar beneden</option>
       </select>
+      <label class="chk" title="Uitgerekende =:-waarden bewaren en bij een volgende sessie terugzetten, zolang hun cellen niet veranderen (wordt in het notebook bewaard)"><input type="checkbox" id="chk-values" checked /> waarden bewaren</label>
       <span class="status" id="status">engine laden…</span>
     </header>
     <div id="banner" class="banner" hidden></div>
@@ -154,7 +156,7 @@
 
   <script src="js/marked.min.js"></script>
   <script src="js/graphics_renderer.js?v=20260926_modtag"></script>
-  <script src="js/notebook_core.js?v=20261023c"></script>
+  <script src="js/notebook_core.js?v=20261023d"></script>
   <script>
   (function () {
     const NB = window.SaplNotebook;
@@ -203,6 +205,7 @@
       ready = false;
       setStatus("engine laden…");
       worker = new Worker("engine/worker.js?v=" + Date.now());
+      valuesInWorker = new Set();
       worker.onmessage = (e) => {
         const m = e.data;
         if (m.type === "INIT_DONE") {
@@ -315,7 +318,8 @@
       try {
         if (exprT.size || defT.length || typeT.size) { n += exprT.size + typeT.size; await runProgram(exprT, defT, typeT); }
         if (lcT) { n += 1; await runLc(); }
-        setStatus(`klaar (${Math.round(performance.now() - t0)} ms, ${targets.size === cells.length ? "alles" : targets.size + " cel" + (targets.size === 1 ? "" : "len")})`);
+        const rest = lastRestored ? `, ${lastRestored} ${lastRestored === 1 ? "waarde" : "waarden"} teruggezet` : "";
+        setStatus(`klaar (${Math.round(performance.now() - t0)} ms, ${targets.size === cells.length ? "alles" : targets.size + " cel" + (targets.size === 1 ? "" : "len")}${rest})`);
       } catch (err) {
         showBanner(err.message);
         for (const i of targets) if (cells[i] && cells[i].output && cells[i].output.pending) cells[i].output = { notRun: true };
@@ -331,12 +335,16 @@
     // invoer; de engine compileert zelf alleen wat veranderde, typeert de
     // expressiecellen (Bool als True/False) en zet elke cel in een eigen try.
     async function runProgram(exprT, defT, typeT) {
-      const gen = NB.generateNbInput(cells, new Set([...exprT, ...typeT]), settings.order);
+      const vdir = valuesDir();
+      const gen = NB.generateNbInput(cells, new Set([...exprT, ...typeT]), settings.order, vdir);
       progressText = "";
       currentGen = gen;
+      lastRestored = 0;
+      const msg = { type: "NB_RUN", input: gen.input };
+      if (!SERVER && vdir && !valuesInWorker.has(vdir)) msg.values = await valuesLoad(vdir);
       let r;
       try {
-        r = await call({ type: "NB_RUN", input: gen.input }, TIMEOUT_MS);
+        r = await call(msg, TIMEOUT_MS);
       } catch (err) {
         stopAllWidgets("de engine is opnieuw gestart: voer de cel opnieuw uit");
         const parsed = NB.parseNbOutput(progressText);
@@ -362,6 +370,9 @@
         return;
       }
       const p = NB.parseNbOutput(r.output);
+      if (!SERVER && vdir) { valuesInWorker.add(vdir); if (r.saved && r.saved.length) valuesStore(r.saved); }
+      lastRestored = p.restored.length;
+      for (const e of p.valueErrors) console.info(`waarde ${e.name}: ${e.error}`);
       for (const i of defT) cells[i].output = { def: true, warnings: p.typeWarnings[i] || [], defs: p.defs[i] || (p.defsSame.includes(i) && cells[i].output && cells[i].output.defs) || [] };
       for (const i of typeT) cells[i].output = { types: p.types[i] || [] };
       // Alle definitiecellen gaan mee: een fout ook tonen bij een cel die
@@ -388,6 +399,53 @@
       });
       const banner = [p.error, p.loose].filter(Boolean).join("\n");
       if (banner) showBanner(banner);
+    }
+
+    // ---- bewaarde waarden (fase F, docs/2026-10-23_waarden_bewaren_plan.md) --
+    // Na een run bewaart de REPL elke uitgerekende `=:`-waarde; in een
+    // volgende sessie (de pagina opnieuw geopend) zet hij die terug, als de
+    // cel en alles waar ze van afhangt nog hetzelfde is (een hash per cel).
+    // WebSapl: in IndexedDB (pad -> bytes), één keer per worker meegestuurd.
+    // Workbench: de REPL schrijft zelf in notebooks/.waarden/ (niet in git).
+    let valuesInWorker = new Set();   // mappen die de worker al heeft
+    let lastRestored = 0;
+
+    function valuesDir() {
+      if (settings.values === false) return null;
+      const key = fileName.replace(/^notebooks\//, "").replace(/\.spp$/, "").replace(/[^A-Za-z0-9_-]+/g, "_");
+      return (SERVER ? "notebooks/.waarden/" : "/nbwaarden/") + key;
+    }
+
+    function valuesDb() {
+      return new Promise((resolve, reject) => {
+        const rq = indexedDB.open("websapl_waarden", 1);
+        rq.onupgradeneeded = () => rq.result.createObjectStore("waarden");
+        rq.onsuccess = () => resolve(rq.result);
+        rq.onerror = () => reject(rq.error);
+      });
+    }
+
+    // De bewaarde waarden in `dir`: [{ path, bytes }] (leeg als IndexedDB er
+    // niet is, bv. in een privévenster).
+    async function valuesLoad(dir) {
+      try {
+        const db = await valuesDb();
+        const range = IDBKeyRange.bound(dir + "/", dir + "/\uffff");
+        const tx = db.transaction("waarden", "readonly").objectStore("waarden");
+        const [keys, vals] = await Promise.all([tx.getAllKeys(range), tx.getAll(range)].map((rq) => new Promise((res, rej) => { rq.onsuccess = () => res(rq.result); rq.onerror = () => rej(rq.error); })));
+        return keys.map((k, i) => ({ path: k, bytes: vals[i] }));
+      } catch (_) { return []; }
+    }
+
+    async function valuesStore(saved) {
+      try {
+        const db = await valuesDb();
+        const st = db.transaction("waarden", "readwrite").objectStore("waarden");
+        for (const v of saved) {
+          for (const old of v.removed || []) st.delete(old);
+          st.put(v.bytes, v.path);
+        }
+      } catch (_) {}
     }
 
     async function runLc() {
@@ -1001,6 +1059,7 @@
       cells = NB.parseNotebook(text).map((c) => ({ ...c, output: null }));
       settings = NB.parseSettings(text);
       el("sel-order").value = settings.order;
+      el("chk-values").checked = settings.values !== false;
       fileName = name || "notebook.spp";
       save(); renderAll(); hideBanner();
       loaded = true;
@@ -1068,6 +1127,10 @@
       settings.order = e.target.value;
       save();
       setStatus("volgorde gewijzigd: voer opnieuw uit");
+    });
+    el("chk-values").addEventListener("change", (e) => {
+      settings.values = e.target.checked;
+      save();
     });
     el("btn-add-code").addEventListener("click", () => addCell("code"));
     el("btn-add-md").addEventListener("click", () => addCell("markdown"));

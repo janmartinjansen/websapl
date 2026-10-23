@@ -45,7 +45,15 @@ const mark = `document.getElementById("status").textContent = "(wacht)"; window.
     : spawn("python3", ["-m", "http.server", String(HTTP_PORT)], { cwd: path.join(repo, "websapl"), stdio: "ignore" });
   const profile = fs.mkdtempSync(path.join(os.tmpdir(), "nbtest-"));
   const chrome = spawn(CHROME, ["--headless=new", "--disable-gpu", `--remote-debugging-port=${CDP_PORT}`, `--user-data-dir=${profile}`, "about:blank"], { stdio: "ignore" });
-  const cleanup = () => { chrome.kill(); server.kill(); try { fs.unlinkSync(TEST_NB); } catch (_) {} };
+  // Workbench: de bewaarde waarden van de notebooks die de toets opent
+  // (notebooks/.waarden/<naam>); alleen wat er vóór de toets nog niet was weg.
+  const VALS = path.join(repo, "notebooks", ".waarden");
+  const valsBefore = new Set(fs.existsSync(VALS) ? fs.readdirSync(VALS) : []);
+  const cleanup = () => {
+    chrome.kill(); server.kill(); try { fs.unlinkSync(TEST_NB); } catch (_) {}
+    if (fs.existsSync(VALS)) for (const d of fs.readdirSync(VALS)) if (!valsBefore.has(d)) fs.rmSync(path.join(VALS, d), { recursive: true, force: true });
+    try { fs.rmdirSync(VALS); } catch (_) {}   // alleen als hij leeg is
+  };
   try {
     let targets = [];
     for (let i = 0; i < 50 && !targets.length; i++) { try { targets = (await (await fetch(`http://127.0.0.1:${CDP_PORT}/json`)).json()).filter((t) => t.type === "page"); } catch (_) {} await sleep(200); }
@@ -145,6 +153,26 @@ const mark = `document.getElementById("status").textContent = "(wacht)"; window.
     check("somtype: terug, met standaardwaarden", /\bv = Cirkel 0\.0 Rood\b/.test(await ev(src0)), await ev(src0));
     st = await act(`const k = ${kleurSel(3)}; k.value = "Blauw"; k.dispatchEvent(new Event("change"));`);
     check("record met een veld van type Kleur: keuzelijst", /\bpen = Pen 2 Blauw\b/.test(await ev(src0)) && /Blauw/.test(st[6]), st.join("\n") + "\n" + await ev(src0));
+
+    // Waarden bewaren over sessies heen (fase F, docs/2026-10-23_waarden_
+    // bewaren_plan.md): een verse sessie (WebSapl: de pagina opnieuw, met een
+    // nieuwe worker en de waarden uit IndexedDB; Workbench: een nieuw
+    // rs-driver-proces, de waarden in notebooks/.waarden/) zet de `=:`-waarde
+    // terug in plaats van haar opnieuw uit te rekenen.
+    writeNb("fib n = if (n < 2) n (fib (n - 1) + fib (n - 2))\ntabel =: [fib k | k <- [1 .. 22]]\nsom xs = case xs (Nil -> 0) (Cons x r -> x + som r)", "som tabel");
+    st = await open("notebooks/_browser_test.spp");
+    check("waarden: eerste run rekent", st[3] === "46367" && !/teruggezet/.test(st[0]), st.join("\n"));
+    if (WB) {
+      const vdir = path.join(repo, "notebooks", ".waarden", "_browser_test");
+      check("waarden: bewaard in notebooks/.waarden/", fs.existsSync(vdir) && fs.readdirSync(vdir).some((f) => /^tabel\..*\.val$/.test(f)), fs.existsSync(vdir) ? fs.readdirSync(vdir).join() : "geen map");
+      spawnSync("pkill", ["-TERM", "-P", String(server.pid), "rs-driver"]);
+      await sleep(300);
+      st = await act(`document.getElementById("btn-run").click();`);
+    } else st = await open("notebooks/_browser_test.spp");
+    check("waarden: verse sessie zet tabel terug", st[3] === "46367" && /1 waarde teruggezet/.test(st[0]), st.join("\n"));
+    await ev(`document.getElementById("chk-values").click()`);
+    const savedV = await ev(`JSON.parse(localStorage.getItem("${STORE_KEY}")).text.split("\\n")[0]`);
+    check("waarden uit: in de instellingenregel van het bestand", savedV === "//%% [instellingen] waarden=uit", savedV);
 
     // Interactieve cellen (fase E): notebooks/interactief.spp, de zeef (cel 3)
     // en de bal (cel 6). Getoetst op de widgets en het protocol, niet op

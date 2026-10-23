@@ -53,3 +53,13 @@ map zelf al uit van de scan).
   node websapl/tools/jvb_paths_test.js
   node websapl/tools/jvb_browser_test.js
   ```
+
+- **`notebook_values_test.js`** — waarden bewaren over sessies heen (fase F,
+  `docs/2026-10-23_waarden_bewaren_plan.md`): een run met `@@values` bewaart
+  de uitgerekende `=:`-waarden, een verse sessie zet ze terug (`:sprint`
+  toont ze uitgerekend vóór er een cel rekent), een gewijzigde cel niet; en
+  een waarde die de native REPL bewaarde komt in de worker terug:
+
+  ```bash
+  node websapl/tools/notebook_values_test.js
+  ```

@@ -47,12 +47,14 @@
   // zodat bestaande notebooks niet veranderen.
   const SETTINGS_RE = /^\/\/%% \[instellingen\](.*)$/;
 
-  /** { order: "any" | "top" } */
+  /** { order: "any" | "top", values: true | false } (`waarden=uit`: geen
+   * waarden bewaren over sessies heen, fase F) */
   function parseSettings(text) {
-    const settings = { order: "any" };
+    const settings = { order: "any", values: true };
     for (const line of text.replace(/\r\n/g, "\n").split("\n")) {
       const m = line.match(SETTINGS_RE);
       if (m && /\bvolgorde=boven-naar-beneden\b/.test(m[1])) settings.order = "top";
+      if (m && /\bwaarden=uit\b/.test(m[1])) settings.values = false;
     }
     return settings;
   }
@@ -102,7 +104,10 @@
 
   function serializeNotebook(cells, settings) {
     const out = [];
-    if (settings && settings.order === "top") out.push("//%% [instellingen] volgorde=boven-naar-beneden");
+    const set = [];
+    if (settings && settings.order === "top") set.push("volgorde=boven-naar-beneden");
+    if (settings && settings.values === false) set.push("waarden=uit");
+    if (set.length) out.push("//%% [instellingen] " + set.join(" "));
     for (const c of cells) {
       out.push(c.kind === "code" ? "//%%" : `//%% [${c.kind}]`);
       const lines = c.source.split("\n");
@@ -390,8 +395,12 @@
   // mode: "any" (in elke volgorde, één letrec) of "top" (van boven naar
   // beneden). Resultaat: { input, exprCells: [{ cell, n }], errors }; errors:
   // cellen die classifyCell afwijst.
-  function generateNbInput(cells, only, mode) {
+  // `valuesDir`: waarden bewaren in die map (fase F,
+  // docs/2026-10-23_waarden_bewaren_plan.md): de REPL schrijft er elke
+  // uitgerekende `=:`-CAF in, de motor zet er `@@restore`-regels bij.
+  function generateNbInput(cells, only, mode, valuesDir) {
     const out = [`@@mode ${mode === "top" ? "top" : "any"}`];
+    if (valuesDir) out.push(`@@values ${valuesDir}`);
     // Het definitiepaneel: de REPL stuurt alleen de regels van opnieuw
     // gecompileerde cellen (`@@defsame <cel>` voor de rest). Heeft een
     // definitiecel nog geen paneel (eerste run op deze pagina), dan alles.
@@ -423,7 +432,10 @@
    * definitiecellen; de code draait wel), defs { cellIndex: [{ name, type }] }
    * (wat een definitiecel definieert, met het type als dat er is; sinds 10
    * oktober 2026), defsSame [cellIndex] (cellen die niet opnieuw
-   * gecompileerd zijn: houd hun vorige defs) en done (de regel @@nbdone kwam).
+   * gecompileerd zijn: houd hun vorige defs), done (de regel @@nbdone kwam),
+   * en de bewaarde waarden (fase F): saved [{ name, hash, path }], restored
+   * [naam] en valueErrors [{ name, error }] (terugzetten of bewaren mislukt;
+   * de cel rekent dan gewoon).
    */
   function parseNbOutput(raw) {
     const defErrors = {};
@@ -434,6 +446,7 @@
     const stale = [];
     const general = [];
     const rest = [];
+    const saved = [], restored = [], valueErrors = [];
     let done = false;
     for (const line of raw.split("\n")) {
       const d = line.match(/^@@deferror (-?\d+) (.*)$/);
@@ -444,7 +457,14 @@
       const df = line.match(/^@@def (-?\d+) (\S+)(?: :: (.*))?$/);
       const ds = line.match(/^@@defsame (-?\d+)$/);
       const st = line.match(/^@@stale (\S+)$/);
+      const sv = line.match(/^@@saved (\S+) (\S+) (.+)$/);
+      const rs = line.match(/^@@restored (\S+)$/);
+      const rf = line.match(/^@@(?:restorefailed|savefailed) (\S+) ?(.*)$/);
       if (st) stale.push(st[1]);
+      else if (sv) saved.push({ name: sv[1], hash: sv[2], path: sv[3] });
+      else if (rs) restored.push(rs[1]);
+      else if (rf) valueErrors.push({ name: rf[1], error: rf[2] });
+      else if (/^@@restorestale \S+$/.test(line)) continue;
       else if (df) (defs[+df[1]] = defs[+df[1]] || []).push({ name: df[2], type: df[3] || "" });
       else if (ds) defsSame.push(+ds[1]);
       else if (tw) (typeWarnings[+tw[1]] = typeWarnings[+tw[1]] || []).push(tw[2]);
@@ -457,7 +477,7 @@
     }
     const parsed = parseOutput(rest.join("\n"));
     if (defErrors[-1]) general.unshift("uitvoerlaag: " + defErrors[-1]);
-    return { cells: parsed.cells, loose: parsed.loose, defErrors, types, typeWarnings, defs, defsSame, stale, error: general.join("\n"), done };
+    return { cells: parsed.cells, loose: parsed.loose, defErrors, types, typeWarnings, defs, defsSame, stale, saved, restored, valueErrors, error: general.join("\n"), done };
   }
 
   // == Formulieren (fase C van docs/2026-10-15_notebook_integraal_plan.md) ==
