@@ -31,7 +31,8 @@ function check(name, ok, detail) {
   const progs = fs.readdirSync(path.join(repo, "benchmarks")).filter((n) => n.endsWith(".cfp"))
     .map((n) => [`benchmarks/${n}`, true])
     .concat([["benchmarks/fib.cfp", false], ["benchmarks/knights.cfp", false], ["benchmarks/queens.cfp", false],
-      ["examples/float_constanten.cfp", true], ["tests/caf/keten.cfp", true], ["tests/caf/gc.cfp", true]]);
+      ["examples/float_constanten.cfp", true], ["tests/caf/keten.cfp", true], ["tests/caf/gc.cfp", true],
+      ["tests/dynamics/sprint.cfp", true], ["tests/dynamics/unpack.cfp", true]]);
   for (const [rel, strict] of progs) {
     const name = `${rel}${strict ? "" : " --nostrict"}`;
     const b = path.basename(rel, ".cfp");
@@ -45,7 +46,9 @@ function check(name, ok, detail) {
     if (!f) continue;
     const r = await call({ type: "RUN", contentOrPath: f.content, isPath: false, stdin: "" });
     const want = banner(native(["runfast", path.join(tmp, `${b}.jmvm`)], ""));
-    const got = banner(r.output);
+    // De worker geeft de bytes van stdout als losse tekens terug
+    // (String.fromCharCode per byte); native is UTF-8 (⟨ in tests/dynamics).
+    const got = banner(Buffer.from(r.output, "latin1").toString("utf8"));
     check(`${name}: uitvoer gelijk aan native (${r.metrics.res})`, JSON.stringify(got) === JSON.stringify(want), `${JSON.stringify(got).slice(0, 200)} tegen ${JSON.stringify(want).slice(0, 200)}`);
   }
 
