@@ -147,6 +147,7 @@ const ENTRIES = [
   { src: "notebooks/data/fruit.csv", dst: "notebooks/data/fruit.csv" },
   { src: "notebooks/kennismaking.spp", dst: "notebooks/kennismaking.spp" },
   { src: "notebooks/formulieren.spp", dst: "notebooks/formulieren.spp" },
+  { src: "notebooks/interactief.spp", dst: "notebooks/interactief.spp" },
   { src: "notebooks/vm_metingen.spp", dst: "notebooks/vm_metingen.spp" },
   { src: "notebooks/data/meting_info.csv", dst: "notebooks/data/meting_info.csv" },
   { src: "notebooks/data/benchmarks.csv", dst: "notebooks/data/benchmarks.csv" },

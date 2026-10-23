@@ -185,7 +185,7 @@
     for (const line of body) {
       const begin = line.match(/^@@begin (\d+)$/);
       const end = line.match(/^@@end (\d+)$/);
-      const kind = line.match(/^@@(value|text|markdown|table|graphics|form)$/);
+      const kind = line.match(/^@@(value|text|markdown|table|graphics|form|interactive)$/);
       if (begin) {
         cur = { blocks: [], ended: false };
         result[+begin[1]] = cur;
@@ -431,6 +431,7 @@
     const typeWarnings = {};
     const defs = {};
     const defsSame = [];
+    const stale = [];
     const general = [];
     const rest = [];
     let done = false;
@@ -442,7 +443,9 @@
       const tw = line.match(/^@@typewarn (-?\d+) (.*)$/);
       const df = line.match(/^@@def (-?\d+) (\S+)(?: :: (.*))?$/);
       const ds = line.match(/^@@defsame (-?\d+)$/);
-      if (df) (defs[+df[1]] = defs[+df[1]] || []).push({ name: df[2], type: df[3] || "" });
+      const st = line.match(/^@@stale (\S+)$/);
+      if (st) stale.push(st[1]);
+      else if (df) (defs[+df[1]] = defs[+df[1]] || []).push({ name: df[2], type: df[3] || "" });
       else if (ds) defsSame.push(+ds[1]);
       else if (tw) (typeWarnings[+tw[1]] = typeWarnings[+tw[1]] || []).push(tw[2]);
       else if (tok) (types[+tok[1]] = types[+tok[1]] || []).push({ expr: tok[2], type: tok[3] });
@@ -454,7 +457,7 @@
     }
     const parsed = parseOutput(rest.join("\n"));
     if (defErrors[-1]) general.unshift("uitvoerlaag: " + defErrors[-1]);
-    return { cells: parsed.cells, loose: parsed.loose, defErrors, types, typeWarnings, defs, defsSame, error: general.join("\n"), done };
+    return { cells: parsed.cells, loose: parsed.loose, defErrors, types, typeWarnings, defs, defsSame, stale, error: general.join("\n"), done };
   }
 
   // == Formulieren (fase C van docs/2026-10-15_notebook_integraal_plan.md) ==
@@ -479,6 +482,28 @@
     if (head[0] === "slider") return { kind: "slider", type: head[1], value: head[2], lo: head[3], hi: head[4] };
     if (head[0] === "choice") return { kind: "choice", type: "str", value: head[1], options: head.slice(2) };
     return null;
+  }
+
+  // == Interactieve cellen (fase E, 23 oktober 2026) ======================
+  // `D.interactive model update view` (lib/display.spp): de cel begint met een
+  // blok @@interactive met "<sleutel> <ms>", daarna de weergave van view. Een
+  // gebeurtenis gaat als `:nbmsg <sleutel> <gebeurtenis>` naar de sessie;
+  // het antwoord is weer zo'n cel (of `@@stale <sleutel>`).
+
+  /** Het @@interactive-blok: { tok, ms }; null als het niet te lezen is. */
+  function parseInteractive(content) {
+    const m = String(content).trim().match(/^(\d+_\d+) (\d+)$/);
+    return m ? { tok: m[1], ms: +m[2] } : null;
+  }
+
+  function escapeField(s) {
+    return String(s).replace(/\\/g, "\\\\").replace(/\t/g, "\\t").replace(/\n/g, "\\n");
+  }
+
+  /** Een gebeurtenis als regel: soort en velden gescheiden door een tab
+   * (lib/notebook_glue.cfp, nbEvent): click x y, key naam, tick ms, input veld waarde. */
+  function eventLine(kind, ...fields) {
+    return [kind, ...fields].map(escapeField).join("\t");
   }
 
   /** De naam die een formuliercel bewerkt: het laatste argument, als dat een kale naam is. */
@@ -596,6 +621,7 @@
     parseNotebook, serializeNotebook, classifyCell, parseOutput, definedNames, cafHintNames,
     referencedNames, providedNames, dependents, lcInput, parseLcOutput,
     parseForm, formBinding, findDefinition, saplLiteral, splitArgs, rewriteDefinition,
+    parseInteractive, eventLine,
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.SaplNotebook = api;

@@ -1,0 +1,75 @@
+//%% [markdown]
+// # Interactieve cellen: een model dat reageert
+//
+// `D.interactive model0 update view` maakt een cel met een eigen model, zoals
+// in Elm. `view model` bepaalt wat je ziet (een plaatje, tabel of tekst); een
+// klik in de uitvoer of een toets (klik eerst in de uitvoer, dan heeft die de
+// focus) is een `D.Event`, en `update gebeurtenis model` geeft het volgende
+// model. `D.animated ms ...` geeft daarnaast elke `ms` milliseconden een
+// `D.Tick`.
+//
+// Het model blijft in de sessie, niet in het bestand: de cel opnieuw
+// uitvoeren begint weer bij `model0`. Onder de uitvoer staat hoe lang één
+// gebeurtenis duurt (heen en terug).
+//%% [markdown]
+// ## De zeef van Eratosthenes, stap voor stap
+//
+// Elke klik (of toets) zoekt het volgende priemgetal `p` (groen) en streept
+// zijn veelvouden door (grijs).
+//%%
+import "lib/list.spp" as L
+import "lib/text.spp" as T
+
+::Zeef = { !p : Int, !weg : [Int] }
+
+grens = 60
+kolommen = 10
+
+zeefBegin = Zeef 1 []
+
+zeefStap ev z = case ev
+  (D.Click x y -> volgende z)
+  (D.Key k -> volgende z)
+  (_ -> z)
+
+volgende z = case (L.filter (\m -> L.elem m (weg z) == False) (L.range (p z + 1) grens))
+  (Nil -> z)
+  (Cons q rest -> Zeef q (L.append (weg z) [q * q, q * q + q .. grens]))
+
+zeefBeeld z = D.picture (L.concatMap (vakje z) (L.range 2 grens))
+
+vakje z m =
+  let k = m - 2,
+      x = itof (k % kolommen) * 0.19 - 0.88,
+      y = 0.8 - itof (k / kolommen) * 0.3,
+      kleur = if (L.elem m (weg z)) 8 (if (m <= p z) 10 15) in
+  [G.GraphDisc kleur (G.Pt (x - 0.08) (y - 0.12)) (G.Pt (x + 0.08) (y + 0.12)),
+   G.GraphText 0 (G.Pt (x - 0.05) (y - 0.03)) (T.showInt m)]
+//%%
+D.interactive zeefBegin zeefStap zeefBeeld
+//%% [markdown]
+// ## Een bal die stuitert
+//
+// Elke 40 ms een `Tick`: de bal beweegt en kaatst tegen de randen. Een klik
+// zet de bal op die plek; een toets keert de richting om.
+//%%
+::Bal = { !bx : Float, !by : Float, !vx : Float, !vy : Float }
+
+balBegin = Bal 0.0 0.0 0.031 0.022
+
+balStap ev b = case ev
+  (D.Tick t -> beweeg b)
+  (D.Click x y -> Bal x y (vx b) (vy b))
+  (D.Key k -> Bal (bx b) (by b) (0.0 - vx b) (0.0 - vy b))
+  (_ -> b)
+
+beweeg b =
+  let nvx = if (bx b + vx b > 0.9 \/ bx b + vx b < 0.0 - 0.9) (0.0 - vx b) (vx b),
+      nvy = if (by b + vy b > 0.9 \/ by b + vy b < 0.0 - 0.9) (0.0 - vy b) (vy b) in
+  Bal (bx b + nvx) (by b + nvy) nvx nvy
+
+balBeeld b = D.picture
+  [G.GraphRectangle 7 (G.Pt (0.0 - 0.95) (0.0 - 0.95)) (G.Pt 0.95 0.95),
+   G.GraphDisc 12 (G.Pt (bx b - 0.06) (by b - 0.06)) (G.Pt (bx b + 0.06) (by b + 0.06))]
+//%%
+D.animated 40 balBegin balStap balBeeld

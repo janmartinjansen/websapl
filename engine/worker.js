@@ -1591,6 +1591,9 @@ function nbQueued(fn) {
 }
 
 async function nbRun(input, onProgress) {
+  // Een verse sessie (de eerste run, of na een trap): de sleutels van de
+  // interactieve cellen beginnen dan opnieuw, dus de pagina stopt de oude.
+  const restarted = !rsInstance;
   if (!rsInstance) await rsStart();
   mkdirsFor(rsInstance.FS, "/" + NB_INPUT);
   rsInstance.FS.writeFile("/" + NB_INPUT, input);
@@ -1614,9 +1617,30 @@ async function nbRun(input, onProgress) {
   } catch (e) {
     rsInstance = null;
     rsJournal = [];
-    return { trapped: true, output: rsText() };
+    return { trapped: true, restarted, output: rsText() };
   } finally {
     rsOnChar = null;
+  }
+  const text = rsText();
+  return { trapped: false, restarted, output: text.endsWith("repl> ") ? text.slice(0, -6) : text };
+}
+
+// Een gebeurtenis voor een interactieve cel (fase E van het notebookplan,
+// 23 oktober 2026): `:nbmsg <sleutel> <gebeurtenis>` in dezelfde REPL als de
+// runs (via nbQueued, nooit midden in een run). Rechtstreeks gevoerd, niet via
+// rsEval: een gebeurtenis hoort niet in rsJournal, anders zou een herstart na
+// een wasm-trap elke tik opnieuw afspelen. Na een trap is de sessie weg (en
+// daarmee het model): de pagina stopt dan haar interactieve cellen.
+async function nbMsg(tok, ev) {
+  if (!rsInstance) return { trapped: true, output: "" };
+  const line = ":nbmsg " + tok + " " + ev;
+  rsOutput = [];
+  try {
+    rsInstance.ccall("jmvm_rs_feed", "number", ["string"], [line]);
+  } catch (e) {
+    rsInstance = null;
+    rsJournal = [];
+    return { trapped: true, output: rsText() };
   }
   const text = rsText();
   return { trapped: false, output: text.endsWith("repl> ") ? text.slice(0, -6) : text };
@@ -1850,10 +1874,21 @@ self.onmessage = async function (e) {
       nbQueued(async () => {
         try {
           const r = await nbRun(msg.input, (text) => postMessage({ type: "NOTEBOOK_PROGRESS", id: msg.id, text }));
-          postMessage({ type: "NB_RESULT", id: msg.id, success: true, output: r.output, trapped: r.trapped });
+          postMessage({ type: "NB_RESULT", id: msg.id, success: true, output: r.output, trapped: r.trapped, restarted: r.restarted });
         } catch (err) {
           rsInstance = null;
           postMessage({ type: "NB_RESULT", id: msg.id, success: false, error: err.message });
+        }
+      });
+      break;
+
+    case "NB_MSG":
+      nbQueued(async () => {
+        try {
+          const r = await nbMsg(msg.tok, msg.event);
+          postMessage({ type: "NB_MSG_RESULT", id: msg.id, success: true, output: r.output, trapped: r.trapped });
+        } catch (err) {
+          postMessage({ type: "NB_MSG_RESULT", id: msg.id, success: false, error: err.message });
         }
       });
       break;

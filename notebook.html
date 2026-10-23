@@ -96,6 +96,10 @@
     .nb-form .bad { border-color: var(--err) !important; }
     .nb-form .ro { color: var(--muted); font-family: var(--font-mono); }
     .out canvas { width: min(100%, 380px); aspect-ratio: 1; display: block; border-radius: 8px; border: 1px solid var(--border); }
+    .nb-interactive { display: inline-block; max-width: 100%; cursor: pointer; border-radius: 8px; outline: none; }
+    .nb-interactive:focus-visible, .nb-interactive:focus { box-shadow: 0 0 0 2px var(--accent, #4a7dff); }
+    .nb-interactive-foot { font-size: 11px; color: var(--text-2); font-family: var(--font-mono); margin-top: 2px; min-height: 1em; }
+    .nb-interactive-foot.err { color: var(--err, #c0392b); }
     .add-row { display: flex; gap: 8px; margin-left: 52px; }
     .help { color: var(--muted); font-size: 12px; margin: 30px 0 0 52px; }
     .help code { font-family: var(--font-mono); }
@@ -112,6 +116,7 @@
         <option value="notebooks/kennismaking.spp">Kennismaking</option>
         <option value="notebooks/data_verkennen.spp">Data verkennen</option>
         <option value="notebooks/formulieren.spp">Formulieren</option>
+        <option value="notebooks/interactief.spp">Interactieve cellen</option>
         <option value="notebooks/vm_metingen.spp">Metingen aan VM en compiler</option>
       </select>
       <label class="btn" title="Een .spp-notebook openen">Openen<input type="file" id="file-open" accept=".spp,.txt" /></label>
@@ -149,7 +154,7 @@
 
   <script src="js/marked.min.js"></script>
   <script src="js/graphics_renderer.js?v=20260926_modtag"></script>
-  <script src="js/notebook_core.js?v=20261008"></script>
+  <script src="js/notebook_core.js?v=20261023"></script>
   <script>
   (function () {
     const NB = window.SaplNotebook;
@@ -242,6 +247,7 @@
         }
         return r;
       }
+      if (msg.type === "NB_MSG") return post("/api/notebook/nbmsg", { tok: msg.tok, event: msg.event });
       if (msg.type === "LC_RUN") {
         const r = await post("/api/notebook/lc", { stdin: msg.stdin });
         if (r.timedOut) throw new Error(`lc_repl: geen antwoord binnen ${TIMEOUT_MS / 1000} s (divergente term?).`);
@@ -256,6 +262,7 @@
         const id = ++seq;
         const timer = setTimeout(() => {
           pending.delete(id);
+          stopAllWidgets("de engine is opnieuw gestart: voer de cel opnieuw uit");
           // Een oneindige berekening stopt de VM niet; de worker vervangen.
           worker.terminate();
           startWorker();
@@ -331,6 +338,7 @@
       try {
         r = await call({ type: "NB_RUN", input: gen.input }, TIMEOUT_MS);
       } catch (err) {
+        stopAllWidgets("de engine is opnieuw gestart: voer de cel opnieuw uit");
         const parsed = NB.parseNbOutput(progressText);
         let hung = false;
         for (const e of gen.exprCells) {
@@ -343,6 +351,9 @@
         for (const i of typeT) cells[i].output = { notRun: true };
         throw err;
       }
+      // Een verse sessie (of een trap/tijdslimiet): de sleutels beginnen
+      // opnieuw, dus geen enkel oud widget mag nog een gebeurtenis sturen.
+      if (r.restarted || r.trapped || r.timedOut) stopAllWidgets("de engine is opnieuw gestart: voer de cel opnieuw uit");
       if (!r.success) {
         showBanner(r.error);
         for (const e of gen.exprCells) cells[e.cell].output = { notRun: true };
@@ -409,6 +420,7 @@
       cells.forEach((c, i) => host.appendChild(renderCell(c, i)));
       el("nb-name").textContent = fileName;
       host.querySelectorAll("textarea").forEach(autoGrow);
+      sweepWidgets();
     }
 
     function renderCell(c, i) {
@@ -489,6 +501,7 @@
         if (c) row.classList.toggle("stale", !!c.stale);
         if (c && out) fillOutput(out, c);
       });
+      sweepWidgets();
     }
 
     function fillOutput(out, c) {
@@ -501,6 +514,7 @@
         out._form.update(NB.parseForm(o.blocks[0].content));
         return;
       }
+      if (o && o.blocks && o.blocks.length && o.blocks[0].kind === "interactive") { out._form = null; return renderInteractive(out, c, o.blocks); }
       out._form = null;
       out.innerHTML = "";
       if (!o || c.kind === "markdown") return;
@@ -535,7 +549,12 @@
       }
       if (o.error) return pre("err", o.error);
       if (o.notRun) return pre("note", o.afterStop ? "niet uitgevoerd: een eerdere cel stopte" : "niet uitgevoerd");
-      for (const b of o.blocks || []) {
+      renderBlocks(out, c, o.blocks || []);
+    }
+
+    function renderBlocks(out, c, blocks) {
+      const pre = (cls, text) => { const p = document.createElement("pre"); p.className = cls; p.textContent = text; out.appendChild(p); };
+      for (const b of blocks) {
         if (b.kind === "value" || b.kind === "text") pre("", b.content);
         else if (b.kind === "print") pre("print", b.content);
         else if (b.kind === "markdown") { const d = document.createElement("div"); d.className = "md-view"; d.innerHTML = marked.parse(b.content); out.appendChild(d); }
@@ -546,6 +565,174 @@
           out.appendChild(cv);
           requestAnimationFrame(() => new SaplGraphicsRenderer(cv).renderOutput(b.content));
         }
+      }
+    }
+
+    // ---- interactieve cellen (D.interactive, D.animated; fase E) ---------
+    // Per sleutel één widget, dat renderAll overleeft (het wordt in de nieuwe
+    // uitvoer gehangen). Een klik in de uitvoer of een toets (als de uitvoer de
+    // focus heeft) gaat als `:nbmsg` naar de sessie; het antwoord is de nieuwe
+    // weergave. Hooguit één gebeurtenis tegelijk onderweg; een tik pas na het
+    // antwoord op de vorige. Een widget stopt zodra zijn cel iets anders toont
+    // (opnieuw uitgevoerd, verwijderd, ander notebook) of de sessie weg is.
+    const widgets = new Map();   // sleutel -> widget
+    window.__nbWidgets = widgets;   // voor de toetsen (notebook_browser_test.js)
+    // Gestopte sleutels (met de reden): zo'n cel toont haar laatste beeld,
+    // zonder gebeurtenissen, tot ze opnieuw draait. Anders maakte de volgende
+    // weergave er weer een widget van, met een sleutel die na een herstart
+    // bij een andere cel kan horen.
+    const deadToks = new Map();
+
+    function renderInteractive(out, c, blocks) {
+      const info = NB.parseInteractive(blocks[0].content);
+      if (!info) { out.innerHTML = '<pre class="err">onleesbare interactieve cel</pre>'; return; }
+      if (deadToks.has(info.tok)) {
+        out.innerHTML = "";
+        renderBlocks(out, c, blocks.slice(1));
+        const p = document.createElement("pre"); p.className = "note"; p.textContent = deadToks.get(info.tok) || "gestopt: voer de cel opnieuw uit"; out.appendChild(p);
+        return;
+      }
+      let w = widgets.get(info.tok);
+      if (!w) w = makeWidget(c, info);
+      w.c = c;
+      if (w.root.parentNode !== out) { out.innerHTML = ""; out.appendChild(w.root); }
+      w.show(blocks.slice(1));
+    }
+
+    function makeWidget(c, info) {
+      const root = document.createElement("div");
+      root.className = "nb-interactive";
+      root.tabIndex = 0;
+      root.title = info.ms > 0 ? "interactief, met een klok: klik of typ (met de focus hier)" : "interactief: klik of typ (met de focus hier)";
+      const view = document.createElement("div");
+      const foot = document.createElement("div");
+      foot.className = "nb-interactive-foot";
+      root.append(view, foot);
+      const w = {
+        tok: info.tok, ms: info.ms, c, root, stopped: false, busy: false, queue: [], timer: null,
+        t0: performance.now(), canvas: null, renderer: null, times: [], frames: 0,
+        show(blocks) {
+          // Een plaatje op hetzelfde canvas (geen nieuwe renderer per beeld).
+          if (blocks.length === 1 && blocks[0].kind === "graphics") {
+            if (!w.canvas) {
+              view.innerHTML = "";
+              w.canvas = document.createElement("canvas");
+              view.appendChild(w.canvas);
+              w.renderer = null;
+            }
+            const content = blocks[0].content;
+            requestAnimationFrame(() => {
+              if (!w.renderer) w.renderer = new SaplGraphicsRenderer(w.canvas);
+              w.renderer.renderOutput(content);
+            });
+          } else {
+            w.canvas = null; w.renderer = null;
+            view.innerHTML = "";
+            renderBlocks(view, w.c, blocks);
+          }
+          w.frames++;
+        },
+        point(e) {
+          if (w.renderer && w.canvas && w.canvas.contains(e.target)) return w.renderer.getEventPoint(e);
+          const r = view.getBoundingClientRect();
+          return { x: ((e.clientX - r.left) / Math.max(1, r.width)) * 2 - 1, y: 1 - ((e.clientY - r.top) / Math.max(1, r.height)) * 2 };
+        },
+      };
+      root.addEventListener("click", (e) => {
+        root.focus();
+        const p = w.point(e);
+        widgetSend(w, NB.eventLine("click", p.x.toFixed(4), p.y.toFixed(4)));
+      });
+      root.addEventListener("keydown", (e) => {
+        if (e.target !== root || e.metaKey || e.ctrlKey || e.altKey) return;
+        if (e.key === "Tab" || e.key === "Shift") return;
+        e.preventDefault();
+        widgetSend(w, NB.eventLine("key", e.key));
+      });
+      w.foot = foot;
+      widgets.set(info.tok, w);
+      if (info.ms > 0) widgetTick(w);
+      return w;
+    }
+
+    // De volgende tik `ms` na het versturen van de vorige (niet na het
+    // antwoord): zo is de periode `ms` zolang een rondgang korter duurt.
+    function widgetTick(w, sentAt) {
+      clearTimeout(w.timer);
+      const wait = sentAt === undefined ? w.ms : Math.max(0, w.ms - (performance.now() - sentAt));
+      w.timer = setTimeout(() => {
+        if (w.stopped) return;
+        widgetSend(w, NB.eventLine("tick", String(Math.round(performance.now() - w.t0))), true);
+      }, wait);
+    }
+
+    function widgetSend(w, ev, isTick) {
+      if (w.stopped) return;
+      // Een tik wacht niet in de rij: de volgende komt na het antwoord.
+      if (w.busy || running) {
+        if (isTick) { setTimeout(() => widgetSend(w, ev, true), Math.max(10, w.ms)); return; }
+        if (w.queue.length < 20) w.queue.push(ev);
+        if (running && !w.busy) setTimeout(() => widgetFlush(w), 50);
+        return;
+      }
+      w.busy = true;
+      const t = performance.now();
+      call({ type: "NB_MSG", tok: w.tok, event: ev }, TIMEOUT_MS).then((r) => {
+        w.busy = false;
+        widgetResult(w, r, performance.now() - t);
+      }, (err) => {
+        w.busy = false;
+        stopAllWidgets(err.message);
+        showBanner(err.message);
+      }).then(() => {
+        if (!w.stopped) { if (isTick && !w.errored) widgetTick(w, t); widgetFlush(w); }
+      });
+    }
+
+    function widgetFlush(w) {
+      if (w.stopped || w.busy || !w.queue.length) return;
+      widgetSend(w, w.queue.shift());
+    }
+
+    function widgetResult(w, r, ms) {
+      w.times.push(ms);
+      if (w.times.length > 50) w.times.shift();
+      if (!r.success) return widgetStop(w, r.error || "de gebeurtenis mislukte");
+      if (r.trapped) return stopAllWidgets("de engine stopte: voer de cel opnieuw uit");
+      const p = NB.parseNbOutput(r.output);
+      if (p.stale.includes(w.tok)) return widgetStop(w, "verlopen: voer de cel opnieuw uit");
+      const res = Object.values(p.cells)[0];
+      if (!res) return widgetStop(w, p.error || "geen antwoord van de sessie");
+      // Een fout in update of view: het model blijft, de klok staat stil tot
+      // een volgende gebeurtenis (een klik of toets) wel lukt.
+      if (res.error) { w.foot.textContent = "fout: " + res.error; w.foot.className = "nb-interactive-foot err"; clearTimeout(w.timer); w.errored = true; return; }
+      if (w.errored) { w.errored = false; if (w.ms > 0) widgetTick(w); }
+      if (w.c.output && w.c.output.blocks && w.c.output.blocks[0] && NB.parseInteractive(w.c.output.blocks[0].content)?.tok === w.tok) w.c.output.blocks = res.blocks;
+      w.show(res.blocks.slice(1));
+      const avg = w.times.reduce((a, b) => a + b, 0) / w.times.length;
+      w.foot.className = "nb-interactive-foot";
+      w.foot.textContent = `${Math.round(avg)} ms per gebeurtenis`;
+    }
+
+    function widgetStop(w, why) {
+      if (w.stopped) return;
+      w.stopped = true;
+      clearTimeout(w.timer);
+      widgets.delete(w.tok);
+      deadToks.set(w.tok, why || "gestopt: voer de cel opnieuw uit");
+      if (why && w.foot) { w.foot.textContent = why; w.foot.className = "nb-interactive-foot note"; }
+    }
+
+    function stopAllWidgets(why) {
+      for (const x of [...widgets.values()]) widgetStop(x, why);
+    }
+
+    // Widgets waarvan de cel weg is of iets anders toont, stoppen.
+    function sweepWidgets() {
+      for (const w of [...widgets.values()]) {
+        const o = w.c.output;
+        const tok = o && o.blocks && o.blocks[0] && o.blocks[0].kind === "interactive" ? (NB.parseInteractive(o.blocks[0].content) || {}).tok : null;
+        if (!cells.includes(w.c) || tok !== w.tok) widgetStop(w, null);
       }
     }
 

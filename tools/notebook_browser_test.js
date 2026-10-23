@@ -3,7 +3,9 @@
 // via het DevTools-protocol. Start een statische server op websapl/ en
 // Chrome (macOS-pad, of CHROME=...). Scenario's: kennismaking.spp helemaal;
 // een wasm-trap na een `error`-cel; een cel wijzigen met Shift+Enter en dan
-// alles; de volgorde "van boven naar beneden" (ook in het bestand).
+// alles; de volgorde "van boven naar beneden" (ook in het bestand);
+// formulieren; interactieve cellen (fase E: klikken, een toets, de klok en
+// het aantal beelden per seconde, opnieuw uitvoeren, een ander notebook).
 //
 // Met --workbench dezelfde pagina in de Workbench (workbench/server.js,
 // `?engine=server`): de engine is daar een eigen ./rs-driver-proces
@@ -121,6 +123,47 @@ const mark = `document.getElementById("status").textContent = "(wacht)"; window.
     st = await open("notebooks/_browser_test.spp");
     st = await act(`const i = ${formIn("input[type=text]")}; i.value = 'a "b"\\\\c'; i.dispatchEvent(new Event("change"));`);
     check("formulier: tekst met \" en \\ terug in de bron, lengte 7", st[4] === "7" && (await ev(src0)).includes('kaart = Kaart "a \\"b\\"\\\\c"'), st.join("\n") + "\n" + await ev(src0));
+
+    // Interactieve cellen (fase E): notebooks/interactief.spp, de zeef (cel 3)
+    // en de bal (cel 6). Getoetst op de widgets en het protocol, niet op
+    // pixels (een plaatje blijft in headless Chrome leeg).
+    st = await open("notebooks/interactief.spp");
+    const W = `[...window.__nbWidgets.values()]`;
+    const zeef = `${W}.find((w) => w.ms === 0)`, bal = `${W}.find((w) => w.ms > 0)`;
+    const groen = `((${zeef}).c.output.blocks[1].content.match(/GraphDisc 10 /g) || []).length`;
+    const waitFor = async (js, ms = 5000) => { const t = Date.now(); while (Date.now() - t < ms) { if (await ev(js)) return true; await sleep(50); } return false; };
+    check("interactief.spp: twee interactieve cellen, met een canvas", (await ev(`window.__nbWidgets.size`)) === 2 && st[5] === "[canvas]" && /\[canvas\]$/.test(st[8]), st.join("\n"));
+    const clickZeef = `(() => { const cv = (${zeef}).root.querySelector("canvas"); const r = cv.getBoundingClientRect();
+      cv.dispatchEvent(new MouseEvent("click", { bubbles: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 })); })()`;
+    for (let k = 1; k <= 3; k++) { await ev(clickZeef); await waitFor(`${groen} === ${k}`); }
+    check("zeef: drie klikken, drie priemgetallen groen", (await ev(groen)) === 3, await ev(`(${zeef}).c.output.blocks[1].content.slice(0, 200)`));
+    await ev(`(() => { const r = (${zeef}).root; r.focus(); r.dispatchEvent(new KeyboardEvent("keydown", { key: "a", bubbles: true })); })()`);
+    check("zeef: een toets (met de focus op de uitvoer) zet ook een stap", await waitFor(`${groen} === 4`), await ev(groen));
+    check("zeef: de rondgang staat onder de uitvoer", /ms per gebeurtenis/.test(await ev(`(${zeef}).foot.textContent`)), await ev(`(${zeef}).foot.textContent`));
+    const f0 = await ev(`(${bal}).frames`);
+    await sleep(2000);
+    const fps = ((await ev(`(${bal}).frames`)) - f0) / 2;
+    const rt = await ev(`(${bal}).times.reduce((a, b) => a + b, 0) / (${bal}).times.length`);
+    console.log(`      bal: ${fps} beelden per seconde (D.animated 40), rondgang ${rt.toFixed(1)} ms`);
+    check("bal: minstens 20 beelden per seconde", fps >= 20, `${fps}`);
+    const tok0 = await ev(`(${zeef}).tok`);
+    st = await act(`document.getElementById("btn-run").click();`);
+    check("opnieuw uitvoeren: nieuwe widgets, de zeef weer leeg", (await ev(`window.__nbWidgets.size`)) === 2 && (await ev(`(${zeef}).tok`)) !== tok0 && (await ev(groen)) === 0, st.join("\n"));
+    await ev(clickZeef);
+    check("en daarna weer een stap", await waitFor(`${groen} === 1`), await ev(groen));
+    if (WB) {
+      // Een vers proces begint de sleutels opnieuw: na een herstart mag geen
+      // oud widget meer gebeurtenissen sturen (anders kon een klik op de zeef
+      // bij het model van een andere cel uitkomen).
+      spawnSync("pkill", ["-TERM", "-P", String(server.pid), "rs-driver"]);
+      await sleep(300);
+      st = await act(`const ta = document.querySelectorAll(".cell textarea")[3];
+        ta.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", shiftKey: true, bubbles: true }));`);
+      check("na een gestopt proces, alleen de bal opnieuw: de zeef is gestopt, de bal loopt",
+        (await ev(`window.__nbWidgets.size`)) === 1 && (await ev(`!!(${bal})`)) && !(await ev(`!!(${zeef})`)), st.join("\n"));
+    }
+    st = await open("notebooks/_browser_test.spp");
+    check("een ander notebook: alle interactieve cellen gestopt", (await ev(`window.__nbWidgets.size`)) === 0, "");
 
     await ev(`localStorage.clear()`);
     ws.close();

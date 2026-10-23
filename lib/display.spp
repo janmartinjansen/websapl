@@ -18,6 +18,14 @@ module Display
 import "grafisch/graphics.cfp" as G
 
 ::Display = DText !s | DTable !headers !rows | DMarkdown !s | DGraphics !gs | DForm !v | DSlider !lo !hi !v | DChoice !opts !v | DRecords !xs
+           | DInteractive !ms model update view
+
+// Een gebeurtenis voor een interactieve cel (zie hieronder): een klik in het
+// plaatje (x en y van -1.0 tot 1.0, zoals de Graphics-waarden), een toets
+// (de naam zoals de browser hem geeft: "a", "ArrowLeft", " ", "Enter"), een
+// tik van de klok (ms sinds de cel begon) of een invoer (veld, waarde; nog
+// niet gebruikt).
+::Event = Click !x !y | Key !k | Tick !ms | Input !field !value
 
 // == Bouwfuncties ============================================================
 
@@ -71,6 +79,27 @@ form v = DForm v
 slider lo hi v = DSlider lo hi v
 
 choice opts v = DChoice opts v
+
+// == Interactieve cellen (fase E van docs/2026-10-15_notebook_integraal_plan.md)
+//
+// Een cel met een eigen model dat reageert op gebeurtenissen, zoals in Elm:
+//
+//   D.interactive model0 update view
+//     update :: Event -> model -> model
+//     view   :: model -> Display       (een plaatje, tabel, tekst, ...)
+//
+// De cel toont `view model0`. Een klik in de uitvoer of een toets (als de
+// uitvoer de focus heeft) gaat naar de sessie: die rekent `update` uit en
+// tekent `view` opnieuw. Het model blijft in de sessie (niet in het bestand):
+// de cel opnieuw draaien begint weer bij model0.
+//
+//   D.animated ms model0 update view
+//
+// doet hetzelfde, en geeft daarnaast elke `ms` milliseconden een `Tick`
+// (de volgende tik pas als de vorige getekend is).
+interactive model update view = DInteractive 0 model update view
+
+animated ms model update view = DInteractive ms model update view
 
 // == Rekenwerk voor de diagrammen ============================================
 

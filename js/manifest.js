@@ -1178,7 +1178,7 @@ window.WEBSAPL_TREE = [
         "path": "lib/display.spp",
         "type": "file",
         "ext": ".spp",
-        "size": 4625,
+        "size": 5964,
         "isBinary": false
       },
       {
@@ -1202,7 +1202,7 @@ window.WEBSAPL_TREE = [
         "path": "lib/notebook_glue.cfp",
         "type": "file",
         "ext": ".cfp",
-        "size": 10916,
+        "size": 14603,
         "isBinary": false
       },
       {
@@ -1331,6 +1331,14 @@ window.WEBSAPL_TREE = [
         "type": "file",
         "ext": ".spp",
         "size": 1177,
+        "isBinary": false
+      },
+      {
+        "name": "interactief.spp",
+        "path": "notebooks/interactief.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 2580,
         "isBinary": false
       },
       {
@@ -1732,7 +1740,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/mlibcsvspp.jvb",
                 "type": "file",
                 "ext": ".jvb",
-                "size": 36196,
+                "size": 36332,
                 "isBinary": true
               },
               {
@@ -1764,7 +1772,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/mlibdisplayspp.adts.cfp",
                 "type": "file",
                 "ext": ".cfp",
-                "size": 219,
+                "size": 362,
                 "isBinary": false
               },
               {
@@ -1772,7 +1780,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/mlibdisplayspp.defs.txt",
                 "type": "file",
                 "ext": ".txt",
-                "size": 874,
+                "size": 926,
                 "isBinary": false
               },
               {
@@ -1780,7 +1788,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/mlibdisplayspp.jvb",
                 "type": "file",
                 "ext": ".jvb",
-                "size": 14576,
+                "size": 15064,
                 "isBinary": true
               },
               {
@@ -1788,7 +1796,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/mlibdisplayspp.names.txt",
                 "type": "file",
                 "ext": ".txt",
-                "size": 303,
+                "size": 358,
                 "isBinary": false
               },
               {
@@ -1796,7 +1804,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/mlibdisplayspp.pp.cfp",
                 "type": "file",
                 "ext": ".cfp",
-                "size": 9126,
+                "size": 9694,
                 "isBinary": false
               },
               {
@@ -1804,7 +1812,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/mlibdisplayspp.schemes.txt",
                 "type": "file",
                 "ext": ".txt",
-                "size": 1129,
+                "size": 1243,
                 "isBinary": false
               },
               {
@@ -1828,7 +1836,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/mliblistspp.jvb",
                 "type": "file",
                 "ext": ".jvb",
-                "size": 21716,
+                "size": 21868,
                 "isBinary": true
               },
               {
@@ -1876,7 +1884,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/mlibplotspp.jvb",
                 "type": "file",
                 "ext": ".jvb",
-                "size": 22738,
+                "size": 22882,
                 "isBinary": true
               },
               {
@@ -1924,7 +1932,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/mlibshapespp.jvb",
                 "type": "file",
                 "ext": ".jvb",
-                "size": 32740,
+                "size": 32884,
                 "isBinary": true
               },
               {
@@ -1972,7 +1980,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/mlibstatsspp.jvb",
                 "type": "file",
                 "ext": ".jvb",
-                "size": 21908,
+                "size": 22060,
                 "isBinary": true
               },
               {
@@ -2020,7 +2028,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/mlibtextspp.jvb",
                 "type": "file",
                 "ext": ".jvb",
-                "size": 30376,
+                "size": 30528,
                 "isBinary": true
               },
               {
@@ -2060,7 +2068,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/nbglue.defs.txt",
                 "type": "file",
                 "ext": ".txt",
-                "size": 1244,
+                "size": 1538,
                 "isBinary": false
               },
               {
@@ -2068,7 +2076,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/nbglue.jvb",
                 "type": "file",
                 "ext": ".jvb",
-                "size": 32996,
+                "size": 41172,
                 "isBinary": true
               },
               {
@@ -2076,7 +2084,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/nbglue.pp.cfp",
                 "type": "file",
                 "ext": ".cfp",
-                "size": 16062,
+                "size": 20714,
                 "isBinary": false
               },
               {
@@ -2127,7 +2135,7 @@ window.WEBSAPL_TREE = [
             "path": "repl_sapl/build/mini_repl.jmvm",
             "type": "file",
             "ext": ".jmvm",
-            "size": 6964249,
+            "size": 7137006,
             "isBinary": false
           },
           {
@@ -2135,7 +2143,7 @@ window.WEBSAPL_TREE = [
             "path": "repl_sapl/build/mini_repl.jvb",
             "type": "file",
             "ext": ".jvb",
-            "size": 2608680,
+            "size": 2668344,
             "isBinary": true
           }
         ],
@@ -2586,7 +2594,7 @@ window.WEBSAPL_TREE = [
         "path": "taalproto/naar_sapl.spp",
         "type": "file",
         "ext": ".spp",
-        "size": 25207,
+        "size": 24097,
         "isBinary": false
       },
       {
@@ -2717,7 +2725,7 @@ window.WEBSAPL_TREE = [
     "path": "notebook.html",
     "type": "file",
     "ext": ".html",
-    "size": 41404,
+    "size": 49251,
     "isBinary": false
   },
   {
@@ -2733,7 +2741,7 @@ window.WEBSAPL_TREE = [
     "path": "taallab.html",
     "type": "file",
     "ext": ".html",
-    "size": 23133,
+    "size": 23242,
     "isBinary": false
   }
 ];

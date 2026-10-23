@@ -10,6 +10,8 @@ display__graphicsText 1 1
 display__form 1 0
 display__slider 3 000
 display__choice 2 00
+display__interactive 3 000
+display__animated 4 0000
 display__toF 1 0
 display__listLen 1 1
 display__maxOf 1 1
@@ -36,5 +38,5 @@ __deepEqConstrCheck 4 0000
 __deepEqConstrFields 4 0011
 __deepEqConstrFieldsStep 4 0000
 __deepNeq 2 00
-__pat_mlibdisplayspp_42 5 00000
-__pat_mlibdisplayspp_31 4 0000
+__pat_mlibdisplayspp_49 5 00000
+__pat_mlibdisplayspp_38 4 0000

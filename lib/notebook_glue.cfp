@@ -96,6 +96,90 @@ nbDisplay d =
     (D.DSlider lo hi v -> printString "@@form" <#> nbNl <#> nbLine (Cons "slider" (Cons (nbKind v) (Cons (nbPlain v) (Cons (nbPlain lo) (Cons (nbPlain hi) Nil))))))
     (D.DChoice opts v -> printString "@@form" <#> nbNl <#> nbLine (Cons "choice" (Cons v opts)))
     (D.DRecords xs -> nbRecords xs)
+    (D.DInteractive ms m u vw -> nbRender (vw m))
+
+// == Interactieve cellen (D.interactive, D.animated; fase E) ==================
+// De REPL roept per expressiecel nbCellI aan, met een sleutel `tok` die de
+// sessie uitdeelt (repl_sapl/mini_repl.spp, nbBatchSrc). Een gewone cel geeft
+// Nil terug, een interactieve [tok, stapper]. De stapper is een functie van
+// een gebeurtenis als tekst (velden gescheiden door een tab, zoals bij de
+// formulieren geëscapet: "click\t0.25\t-0.5", "key\ta", "tick\t120"): hij
+// rekent `update` en `view` uit, tekent de cel opnieuw en geeft de volgende
+// stapper terug. De REPL bewaart hem (`:nbmsg tok gebeurtenis`).
+// Protocol voor de pagina:
+//   @@begin n
+//   @@interactive
+//   <tok> <ms>
+//   (de weergave van `view model`, zoals een gewone cel)
+//   @@end n
+// Een fout in update of view: @@begin n met de melding (zonder @@end), en het
+// model blijft wat het was.
+// De typechecker (met de kop van de sessie ervoor) meldt hier bewust twee
+// dingen: een "oneindig type" bij nbStepOk/nbStepFail (een stapper geeft een
+// stapper terug: zonder wikkeltype niet uit te drukken) en bij nbInterStart
+// een lijst met een string en een functie (de grens naar de REPL, die er
+// alleen Cons/Nil van leest).
+// Eerst @@begin, dan pas de waarde uitrekenen (zoals nbCellX): een fout in de
+// cel hoort binnen de cel (de pagina wijst er een trap mee aan).
+nbCellI tbl cur n tok ty v = nbMark "@@begin " n <#> nbCellIV tbl cur n tok ty v
+
+nbCellIV tbl cur n tok ty v = if (nbIsInteractive v) (nbInterStart n tok v) (nbValueX tbl cur ty v <#> nbMark "@@end " n <#> Nil)
+
+// De cellen van een run op volgorde uitrekenen (elke cel drukt af) en de
+// interactieve verzamelen; de hele lijst is uitgerekend zodra er een eerste
+// cel is (nbCollectKeep is strikt in de rest).
+nbCollect cs = case cs (Nil -> Nil) (Cons c r -> nbCollectOne c r)
+
+nbCollectOne !c r = nbCollectKeep c (nbCollect r)
+
+nbCollectKeep c !rest = case c (Nil -> rest) (Cons t x -> Cons c rest)
+
+nbIsInteractive v = if (typeId v > TYPE_FUNC) (strEqual (constrName v) "Display__DInteractive") False
+
+nbInterStart n tok v = case v (D.DInteractive ms m u vw -> nbInterBody tok ms m vw <#> nbMark "@@end " n <#> Cons tok (Cons (nbStepper n tok ms m u vw) Nil))
+
+nbInterShow n tok ms m vw = nbMark "@@begin " n <#> nbInterBody tok ms m vw <#> nbMark "@@end " n
+
+nbInterBody tok ms m vw = printString "@@interactive" <#> nbNl <#> printString tok <#> printString " " <#> printString (list2str (itoa ms)) <#> nbNl <#> nbRender (vw m)
+
+nbStepper n tok ms m u vw ev = try (nbStepOk n tok ms u vw (u (nbEvent ev) m)) (nbStepFail n tok ms m u vw)
+
+// `!m2`: het nieuwe model meteen uitrekenen (binnen de try), zodat een lange
+// reeks gebeurtenissen geen keten van uitstellen opbouwt.
+nbStepOk n tok ms u vw !m2 = nbInterShow n tok ms m2 vw <#> nbStepper n tok ms m2 u vw
+
+nbStepFail n tok ms m u vw msg = nbMark "@@begin " n <#> printString msg <#> nbNl <#> nbStepper n tok ms m u vw
+
+nbEvent ev = nbEventF (nbTabFields ev)
+
+nbEventF fs = case fs (Nil -> error "lege gebeurtenis") (Cons k r -> nbEventK k r)
+
+nbEventK k r =
+  if (strEqual k "click") (D.Click (atof (nbNth 0 r)) (atof (nbNth 1 r)))
+  (if (strEqual k "key") (D.Key (nbNth 0 r))
+  (if (strEqual k "tick") (D.Tick (nbInt (nbNth 0 r)))
+  (if (strEqual k "input") (D.Input (nbNth 0 r) (nbNth 1 r))
+  (error (strcat "onbekende gebeurtenis: " k)))))
+
+nbNth !i fs = case fs (Nil -> "") (Cons f r -> if (i == 0) f (nbNth (i - 1) r))
+
+nbInt s = if (strlen s == 0) 0 (if (strat 0 s == '-') (0 - nbDigits s 1 (strlen s) 0) (nbDigits s 0 (strlen s) 0))
+
+nbDigits s !i !n !acc = if (i >= n) acc (nbDigits s (i + 1) n (acc * 10 + (strat i s - '0')))
+
+// Velden gescheiden door een tab, met \t, \n en \\ (zoals nbEsc).
+nbTabFields s = nbTabFrom s 0 (strlen s) Nil
+
+nbTabFrom s !i !n acc =
+  if (i >= n) (Cons (list2str (nbRev acc Nil)) Nil)
+  (if (strat i s == 9) (Cons (list2str (nbRev acc Nil)) (nbTabFrom s (i + 1) n Nil))
+  (if ((strat i s == 92) /\ (i + 1 < n)) (nbTabFrom s (i + 2) n (Cons (nbUnesc (strat (i + 1) s)) acc))
+  (nbTabFrom s (i + 1) n (Cons (strat i s) acc))))
+
+nbUnesc c = if (c == 't') 9 (if (c == 'n') 10 c)
+
+// (de prelude van de REPL heeft geen reverse)
+nbRev xs acc = case xs (Nil -> acc) (Cons x r -> nbRev r (Cons x acc))
 
 // == Formulieren (D.form, D.slider, D.choice; lib/display.spp) ==============
 // Protocol na `@@form`: één regel per onderdeel, velden gescheiden door een
