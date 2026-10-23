@@ -3,6 +3,7 @@ display__text 1 0
 display__markdown 1 0
 display__table 2 00
 display__picture 1 0
+display__column 1 0
 display__records 1 0
 display__bar 1 0
 display__lineChart 1 0
@@ -38,5 +39,5 @@ __deepEqConstrCheck 4 0000
 __deepEqConstrFields 4 0011
 __deepEqConstrFieldsStep 4 0000
 __deepNeq 2 00
-__pat_mlibdisplayspp_49 5 00000
-__pat_mlibdisplayspp_38 4 0000
+__pat_mlibdisplayspp_50 5 00000
+__pat_mlibdisplayspp_39 4 0000

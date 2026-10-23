@@ -18,13 +18,16 @@ module Display
 import "grafisch/graphics.cfp" as G
 
 ::Display = DText !s | DTable !headers !rows | DMarkdown !s | DGraphics !gs | DForm !v | DSlider !lo !hi !v | DChoice !opts !v | DRecords !xs
-           | DInteractive !ms model update view
+           | DInteractive !ms model update view | DColumn !ds
 
 // Een gebeurtenis voor een interactieve cel (zie hieronder): een klik in het
 // plaatje (x en y van -1.0 tot 1.0, zoals de Graphics-waarden), een toets
 // (de naam zoals de browser hem geeft: "a", "ArrowLeft", " ", "Enter"), een
-// tik van de klok (ms sinds de cel begon) of een invoer (veld, waarde; nog
-// niet gebruikt).
+// tik van de klok (ms sinds de cel begon) of een invoer: een wijziging in een
+// formulier dat `view` toont (D.form, D.slider, D.choice), met de naam van
+// het veld ("" voor de hele waarde: een schuifbalk, een keuzelijst, de
+// constructor van een somtype) en de nieuwe waarde als tekst. Sh.input
+// (lib/shape.spp) past zo'n invoer toe op een record of somtype.
 ::Event = Click !x !y | Key !k | Tick !ms | Input !field !value
 
 // == Bouwfuncties ============================================================
@@ -38,6 +41,9 @@ markdown s = DMarkdown s
 table headers rows = DTable headers rows
 
 picture gs = DGraphics gs
+
+// Meer weergaven onder elkaar: D.column [D.form m, D.picture ...].
+column ds = DColumn ds
 
 // Een lijst records als tabel: de veldnamen als kop, een Bool-veld als
 // True/False. Het tekenen (met __fields_<Naam>) doet lib/notebook_glue.cfp,
@@ -97,6 +103,13 @@ choice opts v = DChoice opts v
 //
 // doet hetzelfde, en geeft daarnaast elke `ms` milliseconden een `Tick`
 // (de volgende tik pas als de vorige getekend is).
+//
+// Toont `view` een formulier, dan wordt een wijziging een `Input veld
+// waarde` voor update (en niet, zoals in een gewone cel, een wijziging in de
+// brontekst). Met lib/shape.spp:
+//
+//   update ev m = case ev (Input veld s -> Sh.input veld s m) (_ -> m)
+//   view m = D.column [D.form m, D.picture (teken m)]
 interactive model update view = DInteractive 0 model update view
 
 animated ms model update view = DInteractive ms model update view

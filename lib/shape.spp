@@ -10,7 +10,10 @@
 //
 // De vorm van een record komt uit `__fields_<Naam>`, dat de preprocessor bij
 // elk record maakt (preprocess/records.cfp), en wordt met `lookup` gevonden.
-// Een gewone ADT draagt (nog) geen veldtypen; dat wordt TUnknown. Een Bool
+// Een somtype (23 oktober 2026) wordt TSum, met per constructor een Alt; de
+// constructors geeft de VM (lookup "@meta:type:<naam>"), de veldtypen van een
+// getypeerde ADT (fase D2) `__alts_<Type>` (preprocess/records.cfp). Een
+// ongetypeerd veld is TUnknown "". Een Bool
 // heeft geen eigen tag in de VM (True is 1), dus alleen de vorm weet dat een
 // veld een Bool is.
 module Shape
@@ -18,7 +21,10 @@ import "lib/text.spp" as T
 
 ::list = Nil | Cons !x xs
 
-::Ty = TInt | TFloat | TStr | TBool | TChar | TList !elem | TRec !name fields | TUnknown !name
+::Ty = TInt | TFloat | TStr | TBool | TChar | TList !elem | TRec !name fields | TSum !name alts | TUnknown !name
+
+// Een constructor van een somtype; alts van een TSum is lui, zoals fields.
+::Alt = Alt !name fields
 
 // fields van een TRec is lui: een record mag (via een lijst) naar zichzelf verwijzen.
 ::Field = Field !name !ty
@@ -35,16 +41,37 @@ conName s = if (T.startsWith "__con_" s) (T.drop 6 s) s
 ofValue v = ofValueTid v (typeId v)
 
 ofValueTid v tid =
-  if (tid > 4) (ofName (constrName v))
+  if (tid > 4) (ofAdtValue (constrName v) tid)
   (if (tid == 1) TInt
   (if (tid == 2) TFloat
   (if (tid == 3) TStr
   (if (tid == 0 - 1) TChar (TUnknown "")))))
 
-// Een record op naam; geen record (geen __fields_): TUnknown.
+// Een record heet als zijn constructor; een somtype zoeken we op type-id.
+ofAdtValue con tid = if (typeId (lookup (T.append "__fields_" con)) == 4) (ofName con) (ofTypeInfo con (T.split '\t' (lookup (T.append "@meta:type:" (T.showInt tid)))))
+
+// Een record of somtype op naam; anders TUnknown.
 ofName name = ofNameH name (lookup (T.append "__fields_" name))
 
-ofNameH name h = if (typeId h == 4) (TRec name (fieldsFrom (applyDynamic h Nil))) (TUnknown name)
+ofNameH name h = if (typeId h == 4) (TRec name (fieldsFrom (applyDynamic h Nil))) (ofTypeInfo name (T.split '\t' (lookup (T.append "@meta:type:" name))))
+
+// "Naam\tCon\tariteit\t..." (vm/meta.h); een onbekend type is "".
+ofTypeInfo name info =
+  case info
+    (Cons tn rest -> if (T.isEmpty tn) (TUnknown name) (TSum tn (altsFor tn rest (lookup (T.append "__alts_" tn)))))
+    (Nil -> TUnknown name)
+
+altsFor tn cons h = if (typeId h == 4) (mapL altOf (T.split ';' (applyDynamic h Nil))) (plainAlts cons)
+
+// "Cirkel,r,Float" (preprocess/records.cfp)
+altOf s = case (T.split ',' s) (Cons c rest -> Alt c (altFields rest)) (Nil -> Alt "" Nil)
+
+altFields ws = case ws (Cons n r -> case r (Cons ty r2 -> Cons (Field n (if (T.equal ty "?") (TUnknown "") (parseTy ty))) (altFields r2)) (Nil -> Nil)) (Nil -> Nil)
+
+// Zonder veldtypen: per veld TUnknown.
+plainAlts cons = case cons (Cons c r -> case r (Cons a r2 -> Cons (Alt c (unknownFields (T.readInt a))) (plainAlts r2)) (Nil -> Nil)) (Nil -> Nil)
+
+unknownFields !n = if (n <= 0) Nil (Cons (Field "" (TUnknown "")) (unknownFields (n - 1)))
 
 fieldsFrom ps = case ps (Nil -> Nil) (Cons p rest -> Cons (fieldOf p) (fieldsFrom rest))
 
@@ -65,7 +92,22 @@ isListName s = (strlen s >= 2) /\ (strat 0 s == '[') /\ (strat (strlen s - 1) s 
 
 isRec ty = case ty (TRec n fs -> True) (_ -> False)
 
-recName ty = case ty (TRec n fs -> n) (TUnknown n -> n) (_ -> "")
+isSum ty = case ty (TSum n as -> True) (_ -> False)
+
+recName ty = case ty (TRec n fs -> n) (TSum n as -> n) (TUnknown n -> n) (_ -> "")
+
+alts ty = case ty (TSum n as -> as) (_ -> Nil)
+
+altName a = case a (Alt n fs -> n)
+
+altFieldsOf a = case a (Alt n fs -> fs)
+
+altNames ty = mapL altName (alts ty)
+
+// De velden van constructor `con` van een somtype.
+altFieldsFor ty con = altFieldsIn con (alts ty)
+
+altFieldsIn con as = case as (Nil -> Nil) (Cons a rest -> if (T.equal (altName a) con) (altFieldsOf a) (altFieldsIn con rest))
 
 fields ty = case ty (TRec n fs -> fs) (_ -> Nil)
 
@@ -84,6 +126,7 @@ tyName ty =
     (TChar -> "Char")
     (TList e -> T.concat ["[", tyName e, "]"])
     (TRec n fs -> n)
+    (TSum n as -> n)
     (TUnknown n -> if (T.isEmpty n) "?" n)
 
 // == Waarden maken ============================================================
@@ -109,8 +152,16 @@ fromText ty s =
     (TFloat -> if (isNumText s) (dyn (T.readFloat s)) (error (T.concat ["geen getal: \"", s, "\""])))
     (TStr -> dyn s)
     (TBool -> boolText s)
+    (TSum n as -> conText ty (T.trim s))
     (TChar -> if (strlen s == 1) (dyn (strat 0 s)) (error (T.concat ["geen teken: \"", s, "\""])))
     (_ -> error (T.concat ["kan geen ", tyName ty, " uit tekst maken: \"", s, "\""]))
+
+// Een constructor zonder velden op naam (een CSV-kolom van type Kleur).
+conText ty s = if (nullaryIn s (alts ty)) (lookup s) (error (T.concat ["geen ", tyName ty, ": \"", s, "\""]))
+
+nullaryIn s as = case as (Nil -> False) (Cons a rest -> if (T.equal (altName a) s) (isNil (altFieldsOf a)) (nullaryIn s rest))
+
+isNil xs = case xs (Nil -> True) (_ -> False)
 
 boolText s =
   let t = T.toLower (T.trim s) in
@@ -155,7 +206,16 @@ showAs ty v =
     (TChar -> T.fromChar (dyn v))
     (TList e -> T.concat ["[", T.join ", " (mapL (showAs e) (dyn v)), "]"])
     (TRec n fs -> T.concat [n, " { ", T.join ", " (showFields fs v 0), " }"])
+    (TSum n as -> showAlt (altFieldsFor ty (constrName v)) v)
     (TUnknown n -> showPlain v)
+
+// Een constructor met velden als `Cirkel 1.5 Rood` (velden met haakjes als
+// ze een spatie bevatten).
+showAlt fs v = T.join " " (Cons (constrName v) (mapL paren (showArgs fs v 0)))
+
+showArgs fs v !i = case fs (Nil -> Nil) (Cons f rest -> Cons (showAs (fieldTy f) (getField v i)) (showArgs rest v (i + 1)))
+
+paren s = if (T.contains " " s) (T.concat ["(", s, ")"]) s
 
 showFields fs v !i = case fs (Nil -> Nil) (Cons f rest -> Cons (T.concat [fieldName f, " = ", showAs (fieldTy f) (getField v i)]) (showFields rest v (i + 1)))
 
@@ -169,3 +229,71 @@ ofPlainTid v tid =
   (if (tid > 4) (constrName v) "<fn>"))))
 
 mapL f xs = case xs (Nil -> Nil) (Cons y ys -> Cons (f y) (mapL f ys))
+
+// == Invoer uit een formulier (interactieve cellen) ===========================
+
+// Een `D.Input veld tekst` (lib/display.spp) toepassen op een waarde: het
+// veld met die naam van een record (of van de huidige constructor van een
+// somtype) wordt de tekst, omgezet volgens zijn type. Veld "" is de hele
+// waarde: een getal, tekst, of de naam van een constructor van een somtype;
+// velden met dezelfde naam en hetzelfde type houden dan hun waarde, de rest
+// krijgt een standaardwaarde (0, 0.0, "", False, 'a', [], de eerste
+// constructor zonder velden). Een fout als het niet kan.
+//
+//   update ev m = case ev (D.Input veld s -> Sh.input veld s m) (_ -> m)
+input field s v = inputAs (ofValue v) field s v
+
+inputAs ty field s v =
+  if (T.isEmpty field) (inputWhole ty s v)
+  (case ty
+    (TRec n fs -> setNamed v fs field s)
+    (TSum n as -> setNamed v (altFieldsFor ty (constrName v)) field s)
+    (_ -> error (T.concat ["geen veld ", field, " in een ", tyName ty])))
+
+inputWhole ty s v = case ty (TSum n as -> switchTo ty (T.trim s) v) (_ -> fromText ty s)
+
+setNamed v fs field s = setAt v (indexOfField field fs 0) fs s
+
+setAt v !i fs s =
+  if (i < 0) (error (T.concat ["geen veld met die naam in ", constrName v]))
+  (make (lookup (constrName v)) (replaceAt i (fromText (fieldTy (nthL i fs)) s) (fieldValues v 0 (lenL fs))))
+
+indexOfField name fs !i = case fs (Nil -> 0 - 1) (Cons f rest -> if (T.equal (fieldName f) name) i (indexOfField name rest (i + 1)))
+
+fieldValues v !i n = if (i >= n) Nil (Cons (getField v i) (fieldValues v (i + 1) n))
+
+replaceAt !i x xs = case xs (Nil -> Nil) (Cons y ys -> if (i == 0) (Cons x ys) (Cons y (replaceAt (i - 1) x ys)))
+
+nthL !i xs = case xs (Cons y ys -> if (i == 0) y (nthL (i - 1) ys))
+
+lenL xs = case xs (Nil -> 0) (Cons y ys -> 1 + lenL ys)
+
+// Een andere constructor van een somtype.
+switchTo ty con v = switchFields con (altFieldsFor ty con) (altFieldsFor ty (constrName v)) v (hasAlt con (alts ty))
+
+hasAlt con as = case as (Nil -> False) (Cons a rest -> if (T.equal (altName a) con) True (hasAlt con rest))
+
+switchFields con newFs oldFs v known =
+  if (known == False) (error (T.concat ["geen constructor ", con]))
+  (case newFs (Nil -> lookup con) (_ -> make (lookup con) (mapL (carryOver oldFs v) newFs)))
+
+// Een veld met dezelfde naam en hetzelfde type houdt zijn waarde.
+carryOver oldFs v f = carryFrom oldFs v f 0
+
+carryFrom fs v f !i =
+  case fs
+    (Nil -> defaultOf (fieldTy f))
+    (Cons g rest -> if (T.equal (fieldName g) (fieldName f) /\ T.equal (tyName (fieldTy g)) (tyName (fieldTy f))) (getField v i) (carryFrom rest v f (i + 1)))
+
+defaultOf ty =
+  case ty
+    (TInt -> dyn 0)
+    (TFloat -> dyn 0.0)
+    (TStr -> dyn "")
+    (TBool -> dyn False)
+    (TChar -> dyn 'a')
+    (TList e -> dyn Nil)
+    (TSum n as -> firstNullary n as)
+    (_ -> error (T.concat ["geen standaardwaarde voor ", tyName ty]))
+
+firstNullary n as = case as (Nil -> error (T.concat ["geen standaardwaarde voor ", n])) (Cons a rest -> if (isNil (altFieldsOf a)) (lookup (altName a)) (firstNullary n rest))

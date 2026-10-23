@@ -1,4 +1,4 @@
-F ofCon conName ofValue ofValueTid ofName ofNameH fieldsFrom fieldOf parseTy isListName isRec recName fields fieldName fieldTy fieldNames tyName dyn make strictList revL fromText boolText isIntText isIntT digitsAt isNumText isNumT numFrom expFrom notB isBoolText showAs showFields showPlain ofPlainTid mapL
-C TInt TFloat TStr TBool TChar TList TRec TUnknown Field Dyn
+F ofCon conName ofValue ofValueTid ofAdtValue ofName ofNameH ofTypeInfo altsFor altOf altFields plainAlts unknownFields fieldsFrom fieldOf parseTy isListName isRec isSum recName alts altName altFieldsOf altNames altFieldsFor altFieldsIn fields fieldName fieldTy fieldNames tyName dyn make strictList revL fromText conText nullaryIn isNil boolText isIntText isIntT digitsAt isNumText isNumT numFrom expFrom notB isBoolText showAs showAlt showArgs paren showFields showPlain ofPlainTid mapL input inputAs inputWhole setNamed setAt indexOfField fieldValues replaceAt nthL lenL switchTo hasAlt switchFields carryOver carryFrom defaultOf firstNullary
+C TInt TFloat TStr TBool TChar TList TRec TSum TUnknown Alt Field Dyn
 module Shape
 import "lib/text.spp" as T

@@ -154,7 +154,7 @@
 
   <script src="js/marked.min.js"></script>
   <script src="js/graphics_renderer.js?v=20260926_modtag"></script>
-  <script src="js/notebook_core.js?v=20261023"></script>
+  <script src="js/notebook_core.js?v=20261023c"></script>
   <script>
   (function () {
     const NB = window.SaplNotebook;
@@ -610,35 +610,57 @@
       root.append(view, foot);
       const w = {
         tok: info.tok, ms: info.ms, c, root, stopped: false, busy: false, queue: [], timer: null,
-        t0: performance.now(), canvas: null, renderer: null, times: [], frames: 0,
+        t0: performance.now(), parts: [], times: [], frames: 0,
+        // Per blok één onderdeel dat blijft staan zolang de soort gelijk is:
+        // een plaatje op hetzelfde canvas (geen nieuwe renderer per beeld), een
+        // formulier met dezelfde velden krijgt alleen nieuwe waarden (een veld
+        // met de focus en een schuifbalk die je versleept blijven staan).
         show(blocks) {
-          // Een plaatje op hetzelfde canvas (geen nieuwe renderer per beeld).
-          if (blocks.length === 1 && blocks[0].kind === "graphics") {
-            if (!w.canvas) {
-              view.innerHTML = "";
-              w.canvas = document.createElement("canvas");
-              view.appendChild(w.canvas);
-              w.renderer = null;
+          const same = w.parts.length === blocks.length && blocks.every((b, i) => w.parts[i].kind === b.kind);
+          if (!same) { view.innerHTML = ""; w.parts = []; }
+          blocks.forEach((b, i) => {
+            let part = w.parts[i];
+            if (b.kind === "graphics") {
+              if (!part) {
+                part = { kind: b.kind, el: document.createElement("canvas"), renderer: null };
+                view.appendChild(part.el);
+              }
+              const content = b.content;
+              requestAnimationFrame(() => {
+                if (!part.renderer) part.renderer = new SaplGraphicsRenderer(part.el);
+                part.renderer.renderOutput(content);
+              });
+            } else if (b.kind === "form") {
+              const f = NB.parseForm(b.content);
+              const sig = f ? formShape(f) : "";
+              if (part && part.sig === sig && f) part.form.update(f);
+              else {
+                const el = document.createElement("div");
+                const form = f ? buildForm(f, "", widgetFormHandlers(w, f)) : null;
+                if (form) el.appendChild(form.box); else el.innerHTML = '<pre class="err">onleesbaar formulier</pre>';
+                if (part) view.replaceChild(el, part.el); else view.appendChild(el);
+                part = { kind: b.kind, el, sig, form };
+              }
+            } else {
+              const el = document.createElement("div");
+              renderBlocks(el, w.c, [b]);
+              if (part) view.replaceChild(el, part.el); else view.appendChild(el);
+              part = { kind: b.kind, el };
             }
-            const content = blocks[0].content;
-            requestAnimationFrame(() => {
-              if (!w.renderer) w.renderer = new SaplGraphicsRenderer(w.canvas);
-              w.renderer.renderOutput(content);
-            });
-          } else {
-            w.canvas = null; w.renderer = null;
-            view.innerHTML = "";
-            renderBlocks(view, w.c, blocks);
-          }
+            w.parts[i] = part;
+          });
           w.frames++;
         },
         point(e) {
-          if (w.renderer && w.canvas && w.canvas.contains(e.target)) return w.renderer.getEventPoint(e);
+          const g = w.parts.find((p) => p.kind === "graphics" && p.renderer && p.el.contains(e.target));
+          if (g) return g.renderer.getEventPoint(e);
           const r = view.getBoundingClientRect();
           return { x: ((e.clientX - r.left) / Math.max(1, r.width)) * 2 - 1, y: 1 - ((e.clientY - r.top) / Math.max(1, r.height)) * 2 };
         },
       };
       root.addEventListener("click", (e) => {
+        // Een klik in een formulier is invoer, geen Click voor het model.
+        if (e.target.closest && e.target.closest(".nb-form")) return;
         root.focus();
         const p = w.point(e);
         widgetSend(w, NB.eventLine("click", p.x.toFixed(4), p.y.toFixed(4)));
@@ -653,6 +675,18 @@
       widgets.set(info.tok, w);
       if (info.ms > 0) widgetTick(w);
       return w;
+    }
+
+    // Een formulier in een interactieve cel: een wijziging wordt een
+    // gebeurtenis `input <veld> <waarde>` (D.Input, lib/display.spp), met ""
+    // als veld voor de hele waarde en voor de constructor van een somtype.
+    function widgetFormHandlers(w, f) {
+      const fieldName = (k) => (k === null || !f.fields || !f.fields[k] ? "" : f.fields[k].name);
+      return {
+        edit: (k, type, raw) => widgetSend(w, NB.eventLine("input", fieldName(k), raw === true ? "True" : raw === false ? "False" : String(raw))),
+        switchCon: (con) => widgetSend(w, NB.eventLine("input", "", con)),
+        canSwitch: (con) => NB.canSwitch(f, con),
+      };
     }
 
     // De volgende tik `ms` na het versturen van de vorige (niet na het
@@ -671,6 +705,10 @@
       // Een tik wacht niet in de rij: de volgende komt na het antwoord.
       if (w.busy || running) {
         if (isTick) { setTimeout(() => widgetSend(w, ev, true), Math.max(10, w.ms)); return; }
+        // Een nieuwe waarde voor hetzelfde veld vervangt de oude in de rij
+        // (een schuifbalk geeft veel wijzigingen achter elkaar).
+        const m = ev.match(/^input\t[^\t]*\t/);
+        if (m) w.queue = w.queue.filter((q) => !q.startsWith(m[0]));
         if (w.queue.length < 20) w.queue.push(ev);
         if (running && !w.busy) setTimeout(() => widgetFlush(w), 50);
         return;
@@ -743,9 +781,14 @@
     function formSignature(c, b) {
       const f = NB.parseForm(b.content);
       if (!f) return "";
-      const shape = f.kind === "record" ? f.fields.map((x) => x.name + ":" + x.type).join(",") + "|" + f.con
+      return [NB.formBinding(c.source), formShape(f)].join("|");
+    }
+
+    // Wat gelijk moet blijven om een formulier alleen nieuwe waarden te geven.
+    function formShape(f) {
+      const shape = f.kind === "record" || f.kind === "sum" ? f.fields.map((x) => x.name + ":" + x.type).join(",") + "|" + f.con
         : f.kind === "slider" ? [f.type, f.lo, f.hi].join(",") : f.kind === "choice" ? f.options.join("\t") : f.type;
-      return [NB.formBinding(c.source), f.kind, shape].join("|");
+      return f.kind + "|" + shape;
     }
 
     function renderForm(out, c, b) {
@@ -753,33 +796,68 @@
       if (!f) { const p = document.createElement("pre"); p.className = "err"; p.textContent = "onleesbaar formulier"; out.appendChild(p); return; }
       const name = NB.formBinding(c.source);
       const def = name ? NB.findDefinition(cells, name) : null;
-      const box = document.createElement("div");
-      box.className = "nb-form";
-      const inputs = [];   // per veld: { set(value) }
-      if (f.kind === "record") {
-        const con = document.createElement("div");
-        con.className = "con";
-        con.textContent = (name ? name + " :: " : "") + f.con;
-        box.appendChild(con);
-        f.fields.forEach((fl, k) => inputs.push(addInput(box, fl.name, fl.type, fl.value, null, def ? (raw) => formEdit(name, k, fl.type, raw) : null)));
-      } else {
-        inputs.push(addInput(box, name || "", f.type, f.value, f, def ? (raw) => formEdit(name, null, f.type, raw) : null));
-      }
-      out.appendChild(box);
+      const oldArgs = def && f.kind === "sum" ? NB.definitionArgs(cells[def.cell].source, name) || [] : [];
+      const form = buildForm(f, name, def ? {
+        edit: (k, type, raw) => formEdit(name, k, type, raw),
+        switchCon: (con) => formSwitch(name, f, con),
+        canSwitch: (con) => NB.switchLiteral(f, con, oldArgs) !== null,
+      } : null);
+      out.appendChild(form.box);
       if (!def) {
         const p = document.createElement("pre");
         p.className = "note";
         p.textContent = name ? `alleen lezen: geen definitie ${name} = ... in een codecel` : "alleen lezen: geef als laatste argument de naam van een definitie, bv. x = 5 en D.slider 0 10 x";
         out.appendChild(p);
       }
-      out._form = {
-        sig: formSignature(c, b),
+      out._form = { sig: formSignature(c, b), update: form.update };
+    }
+
+    // Het formulier zelf (een gewone cel en een interactieve cel). `h` is
+    // null (alleen lezen) of { edit(k, soort, waarde), switchCon(con),
+    // canSwitch(con) }; k is het veldnummer, of null voor de hele waarde.
+    function buildForm(f, name, h) {
+      const box = document.createElement("div");
+      box.className = "nb-form";
+      const inputs = [];   // per veld: { set(value) }
+      const edit = (k, type) => h ? (raw) => h.edit(k, type, raw) : null;
+      if (f.kind === "record") {
+        const con = document.createElement("div");
+        con.className = "con";
+        con.textContent = (name ? name + " :: " : "") + f.con;
+        box.appendChild(con);
+        f.fields.forEach((fl, k) => inputs.push(addInput(box, fl.name, fl.type, fl.value, fieldExtra(fl), edit(k, fl.type))));
+      } else if (f.kind === "sum") {
+        // Een somtype: eerst de constructor, dan de velden van die constructor.
+        const lab = document.createElement("label");
+        lab.textContent = (name ? name + " :: " : "") + f.type;
+        box.appendChild(lab);
+        const sel = document.createElement("select");
+        sel.className = "con-choice";
+        for (const a of f.alts) {
+          const op = document.createElement("option");
+          op.value = a.con; op.textContent = a.con;
+          if (h && a.con !== f.con && !h.canSwitch(a.con)) { op.disabled = true; op.title = "geen standaardwaarde voor een veld"; }
+          sel.appendChild(op);
+        }
+        sel.value = f.con;
+        if (h) sel.addEventListener("change", () => h.switchCon(sel.value));
+        else sel.disabled = true;
+        box.appendChild(sel);
+        f.fields.forEach((fl, k) => inputs.push(addInput(box, fl.name, fl.type, fl.value, fieldExtra(fl), edit(k, fl.type))));
+      } else {
+        inputs.push(addInput(box, name || "", f.type, f.value, f, edit(null, f.type)));
+      }
+      return {
+        box,
         update: (g) => {
-          const vals = g.kind === "record" ? g.fields.map((x) => x.value) : [g.value];
+          const vals = g.kind === "record" || g.kind === "sum" ? g.fields.map((x) => x.value) : [g.value];
           vals.forEach((v, k) => inputs[k] && inputs[k].set(v));
         },
       };
     }
+
+    // Een veld van een opsommingstype (soort con): een keuzelijst.
+    function fieldExtra(fl) { return fl.type === "con" ? { kind: "choice", options: fl.opts } : null; }
 
     // Eén invoerelement; `extra` is het slider-/keuzeformulier zelf.
     function addInput(box, label, type, value, extra, onChange) {
@@ -808,14 +886,16 @@
         input.value = value;
         input.addEventListener("change", () => onChange && onChange(input.value));
         box.appendChild(input);
-        set = (v) => { input.value = v; };
+        // Niet terwijl het veld de focus heeft: in een interactieve cel kan het
+        // antwoord op een tik die al onderweg was nog de oude waarde tonen.
+        set = (v) => { if (document.activeElement !== input) input.value = v; };
       } else if (type === "bool") {
         input = document.createElement("input");
         input.type = "checkbox";
         input.checked = value === "True";
         input.addEventListener("change", () => onChange && onChange(input.checked));
         box.appendChild(input);
-        set = (v) => { input.checked = v === "True"; };
+        set = (v) => { if (document.activeElement !== input) input.checked = v === "True"; };
       } else if (type === "int" || type === "float" || type === "str" || type === "char") {
         input = document.createElement("input");
         input.type = type === "int" || type === "float" ? "number" : "text";
@@ -840,7 +920,7 @@
     let formRunQueued = null;
 
     function formEdit(name, field, type, raw) {
-      const lit = NB.saplLiteral(type, raw);
+      const lit = type === "raw" ? raw : NB.saplLiteral(type, raw);
       const def = NB.findDefinition(cells, name);
       if (lit === null || !def) return;   // ongeldige invoer: niets doen (het veld blijft staan)
       const r = NB.rewriteDefinition(cells[def.cell].source, name, field, lit);
@@ -853,6 +933,16 @@
       // elkaar), dan daarna één keer, met de laatste waarde.
       if (running) formRunQueued = def.cell;
       else runCell(def.cell);
+    }
+
+    // Een andere constructor van een somtype: de hele definitie wordt de
+    // nieuwe waarde (velden die in beide constructors staan, blijven).
+    function formSwitch(name, f, con) {
+      const def = NB.findDefinition(cells, name);
+      if (!def) return;
+      const lit = NB.switchLiteral(f, con, NB.definitionArgs(cells[def.cell].source, name) || []);
+      if (lit === null) return;
+      formEdit(name, null, "raw", lit);
     }
 
     function renderTable(content) {

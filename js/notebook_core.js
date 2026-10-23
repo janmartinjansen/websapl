@@ -475,13 +475,67 @@
     const rows = content.split("\n").filter((l) => l !== "").map((l) => l.split("\t").map(unescapeField));
     if (!rows.length) return null;
     const [head, ...rest] = rows;
-    if (head[0] === "record") {
-      return { kind: "record", con: head[1], fields: rest.filter((r) => r[0] === "field").map((r) => ({ name: r[1], type: r[2], value: r[3] })) };
+    const fields = rest.filter((r) => r[0] === "field").map((r) => ({ name: r[1], type: r[2], value: r[3], opts: optList(r[4]) }));
+    if (head[0] === "record") return { kind: "record", con: head[1], fields };
+    if (head[0] === "sum") {
+      // Een somtype: per constructor (`alt`) de velden met naam, soort,
+      // opties en een standaardwaarde (Sapl-tekst, "" als er geen is).
+      const alts = rest.filter((r) => r[0] === "alt").map((r) => {
+        const fs = [];
+        for (let i = 2; i + 2 < r.length; i += 4) fs.push({ name: r[i], type: r[i + 1], opts: optList(r[i + 2]), dflt: r[i + 3] || "" });
+        return { con: r[1], fields: fs };
+      });
+      return { kind: "sum", con: head[1], type: head[2], alts, fields };
     }
     if (head[0] === "value") return { kind: "value", type: head[1], value: head[2] };
     if (head[0] === "slider") return { kind: "slider", type: head[1], value: head[2], lo: head[3], hi: head[4] };
     if (head[0] === "choice") return { kind: "choice", type: "str", value: head[1], options: head.slice(2) };
     return null;
+  }
+
+  function optList(s) { return s ? s.split(" ").filter((x) => x) : []; }
+
+  // == Somtypen (23 oktober 2026) ==========================================
+  // Een andere constructor kiezen: de nieuwe waarde als Sapl-tekst. Een veld
+  // met dezelfde naam en soort als in de huidige constructor houdt zijn
+  // waarde (de tekst uit de definitie); de rest krijgt de standaardwaarde.
+  // null als een veld geen van beide heeft (een typevariabele, een lijst).
+  function switchLiteral(form, altCon, oldArgs) {
+    const alt = form.alts.find((a) => a.con === altCon);
+    if (!alt) return null;
+    const args = [];
+    for (const f of alt.fields) {
+      const k = form.fields.findIndex((g) => g.name === f.name && g.type === f.type);
+      let lit = null;
+      if (k >= 0 && oldArgs && oldArgs[k] !== undefined) lit = oldArgs[k];
+      else if (k >= 0 && f.type !== "other") lit = saplLiteral(f.type, form.fields[k].value);
+      if (lit === null || lit === "") lit = f.dflt || (f.type === "con" && f.opts.length ? f.opts[0] : null);
+      if (lit === null || lit === "") return null;
+      args.push(lit);
+    }
+    return [alt.con, ...args].join(" ");
+  }
+
+  /** Kan een interactieve cel naar constructor `altCon` (Sh.input in de sessie
+   * houdt velden met dezelfde naam en soort, de rest krijgt een standaardwaarde)? */
+  function canSwitch(form, altCon) {
+    const alt = form.alts.find((a) => a.con === altCon);
+    return !!alt && alt.fields.every((f) => form.fields.some((g) => g.name === f.name && g.type === f.type) || f.dflt || (f.type === "con" && f.opts.length));
+  }
+
+  /** De argumenten van `name = Con a b c` in de brontekst (zonder Con), of null. */
+  function definitionArgs(source, name) {
+    const lines = source.split("\n");
+    const re = defLineRe(name);
+    const k = lines.findIndex((l) => re.test(l));
+    if (k < 0) return null;
+    let end = k + 1;
+    while (end < lines.length && /^\s+\S/.test(lines[end]) && !/^\s*\/\//.test(lines[end])) end++;
+    const m = lines[k].match(re);
+    let inner = [m[2], ...lines.slice(k + 1, end).map((l) => l.trim())].join(" ").replace(/\s*\/\/.*$/, "").trim();
+    while (/^\(.*\)$/.test(inner) && splitArgs(inner).length === 1 && balancedOuter(inner)) inner = inner.slice(1, -1).trim();
+    const parts = splitArgs(inner);
+    return parts.length && /^[A-Z]/.test(parts[0]) ? parts.slice(1) : null;
   }
 
   // == Interactieve cellen (fase E, 23 oktober 2026) ======================
@@ -547,6 +601,7 @@
     }
     if (type === "bool") return raw === true || t === "True" ? "True" : "False";
     if (type === "char") return t.length === 1 ? (t === "'" || t === "\\" ? `'\\${t}'` : `'${t}'`) : null;
+    if (type === "con") return /^[A-Z][A-Za-z0-9_']*$/.test(t) ? t : null;
     if (type === "str") return '"' + String(raw).replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n").replace(/\t/g, "\\t") + '"';
     return null;
   }
@@ -621,7 +676,7 @@
     parseNotebook, serializeNotebook, classifyCell, parseOutput, definedNames, cafHintNames,
     referencedNames, providedNames, dependents, lcInput, parseLcOutput,
     parseForm, formBinding, findDefinition, saplLiteral, splitArgs, rewriteDefinition,
-    parseInteractive, eventLine,
+    parseInteractive, eventLine, switchLiteral, definitionArgs, canSwitch,
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.SaplNotebook = api;

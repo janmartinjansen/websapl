@@ -1,2 +1,2 @@
-::Display__Display = Display__DText !x0 | Display__DTable !x0 !x1 | Display__DMarkdown !x0 | Display__DGraphics !x0 | Display__DForm !x0 | Display__DSlider !x0 !x1 !x2 | Display__DChoice !x0 !x1 | Display__DRecords !x0 | Display__DInteractive !x0 x1 x2 x3
+::Display__Display = Display__DText !x0 | Display__DTable !x0 !x1 | Display__DMarkdown !x0 | Display__DGraphics !x0 | Display__DForm !x0 | Display__DSlider !x0 !x1 !x2 | Display__DChoice !x0 !x1 | Display__DRecords !x0 | Display__DInteractive !x0 x1 x2 x3 | Display__DColumn !x0
 ::Display__Event = Display__Click !x0 !x1 | Display__Key !x0 | Display__Tick !x0 | Display__Input !x0 !x1

@@ -91,7 +91,7 @@ const cellsOf = (...srcs) => srcs.map((source) => ({ kind: "code", source }));
   const cells = NB.parseNotebook(fs.readFileSync(path.join(repo, "notebooks/interactief.spp"), "utf8"));
   const r3 = await run(cells);
   const toks = Object.values(r3.byCell).map(tokOf).filter(Boolean);
-  check("voorbeeldnotebook: twee interactieve cellen (ms 0 en 40)", toks.length === 2 && toks[0].ms === 0 && toks[1].ms === 40, JSON.stringify(toks));
+  check("voorbeeldnotebook: drie interactieve cellen (ms 0, 40 en 40)", toks.length === 3 && toks[0].ms === 0 && toks[1].ms === 40 && toks[2].ms === 40, JSON.stringify(toks));
   check("voorbeeldnotebook: geen typewaarschuwingen", Object.keys(r3.p.typeWarnings).length === 0, JSON.stringify(r3.p.typeWarnings));
   let t = performance.now();
   const n1 = 18;
@@ -107,6 +107,23 @@ const cellsOf = (...srcs) => srcs.map((source) => ({ kind: "code", source }));
   check("bal na 200 tikken: een plaatje", /GraphDisc 12 /.test(textOf(m.p)), textOf(m.p));
   console.log(`      rondgang in de worker: zeef ${zeefMs.toFixed(1)} ms per klik, bal ${balMs.toFixed(2)} ms per tik`);
   check("bal: een tik ruim binnen 50 ms (20 beelden per seconde)", balMs < 25, `${balMs.toFixed(2)} ms`);
+
+  // == Een formulier in een interactieve cel: Input-gebeurtenissen ==========
+  const fig = toks[2];
+  check("voorbeeldnotebook: de derde interactieve cel (formulier en plaatje)", fig && fig.ms === 40, JSON.stringify(toks));
+  const blocksOf = (p) => { const c = Object.values(p.cells)[0]; return c && c.blocks ? c.blocks : []; };
+  const formOf = (p) => { const b = blocksOf(p).find((x) => x.kind === "form"); return b ? NB.parseForm(b.content) : null; };
+  m = await msg(fig.tok, NB.eventLine("input", "kleur", "Rood"));
+  let fm = formOf(m.p);
+  check("input kleur Rood: het formulier toont Rood, het plaatje kleur 12", fm && fm.fields[2].value === "Rood" && /GraphPolyLine 12 /.test(blocksOf(m.p).map((b) => b.content).join("\n")), m.r.output.slice(0, 400));
+  m = await msg(fig.tok, NB.eventLine("input", "lijn", "False"));
+  check("input lijn False: stippen in plaats van een lijn", /GraphDisc 12 /.test(blocksOf(m.p).map((b) => b.content).join("\n")), m.r.output.slice(0, 300));
+  m = await msg(fig.tok, NB.eventLine("input", "fx", "abc"));
+  const ce = Object.values(m.p.cells)[0];
+  check("input fx abc: een melding, het model blijft", ce && /geen geheel getal/.test(ce.error || ""), m.r.output.slice(0, 300));
+  m = await msg(fig.tok, NB.eventLine("input", "fx", "5"));
+  fm = formOf(m.p);
+  check("input fx 5: daarna gewoon verder", fm && fm.fields[0].value === "5" && fm.fields[2].value === "Rood" && fm.fields[3].value === "False", m.r.output.slice(0, 300));
 
   // == Een trap (1 / 0 is in wasm geen vangbare fout): de sessie is weg ======
   const r4 = await run(teller);

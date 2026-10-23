@@ -73,3 +73,40 @@ balBeeld b = D.picture
    G.GraphDisc 12 (G.Pt (bx b - 0.06) (by b - 0.06)) (G.Pt (bx b + 0.06) (by b + 0.06))]
 //%%
 D.animated 40 balBegin balStap balBeeld
+//%% [markdown]
+// ## Een formulier in een interactieve cel
+//
+// Toont `view` een formulier, dan wordt een wijziging een `D.Input veld
+// waarde` voor `update` (in een gewone cel komt een wijziging in de
+// brontekst). `Sh.input` (lib/shape.spp) zet de tekst om volgens het type van
+// het veld en past hem toe op het record; `D.column` zet het formulier boven
+// het plaatje. De figuur draait met de klok mee; pas de instellingen aan
+// terwijl hij draait.
+//%%
+import "lib/shape.spp" as Sh
+
+::Kleur = Rood | Groen | Blauw
+
+::Instelling = { !fx : Int, !fy : Int, !kleur : Kleur, !lijn : Bool }
+
+::Figuur = { !inst : Instelling, !fase : Float }
+
+figBegin = Figuur (Instelling 3 2 Blauw True) 0.0
+
+figStap ev f = case ev
+  (D.Input veld s -> Figuur (Sh.input veld s (inst f)) (fase f))
+  (D.Tick t -> Figuur (inst f) (fase f + 0.04))
+  (_ -> f)
+
+figBeeld f = D.column [D.form (inst f), D.picture (lissajous (inst f) (fase f))]
+
+kleurNr k = case k (Rood -> 12) (Groen -> 10) (Blauw -> 9)
+
+lissajous i ph =
+  let pts = [ G.Pt (0.9 * sin (itof (fx i) * t + ph)) (0.9 * sin (itof (fy i) * t)) | t <- L.map (\k -> itof k * 0.0315) (L.range 0 200) ] in
+  if (lijn i) [G.GraphPolyLine (kleurNr (kleur i)) pts]
+    (L.map (stip (kleurNr (kleur i))) pts)
+
+stip c p = case p (G.Pt x y -> G.GraphDisc c (G.Pt (x - 0.012) (y - 0.012)) (G.Pt (x + 0.012) (y + 0.012)))
+//%%
+D.animated 40 figBegin figStap figBeeld

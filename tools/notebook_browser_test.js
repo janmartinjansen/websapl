@@ -124,15 +124,38 @@ const mark = `document.getElementById("status").textContent = "(wacht)"; window.
     st = await act(`const i = ${formIn("input[type=text]")}; i.value = 'a "b"\\\\c'; i.dispatchEvent(new Event("change"));`);
     check("formulier: tekst met \" en \\ terug in de bron, lengte 7", st[4] === "7" && (await ev(src0)).includes('kaart = Kaart "a \\"b\\"\\\\c"'), st.join("\n") + "\n" + await ev(src0));
 
+    // Somtypen (23 oktober 2026): eerst de constructor, dan de velden; een veld
+    // van een opsommingstype is een keuzelijst.
+    writeNb("::Kleur = Rood | Groen | Blauw\n\n::Vorm = Cirkel { !r : Float, !kl : Kleur } | Rect { !b : Float, !h : Float, !kl : Kleur } | Leeg\n\n::Pen = { !dik : Int, !kleur : Kleur }\n\nv = Cirkel 1.5 Rood\npen = Pen 2 Groen",
+      "D.form v", "v", "D.form pen", "pen");
+    st = await open("notebooks/_browser_test.spp");
+    const conSel = `${formIn("select.con-choice")}`;
+    const kleurSel = (cell) => `document.querySelectorAll(".cell")[${cell}].querySelector("select:not(.con-choice)")`;
+    check("somtype: een keuze van de constructor en een keuzelijst voor Kleur",
+      (await ev(`${conSel}.value`)) === "Cirkel" && (await ev(`[...${conSel}.options].map((o) => o.value + (o.disabled ? "-" : "")).join(",")`)) === "Cirkel,Rect,Leeg" &&
+      (await ev(`${kleurSel(1)}.value`)) === "Rood" && /Cirkel.*1\.5.*Rood/.test(st[4]), st.join("\n"));
+    st = await act(`const k = ${kleurSel(1)}; k.value = "Blauw"; k.dispatchEvent(new Event("change"));`);
+    check("somtype: veld van een opsommingstype gewijzigd", /\bv = Cirkel 1\.5 Blauw\b/.test(await ev(src0)) && /Blauw/.test(st[4]), st.join("\n") + "\n" + await ev(src0));
+    st = await act(`const c = ${conSel}; c.value = "Rect"; c.dispatchEvent(new Event("change"));`);
+    check("somtype: andere constructor, het veld kl blijft", /\bv = Rect 0\.0 0\.0 Blauw\b/.test(await ev(src0)) && /Rect/.test(st[4]) &&
+      (await ev(`${conSel}.value`)) === "Rect" && (await ev(`${formIn("input[type=number]")} !== null`)), st.join("\n") + "\n" + await ev(src0));
+    st = await act(`const c = ${conSel}; c.value = "Leeg"; c.dispatchEvent(new Event("change"));`);
+    check("somtype: constructor zonder velden", /\bv = Leeg\b/.test(await ev(src0)) && /Leeg/.test(st[4]), st.join("\n") + "\n" + await ev(src0));
+    st = await act(`const c = ${conSel}; c.value = "Cirkel"; c.dispatchEvent(new Event("change"));`);
+    check("somtype: terug, met standaardwaarden", /\bv = Cirkel 0\.0 Rood\b/.test(await ev(src0)), await ev(src0));
+    st = await act(`const k = ${kleurSel(3)}; k.value = "Blauw"; k.dispatchEvent(new Event("change"));`);
+    check("record met een veld van type Kleur: keuzelijst", /\bpen = Pen 2 Blauw\b/.test(await ev(src0)) && /Blauw/.test(st[6]), st.join("\n") + "\n" + await ev(src0));
+
     // Interactieve cellen (fase E): notebooks/interactief.spp, de zeef (cel 3)
     // en de bal (cel 6). Getoetst op de widgets en het protocol, niet op
     // pixels (een plaatje blijft in headless Chrome leeg).
     st = await open("notebooks/interactief.spp");
     const W = `[...window.__nbWidgets.values()]`;
-    const zeef = `${W}.find((w) => w.ms === 0)`, bal = `${W}.find((w) => w.ms > 0)`;
+    const zeef = `${W}.find((w) => w.ms === 0)`, bal = `${W}.find((w) => w.ms > 0 && !w.root.querySelector(".nb-form"))`;
+    const fig = `${W}.find((w) => !!w.root.querySelector(".nb-form"))`;
     const groen = `((${zeef}).c.output.blocks[1].content.match(/GraphDisc 10 /g) || []).length`;
     const waitFor = async (js, ms = 5000) => { const t = Date.now(); while (Date.now() - t < ms) { if (await ev(js)) return true; await sleep(50); } return false; };
-    check("interactief.spp: twee interactieve cellen, met een canvas", (await ev(`window.__nbWidgets.size`)) === 2 && st[5] === "[canvas]" && /\[canvas\]$/.test(st[8]), st.join("\n"));
+    check("interactief.spp: drie interactieve cellen, met een canvas", (await ev(`window.__nbWidgets.size`)) === 3 && st[5] === "[canvas]" && /\[canvas\]$/.test(st[8]) && /\[canvas\]$/.test(st[11]), st.join("\n"));
     const clickZeef = `(() => { const cv = (${zeef}).root.querySelector("canvas"); const r = cv.getBoundingClientRect();
       cv.dispatchEvent(new MouseEvent("click", { bubbles: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 })); })()`;
     for (let k = 1; k <= 3; k++) { await ev(clickZeef); await waitFor(`${groen} === ${k}`); }
@@ -146,9 +169,23 @@ const mark = `document.getElementById("status").textContent = "(wacht)"; window.
     const rt = await ev(`(${bal}).times.reduce((a, b) => a + b, 0) / (${bal}).times.length`);
     console.log(`      bal: ${fps} beelden per seconde (D.animated 40), rondgang ${rt.toFixed(1)} ms`);
     check("bal: minstens 20 beelden per seconde", fps >= 20, `${fps}`);
+    // Een formulier in een interactieve cel: een wijziging is een Input voor
+    // update; het formulier blijft staan (een veld houdt de focus).
+    const figForm = `(${fig}).root.querySelector(".nb-form")`;
+    const figGraphics = `(${fig}).c.output.blocks.map((b) => b.content).join("\\n")`;
+    check("figuur: formulier met een keuzelijst voor kleur, en een plaatje", (await ev(`${figForm}.querySelector("select").value`)) === "Blauw" && !!(await ev(`(${fig}).root.querySelector("canvas")`)), await ev(`(${fig}).root.innerText`));
+    await ev(`(() => { const k = ${figForm}.querySelector("select"); k.value = "Rood"; k.dispatchEvent(new Event("change")); })()`);
+    check("figuur: kleur Rood via een Input, het plaatje volgt", await waitFor(`/GraphPolyLine 12 /.test(${figGraphics})`), (await ev(figGraphics)).slice(0, 300));
+    await ev(`(() => { const i = ${figForm}.querySelector("input[type=number]"); window.__figIn = i; i.focus(); i.value = "5"; i.dispatchEvent(new Event("change")); })()`);
+    check("figuur: fx 5 in het model", await waitFor(`/field\tfx\tint\t5\t/.test((${fig}).c.output.blocks.find((b) => b.kind === "form").content)`), await ev(`(${fig}).c.output.blocks.find((b) => b.kind === "form").content`));
+    const ff0 = await ev(`(${fig}).frames`);
+    await sleep(1000);
+    const ffps = (await ev(`(${fig}).frames`)) - ff0;
+    check("figuur: de klok loopt door, en het veld met de focus blijft hetzelfde element", ffps >= 15 && (await ev(`${figForm}.querySelector("input[type=number]") === window.__figIn && document.activeElement === window.__figIn`)), `${ffps} beelden per seconde`);
+    console.log(`      figuur (formulier en plaatje): ${ffps} beelden per seconde`);
     const tok0 = await ev(`(${zeef}).tok`);
     st = await act(`document.getElementById("btn-run").click();`);
-    check("opnieuw uitvoeren: nieuwe widgets, de zeef weer leeg", (await ev(`window.__nbWidgets.size`)) === 2 && (await ev(`(${zeef}).tok`)) !== tok0 && (await ev(groen)) === 0, st.join("\n"));
+    check("opnieuw uitvoeren: nieuwe widgets, de zeef weer leeg", (await ev(`window.__nbWidgets.size`)) === 3 && (await ev(`(${zeef}).tok`)) !== tok0 && (await ev(groen)) === 0, st.join("\n"));
     await ev(clickZeef);
     check("en daarna weer een stap", await waitFor(`${groen} === 1`), await ev(groen));
     if (WB) {

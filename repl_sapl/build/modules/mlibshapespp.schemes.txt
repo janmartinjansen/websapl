@@ -2,14 +2,28 @@ shape__ofCon 1 f v0 cShape__Ty
 shape__conName 0 f cStr cStr
 shape__ofValue 1 f v0 cShape__Ty
 shape__ofValueTid 1 f v0 f cNum? cShape__Ty
+shape__ofAdtValue 0 f cStr f cNum? cShape__Ty
 shape__ofName 0 f cStr cShape__Ty
 shape__ofNameH 1 f cStr f v0 cShape__Ty
+shape__ofTypeInfo 0 f cStr f l cStr cShape__Ty
+shape__altsFor 1 f cStr f l cStr f v0 l cShape__Alt
+shape__altOf 0 f cStr cShape__Alt
+shape__altFields 0 f l cStr l cShape__Field
+shape__plainAlts 0 f l cStr l cShape__Alt
+shape__unknownFields 0 f cNum? l cShape__Field
 shape__fieldsFrom 0 f l l cStr l cShape__Field
 shape__fieldOf 0 f l cStr cShape__Field
 shape__parseTy 0 f cStr cShape__Ty
 shape__isListName 0 f cStr cBool
 shape__isRec 0 f cShape__Ty cBool
+shape__isSum 0 f cShape__Ty cBool
 shape__recName 0 f cShape__Ty cStr
+shape__alts 1 f cShape__Ty l v0
+shape__altName 1 f cShape__Alt v0
+shape__altFieldsOf 1 f cShape__Alt v0
+shape__altNames 1 f cShape__Ty l v0
+shape__altFieldsFor 1 f cShape__Ty f cStr l v0
+shape__altFieldsIn 1 f cStr f l cShape__Alt l v0
 shape__fields 1 f cShape__Ty l v0
 shape__fieldName 1 f cShape__Field v0
 shape__fieldTy 1 f cShape__Field v0
@@ -20,6 +34,9 @@ shape__make 3 f v0 f l v1 v2
 shape__strictList 1 f l v0 l v0
 shape__revL 1 f l v0 f l v0 l v0
 shape__fromText 1 f cShape__Ty f cStr v0
+shape__conText 1 f cShape__Ty f cStr v0
+shape__nullaryIn 0 f cStr f l cShape__Alt cBool
+shape__isNil 1 f l v0 cBool
 shape__boolText 1 f cStr v0
 shape__isIntText 0 f cStr cBool
 shape__isIntT 0 f cStr cBool
@@ -31,7 +48,27 @@ shape__expFrom 0 f cStr f cNum? f cNum? cBool
 shape__notB 0 f cNum cBool
 shape__isBoolText 0 f cStr cBool
 shape__showAs 1 f cShape__Ty f v0 cStr
+shape__showAlt 1 f l cShape__Field f v0 cStr
+shape__showArgs 1 f l cShape__Field f v0 f cNum l cStr
+shape__paren 0 f cStr cStr
 shape__showFields 1 f l cShape__Field f v0 f cNum l cStr
 shape__showPlain 1 f v0 cStr
 shape__ofPlainTid 1 f v0 f cNum cStr
 shape__mapL 2 f f v0 v1 f l v0 l v1
+shape__input 2 f cStr f cStr f v0 v1
+shape__inputAs 2 f cShape__Ty f cStr f cStr f v0 v1
+shape__inputWhole 2 f cShape__Ty f cStr f v0 v1
+shape__setNamed 2 f v0 f l cShape__Field f cStr f cStr v1
+shape__setAt 2 f v0 f cNum? f l cShape__Field f cStr v1
+shape__indexOfField 0 f cStr f l cShape__Field f cNum cNum
+shape__fieldValues 2 f v0 f cNum? f cNum? l v1
+shape__replaceAt 1 f cNum f v0 f l v0 l v0
+shape__nthL 1 f cNum f l v0 v0
+shape__lenL 1 f l v0 cNum
+shape__switchTo 2 f cShape__Ty f cStr f v0 v1
+shape__hasAlt 0 f cStr f l cShape__Alt cBool
+shape__switchFields 2 f cStr f l cShape__Field f l cShape__Field f v0 f cBool v1
+shape__carryOver 2 f l cShape__Field f v0 f cShape__Field v1
+shape__carryFrom 2 f l cShape__Field f v0 f cShape__Field f cNum v1
+shape__defaultOf 1 f cShape__Ty v0
+shape__firstNullary 1 f cStr f l cShape__Alt v0

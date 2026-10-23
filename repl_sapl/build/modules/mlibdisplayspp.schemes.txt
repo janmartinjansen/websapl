@@ -2,6 +2,7 @@ display__text 1 f v0 cDisplay__Display
 display__markdown 1 f v0 cDisplay__Display
 display__table 2 f v0 f v1 cDisplay__Display
 display__picture 1 f v0 cDisplay__Display
+display__column 1 f v0 cDisplay__Display
 display__records 1 f v0 cDisplay__Display
 display__bar 1 f l v0 cDisplay__Display
 display__lineChart 1 f l v0 cDisplay__Display

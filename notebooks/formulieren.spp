@@ -37,3 +37,30 @@ hoogte g x = amplitude g * basis (6.28318 * itof (frequentie g) * x) * (if (gede
 P.line xs (L.map (hoogte golf) xs)
 //%%
 golf
+//%% [markdown]
+// ## Een somtype: eerst de soort, dan de velden
+//
+// Bij een type met meer constructors (met getypeerde velden, of zonder
+// velden zoals `Kleur`) toont `D.form` eerst een keuze van de constructor en
+// daarna de velden daarvan. Een andere keuze schrijft een nieuwe waarde in
+// de definitie; een veld dat in beide constructors staan (`kleur`) houdt
+// zijn waarde. Een veld van een type als `Kleur` is een keuzelijst.
+//%%
+::Kleur = Rood | Groen | Blauw
+
+::Figuur = Cirkel { !straal : Float, !kleur : Kleur }
+         | Rechthoek { !breedte : Float, !lengte : Float, !kleur : Kleur }
+         | Niets
+
+figuur = Cirkel 0.5 Rood
+//%%
+D.form figuur
+//%%
+kleurNr k = case k (Rood -> 12) (Groen -> 10) (Blauw -> 9)
+
+teken f = case f
+  (Cirkel s k -> [G.GraphDisc (kleurNr k) (G.Pt (0.0 - s) (0.0 - s)) (G.Pt s s)])
+  (Rechthoek b h k -> [G.GraphPolygon (kleurNr k) [G.Pt (0.0 - b / 2.0) (0.0 - h / 2.0), G.Pt (b / 2.0) (0.0 - h / 2.0), G.Pt (b / 2.0) (h / 2.0), G.Pt (0.0 - b / 2.0) (h / 2.0)]])
+  (Niets -> [])
+//%%
+D.picture (Cons (G.GraphRectangle 7 (G.Pt (0.0 - 0.95) (0.0 - 0.95)) (G.Pt 0.95 0.95)) (teken figuur))

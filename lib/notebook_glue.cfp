@@ -97,6 +97,11 @@ nbDisplay d =
     (D.DChoice opts v -> printString "@@form" <#> nbNl <#> nbLine (Cons "choice" (Cons v opts)))
     (D.DRecords xs -> nbRecords xs)
     (D.DInteractive ms m u vw -> nbRender (vw m))
+    (D.DColumn ds -> nbColumn ds)
+
+// D.column: elk onderdeel met zijn eigen @@-kop (de pagina toont ze onder
+// elkaar).
+nbColumn ds = case ds (Nil -> 0) (Cons d rest -> nbRender d <#> nbColumn rest)
 
 // == Interactieve cellen (D.interactive, D.animated; fase E) ==================
 // De REPL roept per expressiecel nbCellI aan, met een sleutel `tok` die de
@@ -186,23 +191,139 @@ nbRev xs acc = case xs (Nil -> acc) (Cons x r -> nbRev r (Cons x acc))
 // tab (\t, \n en \\ in een waarde geëscapet; websapl/js/notebook_core.js
 // parseForm):
 //   record <Constructor>
-//   field <naam> <soort> <waarde>      soort: int float str bool char other
+//   sum <Constructor> <Type>           een waarde van een somtype (zie onder)
+//   alt <Constructor> (<naam> <soort> <opties> <standaard>)*
+//   field <naam> <soort> <waarde> <opties>
+//                                      soort: int float str bool char con other
 //   value <soort> <waarde>             een losse waarde (geen record)
 //   slider <soort> <waarde> <lo> <hi>
 //   choice <waarde> <optie> <optie> ...
 // Een record herkennen we aan __fields_<Naam> (preprocess/records.cfp): de
 // veldtypen staan daar als tekst, want een Bool heeft geen eigen tag.
+// Soort `con`: een veld van een opsommingstype (alleen constructors zonder
+// velden, ::Kleur = Rood | Groen); <opties> zijn dan de constructors,
+// gescheiden door een spatie, anders leeg.
 nbForm v = if (typeId v > TYPE_FUNC) (nbFormAdt v (constrName v) (lookup (strcat "__fields_" (constrName v)))) (nbFormValue v)
 
 nbFormAdt v name h =
   if (typeId h == TYPE_FUNC) (nbLine (Cons "record" (Cons (displayConName name) Nil)) <#> nbFormFields v 0 (applyDynamic h Nil))
-  (nbFormValue v)
+  (nbFormSum v name (nbTypeInfo (list2str (itoa (typeId v)))))
 
 nbFormValue v = nbLine (Cons "value" (Cons (nbKind v) (Cons (nbPlain v) Nil)))
 
 nbFormFields v !i fs = case fs (Nil -> 0) (Cons p rest -> nbFormField v i p <#> nbFormFields v (i + 1) rest)
 
-nbFormField v !i p = case p (Cons n r -> case r (Cons ty r2 -> nbLine (Cons "field" (Cons n (Cons (nbKindOfTy ty) (Cons (nbRecCell v i ty) Nil))))))
+nbFormField v !i p = case p (Cons n r -> case r (Cons ty r2 -> nbLine (Cons "field" (Cons n (Cons (nbFieldKind ty) (Cons (nbRecCell v i ty) (Cons (nbEnumOpts ty) Nil)))))))
+
+// == Somtypen (23 oktober 2026) ==============================================
+// Een waarde van een somtype als formulier: eerst een keuze van de
+// constructor, dan de velden van de gekozen constructor. Kan voor een
+// opsommingstype (::Kleur = Rood | Groen) en voor een ADT met getypeerde
+// velden (fase D2, ::Vorm = Cirkel { !r : Float } | Leeg); de veldtypen staan
+// in __alts_<Type> (preprocess/records.cfp, "Cirkel,r,Float;Leeg"). Een type
+// uit een module (Mod__Kleur) of een ander somtype: alleen de waarde.
+// De constructors van een type geeft de VM: lookup "@meta:type:<id of naam>"
+// is "Naam\tCon\tariteit\t..." (vm/meta.h), of "" als het type er niet is.
+nbTypeInfo key = nbTabFields (lookup (strcat "@meta:type:" key))
+
+nbInfoName info = case info (Nil -> "") (Cons n r -> n)
+
+nbInfoCons info = case info (Nil -> Nil) (Cons n r -> nbConPairs r)
+
+nbConPairs xs = case xs (Nil -> Nil) (Cons c r -> case r (Nil -> Nil) (Cons a r2 -> Cons (Cons c (Cons a Nil)) (nbConPairs r2)))
+
+nbPairFst p = case p (Cons a r -> a)
+
+nbPairSnd p = case p (Cons a r -> case r (Cons b r2 -> b))
+
+nbAllNullary cs = case cs (Nil -> True) (Cons p rest -> if (strEqual (nbPairSnd p) "0") (nbAllNullary rest) False)
+
+nbHasModule name = nbHasModuleFrom name 0 (strlen name)
+
+nbHasModuleFrom name !i !n = if (i + 1 >= n) False (if ((strat i name == '_') /\ (strat (i + 1) name == '_')) True (nbHasModuleFrom name (i + 1) n))
+
+// Een eigen type (geen module) met minstens één constructor.
+nbOwnType info = (strlen (nbInfoName info) > 0) /\ (nbHasModule (nbInfoName info) == False) /\ nbNotEmpty (nbInfoCons info)
+
+nbNotEmpty xs = case xs (Nil -> False) (_ -> True)
+
+nbIsEnum info = nbOwnType info /\ nbAllNullary (nbInfoCons info)
+
+nbFormSum v con info = nbFormSumA v con info (lookup (strcat "__alts_" (nbInfoName info)))
+
+nbFormSumA v con info h =
+  if (nbOwnType info == False) (nbFormValue v)
+  (if (typeId h == TYPE_FUNC) (nbFormSumAlts v con (nbInfoName info) (nbParseAlts (applyDynamic h Nil)))
+  (if (nbAllNullary (nbInfoCons info)) (nbFormSumAlts v con (nbInfoName info) (nbEnumAlts (nbInfoCons info))) (nbFormValue v)))
+
+// Alternatieven: per constructor de naam en de velden [[veld, type], ...].
+::NbAlt = NbAlt !con fields
+
+nbAltCon a = case a (NbAlt c fs -> c)
+
+nbAltFs a = case a (NbAlt c fs -> fs)
+
+nbEnumAlts cs = case cs (Nil -> Nil) (Cons p rest -> Cons (NbAlt (nbPairFst p) Nil) (nbEnumAlts rest))
+
+nbParseAlts s = nbParseAltList (nbSplit ';' s)
+
+nbParseAltList xs = case xs (Nil -> Nil) (Cons a rest -> Cons (nbParseAlt (nbSplit ',' a)) (nbParseAltList rest))
+
+nbParseAlt ws = case ws (Nil -> NbAlt "" Nil) (Cons c r -> NbAlt c (nbConPairs r))
+
+nbFormSumAlts v con tname alts =
+  nbLine (Cons "sum" (Cons con (Cons tname Nil))) <#> nbAltLines alts <#> nbFormFields v 0 (nbAltFields con alts)
+
+nbAltLines alts = case alts (Nil -> 0) (Cons a rest -> nbLine (Cons "alt" (Cons (nbAltCon a) (nbAltSpecs (nbAltFs a)))) <#> nbAltLines rest)
+
+nbAltSpecs fs = case fs (Nil -> Nil) (Cons p rest -> Cons (nbPairFst p) (Cons (nbFieldKind (nbPairSnd p)) (Cons (nbEnumOpts (nbPairSnd p)) (Cons (nbDefault (nbPairSnd p)) (nbAltSpecs rest)))))
+
+nbAltFields con alts = case alts (Nil -> Nil) (Cons a rest -> if (strEqual (nbAltCon a) con) (nbAltFs a) (nbAltFields con rest))
+
+// De soort van een veldtype: zoals nbKindOfTy, en `con` voor een
+// opsommingstype.
+nbFieldKind ty = nbFieldKindK ty (nbKindOfTy ty)
+
+nbFieldKindK ty k = if (strEqual k "other") (if (nbIsEnum (nbTypeInfoOf ty)) "con" k) k
+
+// Alleen een kale typenaam (geen [Int], Tree a, a) kan een opsommingstype zijn.
+nbTypeInfoOf ty = if (nbPlainTypeName ty) (nbTypeInfo ty) Nil
+
+nbPlainTypeName ty = (strlen ty > 0) /\ (strat 0 ty >= 'A') /\ (strat 0 ty <= 'Z') /\ nbNoSpace ty 0 (strlen ty)
+
+nbNoSpace s !i !n = if (i >= n) True (if (strat i s == ' ') False (nbNoSpace s (i + 1) n))
+
+nbEnumOpts ty = nbEnumOptsI (nbTypeInfoOf ty)
+
+nbEnumOptsI info = if (nbIsEnum info) (nbJoinSp (nbInfoCons info)) ""
+
+nbJoinSp cs = case cs (Nil -> "") (Cons p rest -> case rest (Nil -> nbPairFst p) (_ -> strcat (nbPairFst p) (strcat " " (nbJoinSp rest))))
+
+// Een standaardwaarde (als Sapl-tekst) voor een veld bij het wisselen van
+// constructor; "" als er geen is (een typevariabele, een lijst). Een eigen
+// somtype met een constructor zonder velden (Tree a: Leaf) krijgt die.
+nbDefault ty =
+  if (strEqual ty "Int") "0"
+  (if (strEqual ty "Float") "0.0"
+  (if (strEqual ty "String" \/ strEqual ty "Str") "\"\""
+  (if (strEqual ty "Bool") "False"
+  (if (strEqual ty "Char") "'a'"
+  (nbNullaryOf (nbTypeInfo (nbHeadWord ty)))))))
+
+nbHeadWord ty = list2str (nbHeadFrom ty 0 (strlen ty))
+
+nbHeadFrom s !i !n = if (i >= n) Nil (if (strat i s == ' ') Nil (Cons (strat i s) (nbHeadFrom s (i + 1) n)))
+
+nbNullaryOf info = if (nbOwnType info) (nbFirstNullary (nbInfoCons info)) ""
+
+nbFirstNullary cs = case cs (Nil -> "") (Cons p rest -> if (strEqual (nbPairSnd p) "0") (nbPairFst p) (nbFirstNullary rest))
+
+// s gesplitst op teken c (zonder escapes).
+nbSplit c s = nbSplitFrom c s 0 0 (strlen s)
+
+nbSplitFrom c s !start !i !n =
+  if (i >= n) (Cons (strslice s start n) Nil)
+  (if (strat i s == c) (Cons (strslice s start i) (nbSplitFrom c s (i + 1) (i + 1) n)) (nbSplitFrom c s start (i + 1) n))
 
 nbKind v = nbKindTid (typeId v)
 
