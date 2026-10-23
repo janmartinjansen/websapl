@@ -2135,7 +2135,7 @@
               "path": "repl_sapl/build/mini_repl.jmvm",
               "type": "file",
               "ext": ".jmvm",
-              "size": 7158146,
+              "size": 7161293,
               "isBinary": false
             },
             {
@@ -2143,7 +2143,7 @@
               "path": "repl_sapl/build/mini_repl.jvb",
               "type": "file",
               "ext": ".jvb",
-              "size": 2675336,
+              "size": 2676392,
               "isBinary": true
             }
           ],
@@ -2725,7 +2725,7 @@
       "path": "notebook.html",
       "type": "file",
       "ext": ".html",
-      "size": 55424,
+      "size": 55658,
       "isBinary": false
     },
     {
