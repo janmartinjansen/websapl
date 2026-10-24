@@ -370,7 +370,7 @@
           "path": "docs/waarden_bewaren.md",
           "type": "file",
           "ext": ".md",
-          "size": 8550,
+          "size": 10563,
           "isBinary": false
         }
       ],
@@ -1260,6 +1260,14 @@
           "ext": ".spp",
           "size": 8745,
           "isBinary": false
+        },
+        {
+          "name": "waarden.spp",
+          "path": "lib/waarden.spp",
+          "type": "file",
+          "ext": ".spp",
+          "size": 2859,
+          "isBinary": false
         }
       ],
       "_expanded": false
@@ -1370,7 +1378,7 @@
           "path": "notebooks/waarden_bewaren.spp",
           "type": "file",
           "ext": ".spp",
-          "size": 4157,
+          "size": 4875,
           "isBinary": false
         }
       ],
@@ -1684,7 +1692,7 @@
                   "path": "repl_sapl/build/modules/index.txt",
                   "type": "file",
                   "ext": ".txt",
-                  "size": 650,
+                  "size": 720,
                   "isBinary": false
                 },
                 {
@@ -2072,6 +2080,54 @@
                   "isBinary": false
                 },
                 {
+                  "name": "mlibwaardenspp.adts.cfp",
+                  "path": "repl_sapl/build/modules/mlibwaardenspp.adts.cfp",
+                  "type": "file",
+                  "ext": ".cfp",
+                  "size": 1,
+                  "isBinary": false
+                },
+                {
+                  "name": "mlibwaardenspp.defs.txt",
+                  "path": "repl_sapl/build/modules/mlibwaardenspp.defs.txt",
+                  "type": "file",
+                  "ext": ".txt",
+                  "size": 681,
+                  "isBinary": false
+                },
+                {
+                  "name": "mlibwaardenspp.jvb",
+                  "path": "repl_sapl/build/modules/mlibwaardenspp.jvb",
+                  "type": "file",
+                  "ext": ".jvb",
+                  "size": 13300,
+                  "isBinary": true
+                },
+                {
+                  "name": "mlibwaardenspp.names.txt",
+                  "path": "repl_sapl/build/modules/mlibwaardenspp.names.txt",
+                  "type": "file",
+                  "ext": ".txt",
+                  "size": 156,
+                  "isBinary": false
+                },
+                {
+                  "name": "mlibwaardenspp.pp.cfp",
+                  "path": "repl_sapl/build/modules/mlibwaardenspp.pp.cfp",
+                  "type": "file",
+                  "ext": ".cfp",
+                  "size": 8114,
+                  "isBinary": false
+                },
+                {
+                  "name": "mlibwaardenspp.schemes.txt",
+                  "path": "repl_sapl/build/modules/mlibwaardenspp.schemes.txt",
+                  "type": "file",
+                  "ext": ".txt",
+                  "size": 644,
+                  "isBinary": false
+                },
+                {
                   "name": "nbglue.adts.cfp",
                   "path": "repl_sapl/build/modules/nbglue.adts.cfp",
                   "type": "file",
@@ -2151,7 +2207,7 @@
               "path": "repl_sapl/build/mini_repl.jmvm",
               "type": "file",
               "ext": ".jmvm",
-              "size": 7271482,
+              "size": 7339556,
               "isBinary": false
             },
             {
@@ -2159,7 +2215,7 @@
               "path": "repl_sapl/build/mini_repl.jvb",
               "type": "file",
               "ext": ".jvb",
-              "size": 2712504,
+              "size": 2736064,
               "isBinary": true
             }
           ],

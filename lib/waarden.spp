@@ -1,0 +1,65 @@
+// lib/waarden.spp -- pack/unpack met een typecontrole (24 oktober 2026).
+// Uitleg: docs/waarden_bewaren_gebruik.md, §3.
+//
+// Gebruik:  import "lib/waarden.spp" as W
+//           s = W.packT "[Int]" [1, 2, 3]
+//           W.unpackT "[Int]" s            -- [1, 2, 3]
+//           W.unpackT "[Str]" s            -- fout: verwacht [Str], gevonden [Int]
+//
+// packT zet het type vooraan in de tekst (`@type [Int]` en een newline, dan
+// wat pack maakt); unpackT vergelijkt dat met het gevraagde type en geeft
+// anders een fout die met `try` te vangen is. De typechecker kent beide
+// (preprocess/typecheck.cfp, inferTypedPack): met een letterlijke typetekst
+// moet de waarde bij packT dat type hebben, en is het resultaat van unpackT
+// van dat type. De vergelijking hier is op de tekst, zonder spaties en met
+// Num = Int en String = Str. Zelfstandig: geen stdlib nodig.
+module Waarden
+
+::list = Nil | Cons !x xs
+
+kop = "@type "
+
+packT t x = strappend (strappend kop t) (strappend "\n" (pack x))
+
+unpackT t s = if (heeftKop s 0) (unpackNa t s (regelEind s 6 (strlen s))) (error "unpackT: tekst zonder typekop (gemaakt met pack in plaats van packT?)")
+
+// Het type in de kop, zonder te unpacken (`""` zonder kop).
+typeOf s = if (heeftKop s 0) (strslice s 6 (regelEind s 6 (strlen s))) ""
+
+heeftKop s !i = if (i >= 6) True (if (i >= strlen s) False (if (strat i s == strat i kop) (heeftKop s (i + 1)) False))
+
+regelEind s !i !n = if (i >= n) n (if (strat i s == '\n') i (regelEind s (i + 1) n))
+
+unpackNa t s !e =
+  let gevonden = strslice s 6 e in
+  if (zelfdeType t gevonden) (unpack (strslice s (e + 1) (strlen s)))
+  (error (strappend "unpackT: verwacht " (strappend t (strappend ", gevonden " gevonden))))
+
+// == Typeteksten vergelijken =================================================
+
+zelfdeType a b = gelijk (norm (tekens a 0)) (norm (tekens b 0))
+
+tekens s !i = if (i >= strlen s) Nil (Cons (strat i s) (tekens s (i + 1)))
+
+gelijk xs ys =
+  case xs
+    (Nil -> case ys (Nil -> True) (_ -> False))
+    (Cons x r -> case ys (Nil -> False) (Cons y q -> if (x == y) (gelijk r q) False))
+
+// Zonder spaties, en de synoniemen Num en String als Int en Str.
+norm cs =
+  case cs
+    (Nil -> Nil)
+    (Cons c r -> if (c == ' ') (norm r) (if (woordTeken c) (normWoord (neemWoord cs) (naWoord cs)) (Cons c (norm r))))
+
+normWoord w rest = plak (synoniem w) (norm rest)
+
+synoniem w = if (gelijk w (tekens "Num" 0)) (tekens "Int" 0) (if (gelijk w (tekens "String" 0)) (tekens "Str" 0) w)
+
+woordTeken c = ((c >= 'a') /\ (c <= 'z')) \/ ((c >= 'A') /\ (c <= 'Z')) \/ ((c >= '0') /\ (c <= '9')) \/ (c == '_') \/ (c == '.')
+
+neemWoord cs = case cs (Nil -> Nil) (Cons c r -> if (woordTeken c) (Cons c (neemWoord r)) Nil)
+
+naWoord cs = case cs (Nil -> Nil) (Cons c r -> if (woordTeken c) (naWoord r) cs)
+
+plak xs ys = case xs (Nil -> ys) (Cons x r -> Cons x (plak r ys))

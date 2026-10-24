@@ -105,10 +105,29 @@ strlen (packMax 10 tabel)
 // Twee dingen om op te letten:
 //
 // - `unpack` controleert het type niet. Lees een tekst terug als het type dat
-//   hij had; een andere lezing geeft onzin of een fout.
+//   hij had; een andere lezing geeft onzin of een fout. Met typecontrole:
+//   `packT` en `unpackT`, hieronder.
 // - Een functie uit `unpack` pas je toe via een naam (zoals `tienErbij`
 //   hierboven): `(unpack s) 5` geeft een compileerfout.
 //
 // Een tekst die niet klopt, geeft een fout die je met `try` kunt opvangen:
 //%%
 try (unpack "dit is geen waarde") (\melding -> strcat "fout: " melding)
+//%% [markdown]
+// ## 5. Met typecontrole: `packT` en `unpackT`
+//
+// De module `lib/waarden.spp` zet het type vooraan in de tekst. De
+// typechecker kent het type dan al bij het compileren (`unpackT "[Int]"` geeft
+// een `[Int]`, niet een willekeurig type), en `unpackT` controleert het bij
+// het teruglezen nog eens. Probeer in de laatste cel `[Str]` te veranderen in
+// `[Int]`, of schrijf `[Itn]`: dan meldt de typechecker een onbekend type.
+//%%
+import "lib/waarden.spp" as W
+
+bewaardeTabel = W.packT "[Int]" tabel
+//%%
+W.typeOf bewaardeTabel
+//%%
+neem 5 (W.unpackT "[Int]" bewaardeTabel)
+//%%
+try (W.unpackT "[Str]" bewaardeTabel) (\melding -> [melding])

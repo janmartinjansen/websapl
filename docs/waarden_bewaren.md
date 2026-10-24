@@ -14,7 +14,7 @@ functies in zitten. Er zijn drie manieren om dat te gebruiken:
 |---|---|---|
 | het notebook (WebSapl en Workbench) | het vinkje **waarden bewaren** | elke uitgerekende `=:`-waarde en het model van elke interactieve cel |
 | de REPL | `:save` en `:load` | alle uitgerekende `=:`-waarden en `resN` van de sessie |
-| je eigen programma | `pack`, `packMax`, `unpack` | elke waarde die je wilt |
+| je eigen programma | `pack`, `packMax`, `unpack`; met typecontrole `W.packT`, `W.unpackT` | elke waarde die je wilt |
 
 Het voorbeeldnotebook **Waarden bewaren** (`notebooks/waarden_bewaren.spp`, in
 WebSapl in de keuzelijst van het notebook) laat alles hieronder zien.
@@ -148,7 +148,7 @@ niet mee.
 
 ---
 
-## 3. In je eigen programma: `pack`, `packMax`, `unpack`
+## 3. In je eigen programma: `pack`, `packMax`, `unpack`, `packT`, `unpackT`
 
 ```
 pack    :: a -> Str
@@ -212,13 +212,60 @@ try (unpack "dit is geen waarde") (\melding -> strcat "fout: " melding)
 -- "fout: unpack: onbekend teken 'dit' (bij teken 3)"
 ```
 
-### Let op: geen typecontrole
+### Let op: `unpack` controleert het type niet
 
 `unpack` weet niet welk type de tekst had. De typechecker gelooft wat je
 ervan maakt (`unpack :: Str -> a`). Lees een tekst dus terug als het type dat
 hij had; een andere lezing geeft onzin of een fout bij het gebruik. Het
 notebook beschermt zich daartegen met de controle op "niets veranderd"
-hierboven; in je eigen programma ben je daar zelf verantwoordelijk voor.
+hierboven. In je eigen programma gebruik je daarvoor `packT` en `unpackT`.
+
+### Met typecontrole: `packT` en `unpackT`
+
+De module `lib/waarden.spp` doet hetzelfde als `pack` en `unpack`, maar met
+het type erbij:
+
+```
+import "lib/waarden.spp" as W
+
+s = W.packT "[Int]" [1, 2, 3]       -- "@type [Int]", een newline, dan pack [1, 2, 3]
+W.unpackT "[Int]" s                 -- [1, 2, 3]
+W.unpackT "[Str]" s                 -- fout: unpackT: verwacht [Str], gevonden [Int]
+W.unpackT "[Int]" (pack [1, 2])     -- fout: unpackT: tekst zonder typekop (...)
+W.typeOf s                          -- "[Int]"
+```
+
+Het type wordt twee keer gecontroleerd:
+
+- **Bij het compileren**, door de typechecker, als het type een letterlijke
+  tekst is. Bij `packT` moet de waarde dat type hebben, en `unpackT` geeft
+  een waarde van dat type (niet het algemene `a`):
+
+  ```
+  repl> :type W.unpackT "[Int]"
+  W.unpackT "[Int]" :: (Str -> [Num])
+  repl> :type W.packT "[Int]" "x"
+  fout: kan niet unificeren: [Num] met Str
+  repl> :type W.unpackT "[Itn]" s
+  fout: typetekst "[Itn]": onbekend type Itn
+  ```
+
+  In `./compile` en het notebook is dat, zoals altijd, een waarschuwing.
+- **Bij het teruglezen**, door `unpackT`: is het type in de tekst een ander,
+  dan volgt een fout die je met `try` opvangt.
+
+De typetekst is geschreven zoals een veldtype in een record: `Int`, `Str`,
+`Bool`, `Char`, `Float`, `[Int]`, `Stand`, `Tree Int`, `(Tree a)`. Grenzen:
+
+- Er is geen functietype (`Int -> Int`). Een functie stop je in een record
+  of ADT, of je gebruikt gewoon `pack`.
+- Bij het teruglezen worden de teksten vergeleken, zonder spaties en met
+  `Num` gelijk aan `Int` en `String` gelijk aan `Str`. Schrijf dus aan beide
+  kanten hetzelfde type op.
+- Een type uit een module (`D.Event`) en een typevariabele (`[a]`) controleert
+  de typechecker niet; bij het teruglezen wordt alleen de tekst vergeleken.
+- Een ADT met dezelfde naam maar een andere definitie (een veld erbij) komt
+  door de controle. Na zo'n wijziging past een oude tekst niet meer.
 
 ---
 

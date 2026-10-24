@@ -1,0 +1,3 @@
+F kop packT unpackT typeOf heeftKop regelEind unpackNa zelfdeType tekens gelijk norm normWoord synoniem woordTeken neemWoord naWoord plak
+C 
+module Waarden

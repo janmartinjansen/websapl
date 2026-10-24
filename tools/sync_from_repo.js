@@ -143,6 +143,7 @@ const ENTRIES = [
   { src: "lib/plot.spp", dst: "lib/plot.spp" },
   { src: "lib/csv.spp", dst: "lib/csv.spp" },
   { src: "lib/shape.spp", dst: "lib/shape.spp" },
+  { src: "lib/waarden.spp", dst: "lib/waarden.spp" },
   { src: "notebooks/data_verkennen.spp", dst: "notebooks/data_verkennen.spp" },
   { src: "notebooks/data/fruit.csv", dst: "notebooks/data/fruit.csv" },
   { src: "notebooks/kennismaking.spp", dst: "notebooks/kennismaking.spp" },

@@ -8,3 +8,4 @@ lib/stats.spp 5099 828166908 repl_sapl/build/modules/mlibstatsspp
 lib/shape.spp 12595 876999808 repl_sapl/build/modules/mlibshapespp
 lib/csv.spp 9663 211190638 repl_sapl/build/modules/mlibcsvspp
 lib/plot.spp 5685 914385098 repl_sapl/build/modules/mlibplotspp
+lib/waarden.spp 2859 208201878 repl_sapl/build/modules/mlibwaardenspp

@@ -1,0 +1,17 @@
+waarden__kop 0 cStr
+waarden__packT 1 f cStr f v0 cStr
+waarden__unpackT 1 f cStr f cStr v0
+waarden__typeOf 0 f cStr cStr
+waarden__heeftKop 0 f cStr f cNum? cBool
+waarden__regelEind 0 f cStr f cNum? f cNum? cNum?
+waarden__unpackNa 1 f cStr f cStr f cNum v0
+waarden__zelfdeType 0 f cStr f cStr cBool
+waarden__tekens 0 f cStr f cNum? l cChar
+waarden__gelijk 1 f l v0 f l v0 cBool
+waarden__norm 0 f l cChar l cChar
+waarden__normWoord 0 f l cChar f l cChar l cChar
+waarden__synoniem 0 f l cChar l cChar
+waarden__woordTeken 0 f cChar cBool
+waarden__neemWoord 0 f l cChar l cChar
+waarden__naWoord 0 f l cChar l cChar
+waarden__plak 1 f l v0 f l v0 l v0
