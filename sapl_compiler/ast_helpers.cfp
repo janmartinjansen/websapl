@@ -506,8 +506,13 @@ funcAddrKw = ['funcAddr']
 // fieldIsValue obj i (11 oktober 2026): is veld i al een waarde (_AUX
 // FieldIsValue)? Ook dit gebruikt gen1's eigen bron niet.
 fieldIsValueKw = ['fieldIsValue']
+// pack x, packMax max x, unpack s (24 oktober 2026, _AUX Pack/PackMax/Unpack):
+// een waarde als tekst en terug (vm/dynamics.h). Niet in gen1's eigen bron.
+packKw = ['pack']
+packMaxKw = ['packMax']
+unpackKw = ['unpack']
 
-reflectionKws = Cons typeIdKw (Cons constrNameKw (Cons getFieldKw (Cons makeConstrKw (Cons funcNameKw (Cons funcArityKw (Cons funcRemainingKw (Cons applyDynamicKw (Cons lookupKw (Cons ordKw (Cons chrKw (Cons funcAddrKw (Cons fieldIsValueKw Nil))))))))))))
+reflectionKws = Cons typeIdKw (Cons constrNameKw (Cons getFieldKw (Cons makeConstrKw (Cons funcNameKw (Cons funcArityKw (Cons funcRemainingKw (Cons applyDynamicKw (Cons lookupKw (Cons ordKw (Cons chrKw (Cons funcAddrKw (Cons fieldIsValueKw (Cons packKw (Cons packMaxKw (Cons unpackKw Nil)))))))))))))))
 
 isReflectionCall name = member reflectionKws name
 
@@ -534,7 +539,19 @@ reflectionOpcode name =
   (if (charListEq name chrKw) ['chr']
   (if (charListEq name funcAddrKw) ['funcaddr']
   (if (charListEq name fieldIsValueKw) ['fieldisvalue']
-  (error "reflectionOpcode: unknown reflection call")))))))))))))
+  (if (charListEq name packKw) ['pack']
+  (if (charListEq name packMaxKw) ['packmax']
+  (if (charListEq name unpackKw) ['unpack']
+  (error "reflectionOpcode: unknown reflection call"))))))))))))))))
+
+// Het aantal argumenten van een reflectieprimitief, -1 voor makeConstr (dat
+// zijn veldaantal zelf als argument krijgt). Alleen voor de controle in
+// stage5_codegen.cfp's genReflectionCall (24 oktober 2026): `(lookup "f") 2 3`
+// werd één aanroep met drie argumenten en gaf stil onzin.
+reflectionArity name =
+  if (charListEq name makeConstrKw) (0 - 1)
+  (if (charListEq name getFieldKw \/ charListEq name applyDynamicKw \/ charListEq name fieldIsValueKw \/ charListEq name packMaxKw) 2
+  1)
 
 exprConstrNameOf e =
   case e

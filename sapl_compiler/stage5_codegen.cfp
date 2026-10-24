@@ -160,8 +160,12 @@ genStrcreateCallRest prog adts args a rest =
 // an empirical "GetField called on non-pointer!" VM crash with the reversed
 // order. No arity check: see ast_helpers.cfp's isReflectionCall comment for
 // why (makeConstr has no fixed arity, and parser.ama doesn't check either).
+// Te veel argumenten (`(unpack s) x` wordt `unpack s x`): een fout in plaats
+// van stil het verkeerde argument bovenop (24 oktober 2026).
 genReflectionCall prog adts args n as =
-  append (concatAll (map (genValue prog adts args) as)) (reflectionInstrs n)
+  if (reflectionArity n >= 0 /\ length as > reflectionArity n)
+    (error (list2str (append ['saplcomp: '] (append n (append [' krijgt '] (append (itoa (length as)) (append [' argumenten, verwacht '] (append (itoa (reflectionArity n)) [' (bind het resultaat eerst aan een naam en pas die toe)']))))))))
+    (append (concatAll (map (genValue prog adts args) as)) (reflectionInstrs n))
 
 // `getField` levert het veld zoals het in de knoop staat, dus bij een lui
 // veld een onge-evalueerde thunk (type-id 4). De rest van de codegen neemt
@@ -170,9 +174,11 @@ genReflectionCall prog adts args n as =
 // tupel `(x * 2.0, 0)` toonde als `(9.00725e+15, 0)`. Sinds 26 september
 // 2026 dwingt een `eval` direct na `getfield` het veld af, net als een
 // `case` op dat veld; op een al geëvalueerde waarde doet `eval` niets.
+// Ook `unpack` (24 oktober 2026): de teruggebouwde waarde kan een thunk zijn
+// (de tekst begint met `T`/`P`), dus ook daar een `force`.
 reflectionInstrs n =
-  if (charListEq n getFieldKw)
-    (Cons (mkI ['getfield']) (Cons (mkI ['force']) Nil))
+  if (charListEq n getFieldKw \/ charListEq n unpackKw)
+    (Cons (mkI (reflectionOpcode n)) (Cons (mkI ['force']) Nil))
     (Cons (mkI (reflectionOpcode n)) Nil)
 
 // `error msg`: syscall 8 (7 October 2026) goes to the nearest catch-all
