@@ -46,6 +46,8 @@
     }
     button:hover, label.btn:hover { background: var(--bg-hover); }
     label.chk { font-size: 13px; color: var(--text-2); display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+    a.help-link { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; margin-left: -4px; border-radius: 50%; border: 1px solid var(--border); color: var(--text-2); font-size: 12px; text-decoration: none; }
+    a.help-link:hover { color: var(--text); border-color: var(--text-2); }
     button.primary { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
     button:disabled { opacity: .5; cursor: default; }
     .status { font-size: 12px; color: var(--muted); min-width: 110px; text-align: right; }
@@ -118,6 +120,7 @@
         <option value="notebooks/data_verkennen.spp">Data verkennen</option>
         <option value="notebooks/formulieren.spp">Formulieren</option>
         <option value="notebooks/interactief.spp">Interactieve cellen</option>
+        <option value="notebooks/waarden_bewaren.spp">Waarden bewaren</option>
         <option value="notebooks/vm_metingen.spp">Metingen aan VM en compiler</option>
       </select>
       <label class="btn" title="Een .spp-notebook openen">Openen<input type="file" id="file-open" accept=".spp,.txt" /></label>
@@ -127,6 +130,7 @@
         <option value="top">van boven naar beneden</option>
       </select>
       <label class="chk" title="Uitgerekende =:-waarden en het model van interactieve cellen bewaren en bij een volgende sessie terugzetten, zolang hun cellen niet veranderen (wordt in het notebook bewaard)"><input type="checkbox" id="chk-values" checked /> waarden bewaren</label>
+      <a class="help-link" href="ide.html?file=docs/waarden_bewaren.md" target="_blank" title="Gebruiksaanwijzing: waarden bewaren">?</a>
       <span class="status" id="status">engine laden…</span>
     </header>
     <div id="banner" class="banner" hidden></div>

@@ -1,0 +1,114 @@
+//%% [markdown]
+// # Waarden bewaren: een notebook dat onthoudt
+//
+// Met het vinkje **waarden bewaren** (in de werkbalk bovenaan, standaard aan) onthoudt het
+// notebook wat het al uitrekende: elke `=:`-waarde en het model van elke
+// interactieve cel. Open je het notebook later opnieuw (of herlaad je de
+// pagina), dan komen ze terug in plaats van opnieuw uitgerekend te worden. In
+// de statusregel staat dan bijvoorbeeld `klaar (…), 2 waarden teruggezet`.
+//
+// **Probeer het zo:** voer alles uit, klik een paar keer in de teller
+// (deel 3), herlaad de pagina en voer alles opnieuw uit.
+//
+// De volledige uitleg staat in de gebruiksaanwijzing *Waarden bewaren*
+// (de link **?** naast het vinkje; in de repo
+// `docs/waarden_bewaren_gebruik.md`).
+//%% [markdown]
+// ## 1. Een dure waarde
+//
+// `tabel` is een `=:`-definitie (een CAF): ze wordt één keer uitgerekend, de
+// eerste keer dat een cel haar nodig heeft. Daarna bewaart het notebook haar.
+// In een volgende sessie staat ze er meteen weer, zolang deze cel en alles
+// waar ze van afhangt niet veranderde. Verander je `32` in `31`, dan rekent
+// ze opnieuw (en wordt de nieuwe waarde bewaard).
+//%%
+fib n = if (n < 2) n (fib (n - 1) + fib (n - 2))
+
+tabel =: [fib k | k <- [1 .. 32]]
+
+som xs = case xs (Nil -> 0) (Cons x r -> x + som r)
+//%%
+som tabel
+//%% [markdown]
+// ## 2. Een half uitgerekende lijst
+//
+// Een oneindige lijst wordt bewaard zoals hij er op dat moment bij ligt: het
+// uitgerekende begin, en de rest als een nog niet uitgerekend stuk. Na het
+// terugzetten rekent hij gewoon verder. Vraag hieronder meer priemgetallen en
+// herlaad: de eerste komen uit het bewaarde deel.
+//%%
+zeef xs = case xs (Cons p r -> Cons p (zeef [x | x <- r, x % p != 0]))
+
+priemen =: zeef [2 ..]
+
+neem n xs = if (n == 0) Nil (case xs (Cons x r -> Cons x (neem (n - 1) r)))
+//%%
+neem 15 priemen
+//%% [markdown]
+// ## 3. Een interactieve cel die onthoudt
+//
+// Het model van een interactieve cel wordt na elke klik bewaard. Klik een paar
+// keer in de uitvoer, herlaad de pagina en voer alles uit: de teller gaat
+// verder waar hij was.
+//
+// Wil je opnieuw beginnen? Voer de cel opnieuw uit: binnen dezelfde sessie
+// begint ze dan weer bij het startmodel (en dat wordt bewaard). Ook een
+// wijziging in een definitie waar de cel van afhangt (bijvoorbeeld de tekst in
+// `toonStand`) zet het model terug op het begin.
+//%%
+import "lib/text.spp" as T
+
+::Stand = { !klikken : Int, !toetsen : Int }
+
+standBegin = Stand 0 0
+
+standStap ev s = case ev
+  (D.Click x y -> Stand (klikken s + 1) (toetsen s))
+  (D.Key k -> Stand (klikken s) (toetsen s + 1))
+  (_ -> s)
+
+toonStand s = D.text (strcat (T.showInt (klikken s)) (strcat " klikken, " (strcat (T.showInt (toetsen s)) " toetsen")))
+//%%
+D.interactive standBegin standStap toonStand
+//%% [markdown]
+// ## 4. Zelf bewaren: `pack` en `unpack`
+//
+// Wat het notebook doet, kun je ook zelf, met drie primitieven:
+//
+// - `pack x` maakt van elke waarde een tekst (`Str`): lijsten, records,
+//   gedeelde stukken, een cyclus, een nog niet uitgerekend stuk, en ook een
+//   functie of een gedeeltelijke toepassing;
+// - `packMax n x` doet hetzelfde, maar geeft `""` als de waarde meer dan `n`
+//   knopen heeft;
+// - `unpack s` maakt er weer een waarde van.
+//
+// Zo'n tekst kun je met `writeFile` wegschrijven en later met `readFile` en
+// `unpack` terughalen. Functies staan erin bij naam: lees de tekst dus terug
+// in hetzelfde programma (of hetzelfde notebook).
+//%%
+pack [1, 2, 3]
+//%%
+unpack (pack (neem 5 priemen))
+//%%
+plus a b = a + b
+
+pas5 f = f 5
+
+tienErbij = unpack (pack (plus 10))
+//%%
+pas5 tienErbij
+//%%
+strlen (packMax 1000 tabel)
+//%%
+strlen (packMax 10 tabel)
+//%% [markdown]
+// Twee dingen om op te letten:
+//
+// - `unpack` controleert het type niet. Lees een tekst terug als het type dat
+//   hij had; een andere lezing geeft onzin of een fout.
+// - Een functie uit `unpack` pas je toe via een naam (zoals `tienErbij`
+//   hierboven): `(unpack s) 5` geeft een compileerfout.
+//
+// Een tekst die niet klopt, geeft een fout die je met `try` kunt opvangen:
+//%%
+try (unpack "dit is geen waarde") (\melding -> strcat "fout: " melding)

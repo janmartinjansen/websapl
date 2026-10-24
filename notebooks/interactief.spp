@@ -8,8 +8,10 @@
 // model. `D.animated ms ...` geeft daarnaast elke `ms` milliseconden een
 // `D.Tick`.
 //
-// Het model blijft in de sessie, niet in het bestand: de cel opnieuw
-// uitvoeren begint weer bij `model0`. Onder de uitvoer staat hoe lang één
+// Het model staat in de sessie, niet in het bestand: de cel opnieuw
+// uitvoeren begint weer bij `model0`. Met **waarden bewaren** aan komt het
+// model wel terug in een volgende sessie (de pagina herladen); zie het
+// notebook *Waarden bewaren*. Onder de uitvoer staat hoe lang één
 // gebeurtenis duurt (heen en terug).
 //%% [markdown]
 // ## De zeef van Eratosthenes, stap voor stap

@@ -346,7 +346,7 @@
           "path": "docs/README.md",
           "type": "file",
           "ext": ".md",
-          "size": 1874,
+          "size": 2108,
           "isBinary": false
         },
         {
@@ -363,6 +363,14 @@
           "type": "file",
           "ext": ".md",
           "size": 4027,
+          "isBinary": false
+        },
+        {
+          "name": "waarden_bewaren.md",
+          "path": "docs/waarden_bewaren.md",
+          "type": "file",
+          "ext": ".md",
+          "size": 8550,
           "isBinary": false
         }
       ],
@@ -1202,7 +1210,7 @@
           "path": "lib/notebook_glue.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 21097,
+          "size": 24570,
           "isBinary": false
         },
         {
@@ -1338,7 +1346,7 @@
           "path": "notebooks/interactief.spp",
           "type": "file",
           "ext": ".spp",
-          "size": 3980,
+          "size": 4119,
           "isBinary": false
         },
         {
@@ -1355,6 +1363,14 @@
           "type": "file",
           "ext": ".spp",
           "size": 9662,
+          "isBinary": false
+        },
+        {
+          "name": "waarden_bewaren.spp",
+          "path": "notebooks/waarden_bewaren.spp",
+          "type": "file",
+          "ext": ".spp",
+          "size": 4157,
           "isBinary": false
         }
       ],
@@ -1740,7 +1756,7 @@
                   "path": "repl_sapl/build/modules/mlibcsvspp.jvb",
                   "type": "file",
                   "ext": ".jvb",
-                  "size": 36572,
+                  "size": 36604,
                   "isBinary": true
                 },
                 {
@@ -1836,7 +1852,7 @@
                   "path": "repl_sapl/build/modules/mliblistspp.jvb",
                   "type": "file",
                   "ext": ".jvb",
-                  "size": 21916,
+                  "size": 21940,
                   "isBinary": true
                 },
                 {
@@ -1884,7 +1900,7 @@
                   "path": "repl_sapl/build/modules/mlibplotspp.jvb",
                   "type": "file",
                   "ext": ".jvb",
-                  "size": 22986,
+                  "size": 23010,
                   "isBinary": true
                 },
                 {
@@ -1932,7 +1948,7 @@
                   "path": "repl_sapl/build/modules/mlibshapespp.jvb",
                   "type": "file",
                   "ext": ".jvb",
-                  "size": 56608,
+                  "size": 56640,
                   "isBinary": true
                 },
                 {
@@ -1980,7 +1996,7 @@
                   "path": "repl_sapl/build/modules/mlibstatsspp.jvb",
                   "type": "file",
                   "ext": ".jvb",
-                  "size": 22108,
+                  "size": 22132,
                   "isBinary": true
                 },
                 {
@@ -2028,7 +2044,7 @@
                   "path": "repl_sapl/build/modules/mlibtextspp.jvb",
                   "type": "file",
                   "ext": ".jvb",
-                  "size": 30576,
+                  "size": 30600,
                   "isBinary": true
                 },
                 {
@@ -2060,7 +2076,7 @@
                   "path": "repl_sapl/build/modules/nbglue.adts.cfp",
                   "type": "file",
                   "ext": ".cfp",
-                  "size": 23,
+                  "size": 45,
                   "isBinary": false
                 },
                 {
@@ -2068,7 +2084,7 @@
                   "path": "repl_sapl/build/modules/nbglue.defs.txt",
                   "type": "file",
                   "ext": ".txt",
-                  "size": 2191,
+                  "size": 2515,
                   "isBinary": false
                 },
                 {
@@ -2076,7 +2092,7 @@
                   "path": "repl_sapl/build/modules/nbglue.jvb",
                   "type": "file",
                   "ext": ".jvb",
-                  "size": 56460,
+                  "size": 62276,
                   "isBinary": true
                 },
                 {
@@ -2084,7 +2100,7 @@
                   "path": "repl_sapl/build/modules/nbglue.pp.cfp",
                   "type": "file",
                   "ext": ".cfp",
-                  "size": 27825,
+                  "size": 32336,
                   "isBinary": false
                 },
                 {
@@ -2135,7 +2151,7 @@
               "path": "repl_sapl/build/mini_repl.jmvm",
               "type": "file",
               "ext": ".jmvm",
-              "size": 7161293,
+              "size": 7271482,
               "isBinary": false
             },
             {
@@ -2143,7 +2159,7 @@
               "path": "repl_sapl/build/mini_repl.jvb",
               "type": "file",
               "ext": ".jvb",
-              "size": 2676392,
+              "size": 2712504,
               "isBinary": true
             }
           ],
@@ -2162,7 +2178,7 @@
           "path": "sapl_compiler/ast_helpers.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 23012,
+          "size": 23911,
           "isBinary": false
         },
         {
@@ -2202,7 +2218,7 @@
           "path": "sapl_compiler/stage5_codegen.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 75863,
+          "size": 76481,
           "isBinary": false
         }
       ],
@@ -2725,7 +2741,7 @@
       "path": "notebook.html",
       "type": "file",
       "ext": ".html",
-      "size": 55658,
+      "size": 60631,
       "isBinary": false
     },
     {
