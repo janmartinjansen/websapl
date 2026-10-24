@@ -126,7 +126,7 @@
         <option value="any">in elke volgorde</option>
         <option value="top">van boven naar beneden</option>
       </select>
-      <label class="chk" title="Uitgerekende =:-waarden bewaren en bij een volgende sessie terugzetten, zolang hun cellen niet veranderen (wordt in het notebook bewaard)"><input type="checkbox" id="chk-values" checked /> waarden bewaren</label>
+      <label class="chk" title="Uitgerekende =:-waarden en het model van interactieve cellen bewaren en bij een volgende sessie terugzetten, zolang hun cellen niet veranderen (wordt in het notebook bewaard)"><input type="checkbox" id="chk-values" checked /> waarden bewaren</label>
       <span class="status" id="status">engine laden…</span>
     </header>
     <div id="banner" class="banner" hidden></div>
@@ -370,7 +370,7 @@
         return;
       }
       const p = NB.parseNbOutput(r.output);
-      if (!SERVER && vdir) { valuesInWorker.add(vdir); if (r.saved && r.saved.length) valuesStore(r.saved); }
+      if (!SERVER && vdir) { valuesInWorker.add(vdir); if (r.saved && r.saved.length) { valuesStoreSoon(r.saved); valuesFlush(); } }
       lastRestored = p.restored.length;
       for (const e of p.valueErrors) console.info(`waarde ${e.name}: ${e.error}`);
       for (const i of defT) cells[i].output = { def: true, warnings: p.typeWarnings[i] || [], defs: p.defs[i] || (p.defsSame.includes(i) && cells[i].output && cells[i].output.defs) || [] };
@@ -447,6 +447,33 @@
         }
       } catch (_) {}
     }
+
+    // Het model van een interactieve cel (fase F): na elke stap die het
+    // veranderde een nieuw bestand; een bal geeft er 25 per seconde. Daarom
+    // per pad alleen het laatste, één keer per halve seconde (en bij het
+    // verlaten van de pagina) naar IndexedDB.
+    const valuesPending = new Map();
+    let valuesTimer = null;
+
+    function valuesStoreSoon(saved) {
+      for (const v of saved) {
+        const prev = valuesPending.get(v.path);
+        valuesPending.delete(v.path);   // achteraan: het nieuwste wint
+        valuesPending.set(v.path, { ...v, removed: [...new Set([...(prev ? prev.removed || [] : []), ...(v.removed || [])])] });
+      }
+      if (!valuesTimer) valuesTimer = setTimeout(valuesFlush, 500);
+    }
+
+    function valuesFlush() {
+      clearTimeout(valuesTimer);
+      valuesTimer = null;
+      if (!valuesPending.size) return;
+      const list = [...valuesPending.values()];
+      valuesPending.clear();
+      valuesStore(list);
+    }
+
+    addEventListener("pagehide", valuesFlush);
 
     async function runLc() {
       const inp = NB.lcInput(cells);
@@ -795,6 +822,7 @@
       if (w.times.length > 50) w.times.shift();
       if (!r.success) return widgetStop(w, r.error || "de gebeurtenis mislukte");
       if (r.trapped) return stopAllWidgets("de engine stopte: voer de cel opnieuw uit");
+      if (!SERVER && r.saved && r.saved.length) valuesStoreSoon(r.saved);
       const p = NB.parseNbOutput(r.output);
       if (p.stale.includes(w.tok)) return widgetStop(w, "verlopen: voer de cel opnieuw uit");
       const res = Object.values(p.cells)[0];

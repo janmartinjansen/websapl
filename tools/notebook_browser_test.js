@@ -4,7 +4,8 @@
 // Chrome (macOS-pad, of CHROME=...). Scenario's: kennismaking.spp helemaal;
 // een wasm-trap na een `error`-cel; een cel wijzigen met Shift+Enter en dan
 // alles; de volgorde "van boven naar beneden" (ook in het bestand);
-// formulieren; interactieve cellen (fase E: klikken, een toets, de klok en
+// formulieren; waarden en het model van een interactieve cel bewaren (fase F);
+// interactieve cellen (fase E: klikken, een toets, de klok en
 // het aantal beelden per seconde, opnieuw uitvoeren, een ander notebook).
 //
 // Met --workbench dezelfde pagina in de Workbench (workbench/server.js,
@@ -170,6 +171,23 @@ const mark = `document.getElementById("status").textContent = "(wacht)"; window.
       st = await act(`document.getElementById("btn-run").click();`);
     } else st = await open("notebooks/_browser_test.spp");
     check("waarden: verse sessie zet tabel terug", st[3] === "46367" && /1 waarde teruggezet/.test(st[0]), st.join("\n"));
+    // Het model van een interactieve cel (fase F, §11 van het plan): drie
+    // klikken, dan een verse sessie zoals hierboven: het model komt terug.
+    writeNb('import "lib/text.spp" as T\n\ntel ev n = case ev (D.Click x y -> n + 1) (_ -> n)\n\ntoon n = D.text (strcat "aantal: " (T.showInt n))', "D.interactive 0 tel toon");
+    st = await open("notebooks/_browser_test.spp");
+    const tw = `[...window.__nbWidgets.values()][0]`;
+    const twText = `((${tw}) && (${tw}).c.output.blocks[1].content)`;
+    const waitUntil = async (js, ms = 5000) => { const t = Date.now(); while (Date.now() - t < ms) { if (await ev(js)) return true; await sleep(50); } return false; };
+    for (let k = 1; k <= 3; k++) { await ev(`(${tw}).root.click()`); await waitUntil(`${twText} === "aantal: ${k}"`); }
+    check("model: drie klikken", (await ev(twText)) === "aantal: 3", await ev(twText));
+    if (WB) {
+      spawnSync("pkill", ["-TERM", "-P", String(server.pid), "rs-driver"]);
+      await sleep(300);
+      st = await act(`document.getElementById("btn-run").click();`);
+    } else { await sleep(800); st = await open("notebooks/_browser_test.spp"); }
+    check("model: verse sessie zet het terug (3)", /aantal: 3/.test(st[3]), st.join("\n"));
+    await ev(`(${tw}).root.click()`);
+    check("model: daarna verder (4)", await waitUntil(`${twText} === "aantal: 4"`), await ev(twText));
     await ev(`document.getElementById("chk-values").click()`);
     const savedV = await ev(`JSON.parse(localStorage.getItem("${STORE_KEY}")).text.split("\\n")[0]`);
     check("waarden uit: in de instellingenregel van het bestand", savedV === "//%% [instellingen] waarden=uit", savedV);
@@ -227,6 +245,7 @@ const mark = `document.getElementById("status").textContent = "(wacht)"; window.
       check("na een gestopt proces, alleen de bal opnieuw: de zeef is gestopt, de bal loopt",
         (await ev(`window.__nbWidgets.size`)) === 1 && (await ev(`!!(${bal})`)) && !(await ev(`!!(${zeef})`)), st.join("\n"));
     }
+    writeNb("1 + 2");   // zonder interactieve cel (de toets van het model liet er een staan)
     st = await open("notebooks/_browser_test.spp");
     check("een ander notebook: alle interactieve cellen gestopt", (await ev(`window.__nbWidgets.size`)) === 0, "");
 

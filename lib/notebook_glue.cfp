@@ -119,16 +119,23 @@ nbColumn ds = case ds (Nil -> 0) (Cons d rest -> nbRender d <#> nbColumn rest)
 //   @@end n
 // Een fout in update of view: @@begin n met de melding (zonder @@end), en het
 // model blijft wat het was.
-// De typechecker (met de kop van de sessie ervoor) meldt hier bewust twee
-// dingen: een "oneindig type" bij nbStepOk/nbStepFail (een stapper geeft een
-// stapper terug: zonder wikkeltype niet uit te drukken) en bij nbInterStart
+// De typechecker (met de kop van de sessie ervoor) meldt hier bewust drie
+// dingen: een "oneindig type" bij nbStepNext/nbStepFail (een stapper geeft een
+// stapper terug: zonder wikkeltype niet uit te drukken), bij nbInterFirst
 // een lijst met een string en een functie (de grens naar de REPL, die er
-// alleen Cons/Nil van leest).
+// alleen Cons/Nil van leest), en bij nbCellIV `Str met Display` (`v` is elke
+// waarde, alleen een Display als hij interactief is; tot 24 oktober 2026
+// verborgen doordat nbInterStart zelf al niet typeerde).
 // Eerst @@begin, dan pas de waarde uitrekenen (zoals nbCellX): een fout in de
 // cel hoort binnen de cel (de pagina wijst er een trap mee aan).
-nbCellI tbl cur n tok ty v = nbMark "@@begin " n <#> nbCellIV tbl cur n tok ty v
+// Het model bewaren (fase F, docs/2026-10-23_waarden_bewaren_plan.md §11):
+// `mp` het bestand ("" = niet bewaren), `nm` de naam (`@m<hash van de
+// celtekst>`), `mh` de hash van de cel met alles waar ze van afhangt, `mr` 1
+// als de REPL het bewaarde model mag terugzetten (een verse sessie: de cel
+// had nog geen stapper; opnieuw uitvoeren begint wel bij model0).
+nbCellI tbl cur n tok ty mp nm mh mr v = nbMark "@@begin " n <#> nbCellIV tbl cur n tok ty mp nm mh mr v
 
-nbCellIV tbl cur n tok ty v = if (nbIsInteractive v) (nbInterStart n tok v) (nbValueX tbl cur ty v <#> nbMark "@@end " n <#> Nil)
+nbCellIV tbl cur n tok ty mp nm mh mr v = if (nbIsInteractive v) (nbInterStart n tok mp nm mh mr v) (nbValueX tbl cur ty v <#> nbMark "@@end " n <#> Nil)
 
 // De cellen van een run op volgorde uitrekenen (elke cel drukt af) en de
 // interactieve verzamelen; de hele lijst is uitgerekend zodra er een eerste
@@ -141,19 +148,71 @@ nbCollectKeep c !rest = case c (Nil -> rest) (Cons t x -> Cons c rest)
 
 nbIsInteractive v = if (typeId v > TYPE_FUNC) (strEqual (constrName v) "Display__DInteractive") False
 
-nbInterStart n tok v = case v (D.DInteractive ms m u vw -> nbInterBody tok ms m vw <#> nbMark "@@end " n <#> Cons tok (Cons (nbStepper n tok ms m u vw) Nil))
+nbInterStart n tok mp nm mh mr v = case v (D.DInteractive ms m u vw -> nbInterBegin n tok ms u vw (MS mp nm mh (nbModelFirst mp nm mh)) (nbModelStart mp nm mh mr m))
+
+// Het eerste beeld; het startmodel meteen bewaren (ook model0: anders bracht
+// een verse sessie na "opnieuw uitvoeren" het oude model terug).
+nbInterBegin n tok ms u vw sv !m = nbInterBody tok ms m vw <#> nbMark "@@end " n <#> nbInterFirst n tok ms m u vw (nbModelSave sv m)
+
+// `!sv2`: meteen bewaren (anders pas bij de volgende gebeurtenis).
+nbInterFirst n tok ms m u vw !sv2 = Cons tok (Cons (nbStepper n tok ms m u vw sv2) Nil)
 
 nbInterShow n tok ms m vw = nbMark "@@begin " n <#> nbInterBody tok ms m vw <#> nbMark "@@end " n
 
 nbInterBody tok ms m vw = printString "@@interactive" <#> nbNl <#> printString tok <#> printString " " <#> printString (list2str (itoa ms)) <#> nbNl <#> nbRender (vw m)
 
-nbStepper n tok ms m u vw ev = try (nbStepOk n tok ms u vw (u (nbEvent ev) m)) (nbStepFail n tok ms m u vw)
+nbStepper n tok ms m u vw sv ev = try (nbStepOk n tok ms u vw sv (u (nbEvent ev) m)) (nbStepFail n tok ms m u vw sv)
 
 // `!m2`: het nieuwe model meteen uitrekenen (binnen de try), zodat een lange
 // reeks gebeurtenissen geen keten van uitstellen opbouwt.
-nbStepOk n tok ms u vw !m2 = nbInterShow n tok ms m2 vw <#> nbStepper n tok ms m2 u vw
+nbStepOk n tok ms u vw sv !m2 = nbInterShow n tok ms m2 vw <#> nbStepNext n tok ms m2 u vw (nbModelSave sv m2)
 
-nbStepFail n tok ms m u vw msg = nbMark "@@begin " n <#> printString msg <#> nbNl <#> nbStepper n tok ms m u vw
+nbStepNext n tok ms m u vw !sv2 = nbStepper n tok ms m u vw sv2
+
+nbStepFail n tok ms m u vw sv msg = nbMark "@@begin " n <#> printString msg <#> nbNl <#> nbStepper n tok ms m u vw sv
+
+// -- Het model bewaren --------------------------------------------------------
+// Een bestand `<map>/<nm>.<mh>.val` met een kopregel `jmvm-waarde <nm> <mh>`
+// en de tekst van packMax (zoals een `=:`-waarde, dus de motoren bewaren en
+// verplaatsen het net zo). Na elke geslaagde stap, alleen als de tekst
+// veranderde (vergeleken met de vorige, in het geheugen); geschreven met een
+// regel `@@saved <nm> <mh> <pad>`. MS: pad, naam, hash, de laatst bewaarde
+// tekst ("" = nog niets; "-" = te groot).
+::MS = MS mp nm mh last
+
+nbModelMax = 1000000
+
+nbModelHdr nm mh = strcat "jmvm-waarde " (strcat nm (strcat " " (strcat mh "\n")))
+
+nbModelSave sv m = case sv (MS mp nm mh last -> if (strlen mp == 0) sv (nbModelSaveT mp nm mh last (try (packMax nbModelMax m) nbModelPackErr)))
+
+nbModelPackErr msg = ""
+
+nbModelSaveT mp nm mh last t =
+  if (strlen t == 0) (nbModelBig mp nm mh last)
+  (if (strEqual t last) (MS mp nm mh last)
+  (writeFile mp (strcat (nbModelHdr nm mh) t) <#> printString (strcat "@@saved " (strcat nm (strcat " " (strcat mh (strcat " " (strcat mp "\n")))))) <#> MS mp nm mh t))
+
+nbModelBig mp nm mh last = if (strEqual last "-") (MS mp nm mh last) (printString (strcat "@@savefailed " (strcat nm " te groot\n")) <#> MS mp nm mh "-")
+
+// Wat er al in het bestand staat (zonder kopregel), zodat het startmodel niet
+// opnieuw geschreven wordt als het teruggezet is of niet veranderde.
+nbModelFirst mp nm mh = if (strlen mp == 0) "" (nbModelBody (nbModelHdr nm mh) (readFile mp))
+
+nbModelBody hdr content = if (nbStarts hdr content) (strslice content (strlen hdr) (strlen content)) ""
+
+nbStarts hdr s = (strlen s >= strlen hdr) /\ strEqual (strslice s 0 (strlen hdr)) hdr
+
+// Het startmodel: het bewaarde als dat er is en mag, anders model0. Een
+// bewaard model dat niet terug te lezen is (een functie die er niet meer is):
+// `@@restorefailed`, en dan model0.
+nbModelStart mp nm mh mr m = if ((mr == 0) \/ (strlen mp == 0)) m (nbModelFrom nm m (nbModelBody (nbModelHdr nm mh) (readFile mp)))
+
+nbModelFrom nm m t = if (strlen t == 0) m (try (nbModelRestored nm (unpack t)) (nbModelRestoreErr nm m))
+
+nbModelRestored nm !m2 = printString (strcat "@@restored " (strcat nm "\n")) <#> m2
+
+nbModelRestoreErr nm m msg = printString (strcat "@@restorefailed " (strcat nm (strcat " " (strcat (nbEsc msg) "\n")))) <#> m
 
 nbEvent ev = nbEventF (nbTabFields ev)
 

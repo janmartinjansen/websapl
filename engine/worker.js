@@ -1681,8 +1681,9 @@ async function nbRun(input, onProgress) {
 // 23 oktober 2026): `:nbmsg <sleutel> <gebeurtenis>` in dezelfde REPL als de
 // runs (via nbQueued, nooit midden in een run). Rechtstreeks gevoerd, niet via
 // rsEval: een gebeurtenis hoort niet in rsJournal, anders zou een herstart na
-// een wasm-trap elke tik opnieuw afspelen. Na een trap is de sessie weg (en
-// daarmee het model): de pagina stopt dan haar interactieve cellen.
+// een wasm-trap elke tik opnieuw afspelen. Na een trap is de sessie weg: de
+// pagina stopt dan haar interactieve cellen. Met waarden bewaren komt het
+// laatst bewaarde model (fase F) bij de volgende run terug.
 async function nbMsg(tok, ev) {
   if (!rsInstance) return { trapped: true, output: "" };
   const line = ":nbmsg " + tok + " " + ev;
@@ -1695,7 +1696,9 @@ async function nbMsg(tok, ev) {
     return { trapped: true, output: rsText() };
   }
   const text = rsText();
-  return { trapped: false, output: text.endsWith("repl> ") ? text.slice(0, -6) : text };
+  // Het model van de cel (fase F): na een stap die het veranderde, een regel
+  // `@@saved`, net als na een run.
+  return { trapped: false, output: text.endsWith("repl> ") ? text.slice(0, -6) : text, saved: nbCollectSaved(text) };
 }
 
 function rsTrapMessage(replay) {
@@ -1939,7 +1942,7 @@ self.onmessage = async function (e) {
       nbQueued(async () => {
         try {
           const r = await nbMsg(msg.tok, msg.event);
-          postMessage({ type: "NB_MSG_RESULT", id: msg.id, success: true, output: r.output, trapped: r.trapped });
+          postMessage({ type: "NB_MSG_RESULT", id: msg.id, success: true, output: r.output, trapped: r.trapped, saved: r.saved || [] });
         } catch (err) {
           postMessage({ type: "NB_MSG_RESULT", id: msg.id, success: false, error: err.message });
         }
