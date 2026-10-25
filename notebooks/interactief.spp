@@ -164,84 +164,135 @@ kubusBeeld k =
 //%%
 D.animated 40 kubusBegin kubusStap kubusBeeld
 //%% [markdown]
-// ## De Hilbert-curve, stap voor stap
+// ## Ruimtevullende curves (Hilbert, Sierpinski en Tartan), stap voor stap
 //
-// De ruimtevullende curve van Hilbert bestaat op elk niveau uit vier kleinere
-// kopieën van zichzelf (gekanteld en verschoven). Kies het `niveau` (1 t/m 5)
-// en de `snelheid` (lijnstukken per tik) in het formulier: de curve verschijnt
-// niet in één keer, maar wordt lijnstuk voor lijnstuk getekend vanaf het
-// beginpunt. Klik in het plaatje om het tekenen opnieuw te starten; vink
-// `pauze` aan (of druk op een toets) om halverwege stil te zetten.
+// Uit het oorspronkelijke Amanda-programma (`grafisch/CURVES.AMA`): `tcat`
+// plakt het volgende deelplaatje relatief aan het eindpunt van het vorige,
+// waarmee `hilb`, `sier` en `tart` elk uit vier gedraaide/verschoven kopieën
+// van het vorige niveau bestaan. Kies de `soort`, het `niveau` (1 t/m 5) en de
+// `snelheid` (lijnstukken per tik) in het formulier: de curve wordt lijnstuk
+// voor lijnstuk getekend, met een rode punt op de tekenpen. Klik in het
+// plaatje om opnieuw te beginnen; `pauze` (of een toets) zet het tekenen stil.
 //%%
-::HilbertInst = { !niveau : Int, !snelheid : Int, !pauze : Bool }
+::Curve = Hilbert | Sierpinski | Tartan
 
-::Hilbert = { !hInst : HilbertInst, !getekend : Int }
+::CurveInst = { !soort : Curve, !niveau : Int, !snelheid : Int, !pauze : Bool }
 
-hilbertBegin = Hilbert (HilbertInst 3 1 False) 2
+::CurveModel = { !cInst : CurveInst, !getekend : Int }
+
+curveBegin = CurveModel (CurveInst Hilbert 3 1 False) 2
 
 begrens lo hi n = if (n < lo) lo (if (n > hi) hi n)
 
 spiegelX p = case p (G.Pt x y -> G.Pt (0.0 - x) y)
 spiegelY p = case p (G.Pt x y -> G.Pt x (0.0 - y))
 draai90 p = case p (G.Pt x y -> G.Pt (0.0 - y) x)
+draai270 p = case p (G.Pt x y -> G.Pt y (0.0 - x))
 verschuif dx dy p = case p (G.Pt x y -> G.Pt (x + dx) (y + dy))
-schaal s p = case p (G.Pt x y -> G.Pt (x * s) (y * s))
 
-hilbMaat n = if (n <= 0) 0.0 (2.0 * hilbMaat (n - 1) + 1.0)
+tcat xs ys = case (L.last xs) (G.Pt lx ly -> L.append xs (L.map (verschuif lx ly) ys))
 
-hilbStap v m =
-  let d1 = L.map (\p -> spiegelX (draai90 p)) v,
-      d2 = L.map (verschuif (m + 1.0) 0.0) v,
-      d3 = L.map (verschuif (m + 1.0) (m + 1.0)) v,
-      d4 = L.map (\p -> verschuif m (2.0 * m + 1.0) (spiegelY (draai90 p))) v in
-  L.concat [d1, d2, d3, d4]
+tcat4 a b c d = tcat (tcat (tcat a b) c) d
 
-hilb n = if (n <= 0) [G.Pt 0.0 0.0] (hilbStap (hilb (n - 1)) (hilbMaat (n - 1)))
+hilbStap v =
+  tcat4
+    (L.map (\p -> spiegelX (draai90 p)) v)
+    (L.map (verschuif 1.0 0.0) v)
+    (L.map (verschuif 0.0 1.0) v)
+    (L.map (\p -> verschuif (0.0 - 1.0) 0.0 (spiegelY (draai90 p))) v)
 
-hilbertPunten n =
-  let m = hilbMaat n,
-      s = 1.55 / m in
-  L.map (\p -> verschuif (0.0 - 0.775) (0.0 - 0.82) (schaal s p)) (hilb n)
+hilb n = if (n <= 0) [G.Pt 0.0 0.0] (hilbStap (hilb (n - 1)))
 
-hilbertRoutes =: [ hilbertPunten k | k <- [1 .. 5] ]
+sierStap v =
+  tcat4
+    v
+    (L.map (\p -> verschuif (0.0 - 1.0) 1.0 (draai90 p)) v)
+    (L.map (\p -> verschuif 0.0 1.0 (draai270 p)) v)
+    (L.map (verschuif 1.0 1.0) v)
 
-aantalHilbert n = L.foldl (\a b -> a * 4) 1 (L.range 1 (begrens 1 5 n))
+sier n = if (n <= 0) [G.Pt 0.0 0.0] (sierStap (sier (n - 1)))
 
-hilbertInvoer veld s h =
-  let nieuw = Sh.input veld s (hInst h),
-      anderNiv = begrens 1 5 (niveau nieuw) != begrens 1 5 (niveau (hInst h)) in
-  Hilbert nieuw (if anderNiv 2 (getekend h))
+tartStap v =
+  tcat4
+    v
+    (L.map (\p -> verschuif 1.0 1.0 (draai90 p)) v)
+    (L.map (\p -> verschuif 1.0 1.0 (draai270 p)) v)
+    (L.map (verschuif 1.0 1.0) v)
 
-hilbertPauze h =
-  let i = hInst h in
-  Hilbert (HilbertInst (niveau i) (snelheid i) (if (pauze i) False True)) (getekend h)
+tart n = if (n <= 0) [G.Pt 0.0 0.0, G.Pt 10.0 10.0] (tartStap (tart (n - 1)))
 
-hilbertTik h =
-  let i = hInst h,
-      tot = aantalHilbert (niveau i),
+ptX p = case p (G.Pt x y -> x)
+ptY p = case p (G.Pt x y -> y)
+
+passend pts =
+  let xs = L.map ptX pts,
+      ys = L.map ptY pts,
+      x0 = L.minimum xs, x1 = L.maximum xs,
+      y0 = L.minimum ys, y1 = L.maximum ys,
+      dx = x1 - x0, dy = y1 - y0,
+      span = if (dx > dy) dx dy,
+      s = if (span > 0.0) (1.55 / span) 1.0,
+      mx = (x0 + x1) * 0.5,
+      my = (y0 + y1) * 0.5 in
+  [G.Pt ((ptX p - mx) * s) ((ptY p - my) * s - 0.04) | p <- pts]
+
+hilbertRoutes =: [ passend (hilb k) | k <- [1 .. 5] ]
+sierpinskiRoutes =: [ passend (sier k) | k <- [1 .. 5] ]
+tartanRoutes =: [ passend (tart k) | k <- [1 .. 5] ]
+
+curveRoute c niv =
+  let k = begrens 1 5 niv - 1 in
+  case c
+    (Hilbert -> L.nth k hilbertRoutes)
+    (Sierpinski -> L.nth k sierpinskiRoutes)
+    (Tartan -> L.nth k tartanRoutes)
+
+curveKleur c = case c (Hilbert -> 11) (Sierpinski -> 14) (Tartan -> 10)
+curveNaam c = case c (Hilbert -> "Hilbert") (Sierpinski -> "Sierpinski") (Tartan -> "Tartan")
+
+aantalCurve c n =
+  let basis = case c (Tartan -> 2) (_ -> 1) in
+  basis * L.foldl (\a b -> a * 4) 1 (L.range 1 (begrens 1 5 n))
+
+curveInvoer veld s h =
+  let oud = cInst h,
+      nieuw = Sh.input veld s oud,
+      herstart = (soort nieuw != soort oud) \/ (begrens 1 5 (niveau nieuw) != begrens 1 5 (niveau oud)) in
+  CurveModel nieuw (if herstart 2 (getekend h))
+
+curvePauze h =
+  let i = cInst h in
+  CurveModel (CurveInst (soort i) (niveau i) (snelheid i) (if (pauze i) False True)) (getekend h)
+
+curveTik h =
+  let i = cInst h,
+      tot = aantalCurve (soort i) (niveau i),
       stap = begrens 1 64 (snelheid i),
       volgende = getekend h + stap in
-  if (pauze i) h (Hilbert i (if (getekend h >= tot + 20 * stap) 2 volgende))
+  if (pauze i) h (CurveModel i (if (getekend h >= tot + 20 * stap) 2 volgende))
 
-hilbertStap ev h = case ev
-  (D.Input veld s -> hilbertInvoer veld s h)
-  (D.Click x y -> Hilbert (hInst h) 2)
-  (D.Key k -> hilbertPauze h)
-  (D.Tick t -> hilbertTik h)
+curveStap ev h = case ev
+  (D.Input veld s -> curveInvoer veld s h)
+  (D.Click x y -> CurveModel (cInst h) 2)
+  (D.Key k -> curvePauze h)
+  (D.Tick t -> curveTik h)
+  (_ -> h)
 
-hilbertBeeld h =
-  let niv = begrens 1 5 (niveau (hInst h)),
-      pts = L.nth (niv - 1) hilbertRoutes,
-      tot = aantalHilbert niv,
+curveBeeld h =
+  let i = cInst h,
+      c = soort i,
+      niv = begrens 1 5 (niveau i),
+      pts = curveRoute c niv,
+      tot = aantalCurve c niv,
       nu = begrens 1 tot (getekend h),
       deel = L.take nu pts,
       kop = L.last deel,
-      tekst = T.concat ["niveau ", T.showInt niv, ": ", T.showInt (nu - 1), " / ", T.showInt (tot - 1), " lijnstukken"] in
+      tekst = T.concat [curveNaam c, " (niveau ", T.showInt niv, "): ", T.showInt (nu - 1), " / ", T.showInt (tot - 1), " lijnstukken"] in
   D.column
-    [D.form (hInst h),
+    [D.form i,
      D.picture
-       [G.GraphPolyLine 11 deel,
+       [G.GraphPolyLine (curveKleur c) deel,
         stip 12 kop,
         G.GraphText 7 (G.Pt (0.0 - 0.78) 0.86) tekst]]
 //%%
-D.animated 40 hilbertBegin hilbertStap hilbertBeeld
+D.animated 40 curveBegin curveStap curveBeeld

@@ -1354,7 +1354,7 @@ window.WEBSAPL_TREE = [
         "path": "notebooks/interactief.spp",
         "type": "file",
         "ext": ".spp",
-        "size": 8917,
+        "size": 10494,
         "isBinary": false
       },
       {
@@ -2797,7 +2797,7 @@ window.WEBSAPL_TREE = [
     "path": "notebook.html",
     "type": "file",
     "ext": ".html",
-    "size": 63400,
+    "size": 63399,
     "isBinary": false
   },
   {

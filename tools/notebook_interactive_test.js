@@ -130,9 +130,13 @@ const cellsOf = (...srcs) => srcs.map((source) => ({ kind: "code", source }));
   m = await msg(kub.tok, NB.eventLine("tick", "40"));
   check("kubus: twaalf ribben en acht hoekpunten", (textOf(m.p).match(/GraphPolyLine 11 /g) || []).length === 12 && (textOf(m.p).match(/GraphDisc 14 /g) || []).length === 8, textOf(m.p).slice(0, 300));
   m = await msg(hilb.tok, NB.eventLine("tick", "40"));
-  check("hilbert: tik zet het tekenen een stap verder (2 / 63 lijnstukken)", /niveau 3: 2 \/ 63 lijnstukken/.test(textOf(m.p)), textOf(m.p));
+  check("hilbert: tik zet het tekenen een stap verder (2 / 63 lijnstukken)", /Hilbert \(niveau 3\): 2 \/ 63 lijnstukken/.test(textOf(m.p)), textOf(m.p));
   m = await msg(hilb.tok, NB.eventLine("input", "niveau", "4"));
-  check("hilbert: ander niveau gekozen (4), tekenen begint opnieuw bij 1 / 255", /niveau 4: 1 \/ 255 lijnstukken/.test(textOf(m.p)), textOf(m.p));
+  check("hilbert: ander niveau gekozen (4), tekenen begint opnieuw bij 1 / 255", /Hilbert \(niveau 4\): 1 \/ 255 lijnstukken/.test(textOf(m.p)), textOf(m.p));
+  m = await msg(hilb.tok, NB.eventLine("input", "soort", "Sierpinski"));
+  check("sierpinski: andere curve gekozen, begint opnieuw bij 1 / 255", /Sierpinski \(niveau 4\): 1 \/ 255 lijnstukken/.test(textOf(m.p)) && /GraphPolyLine 14 /.test(textOf(m.p)), textOf(m.p));
+  m = await msg(hilb.tok, NB.eventLine("input", "soort", "Tartan"));
+  check("tartan: 512 punten op niveau 4, begint bij 1 / 511", /Tartan \(niveau 4\): 1 \/ 511 lijnstukken/.test(textOf(m.p)) && /GraphPolyLine 10 /.test(textOf(m.p)), textOf(m.p));
 
   // == Een trap (1 / 0 is in wasm geen vangbare fout): de sessie is weg ======
   const r4 = await run(teller);
