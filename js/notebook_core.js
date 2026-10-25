@@ -47,21 +47,23 @@
   // zodat bestaande notebooks niet veranderen.
   const SETTINGS_RE = /^\/\/%% \[instellingen\](.*)$/;
 
-  /** { order: "any" | "top", values: true | false } (`waarden=uit`: geen
-   * waarden bewaren over sessies heen, fase F) */
+  /** { order: "any" | "top", values: true | false, hideCode?: true } (`waarden=uit`: geen
+   * waarden bewaren over sessies heen, fase F; `code=verborgen`: alleen
+   * tekst en uitvoer tonen) */
   function parseSettings(text) {
     const settings = { order: "any", values: true };
     for (const line of text.replace(/\r\n/g, "\n").split("\n")) {
       const m = line.match(SETTINGS_RE);
       if (m && /\bvolgorde=boven-naar-beneden\b/.test(m[1])) settings.order = "top";
       if (m && /\bwaarden=uit\b/.test(m[1])) settings.values = false;
+      if (m && /\bcode=verborgen\b/.test(m[1])) settings.hideCode = true;
     }
     return settings;
   }
 
   function parseNotebook(text) {
     const cells = [];
-    let cur = { kind: "code", lines: [] };
+    let cur = { kind: "code", folded: false, lines: [] };
     let sawMarker = false;
     for (const line of text.replace(/\r\n/g, "\n").split("\n")) {
       if (SETTINGS_RE.test(line)) continue;
@@ -69,24 +71,32 @@
       if (m) {
         if (sawMarker || cur.lines.some((l) => l.trim() !== "")) cells.push(cur);
         sawMarker = true;
-        cur = { kind: markerKind(m[1]), lines: [] };
+        cur = { kind: markerKind(m[1]), folded: markerFolded(m[1]), lines: [] };
       } else {
         cur.lines.push(line);
       }
     }
     cells.push(cur);
-    return cells.map((c) => ({
-      kind: c.kind,
-      source: trimBlankEdges(COMMENTED.includes(c.kind) ? c.lines.map(unComment) : c.lines).join("\n"),
-    }));
+    return cells.map((c) => {
+      const res = {
+        kind: c.kind,
+        source: trimBlankEdges(COMMENTED.includes(c.kind) ? c.lines.map(unComment) : c.lines).join("\n"),
+      };
+      if (c.folded && c.kind !== "markdown") res.folded = true;
+      return res;
+    });
   }
 
   // Celsoorten die in het bestand als commentaar staan.
   const COMMENTED = ["markdown", "lc", "type"];
 
   function markerKind(rest) {
-    const m = rest.match(/\[(markdown|lc|type)\]/);
+    const m = rest.match(/\[(?:[^[\]]*\b)?(markdown|lc|type)\b[^[\]]*\]/);
     return m ? m[1] : "code";
+  }
+
+  function markerFolded(rest) {
+    return /\[[^[\]]*\bingeklapt\b[^[\]]*\]/.test(rest);
   }
 
   function unComment(line) {
@@ -107,14 +117,35 @@
     const set = [];
     if (settings && settings.order === "top") set.push("volgorde=boven-naar-beneden");
     if (settings && settings.values === false) set.push("waarden=uit");
+    if (settings && settings.hideCode) set.push("code=verborgen");
     if (set.length) out.push("//%% [instellingen] " + set.join(" "));
     for (const c of cells) {
-      out.push(c.kind === "code" ? "//%%" : `//%% [${c.kind}]`);
+      const tags = [];
+      if (c.kind !== "code") tags.push(c.kind);
+      if (c.folded && c.kind !== "markdown") tags.push("ingeklapt");
+      out.push(tags.length ? `//%% [${tags.join(", ")}]` : "//%%");
       const lines = c.source.split("\n");
       if (COMMENTED.includes(c.kind)) out.push(...lines.map((l) => (l === "" ? "//" : "// " + l)));
       else out.push(...lines);
     }
     return out.join("\n") + "\n";
+  }
+
+  /** Korte samenvatting van één regel voor een ingeklapte cel. */
+  function cellSummary(c) {
+    const lines = codeLines(c.source || "");
+    const total = (c.source || "").split("\n").length;
+    if (c.kind === "code" && classifyCell(c.source || "").kind === "def") {
+      const names = definedNames(c.source || "");
+      for (const l of lines) {
+        const tm = l.match(/^::([A-Za-z_][A-Za-z0-9_']*)/);
+        if (tm && !names.includes(tm[1])) names.unshift(tm[1]);
+      }
+      const shown = names.slice(0, 6).join(", ") + (names.length > 6 ? ", …" : "");
+      return shown ? `${shown} (${total} ${total === 1 ? "regel" : "regels"})` : `definities (${total} regels)`;
+    }
+    const first = (lines[0] || (c.source || "").split("\n")[0] || "").trim();
+    return first.length > 72 ? first.slice(0, 69) + "…" : (first || "lege cel");
   }
 
   // Code zonder commentaarregels; `//` binnen een regel laten we staan (de
@@ -693,7 +724,7 @@
 
   const api = {
     generateNbInput, parseNbOutput, parseSettings, NO_MESSAGE,
-    parseNotebook, serializeNotebook, classifyCell, parseOutput, definedNames, cafHintNames,
+    parseNotebook, serializeNotebook, cellSummary, classifyCell, parseOutput, definedNames, cafHintNames,
     referencedNames, providedNames, dependents, lcInput, parseLcOutput,
     parseForm, formBinding, findDefinition, saplLiteral, splitArgs, rewriteDefinition,
     parseInteractive, eventLine, switchLiteral, definitionArgs, canSwitch,

@@ -91,7 +91,7 @@ const cellsOf = (...srcs) => srcs.map((source) => ({ kind: "code", source }));
   const cells = NB.parseNotebook(fs.readFileSync(path.join(repo, "notebooks/interactief.spp"), "utf8"));
   const r3 = await run(cells);
   const toks = Object.values(r3.byCell).map(tokOf).filter(Boolean);
-  check("voorbeeldnotebook: drie interactieve cellen (ms 0, 40 en 40)", toks.length === 3 && toks[0].ms === 0 && toks[1].ms === 40 && toks[2].ms === 40, JSON.stringify(toks));
+  check("voorbeeldnotebook: vijf interactieve cellen (ms 0 en viermaal 40)", toks.length === 5 && toks[0].ms === 0 && toks.slice(1).every((x) => x.ms === 40), JSON.stringify(toks));
   check("voorbeeldnotebook: geen typewaarschuwingen", Object.keys(r3.p.typeWarnings).length === 0, JSON.stringify(r3.p.typeWarnings));
   let t = performance.now();
   const n1 = 18;
@@ -124,6 +124,15 @@ const cellsOf = (...srcs) => srcs.map((source) => ({ kind: "code", source }));
   m = await msg(fig.tok, NB.eventLine("input", "fx", "5"));
   fm = formOf(m.p);
   check("input fx 5: daarna gewoon verder", fm && fm.fields[0].value === "5" && fm.fields[2].value === "Rood" && fm.fields[3].value === "False", m.r.output.slice(0, 300));
+
+  // == Draaiende kubus en Hilbert-curve met voortgang =======================
+  const kub = toks[3], hilb = toks[4];
+  m = await msg(kub.tok, NB.eventLine("tick", "40"));
+  check("kubus: twaalf ribben en acht hoekpunten", (textOf(m.p).match(/GraphPolyLine 11 /g) || []).length === 12 && (textOf(m.p).match(/GraphDisc 14 /g) || []).length === 8, textOf(m.p).slice(0, 300));
+  m = await msg(hilb.tok, NB.eventLine("tick", "40"));
+  check("hilbert: tik zet het tekenen een stap verder (2 / 63 lijnstukken)", /niveau 3: 2 \/ 63 lijnstukken/.test(textOf(m.p)), textOf(m.p));
+  m = await msg(hilb.tok, NB.eventLine("input", "niveau", "4"));
+  check("hilbert: ander niveau gekozen (4), tekenen begint opnieuw bij 1 / 255", /niveau 4: 1 \/ 255 lijnstukken/.test(textOf(m.p)), textOf(m.p));
 
   // == Een trap (1 / 0 is in wasm geen vangbare fout): de sessie is weg ======
   const r4 = await run(teller);

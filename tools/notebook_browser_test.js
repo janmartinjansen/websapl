@@ -201,7 +201,7 @@ const mark = `document.getElementById("status").textContent = "(wacht)"; window.
     const fig = `${W}.find((w) => !!w.root.querySelector(".nb-form"))`;
     const groen = `((${zeef}).c.output.blocks[1].content.match(/GraphDisc 10 /g) || []).length`;
     const waitFor = async (js, ms = 5000) => { const t = Date.now(); while (Date.now() - t < ms) { if (await ev(js)) return true; await sleep(50); } return false; };
-    check("interactief.spp: drie interactieve cellen, met een canvas", (await ev(`window.__nbWidgets.size`)) === 3 && st[5] === "[canvas]" && /\[canvas\]$/.test(st[8]) && /\[canvas\]$/.test(st[11]), st.join("\n"));
+    check("interactief.spp: vijf interactieve cellen, met een canvas", (await ev(`window.__nbWidgets.size`)) === 5 && st[5] === "[canvas]" && /\[canvas\]$/.test(st[8]) && /\[canvas\]$/.test(st[11]) && /\[canvas\]$/.test(st[14]) && /\[canvas\]$/.test(st[17]), st.join("\n"));
     const clickZeef = `(() => { const cv = (${zeef}).root.querySelector("canvas"); const r = cv.getBoundingClientRect();
       cv.dispatchEvent(new MouseEvent("click", { bubbles: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 })); })()`;
     for (let k = 1; k <= 3; k++) { await ev(clickZeef); await waitFor(`${groen} === ${k}`); }
@@ -231,9 +231,17 @@ const mark = `document.getElementById("status").textContent = "(wacht)"; window.
     console.log(`      figuur (formulier en plaatje): ${ffps} beelden per seconde`);
     const tok0 = await ev(`(${zeef}).tok`);
     st = await act(`document.getElementById("btn-run").click();`);
-    check("opnieuw uitvoeren: nieuwe widgets, de zeef weer leeg", (await ev(`window.__nbWidgets.size`)) === 3 && (await ev(`(${zeef}).tok`)) !== tok0 && (await ev(groen)) === 0, st.join("\n"));
+    check("opnieuw uitvoeren: nieuwe widgets, de zeef weer leeg", (await ev(`window.__nbWidgets.size`)) === 5 && (await ev(`(${zeef}).tok`)) !== tok0 && (await ev(groen)) === 0, st.join("\n"));
     await ev(clickZeef);
     check("en daarna weer een stap", await waitFor(`${groen} === 1`), await ev(groen));
+    // Per cel inklappen en globaal code verbergen.
+    await ev(`document.querySelectorAll(".cell")[2].querySelectorAll(".cell-tools button")[1].click()`);
+    check("cel inklappen: klasse folded en //%% [ingeklapt] in het bestand", await ev(`document.querySelectorAll(".cell")[2].classList.contains("folded") && JSON.parse(localStorage.getItem("${STORE_KEY}")).text.includes("//%% [ingeklapt]")`), "");
+    await ev(`document.querySelectorAll(".cell")[2].querySelector(".folded-summary").click()`);
+    check("ingeklapte balk aanklikken: cel klapt weer uit", await ev(`!document.querySelectorAll(".cell")[2].classList.contains("folded")`), "");
+    await ev(`document.getElementById("chk-hide-code").click()`);
+    check("code verbergen: body.hide-code en code=verborgen in het bestand", await ev(`document.body.classList.contains("hide-code") && JSON.parse(localStorage.getItem("${STORE_KEY}")).text.startsWith("//%% [instellingen] code=verborgen")`), "");
+    await ev(`document.getElementById("chk-hide-code").click()`);
     if (WB) {
       // Een vers proces begint de sleutels opnieuw: na een herstart mag geen
       // oud widget meer gebeurtenissen sturen (anders kon een klik op de zeef

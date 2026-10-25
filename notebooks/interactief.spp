@@ -12,7 +12,9 @@
 // uitvoeren begint weer bij `model0`. Met **waarden bewaren** aan komt het
 // model wel terug in een volgende sessie (de pagina herladen); zie het
 // notebook *Waarden bewaren*. Onder de uitvoer staat hoe lang één
-// gebeurtenis duurt (heen en terug).
+// gebeurtenis duurt (heen en terug). Zet **code verbergen** bovenin aan (of
+// klap een losse codecel in met **inklappen**) om je op de plaatjes en
+// instellingen te concentreren.
 //%% [markdown]
 // ## De zeef van Eratosthenes, stap voor stap
 //
@@ -112,3 +114,134 @@ lissajous i ph =
 stip c p = case p (G.Pt x y -> G.GraphDisc c (G.Pt (x - 0.012) (y - 0.012)) (G.Pt (x + 0.012) (y + 0.012)))
 //%%
 D.animated 40 figBegin figStap figBeeld
+//%% [markdown]
+// ## Een draaiende kubus
+//
+// De twaalf ribben van een kubus in 3D, geroteerd om de x- en y-as en met
+// perspectief geprojecteerd op het vlak. Klik in het plaatje om de kubus
+// naar dat punt te kantelen; een toets (met de focus op het plaatje)
+// pauzeert of hervat het draaien.
+//%%
+::Pt3 = Pt3 !x !y !z
+::Rib = Rib !van !naar
+
+::Kubus = { !hoekX : Float, !hoekY : Float, !draait : Bool }
+
+kubusBegin = Kubus 0.4 0.6 True
+
+kubusPunten =:
+  let r = [0.0 - 0.55, 0.55] in
+  [Pt3 x y z | x <- r, y <- r, z <- r]
+
+kubusRibben =:
+  let r = [0.0 - 0.55, 0.55] in
+  L.concat
+    [[Rib (Pt3 (0.0 - 0.55) a b) (Pt3 0.55 a b) | a <- r, b <- r],
+     [Rib (Pt3 a (0.0 - 0.55) b) (Pt3 a 0.55 b) | a <- r, b <- r],
+     [Rib (Pt3 a b (0.0 - 0.55)) (Pt3 a b 0.55) | a <- r, b <- r]]
+
+draaiX phi p = case p (Pt3 x y z -> Pt3 x (cos phi * y - sin phi * z) (sin phi * y + cos phi * z))
+
+draaiY phi p = case p (Pt3 x y z -> Pt3 (cos phi * x + sin phi * z) y (cos phi * z - sin phi * x))
+
+projecteer p = case p (Pt3 x y z -> G.Pt (1.6 * x / (z + 2.4)) (1.6 * y / (z + 2.4)))
+
+hoekPunt k p = projecteer (draaiX (hoekX k) (draaiY (hoekY k) p))
+
+tekenRib k rib = case rib (Rib p q -> G.GraphPolyLine 11 [hoekPunt k p, hoekPunt k q])
+
+kubusStap ev k = case ev
+  (D.Tick t -> if (draait k) (Kubus (hoekX k + 0.025) (hoekY k + 0.038) True) k)
+  (D.Click x y -> Kubus (0.0 - y * 1.5) (x * 1.5) (draait k))
+  (D.Key toets -> Kubus (hoekX k) (hoekY k) (if (draait k) False True))
+  (_ -> k)
+
+kubusBeeld k =
+  D.picture
+    (L.append
+      (L.map (tekenRib k) kubusRibben)
+      (L.map (\p -> stip 14 (hoekPunt k p)) kubusPunten))
+//%%
+D.animated 40 kubusBegin kubusStap kubusBeeld
+//%% [markdown]
+// ## De Hilbert-curve, stap voor stap
+//
+// De ruimtevullende curve van Hilbert bestaat op elk niveau uit vier kleinere
+// kopieën van zichzelf (gekanteld en verschoven). Kies het `niveau` (1 t/m 5)
+// en de `snelheid` (lijnstukken per tik) in het formulier: de curve verschijnt
+// niet in één keer, maar wordt lijnstuk voor lijnstuk getekend vanaf het
+// beginpunt. Klik in het plaatje om het tekenen opnieuw te starten; vink
+// `pauze` aan (of druk op een toets) om halverwege stil te zetten.
+//%%
+::HilbertInst = { !niveau : Int, !snelheid : Int, !pauze : Bool }
+
+::Hilbert = { !hInst : HilbertInst, !getekend : Int }
+
+hilbertBegin = Hilbert (HilbertInst 3 1 False) 2
+
+begrens lo hi n = if (n < lo) lo (if (n > hi) hi n)
+
+spiegelX p = case p (G.Pt x y -> G.Pt (0.0 - x) y)
+spiegelY p = case p (G.Pt x y -> G.Pt x (0.0 - y))
+draai90 p = case p (G.Pt x y -> G.Pt (0.0 - y) x)
+verschuif dx dy p = case p (G.Pt x y -> G.Pt (x + dx) (y + dy))
+schaal s p = case p (G.Pt x y -> G.Pt (x * s) (y * s))
+
+hilbMaat n = if (n <= 0) 0.0 (2.0 * hilbMaat (n - 1) + 1.0)
+
+hilbStap v m =
+  let d1 = L.map (\p -> spiegelX (draai90 p)) v,
+      d2 = L.map (verschuif (m + 1.0) 0.0) v,
+      d3 = L.map (verschuif (m + 1.0) (m + 1.0)) v,
+      d4 = L.map (\p -> verschuif m (2.0 * m + 1.0) (spiegelY (draai90 p))) v in
+  L.concat [d1, d2, d3, d4]
+
+hilb n = if (n <= 0) [G.Pt 0.0 0.0] (hilbStap (hilb (n - 1)) (hilbMaat (n - 1)))
+
+hilbertPunten n =
+  let m = hilbMaat n,
+      s = 1.55 / m in
+  L.map (\p -> verschuif (0.0 - 0.775) (0.0 - 0.82) (schaal s p)) (hilb n)
+
+hilbertRoutes =: [ hilbertPunten k | k <- [1 .. 5] ]
+
+aantalHilbert n = L.foldl (\a b -> a * 4) 1 (L.range 1 (begrens 1 5 n))
+
+hilbertInvoer veld s h =
+  let nieuw = Sh.input veld s (hInst h),
+      anderNiv = begrens 1 5 (niveau nieuw) != begrens 1 5 (niveau (hInst h)) in
+  Hilbert nieuw (if anderNiv 2 (getekend h))
+
+hilbertPauze h =
+  let i = hInst h in
+  Hilbert (HilbertInst (niveau i) (snelheid i) (if (pauze i) False True)) (getekend h)
+
+hilbertTik h =
+  let i = hInst h,
+      tot = aantalHilbert (niveau i),
+      stap = begrens 1 64 (snelheid i),
+      volgende = getekend h + stap in
+  if (pauze i) h (Hilbert i (if (getekend h >= tot + 20 * stap) 2 volgende))
+
+hilbertStap ev h = case ev
+  (D.Input veld s -> hilbertInvoer veld s h)
+  (D.Click x y -> Hilbert (hInst h) 2)
+  (D.Key k -> hilbertPauze h)
+  (D.Tick t -> hilbertTik h)
+
+hilbertBeeld h =
+  let niv = begrens 1 5 (niveau (hInst h)),
+      pts = L.nth (niv - 1) hilbertRoutes,
+      tot = aantalHilbert niv,
+      nu = begrens 1 tot (getekend h),
+      deel = L.take nu pts,
+      kop = L.last deel,
+      tekst = T.concat ["niveau ", T.showInt niv, ": ", T.showInt (nu - 1), " / ", T.showInt (tot - 1), " lijnstukken"] in
+  D.column
+    [D.form (hInst h),
+     D.picture
+       [G.GraphPolyLine 11 deel,
+        stip 12 kop,
+        G.GraphText 7 (G.Pt (0.0 - 0.78) 0.86) tekst]]
+//%%
+D.animated 40 hilbertBegin hilbertStap hilbertBeeld

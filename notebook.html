@@ -79,6 +79,23 @@
     .out .note { color: var(--muted); font-size: 12px; }
     .out .warn { color: #d97706; font-size: 13px; }
     .out .ok { color: var(--ok); font-size: 12px; }
+    .folded-summary {
+      display: none; padding: 5px 10px; border: 1px dashed var(--border); border-radius: 8px;
+      background: var(--bg-card); color: var(--muted); font-family: var(--font-mono); font-size: 12.5px;
+      cursor: pointer; user-select: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .folded-summary:hover { color: var(--text); border-color: var(--text-2); }
+    .cell.folded .folded-summary { display: block; }
+    .cell.folded textarea { display: none; }
+    .cell.folded .out.def-out { display: none; }
+    body.hide-code .cell:not([data-kind="markdown"]) textarea,
+    body.hide-code .folded-summary,
+    body.hide-code .out.def-out,
+    body.hide-code .gutter,
+    body.hide-code .cell-tools,
+    body.hide-code .add-row { display: none; }
+    body.hide-code .cell { grid-template-columns: 1fr; margin-bottom: 6px; }
+    body.hide-code .cell:hover .cell-body, body.hide-code .cell.focus .cell-body { border-color: transparent; }
     .cell.stale .out { opacity: .45; }
     .cell.stale .gutter::after { content: " •"; color: var(--accent); }
     .table-wrap { overflow-x: auto; max-width: 100%; }
@@ -131,6 +148,7 @@
       </select>
       <label class="chk" title="Uitgerekende =:-waarden en het model van interactieve cellen bewaren en bij een volgende sessie terugzetten, zolang hun cellen niet veranderen (wordt in het notebook bewaard)"><input type="checkbox" id="chk-values" checked /> waarden bewaren</label>
       <a class="help-link" href="ide.html?file=docs/waarden_bewaren.md" target="_blank" title="Gebruiksaanwijzing: waarden bewaren">?</a>
+      <label class="chk" title="Alle codecellen verbergen zodat alleen tekst, formulieren en uitvoer zichtbaar zijn (wordt in het notebook bewaard)"><input type="checkbox" id="chk-hide-code" /> code verbergen</label>
       <span class="status" id="status">engine laden…</span>
     </header>
     <div id="banner" class="banner" hidden></div>
@@ -160,7 +178,7 @@
 
   <script src="js/marked.min.js"></script>
   <script src="js/graphics_renderer.js?v=20260926_modtag"></script>
-  <script src="js/notebook_core.js?v=20261023d"></script>
+  <script src="js/notebook_core.js?v=20261025"></script>
   <script>
   (function () {
     const NB = window.SaplNotebook;
@@ -514,8 +532,9 @@
 
     function renderCell(c, i) {
       const row = document.createElement("div");
-      row.className = "cell" + (c.stale ? " stale" : "");
+      row.className = "cell" + (c.stale ? " stale" : "") + (c.folded && c.kind !== "markdown" ? " folded" : "");
       row.dataset.index = i;
+      row.dataset.kind = c.kind;
       const gutter = document.createElement("div");
       gutter.className = "gutter";
       gutter.textContent = { code: `[${i + 1}]`, markdown: "md", lc: "λ", type: "::" }[c.kind];
@@ -530,6 +549,15 @@
         view.addEventListener("dblclick", () => { c.editing = true; renderAll(); focusCell(i); });
         body.appendChild(view);
       } else {
+        let sum = null;
+        if (c.kind !== "markdown") {
+          sum = document.createElement("div");
+          sum.className = "folded-summary";
+          sum.title = "Klik om de broncode te tonen";
+          sum.textContent = "▸ " + NB.cellSummary(c);
+          sum.addEventListener("click", () => { delete c.folded; save(); renderAll(); focusCell(i); });
+          body.appendChild(sum);
+        }
         const ta = document.createElement("textarea");
         ta.value = c.source;
         ta.rows = 1;
@@ -543,7 +571,9 @@
             ta.value = ta.value.replace(/\\/g, "λ");
             ta.selectionStart = ta.selectionEnd = pos;
           }
-          c.source = ta.value; autoGrow(ta); save(); markStale(i);
+          c.source = ta.value;
+          if (sum) sum.textContent = "▸ " + NB.cellSummary(c);
+          autoGrow(ta); save(); markStale(i);
         });
         ta.addEventListener("keydown", (e) => onKey(e, ta, c));
         ta.addEventListener("focus", () => row.classList.add("focus"));
@@ -572,12 +602,20 @@
         tools.appendChild(b);
       };
       mk("▶", "Deze cel uitvoeren, met wat ervan afhangt (Shift+Enter)", () => runCell(i));
+      if (cells[i].kind !== "markdown") {
+        mk(cells[i].folded ? "code tonen" : "inklappen", cells[i].folded ? "De broncode van deze cel uitklappen" : "De broncode van deze cel inklappen (bewaard in het notebook)", () => {
+          if (cells[i].folded) delete cells[i].folded; else cells[i].folded = true;
+          save(); renderAll();
+        });
+      }
       mk("↑", "Omhoog", () => move(i, -1));
       mk("↓", "Omlaag", () => move(i, 1));
       const next = { code: "markdown", markdown: "lc", lc: "type", type: "code" };
       const label = { code: "code", markdown: "tekst", lc: "λ", type: "type" };
       mk("soort: " + label[cells[i].kind], "Soort wisselen: code → tekst → λ → type", () => {
-        cells[i].kind = next[cells[i].kind]; cells[i].output = null; cells[i].editing = cells[i].kind === "markdown"; save(); renderAll();
+        cells[i].kind = next[cells[i].kind];
+        if (cells[i].kind === "markdown") delete cells[i].folded;
+        cells[i].output = null; cells[i].editing = cells[i].kind === "markdown"; save(); renderAll();
       });
       mk("✕", "Verwijderen", () => { cells.splice(i, 1); save(); renderAll(); });
       return tools;
@@ -595,6 +633,7 @@
 
     function fillOutput(out, c) {
       const o = c.output;
+      out.classList.toggle("def-out", !!(o && o.def && !(o.warnings && o.warnings.length)));
       // Een formulier blijft staan terwijl zijn cel opnieuw draait, en krijgt
       // daarna alleen nieuwe waarden als het verder gelijk is: anders zou een
       // schuifbalk die je versleept onder je vinger vervangen worden.
@@ -1092,6 +1131,8 @@
       settings = NB.parseSettings(text);
       el("sel-order").value = settings.order;
       el("chk-values").checked = settings.values !== false;
+      el("chk-hide-code").checked = !!settings.hideCode;
+      document.body.classList.toggle("hide-code", !!settings.hideCode);
       fileName = name || "notebook.spp";
       save(); renderAll(); hideBanner();
       loaded = true;
@@ -1162,6 +1203,12 @@
     });
     el("chk-values").addEventListener("change", (e) => {
       settings.values = e.target.checked;
+      save();
+    });
+    el("chk-hide-code").addEventListener("change", (e) => {
+      if (e.target.checked) settings.hideCode = true; else delete settings.hideCode;
+      document.body.classList.toggle("hide-code", !!settings.hideCode);
+      if (!settings.hideCode) document.querySelectorAll("#cells textarea").forEach(autoGrow);
       save();
     });
     el("btn-add-code").addEventListener("click", () => addCell("code"));

@@ -89,10 +89,19 @@ check("definedNames CAF", nb.definedNames("big =: 1\nf x = x"), ["big", "f"]);
 check("cafHintNames", nb.cafHintNames("big = som 0 10\nn = 5\ns = \"x\"\nc =: dure 1\nf x = x\nstart = big\nt = (1, 2)\n  vervolg = 3\n::K = A\nq == 1"), ["big", "t"]);
 check("CAF in de invoer", nb.generateNbInput(nb.parseNotebook("//%%\nbig =: 5\n//%%\nbig + big\n")).input.split("\n").includes("big =: 5"), true);
 
-// 6. Celsoorten in het bestand (lc/type als commentaar).
+// 6. Celsoorten en inklappen in het bestand (lc/type als commentaar).
 const kinds = nb.parseNotebook("//%% [lc]\n// I = \\x.x\n//%% [type]\n// 1 + 1\n//%%\n2\n");
 check("lc/type parse", kinds.map((c) => [c.kind, c.source]), [["lc", "I = \\x.x"], ["type", "1 + 1"], ["code", "2"]]);
 check("lc/type heen en terug", nb.parseNotebook(nb.serializeNotebook(kinds)), kinds);
+const folded = nb.parseNotebook("//%% [ingeklapt]\nf x = x\ng y = y\n//%% [lc, ingeklapt]\n// I = \\x.x\n//%%\nf 1\n");
+check("ingeklapte cellen parse", folded, [
+  { kind: "code", source: "f x = x\ng y = y", folded: true },
+  { kind: "lc", source: "I = \\x.x", folded: true },
+  { kind: "code", source: "f 1" },
+]);
+check("ingeklapte cellen heen en terug", nb.parseNotebook(nb.serializeNotebook(folded)), folded);
+check("code=verborgen in de instellingen", [nb.parseSettings("//%% [instellingen] code=verborgen\n").hideCode, nb.serializeNotebook([{ kind: "code", source: "1" }], { order: "any", values: true, hideCode: true }).split("\n")[0]], [true, "//%% [instellingen] code=verborgen"]);
+check("cellSummary", [nb.cellSummary(folded[0]), nb.cellSummary(folded[2])], ["f, g (2 regels)", "f 1"]);
 
 // 7. Afhankelijkheden.
 const dep = nb.parseNotebook([
