@@ -137,6 +137,8 @@ const cellsOf = (...srcs) => srcs.map((source) => ({ kind: "code", source }));
   check("sierpinski: andere curve gekozen, begint opnieuw bij 1 / 255", /Sierpinski \(niveau 4\): 1 \/ 255 lijnstukken/.test(textOf(m.p)) && /GraphPolyLine 14 /.test(textOf(m.p)), textOf(m.p));
   m = await msg(hilb.tok, NB.eventLine("input", "soort", "Tartan"));
   check("tartan: 512 punten op niveau 4, begint bij 1 / 511", /Tartan \(niveau 4\): 1 \/ 511 lijnstukken/.test(textOf(m.p)) && /GraphPolyLine 10 /.test(textOf(m.p)), textOf(m.p));
+  m = await msg(hilb.tok, NB.eventLine("input", "soort", "Peano"));
+  check("peano: begrensd tot niveau 3 (729 punten), begint bij 1 / 728", /Peano \(niveau 3\): 1 \/ 728 lijnstukken/.test(textOf(m.p)) && /GraphPolyLine 13 /.test(textOf(m.p)), textOf(m.p));
 
   // == Een trap (1 / 0 is in wasm geen vangbare fout): de sessie is weg ======
   const r4 = await run(teller);

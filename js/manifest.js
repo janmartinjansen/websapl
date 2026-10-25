@@ -1354,7 +1354,7 @@ window.WEBSAPL_TREE = [
         "path": "notebooks/interactief.spp",
         "type": "file",
         "ext": ".spp",
-        "size": 10494,
+        "size": 11354,
         "isBinary": false
       },
       {

@@ -164,17 +164,18 @@ kubusBeeld k =
 //%%
 D.animated 40 kubusBegin kubusStap kubusBeeld
 //%% [markdown]
-// ## Ruimtevullende curves (Hilbert, Sierpinski en Tartan), stap voor stap
+// ## Ruimtevullende curves (Hilbert, Sierpinski, Tartan en Peano), stap voor stap
 //
 // Uit het oorspronkelijke Amanda-programma (`grafisch/CURVES.AMA`): `tcat`
 // plakt het volgende deelplaatje relatief aan het eindpunt van het vorige,
 // waarmee `hilb`, `sier` en `tart` elk uit vier gedraaide/verschoven kopieën
-// van het vorige niveau bestaan. Kies de `soort`, het `niveau` (1 t/m 5) en de
-// `snelheid` (lijnstukken per tik) in het formulier: de curve wordt lijnstuk
-// voor lijnstuk getekend, met een rode punt op de tekenpen. Klik in het
-// plaatje om opnieuw te beginnen; `pauze` (of een toets) zet het tekenen stil.
+// van het vorige niveau bestaan, en `pean` uit negen kopieën (3×3). Kies de
+// `soort`, het `niveau` (1 t/m 5; voor Peano 1 t/m 3, met $9^3 = 729$ punten)
+// en de `snelheid` (lijnstukken per tik) in het formulier: de curve wordt
+// lijnstuk voor lijnstuk getekend, met een rode punt op de tekenpen. Klik in
+// het plaatje om opnieuw te beginnen; `pauze` (of een toets) zet het tekenen stil.
 //%%
-::Curve = Hilbert | Sierpinski | Tartan
+::Curve = Hilbert | Sierpinski | Tartan | Peano
 
 ::CurveInst = { !soort : Curve, !niveau : Int, !snelheid : Int, !pauze : Bool }
 
@@ -221,6 +222,22 @@ tartStap v =
 
 tart n = if (n <= 0) [G.Pt 0.0 0.0, G.Pt 10.0 10.0] (tartStap (tart (n - 1)))
 
+afmp n = if (n <= 0) 0.0 (3.0 * afmp (n - 1) + 1.0)
+
+peanRij v afm =
+  L.concat
+    [v,
+     L.map (\p -> verschuif (afm + 0.5) afm (spiegelY p)) v,
+     L.map (verschuif (2.0 * afm + 1.0) 0.0) v]
+
+peanStap h afm =
+  L.concat
+    [h,
+     L.map (\p -> verschuif (3.0 * afm + 1.0) (afm + 0.5) (spiegelX p)) h,
+     L.map (verschuif 0.0 (2.0 * afm + 1.0)) h]
+
+pean n = if (n <= 0) [G.Pt 0.0 0.0] (peanStap (peanRij (pean (n - 1)) (afmp (n - 1))) (afmp (n - 1)))
+
 ptX p = case p (G.Pt x y -> x)
 ptY p = case p (G.Pt x y -> y)
 
@@ -239,25 +256,31 @@ passend pts =
 hilbertRoutes =: [ passend (hilb k) | k <- [1 .. 5] ]
 sierpinskiRoutes =: [ passend (sier k) | k <- [1 .. 5] ]
 tartanRoutes =: [ passend (tart k) | k <- [1 .. 5] ]
+peanoRoutes =: [ passend (pean k) | k <- [1 .. 3] ]
+
+maxNiveau c = case c (Peano -> 3) (_ -> 5)
 
 curveRoute c niv =
-  let k = begrens 1 5 niv - 1 in
+  let k = begrens 1 (maxNiveau c) niv - 1 in
   case c
     (Hilbert -> L.nth k hilbertRoutes)
     (Sierpinski -> L.nth k sierpinskiRoutes)
     (Tartan -> L.nth k tartanRoutes)
+    (Peano -> L.nth k peanoRoutes)
 
-curveKleur c = case c (Hilbert -> 11) (Sierpinski -> 14) (Tartan -> 10)
-curveNaam c = case c (Hilbert -> "Hilbert") (Sierpinski -> "Sierpinski") (Tartan -> "Tartan")
+curveKleur c = case c (Hilbert -> 11) (Sierpinski -> 14) (Tartan -> 10) (Peano -> 13)
+curveNaam c = case c (Hilbert -> "Hilbert") (Sierpinski -> "Sierpinski") (Tartan -> "Tartan") (Peano -> "Peano")
 
 aantalCurve c n =
-  let basis = case c (Tartan -> 2) (_ -> 1) in
-  basis * L.foldl (\a b -> a * 4) 1 (L.range 1 (begrens 1 5 n))
+  let basis = case c (Tartan -> 2) (_ -> 1),
+      factor = case c (Peano -> 9) (_ -> 4) in
+  basis * L.foldl (\a b -> a * factor) 1 (L.range 1 (begrens 1 (maxNiveau c) n))
 
 curveInvoer veld s h =
   let oud = cInst h,
       nieuw = Sh.input veld s oud,
-      herstart = (soort nieuw != soort oud) \/ (begrens 1 5 (niveau nieuw) != begrens 1 5 (niveau oud)) in
+      c0 = soort oud, c1 = soort nieuw,
+      herstart = (c1 != c0) \/ (begrens 1 (maxNiveau c1) (niveau nieuw) != begrens 1 (maxNiveau c0) (niveau oud)) in
   CurveModel nieuw (if herstart 2 (getekend h))
 
 curvePauze h =
@@ -281,7 +304,7 @@ curveStap ev h = case ev
 curveBeeld h =
   let i = cInst h,
       c = soort i,
-      niv = begrens 1 5 (niveau i),
+      niv = begrens 1 (maxNiveau c) (niveau i),
       pts = curveRoute c niv,
       tot = aantalCurve c niv,
       nu = begrens 1 tot (getekend h),
