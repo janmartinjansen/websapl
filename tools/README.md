@@ -14,6 +14,10 @@ map zelf al uit van de scan).
   node websapl/tools/build_manifest.js
   ```
 
+- **`wasm_ab_meting/`** — warme A/B-meting van twee VM-wasms in headless
+  Chrome en node (opwarmen zoals de worker, een gedeelde gecompileerde
+  module, ruiscontrole). Voor elke VM-wijziging; zie de README daar.
+
 - **`sync_from_repo.js`** — houdt de kopieën in `websapl/` gelijk aan hun
   bron elders in de repo (compiler-bytecode in `engine/`, `#import`-modules
   in `sapl_compiler/`, voorbeelden, benchmarks, de CodeMirror-bestanden uit

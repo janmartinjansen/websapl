@@ -1,0 +1,35 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>wasm A/B</title>
+<!-- De pagina van meet_chrome.js (README.md hier), geserveerd vanuit de
+     werkmap: ?var=main,proef&rondes=7&bench=fib,queens&los=1 -->
+<pre id="uit"></pre>
+<script src="meet_kern.js"></script>
+<script>
+const q = new URLSearchParams(location.search);
+const namen = (q.get("var") || "main,proef").split(",");
+const bench = q.get("bench") ? q.get("bench").split(",") : BENCHMARKS;
+const rondes = +(q.get("rondes") || 7);
+const los = !!q.get("los");
+const uitEl = document.getElementById("uit");
+const log = (s) => { uitEl.textContent += s + "\n"; };
+const laad = (src) => new Promise((r, f) => { const s = document.createElement("script"); s.src = src; s.onload = r; s.onerror = f; document.head.appendChild(s); });
+const bytes = async (url) => new Uint8Array(await (await fetch(url)).arrayBuffer());
+(async () => {
+  try {
+    // Elke jmvm.js zet dezelfde globale createJMVMModule: na het laden bewaren.
+    const varianten = [];
+    for (const n of namen) {
+      await laad("wasm_" + n + "/jmvm.js");
+      const wasmBinary = await bytes("wasm_" + n + "/jmvm.wasm");
+      varianten.push({ naam: n, create: window.createJMVMModule, wasmBinary, module: los ? null : await WebAssembly.compile(wasmBinary) });
+    }
+    const progs = [];
+    for (const b of bench) progs.push({ naam: b, jvb: await bytes("benchmarks/" + b + ".jvb") });
+    const warm = opwarmJvb(await (await fetch("worker.js")).text(), (b) => Uint8Array.from(atob(b), (c) => c.charCodeAt(0)));
+    const tabel = await meetAB(varianten, progs, warm, rondes, log);
+    window.__uit = tabel + "\n" + uitEl.textContent.split("\n").filter((l) => l.startsWith("{")).join("\n");
+  } catch (e) { window.__uit = "FOUT " + (e.stack || e); }
+  window.__klaar = true;
+})();
+</script>
