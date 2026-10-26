@@ -1,0 +1,31 @@
+// server/fase1/incident.spp -- de gedeelde typen van fase 1 (de meetlat van
+// docs/2026-10-25_client_server_ontwerp.md): een lijst incidenten, gedeeld
+// door alle tabbladen. Server én client importeren deze module; dat is de
+// afspraak tussen beide kanten.
+//
+//   import "server/fase1/incident.spp" as I
+//
+// Inpakken en uitpakken gaan via `pakken`/`uitpakken` hier, zodat beide
+// kanten dezelfde typetekst gebruiken (W.packT vergelijkt het type als
+// tekst: "[Incident.Incident]" hier, en niet "[I.Incident]" in de module die importeert).
+module Incident
+import "lib/waarden.spp" as W
+import "lib/verbinding.spp" as V
+
+::Incident = { !nr : Int, !plaats : Str, !ernst : Int, !status : Str }
+
+// Eerst V.heel: alleen data over de lijn (zie lib/verbinding.spp).
+pakken xs = W.packT "[Incident.Incident]" (V.heel xs)
+
+uitpakken s = W.unpackT "[Incident.Incident]" s
+
+// Voor de server: "" als de tekst een lijst incidenten is (en alleen data),
+// anders de melding.
+controleer s = try (geldig (uitpakken s)) melding
+
+geldig !xs = if (V.isData xs) "" "geen data: er zitten niet-uitgerekende delen of functies in"
+
+melding m = m
+
+// Een begin om mee te spelen (notebook, toetsen).
+voorbeeld = [Incident 1 "Dam" 3 "open", Incident 2 "Coolsingel" 1 "open"]

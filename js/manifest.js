@@ -1186,7 +1186,7 @@ window.WEBSAPL_TREE = [
         "path": "lib/display.spp",
         "type": "file",
         "ext": ".spp",
-        "size": 6656,
+        "size": 7796,
         "isBinary": false
       },
       {
@@ -1210,7 +1210,7 @@ window.WEBSAPL_TREE = [
         "path": "lib/notebook_glue.cfp",
         "type": "file",
         "ext": ".cfp",
-        "size": 24570,
+        "size": 26746,
         "isBinary": false
       },
       {
@@ -1259,6 +1259,14 @@ window.WEBSAPL_TREE = [
         "type": "file",
         "ext": ".spp",
         "size": 8745,
+        "isBinary": false
+      },
+      {
+        "name": "verbinding.spp",
+        "path": "lib/verbinding.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 6517,
         "isBinary": false
       },
       {
@@ -1347,6 +1355,14 @@ window.WEBSAPL_TREE = [
         "type": "file",
         "ext": ".spp",
         "size": 2311,
+        "isBinary": false
+      },
+      {
+        "name": "incidenten_gedeeld.spp",
+        "path": "notebooks/incidenten_gedeeld.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 3388,
         "isBinary": false
       },
       {
@@ -1764,7 +1780,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/mlibcsvspp.jvb",
                 "type": "file",
                 "ext": ".jvb",
-                "size": 36604,
+                "size": 36740,
                 "isBinary": true
               },
               {
@@ -1796,7 +1812,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/mlibdisplayspp.adts.cfp",
                 "type": "file",
                 "ext": ".cfp",
-                "size": 385,
+                "size": 529,
                 "isBinary": false
               },
               {
@@ -1804,7 +1820,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/mlibdisplayspp.defs.txt",
                 "type": "file",
                 "ext": ".txt",
-                "size": 946,
+                "size": 1021,
                 "isBinary": false
               },
               {
@@ -1812,7 +1828,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/mlibdisplayspp.jvb",
                 "type": "file",
                 "ext": ".jvb",
-                "size": 15224,
+                "size": 16160,
                 "isBinary": true
               },
               {
@@ -1820,7 +1836,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/mlibdisplayspp.names.txt",
                 "type": "file",
                 "ext": ".txt",
-                "size": 373,
+                "size": 450,
                 "isBinary": false
               },
               {
@@ -1828,7 +1844,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/mlibdisplayspp.pp.cfp",
                 "type": "file",
                 "ext": ".cfp",
-                "size": 9800,
+                "size": 10574,
                 "isBinary": false
               },
               {
@@ -1836,7 +1852,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/mlibdisplayspp.schemes.txt",
                 "type": "file",
                 "ext": ".txt",
-                "size": 1284,
+                "size": 1466,
                 "isBinary": false
               },
               {
@@ -1860,7 +1876,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/mliblistspp.jvb",
                 "type": "file",
                 "ext": ".jvb",
-                "size": 21940,
+                "size": 22084,
                 "isBinary": true
               },
               {
@@ -1908,7 +1924,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/mlibplotspp.jvb",
                 "type": "file",
                 "ext": ".jvb",
-                "size": 23010,
+                "size": 23154,
                 "isBinary": true
               },
               {
@@ -1956,7 +1972,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/mlibshapespp.jvb",
                 "type": "file",
                 "ext": ".jvb",
-                "size": 56640,
+                "size": 56776,
                 "isBinary": true
               },
               {
@@ -2004,7 +2020,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/mlibstatsspp.jvb",
                 "type": "file",
                 "ext": ".jvb",
-                "size": 22132,
+                "size": 22276,
                 "isBinary": true
               },
               {
@@ -2052,7 +2068,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/mlibtextspp.jvb",
                 "type": "file",
                 "ext": ".jvb",
-                "size": 30600,
+                "size": 30744,
                 "isBinary": true
               },
               {
@@ -2100,7 +2116,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/mlibwaardenspp.jvb",
                 "type": "file",
                 "ext": ".jvb",
-                "size": 13300,
+                "size": 13444,
                 "isBinary": true
               },
               {
@@ -2140,7 +2156,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/nbglue.defs.txt",
                 "type": "file",
                 "ext": ".txt",
-                "size": 2515,
+                "size": 2607,
                 "isBinary": false
               },
               {
@@ -2148,7 +2164,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/nbglue.jvb",
                 "type": "file",
                 "ext": ".jvb",
-                "size": 62276,
+                "size": 66500,
                 "isBinary": true
               },
               {
@@ -2156,7 +2172,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/nbglue.pp.cfp",
                 "type": "file",
                 "ext": ".cfp",
-                "size": 32336,
+                "size": 34388,
                 "isBinary": false
               },
               {
@@ -2460,6 +2476,30 @@ window.WEBSAPL_TREE = [
         "ext": ".js",
         "size": 94953,
         "isBinary": false
+      }
+    ],
+    "_expanded": false
+  },
+  {
+    "name": "server",
+    "path": "server",
+    "type": "directory",
+    "children": [
+      {
+        "name": "fase1",
+        "path": "server/fase1",
+        "type": "directory",
+        "children": [
+          {
+            "name": "incident.spp",
+            "path": "server/fase1/incident.spp",
+            "type": "file",
+            "ext": ".spp",
+            "size": 1259,
+            "isBinary": false
+          }
+        ],
+        "_expanded": false
       }
     ],
     "_expanded": false
@@ -2797,7 +2837,7 @@ window.WEBSAPL_TREE = [
     "path": "notebook.html",
     "type": "file",
     "ext": ".html",
-    "size": 63399,
+    "size": 65173,
     "isBinary": false
   },
   {

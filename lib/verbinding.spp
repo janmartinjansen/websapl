@@ -1,0 +1,158 @@
+// lib/verbinding.spp -- het protocol tussen een client en een Sapl-server
+// (fase 1 van docs/2026-10-25_client_server_ontwerp.md, 25 oktober 2026).
+//
+// Gebruik:  import "lib/verbinding.spp" as V
+//
+// Eén bericht is één regel. Velden worden gescheiden door één spatie; het
+// laatste veld (de payload) is de rest van de regel, geëscapet met \\, \n
+// en \t, zoals de notebook doet (NB.escapeField, nbEsc). Een gepackte
+// waarde (W.packT) bevat altijd een newline, dus escapen is nooit optioneel.
+//
+// Client -> server:
+//   lees <share>                                abonneren, en de waarde
+//   schrijf <share> <versie> <soort> <payload>  schrijven als <versie> nog de
+//                                               laatste is
+// Server -> client:
+//   hallo <protocol>                            na het openen
+//   update <share> <versie> <soort> <payload>   op `lees`, en na elke
+//                                               geslaagde schrijf van een ander
+//   ok <share> <versie>                         de schrijf is gelukt
+//   conflict <share> <versie> <soort> <payload> te oud: de actuele waarde
+//   fout <melding>
+//
+// <soort> is nu altijd `waarde` (de tekst van W.packT); later ook `bron` en
+// `code` (zie "Wat er uitgewisseld wordt" in de notitie). Een andere soort
+// geeft `fout`.
+//
+// Deze module rekent niets uit over de waarde zelf: de payload is de tekst
+// van W.packT, en het W.unpackT met het verwachte type doet de ontvanger.
+// Zelfstandig: geen stdlib nodig.
+module Verbinding
+
+::list = Nil | Cons !x xs
+
+protocol = "jmvm-shares 1"
+
+soortWaarde = "waarde"
+
+// == Escapen =================================================================
+
+esc s = vanTekens (escLijst s 0 (strlen s))
+
+escLijst s !i !n = if (i >= n) Nil (escTeken (strat i s) (escLijst s (i + 1) n))
+
+escTeken !c rest =
+  if (c == 92) (Cons 92 (Cons 92 rest))
+  (if (c == 10) (Cons 92 (Cons 'n' rest))
+  (if (c == 9) (Cons 92 (Cons 't' rest))
+  (if (c == 13) (Cons 92 (Cons 'r' rest))
+  (Cons c rest))))
+
+unesc s = vanTekens (unescLijst s 0 (strlen s))
+
+unescLijst s !i !n =
+  if (i >= n) Nil
+  (if ((strat i s == 92) /\ (i + 1 < n)) (Cons (unescTeken (strat (i + 1) s)) (unescLijst s (i + 2) n))
+  (Cons (strat i s) (unescLijst s (i + 1) n)))
+
+unescTeken c = if (c == 'n') 10 (if (c == 't') 9 (if (c == 'r') 13 c))
+
+vanTekens cs = vul cs 0 (strcreate (lengte cs 0))
+
+vul cs !i !t = case cs (Nil -> t) (Cons c r -> vul r (i + 1) (update c i t))
+
+lengte xs !acc = case xs (Nil -> acc) (Cons y ys -> lengte ys (acc + 1))
+
+// == Berichten maken =========================================================
+
+lees share = strappend "lees " share
+
+// schrijf "incidenten" 3 (W.packT "[Incident]" xs)
+schrijf share !versie tekst = regel (Cons "schrijf" (Cons share (Cons (toonGetal versie) (Cons soortWaarde (Cons (esc tekst) Nil)))))
+
+regel xs = case xs (Nil -> "") (Cons x r -> case r (Nil -> x) (_ -> strappend x (strappend " " (regel r))))
+
+// == Berichten lezen =========================================================
+
+// Een regel van de server. De tekst in Update en Conflict is al ontescapet:
+// klaar voor W.unpackT.
+::Antwoord = Hallo !proto | Update !share !versie !tekst | Ok !share !versie
+           | Conflict !share !versie !tekst | Fout !melding | Onbekend !regel
+
+antwoord s =
+  let w = eerste s in
+  if (strEqual w "update") (metWaarde Update s)
+  (if (strEqual w "conflict") (metWaarde Conflict s)
+  (if (strEqual w "ok") (okVan s (velden 3 s))
+  (if (strEqual w "fout") (Fout (naVeld 1 s))
+  (if (strEqual w "hallo") (Hallo (naVeld 1 s))
+  (Onbekend s)))))
+
+metWaarde k s = metWaardeV k s (velden 4 s)
+
+metWaardeV k s vs =
+  if ((aantal vs == 4) /\ strEqual (nde 3 vs) soortWaarde) (k (nde 1 vs) (leesGetal (nde 2 vs)) (unesc (naVeld 4 s)))
+  (Onbekend s)
+
+okVan s vs = if (aantal vs == 3) (Ok (nde 1 vs) (leesGetal (nde 2 vs))) (Onbekend s)
+
+// Het i-de element (vanaf 0), "" als de lijst te kort is.
+nde !i xs = case xs (Nil -> "") (Cons x r -> if (i == 0) x (nde (i - 1) r))
+
+aantal xs = lengte xs 0
+
+// De eerste `k` velden (minder als de regel korter is).
+velden !k s = veldenVan k s 0 (strlen s)
+
+veldenVan !k s !i !n = if ((k <= 0) \/ (i > n)) Nil (veldTot k s i (spatieVanaf s i n) n)
+
+veldTot !k s !i !e !n = Cons (strslice s i e) (veldenVan (k - 1) s (e + 1) n)
+
+// Alles na het k-de veld (de payload).
+naVeld !k s = naVeldVan k s 0 (strlen s)
+
+naVeldVan !k s !i !n = if (k <= 0) (strslice s i n) (if (i >= n) "" (naVeldVan (k - 1) s (spatieVanaf s i n + 1) n))
+
+eerste s = strslice s 0 (spatieVanaf s 0 (strlen s))
+
+spatieVanaf s !i !n = if (i >= n) n (if (strat i s == 32) i (spatieVanaf s (i + 1) n))
+
+// == Getallen ================================================================
+
+leesGetal s = if (isGetal s) (cijfers s 0 (strlen s) 0) (0 - 1)
+
+isGetal s = (strlen s > 0) /\ alleCijfers s 0 (strlen s)
+
+alleCijfers s !i !n = if (i >= n) True (if ((strat i s >= '0') /\ (strat i s <= '9')) (alleCijfers s (i + 1) n) False)
+
+cijfers s !i !n !acc = if (i >= n) acc (cijfers s (i + 1) n ((acc * 10) + (strat i s - '0')))
+
+toonGetal !n = if (n < 0) (strappend "-" (toonGetal (0 - n))) (vanTekens (getalTekens n Nil))
+
+getalTekens !n acc = if (n < 10) (Cons ('0' + n) acc) (getalTekens (n / 10) (Cons ('0' + (n % 10)) acc))
+
+strEqual a b = (strlen a == strlen b) /\ gelijkVanaf a b 0 (strlen a)
+
+gelijkVanaf a b !i !n = if (i >= n) True (if (strat i a == strat i b) (gelijkVanaf a b (i + 1) n) False)
+
+// == Alleen data over de lijn ================================================
+// `pack` neemt thunks en closures mee (verwijzingen naar code van deze
+// build). Wat er tussen client en server gaat, moet data zijn (variant 3 in
+// de notitie): eerst `heel`, dan W.packT. De ontvanger controleert met
+// `isData`. Een cyclische waarde laat `heel` niet stoppen.
+
+// x helemaal uitgerekend (alle velden, diep); een functie erin is een fout.
+heel !x = if (typeId x == 4) (error "V.heel: een functie is geen data") (if (typeId x > 4) (heelVelden x 0 (ariteit x)) x)
+
+heelVelden !x !i !n = if (i >= n) x (heelVerder x i n (heel (getField x i)))
+
+heelVerder !x !i !n !v = heelVelden x (i + 1) n
+
+// Geen thunk en geen functie erin (zonder iets uit te rekenen).
+isData !x = if (typeId x == 4) False (if (typeId x > 4) (veldenData x 0 (ariteit x)) True)
+
+veldenData !x !i !n = if (i >= n) True (if (fieldIsValue x i == 1) (if (isData (getField x i)) (veldenData x (i + 1) n) False) False)
+
+ariteit !x = ariteitVan (lookup (constrName x))
+
+ariteitVan c = if (typeId c == 4) (funcArity c) 0

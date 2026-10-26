@@ -478,6 +478,7 @@
     const general = [];
     const rest = [];
     const saved = [], restored = [], valueErrors = [];
+    const sends = [];   // @@send <tok> <bericht>: van een verbonden cel (D.connected) naar de server
     let done = false;
     for (const line of raw.split("\n")) {
       const d = line.match(/^@@deferror (-?\d+) (.*)$/);
@@ -491,7 +492,9 @@
       const sv = line.match(/^@@saved (\S+) (\S+) (.+)$/);
       const rs = line.match(/^@@restored (\S+)$/);
       const rf = line.match(/^@@(?:restorefailed|savefailed) (\S+) ?(.*)$/);
-      if (st) stale.push(st[1]);
+      const se = line.match(/^@@send (\S+) (.*)$/);
+      if (se) sends.push({ tok: se[1], line: unescapeField(se[2]) });
+      else if (st) stale.push(st[1]);
       else if (sv) saved.push({ name: sv[1], hash: sv[2], path: sv[3] });
       else if (rs) restored.push(rs[1]);
       else if (rf) valueErrors.push({ name: rf[1], error: rf[2] });
@@ -508,7 +511,7 @@
     }
     const parsed = parseOutput(rest.join("\n"));
     if (defErrors[-1]) general.unshift("uitvoerlaag: " + defErrors[-1]);
-    return { cells: parsed.cells, loose: parsed.loose, defErrors, types, typeWarnings, defs, defsSame, stale, saved, restored, valueErrors, error: general.join("\n"), done };
+    return { cells: parsed.cells, loose: parsed.loose, defErrors, types, typeWarnings, defs, defsSame, stale, saved, restored, valueErrors, sends, error: general.join("\n"), done };
   }
 
   // == Formulieren (fase C van docs/2026-10-15_notebook_integraal_plan.md) ==
@@ -595,10 +598,10 @@
   // gebeurtenis gaat als `:nbmsg <sleutel> <gebeurtenis>` naar de sessie;
   // het antwoord is weer zo'n cel (of `@@stale <sleutel>`).
 
-  /** Het @@interactive-blok: { tok, ms }; null als het niet te lezen is. */
+  /** Het @@interactive-blok: { tok, ms, url } (url bij D.connected, anders null); null als het niet te lezen is. */
   function parseInteractive(content) {
-    const m = String(content).trim().match(/^(\d+_\d+) (\d+)$/);
-    return m ? { tok: m[1], ms: +m[2] } : null;
+    const m = String(content).trim().match(/^(\d+_\d+) (\d+)(?: (\S+))?$/);
+    return m ? { tok: m[1], ms: +m[2], url: m[3] || null } : null;
   }
 
   function escapeField(s) {

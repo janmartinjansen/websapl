@@ -12,6 +12,9 @@ display__slider 3 f v0 f v1 f v2 cDisplay__Display
 display__choice 2 f v0 f v1 cDisplay__Display
 display__interactive 3 f v0 f v1 f v2 cDisplay__Display
 display__animated 4 f v0 f v1 f v2 f v3 cDisplay__Display
+display__connected 4 f v0 f v1 f v2 f v3 cDisplay__Display
+display__connStep 5 f f v0 v1 f f v2 f v3 cDisplay__Reply f v2 f v3 v4
+display__connStepR 3 f f v0 v1 f cDisplay__Reply v2
 display__toF 0 edisplay__toF: kan niet unificeren: Num met Float
 display__listLen 1 f l v0 cNum
 display__maxOf 1 f l v0 cFloat

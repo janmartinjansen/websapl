@@ -98,6 +98,7 @@ nbDisplay d =
     (D.DRecords xs -> nbRecords xs)
     (D.DInteractive ms m u vw -> nbRender (vw m))
     (D.DColumn ds -> nbColumn ds)
+    (D.DConnected url m u vw -> nbRender (vw m))
 
 // D.column: elk onderdeel met zijn eigen @@-kop (de pagina toont ze onder
 // elkaar).
@@ -146,9 +147,19 @@ nbCollectOne !c r = nbCollectKeep c (nbCollect r)
 
 nbCollectKeep c !rest = case c (Nil -> rest) (Cons t x -> Cons c rest)
 
-nbIsInteractive v = if (typeId v > TYPE_FUNC) (strEqual (constrName v) "Display__DInteractive") False
+nbIsInteractive v = if (typeId v > TYPE_FUNC) (strEqual (constrName v) "Display__DInteractive" \/ strEqual (constrName v) "Display__DConnected") False
 
-nbInterStart n tok mp nm mh mr v = case v (D.DInteractive ms m u vw -> nbInterBegin n tok ms u vw (MS mp nm mh (nbModelFirst mp nm mh)) (nbModelStart mp nm mh mr m))
+// `kop`: wat er na de sleutel op de regel van @@interactive staat: de ms van
+// de klok, en bij een verbonden cel (D.connected) "0 <url>". Een verbonden
+// cel krijgt als update D.connStep: die schrijft de berichten van update
+// als `@@send <tok> <bericht>` (geëscapet), voor de pagina, die ze naar de
+// WebSocket stuurt.
+nbInterStart n tok mp nm mh mr v =
+  case v
+    (D.DInteractive ms m u vw -> nbInterBegin n tok (list2str (itoa ms)) u vw (MS mp nm mh (nbModelFirst mp nm mh)) (nbModelStart mp nm mh mr m))
+    (D.DConnected url m u vw -> nbInterBegin n tok (strcat "0 " url) (D.connStep (nbSends tok) u) vw (MS mp nm mh (nbModelFirst mp nm mh)) (nbModelStart mp nm mh mr m))
+
+nbSends tok msgs = case msgs (Nil -> 0) (Cons x r -> printString "@@send " <#> printString tok <#> printString " " <#> printString (nbEsc x) <#> nbNl <#> nbSends tok r)
 
 // Het eerste beeld; het startmodel meteen bewaren (ook model0: anders bracht
 // een verse sessie na "opnieuw uitvoeren" het oude model terug).
@@ -159,7 +170,7 @@ nbInterFirst n tok ms m u vw !sv2 = Cons tok (Cons (nbStepper n tok ms m u vw sv
 
 nbInterShow n tok ms m vw = nbMark "@@begin " n <#> nbInterBody tok ms m vw <#> nbMark "@@end " n
 
-nbInterBody tok ms m vw = printString "@@interactive" <#> nbNl <#> printString tok <#> printString " " <#> printString (list2str (itoa ms)) <#> nbNl <#> nbRender (vw m)
+nbInterBody tok ms m vw = printString "@@interactive" <#> nbNl <#> printString tok <#> printString " " <#> printString ms <#> nbNl <#> nbRender (vw m)
 
 nbStepper n tok ms m u vw sv ev = try (nbStepOk n tok ms u vw sv (u (nbEvent ev) m)) (nbStepFail n tok ms m u vw sv)
 
@@ -223,7 +234,10 @@ nbEventK k r =
   (if (strEqual k "key") (D.Key (nbNth 0 r))
   (if (strEqual k "tick") (D.Tick (nbInt (nbNth 0 r)))
   (if (strEqual k "input") (D.Input (nbNth 0 r) (nbNth 1 r))
-  (error (strcat "onbekende gebeurtenis: " k)))))
+  (if (strEqual k "message") (D.Message (nbNth 0 r))
+  (if (strEqual k "connected") D.Connected
+  (if (strEqual k "disconnected") D.Disconnected
+  (error (strcat "onbekende gebeurtenis: " k))))))))
 
 nbNth !i fs = case fs (Nil -> "") (Cons f r -> if (i == 0) f (nbNth (i - 1) r))
 
@@ -262,7 +276,7 @@ nbRev xs acc = case xs (Nil -> acc) (Cons x r -> nbRev r (Cons x acc))
 // Soort `con`: een veld van een opsommingstype (alleen constructors zonder
 // velden, ::Kleur = Rood | Groen); <opties> zijn dan de constructors,
 // gescheiden door een spatie, anders leeg.
-nbForm v = if (typeId v > TYPE_FUNC) (nbFormAdt v (constrName v) (lookup (strcat "__fields_" (constrName v)))) (nbFormValue v)
+nbForm v = if (typeId v > TYPE_FUNC) (nbFormAdt v (constrName v) (lookup (nbFieldsName (constrName v)))) (nbFormValue v)
 
 nbFormAdt v name h =
   if (typeId h == TYPE_FUNC) (nbLine (Cons "record" (Cons (displayConName name) Nil)) <#> nbFormFields v 0 (applyDynamic h Nil))
@@ -416,7 +430,27 @@ nbEscChar c rest =
   (if (c == 10) (Cons 92 (Cons 'n' rest)) (Cons c rest)))
 
 // D.records xs: een tabel met de veldnamen als kop.
-nbRecords xs = case xs (Nil -> printString "@@text" <#> nbNl <#> printString "(geen rijen)" <#> nbNl) (Cons r rest -> nbRecordsH xs (lookup (strcat "__fields_" (constrName r))))
+// __fields_<Naam> van een record; bij een record uit een module heet de
+// constructor `Module__Naam` en de functie `module____fields_Naam`
+// (preprocess/modules.cfp: functies krijgen de modulenaam met een kleine
+// letter ervoor, constructors de modulenaam zelf). Tot 25 oktober 2026 werd
+// alleen de eerste vorm gezocht, en toonden D.records en D.form een record
+// uit een module als gewone waarde.
+// De naam, niet de functie zelf: een functie zonder argumenten die een
+// functie teruggeeft, wordt daar meteen uitgerekend (dan kwam de lijst
+// velden terug in plaats van de functie).
+nbFieldsName name = if (typeId (lookup (strcat "__fields_" name)) == TYPE_FUNC) (strcat "__fields_" name) (nbFieldsMod name (nbLastSep name (strlen name - 2)))
+
+nbFieldsMod name !i = if (i <= 0) (strcat "__fields_" name) (strcat (nbLowerFirst (strslice name 0 i)) (strcat "____fields_" (strslice name (i + 2) (strlen name))))
+
+// De plek van de laatste "__" in s (zoekend vanaf i omlaag), of -1.
+nbLastSep s !i = if (i < 1) (0 - 1) (if ((strat i s == '_') /\ (strat (i + 1) s == '_')) i (nbLastSep s (i - 1)))
+
+nbLowerFirst s = if (strlen s == 0) s (strcat (list2str (Cons (nbLowerC (strat 0 s)) Nil)) (strslice s 1 (strlen s)))
+
+nbLowerC c = if ((c >= 'A') /\ (c <= 'Z')) (c + 32) c
+
+nbRecords xs = case xs (Nil -> printString "@@text" <#> nbNl <#> printString "(geen rijen)" <#> nbNl) (Cons r rest -> nbRecordsH xs (lookup (nbFieldsName (constrName r))))
 
 nbRecordsH xs h = if (typeId h == TYPE_FUNC) (nbRecordsF xs (applyDynamic h Nil)) (nbValue xs)
 
@@ -469,7 +503,7 @@ nbShowHook d v name h = if (typeId h == TYPE_FUNC) (applyDynamic h (Cons v Nil))
 // `Naam { veld = waarde, ... }`, met een Bool-veld als True/False (15 oktober
 // 2026; in een cel maakt de preprocessor geen show_<Naam>, want de cel
 // definieert geen showVal).
-nbShowGeneric d v name arity = nbShowRec d v name arity (lookup (strcat "__fields_" name))
+nbShowGeneric d v name arity = nbShowRec d v name arity (lookup (nbFieldsName name))
 
 nbShowRec d v name arity h =
   if (typeId h == TYPE_FUNC) (strcat (displayConName name) (strcat " { " (strcat (nbRecFields (d - 1) v 0 (applyDynamic h Nil)) " }")))

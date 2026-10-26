@@ -24,6 +24,7 @@ nbCollectOne 2 11
 nbCollectKeep 2 11
 nbIsInteractive 1 0
 nbInterStart 7 0000001
+nbSends 2 01
 nbInterBegin 7 0000001
 nbInterFirst 7 0000001
 nbInterShow 5 00000
@@ -109,6 +110,11 @@ nbTabbed 1 1
 nbEsc 1 0
 nbEscFrom 3 011
 nbEscChar 2 00
+nbFieldsName 1 0
+nbFieldsMod 2 01
+nbLastSep 2 01
+nbLowerFirst 1 0
+nbLowerC 1 1
 nbRecords 1 1
 nbRecordsH 2 00
 nbRecordsF 2 00

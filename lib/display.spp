@@ -18,7 +18,7 @@ module Display
 import "grafisch/graphics.cfp" as G
 
 ::Display = DText !s | DTable !headers !rows | DMarkdown !s | DGraphics !gs | DForm !v | DSlider !lo !hi !v | DChoice !opts !v | DRecords !xs
-           | DInteractive !ms model update view | DColumn !ds
+           | DInteractive !ms model update view | DColumn !ds | DConnected !url model update view
 
 // Een gebeurtenis voor een interactieve cel (zie hieronder): een klik in het
 // plaatje (x en y van -1.0 tot 1.0, zoals de Graphics-waarden), een toets
@@ -28,7 +28,10 @@ import "grafisch/graphics.cfp" as G
 // het veld ("" voor de hele waarde: een schuifbalk, een keuzelijst, de
 // constructor van een somtype) en de nieuwe waarde als tekst. Sh.input
 // (lib/shape.spp) past zo'n invoer toe op een record of somtype.
-::Event = Click !x !y | Key !k | Tick !ms | Input !field !value
+// Een verbonden cel (D.connected, hieronder) krijgt daarnaast Connected
+// (de verbinding is open), Message (een regel van de server) en
+// Disconnected.
+::Event = Click !x !y | Key !k | Tick !ms | Input !field !value | Message !line | Connected | Disconnected
 
 // == Bouwfuncties ============================================================
 
@@ -113,6 +116,26 @@ choice opts v = DChoice opts v
 interactive model update view = DInteractive 0 model update view
 
 animated ms model update view = DInteractive ms model update view
+
+// == Verbonden cellen (fase 1 van docs/2026-10-25_client_server_ontwerp.md)
+//
+//   D.connected url model0 update view
+//     update :: Event -> model -> Reply     (D.Reply model2 berichten)
+//
+// Als D.interactive, maar de pagina opent een WebSocket naar `url` (de
+// gastheer, server/gastheer/host.js) en geeft update ook Connected, Message
+// <regel> en Disconnected. Update geeft het nieuwe model en een lijst regels
+// die de pagina naar de server stuurt (D.Reply m [] als er niets te sturen
+// is). Het protocol en de hulpjes: lib/verbinding.spp.
+connected url model update view = DConnected url model update view
+
+::Reply = Reply !model msgs
+
+// Voor lib/notebook_glue.cfp: update van een verbonden cel als gewone update
+// (gebeurtenis en model naar model); `send` krijgt de berichten.
+connStep send u ev m = connStepR send (u ev m)
+
+connStepR send r = case r (Reply m2 msgs -> send msgs <#> m2)
 
 // == Rekenwerk voor de diagrammen ============================================
 

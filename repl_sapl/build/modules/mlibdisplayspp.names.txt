@@ -1,4 +1,4 @@
-F text markdown table picture column records bar lineChart graphicsText form slider choice interactive animated toF listLen maxOf maxFrom minOf minFrom left bottom span baseLine barsFrom barAt linePoints linePoint
-C DText DTable DMarkdown DGraphics DForm DSlider DChoice DRecords DInteractive DColumn Click Key Tick Input
+F text markdown table picture column records bar lineChart graphicsText form slider choice interactive animated connected connStep connStepR toF listLen maxOf maxFrom minOf minFrom left bottom span baseLine barsFrom barAt linePoints linePoint
+C DText DTable DMarkdown DGraphics DForm DSlider DChoice DRecords DInteractive DColumn DConnected Click Key Tick Input Message Connected Disconnected Reply
 module Display
 import "grafisch/graphics.cfp" as G

@@ -731,7 +731,7 @@
       const root = document.createElement("div");
       root.className = "nb-interactive";
       root.tabIndex = 0;
-      root.title = info.ms > 0 ? "interactief, met een klok: klik of typ (met de focus hier)" : "interactief: klik of typ (met de focus hier)";
+      root.title = info.url ? `verbonden met ${info.url}: klik of typ (met de focus hier)` : info.ms > 0 ? "interactief, met een klok: klik of typ (met de focus hier)" : "interactief: klik of typ (met de focus hier)";
       const view = document.createElement("div");
       const foot = document.createElement("div");
       foot.className = "nb-interactive-foot";
@@ -802,7 +802,34 @@
       w.foot = foot;
       widgets.set(info.tok, w);
       if (info.ms > 0) widgetTick(w);
+      if (info.url) widgetConnect(w, info.url);
       return w;
+    }
+
+    // Een verbonden cel (D.connected, docs/2026-10-25_client_server_ontwerp.md):
+    // één WebSocket per widget, dicht in widgetStop. Een regel van de server
+    // wordt een gebeurtenis `message`; de berichten die update teruggeeft
+    // (@@send) gaan naar de socket. Berichten van de server vallen nooit weg
+    // uit de rij (anders bleef de weergave stil op een oude stand staan).
+    function widgetConnect(w, url) {
+      let ws;
+      try { ws = new WebSocket(url); } catch (e) { w.foot.textContent = `verbinding met ${url} mislukt: ${e.message}`; w.foot.className = "nb-interactive-foot err"; return; }
+      w.sock = ws;
+      ws.onopen = () => widgetSend(w, NB.eventLine("connected"), false, true);
+      ws.onmessage = (e) => widgetSend(w, NB.eventLine("message", String(e.data)), false, true);
+      ws.onclose = () => {
+        if (w.stopped) return;
+        // De melding blijft onder de cel staan (widgetResult schrijft daar
+        // anders de rondgang).
+        w.offline = `verbinding met ${url} verbroken`;
+        widgetSend(w, NB.eventLine("disconnected"), false, true);
+        w.foot.textContent = w.offline; w.foot.className = "nb-interactive-foot err";
+      };
+    }
+
+    function widgetSocketSend(w, line) {
+      if (w.sock && w.sock.readyState === 1) { w.sock.send(line); return; }
+      w.foot.textContent = "niet verbonden: bericht niet verstuurd"; w.foot.className = "nb-interactive-foot err";
     }
 
     // Een formulier in een interactieve cel: een wijziging wordt een
@@ -828,7 +855,7 @@
       }, wait);
     }
 
-    function widgetSend(w, ev, isTick) {
+    function widgetSend(w, ev, isTick, keep) {
       if (w.stopped) return;
       // Een tik wacht niet in de rij: de volgende komt na het antwoord.
       if (w.busy || running) {
@@ -837,7 +864,7 @@
         // (een schuifbalk geeft veel wijzigingen achter elkaar).
         const m = ev.match(/^input\t[^\t]*\t/);
         if (m) w.queue = w.queue.filter((q) => !q.startsWith(m[0]));
-        if (w.queue.length < 20) w.queue.push(ev);
+        if (w.queue.length < 20 || keep) w.queue.push(ev);
         if (running && !w.busy) setTimeout(() => widgetFlush(w), 50);
         return;
       }
@@ -874,17 +901,19 @@
       // een volgende gebeurtenis (een klik of toets) wel lukt.
       if (res.error) { w.foot.textContent = "fout: " + res.error; w.foot.className = "nb-interactive-foot err"; clearTimeout(w.timer); w.errored = true; return; }
       if (w.errored) { w.errored = false; if (w.ms > 0) widgetTick(w); }
+      for (const s of p.sends || []) if (s.tok === w.tok) widgetSocketSend(w, s.line);
       if (w.c.output && w.c.output.blocks && w.c.output.blocks[0] && NB.parseInteractive(w.c.output.blocks[0].content)?.tok === w.tok) w.c.output.blocks = res.blocks;
       w.show(res.blocks.slice(1));
       const avg = w.times.reduce((a, b) => a + b, 0) / w.times.length;
-      w.foot.className = "nb-interactive-foot";
-      w.foot.textContent = `${Math.round(avg)} ms per gebeurtenis`;
+      w.foot.className = w.offline ? "nb-interactive-foot err" : "nb-interactive-foot";
+      w.foot.textContent = w.offline || `${Math.round(avg)} ms per gebeurtenis`;
     }
 
     function widgetStop(w, why) {
       if (w.stopped) return;
       w.stopped = true;
       clearTimeout(w.timer);
+      if (w.sock) { try { w.sock.close(); } catch (e) {} }
       widgets.delete(w.tok);
       deadToks.set(w.tok, why || "gestopt: voer de cel opnieuw uit");
       if (why && w.foot) { w.foot.textContent = why; w.foot.className = "nb-interactive-foot note"; }
