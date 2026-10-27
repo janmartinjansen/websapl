@@ -48,10 +48,26 @@ ofValueTid v tid =
   (if (tid == 0 - 1) TChar (TUnknown "")))))
 
 // Een record heet als zijn constructor; een somtype zoeken we op type-id.
-ofAdtValue con tid = if (typeId (lookup (T.append "__fields_" con)) == 4) (ofName con) (ofTypeInfo con (T.split '\t' (lookup (T.append "@meta:type:" (T.showInt tid)))))
+ofAdtValue con tid = if (typeId (lookup (fieldsName con)) == 4) (ofName con) (ofTypeInfo con (T.split '\t' (lookup (T.append "@meta:type:" (T.showInt tid)))))
 
 // Een record of somtype op naam; anders TUnknown.
-ofName name = ofNameH name (lookup (T.append "__fields_" name))
+ofName name = ofNameH name (lookup (fieldsName name))
+
+// De naam van de veldtabel. Bij een record uit een module heet de
+// constructor `Module__Naam` en de tabel `module____fields_Naam`
+// (preprocess/modules.cfp; zoals nbFieldsName in lib/notebook_glue.cfp).
+// Tot 26 oktober 2026 werd alleen `__fields_<Naam>` gezocht, en was een
+// record uit een module voor Sh.input een onbekende vorm.
+fieldsName name = if (typeId (lookup (T.append "__fields_" name)) == 4) (T.append "__fields_" name) (fieldsMod name (lastSep name (strlen name - 2)))
+
+fieldsMod name !i = if (i <= 0) (T.append "__fields_" name) (T.concat [lowerFirst (T.slice 0 i name), "____fields_", T.slice (i + 2) (strlen name - i - 2) name])
+
+// De plek van de laatste "__" in s (zoekend vanaf i omlaag), of -1.
+lastSep s !i = if (i < 1) (0 - 1) (if ((strat i s == '_') /\ (strat (i + 1) s == '_')) i (lastSep s (i - 1)))
+
+lowerFirst s = if (strlen s == 0) s (T.append (T.fromChar (lowerC (strat 0 s))) (T.slice 1 (strlen s - 1) s))
+
+lowerC c = if ((c >= 'A') /\ (c <= 'Z')) (c + 32) c
 
 ofNameH name h = if (typeId h == 4) (TRec name (fieldsFrom (applyDynamic h Nil))) (ofTypeInfo name (T.split '\t' (lookup (T.append "@meta:type:" name))))
 

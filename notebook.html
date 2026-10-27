@@ -190,6 +190,12 @@
     const STORE_KEY = SERVER ? "workbench_notebook" : "websapl_notebook";
     const TIMEOUT_MS = 30000;
     const el = (id) => document.getElementById(id);
+    // Servermodus: elk tabblad heeft in de Workbench een eigen REPL-proces
+    // (anders maakt een run in het ene tabblad de interactieve cellen van het
+    // andere ongeldig). Een nieuwe sleutel per keer dat de pagina laadt; bij
+    // het sluiten stopt de server dat proces.
+    const TAB = SERVER ? Math.random().toString(36).slice(2) + Date.now().toString(36) : "";
+    if (SERVER) addEventListener("pagehide", () => navigator.sendBeacon("/api/notebook/close", JSON.stringify({ tab: TAB })));
 
     let cells = [];          // [{ kind, source, output: {…} | null }]
     let settings = { order: "any" };   // NB.parseSettings; gaat mee in het bestand
@@ -265,14 +271,14 @@
         return res.json();
       };
       if (msg.type === "NB_RUN") {
-        const r = await post("/api/notebook/nb", { input: msg.input });
+        const r = await post("/api/notebook/nb", { tab: TAB, input: msg.input });
         if (r.timedOut) {
           progressText = r.output;
           throw new Error(`Tijdslimiet van ${TIMEOUT_MS / 1000} s overschreden (een oneindige berekening?). De engine begint de volgende run opnieuw.`);
         }
         return r;
       }
-      if (msg.type === "NB_MSG") return post("/api/notebook/nbmsg", { tok: msg.tok, event: msg.event });
+      if (msg.type === "NB_MSG") return post("/api/notebook/nbmsg", { tab: TAB, tok: msg.tok, event: msg.event });
       if (msg.type === "LC_RUN") {
         const r = await post("/api/notebook/lc", { stdin: msg.stdin });
         if (r.timedOut) throw new Error(`lc_repl: geen antwoord binnen ${TIMEOUT_MS / 1000} s (divergente term?).`);
@@ -703,31 +709,40 @@
     // weergave. Hooguit één gebeurtenis tegelijk onderweg; een tik pas na het
     // antwoord op de vorige. Een widget stopt zodra zijn cel iets anders toont
     // (opnieuw uitgevoerd, verwijderd, ander notebook) of de sessie weg is.
-    const widgets = new Map();   // sleutel -> widget
+    const widgets = new Map();   // generatie:sleutel -> widget
     window.__nbWidgets = widgets;   // voor de toetsen (notebook_browser_test.js)
     // Gestopte sleutels (met de reden): zo'n cel toont haar laatste beeld,
     // zonder gebeurtenissen, tot ze opnieuw draait. Anders maakte de volgende
     // weergave er weer een widget van, met een sleutel die na een herstart
     // bij een andere cel kan horen.
     const deadToks = new Map();
+    // De sleutels komen van de sessie, en een verse sessie (een nieuw proces of
+    // een nieuwe worker) nummert opnieuw: dezelfde sleutel kan dan bij een
+    // nieuwe cel horen terwijl hij nog als gestopt bekendstaat (dan startte
+    // die cel nooit). Daarom een generatie, één hoger telkens als alle widgets
+    // stoppen; een uitvoer krijgt bij zijn eerste weergave de generatie van dat
+    // moment, en widgets en deadToks gebruiken `generatie:sleutel`.
+    let engineGen = 0;
 
     function renderInteractive(out, c, blocks) {
       const info = NB.parseInteractive(blocks[0].content);
       if (!info) { out.innerHTML = '<pre class="err">onleesbare interactieve cel</pre>'; return; }
-      if (deadToks.has(info.tok)) {
+      if (c.output && c.output.engineGen === undefined) Object.defineProperty(c.output, "engineGen", { value: engineGen, writable: true });
+      const key = `${c.output ? c.output.engineGen : engineGen}:${info.tok}`;
+      if (deadToks.has(key)) {
         out.innerHTML = "";
         renderBlocks(out, c, blocks.slice(1));
-        const p = document.createElement("pre"); p.className = "note"; p.textContent = deadToks.get(info.tok) || "gestopt: voer de cel opnieuw uit"; out.appendChild(p);
+        const p = document.createElement("pre"); p.className = "note"; p.textContent = deadToks.get(key) || "gestopt: voer de cel opnieuw uit"; out.appendChild(p);
         return;
       }
-      let w = widgets.get(info.tok);
-      if (!w) w = makeWidget(c, info);
+      let w = widgets.get(key);
+      if (!w) w = makeWidget(c, info, key);
       w.c = c;
       if (w.root.parentNode !== out) { out.innerHTML = ""; out.appendChild(w.root); }
       w.show(blocks.slice(1));
     }
 
-    function makeWidget(c, info) {
+    function makeWidget(c, info, key) {
       const root = document.createElement("div");
       root.className = "nb-interactive";
       root.tabIndex = 0;
@@ -737,7 +752,7 @@
       foot.className = "nb-interactive-foot";
       root.append(view, foot);
       const w = {
-        tok: info.tok, ms: info.ms, c, root, stopped: false, busy: false, queue: [], timer: null,
+        tok: info.tok, key, ms: info.ms, c, root, stopped: false, busy: false, queue: [], timer: null,
         t0: performance.now(), parts: [], times: [], frames: 0,
         // Per blok één onderdeel dat blijft staan zolang de soort gelijk is:
         // een plaatje op hetzelfde canvas (geen nieuwe renderer per beeld), een
@@ -800,7 +815,7 @@
         widgetSend(w, NB.eventLine("key", e.key));
       });
       w.foot = foot;
-      widgets.set(info.tok, w);
+      widgets.set(key, w);
       if (info.ms > 0) widgetTick(w);
       if (info.url) widgetConnect(w, info.url);
       return w;
@@ -914,13 +929,14 @@
       w.stopped = true;
       clearTimeout(w.timer);
       if (w.sock) { try { w.sock.close(); } catch (e) {} }
-      widgets.delete(w.tok);
-      deadToks.set(w.tok, why || "gestopt: voer de cel opnieuw uit");
+      widgets.delete(w.key);
+      deadToks.set(w.key, why || "gestopt: voer de cel opnieuw uit");
       if (why && w.foot) { w.foot.textContent = why; w.foot.className = "nb-interactive-foot note"; }
     }
 
     function stopAllWidgets(why) {
       for (const x of [...widgets.values()]) widgetStop(x, why);
+      engineGen++;
     }
 
     // Widgets waarvan de cel weg is of iets anders toont, stoppen.

@@ -5,6 +5,11 @@ shape__ofValue 1 0
 shape__ofValueTid 2 01
 shape__ofAdtValue 2 00
 shape__ofName 1 0
+shape__fieldsName 1 0
+shape__fieldsMod 2 01
+shape__lastSep 2 01
+shape__lowerFirst 1 0
+shape__lowerC 1 1
 shape__ofNameH 2 00
 shape__ofTypeInfo 2 01
 shape__altsFor 3 000
@@ -85,5 +90,5 @@ __deepEqConstrCheck 4 0000
 __deepEqConstrFields 4 0011
 __deepEqConstrFieldsStep 4 0000
 __deepNeq 2 00
-__pat_mlibshapespp_73 4 0000
-__pat_mlibshapespp_53 5 00000
+__pat_mlibshapespp_80 4 0000
+__pat_mlibshapespp_60 5 00000

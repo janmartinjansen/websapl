@@ -4,6 +4,11 @@ shape__ofValue 1 f v0 cShape__Ty
 shape__ofValueTid 1 f v0 f cNum? cShape__Ty
 shape__ofAdtValue 0 f cStr f cNum? cShape__Ty
 shape__ofName 0 f cStr cShape__Ty
+shape__fieldsName 0 f cStr cStr
+shape__fieldsMod 0 f cStr f cNum? cStr
+shape__lastSep 0 f cStr f cNum? cNum
+shape__lowerFirst 0 f cStr cStr
+shape__lowerC 0 f cChar cNum
 shape__ofNameH 1 f cStr f v0 cShape__Ty
 shape__ofTypeInfo 0 f cStr f l cStr cShape__Ty
 shape__altsFor 1 f cStr f l cStr f v0 l cShape__Alt
