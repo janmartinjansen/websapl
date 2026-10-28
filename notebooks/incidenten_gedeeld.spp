@@ -11,7 +11,9 @@
 //
 // Start eerst de gastheer (vanuit de repo-root):
 //
-//     node server/gastheer/host.js server/fase1/server.jmvm
+//     node server/gastheer/host.js --bewaar server/data/fase1.log server/fase1/server.jmvm
+//
+// (met `--bewaar` overleeft de lijst een herstart van de server)
 //
 // en voer dan het notebook uit in twee tabbladen. **Klik** in de uitvoer
 // voor een nieuw incident, druk **d** (met de focus in de uitvoer) om het
@@ -24,17 +26,20 @@ import "lib/verbinding.spp" as V
 import "server/fase1/incident.spp" as I
 import "lib/text.spp" as T
 
-// versie: de versie van de server waarop `lijst` gebaseerd is. Tijdens een
-// schrijfactie (wacht) blijven wijzigingen lokaal; na het ok gaat de lijst
-// opnieuw op als hij intussen veranderde. Zo geeft een dubbelklik geen
-// conflict met jezelf.
+// versie: de versie van de server waarop `lijst` gebaseerd is (-1: nog
+// niets van de server, of de verbinding is weg). Tijdens een schrijfactie
+// (wacht) en zonder versie blijven wijzigingen lokaal; na het ok gaat de
+// lijst opnieuw op als hij intussen veranderde. Zo geeft een dubbelklik geen
+// conflict met jezelf. Valt de verbinding weg, dan komt er op een lopende
+// schrijfactie geen ok meer: na het opnieuw verbinden (de pagina probeert
+// dat zelf) is het eerste update de stand.
 ::Stand = { !versie : Int, !lijst : [I.Incident], !verstuurd : [I.Incident], !wacht : Bool, !melding : Str }
 
 begin = Stand (0 - 1) [] [] False "nog niet verbonden"
 
 stap ev m = case ev
   (D.Connected -> D.Reply (met m "verbonden") [V.lees "incidenten"])
-  (D.Disconnected -> D.Reply (met m "de verbinding is weg") [])
+  (D.Disconnected -> D.Reply (Stand (0 - 1) (lijst m) [] False "de verbinding is weg") [])
   (D.Message r -> ontvang (V.antwoord r) m)
   (D.Click x y -> wijzig (plakAchter (lijst m) (nieuw (lijst m))) m)
   (D.Key k -> if (k == "d") (wijzig (sluitEerste (lijst m)) m) (D.Reply m []))
@@ -43,17 +48,23 @@ stap ev m = case ev
 met m tekst = Stand (versie m) (lijst m) (verstuurd m) (wacht m) tekst
 
 // Lokaal meteen bijwerken; versturen als er geen schrijfactie loopt.
-wijzig xs m = if (wacht m) (D.Reply (Stand (versie m) xs (verstuurd m) True "opslaan...") []) (stuur (versie m) xs)
+wijzig xs m =
+  if (versie m < 0) (D.Reply (Stand (versie m) xs [] False (melding m)) [])
+  (if (wacht m) (D.Reply (Stand (versie m) xs (verstuurd m) True "opslaan...") []) (stuur (versie m) xs))
 
 // De hele lijst opsturen, met de versie waarop hij gebaseerd is.
 stuur v xs = D.Reply (Stand v xs xs True "opslaan...") [V.schrijf "incidenten" v (I.pakken xs)]
 
 ontvang a m = case a
-  (V.Update sh v t -> D.Reply (Stand v (I.uitpakken t) [] (wacht m) "bijgewerkt") [])
+  (V.Update sh v t -> D.Reply (Stand v (I.uitpakken t) [] (wachtNaUpdate m) "bijgewerkt") [])
   (V.Ok sh v -> if (lijst m == verstuurd m) (D.Reply (Stand v (lijst m) [] False "opgeslagen") []) (stuur v (lijst m)))
   (V.Conflict sh v t -> D.Reply (Stand v (I.uitpakken t) [] False "conflict: een ander was eerder, dit is de stand van de server") [])
   (V.Fout f -> D.Reply (Stand (versie m) (lijst m) [] False (strappend "fout: " f)) [])
   (_ -> D.Reply m [])
+
+// Na een update loopt een schrijfactie door (het ok komt nog), behalve bij
+// het eerste update na het (opnieuw) verbinden: dan is er niets onderweg.
+wachtNaUpdate m = (versie m >= 0) /\ wacht m
 
 nieuw xs = I.Incident (hoogste xs + 1) (strappend "Plek " (T.showInt (hoogste xs + 1))) 2 "open"
 

@@ -826,19 +826,32 @@
     // wordt een gebeurtenis `message`; de berichten die update teruggeeft
     // (@@send) gaan naar de socket. Berichten van de server vallen nooit weg
     // uit de rij (anders bleef de weergave stil op een oude stand staan).
+    // Een verbonden cel (D.connected). Valt de verbinding weg (de server
+    // herstart, het net hapert), dan krijgt de cel `disconnected` en probeert
+    // de pagina het opnieuw, na 1, 2, 4, ... hooguit 10 s; lukt dat, dan
+    // krijgt de cel weer `connected` (en leest ze opnieuw). Een poging die
+    // mislukt, geeft geen nieuwe `disconnected`.
     function widgetConnect(w, url) {
       let ws;
       try { ws = new WebSocket(url); } catch (e) { w.foot.textContent = `verbinding met ${url} mislukt: ${e.message}`; w.foot.className = "nb-interactive-foot err"; return; }
       w.sock = ws;
-      ws.onopen = () => widgetSend(w, NB.eventLine("connected"), false, true);
+      let opened = false;
+      ws.onopen = () => {
+        opened = true; w.retryMs = 0;
+        if (w.offline) { w.offline = null; w.foot.className = "nb-interactive-foot"; }
+        widgetSend(w, NB.eventLine("connected"), false, true);
+      };
       ws.onmessage = (e) => widgetSend(w, NB.eventLine("message", String(e.data)), false, true);
       ws.onclose = () => {
         if (w.stopped) return;
         // De melding blijft onder de cel staan (widgetResult schrijft daar
         // anders de rondgang).
-        w.offline = `verbinding met ${url} verbroken`;
-        widgetSend(w, NB.eventLine("disconnected"), false, true);
+        w.retryMs = Math.min(10000, (w.retryMs || 500) * 2);
+        w.offline = `verbinding met ${url} verbroken; opnieuw proberen over ${Math.round(w.retryMs / 1000)} s`;
+        if (opened) widgetSend(w, NB.eventLine("disconnected"), false, true);
         w.foot.textContent = w.offline; w.foot.className = "nb-interactive-foot err";
+        clearTimeout(w.retry);
+        w.retry = setTimeout(() => { if (!w.stopped) widgetConnect(w, url); }, w.retryMs);
       };
     }
 
@@ -928,6 +941,7 @@
       if (w.stopped) return;
       w.stopped = true;
       clearTimeout(w.timer);
+      clearTimeout(w.retry);
       if (w.sock) { try { w.sock.close(); } catch (e) {} }
       widgets.delete(w.key);
       deadToks.set(w.key, why || "gestopt: voer de cel opnieuw uit");
