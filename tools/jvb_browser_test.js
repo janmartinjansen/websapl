@@ -15,8 +15,8 @@ const HTTP_PORT = 8766, CDP_PORT = 9334;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // Draait in de pagina: een eigen worker, INIT, en de berichten na elkaar.
-const SCRIPT = (src, text) => `(async () => {
-  const w = new Worker("engine/worker.js");
+const SCRIPT = (src, text, url = "engine/worker.js") => `(async () => {
+  const w = new Worker(${JSON.stringify(url)});
   const wait = (type) => new Promise((r) => { const h = (e) => { if (e.data.type === type) { w.removeEventListener("message", h); r(e.data); } }; w.addEventListener("message", h); });
   const initDone = wait("INIT_DONE"); w.postMessage({ type: "INIT" }); await initDone;
   const out = {};
@@ -28,7 +28,8 @@ const SCRIPT = (src, text) => `(async () => {
   p = wait("RUN_COMPLETE"); w.postMessage({ type: "RUN", id: 2, contentOrPath: out.text, isPath: false, stdin: "" });
   out.res1 = (await p).metrics.res;
   p = wait("RUN_COMPLETE"); w.postMessage({ type: "RUN", id: 3, contentOrPath: ${JSON.stringify(text)}, isPath: false, stdin: "" });
-  out.res2 = (await p).metrics.res;
+  const m2 = (await p).metrics;
+  out.res2 = m2.res; out.instr = m2.instr_executed; out.calls = m2.calls;
   w.terminate();
   return out;
 })()`;
@@ -60,7 +61,13 @@ const SCRIPT = (src, text) => `(async () => {
       check("compile (gen1 -> .jvb, tekst uit jvb2jmvm)", v.compiled && v.text.startsWith("start"), v.text.slice(0, 200));
       check("run na compile (queens, res 2680)", v.res1 === "2680", v.res1);
       check("losse .jmvm-tekst via jmvm2jvb (primes, res 48619)", v.res2 === "48619", v.res2);
+      // jmvm.wasm telt alleen calls en creates (variant websapl); met
+      // ?tellen=1 laadt de worker jmvm_tel.wasm, die ook instructies telt.
+      check("jmvm.wasm: calls geteld, geen instructies", v.calls > 0 && v.instr === null, `calls ${v.calls}, instr ${v.instr}`);
     }
+    const r2 = await send("Runtime.evaluate", { expression: SCRIPT(src, text, "engine/worker.js?tellen=1"), returnByValue: true, awaitPromise: true, timeout: 120000 });
+    const v2 = r2.result && r2.result.result && r2.result.result.value;
+    check("?tellen=1: jmvm_tel.wasm telt ook instructies (zelfde uitkomsten)", !!v2 && v2.res1 === "2680" && v2.res2 === "48619" && v2.instr > 0 && v2.calls === v.calls, v2 && `res ${v2.res1}/${v2.res2}, instr ${v2.instr}, calls ${v2.calls}`);
   } finally { chrome.kill(); server.kill(); }
   console.log(fail ? "fout(en)" : "alles in orde");
   process.exit(fail);

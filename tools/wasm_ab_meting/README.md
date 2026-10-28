@@ -36,7 +36,8 @@ programma's zijn `benchmarks/<naam>.jvb` van de checkout waaruit je meet;
 die mogen geen instructies gebruiken die in een van beide VM's ontbreken.
 
 `bouw.sh` gebruikt de em++-regel van `websapl/tools/build_wasm.sh` (houd ze
-gelijk) en meldt of de uitkomst byte-gelijk is aan de gecommitte
+gelijk; de variant `vm/variant/websapl.h`, of `runswitch.h` in een checkout
+van vóór 28 oktober 2026) en meldt of de uitkomst byte-gelijk is aan de gecommitte
 `websapl/engine/jmvm.wasm`; voor `main` moet dat zo zijn, anders meet je
 iets anders dan WebSapl draait.
 
@@ -69,3 +70,7 @@ Chrome: node tiert anders.
 - 26 oktober 2026, de proef "ongebruikte instructies weghalen"
   (tag `proef/ongebruikte-instructies`): native ±0 met musttail, maar in
   Chrome `fib` +21% warm. Zie `docs/performance_bevindingen.md`.
+- 28 oktober 2026, instructies niet meer tellen in WebSapl (variant
+  `websapl.h`): warm in Chrome −2% (`sprimes`) tot −25% (`queens`), mediaan
+  ~−9%. Een tussenvorm zonder de globale `instrCount` was op `fib` 14%
+  trager: meet het eindresultaat. Zie `docs/performance_bevindingen.md`.

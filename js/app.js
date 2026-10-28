@@ -189,7 +189,7 @@
 
   // --- WEB WORKER ---
   function initWorker() {
-    state.worker = new Worker("engine/worker.js?v=" + Date.now());
+    state.worker = new Worker("engine/worker.js?v=" + Date.now() + (/[?&]tellen=1(&|$)/.test(location.search) ? "&tellen=1" : ""));
 
     state.worker.onmessage = function (e) {
       const msg = e.data;

@@ -4,6 +4,12 @@
  * and the Stage-4 Retag compiler (retagcomp.jmvm) completely client-side in the browser.
  */
 
+// De VM-wasm: jmvm.wasm telt alleen calls en creates; met `?tellen=1` op de
+// worker (de pagina geeft dat door als ze zelf `?tellen=1` heeft) de versie
+// die ook elke instructie telt (jmvm_tel.wasm, ~8% trager; 28 oktober 2026,
+// websapl/tools/build_wasm.sh).
+const JMVM_WASM = (typeof location !== "undefined" && /[?&]tellen=1(&|$)/.test(location.search)) ? "./jmvm_tel.wasm" : "./jmvm.wasm";
+
 let jmvmModule = null;
 let isInitialized = false;
 let isExecuting = false;
@@ -322,7 +328,7 @@ async function initEngine(data = {}) {
 
   jmvmModule = await createJMVMModule({
     noInitialRun: true,
-    locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm?v=" + Date.now() : (prefix || "") + p)
+    locateFile: (p, prefix) => (p.endsWith(".wasm") ? JMVM_WASM + "?v=" + Date.now() : (prefix || "") + p)
   });
 
   // Setup directory structure
@@ -402,7 +408,7 @@ async function warmUpEngine() {
   try {
     const inst = await createJMVMModule({
       noInitialRun: true,
-      locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm" : (prefix || "") + p),
+      locateFile: (p, prefix) => (p.endsWith(".wasm") ? JMVM_WASM : (prefix || "") + p),
       stdin: () => null,
       stdout: () => {},
       stderr: () => {}
@@ -429,7 +435,7 @@ async function runCompilerStage(flattenedSource, stageFlag, outPath) {
 
   const instance = await createJMVMModule({
     noInitialRun: true,
-    locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm" : (prefix || "") + p),
+    locateFile: (p, prefix) => (p.endsWith(".wasm") ? JMVM_WASM : (prefix || "") + p),
     stdin: () => {
       if (stdinIndex < stdinBuffer.length) {
         return stdinBuffer[stdinIndex++].charCodeAt(0);
@@ -566,7 +572,7 @@ async function compileRetag(source, srcPath) {
 
   const instance = await createJMVMModule({
     noInitialRun: true,
-    locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm" : (prefix || "") + p),
+    locateFile: (p, prefix) => (p.endsWith(".wasm") ? JMVM_WASM : (prefix || "") + p),
     stdin: () => {
       if (stdinIndex < stdinBuffer.length) {
         return stdinBuffer[stdinIndex++].charCodeAt(0);
@@ -733,7 +739,7 @@ async function preprocessSpp(source, srcPath, tag = "") {
 
   const instance = await createJMVMModule({
     noInitialRun: true,
-    locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm" : (prefix || "") + p),
+    locateFile: (p, prefix) => (p.endsWith(".wasm") ? JMVM_WASM : (prefix || "") + p),
     stdin: () => {
       if (stdinIndex < stdinBuffer.length) {
         return stdinBuffer[stdinIndex++].charCodeAt(0);
@@ -825,7 +831,7 @@ async function preprocessLfp(source, srcPath) {
 
   const instance = await createJMVMModule({
     noInitialRun: true,
-    locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm" : (prefix || "") + p),
+    locateFile: (p, prefix) => (p.endsWith(".wasm") ? JMVM_WASM : (prefix || "") + p),
     stdin: () => {
       if (stdinIndex < stdinBuffer.length) {
         return stdinBuffer[stdinIndex++].charCodeAt(0);
@@ -900,7 +906,7 @@ async function typecheckSource(source, srcPath) {
 
   const instance = await createJMVMModule({
     noInitialRun: true,
-    locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm" : (prefix || "") + p),
+    locateFile: (p, prefix) => (p.endsWith(".wasm") ? JMVM_WASM : (prefix || "") + p),
     stdin: () => {
       if (stdinIndex < stdinBuffer.length) {
         return stdinBuffer[stdinIndex++].charCodeAt(0);
@@ -1043,7 +1049,7 @@ async function runSaplcompModuleStage(moduleSource, stage, outPath, defsContents
 
   const instance = await createJMVMModule({
     noInitialRun: true,
-    locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm" : (prefix || "") + p),
+    locateFile: (p, prefix) => (p.endsWith(".wasm") ? JMVM_WASM : (prefix || "") + p),
     stdin: () => (stdinIndex < stdinBuffer.length ? stdinBuffer[stdinIndex++].charCodeAt(0) : null),
     stdout: (c) => compilerOutput.push(String.fromCharCode(c)),
     stderr: (c) => compilerOutput.push(String.fromCharCode(c))
@@ -1087,7 +1093,7 @@ async function runRetagLinkStage(retagContents, outPath, entryFunc) {
 
   const instance = await createJMVMModule({
     noInitialRun: true,
-    locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm" : (prefix || "") + p),
+    locateFile: (p, prefix) => (p.endsWith(".wasm") ? JMVM_WASM : (prefix || "") + p),
     stdin: () => (stdinIndex < stdinBuffer.length ? stdinBuffer[stdinIndex++].charCodeAt(0) : null),
     stdout: (c) => compilerOutput.push(String.fromCharCode(c)),
     stderr: (c) => compilerOutput.push(String.fromCharCode(c))
@@ -1140,7 +1146,7 @@ async function runRetagCompStage(retagText, outPath) {
 
   const instance = await createJMVMModule({
     noInitialRun: true,
-    locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm" : (prefix || "") + p),
+    locateFile: (p, prefix) => (p.endsWith(".wasm") ? JMVM_WASM : (prefix || "") + p),
     stdin: () => (stdinIndex < stdinBuffer.length ? stdinBuffer[stdinIndex++].charCodeAt(0) : null),
     stdout: (c) => compilerOutput.push(String.fromCharCode(c)),
     stderr: (c) => compilerOutput.push(String.fromCharCode(c))
@@ -1285,7 +1291,7 @@ async function executeJmvm(contentOrPath, isPath = false, customStdin = "", runI
 
   const execInstance = await createJMVMModule({
     noInitialRun: true,
-    locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm" : (prefix || "") + p),
+    locateFile: (p, prefix) => (p.endsWith(".wasm") ? JMVM_WASM : (prefix || "") + p),
     stdin: () => {
       if (stdinIndex < stdinBuffer.length) {
         return stdinBuffer[stdinIndex++].charCodeAt(0);
@@ -1417,7 +1423,7 @@ function rsText() {
 async function rsStart() {
   const inst = await createJMVMModule({
     noInitialRun: true,
-    locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm" : (prefix || "") + p),
+    locateFile: (p, prefix) => (p.endsWith(".wasm") ? JMVM_WASM : (prefix || "") + p),
     stdin: () => null,
     stdout: (c) => { rsOutput.push(c & 255); if (rsOnChar) rsOnChar(c & 255); },
     stderr: () => {}
@@ -1726,7 +1732,7 @@ async function runJmvmCapture(jmvmContent, extraFiles = {}, stdinText = "", onPr
   let stdinPos = 0;
   const instance = await createJMVMModule({
     noInitialRun: true,
-    locateFile: (p, prefix) => (p.endsWith(".wasm") ? "./jmvm.wasm" : (prefix || "") + p),
+    locateFile: (p, prefix) => (p.endsWith(".wasm") ? JMVM_WASM : (prefix || "") + p),
     stdin: () => (stdinPos < stdinBytes.length ? stdinBytes[stdinPos++] : null),
     stdout: (c) => {
       output.push(String.fromCharCode(c));

@@ -666,7 +666,7 @@
       const presets = {};
 
       // Initialize Web Worker with cache-busting timestamp
-      const worker = new Worker('engine/worker.js?v=' + Date.now());
+      const worker = new Worker('engine/worker.js?v=' + Date.now() + (/[?&]tellen=1(&|$)/.test(location.search) ? "&tellen=1" : ""));
       let workerReady = false;
 
       worker.onmessage = (e) => {
@@ -687,7 +687,7 @@
             }
             if (msg.metrics) {
               document.getElementById('metric-exec-time').textContent = (msg.durationMs || 1) + ' ms';
-              document.getElementById('metric-instr-count').textContent = (msg.metrics.instr_executed || 0) + ' instr';
+              document.getElementById('metric-instr-count').textContent = (msg.metrics.instr_executed != null ? msg.metrics.instr_executed + ' instr' : msg.metrics.calls != null ? msg.metrics.calls + ' calls' : '-');
             }
           }
         } else if (msg.type === 'COMPILE_COMPLETE') {
@@ -774,7 +774,7 @@
         }
         if (msg.metrics) {
           document.getElementById('metric-exec-time').textContent = (msg.durationMs || 1) + ' ms';
-          document.getElementById('metric-instr-count').textContent = (msg.metrics.instr_executed || 0) + ' instr';
+          document.getElementById('metric-instr-count').textContent = (msg.metrics.instr_executed != null ? msg.metrics.instr_executed + ' instr' : msg.metrics.calls != null ? msg.metrics.calls + ' calls' : '-');
         }
         pumpTickQueue();
       }

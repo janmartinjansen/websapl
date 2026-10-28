@@ -191,7 +191,7 @@ bewaard.</span></pre>
     function startWorker() {
       ready = false;
       setStatus("busy", "Engine laden…");
-      worker = new Worker("engine/worker.js?v=" + Date.now());
+      worker = new Worker("engine/worker.js?v=" + Date.now() + (/[?&]tellen=1(&|$)/.test(location.search) ? "&tellen=1" : ""));
       worker.onmessage = (e) => {
         const m = e.data;
         if (m.type === "INIT_DONE") { ready = true; setStatus("ready", "Klaar"); return; }

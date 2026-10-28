@@ -232,7 +232,7 @@
       }
       ready = false;
       setStatus("engine laden…");
-      worker = new Worker("engine/worker.js?v=" + Date.now());
+      worker = new Worker("engine/worker.js?v=" + Date.now() + (/[?&]tellen=1(&|$)/.test(location.search) ? "&tellen=1" : ""));
       valuesInWorker = new Set();
       worker.onmessage = (e) => {
         const m = e.data;

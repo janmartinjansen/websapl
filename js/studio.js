@@ -197,7 +197,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- WEB WORKER (JMVM WASM) ---
   function initWorker() {
     try {
-      state.worker = new Worker("engine/worker.js?v=" + Date.now());
+      state.worker = new Worker("engine/worker.js?v=" + Date.now() + (/[?&]tellen=1(&|$)/.test(location.search) ? "&tellen=1" : ""));
       state.worker.onmessage = handleWorkerMessage;
       state.worker.postMessage({
         type: "INIT",
@@ -1765,7 +1765,7 @@ stop
               `Calls: ${m.calls || 0}\n` +
               `Heap Allocations: ${m.creates || 0}\n` +
               `GC Count: ${m.gc_count || 0}\n` +
-              `Instructions: ${m.instr_executed || 0}\n\n` +
+              `Instructions: ${m.instr_executed != null ? m.instr_executed : "- (alleen met ?tellen=1)"}\n\n` +
               `--- Console Output ---\n${msg.output || '(no stdout)'}`;
           },
           onError: (err) => {
