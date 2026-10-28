@@ -1166,6 +1166,14 @@ window.WEBSAPL_TREE = [
     "type": "directory",
     "children": [
       {
+        "name": "codehash.spp",
+        "path": "lib/codehash.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 20349,
+        "isBinary": false
+      },
+      {
         "name": "csv.spp",
         "path": "lib/csv.spp",
         "type": "file",
@@ -1230,11 +1238,19 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
+        "name": "rekenen.spp",
+        "path": "lib/rekenen.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 2564,
+        "isBinary": false
+      },
+      {
         "name": "shape.spp",
         "path": "lib/shape.spp",
         "type": "file",
         "ext": ".spp",
-        "size": 12595,
+        "size": 13572,
         "isBinary": false
       },
       {
@@ -1362,7 +1378,7 @@ window.WEBSAPL_TREE = [
         "path": "notebooks/incidenten_gedeeld.spp",
         "type": "file",
         "ext": ".spp",
-        "size": 3388,
+        "size": 4045,
         "isBinary": false
       },
       {
@@ -1379,6 +1395,14 @@ window.WEBSAPL_TREE = [
         "type": "file",
         "ext": ".spp",
         "size": 2665,
+        "isBinary": false
+      },
+      {
+        "name": "rekenen_op_server.spp",
+        "path": "notebooks/rekenen_op_server.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 1930,
         "isBinary": false
       },
       {
@@ -1708,7 +1732,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/index.txt",
                 "type": "file",
                 "ext": ".txt",
-                "size": 720,
+                "size": 719,
                 "isBinary": false
               },
               {
@@ -1964,7 +1988,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/mlibshapespp.defs.txt",
                 "type": "file",
                 "ext": ".txt",
-                "size": 1863,
+                "size": 1967,
                 "isBinary": false
               },
               {
@@ -1972,7 +1996,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/mlibshapespp.jvb",
                 "type": "file",
                 "ext": ".jvb",
-                "size": 56776,
+                "size": 59752,
                 "isBinary": true
               },
               {
@@ -1980,7 +2004,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/mlibshapespp.names.txt",
                 "type": "file",
                 "ext": ".txt",
-                "size": 756,
+                "size": 803,
                 "isBinary": false
               },
               {
@@ -1988,7 +2012,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/mlibshapespp.pp.cfp",
                 "type": "file",
                 "ext": ".cfp",
-                "size": 23915,
+                "size": 25375,
                 "isBinary": false
               },
               {
@@ -1996,7 +2020,7 @@ window.WEBSAPL_TREE = [
                 "path": "repl_sapl/build/modules/mlibshapespp.schemes.txt",
                 "type": "file",
                 "ext": ".txt",
-                "size": 3014,
+                "size": 3183,
                 "isBinary": false
               },
               {
@@ -2223,7 +2247,7 @@ window.WEBSAPL_TREE = [
             "path": "repl_sapl/build/mini_repl.jmvm",
             "type": "file",
             "ext": ".jmvm",
-            "size": 7339556,
+            "size": 7587708,
             "isBinary": false
           },
           {
@@ -2231,7 +2255,7 @@ window.WEBSAPL_TREE = [
             "path": "repl_sapl/build/mini_repl.jvb",
             "type": "file",
             "ext": ".jvb",
-            "size": 2736064,
+            "size": 2821360,
             "isBinary": true
           }
         ],
@@ -2837,7 +2861,7 @@ window.WEBSAPL_TREE = [
     "path": "notebook.html",
     "type": "file",
     "ext": ".html",
-    "size": 65173,
+    "size": 67710,
     "isBinary": false
   },
   {

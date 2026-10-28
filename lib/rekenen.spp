@@ -1,0 +1,58 @@
+// lib/rekenen.spp -- een berekening laten uitrekenen door een rekenproces
+// (fase 3, stap 2 van docs/2026-10-28_fase3_code_verhuizen_plan.md,
+// 28 oktober 2026).
+//
+// Gebruik:  import "lib/rekenen.spp" as R
+//
+// Een verbonden cel (D.connected) praat met `server/rekenen/host.js --code`:
+//   1. bij D.Connected stuurt ze R.bron: de pagina vervangt dat bericht door
+//      de definitiecellen van dit notebook (wat ze ook aan de REPL geeft), en
+//      het rekenproces compileert die; het antwoordt met R.Klaar (of eerst
+//      R.BronFout per cel die niet compileert);
+//   2. R.reken id e stuurt de berekening e onuitgerekend op (CH.packH, met
+//      een hash per functie);
+//   3. het antwoord is R.Uitkomst id tekst, met `unpack tekst` de waarde (al
+//      helemaal uitgerekend, alleen data), of R.RekenFout id melding.
+//
+// Wat het rekenproces moet kennen, staat in een definitiecel: de functies
+// die e aanroept. Een hulpfunctie uit een expressiecel (een lambda of
+// lijstcomprehensie die daar staat) kent het niet; zet de berekening dus in
+// een definitie (`taak n = lang n`) en roep die aan. De pagina stuurt de
+// definities van de laatste run, dus normaal kennen beide kanten dezelfde
+// code. Is een definitie bij het rekenproces toch anders (een ander
+// notebook, of een rekenproces dat iets anders kreeg), dan geeft de hash een
+// RekenFout, nooit een verkeerde functie.
+module Rekenen
+import "lib/codehash.spp" as CH
+import "lib/verbinding.spp" as V
+
+::list = Nil | Cons !x xs
+
+protocol = "jmvm-reken 1"
+
+// Het veld is lui: zo gaat de berekening onuitgerekend mee.
+::Taak = Taak berekening
+
+// == Berichten maken =========================================================
+
+// De pagina vult de bron in (het notebook kent zijn eigen cellen).
+bron = "bron"
+
+// reken "a" (lang 30)
+reken id e = strappend "reken " (strappend id (strappend " " (V.esc (CH.packH (Taak e)))))
+
+// == Berichten lezen =========================================================
+
+// De tekst in Uitkomst is al ontescapet: klaar voor `unpack`.
+::Antwoord = Hallo !proto | Klaar | BronFout !cel !melding | Uitkomst !id !tekst
+           | RekenFout !id !melding | Fout !melding | Onbekend !regel
+
+antwoord s =
+  let w = V.eerste s in
+  if (V.strEqual w "uitkomst") (Uitkomst (V.nde 1 (V.velden 2 s)) (V.unesc (V.naVeld 2 s)))
+  (if (V.strEqual w "rekenfout") (RekenFout (V.nde 1 (V.velden 2 s)) (V.naVeld 2 s))
+  (if (V.strEqual w "klaar") Klaar
+  (if (V.strEqual w "bronfout") (BronFout (V.leesGetal (V.nde 1 (V.velden 2 s))) (V.naVeld 2 s))
+  (if (V.strEqual w "fout") (Fout (V.naVeld 1 s))
+  (if (V.strEqual w "hallo") (Hallo (V.naVeld 1 s))
+  (Onbekend s))))))

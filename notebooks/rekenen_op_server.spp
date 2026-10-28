@@ -1,0 +1,50 @@
+//%% [markdown]
+// # Rekenen op een rekenproces
+//
+// Fase 3 van `docs/2026-10-25_client_server_ontwerp.md`: deze cel stuurt een
+// berekening, nog niet uitgerekend, naar een rekenproces en krijgt de
+// uitkomst terug. Het rekenproces is een eigen REPL in Sapl, native: voor
+// `fib` drie keer sneller dan de wasm in WebSapl, voor rekenwerk met veel
+// lijsten 1,1 tot 1,5 keer. Het krijgt eerst de definitiecellen
+// van dit notebook (`R.bron`) en compileert die; daarna pakt het de
+// berekening uit, met een hash per functie als controle.
+//
+// Start eerst het rekenproces (vanuit de repo-root; `--code`: het neemt code
+// aan, en daarom alleen lokaal):
+//
+//     node server/rekenen/host.js --code
+//
+// en voer dan het notebook uit. **Klik** in de uitvoer om `fib 27` op het
+// rekenproces uit te laten rekenen.
+//
+// Na een wijziging en opnieuw uitvoeren verbindt de cel opnieuw en krijgt
+// het rekenproces de nieuwe definities: beide kanten lopen gelijk op. De
+// hash per functie is het vangnet voor als dat niet zo is (een rekenproces
+// met andere code): dan een fout, nooit een verkeerde uitkomst.
+//%%
+import "lib/rekenen.spp" as R
+import "lib/text.spp" as T
+
+fib n = if (n < 2) n (fib (n - 1) + fib (n - 2))
+
+// De berekening die verhuist: een definitie, zodat het rekenproces haar kent.
+taak n = fib n
+
+stap ev m = case ev
+  (D.Connected -> D.Reply "verbonden; de definities gaan naar het rekenproces" [R.bron])
+  (D.Disconnected -> D.Reply "de verbinding is weg" [])
+  (D.Message r -> D.Reply (ontvang (R.antwoord r) m) [])
+  (D.Click x y -> D.Reply "bezig met fib 27 ..." [R.reken "fib27" (taak 27)])
+  (_ -> D.Reply m [])
+
+ontvang a m = case a
+  (R.Klaar -> "klaar: klik om fib 27 op het rekenproces uit te rekenen")
+  (R.Uitkomst id t -> strappend "fib 27 = " (T.showInt (unpack t)))
+  (R.RekenFout id f -> strappend "fout: " f)
+  (R.BronFout c f -> strappend "een cel compileert niet op het rekenproces: " f)
+  (R.Fout f -> strappend "fout: " f)
+  (_ -> m)
+
+beeld m = D.text m
+//%%
+D.connected "ws://localhost:8091/" "nog niet verbonden" stap beeld

@@ -1,0 +1,441 @@
+// lib/codehash.spp -- pack/unpack met een code-hash per functie (28 oktober 2026).
+// Plan: docs/2026-10-28_fase3_code_verhuizen_plan.md, stap 1.
+//
+// Gebruik:  import "lib/codehash.spp" as CH
+//           s = CH.packH x        -- zoals pack, met `naam#<hash>` bij elke functie
+//           CH.unpackH s          -- zoals unpack, met de versie die bij de hash past
+//
+// Een ingepakte waarde noemt functies op naam. Leest een ander programma (of
+// een latere REPL-sessie) haar terug, dan kan die naam bij andere code horen.
+// packH zet achter elke functie een hash over haar code; unpackH zoekt onder
+// de versies met die naam de versie met precies die code, en geeft anders een
+// fout ("functie f is anders dan toen deze waarde werd ingepakt").
+//
+// De hash gaat over de geladen code, niet over de bron of de namen: alle
+// functies die vanaf de functie bereikbaar zijn, in een vaste volgorde (de
+// eerste keer dat de doorloop er een tegenkomt, krijgt ze het volgende
+// nummer, en een verwijzing telt als dat nummer). Per functie de instructies
+// die vanaf haar ingang bereikbaar zijn; string-literals, typen en CAF's (via
+// de functie die hem vult: `pushfunc f; create; setcaf k`) op inhoud. Zo telt
+// ook een gewijzigde aangeroepen functie mee, en recursie vanzelf.
+//
+// De VM levert alleen de bouwstenen (vm/dynamics.h): `packMax (0 - 2) x`
+// schrijft elke functie als `naam:adres`, `unpack` leest `naam:adres` als
+// precies die ingang, `lookup "@meta:code:<a>"` geeft de woorden van een
+// functie (de opcodes zoals vóór makeCode) en `lookup "@meta:string:<k>"`
+// een string-literal. Alles hier is gewoon Sapl, zonder stdlib.
+module CodeHash
+
+::ChL = ChNil | ChCons x xs
+::ChT = ChLeaf | ChNode !h !k v l r
+::ChST = ChSLeaf | ChSNode !h k v l r
+::ChI = ChW !w | ChR !a
+::ChH = ChH !a !b
+::ChCtx = ChCtx !codeend cafs
+::ChSt = ChSt ctx last memo chosen
+::ChRw = ChRw text st
+
+// == De ingangen ===============================================================
+
+// pack met een hash achter elke functie (`naam#<16 hex>`), per naam en ingang
+// alleen als het adres anders is dan de vorige keer in de tekst.
+packH x = chRewrite 0 (packMax (0 - 2) x)
+
+// unpack met de versie die bij de hash past (zie boven). Een tekst zonder
+// hashes leest zoals unpack.
+unpackH t = unpack (chRewrite 1 t)
+
+// De code-hash van de functie-ingang op adres a (16 hex).
+hashAt !a = chHex (chHashOf (chNewCtx a) a)
+
+// == Getallen en tekst ===========================================================
+
+chTwo31 = 65536 * 32768
+chTwo32 = 65536 * 65536
+
+// Een woord uit een array van 4 bytes: native 0..2^32-1, op wasm (long van
+// 32 bits) negatief vanaf 2^31; chU maakt er 0..2^32-1 van, chW een getal
+// met teken (een sprong terug).
+chU !w = if (w < 0) (w + chTwo32) w
+chS !u = if (u >= chTwo31) (u - chTwo32) u
+chW j !k = chS (chU (get k j))
+
+chDigits = "0123456789abcdef"
+chNum !n = if (n < 10) (strslice chDigits n (n + 1)) (strappend (chNum (n / 10)) (strslice chDigits (n % 10) (n % 10 + 1)))
+chNumAt t !i !e !acc = if (i >= e) acc (chNumAt t (i + 1) e (acc * 10 + (ord (strat i t) - 48)))
+
+chStrEq a b = if (strlen a == strlen b) (chStrEqAt a b 0 (strlen a)) False
+chStrEqAt a b !i !n = if (i >= n) True (if (strat i a == strat i b) (chStrEqAt a b (i + 1) n) False)
+
+// De eerste positie van teken c in t vanaf i (vóór e), of e.
+chFind t c !i !e = if (i >= e) e (if (strat i t == c) i (chFind t c (i + 1) e))
+
+// == Een hash: twee banen van 31 bits ============================================
+
+chP1 = 2147483647
+chP2 = 2147483629
+chBegin = ChH 1 7
+
+chMix h !w = case h (ChH a b -> ChH ((a * 1000003 + w) % chP1) ((b * 16777619 + w) % chP2))
+
+chMixStr !h s = chMixStrAt h s 0 (strlen s)
+chMixStrAt !h s !i !n = if (i >= n) (chMix h 256) (chMixStrAt (chMix h (ord (strat i s))) s (i + 1) n)
+
+chHex h = case h (ChH a b -> strappend (chHex8 a 8 "") (chHex8 b 8 ""))
+chHex8 !x !k acc = if (k == 0) acc (chHex8 (x / 16) (k - 1) (strappend (strslice chDigits (x % 16) (x % 16 + 1)) acc))
+
+// == Bomen: op getal en op tekst =================================================
+
+// Op getal; de sleutel eerst verhaspeld, zodat oplopende adressen geen
+// scheve boom geven.
+chScr !k = (k * 1103515245 + 12345) % chTwo31
+
+chIGet t !k d = chIGetH t (chScr k) k d
+chIGetH t !h !k d = case t (ChLeaf -> d) (ChNode h2 k2 v l r -> chIGetN h k d h2 k2 v l r)
+chIGetN !h !k d !h2 !k2 v l r =
+  if (h < h2) (chIGetH l h k d)
+  (if (h > h2) (chIGetH r h k d)
+  (if (k == k2) v (chIGetH r h k d)))
+
+chIPut t !k v = chIPutH t (chScr k) k v
+chIPutH t !h !k v = case t (ChLeaf -> ChNode h k v ChLeaf ChLeaf) (ChNode h2 k2 v2 l r -> chIPutN h k v h2 k2 v2 l r)
+chIPutN !h !k v !h2 !k2 v2 l r =
+  if (h < h2) (ChNode h2 k2 v2 (chIPutH l h k v) r)
+  (if (h > h2) (ChNode h2 k2 v2 l (chIPutH r h k v))
+  (if (k == k2) (ChNode h2 k2 v l r) (ChNode h2 k2 v2 l (chIPutH r h k v))))
+
+// Op tekst (de hash van de VM, lookup "@meta:hash:").
+chSKey s = lookup (strappend "@meta:hash:" s)
+chSGet t s d = chSGetH t (chSKey s) s d
+chSGetH t !h s d = case t (ChSLeaf -> d) (ChSNode h2 k2 v l r -> chSGetN h s d h2 k2 v l r)
+chSGetN !h s d !h2 k2 v l r =
+  if (h < h2) (chSGetH l h s d)
+  (if (h > h2) (chSGetH r h s d)
+  (if (chStrEq s k2) v (chSGetH r h s d)))
+
+chSPut t s v = chSPutH t (chSKey s) s v
+chSPutH t !h s v = case t (ChSLeaf -> ChSNode h s v ChSLeaf ChSLeaf) (ChSNode h2 k2 v2 l r -> chSPutN h s v h2 k2 v2 l r)
+chSPutN !h s v !h2 k2 v2 l r =
+  if (h < h2) (ChSNode h2 k2 v2 (chSPutH l h s v) r)
+  (if (h > h2) (ChSNode h2 k2 v2 l (chSPutH r h s v))
+  (if (chStrEq s k2) (ChSNode h2 k2 v l r) (ChSNode h2 k2 v2 l (chSPutH r h s v))))
+
+chRev xs = chRevAcc xs ChNil
+chRevAcc xs acc = case xs (ChNil -> acc) (ChCons x r -> chRevAcc r (ChCons x acc))
+
+// == De code van één functie =====================================================
+
+// Per aanroep van packH/unpackH (niet als CAF: een REPL-stuk erbij verandert
+// het programma): het eind van de code, en lui wie elke CAF vult.
+chNewCtx x = let !e = lookup "@meta:codeend" in ChCtx e (chCafScan e)
+
+chCafScan !e = let j = lookup (strappend "@meta:code:0:" (chNum e)) in chCafWalk j 0 (strlen j) (0 - 1) (0 - 1) ChLeaf
+chCafWalk j !o !n !p1 !p2 t = if (o >= n) t (chCafStep j o n p1 p2 t (chW j o))
+chCafStep j !o !n !p1 !p2 t !op = chCafWalk j (o + chGLen j o op) n o p1 (chCafAt j o op p1 p2 t)
+chCafAt j !o !op !p1 !p2 t =
+  if (op != chOp__AUX) t
+  (if (chW j (o + 1) != chAux_SetCaf) t
+  (if (p2 < 0) t
+  (if (chW j p2 != chOp_PUSHFUNCNR) t
+  (if (chW j p1 != chOp_CREATE) t (chIPut t (chW j (o + 2)) (chW j (p2 + 2)))))))
+
+chCafFunc ctx !k = case ctx (ChCtx e cafs -> chIGet cafs k (0 - 1))
+chCodeEnd ctx = case ctx (ChCtx e cafs -> e)
+
+chTerminal !op !sub =
+  if (op == chOp_IRETURN) True (if (op == chOp_IRETURN_CONST) True (if (op == chOp_TAILCALL) True
+  (if (op == chOp_JMP) True (if (op == chOp_STOP) True (if (op == chOp_JMPT) True
+  (if (op == chOp__AUX) (sub == chAux_GoJMP) False))))))
+
+// Het aantal sprongen vanaf positie rp: rel*n (jmpt, jmptable) heeft er n.
+chRelCount j !o !op !sub !rp =
+  if (op == chOp_JMPT) (chW j (o + rp - 1))
+  (if (op == chOp__AUX) (if (sub == chAux_JMPTable) (chW j (o + rp - 1)) 1) 1)
+
+// De instructies (posities) die vanaf 0 bereikbaar zijn: doorlopen en
+// sprongen binnen het stuk. Een sprong of doorloop naar buiten wordt een
+// verwijzing naar een andere functie (zie chEmit).
+chReach j !n todo set = case todo (ChNil -> set) (ChCons o rest -> chReachAt j n o rest set)
+chReachAt j !n !o rest set =
+  if (o < 0) (chReach j n rest set)
+  (if (o >= n) (chReach j n rest set)
+  (if (chIGet set o False) (chReach j n rest set)
+  (chReach j n (chSucc j n o (chW j o) (chW j (o + 1)) rest) (chIPut set o True))))
+
+chSucc j !n !o !op !sub rest =
+  let !rp = chGRelPos op sub,
+      rels = (if (rp > 0) (chRels j o (o + rp) (chRelCount j o op sub rp) rest) rest) in
+  if (chTerminal op sub) rels (ChCons (o + chGLen j o op) rels)
+
+chRels j !o !p !c rest = if (c == 0) rest (chRels j o (p + 1) (c - 1) (ChCons (o + chW j p) rest))
+
+// De woorden van de functie op adres s, als ChW (een woord) en ChR (een
+// andere functie), alleen de bereikbare instructies, in volgorde.
+chDecode ctx !s =
+  let j = lookup (strappend "@meta:code:" (chNum s)),
+      !n = strlen j in
+  chRev (chEmit ctx j s n (chReach j n (ChCons 0 ChNil) ChLeaf) 0 ChNil)
+
+chEmit ctx j !s !n set !o acc =
+  if (o >= n) acc (chEmitAt ctx j s n set o (chW j o) (chW j (o + 1)) acc)
+chEmitAt ctx j !s !n set !o !op !sub acc =
+  let !len = chGLen j o op in
+  if (chIGet set o False) (chEmit ctx j s n set (o + len) (chFall ctx s n o len op sub (chOps ctx j s n o op sub len (chFirst op) (chOpHead op sub acc))))
+  (chEmit ctx j s n set (o + len) acc)
+
+chFirst !op = if (op == chOp__AUX) 2 1
+chOpHead !op !sub acc = if (op == chOp__AUX) (ChCons (ChW (chU sub)) (ChCons (ChW op) acc)) (ChCons (ChW op) acc)
+
+// Loopt een bereikbare instructie door voorbij het eind: de volgende functie.
+chFall ctx !s !n !o !len !op !sub acc =
+  if (chTerminal op sub) acc
+  (if (o + len < n) acc
+  (if (s + n >= chCodeEnd ctx) acc (ChCons (ChR (s + n)) acc)))
+
+chOps ctx j !s !n !o !op !sub !len !p acc =
+  if (p >= len) acc (chOps ctx j s n o op sub len (p + 1) (chOp ctx j s n o op sub p (chW j (o + p)) acc))
+
+chOp ctx j !s !n !o !op !sub !p !w acc =
+  if (p == chGAdresPos op sub) (ChCons (ChR w) acc)
+  (if (p == chGStrPos op sub) (chHashItems (chMixStr chBegin (lookup (strappend "@meta:string:" (chNum w)))) acc)
+  (if (p == chGTypePos op sub) (chHashItems (chMixStr chBegin (lookup (strappend "@meta:type:" (chNum w)))) acc)
+  (if (p == chGCafPos op sub) (chCafItem (chCafFunc ctx w) acc)
+  (if (chIsRel j o op sub p) (chRelItem s n (o + w) w acc)
+  (ChCons (ChW (chU w)) acc)))))
+
+chHashItems h acc = case h (ChH a b -> ChCons (ChW b) (ChCons (ChW a) acc))
+chCafItem !f acc = if (f < 0) (ChCons (ChW (chTwo32 - 3)) acc) (ChCons (ChR f) acc)
+
+chIsRel j !o !op !sub !p = chIsRelR p (chGRelPos op sub) j o op sub
+chIsRelR !p !rp j !o !op !sub =
+  if (rp == 0) False
+  (if (p < rp) False (p < rp + chRelCount j o op sub rp))
+
+// Een sprong binnen de functie: de afstand; naar buiten: die functie.
+chRelItem !s !n !t !w acc = if (t < 0) (ChCons (ChR (s + t)) acc) (if (t >= n) (ChCons (ChR (s + t)) acc) (ChCons (ChW (chU w)) acc))
+
+// == De hash van een functie =======================================================
+
+// Een doorloop vanaf root; idx: adres -> nummer, byI: nummer -> adres.
+chHashOf ctx !root = chWalk ctx (chIPut ChLeaf root 0) (chIPut ChLeaf 0 root) 1 0 chBegin
+
+chWalk ctx idx byI !cnt !i !h =
+  if (i >= cnt) (chMix h cnt)
+  (chWalkItems ctx idx byI cnt i (chMix h (chTwo32 - 2)) (chDecode ctx (chIGet byI i 0)))
+
+chWalkItems ctx idx byI !cnt !i !h items = case items
+  (ChNil -> chWalk ctx idx byI cnt (i + 1) h)
+  (ChCons it rest -> chWalkItem ctx idx byI cnt i h rest it)
+
+chWalkItem ctx idx byI !cnt !i !h rest it = case it
+  (ChW w -> chWalkItems ctx idx byI cnt i (chMix h w) rest)
+  (ChR a -> chWalkRef ctx idx byI cnt i h rest a (chIGet idx a (0 - 1)))
+
+chWalkRef ctx idx byI !cnt !i !h rest !a !k =
+  if (k >= 0) (chWalkItems ctx idx byI cnt i (chMix (chMix h (chTwo32 - 1)) k) rest)
+  (chWalkItems ctx (chIPut idx a cnt) (chIPut byI cnt a) (cnt + 1) i (chMix (chMix h (chTwo32 - 1)) cnt) rest)
+
+// De hash van adres a als tekst, bewaard in memo (per aanroep van packH/unpackH).
+chHashMemo ctx memo !a = chHashMemo2 ctx memo a (chIGet memo a "")
+chHashMemo2 ctx memo !a hx = if (strlen hx > 0) hx (chHex (chHashOf ctx a))
+
+// == De tekst herschrijven ===========================================================
+
+// mode 0 (packH): `naam:adres` wordt `naam#hash` (of `naam` als dezelfde naam
+// en ingang het vorige keer ook dat adres hadden); mode 1 (unpackH):
+// `naam#hash` wordt `naam:adres` (de nieuwste versie met die hash), en een
+// latere `naam` zonder hash dezelfde versie.
+chRewrite !mode t = chScan mode t 0 (strlen t) 0 0 False (ChSt (chNewCtx mode) ChSLeaf ChLeaf ChSLeaf) ChNil
+
+// Een token loopt tot een spatie; een string `s<es>:<len>:<bytes>` tot het
+// eind van zijn bytes (die spaties kunnen bevatten). names: hoeveel namen er
+// nog komen (na K of Q: type en constructor); fn: het volgende token is een
+// functienaam (na T, P of F).
+chScan !mode t !p !n !copied !names !fn st pieces =
+  if (p >= n) (chJoin (chRev (ChCons (strslice t copied n) pieces)))
+  (if (strat p t == ' ') (chScan mode t (p + 1) n copied names fn st pieces)
+  (chScanTok mode t p (chFind t ' ' p n) n copied names fn st pieces))
+
+chScanTok !mode t !p !e !n !copied !names !fn st pieces =
+  if fn (chFunc mode t p e n copied st pieces (chIngang t e n))
+  (if (names > 0) (chScan mode t e n copied (names - 1) False st pieces)
+  (if (e == p + 1) (chOne mode t p e n copied st pieces (strat p t))
+  (if (strat p t == 's') (chScan mode t (chStrEnd t p n) n copied 0 False st pieces)
+  (chScan mode t e n copied 0 False st pieces))))
+
+chOne !mode t !p !e !n !copied st pieces !c =
+  if (c == 'K') (chScan mode t e n copied 2 False st pieces)
+  (if (c == 'Q') (chScan mode t e n copied 2 False st pieces)
+  (if (c == 'T') (chScan mode t e n copied 0 True st pieces)
+  (if (c == 'P') (chScan mode t e n copied 0 True st pieces)
+  (if (c == 'F') (chScan mode t e n copied 0 True st pieces)
+  (chScan mode t e n copied 0 False st pieces)))))
+
+// Het eind van een string-token: na `s<es>:<len>:` nog len * es bytes.
+chStrEnd t !p !n =
+  let !c1 = chFind t ':' p n,
+      !c2 = chFind t ':' (c1 + 1) n in
+  c2 + 1 + chNumAt t (c1 + 1) c2 0 * chNumAt t (p + 1) c1 0
+
+// De ingang (S of L) na de functienaam.
+chIngang t !e !n = strslice t (chSkipSp t e n) (chSkipSp t e n + 1)
+chSkipSp t !i !n = if (i >= n) n (if (strat i t == ' ') (chSkipSp t (i + 1) n) i)
+
+chFunc !mode t !p !e !n !copied st pieces ing =
+  let rw = (if (mode == 0) (chPackTok t p e st ing) (chUnpackTok t p e st ing)) in
+  case rw (ChRw text st2 -> chScan mode t e n e 0 False st2 (ChCons text (ChCons (strslice t copied p) pieces)))
+
+chStCtx st = case st (ChSt c l m ch -> c)
+chStLast st = case st (ChSt c l m ch -> l)
+chStMemo st = case st (ChSt c l m ch -> m)
+chStChosen st = case st (ChSt c l m ch -> ch)
+
+// packH: `naam:adres`.
+chPackTok t !p !e st ing = chPackTok2 t p e st ing (chFind t ':' p e)
+chPackTok2 t !p !e st ing !c =
+  if (c >= e) (ChRw (strslice t p e) st)
+  (chPackTok3 (strslice t p c) (chNumAt t (c + 1) e 0) st ing)
+chPackTok3 naam !a st ing =
+  let key = strappend naam (strappend " " ing) in
+  if (chSGet (chStLast st) key (0 - 1) == a) (ChRw naam st)
+  (chPackTok4 naam a st key (chHashMemo (chStCtx st) (chStMemo st) a))
+chPackTok4 naam !a st key hx =
+  ChRw (strappend naam (strappend "#" hx))
+       (ChSt (chStCtx st) (chSPut (chStLast st) key a) (chIPut (chStMemo st) a hx) (chStChosen st))
+
+// unpackH: `naam#hash` of `naam`.
+chUnpackTok t !p !e st ing = chUnpackTok2 t p e st ing (chFind t '#' p e)
+chUnpackTok2 t !p !e st ing !h =
+  if (h >= e) (chBare (strslice t p e) st ing)
+  (chHashed (strslice t p h) (strslice t (h + 1) e) st ing (lookup (strappend "@meta:faddrs:" (strslice t p h))))
+
+chBare naam st ing = chBare2 naam st (chSGet (chStChosen st) (strappend naam (strappend " " ing)) (0 - 1))
+chBare2 naam st !a = if (a < 0) (ChRw naam st) (ChRw (strappend naam (strappend ":" (chNum a))) st)
+
+// De versies (alle ingangen met die naam, in laadvolgorde): van nieuw naar oud.
+chHashed naam hx st ing cands =
+  if (strlen cands == 0) (ChRw naam st)
+  (chTry naam hx st (strappend naam (strappend " " ing)) cands (strlen cands - 1))
+chTry naam hx st key cands !k =
+  if (k < 0) (error (strappend "unpack: functie " (strappend naam " is anders dan toen deze waarde werd ingepakt (andere code)")))
+  (chTryAt naam hx st key cands k (chU (get k cands)))
+chTryAt naam hx st key cands !k !a = chTryHx naam hx st key cands k a (chHashMemo (chStCtx st) (chStMemo st) a)
+chTryHx naam hx st key cands !k !a h2 =
+  let st2 = ChSt (chStCtx st) (chStLast st) (chIPut (chStMemo st) a h2) (chStChosen st) in
+  if (chStrEq hx h2) (ChRw (strappend naam (strappend ":" (chNum a))) (ChSt (chStCtx st2) (chStLast st2) (chStMemo st2) (chSPut (chStChosen st2) key a)))
+  (chTry naam hx st2 key cands (k - 1))
+
+// Strings samenvoegen, steeds twee aan twee (geen kwadratisch kopiëren).
+chJoin xs = case xs (ChNil -> "") (ChCons x r -> chJoin1 x r)
+chJoin1 x r = case r (ChNil -> x) (ChCons y s -> chJoin (chPairs (ChCons x r)))
+chPairs xs = case xs (ChNil -> ChNil) (ChCons a r -> chPairs1 a r)
+chPairs1 a r = case r (ChNil -> ChCons a ChNil) (ChCons b s -> ChCons (strappend a b) (chPairs s))
+
+// === BEGIN GEGENEREERD door vm/genereer.cfp uit vm/instructies.tab: niet met de hand bewerken (bash vm/genereer.sh) ===
+// De opcodes en de subcodes van _AUX.
+chOp_BIPUSH = 0
+chOp_IADD = 1
+chOp_ISUB = 2
+chOp_IMULT = 3
+chOp_IDIV = 4
+chOp_IMOD = 5
+chOp_IFLTLV = 6
+chOp_IFEQ = 7
+chOp_IFNEQ = 8
+chOp_IFLT = 9
+chOp_IFLE = 10
+chOp_IFCMP = 11
+chOp_CALL = 12
+chOp_IRETURN = 13
+chOp_IRETURN_CONST = 14
+chOp_INC = 15
+chOp_DEC = 16
+chOp_DUP = 17
+chOp_PRINT = 18
+chOp_LOAD = 19
+chOp_STORE = 20
+chOp_LOADADD = 21
+chOp_SWAP = 22
+chOp_UPDSP = 23
+chOp_STOP = 24
+chOp_CREATE = 25
+chOp_PUSHFUNCNR = 26
+chOp_GET = 27
+chOp_GETN = 28
+chOp_UPDATE = 29
+chOp_GETALL = 30
+chOp_EVAL = 31
+chOp_BOX = 32
+chOp_CCREATE = 33
+chOp_DEBUG = 34
+chOp_JMP = 35
+chOp_TAILCALL = 36
+chOp_JMPT = 37
+chOp_ARRAY_CREATE_STATIC = 38
+chOp_ARRAY_CREATE_DYNAMIC = 39
+chOp_ARRAY_GET = 40
+chOp_ARRAY_SET = 41
+chOp_ARRAY_SIZE = 42
+chOp_FADD = 43
+chOp_FSUB = 44
+chOp_FMULT = 45
+chOp_FDIV = 46
+chOp_FLOATOP = 47
+chOp_POW = 48
+chOp_PUSHC = 49
+chOp__AUX = 50
+chOp_FORCE = 51
+chOp_EVALAP = 52
+chAux_IsValue = 0
+chAux_GetType = 1
+chAux_NewArray = 2
+chAux_IsType = 3
+chAux_JMPTable = 4
+chAux_GetMeta = 5
+chAux_SetMeta = 6
+chAux_Apply = 7
+chAux_SetJMP = 8
+chAux_GoJMP = 9
+chAux_PopJMP = 10
+chAux_SysCall = 11
+chAux_GetTypeId = 12
+chAux_GetConstrName = 13
+chAux_GetField = 14
+chAux_MakeConstr = 15
+chAux_GetFuncName = 16
+chAux_GetFuncArity = 17
+chAux_GetFuncRemaining = 18
+chAux_ApplyDynamic = 19
+chAux_Lookup = 20
+chAux_ArrAppend = 21
+chAux_ArrSlice = 22
+chAux_ArrCopy = 23
+chAux_PushCaf = 24
+chAux_Ord = 25
+chAux_Chr = 26
+chAux_SetCaf = 27
+chAux_Pop = 28
+chAux_FuncAddr = 29
+chAux_FieldIsValue = 30
+chAux_Pack = 31
+chAux_PackMax = 32
+chAux_Unpack = 33
+
+// De lengte van de instructie op i (opcode op); een onbekende opcode of subcode is een fout.
+chGLen j !i !op = if (op < 0) (chGOnbekend 0) (if (op > 52) (chGOnbekend 0) (if (op < 33) (if (op < 21) (if (op < 7) (if (op < 1) 2 (if (op < 6) 1 4)) (if (op < 15) (if (op < 14) 2 3) (if (op < 18) 1 2))) (if (op < 24) (if (op < 22) 3 (if (op < 23) 1 2)) (if (op < 27) (if (op < 25) 1 3) (if (op < 28) 2 1)))) (if (op < 43) (if (op < 37) (if (op < 34) 5 (if (op < 36) 2 3)) (if (op < 39) (if (op < 38) (2 + chW j (i + 1)) 3) (if (op < 40) 2 1))) (if (op < 49) (if (op < 47) (chGOnbekend 0) (if (op < 48) (if (chW j (i + 1) == 26) 3 2) 1)) (if (op < 51) (if (op < 50) 2 (chGLenAux j i (chW j (i + 1)))) (if (op < 52) 1 2))))))
+chGLenAux j !i !sub = if (sub < 0) (chGOnbekend 1) (if (sub > 33) (chGOnbekend 1) (if (sub < 8) (if (sub < 4) (if (sub < 2) (if (sub < 1) 3 2) (if (sub < 3) 3 4)) (if (sub < 6) (if (sub < 5) (3 + chW j (i + 2)) 3) (if (sub < 7) 4 2))) (if (sub < 24) (if (sub < 11) (if (sub < 9) 4 2) (if (sub < 12) 3 2)) (if (sub < 27) (if (sub < 25) 3 2) (if (sub < 28) 3 2)))))
+chGOnbekend !k = if (k == 0) (error "loadcode: onbekende opcode") (error "loadcode: onbekende subcode van _AUX")
+
+// De positie (vanaf de opcode) van een operand van deze soort, of 0: een adres
+// (code/func), een string, een type-id, een CAF, een sprong (rel, of de eerste van rel*n).
+chGAdresPos !op sub = if (op == 50) (chGAdresPosAux sub) (if (op == 12) 1 (if (op == 26) 2 (if (op == 36) 2 0)))
+chGAdresPosAux !sub = 0
+chGStrPos !op sub = if (op == 50) (chGStrPosAux sub) (if (op == 38) 2 0)
+chGStrPosAux !sub = 0
+chGTypePos !op sub = if (op == 50) (chGTypePosAux sub) (if (op == 33) 3 0)
+chGTypePosAux !sub = 0
+chGCafPos !op sub = if (op == 50) (chGCafPosAux sub) 0
+chGCafPosAux !sub = (if (sub == 24) 2 (if (sub == 27) 2 0))
+chGRelPos !op sub = if (op == 50) (chGRelPosAux sub) (if (op == 6) 3 (if (op == 7) 1 (if (op == 8) 1 (if (op == 9) 1 (if (op == 10) 1 (if (op == 11) 1 (if (op == 35) 1 (if (op == 37) 2 0))))))))
+chGRelPosAux !sub = (if (sub == 0) 2 (if (sub == 3) 3 (if (sub == 4) 3 (if (sub == 8) 3 0))))
+// === EINDE GEGENEREERD ===

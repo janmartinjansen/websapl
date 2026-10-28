@@ -855,7 +855,12 @@
       };
     }
 
+    // Een rekenproces (lib/rekenen.spp, server/rekenen/host.js): het bericht
+    // `bron` van een cel wordt de invoer van de laatste run (wat de engine
+    // compileerde), zodat het rekenproces dezelfde definities met dezelfde
+    // namen krijgt. Een cel kent haar eigen notebook niet; de pagina wel.
     function widgetSocketSend(w, line) {
+      if (line === "bron") line = "bron " + String(currentGen ? currentGen.input : "").replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/\t/g, "\\t").replace(/\r/g, "\\r");
       if (w.sock && w.sock.readyState === 1) { w.sock.send(line); return; }
       w.foot.textContent = "niet verbonden: bericht niet verstuurd"; w.foot.className = "nb-interactive-foot err";
     }
