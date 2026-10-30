@@ -1,0 +1,113 @@
+// lib/taxi_minimal.spp -- het voorbeeld `taxi_minimal` van C2Sketch
+// (docs/examples/taxi_minimal.md daar) als data, met het scenario uit dat
+// document en twee agents (fase 4, stap 1 van
+// docs/2026-10-29_fase4_top_laag_plan.md).
+//
+//   import "lib/c2sketch.spp" as C
+//   import "lib/taxi_minimal.spp" as X
+//   C.speel X.model (C.begin X.model) X.scenario
+//
+// Tom Traveler komt aan op het vliegveld en wil naar zijn hotel; Carrie
+// Cabby staat met haar taxi in de taxizone. De namen volgen de definities
+// (zie het plan, "Namen genormaliseerd"): `TaxiCarrie.direct_audio`,
+// `TaxiCarrie.BackSeat`, `acquire_customers`.
+module Taxi_minimal
+import "lib/list.spp" as L
+import "lib/c2sketch.spp" as C
+
+::list = Nil | Cons !x xs
+
+tom = "TomTraveler"
+
+carrie = "TaxiCarrie"
+
+oorTom = "TomTraveler.direct_audio"
+
+oorCarrie = "TaxiCarrie.direct_audio"
+
+achterbank = "TaxiCarrie.BackSeat"
+
+vliegveld = "AirportTaxiZone"
+
+hotel = "TomsHotel"
+
+onderweg = "InTransit"
+
+model =: C.Model "examples.taxi_minimal"
+  [C.Actor tom "Tom Traveler" [] [vliegveld],
+   C.Actor carrie "Carrie Cabby in her taxi" [] [vliegveld]]
+  [C.Locatie vliegveld "Airport Taxi zone" "",
+   C.Locatie hotel "Tom's hotel" "",
+   C.Locatie onderweg "In transit" "",
+   C.Locatie achterbank "Backseat of Carrie's taxi" carrie]
+  [C.Ruimte oorTom "Tom's direct audio",
+   C.Ruimte oorCarrie "Carrie's direct audio"]
+  [C.Taak "go_to_hotel" "Go to hotel" [tom] []
+     [C.Taak "arrange_taxi_ride" "Arrange taxi ride" []
+        [C.InfoReq "request_channel" C.Schrijf oorCarrie,
+         C.InfoReq "confirm_channel" C.Lees oorTom] [],
+      C.Taak "ride_to_hotel" "Ride to hotel" []
+        [C.InfoReq "notification_channel" C.Lees oorTom] []],
+   C.Taak "provide_taxi_service" "Provide taxi service" [carrie] []
+     [C.Taak "position_for_pickup" "Position taxi for pickup" [] [] [],
+      C.Taak "acquire_customers" "Acquire customers" []
+        [C.InfoReq "request_channel" C.Lees oorCarrie,
+         C.InfoReq "confirm_channel" C.Schrijf oorTom] [],
+      C.Taak "transport_customer" "Transport customer" []
+        [C.InfoReq "notify_channel" C.Schrijf oorTom] []]]
+
+// Het scenario van C2Sketch, met de tijden van daar (5-7 en 9 ontbreken).
+scenario =
+  [C.Info 1 tom oorCarrie "Please take me to the hotel",
+   C.Info 2 carrie oorTom "Sure, get in",
+   C.Verplaats 3 tom vliegveld achterbank,
+   C.Verplaats 4 carrie vliegveld onderweg,
+   C.Verplaats 8 carrie onderweg hotel,
+   C.Info 10 carrie oorTom "We have arrived",
+   C.Verplaats 11 tom achterbank hotel,
+   C.Info 12 tom oorCarrie "Thanks for the ride. Bye"]
+
+// == Agents ==================================================================
+//
+// Elke agent kijkt naar de stand en geeft wat hij nu doet (of niets). Ze
+// pakken ook hun taken op en ronden ze af, wat het scenario hierboven niet
+// doet.
+
+agentTom m s = tomDoet s (C.klok s + 1) (C.directOp s tom)
+
+tomDoet s t op =
+  if (nogNietGezegd s tom oorCarrie)
+    [C.StartTaak t tom "go_to_hotel/arrange_taxi_ride", C.Info t tom oorCarrie "Please take me to the hotel"]
+  (if (gehoord s oorTom "Sure, get in" /\ L.elem vliegveld op)
+    [C.RondAf t tom "go_to_hotel/arrange_taxi_ride", C.StartTaak t tom "go_to_hotel/ride_to_hotel",
+     C.Verplaats t tom vliegveld achterbank]
+  (if (gehoord s oorTom "We have arrived" /\ L.elem achterbank op)
+    [C.Verplaats t tom achterbank hotel]
+  (if (L.elem hotel op /\ (gehoord s oorCarrie "Thanks for the ride. Bye" == False))
+    [C.Info t tom oorCarrie "Thanks for the ride. Bye", C.RondAf t tom "go_to_hotel/ride_to_hotel"]
+  [])))
+
+agentCarrie m s = carrieDoet s (C.klok s + 1) (C.directOp s carrie) (L.elem achterbank (C.directOp s tom))
+
+carrieDoet s t op tomAchterin =
+  if (gehoord s oorCarrie "Please take me to the hotel" /\ nogNietGezegd s carrie oorTom)
+    [C.StartTaak t carrie "provide_taxi_service/acquire_customers", C.Info t carrie oorTom "Sure, get in"]
+  (if (tomAchterin /\ L.elem vliegveld op)
+    [C.RondAf t carrie "provide_taxi_service/acquire_customers",
+     C.StartTaak t carrie "provide_taxi_service/transport_customer",
+     C.Verplaats t carrie vliegveld onderweg]
+  (if (tomAchterin /\ L.elem onderweg op)
+    [C.Verplaats t carrie onderweg hotel]
+  (if (tomAchterin /\ L.elem hotel op /\ (gehoord s oorTom "We have arrived" == False))
+    [C.Info t carrie oorTom "We have arrived"]
+  (if (L.elem hotel op /\ (tomAchterin == False) /\ C.isBezigDoor carrie (C.statusVan s "provide_taxi_service/transport_customer"))
+    [C.RondAf t carrie "provide_taxi_service/transport_customer"]
+  []))))
+
+berichtenIn s r = L.concatMap (\x -> if (C.inRuimte x == r) (C.berichten x) []) (C.inhoud s)
+
+gehoord s r x = L.any (\b -> C.tekst b == x) (berichtenIn s r)
+
+nogNietGezegd s a r = L.all (\b -> C.van b != a) (berichtenIn s r)
+
+agents = [agentTom, agentCarrie]

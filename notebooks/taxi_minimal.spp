@@ -1,0 +1,88 @@
+//%% [markdown]
+// # Taken als data: `taxi_minimal` van C2Sketch
+//
+// Fase 4 van `docs/2026-10-25_client_server_ontwerp.md`, stap 1 (zie
+// `docs/2026-10-29_fase4_top_laag_plan.md`). Het voorbeeld `taxi_minimal`
+// uit C2Sketch van Bas Lijnse: Tom Traveler komt aan op het vliegveld en
+// wil naar zijn hotel, Carrie Cabby wacht met haar taxi in de taxizone.
+//
+// Het model (actors, locaties, information spaces en taken) is gewone
+// Sapl-data (`lib/taxi_minimal.spp`). Wat je ermee kunt (de takenlijst per
+// actor, wie waar is, of een gebeurtenis mag) zijn pure functies in
+// `lib/c2sketch.spp`. Er is nog geen server: dat is stap 2.
+//%%
+import "lib/list.spp" as L
+import "lib/text.spp" as T
+import "lib/c2sketch.spp" as C
+import "lib/taxi_minimal.spp" as X
+
+model =: X.model
+//%% [markdown]
+// ## Het model
+//
+// Elke bladtaak met zijn id (het pad van de definitie: blijft gelijk zolang
+// het model gelijk blijft), de actors die hem mogen doen, en de
+// information spaces die hij leest (`<-`) of waarin hij schrijft (`->`).
+//%%
+D.table ["taak", "wie", "ruimtes"]
+  (L.map (\b -> [C.bladId b, T.join ", " (L.filter (\a -> C.voldoetAlle model a (C.eisen b)) (L.map C.actorNaam (C.actors model))),
+                 T.join ", " (L.map (\q -> T.concat [C.kanaal q, " ", C.toonRichting (C.richting q), " ", C.ruimte q]) (C.infoReqs (C.bladTaak b)))])
+         (C.bladen model))
+//%% [markdown]
+// ## Het scenario, stap voor stap
+//
+// Het scenario uit C2Sketch: acht gebeurtenissen, van "Please take me to
+// the hotel" tot "Thanks for the ride. Bye". Klik in de uitvoer, of gebruik
+// **→**/**←** (met de focus in de uitvoer). Met **a** wissel je naar een
+// simulatie met twee agents (`X.agentTom`, `X.agentCarrie`): pure functies
+// die naar de stand kijken en zeggen wat ze doen. Zij pakken ook hun taken
+// op en ronden ze af; het scenario doet dat niet.
+//%%
+::Speler = { !stap : Int, !agents : Bool }
+
+scenarioStanden =: C.speel model (C.begin model) X.scenario
+
+agentStanden =: C.simuleer model X.agents 20 (C.begin model)
+
+standen sp = if (agents sp) agentStanden scenarioStanden
+
+gebeurtenis sp i = if (agents sp) "" (if (i == 0) "begin" (C.toonGebeurtenis (L.nth (i - 1) X.scenario)))
+
+speel ev sp = case ev
+  (D.Click x y -> verder 1 sp)
+  (D.Key k -> if (k == "ArrowLeft") (verder (0 - 1) sp)
+              (if (k == "a") (Speler 0 (agents sp == False)) (verder 1 sp)))
+  (_ -> sp)
+
+verder d sp = Speler (max 0 (min (L.length (standen sp) - 1) (stap sp + d))) (agents sp)
+
+max a b = if (a > b) a b
+
+min a b = if (a < b) a b
+
+beeld sp =
+  let s = L.nth (stap sp) (standen sp) in
+  D.column [
+    D.markdown (T.concat ["**", if (agents sp) "agents" "scenario", "**, stap ", T.showInt (stap sp), " van ",
+                          T.showInt (L.length (standen sp) - 1), ", tijd ", T.showInt (C.klok s), ". ", gebeurtenis sp (stap sp)]),
+    D.table ["actor", "is op"] (L.map (\a -> [C.actorNaam a, T.join ", " (C.isOp model s (C.actorNaam a))]) (C.actors model)),
+    D.table ["ruimte", "berichten"] (L.map (\x -> [C.inRuimte x, T.join " | " (L.map (\b -> T.concat [C.van b, ": ", C.tekst b]) (C.berichten x))]) (C.inhoud s)),
+    D.text (T.unlines (L.concatMap (\a -> Cons (strappend "taken van " (C.actorNaam a)) (C.toonBoom model s (C.actorNaam a))) (C.actors model)))]
+//%%
+D.interactive (Speler 0 False) speel beeld
+//%% [markdown]
+// ## Wat het model weigert
+//
+// `C.controle model gebeurtenis stand` geeft `""` als het model de
+// gebeurtenis toestaat, en anders waarom niet. Dit is wat een server in
+// stap 2 met een binnenkomende gebeurtenis doet. Verander gerust een
+// gebeurtenis en voer de cel opnieuw uit.
+//%%
+D.table ["gebeurtenis", "controle"]
+  (L.map (\ev -> [C.toonGebeurtenis ev, C.controle model ev (C.begin model)])
+    [C.Info 1 X.tom X.oorCarrie "Please take me to the hotel",
+     C.Info 1 X.tom X.oorTom "ik schrijf in mijn eigen oor",
+     C.Verplaats 1 X.tom X.hotel X.vliegveld,
+     C.StartTaak 1 X.tom "go_to_hotel/arrange_taxi_ride",
+     C.StartTaak 1 X.tom "provide_taxi_service/acquire_customers",
+     C.StartTaak 1 X.tom "go_to_hotel"])

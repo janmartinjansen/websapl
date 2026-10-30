@@ -1,0 +1,260 @@
+// lib/c2sketch.spp -- taken als data: het metamodel en de uitvoeringssemantiek
+// van C2Sketch (Bas Lijnse, gitlab.com/baslijnse/c2sketch), als pure functies
+// (fase 4, stap 1 van docs/2026-10-29_fase4_top_laag_plan.md).
+//
+//   import "lib/c2sketch.spp" as C
+//
+// Een Model beschrijft actors, locaties, information spaces ("ruimtes") en
+// hiërarchische taken. Een Stand is wat er tijdens het draaien verandert:
+// waar iedereen is, wat er in de ruimtes staat, en hoe ver de taken zijn. Een
+// Gebeurtenis verandert de stand (`pas`); `controle` zegt of het model hem
+// toestaat. Een scenario is een begin plus een rij gebeurtenissen (`speel`).
+//
+// Namen: een ruimte of locatie die bij een actor hoort, heet `Actor.naam`
+// (`TomTraveler.direct_audio`). Het id van een taak is het pad van de
+// definitie (`go_to_hotel/arrange_taxi_ride`) en blijft dus gelijk zolang de
+// definitie gelijk blijft.
+module C2sketch
+import "lib/list.spp" as L
+import "lib/text.spp" as T
+
+::list = Nil | Cons !x xs
+
+// == Het model ===============================================================
+
+// lidVan: de actors (groepen) waar deze actor bij aangesloten is.
+::Actor = { !actorNaam : Str, !actorTitel : Str, !lidVan : [Str], !beginLocaties : [Str] }
+
+// binnenActor: "" voor een gewone locatie; de naam van de actor voor een
+// locatie die bij een actor hoort (wie daar is, is ook waar die actor is).
+::Locatie = { !locNaam : Str, !locTitel : Str, !binnenActor : Str }
+
+::Ruimte = { !ruimteNaam : Str, !ruimteTitel : Str }
+
+// `info-req <- kanaal = ruimte` (Lees), `->` (Schrijf) of `<->` (allebei).
+::Richting = Lees | Schrijf | LeesSchrijf
+
+::InfoReq = { !kanaal : Str, !richting : Richting, !ruimte : Str }
+
+// voorActor: de actor-constraints (`!for-actor`), leeg = geen.
+::Taak = { !taakNaam : Str, !taakTitel : Str, !voorActor : [Str], !infoReqs : [InfoReq], !deeltaken : [Taak] }
+
+::Model = { !modelNaam : Str, !actors : [Actor], !locaties : [Locatie], !ruimtes : [Ruimte], !taken : [Taak] }
+
+// == De stand ================================================================
+
+::Bericht = { !van : Str, !tijd : Int, !tekst : Str }
+
+::Plek = { !wie : Str, !waar : [Str] }
+
+::Inhoud = { !inRuimte : Str, !berichten : [Bericht] }
+
+::Status = Open | Bezig !door | Afgerond !door
+
+::TaakStand = { !taakId : Str, !status : Status }
+
+::Stand = { !klok : Int, !plekken : [Plek], !inhoud : [Inhoud], !taakStanden : [TaakStand] }
+
+::Gebeurtenis =
+    Info !tijdstip !actor !naarRuimte !bericht
+  | Verplaats !tijdstip !actor !weg !naar
+  | StartTaak !tijdstip !actor !id
+  | RondAf !tijdstip !actor !id
+
+// == Bladtaken en takenlijsten ===============================================
+
+// Een bladtaak met zijn id en alle actor-constraints van hem en de taken
+// erboven.
+::Blad = { !bladId : Str, !bladTaak : Taak, !eisen : [Str] }
+
+bladen m = L.concatMap (bladenOnder "" Nil) (taken m)
+
+bladenOnder pad eisenBoven t =
+  let id = padVan pad (taakNaam t),
+      es = L.append eisenBoven (voorActor t) in
+  if (L.isEmpty (deeltaken t)) [Blad id t es] (L.concatMap (bladenOnder id es) (deeltaken t))
+
+padVan pad naam = if (T.isEmpty pad) naam (T.concat [pad, "/", naam])
+
+// Een actor voldoet aan een constraint als hij die actor is of er (via de
+// groepen, direct of indirect) bij aangesloten is.
+voldoet m a eis = (a == eis) \/ L.any (\g -> voldoet m g eis) (lidVanNaam m a)
+
+lidVanNaam m a = case (zoekActor m a) (Nil -> Nil) (Cons x r -> lidVan x)
+
+voldoetAlle m a es = L.all (voldoet m a) es
+
+// De takenlijst van een actor: de bladtaken die hij mag doen.
+takenlijst m a = L.filter (\b -> voldoetAlle m a (eisen b)) (bladen m)
+
+beschikbaar m a id = L.any (\b -> bladId b == id) (takenlijst m a)
+
+// De taakboom zoals een actor hem ziet: een samengestelde taak alleen als er
+// minstens één bladtaak onder beschikbaar is. Per regel: diepte, id, taak.
+::BoomRegel = { !diepte : Int, !regelId : Str, !regelTaak : Taak }
+
+boom m a = L.concatMap (boomOnder m a 0 "") (taken m)
+
+boomOnder m a d pad t =
+  let id = padVan pad (taakNaam t) in
+  if (L.isEmpty (deeltaken t))
+    (if (beschikbaar m a id) [BoomRegel d id t] [])
+    (if (L.any (\b -> T.startsWith (strappend id "/") (bladId b)) (takenlijst m a))
+      (Cons (BoomRegel d id t) (L.concatMap (boomOnder m a (d + 1) id) (deeltaken t)))
+      [])
+
+zoekBlad m id = L.filter (\b -> bladId b == id) (bladen m)
+
+// De ruimtes van een taak ("operational pictures"): lezen of schrijven.
+leest r = case (richting r) (Schrijf -> False) (_ -> True)
+
+schrijft r = case (richting r) (Lees -> False) (_ -> True)
+
+// Mag actor a in ruimte r schrijven? Ja als een van zijn bladtaken een
+// schrijvende info-req naar r heeft.
+magSchrijven m a r =
+  L.any (\b -> L.any (\q -> schrijft q /\ (ruimte q == r)) (infoReqs (bladTaak b))) (takenlijst m a)
+
+// == Opzoeken ================================================================
+
+zoekActor m a = L.filter (\x -> actorNaam x == a) (actors m)
+
+zoekLocatie m l = L.filter (\x -> locNaam x == l) (locaties m)
+
+bestaatRuimte m r = L.any (\x -> ruimteNaam x == r) (ruimtes m)
+
+titelVanActor m a = case (zoekActor m a) (Nil -> a) (Cons x r -> actorTitel x)
+
+// == Locaties ================================================================
+
+// Waar een actor direct is (zoals de gebeurtenissen het zeggen).
+directOp s a = case (L.filter (\p -> wie p == a) (plekken s)) (Nil -> Nil) (Cons p r -> waar p)
+
+// Waar een actor is, ook afgeleid: wie op een locatie binnen een actor is
+// (TaxiCarrie.BackSeat), is ook overal waar die actor is.
+isOp m s a = L.nub (L.concatMap (afgeleid m s) (directOp s a))
+
+afgeleid m s l =
+  case (zoekLocatie m l)
+    (Nil -> [l])
+    (Cons x r -> if (T.isEmpty (binnenActor x)) [l] (Cons l (isOp m s (binnenActor x))))
+
+// == Beginnen en gebeurtenissen toepassen ====================================
+
+begin m =
+  Stand 0
+    (L.map (\a -> Plek (actorNaam a) (beginLocaties a)) (actors m))
+    (L.map (\r -> Inhoud (ruimteNaam r) Nil) (ruimtes m))
+    (L.map (\b -> TaakStand (bladId b) Open) (bladen m))
+
+tijdVan ev = case ev
+  (Info t a r x -> t)
+  (Verplaats t a w n -> t)
+  (StartTaak t a i -> t)
+  (RondAf t a i -> t)
+
+actorVan ev = case ev
+  (Info t a r x -> a)
+  (Verplaats t a w n -> a)
+  (StartTaak t a i -> a)
+  (RondAf t a i -> a)
+
+// Toepassen zonder controle (zie `controle`).
+pas ev s = case ev
+  (Info t a r x -> Stand t (plekken s) (L.map (voegToe r (Bericht a t x)) (inhoud s)) (taakStanden s))
+  (Verplaats t a w n -> Stand t (L.map (verplaats a w n) (plekken s)) (inhoud s) (taakStanden s))
+  (StartTaak t a i -> Stand t (plekken s) (inhoud s) (L.map (zetStatus i (Bezig a)) (taakStanden s)))
+  (RondAf t a i -> Stand t (plekken s) (inhoud s) (L.map (zetStatus i (Afgerond a)) (taakStanden s)))
+
+voegToe r b x = if (inRuimte x == r) (Inhoud r (L.append (berichten x) [b])) x
+
+verplaats a w n p =
+  if (wie p == a) (Plek a (L.append (L.filter (\l -> l != w) (waar p)) [n])) p
+
+zetStatus i st ts = if (taakId ts == i) (TaakStand i st) ts
+
+statusVan s i = case (L.filter (\ts -> taakId ts == i) (taakStanden s)) (Nil -> Open) (Cons ts r -> status ts)
+
+// "" als het model de gebeurtenis toestaat, anders waarom niet. Dit is een
+// controle van het model (mag deze actor dit?), geen beveiliging: wie de
+// actor is, zegt de gebeurtenis zelf.
+controle m ev s = case ev
+  (Info t a r x -> eerste [tijdOk t s, actorOk m a,
+      wanneer (bestaatRuimte m r == False) (strappend "onbekende ruimte " r),
+      wanneer (magSchrijven m a r == False) (T.concat [a, " heeft geen taak die in ", r, " schrijft"])])
+  (Verplaats t a w n -> eerste [tijdOk t s, actorOk m a,
+      wanneer (L.elem w (directOp s a) == False) (T.concat [a, " is niet op ", w]),
+      wanneer (L.isEmpty (zoekLocatie m n)) (strappend "onbekende locatie " n)])
+  (StartTaak t a i -> eerste [tijdOk t s, actorOk m a,
+      wanneer (beschikbaar m a i == False) (T.concat [i, " staat niet op de takenlijst van ", a]),
+      wanneer (isOpen (statusVan s i) == False) (strappend i " is al begonnen")])
+  (RondAf t a i -> eerste [tijdOk t s, actorOk m a,
+      wanneer (isBezigDoor a (statusVan s i) == False) (T.concat [a, " is niet bezig met ", i])])
+
+tijdOk t s = wanneer (t < klok s) (T.concat ["tijd ", T.showInt t, " ligt voor ", T.showInt (klok s)])
+
+actorOk m a = wanneer (L.isEmpty (zoekActor m a)) (strappend "onbekende actor " a)
+
+wanneer c melding = if c melding ""
+
+eerste ms = case (L.filter (\x -> T.isEmpty x == False) ms) (Nil -> "") (Cons x r -> x)
+
+isOpen st = case st (Open -> True) (_ -> False)
+
+isBezigDoor a st = case st (Bezig d -> d == a) (_ -> False)
+
+// Toepassen met controle: Right-achtig, als paar (melding, stand). Bij een
+// melding blijft de stand gelijk.
+probeer m ev s = let c = controle m ev s in if (T.isEmpty c) ("", pas ev s) (c, s)
+
+// Een scenario afspelen: alle tussenstanden, de begintoestand eerst. Een
+// gebeurtenis die het model niet toestaat, stopt het met een fout.
+speel m s evs = Cons s (speelVerder m s evs)
+
+speelVerder m s evs = case evs
+  (Nil -> Nil)
+  (Cons ev r -> speelStap m s ev r (controle m ev s))
+
+speelStap m s ev r c = if (T.isEmpty c) (speel m (pas ev s) r) (error (strappend "scenario: " c))
+
+// Agents (C2Sketch: `interact(time, model) -> [events]`) zijn functies
+// model -> stand -> [Gebeurtenis]. `simuleer` laat ze om de beurt reageren
+// tot niemand meer iets doet (hooguit n rondes).
+simuleer m agents n s = if (n <= 0) [s] (simuleerRonde m agents n s (L.concatMap (\ag -> ag m s) agents))
+
+simuleerRonde m agents n s evs =
+  if (L.isEmpty evs) [s] (Cons s (simuleer m agents (n - 1) (L.foldl (\st ev -> pasMet m ev st) s evs)))
+
+pasMet m ev s = let c = controle m ev s in if (T.isEmpty c) (pas ev s) (error (strappend "agent: " c))
+
+// == Tekst ===================================================================
+
+toonRichting r = case r (Lees -> "<-") (Schrijf -> "->") (LeesSchrijf -> "<->")
+
+toonStatus st = case st (Open -> "open") (Bezig d -> strappend "bezig: " d) (Afgerond d -> strappend "klaar: " d)
+
+toonGebeurtenis ev = case ev
+  (Info t a r x -> T.concat [T.showInt t, " ", a, " zegt in ", r, ": \"", x, "\""])
+  (Verplaats t a w n -> T.concat [T.showInt t, " ", a, ": ", w, " -> ", n])
+  (StartTaak t a i -> T.concat [T.showInt t, " ", a, " begint ", i])
+  (RondAf t a i -> T.concat [T.showInt t, " ", a, " rondt af: ", i])
+
+// De taakboom van een actor, met de status van de bladtaken.
+toonBoom m s a = L.map (toonBoomRegel s) (boom m a)
+
+toonBoomRegel s r =
+  T.concat [T.repeat (2 * diepte r) " ", regelId r, tagStatus s r]
+
+tagStatus s r = if (L.isEmpty (deeltaken (regelTaak r))) (T.concat [" [", toonStatus (statusVan s (regelId r)), "]"]) ""
+
+toonPlek m s a = T.concat [a, " is op ", T.join ", " (isOp m s a)]
+
+toonInhoud x = T.concat [inRuimte x, ": ", T.join " | " (L.map (\b -> T.concat [van b, ": ", tekst b]) (berichten x))]
+
+// De hele stand als regels tekst.
+toonStand m s =
+  L.concat [
+    [strappend "tijd " (T.showInt (klok s))],
+    L.map (\a -> strappend "  " (toonPlek m s (actorNaam a))) (actors m),
+    L.map (\x -> strappend "  " (toonInhoud x)) (inhoud s),
+    L.concatMap (\a -> Cons (T.concat ["  taken van ", actorNaam a, ":"]) (L.map (\l -> strappend "    " l) (toonBoom m s (actorNaam a)))) (actors m)]

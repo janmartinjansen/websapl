@@ -1166,6 +1166,14 @@ window.WEBSAPL_TREE = [
     "type": "directory",
     "children": [
       {
+        "name": "c2sketch.spp",
+        "path": "lib/c2sketch.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 11193,
+        "isBinary": false
+      },
+      {
         "name": "codehash.spp",
         "path": "lib/codehash.spp",
         "type": "file",
@@ -1242,7 +1250,7 @@ window.WEBSAPL_TREE = [
         "path": "lib/rekenen.spp",
         "type": "file",
         "ext": ".spp",
-        "size": 2564,
+        "size": 2660,
         "isBinary": false
       },
       {
@@ -1267,6 +1275,14 @@ window.WEBSAPL_TREE = [
         "type": "file",
         "ext": ".cfp",
         "size": 3559,
+        "isBinary": false
+      },
+      {
+        "name": "taxi_minimal.spp",
+        "path": "lib/taxi_minimal.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 4821,
         "isBinary": false
       },
       {
@@ -1402,7 +1418,15 @@ window.WEBSAPL_TREE = [
         "path": "notebooks/rekenen_op_server.spp",
         "type": "file",
         "ext": ".spp",
-        "size": 1930,
+        "size": 2069,
+        "isBinary": false
+      },
+      {
+        "name": "taxi_minimal.spp",
+        "path": "notebooks/taxi_minimal.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 4096,
         "isBinary": false
       },
       {
@@ -2247,7 +2271,7 @@ window.WEBSAPL_TREE = [
             "path": "repl_sapl/build/mini_repl.jmvm",
             "type": "file",
             "ext": ".jmvm",
-            "size": 7587708,
+            "size": 7346960,
             "isBinary": false
           },
           {
@@ -2255,7 +2279,7 @@ window.WEBSAPL_TREE = [
             "path": "repl_sapl/build/mini_repl.jvb",
             "type": "file",
             "ext": ".jvb",
-            "size": 2821360,
+            "size": 2738528,
             "isBinary": true
           }
         ],
@@ -2861,7 +2885,7 @@ window.WEBSAPL_TREE = [
     "path": "notebook.html",
     "type": "file",
     "ext": ".html",
-    "size": 67710,
+    "size": 67775,
     "isBinary": false
   },
   {
@@ -2877,7 +2901,7 @@ window.WEBSAPL_TREE = [
     "path": "taallab.html",
     "type": "file",
     "ext": ".html",
-    "size": 23242,
+    "size": 23307,
     "isBinary": false
   }
 ];
