@@ -6,7 +6,8 @@
 // alles; de volgorde "van boven naar beneden" (ook in het bestand);
 // formulieren; waarden en het model van een interactieve cel bewaren (fase F);
 // interactieve cellen (fase E: klikken, een toets, de klok en
-// het aantal beelden per seconde, opnieuw uitvoeren, een ander notebook).
+// het aantal beelden per seconde, opnieuw uitvoeren, een ander notebook);
+// de presentatiemodus.
 //
 // Met --workbench dezelfde pagina in de Workbench (workbench/server.js,
 // `?engine=server`): de engine is daar een eigen ./rs-driver-proces
@@ -234,6 +235,32 @@ const mark = `document.getElementById("status").textContent = "(wacht)"; window.
     check("opnieuw uitvoeren: nieuwe widgets, de zeef weer leeg", (await ev(`window.__nbWidgets.size`)) === 5 && (await ev(`(${zeef}).tok`)) !== tok0 && (await ev(groen)) === 0, st.join("\n"));
     await ev(clickZeef);
     check("en daarna weer een stap", await waitFor(`${groen} === 1`), await ev(groen));
+    // Presentatiemodus (30 oktober 2026): een dia per kop # of ##; P en Esc
+    // wisselen, C toont de code, PageDown bladert ook als een interactieve
+    // cel de focus heeft (een clicker), en een plaatje krijgt de maat van
+    // zijn dia.
+    const key = (target, k) => ev(`(() => { ${target}.dispatchEvent(new KeyboardEvent("keydown", { key: "${k}", bubbles: true })); })()`);
+    await ev(`scrollTo(0, 0); document.activeElement && document.activeElement.blur()`);
+    await key("document.body", "p");
+    check("presenteren: P geeft body.present op dia 1 van 6", await ev(`document.body.classList.contains("present") && location.hash === "#dia=1" && document.getElementById("present-count").textContent === "1 / 6"`), await ev(`location.hash + " " + document.getElementById("present-count").textContent`));
+    await key("document.body", "PageDown");
+    const zeefCell = `(${zeef}).root.closest(".cell")`;
+    check("presenteren: PageDown naar dia 2, alleen de zeef-dia zichtbaar", await ev(`location.hash === "#dia=2" && !${zeefCell}.classList.contains("off-slide") && document.querySelector(".cell").classList.contains("off-slide")`), await ev(`location.hash`));
+    await key("document.body", "c");
+    const codeShown = `!document.body.classList.contains("hide-code") && getComputedStyle(${zeefCell}.querySelector("textarea") || document.body).display !== "none"`;
+    check("presenteren: C toont de code van de dia", await ev(codeShown), "");
+    await key("document.body", "c");
+    check("presenteren: C nog eens verbergt hem weer", await ev(`document.body.classList.contains("hide-code")`), "");
+    await sleep(300);
+    const sized = `(() => { const cv = (${zeef}).root.querySelector("canvas"); const r = cv.getBoundingClientRect(); return r.width > 0 && cv.width === Math.max(100, Math.floor(r.width * devicePixelRatio)); })()`;
+    check("presenteren: het plaatje van de zeef heeft de maat van de dia", await ev(sized), await ev(`(() => { const cv = (${zeef}).root.querySelector("canvas"); return cv.width + " " + cv.getBoundingClientRect().width; })()`));
+    await ev(`(${zeef}).root.focus()`);
+    await key(`(${zeef}).root`, "PageDown");
+    await sleep(300);
+    check("presenteren: PageDown met de focus op de zeef bladert, de zeef zet geen stap", (await ev(`location.hash`)) === "#dia=3" && (await ev(groen)) === 1, (await ev(`location.hash`)) + " " + (await ev(groen)));
+    await key("document.body", "PageUp");
+    await key("document.body", "Escape");
+    check("presenteren: Esc terug naar het notebook, alle cellen zichtbaar", await ev(`!document.body.classList.contains("present") && !document.querySelector(".off-slide") && location.hash === ""`), await ev(`location.hash`));
     // Per cel inklappen en globaal code verbergen.
     await ev(`document.querySelectorAll(".cell")[2].querySelectorAll(".cell-tools button")[1].click()`);
     check("cel inklappen: klasse folded en //%% [ingeklapt] in het bestand", await ev(`document.querySelectorAll(".cell")[2].classList.contains("folded") && JSON.parse(localStorage.getItem("${STORE_KEY}")).text.includes("//%% [ingeklapt]")`), "");
@@ -253,6 +280,11 @@ const mark = `document.getElementById("status").textContent = "(wacht)"; window.
       check("na een gestopt proces, alleen de bal opnieuw: de zeef is gestopt, de bal loopt",
         (await ev(`window.__nbWidgets.size`)) === 1 && (await ev(`!!(${bal})`)) && !(await ev(`!!(${zeef})`)), st.join("\n"));
     }
+    // De demo voor TOP Software (notebooks/topdemo/, in WebSapl topdemo/):
+    // alles draait, geen fout in een cel.
+    st = await open(WB ? "notebooks/topdemo/presentatie.spp" : "topdemo/presentatie.spp");
+    const errs = await ev(`[...document.querySelectorAll(".out .err")].map((e) => e.textContent).join(" | ")`);
+    check("topdemo/presentatie.spp: alles uitgevoerd, geen fout", st[0].startsWith("klaar (") && !st[1] && !errs, errs || st.join("\n"));
     writeNb("1 + 2");   // zonder interactieve cel (de toets van het model liet er een staan)
     st = await open("notebooks/_browser_test.spp");
     check("een ander notebook: alle interactieve cellen gestopt", (await ev(`window.__nbWidgets.size`)) === 0, "");

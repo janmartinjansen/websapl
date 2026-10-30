@@ -124,6 +124,36 @@
     .help { color: var(--muted); font-size: 12px; margin: 30px 0 0 52px; }
     .help code { font-family: var(--font-mono); }
     input[type=file] { display: none; }
+    /* Presentatiemodus (30 oktober 2026): hetzelfde notebook, één dia per
+       scherm (een dia begint bij een tekstcel met een kop # of ##, zie
+       slideStarts in js/notebook_core.js). De sessie blijft dezelfde. */
+    .present-bar { display: none; }
+    body.present header, body.present .add-row, body.present .help,
+    body.present .gutter, body.present .cell-tools, body.present .cell.off-slide { display: none; }
+    body.present .wrap { max-width: 1240px; padding: 34px 32px 110px; }
+    body.present .cell { grid-template-columns: 1fr; margin-bottom: 12px; }
+    body.present .cell:hover .cell-body, body.present .cell.focus .cell-body { border-color: transparent; }
+    body.present .md-view { font-size: 25px; line-height: 1.45; cursor: default; }
+    body.present .md-view h1 { font-size: 46px; margin: 0 0 18px; line-height: 1.15; }
+    body.present .md-view h2 { font-size: 38px; margin: 0 0 14px; line-height: 1.2; }
+    body.present .md-view h3 { font-size: 29px; margin: 14px 0 6px; }
+    body.present .md-view p, body.present .md-view li { margin: 8px 0; }
+    body.present .md-view code { font-size: .88em; }
+    body.present textarea { font-size: 19px; }
+    body.present .out pre, body.present .out table { font-size: 19px; }
+    body.present .out .note, body.present .nb-interactive-foot { font-size: 14px; }
+    body.present .out canvas { width: min(100%, 600px, 60vh); }
+    body.present .nb-form { font-size: 19px; max-width: 780px; }
+    body.present .nb-form input[type=text], body.present .nb-form input[type=number], body.present .nb-form select { font-size: 18px; }
+    body.present .present-bar {
+      display: flex; align-items: center; gap: 6px; position: fixed; right: 16px; bottom: 14px; z-index: 10;
+      opacity: .35; transition: opacity .2s;
+    }
+    body.present .present-bar:hover { opacity: 1; }
+    .present-bar button { padding: 4px 10px; }
+    .present-bar button.on { border-color: var(--accent); color: var(--accent); }
+    .present-bar .count { font-family: var(--font-mono); font-size: 13px; color: var(--text-2); min-width: 54px; text-align: center; }
+    .present-bar .pstatus { font-size: 12px; color: var(--muted); max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   </style>
 </head>
 <body>
@@ -149,9 +179,21 @@
       <label class="chk" title="Uitgerekende =:-waarden en het model van interactieve cellen bewaren en bij een volgende sessie terugzetten, zolang hun cellen niet veranderen (wordt in het notebook bewaard)"><input type="checkbox" id="chk-values" checked /> waarden bewaren</label>
       <a class="help-link" href="ide.html?file=docs/waarden_bewaren.md" target="_blank" title="Gebruiksaanwijzing: waarden bewaren">?</a>
       <label class="chk" title="Alle codecellen verbergen zodat alleen tekst, formulieren en uitvoer zichtbaar zijn (wordt in het notebook bewaard)"><input type="checkbox" id="chk-hide-code" /> code verbergen</label>
+      <button id="btn-present" title="Presenteren: één dia per scherm; een dia begint bij een tekstcel met een kop # of ## (toets P; Esc terug)">Presenteren</button>
       <span class="status" id="status">engine laden…</span>
     </header>
     <div id="banner" class="banner" hidden></div>
+    <div class="present-bar">
+      <span class="pstatus" id="present-status"></span>
+      <button id="btn-present-prev" title="Vorige dia (PageUp, ←)">‹</button>
+      <span class="count" id="present-count"></span>
+      <button id="btn-present-next" title="Volgende dia (PageDown, spatie, →)">›</button>
+      <button id="btn-present-code" title="De code van deze dia tonen of verbergen (C)">code</button>
+      <button id="btn-present-run" title="Alles uitvoeren (Ctrl/⌘+Enter)">▶</button>
+      <button id="btn-present-theme" title="Licht of donker (T)">◐</button>
+      <button id="btn-present-full" title="Volledig scherm (F)">⛶</button>
+      <button id="btn-present-exit" title="Terug naar het notebook (Esc)">✕</button>
+    </div>
     <div id="cells"></div>
     <div class="add-row">
       <button id="btn-add-code">+ Code</button>
@@ -172,13 +214,15 @@
       toont per regel het type van een expressie. Een cel mag een definitie uit
       een latere cel gebruiken ("in elke volgorde"), tenzij je de volgorde op
       "van boven naar beneden" zet; een fout blijft bij haar cel, de cellen
-      die ervan afhangen worden overgeslagen.
+      die ervan afhangen worden overgeslagen. <b>Presenteren</b> (of de toets
+      P) toont één dia per scherm: een dia begint bij een tekstcel met een kop
+      <code>#</code> of <code>##</code>; C toont de code van de dia, Esc gaat terug.
     </p>
   </div>
 
   <script src="js/marked.min.js"></script>
   <script src="js/graphics_renderer.js?v=20260926_modtag"></script>
-  <script src="js/notebook_core.js?v=20261025"></script>
+  <script src="js/notebook_core.js?v=20261030"></script>
   <script>
   (function () {
     const NB = window.SaplNotebook;
@@ -534,6 +578,7 @@
       el("nb-name").textContent = fileName;
       host.querySelectorAll("textarea").forEach(autoGrow);
       sweepWidgets();
+      applySlides();
     }
 
     function renderCell(c, i) {
@@ -697,7 +742,11 @@
         else if (b.kind === "graphics") {
           const cv = document.createElement("canvas");
           out.appendChild(cv);
-          requestAnimationFrame(() => new SaplGraphicsRenderer(cv).renderOutput(b.content));
+          requestAnimationFrame(() => {
+            const r = new SaplGraphicsRenderer(cv);
+            r.renderOutput(b.content);
+            watchCanvas(cv, r, () => b.content);
+          });
         }
       }
     }
@@ -769,8 +818,12 @@
                 view.appendChild(part.el);
               }
               const content = b.content;
+              part.content = content;
               requestAnimationFrame(() => {
-                if (!part.renderer) part.renderer = new SaplGraphicsRenderer(part.el);
+                if (!part.renderer) {
+                  part.renderer = new SaplGraphicsRenderer(part.el);
+                  watchCanvas(part.el, part.renderer, () => part.content);
+                }
                 part.renderer.renderOutput(content);
               });
             } else if (b.kind === "form") {
@@ -810,6 +863,8 @@
       });
       root.addEventListener("keydown", (e) => {
         if (e.target !== root || e.metaKey || e.ctrlKey || e.altKey) return;
+        // Bij het presenteren bladeren PageDown/PageUp (een clicker) altijd.
+        if (present && (e.key === "PageDown" || e.key === "PageUp")) return;
         if (e.key === "Tab" || e.key === "Shift") return;
         e.preventDefault();
         widgetSend(w, NB.eventLine("key", e.key));
@@ -1200,8 +1255,147 @@
       fileName = name || "notebook.spp";
       save(); renderAll(); hideBanner();
       loaded = true;
+      if (!presentStarted) {
+        presentStarted = true;
+        // ?presenteer=1: meteen presenteren, bij #dia=n op die dia.
+        if (new URLSearchParams(location.search).get("presenteer") === "1") {
+          const m = location.hash.match(/dia=(\d+)/);
+          setPresent(true, m ? Number(m[1]) - 1 : 0);
+        }
+      }
       maybeAutoRun();
     }
+
+    // ---- presentatiemodus -----------------------------------------------
+    // Dezelfde cellen en dezelfde sessie, alleen een andere weergave: de
+    // cellen van één dia, groter, zonder knoppenbalk. Code is verborgen tot
+    // je hem per dia toont (C); bewerken en uitvoeren werkt dan als altijd.
+    let present = false, slide = 0, presentCode = false, presentStarted = false;
+
+    function slideOf(i) {
+      const st = NB.slideStarts(cells);
+      let k = 0;
+      st.forEach((s, j) => { if (s <= i) k = j; });
+      return k;
+    }
+
+    // De cel waar je in het notebook bent: die met de focus, anders de
+    // eerste die bovenin beeld staat.
+    function currentCellIndex() {
+      const rows = [...document.querySelectorAll("#cells .cell")];
+      const f = rows.find((r) => r.classList.contains("focus"));
+      if (f) return Number(f.dataset.index);
+      const top = document.querySelector("header").getBoundingClientRect().bottom;
+      const r = rows.find((x) => x.getBoundingClientRect().bottom > top + 8);
+      return r ? Number(r.dataset.index) : 0;
+    }
+
+    function applySlides() {
+      if (!present) return;
+      const st = NB.slideStarts(cells);
+      slide = Math.max(0, Math.min(slide, st.length - 1));
+      const a = st[slide], b = slide + 1 < st.length ? st[slide + 1] : cells.length;
+      document.querySelectorAll("#cells .cell").forEach((row) => {
+        const i = Number(row.dataset.index);
+        row.classList.toggle("off-slide", i < a || i >= b);
+      });
+      el("present-count").textContent = `${slide + 1} / ${st.length}`;
+      document.body.classList.toggle("hide-code", !presentCode);
+      el("btn-present-code").classList.toggle("on", presentCode);
+      if (presentCode) document.querySelectorAll("#cells .cell:not(.off-slide) textarea").forEach(autoGrow);
+      history.replaceState(null, "", location.pathname + location.search + "#dia=" + (slide + 1));
+      redrawVisible();
+    }
+
+    // Een plaatje opnieuw tekenen op zijn huidige grootte als die verandert:
+    // het werd getekend voordat het canvas zijn maat had, terwijl zijn dia
+    // verborgen was, of in de kleinere notebookweergave. Een verborgen canvas
+    // (breedte 0) blijft zoals het is.
+    function watchCanvas(cv, r, content) {
+      cv._redraw = () => {
+        if (!cv.getBoundingClientRect().width) return;
+        r.setupHighDPI();
+        r.renderOutput(content());
+      };
+      if (window.ResizeObserver) new ResizeObserver(() => cv._redraw()).observe(cv);
+    }
+
+    function redrawVisible() {
+      requestAnimationFrame(() => document.querySelectorAll("#cells .cell:not(.off-slide) canvas").forEach((cv) => cv._redraw && cv._redraw()));
+    }
+
+    function setPresent(on, at) {
+      present = on;
+      document.body.classList.toggle("present", on);
+      if (on) {
+        slide = at != null ? at : slideOf(currentCellIndex());
+        presentCode = false;
+        applySlides();
+        scrollTo(0, 0);
+        return;
+      }
+      const first = NB.slideStarts(cells)[slide] || 0;
+      document.querySelectorAll("#cells .cell.off-slide").forEach((r) => r.classList.remove("off-slide"));
+      document.body.classList.toggle("hide-code", !!settings.hideCode);
+      document.querySelectorAll("#cells textarea").forEach(autoGrow);
+      history.replaceState(null, "", location.pathname + location.search);
+      redrawVisible();
+      const row = document.querySelector(`.cell[data-index="${first}"]`);
+      if (row) { row.scrollIntoView({ block: "start" }); scrollBy(0, -(document.querySelector("header").offsetHeight + 12)); }
+    }
+
+    function goSlide(k) {
+      const n = NB.slideStarts(cells).length;
+      if (k < 0 || k >= n || k === slide) return;
+      slide = k;
+      applySlides();
+      scrollTo(0, 0);
+    }
+
+    function toggleTheme() {
+      const t = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", t);
+      try { localStorage.setItem("websapl_theme", t); } catch (_) {}
+    }
+
+    function toggleFullscreen() {
+      if (document.fullscreenElement) document.exitFullscreen();
+      else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
+    }
+
+    // Toetsen. Wie typt (een codecel, een formulierveld) of een
+    // interactieve cel met de focus bedient, houdt zijn toetsen: dan
+    // bladert niets, behalve PageDown/PageUp (een clicker) bij een
+    // interactieve cel.
+    document.addEventListener("keydown", (e) => {
+      const t = e.target;
+      const typing = t && t.closest && t.closest("textarea, input, select, [contenteditable]");
+      const clicker = e.key === "PageDown" || e.key === "PageUp";
+      const busy = typing || (t && t.closest && t.closest(".nb-interactive") && !(present && clicker));
+      const mods = e.metaKey || e.ctrlKey || e.altKey;
+      if (!present) {
+        if (!busy && !mods && (e.key === "p" || e.key === "P")) { e.preventDefault(); setPresent(true); }
+        return;
+      }
+      if (e.key === "Escape") {
+        e.preventDefault();
+        if (busy) { t.blur(); return; }
+        setPresent(false);
+        return;
+      }
+      if (busy || mods) return;
+      const st = NB.slideStarts(cells);
+      const acts = {
+        PageDown: () => goSlide(slide + 1), ArrowRight: () => goSlide(slide + 1),
+        PageUp: () => goSlide(slide - 1), ArrowLeft: () => goSlide(slide - 1),
+        " ": () => goSlide(slide + (e.shiftKey ? -1 : 1)),
+        Home: () => goSlide(0), End: () => goSlide(st.length - 1),
+        c: () => { presentCode = !presentCode; applySlides(); },
+        t: toggleTheme, f: toggleFullscreen,
+      };
+      const act = acts[e.key.length === 1 && e.key !== " " ? e.key.toLowerCase() : e.key];
+      if (act) { e.preventDefault(); act(); }
+    });
 
     function save() {
       try { localStorage.setItem(STORE_KEY, JSON.stringify({ fileName, text: NB.serializeNotebook(cells, settings) })); } catch (_) {}
@@ -1255,11 +1449,19 @@
       } catch (_) {}
     }
 
-    function setStatus(t) { el("status").textContent = t; }
+    function setStatus(t) { el("status").textContent = t; el("present-status").textContent = t; }
     function showBanner(t) { el("banner").textContent = t; el("banner").hidden = false; }
     function hideBanner() { el("banner").hidden = true; }
 
     el("btn-run").addEventListener("click", runAll);
+    el("btn-present").addEventListener("click", () => setPresent(true));
+    el("btn-present-prev").addEventListener("click", () => goSlide(slide - 1));
+    el("btn-present-next").addEventListener("click", () => goSlide(slide + 1));
+    el("btn-present-code").addEventListener("click", () => { presentCode = !presentCode; applySlides(); });
+    el("btn-present-run").addEventListener("click", runAll);
+    el("btn-present-theme").addEventListener("click", toggleTheme);
+    el("btn-present-full").addEventListener("click", toggleFullscreen);
+    el("btn-present-exit").addEventListener("click", () => setPresent(false));
     el("sel-order").addEventListener("change", (e) => {
       settings.order = e.target.value;
       save();

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="nl" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Demo TOP Software</title>
+  <script>
+    try { document.documentElement.setAttribute("data-theme", localStorage.getItem("websapl_theme") || "dark"); } catch (_) {}
+  </script>
+  <!--
+    Startpagina van de demo voor het bezoek aan TOP Software (november 2026).
+    De presentatie zelf is een notebook (notebooks/topdemo/presentatie.spp in
+    de repo, hierheen gekopieerd door tools/sync_from_repo.js), getoond in de
+    presentatiemodus van notebook.html. Alles draait in de browser.
+  -->
+  <style>
+    :root {
+      --bg: #12151c; --bg-card: #1a1e27; --bg-hover: #232834; --border: #2e3546;
+      --text: #e6edf3; --text-2: #9aa4b2; --muted: #647083; --accent: #38bdf8; --purple: #c084fc;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'Fira Code', 'SF Mono', Consolas, Monaco, monospace;
+    }
+    [data-theme="light"] {
+      --bg: #f8fafc; --bg-card: #ffffff; --bg-hover: #f1f5f9; --border: #e2e8f0;
+      --text: #0f172a; --text-2: #475569; --muted: #94a3b8; --accent: #0284c7; --purple: #7e22ce;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font-sans); line-height: 1.5; }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 48px 16px 80px; }
+    .back { color: var(--muted); text-decoration: none; font-size: 14px; }
+    h1 { font-size: 34px; margin: 10px 0 6px; line-height: 1.2; }
+    .sub { color: var(--text-2); margin: 0 0 28px; }
+    a.start {
+      display: inline-block; background: var(--accent); color: #fff; text-decoration: none; font-weight: 600;
+      padding: 12px 22px; border-radius: 8px; font-size: 17px;
+    }
+    a.start:hover { filter: brightness(1.1); }
+    .keys { color: var(--text-2); font-size: 14px; margin: 14px 0 36px; }
+    kbd { font-family: var(--font-mono); font-size: 12px; border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: var(--bg-card); }
+    h2 { font-size: 18px; margin: 0 0 12px; color: var(--text-2); font-weight: 600; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+    a.card { display: block; text-decoration: none; color: var(--text); background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+    a.card:hover { background: var(--bg-hover); border-color: var(--text-2); }
+    a.card b { display: block; margin-bottom: 4px; }
+    a.card span { color: var(--text-2); font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="../index.html">WebSapl ›</a>
+    <h1>Sapl en de JMVM: drie maanden verder</h1>
+    <p class="sub">Demo voor TOP Software. De presentatie is een notebook dat live in deze browser draait: compiler, typechecker, linker en VM.</p>
+
+    <a class="start" href="../notebook.html?nb=topdemo/presentatie.spp&amp;run=1&amp;presenteer=1">Start de presentatie →</a>
+    <p class="keys">
+      <kbd>PageDown</kbd> / <kbd>spatie</kbd> / <kbd>→</kbd> volgende dia ·
+      <kbd>PageUp</kbd> / <kbd>←</kbd> vorige ·
+      <kbd>C</kbd> code tonen ·
+      <kbd>F</kbd> volledig scherm ·
+      <kbd>T</kbd> licht of donker ·
+      <kbd>Esc</kbd> naar het notebook, <kbd>P</kbd> terug naar de dia
+    </p>
+
+    <h2>Verder kijken</h2>
+    <div class="grid">
+      <a class="card" href="../notebook.html?nb=notebooks/taxi_minimal.spp&amp;run=1"><b>Taken als data</b><span>taxi_minimal van C2Sketch: takenlijsten, het scenario en twee agents.</span></a>
+      <a class="card" href="../taallab.html"><b>Taallab</b><span>Een taal bouwen en met <code>:lang</code> laden in de REPL.</span></a>
+      <a class="card" href="../ide.html?file=paper_examples/05_sieve.cfp"><b>De compiler, stap voor stap</b><span>De Workbench met de tussenformaten van gen1.</span></a>
+      <a class="card" href="../notebook.html?nb=notebooks/interactief.spp&amp;run=1"><b>Interactieve cellen</b><span>Zeef, stuiterende bal, draaiende kubus, ruimtevullende curves.</span></a>
+      <a class="card" href="../notebook.html?nb=notebooks/formulieren.spp&amp;run=1"><b>Formulieren</b><span>Formulieren uit records en somtypen.</span></a>
+      <a class="card" href="../notebook.html?nb=notebooks/waarden_bewaren.spp&amp;run=1"><b>Waarden bewaren</b><span><code>pack</code>, <code>packT</code> en waarden die het herladen overleven.</span></a>
+      <a class="card" href="../notebook.html?nb=notebooks/vm_metingen.spp&amp;run=1"><b>Metingen</b><span>De VM en de compiler gemeten, per benchmark.</span></a>
+      <a class="card" href="../ide.html#repl"><b>De REPL</b><span>De REPL in Sapl, met <code>:type</code>, <code>:info</code> en <code>:undo</code>.</span></a>
+    </div>
+  </div>
+</body>
+</html>

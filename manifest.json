@@ -2777,6 +2777,30 @@
       "_expanded": false
     },
     {
+      "name": "topdemo",
+      "path": "topdemo",
+      "type": "directory",
+      "children": [
+        {
+          "name": "index.html",
+          "path": "topdemo/index.html",
+          "type": "file",
+          "ext": ".html",
+          "size": 4948,
+          "isBinary": false
+        },
+        {
+          "name": "presentatie.spp",
+          "path": "topdemo/presentatie.spp",
+          "type": "file",
+          "ext": ".spp",
+          "size": 10819,
+          "isBinary": false
+        }
+      ],
+      "_expanded": false
+    },
+    {
       "name": "typing",
       "path": "typing",
       "type": "directory",
@@ -2885,7 +2909,7 @@
       "path": "notebook.html",
       "type": "file",
       "ext": ".html",
-      "size": 67775,
+      "size": 77430,
       "isBinary": false
     },
     {

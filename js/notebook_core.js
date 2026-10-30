@@ -725,7 +725,22 @@
     return true;
   }
 
+  // Presentatiemodus (30 oktober 2026): een dia begint bij elke tekstcel
+  // waarvan de eerste niet-lege regel een kop `#` of `##` is; `###` blijft
+  // binnen de dia. Cellen vóór de eerste kop vormen samen de eerste dia. Zo
+  // staat er niets extra's in het bestand. Geeft de begin-indexen.
+  function slideStarts(cells) {
+    const starts = [0];
+    cells.forEach((c, i) => {
+      if (i === 0 || c.kind !== "markdown") return;
+      const first = (c.source || "").split("\n").find((l) => l.trim() !== "") || "";
+      if (/^#{1,2}\s/.test(first.trim())) starts.push(i);
+    });
+    return starts;
+  }
+
   const api = {
+    slideStarts,
     generateNbInput, parseNbOutput, parseSettings, NO_MESSAGE,
     parseNotebook, serializeNotebook, cellSummary, classifyCell, parseOutput, definedNames, cafHintNames,
     referencedNames, providedNames, dependents, lcInput, parseLcOutput,

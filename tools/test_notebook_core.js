@@ -173,5 +173,16 @@ check("record: een cel met alleen een getter hangt ervan af", [...nb.dependents(
 
 check("geen =:-tip bij een constructor met letterlijke waarden", nb.cafHintNames("golf = Golf 1.0 3 True\no = Opties \"a b\" (0 - 1) 'c'\np = Punt (f 1) 2"), ["p"]);
 
+// Presentatiemodus: een dia begint bij een tekstcel met een kop # of ##.
+{
+  const md = (t) => ({ kind: "markdown", source: t });
+  const code = (t) => ({ kind: "code", source: t });
+  check("dia's: kop # en ## beginnen een dia, ### niet, code niet",
+    nb.slideStarts([code("x = 1"), md("# Titel"), code("x"), md("\n## Twee\ntekst"), md("### sub"), code("# geen kop"), md("gewone tekst"), md("## Drie")]),
+    [0, 1, 3, 7]);
+  check("dia's: een kop als eerste cel geeft geen lege dia", nb.slideStarts([md("# A"), md("## B")]), [0, 1]);
+  check("dia's: leeg notebook", nb.slideStarts([]), [0]);
+}
+
 console.log(failures ? `${failures} fout(en)` : "notebook_core: alles goed");
 process.exit(failures ? 1 : 0);

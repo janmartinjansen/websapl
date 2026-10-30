@@ -1,0 +1,296 @@
+//%% [instellingen] waarden=uit code=verborgen
+//%% [markdown]
+// # Sapl en de JMVM: drie maanden verder
+//
+// Een luie functionele taal, een compiler en een VM, nu volledig in de
+// browser.
+//
+// Jan Martin Jansen · bezoek aan TOP Software · november 2026
+//
+// *Dit is geen dia-programma: het is een notebook. Elke dia draait live in
+// deze browsertab (WebAssembly), en met **C** zie je de code eronder. Met
+// **Esc** ga je naar de gewone notebookweergave, met **P** weer terug.*
+//%%
+import "lib/list.spp" as L
+import "lib/text.spp" as T
+import "lib/plot.spp" as P
+import "lib/waarden.spp" as W
+import "lib/c2sketch.spp" as C
+import "lib/taxi_minimal.spp" as X
+//%% [markdown]
+// ## Waar het begon: 17 juli 2026
+//
+// - Een VM in C++ voor luie functionele talen (de JMVM), en een paar
+//   varianten daarvan naast elkaar
+// - De compiler voor Sapl, geschreven in **Amanda**, gedraaid via de
+//   `ama`-interpreter
+// - Twaalf benchmarks (`fib`, `queens`, `primes`, `sort`, ...)
+// - 75 bestanden, ~16.700 regels
+//
+// Geen browser, geen REPL, geen typen, geen modules. Alleen een
+// commandoregel: compileren, draaien, `res:` lezen.
+//%% [markdown]
+// ## Wat er nu in deze browsertab draait
+//%%
+D.table ["onderdeel", "geschreven in", "sinds"]
+  [ ["de JMVM (WebAssembly)", "C++, instructies uit een tabel", "17 jul (wasm)"],
+    ["Sapl+ naar Sapl (voorbewerker)", "Sapl", "24 aug"],
+    ["de compiler gen1 (vertaalt zichzelf)", "Sapl", "10 aug; productie 25 sep"],
+    ["de typechecker", "Sapl", "18 sep"],
+    ["het notebook", "Sapl + een HTML-pagina", "26 sep"],
+    ["de REPL", "Sapl", "7 okt"],
+    ["linken van losse stukken code", "Sapl", "10 okt"],
+    ["het binaire laadformaat .jvb", "Sapl (schrijven) en C (lezen)", "9 okt"],
+    ["talen bouwen en laden (:lang)", "Sapl", "17 okt; :lang 20 okt"],
+    ["waarden met code bewaren", "Sapl + VM-primitieven", "23 okt"] ]
+//%% [markdown]
+// Alles wat met taal te maken heeft (ontleden, vertalen, typeren, linken)
+// is Sapl. De VM in C++ is klein gehouden: hij kan laden, rekenen en een
+// waarde inpakken, en verder niets.
+//%% [markdown]
+// ## Drie maanden in commits
+//
+// Commits per week (week 29 = half juli, week 44 = deze week):
+//%%
+weken =: ["29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44"]
+
+commitsPerWeek =: [19, 18, 26, 43, 69, 102, 76, 69, 65, 38, 62, 13, 169, 143, 83, 58]
+
+metClaude =: [0, 13, 22, 32, 48, 43, 40, 25, 63, 35, 60, 12, 156, 103, 49, 43]
+//%%
+P.bars weken commitsPerWeek
+//%%
+D.table ["", "aantal"]
+  [ ["commits", T.showInt (L.sum commitsPerWeek)],
+    ["met Claude als co-auteur", T.showInt (L.sum metClaude)],
+    ["pull requests (gemerged)", "102"],
+    ["ontwerp- en meetdocumenten (docs/)", "84"] ]
+//%% [markdown]
+// ## Mijlpalen
+//%%
+D.table ["datum", "mijlpaal"]
+  [ ["17 jul", "start; eerste WebAssembly-versie van de VM"],
+    ["7 aug", "automatische strictness-analyse"],
+    ["10 aug", "begin van de compiler in Sapl (gen1)"],
+    ["18 aug", "WebSapl: de VM en de compiler in de browser"],
+    ["25 sep", "gen1 vertaalt zichzelf (fixpunt) en wordt de productiecompiler"],
+    ["26 sep", "het notebook"],
+    ["7 okt", "de REPL in Sapl, met linken in het geheugen"],
+    ["9-11 okt", "binair laadformaat; de VM leest geen tekst meer"],
+    ["12 okt", "de VM uit leesbare bronnen, instructietabel + generator in Sapl"],
+    ["14 okt", "de typechecker in elke compilatie"],
+    ["17 okt", "taalprototypes: een taal als Sapl-module"],
+    ["20 okt", ":lang: een eigen taal laden in de REPL"],
+    ["23 okt", "waarden (ook functies) bewaren over sessies heen"],
+    ["24 okt", "musttail-dispatch: native 5-54% sneller"] ]
+//%% [markdown]
+// ## De compiler zit in het systeem
+//
+// Elke cel gaat in de browser door de hele keten: Sapl+ naar Sapl, de
+// compiler gen1, de typechecker, en dan bytecode die in het draaiende
+// programma gelinkt wordt. Pas de definitie aan (**C**, dan Shift+Enter):
+//%%
+kwadraten n = [x * x | x <- L.range 1 n, x % 3 != 0]
+//%%
+kwadraten 20
+//%% [type]
+kwadraten
+L.map
+L.foldr (\x acc -> x + acc) 0
+//%% [markdown]
+// Elke tussenstap van de compiler bekijken: de Workbench, met de
+// tussenformaten aangevinkt: [ide.html](ide.html?file=paper_examples/05_sieve.cfp).
+//%% [markdown]
+// ## Typen in de browser
+//
+// De typechecker is ook Sapl, en draait bij elke cel. Een fout blijft bij
+// zijn cel; de rest van het notebook loopt door.
+//%%
+::Punt = { !px : Float, !py : Float }
+
+afstand p q = sqrt ((px p - px q) * (px p - px q) + (py p - py q) * (py p - py q))
+//%% [type]
+afstand
+afstand (Punt 0.0 0.0)
+//%%
+afstand (Punt 0.0 0.0) (Punt 3.0 4.0)
+//%% [markdown]
+// ## Incrementeel: elke cel een eigen stuk code
+//
+// - Een cel wordt een eigen stuk bytecode (`.jvb`) en wordt **in Sapl** in
+//   het draaiende programma gelinkt. Een ongewijzigde cel wordt niet
+//   opnieuw vertaald: de eerste run van deze presentatie kost een paar
+//   seconden, een volgende enkele tientallen milliseconden.
+// - Bibliotheken liggen al vertaald klaar en worden pas bij de eerste
+//   `import` geladen.
+// - Een `=:`-waarde (een CAF) wordt één keer uitgerekend en blijft staan,
+//   ook als je andere cellen wijzigt.
+//%%
+priemen =: zeef (L.range 2 30000)
+
+zeef xs = case xs (Nil -> Nil) (Cons p rest -> Cons p (zeef (L.filter (\n -> n % p != 0) rest)))
+
+aantalPriemen =: length priemen
+//%%
+aantalPriemen
+//%% [markdown]
+// ## Functies zijn waarden, en je ziet wat ze zijn
+//%%
+plus a b = a + b
+//%%
+plus 1
+//%%
+L.map
+//%%
+\x -> x * 2
+//%% [markdown]
+// Een gedeeltelijke toepassing toont wat er nog ontbreekt; een
+// bibliotheekfunctie heet zoals je haar importeerde; een lambda is een λ.
+// De VM geeft daarvoor alleen een adres en een naam; de rest is Sapl.
+//%% [markdown]
+// ## Waarden met code: `pack` en `unpack`
+//
+// `pack` maakt van elke waarde een tekst, ook van een functie of een nog
+// niet uitgerekend stuk (een thunk). `unpack` maakt er weer een waarde van.
+//%%
+tienErbij =: unpack (pack (plus 10))
+
+pas5 f = f 5
+
+luieLijst =: unpack (pack (L.map (\n -> n * n) (L.range 1 1000000)))
+//%%
+pas5 tienErbij
+//%%
+L.take 5 luieLijst
+//%%
+strlen (pack (plus 10))
+//%% [markdown]
+// Met typecontrole: `packT` zet het type vooraan, en de typechecker kent
+// het al bij het compileren.
+//%%
+bewaard =: W.packT "[Int]" (kwadraten 10)
+//%%
+W.typeOf bewaard
+//%%
+try (W.unpackT "[Str]" bewaard) (\melding -> [melding])
+//%% [markdown]
+// Het notebook gebruikt dit zelf: met **waarden bewaren** aan komen
+// uitgerekende waarden en de stand van interactieve cellen terug na het
+// herladen van de pagina.
+//%% [markdown]
+// ## Interactief: een model dat reageert
+//
+// `D.interactive model0 update view`, zoals in Elm. Klik in het plaatje (of
+// druk op een toets): het volgende priemgetal en zijn veelvouden.
+//%%
+::Zeef = { !p : Int, !weg : [Int] }
+
+grens = 60
+kolommen = 10
+
+zeefBegin = Zeef 1 []
+
+zeefStap ev z = case ev
+  (D.Click x y -> volgende z)
+  (D.Key k -> volgende z)
+  (_ -> z)
+
+volgende z = case (L.filter (\m -> L.elem m (weg z) == False) (L.range (p z + 1) grens))
+  (Nil -> z)
+  (Cons q rest -> Zeef q (L.append (weg z) [q * q, q * q + q .. grens]))
+
+zeefBeeld z = D.picture (L.concatMap (vakje z) (L.range 2 grens))
+
+vakje z m =
+  let k = m - 2,
+      x = itof (k % kolommen) * 0.19 - 0.88,
+      y = 0.8 - itof (k / kolommen) * 0.3,
+      kleur = if (L.elem m (weg z)) 8 (if (m <= p z) 10 15) in
+  [G.GraphDisc kleur (G.Pt (x - 0.08) (y - 0.12)) (G.Pt (x + 0.08) (y + 0.12)),
+   G.GraphText 0 (G.Pt (x - 0.05) (y - 0.03)) (T.showInt m)]
+//%%
+D.interactive zeefBegin zeefStap zeefBeeld
+//%% [markdown]
+// ## Formulieren uit types
+//
+// `D.form x` maakt een formulier uit het type van `x`. Een wijziging komt in
+// de brontekst van de definitie, en alleen wat ervan afhangt wordt opnieuw
+// uitgerekend.
+//%%
+::Golf = { !amplitude : Float, !frequentie : Int, !gedempt : Bool }
+
+golf = Golf 1.0 3 False
+//%%
+D.form golf
+//%%
+xs =: [ itof i / 80.0 | i <- L.range 0 80 ]
+
+hoogte g x = amplitude g * sin (6.28318 * itof (frequentie g) * x) * (if (gedempt g) (exp (0.0 - (3.0 * x))) 1.0)
+//%%
+P.line xs (L.map (hoogte golf) xs)
+//%% [markdown]
+// ## Taken als data: `taxi_minimal` van C2Sketch
+//
+// Het voorbeeld van Bas Lijnse als gewone Sapl-data. Wie welke taak mag
+// doen, volgt uit de actors, hun groepen en de eisen van elke taak, met
+// pure functies (`lib/c2sketch.spp`).
+//%%
+D.table ["taak", "wie"]
+  (L.map (\b -> [C.bladId b, T.join ", " (L.filter (\a -> C.voldoetAlle X.model a (C.eisen b)) (L.map C.actorNaam (C.actors X.model)))])
+         (C.bladen X.model))
+//%% [markdown]
+// Het scenario stap voor stap, en twee agents die het zelf spelen:
+// [het notebook taxi_minimal](notebook.html?nb=notebooks/taxi_minimal.spp&run=1).
+//%% [markdown]
+// ## Een taal bouwen en laden terwijl het systeem draait
+//
+// - Een taal is een Sapl-module: een parser en een vertaling naar een
+//   kleine kerntaal (`taalproto/`).
+// - In de REPL laadt `:lang` zo'n taal. Daarna is elke regel invoer in die
+//   taal: die gaat via Sapl naar bytecode, en wordt in het geheugen gelinkt
+//   en gedraaid, net als een gewone regel Sapl.
+// - Er zijn een paar voorbeeldtalen: een rekenmachine, een imperatieve taal
+//   (`while`), `tiny` en een kleine ML.
+//
+// Live: [het taallab](taallab.html).
+//%% [markdown]
+// ## Snelheid: de browser tegen native
+//%%
+nfib n = if (n < 2) 1 (nfib (n - 1) + nfib (n - 2) + 1)
+//%%
+nfib 30
+//%% [markdown]
+// Voer de cel opnieuw uit (**C**, dan Shift+Enter in de cel): de tijd staat
+// rechtsonder. Gemeten op een Apple M4, warm, wasm-tijd gedeeld door native
+// tijd (lager is beter):
+//%%
+P.bars ["JMVM", "ABC", "ABC locals", "clean-llvm"] [1.43, 2.67, 1.76, 1.63]
+//%% [markdown]
+// JMVM en de ABC-interpreter in Chrome, de ABC-interpreter na het omzetten
+// van globals naar locals, en clean-llvm (fannkuch, in Node). Zie de
+// notitie *Clean, LLVM en de browser*.
+//%% [markdown]
+// ## Hoe AI dit mogelijk maakte
+//
+// *Concept, nog aan te vullen.*
+//
+// - **Ik kies, Claude bouwt.** Per onderwerp een plan als document, daarna
+//   mijn keuze, daarna een branch, de volledige regressie en een PR.
+// - **Regels en geheugen in de repo.** `CLAUDE.md`, de regeldocumenten
+//   voor Sapl en Amanda, en de documenten in `docs/` zijn wat elke nieuwe
+//   sessie eerst leest.
+// - **Meten in plaats van gissen.** Elke VM-wijziging wordt native en in
+//   de browser gemeten; elke compilerwijziging tegen de benchmarks en het
+//   fixpunt van gen1.
+// - **Fouten worden lessen.** Een fout die acht commits lang onopgemerkt
+//   bleef, staat nu als regel in `CLAUDE.md`: altijd de volledige
+//   regressie.
+//%% [markdown]
+// ## Volgende keer
+//
+// - Client en server: gedeelde information spaces, de server bewaart en
+//   herstelt, berekeningen verhuizen naar een snel rekenproces
+// - De TOP-laag: taken als data op de server, lenzen op gedeelde data,
+//   Toppyt als data
+//
+// Vragen?
