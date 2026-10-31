@@ -68,6 +68,66 @@ D.table ["onderdeel", "geschreven in", "sinds"]
 // - **Fouten worden regels.** Een fout die acht commits lang onopgemerkt
 //   bleef, staat nu in `CLAUDE.md`: altijd de volledige regressie.
 //%% [markdown]
+// ## Waar AI het verschil maakt
+//
+// *Concept, nog aan te vullen.*
+//
+// - **Regressie kost niets meer, dus altijd alles.** Bij elke pull request
+//   draaien twee benchmarksets, 22 bootstraptests, het fixpunt van de
+//   compiler en de laad-, REPL- en browsertoetsen.
+// - **Complexe fouten worden gevonden, niet omzeild.** Een minimale
+//   reproductie, een tabel met varianten, en dan vaak een fix van één regel.
+//   Ook een crash die alleen in WebAssembly optrad.
+// - **Alternatieven uitproberen is goedkoop.** Een proef kost uren in plaats
+//   van weken. Daardoor durf je een idee te meten en daarna te verwerpen.
+// - **De keuzes blijven bij mij.** Wat we bouwen, wat goed genoeg is, en wat
+//   we na een meting laten liggen.
+//%% [markdown]
+// ## Regressie: altijd alles
+//
+// Wat Claude na een wijziging aan de compiler of de VM draait:
+//%%
+D.table ["toets", "wat ze bewaakt"]
+  [ ["13 benchmarks, met en zonder strictness-inferentie", "de uitkomst (res:) én de snelheid"],
+    ["22 bootstraptests en check_bootstrap", "gen1 vertaalt zichzelf; parser.ama bouwt hem nog"],
+    ["vergelijk_varianten.py", "alle VM-builds: objectcode per functie gelijk"],
+    ["laadformaat: 8 scripts", "heen en terug voor elk .jmvm-bestand"],
+    ["REPL-tests en 14 WebSapl-toetsen", "ook in headless Chrome"],
+    ["warme A/B-meting in wasm", "een VM-wijziging ook in de browser"] ]
+//%% [markdown]
+// **Lessen die regels werden.** Begin augustus gaf de compiler acht commits
+// lang stil géén uitvoer voor elk recursief programma: de nieuwe testjes
+// gebruikten geen recursie, en niemand draaide de volledige regressie. Nu
+// staat in `CLAUDE.md`: altijd alles. En een toets moet `res:` controleren:
+// een vergelijking die twee keer "command not found" gelijk vond, "slaagde".
+//%% [markdown]
+// ## Complexe fouten opsporen
+//%%
+D.table ["fout", "hoe gevonden", "oplossing"]
+  [ ["stil fout resultaat: functie uit een constructorveld, daarna meer argumenten (27 sep)", "minimale reproductie, tabel met 8 varianten", "één regel: jmpt zet ook mark"],
+    ["crash alleen in WebAssembly, niet native (17 sep)", "wasm-build met AddressSanitizer en emsymbolizer", "buffer van 256 bytes te klein voor een lange foutmelding"],
+    ["gedraaide figuren gespiegeld, alleen in de browser (29 aug)", "dezelfde bytecode native tegenover wasm", "Cell.p is in wasm32 32 bits: een float verloor zijn tekenbit"],
+    ["GC kopieert eindeloos (15 sep)", "de overloop stap voor stap afgeleid", "Admin.size (16 bits) te klein voor één groot object"],
+    ["REPL: een parameter leest een oude waarde (7 okt)", "code van gen1 naast die van parser.ama", "a <#> b liet a op de stack liggen"] ]
+//%% [markdown]
+// Het patroon staat nu in `CLAUDE.md`: vijf keer op rij was een onverwachte
+// crash een vaste grens die stil overschreden werd, nooit de
+// interpreterlogica. En er kwam gereedschap bij: `runswitch-debug` (de
+// laatste 4096 instructies bij een crash of hang), `difftrace.py` (waar
+// lopen twee uitvoeringen uiteen) en een trace-viewer.
+//%% [markdown]
+// ## Alternatieven uitproberen, ook om ze te verwerpen
+//%%
+D.table ["proef", "uitkomst", "besluit"]
+  [ ["dispatch met musttail (native)", "5-54% sneller dan goto", "standaard"],
+    ["dispatch met musttail (wasm)", "warm 32-91% trager dan switch", "niet gedaan"],
+    ["Scott-codering i.p.v. ADT's", "1,0-3,2× trager over de benchmarks", "niet gedaan"],
+    ["JMVM naar losse wasm compileren", "1,4-3,5× in Chrome, ~1,4× in Safari", "niet ingebouwd"],
+    ["REPL in Sapl i.p.v. repl-host", "25,7 naar 5,8 ms per regel", "de REPL"],
+    ["ongebruikte instructies weg", "native ±0, Chrome fib +21%", "alleen een tag"],
+    ["ABC-interpreter: globals naar locals", "34% minder tijd in Chrome", "voorstel aan TOP"],
+    ["typewaarschuwingen: twee verse agents, aan en uit", "allebei 5 van 5 goed", "waarschuwingen, geen strenge modus"] ]
+//%% [markdown]
 // ## Drie maanden in commits
 //
 // Commits per week (week 29 = half juli, week 44 = deze week):
