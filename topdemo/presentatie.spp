@@ -630,27 +630,28 @@ D.table ["benchmark", "JMVM", "ABC retag", "ABC Clean", "retag / Clean"]
 //%% [markdown]
 // ## De nieuwe ABC in wasm
 //
-// *31 oktober · node 26 (V8), warm, Apple M4, in seconden, zonder globals →
-// locals.* Dezelfde uitvoer als de JMVM; gen1 maakt ook in wasm byte voor
-// byte `saplcomp.jmvm`.
+// *31 oktober · node 26 (V8), warm, Apple M4, in seconden.* "locals": de
+// wasm-interpreter met globals → locals. Dezelfde uitvoer als de JMVM; gen1
+// maakt ook in wasm byte voor byte `saplcomp.jmvm`.
 //%%
-::Abcwasm = { !bNaam : Str, !bJmvm : Float, !bOud : Float, !bNu : Float }
+::Abcwasm = { !bNaam : Str, !bJmvm : Float, !bOud : Float, !bNu : Float, !bNuLoc : Float }
 
 abcWasm =:
-  [ Abcwasm "fib" 0.626 2.272 0.979, Abcwasm "primes" 0.536 0.607 0.606,
-    Abcwasm "queens" 0.274 0.522 0.496, Abcwasm "sort" 0.553 0.751 0.690,
-    Abcwasm "knights" 0.127 0.187 0.128, Abcwasm "hamming" 0.797 0.954 0.856,
-    Abcwasm "match" 0.406 0.627 0.578, Abcwasm "twice" 1.007 0.997 1.003,
-    Abcwasm "eval" 0.628 0.830 0.723, Abcwasm "sprimes" 1.516 1.193 0.776,
-    Abcwasm "parsetest" 0.935 0.857 0.804, Abcwasm "prolog" 0.368 0.425 0.361,
-    Abcwasm "eval2" 0.719 1.703 1.650, Abcwasm "gen1" 1.027 1.195 0.888 ]
+  [ Abcwasm "fib" 0.624 2.260 0.973 0.907, Abcwasm "primes" 0.476 0.606 0.592 0.384,
+    Abcwasm "queens" 0.271 0.517 0.488 0.273, Abcwasm "sort" 0.549 0.747 0.685 0.464,
+    Abcwasm "knights" 0.126 0.187 0.125 0.077, Abcwasm "hamming" 0.787 0.954 0.830 0.530,
+    Abcwasm "match" 0.404 0.620 0.564 0.383, Abcwasm "twice" 0.990 0.992 1.007 0.726,
+    Abcwasm "eval" 0.620 0.829 0.717 0.474, Abcwasm "sprimes" 1.587 1.194 0.770 0.567,
+    Abcwasm "parsetest" 0.926 0.865 0.791 0.564, Abcwasm "prolog" 0.362 0.425 0.357 0.227,
+    Abcwasm "eval2" 0.709 1.707 1.640 0.974, Abcwasm "gen1" 1.023 1.191 0.884 0.609 ]
 //%%
-D.table ["benchmark", "JMVM", "ABC oud", "ABC nu", "nu / oud", "nu / JMVM"]
-  (L.map (\m -> [bNaam m, fx 3 (bJmvm m), fx 3 (bOud m), fx 3 (bNu m), fx 2 (bNu m / bOud m), fx 2 (bNu m / bJmvm m)]) abcWasm)
+D.table ["benchmark", "JMVM", "ABC oud", "ABC nu", "nu + locals", "nu + locals / JMVM"]
+  (L.map (\m -> [bNaam m, fx 3 (bJmvm m), fx 3 (bOud m), fx 3 (bNu m), fx 3 (bNuLoc m), fx 2 (bNuLoc m / bJmvm m)]) abcWasm)
 //%% [markdown]
-// De winst gaat mee naar wasm: gemiddeld 17% sneller. Tegen de JMVM van
-// 1,40× naar 1,14× langzamer; sneller op `sprimes`, gen1, `parsetest` en
-// `prolog`. Met locals erbij en in Chrome: nog te meten.
+// Gemiddeld ABC / JMVM: oud 1,39×, nu 1,14×, oud + locals 0,93×, **nu +
+// locals 0,77×**. De winsten tellen op: in wasm heeft de ABC-interpreter nu 23%
+// minder tijd nodig dan de JMVM. Achter blijven `fib` en `eval2`. Chrome en Safari:
+// nog te meten.
 //%% [markdown]
 // ## Waarom is de ABC-interpreter sneller dan de JMVM?
 //
@@ -673,7 +674,7 @@ D.table ["benchmark", "JMVM", "ABC oud", "ABC nu", "nu / oud", "nu / JMVM"]
 //%% [markdown]
 // ## Onderzoek voor de komende dagen
 //
-// - **De nieuwe ABC met locals, in Chrome**, en Safari, de iPad
+// - **De nieuwe ABC met locals in Chrome** (in node: 0,77× van de JMVM), en Safari, de iPad
 //   (JavaScriptCore) en Firefox: alle browsermetingen hier zijn V8. Voor
 //   iTasks telt de iPad.
 // - **Locals in `interpretergen-wasm`** zelf, in plaats van achteraf de
