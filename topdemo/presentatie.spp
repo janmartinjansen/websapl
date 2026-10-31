@@ -626,7 +626,31 @@ D.table ["benchmark", "JMVM", "ABC retag", "ABC Clean", "retag / Clean"]
 //%% [markdown]
 // Wat overblijft: `eval` (2,3×) vraagt een analyse van closures (Clean weet
 // uit het type dat `op n m` een getal is), `match`, `twice` en `sort`
-// vragen minder `eval`. De browser is met deze ABC nog niet gemeten.
+// vragen minder `eval`.
+//%% [markdown]
+// ## De nieuwe ABC in wasm
+//
+// *31 oktober · node 26 (V8), warm, Apple M4, in seconden, zonder globals →
+// locals.* Dezelfde uitvoer als de JMVM; gen1 maakt ook in wasm byte voor
+// byte `saplcomp.jmvm`.
+//%%
+::Abcwasm = { !bNaam : Str, !bJmvm : Float, !bOud : Float, !bNu : Float }
+
+abcWasm =:
+  [ Abcwasm "fib" 0.626 2.272 0.979, Abcwasm "primes" 0.536 0.607 0.606,
+    Abcwasm "queens" 0.274 0.522 0.496, Abcwasm "sort" 0.553 0.751 0.690,
+    Abcwasm "knights" 0.127 0.187 0.128, Abcwasm "hamming" 0.797 0.954 0.856,
+    Abcwasm "match" 0.406 0.627 0.578, Abcwasm "twice" 1.007 0.997 1.003,
+    Abcwasm "eval" 0.628 0.830 0.723, Abcwasm "sprimes" 1.516 1.193 0.776,
+    Abcwasm "parsetest" 0.935 0.857 0.804, Abcwasm "prolog" 0.368 0.425 0.361,
+    Abcwasm "eval2" 0.719 1.703 1.650, Abcwasm "gen1" 1.027 1.195 0.888 ]
+//%%
+D.table ["benchmark", "JMVM", "ABC oud", "ABC nu", "nu / oud", "nu / JMVM"]
+  (L.map (\m -> [bNaam m, fx 3 (bJmvm m), fx 3 (bOud m), fx 3 (bNu m), fx 2 (bNu m / bOud m), fx 2 (bNu m / bJmvm m)]) abcWasm)
+//%% [markdown]
+// De winst gaat mee naar wasm: gemiddeld 17% sneller. Tegen de JMVM van
+// 1,40× naar 1,14× langzamer; sneller op `sprimes`, gen1, `parsetest` en
+// `prolog`. Met locals erbij en in Chrome: nog te meten.
 //%% [markdown]
 // ## Waarom is de ABC-interpreter sneller dan de JMVM?
 //
@@ -649,7 +673,7 @@ D.table ["benchmark", "JMVM", "ABC retag", "ABC Clean", "retag / Clean"]
 //%% [markdown]
 // ## Onderzoek voor de komende dagen
 //
-// - **De geoptimaliseerde ABC in de browser**, en Safari, de iPad
+// - **De nieuwe ABC met locals, in Chrome**, en Safari, de iPad
 //   (JavaScriptCore) en Firefox: alle browsermetingen hier zijn V8. Voor
 //   iTasks telt de iPad.
 // - **Locals in `interpretergen-wasm`** zelf, in plaats van achteraf de
