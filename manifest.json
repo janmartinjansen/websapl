@@ -2786,7 +2786,7 @@
           "path": "topdemo/index.html",
           "type": "file",
           "ext": ".html",
-          "size": 4948,
+          "size": 4754,
           "isBinary": false
         },
         {
@@ -2794,7 +2794,7 @@
           "path": "topdemo/presentatie.spp",
           "type": "file",
           "ext": ".spp",
-          "size": 10819,
+          "size": 24170,
           "isBinary": false
         }
       ],
@@ -2909,7 +2909,7 @@
       "path": "notebook.html",
       "type": "file",
       "ext": ".html",
-      "size": 77430,
+      "size": 78766,
       "isBinary": false
     },
     {

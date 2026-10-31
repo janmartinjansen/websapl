@@ -2786,7 +2786,7 @@ window.WEBSAPL_TREE = [
         "path": "topdemo/index.html",
         "type": "file",
         "ext": ".html",
-        "size": 4948,
+        "size": 4754,
         "isBinary": false
       },
       {
@@ -2794,7 +2794,7 @@ window.WEBSAPL_TREE = [
         "path": "topdemo/presentatie.spp",
         "type": "file",
         "ext": ".spp",
-        "size": 10819,
+        "size": 24170,
         "isBinary": false
       }
     ],
@@ -2909,7 +2909,7 @@ window.WEBSAPL_TREE = [
     "path": "notebook.html",
     "type": "file",
     "ext": ".html",
-    "size": 77430,
+    "size": 78766,
     "isBinary": false
   },
   {

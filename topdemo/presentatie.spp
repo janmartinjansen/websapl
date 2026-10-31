@@ -3,7 +3,7 @@
 // # Sapl en de JMVM: drie maanden verder
 //
 // Een luie functionele taal, een compiler en een VM, nu volledig in de
-// browser.
+// browser, gebouwd in drie maanden met AI.
 //
 // Jan Martin Jansen · bezoek aan TOP Software · november 2026
 //
@@ -15,8 +15,9 @@ import "lib/list.spp" as L
 import "lib/text.spp" as T
 import "lib/plot.spp" as P
 import "lib/waarden.spp" as W
-import "lib/c2sketch.spp" as C
-import "lib/taxi_minimal.spp" as X
+//%%
+// Getallen in tabellen met een komma, zoals in de tekst.
+fx d x = T.replace "." "," (T.showFixed d x)
 //%% [markdown]
 // ## Waar het begon: 17 juli 2026
 //
@@ -48,23 +49,61 @@ D.table ["onderdeel", "geschreven in", "sinds"]
 // is Sapl. De VM in C++ is klein gehouden: hij kan laden, rekenen en een
 // waarde inpakken, en verder niets.
 //%% [markdown]
+// ## Het proces: ik kies, Claude bouwt
+//
+// *Concept, nog aan te vullen.*
+//
+// - **Eerst een document.** Per onderwerp een plan of een onderzoeksvraag
+//   in `docs/`, dan mijn keuze, dan pas code.
+// - **Elke wijziging op een eigen branch**, met de volledige regressie (de
+//   benchmarks met en zonder strictness-inferentie, de bootstraptests, het
+//   fixpunt van de compiler), en dan een pull request.
+// - **Parallel werken.** Elke sessie in een eigen worktree; werk zonder
+//   Mac-gereedschap (bijvoorbeeld Clean op Linux) in een cloud-sessie.
+// - **Regels en geheugen in de repo.** `CLAUDE.md`, de regeldocumenten
+//   voor Sapl en Amanda, en de documenten in `docs/` leest elke nieuwe
+//   sessie eerst.
+// - **Meten in plaats van gissen.** Elke VM-wijziging native én warm in
+//   de browser gemeten.
+// - **Fouten worden regels.** Een fout die acht commits lang onopgemerkt
+//   bleef, staat nu in `CLAUDE.md`: altijd de volledige regressie.
+//%% [markdown]
 // ## Drie maanden in commits
 //
 // Commits per week (week 29 = half juli, week 44 = deze week):
 //%%
 weken =: ["29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44"]
 
-commitsPerWeek =: [19, 18, 26, 43, 69, 102, 76, 69, 65, 38, 62, 13, 169, 143, 83, 58]
+commitsPerWeek =: [19, 18, 26, 43, 69, 102, 76, 69, 65, 38, 62, 13, 169, 143, 83, 61]
 
-metClaude =: [0, 13, 22, 32, 48, 43, 40, 25, 63, 35, 60, 12, 156, 103, 49, 43]
+metClaude =: [0, 13, 22, 32, 48, 43, 40, 25, 63, 35, 60, 12, 156, 103, 49, 45]
 //%%
 P.bars weken commitsPerWeek
 //%%
 D.table ["", "aantal"]
   [ ["commits", T.showInt (L.sum commitsPerWeek)],
     ["met Claude als co-auteur", T.showInt (L.sum metClaude)],
-    ["pull requests (gemerged)", "102"],
-    ["ontwerp- en meetdocumenten (docs/)", "84"] ]
+    ["pull requests (gemerged)", "103"],
+    ["ontwerp-, onderzoeks- en meetdocumenten (docs/*.md)", "83"] ]
+//%% [markdown]
+// ## Een voorbeeld van het tempo: Clean en ABC in 27 uur
+//
+// Na het eerste gesprek met TOP: hoe verhoudt de JMVM zich tot Clean en de
+// ABC-interpreter? Van de eerste tot de laatste commit:
+//%%
+D.table ["wanneer", "wat"]
+  [ ["28 okt 17:38", "Clean uit GitLab opgezet; de 12 benchmarks in Clean; gen1 naar Clean vertaald; meetscript"],
+    ["28 okt 17:59", "notitie: Clean, LLVM, de ABC-interpreter en de JMVM"],
+    ["29 okt 08:00", "proef: een ABC-backend voor gen1 (retag-vorm naar ABC); alle benchmarks en het fixpunt van gen1"],
+    ["29 okt 09:23", "de JMVM tegenover de ABC-interpreter in wasm (node, Chrome), grootte, geheugen"],
+    ["29 okt 12:17", "herhaalbaar zonder Clean, op een Mac met Apple silicon"],
+    ["29 okt 17:26", "alles opnieuw gemeten op de Apple M4"],
+    ["29 okt 18:14", "waarom de ABC-interpreter in wasm meer verliest"],
+    ["29 okt 20:44", "notitie voor TOP: globals naar locals, ook op Clean's eigen bytecode"] ]
+//%% [markdown]
+// Linux-werk (Clean bestaat niet voor macOS-arm64) in een cloud-sessie, de
+// metingen op de Mac en in Chrome lokaal. Mijn werk: de vragen, de keuzes en
+// het nakijken.
 //%% [markdown]
 // ## Mijlpalen
 //%%
@@ -79,10 +118,60 @@ D.table ["datum", "mijlpaal"]
     ["9-11 okt", "binair laadformaat; de VM leest geen tekst meer"],
     ["12 okt", "de VM uit leesbare bronnen, instructietabel + generator in Sapl"],
     ["14 okt", "de typechecker in elke compilatie"],
-    ["17 okt", "taalprototypes: een taal als Sapl-module"],
-    ["20 okt", ":lang: een eigen taal laden in de REPL"],
+    ["17-20 okt", "taalprototypes; :lang laadt een eigen taal in de REPL"],
     ["23 okt", "waarden (ook functies) bewaren over sessies heen"],
-    ["24 okt", "musttail-dispatch: native 5-54% sneller"] ]
+    ["24 okt", "musttail-dispatch: native 5-54% sneller"],
+    ["28-29 okt", "ABC-backend voor gen1 (proef); de ABC-interpreter in wasm gemeten"] ]
+//%% [markdown]
+// ## Functionele talen zijn gemaakt voor notebooks
+//
+// - **Puur:** de waarde van een cel hangt alleen af van de definities die
+//   ze gebruikt. Na een wijziging rekent het notebook precies de cellen
+//   opnieuw uit die ervan afhangen. Geen verborgen toestand: wat je ziet, is
+//   wat er geldt.
+// - **Een notebook is één `letrec`:** cellen mogen in elke volgorde staan.
+//   De cel hieronder gebruikt een definitie uit de cel daarna.
+// - **Lui:** een oneindige lijst is gewoon een waarde; er wordt alleen
+//   uitgerekend wat er getoond wordt. Een `=:`-waarde één keer, gedeeld.
+// - **Getypeerd:** een fout blijft bij zijn cel.
+// - **Functies zijn waarden:** ook die kun je tonen, bewaren en versturen.
+//%%
+L.take 10 (L.map (\n -> n * n) natuurlijk)
+//%%
+natuurlijk =: vanaf 1
+
+vanaf n = Cons n (vanaf (n + 1))
+//%% [markdown]
+// ## Wat de VM en de toolchain eraan toevoegen
+//
+// - **De compiler zit in de client.** Voorbewerker, compiler en typechecker
+//   zijn Sapl-programma's op dezelfde VM in de browser. Geen server, geen
+//   kernel.
+// - **Code bijladen in een draaiend programma.** Elke cel wordt een eigen
+//   stuk bytecode, in Sapl gelinkt achter de bestaande code. Uitgerekende
+//   waarden van andere cellen blijven staan.
+// - **Een fout stopt de sessie niet:** `try` per cel, ook om fouten van de
+//   VM zelf (heap vol, stack vol).
+// - **De REPL is een gepauzeerd programma** dat bij `readLine` wacht op de
+//   volgende cel.
+// - **Weinig reflectie, maar genoeg:** de VM geeft een adres, een naam en
+//   een constructor; tonen naar type doet Sapl.
+// - **Elke waarde inpakken:** `pack`, ook een functie of een thunk.
+// - **Klein:** de VM is 147 KB wasm.
+//%% [markdown]
+// ## Andere notebooksystemen
+//%%
+D.table ["", "taal", "waar draait de code", "na een wijziging", "het bestand"]
+  [ ["Jupyter", "Python e.a.", "een kernelproces (server of eigen machine)", "jij kiest welke cellen opnieuw lopen; de toestand is wat er toevallig gedraaid heeft", ".ipynb (JSON, met uitvoer)"],
+    ["JupyterLite", "Python", "browser (Pyodide: CPython in wasm)", "als Jupyter", ".ipynb"],
+    ["Observable", "JavaScript", "browser", "reactief: afhankelijke cellen lopen opnieuw", "eigen formaat"],
+    ["Pluto.jl", "Julia", "een Julia-proces", "reactief", "gewoon .jl-bestand"],
+    ["marimo", "Python", "een Python-proces, of browser (Pyodide)", "reactief; mutatie tussen cellen ziet het niet", "gewoon .py-bestand"],
+    ["dit notebook", "Sapl+", "browser (JMVM in wasm), compiler erbij", "reactief, per cel gecompileerd en gelinkt; puur, dus niets te missen", "gewoon .spp-bestand"] ]
+//%% [markdown]
+// Reactieve notebooks voor imperatieve talen moeten toewijzing en mutatie
+// tussen cellen verbieden of negeren. In een pure taal is daar niets te
+// verbieden: de afhankelijkheden zijn de namen.
 //%% [markdown]
 // ## De compiler zit in het systeem
 //
@@ -229,19 +318,6 @@ hoogte g x = amplitude g * sin (6.28318 * itof (frequentie g) * x) * (if (gedemp
 //%%
 P.line xs (L.map (hoogte golf) xs)
 //%% [markdown]
-// ## Taken als data: `taxi_minimal` van C2Sketch
-//
-// Het voorbeeld van Bas Lijnse als gewone Sapl-data. Wie welke taak mag
-// doen, volgt uit de actors, hun groepen en de eisen van elke taak, met
-// pure functies (`lib/c2sketch.spp`).
-//%%
-D.table ["taak", "wie"]
-  (L.map (\b -> [C.bladId b, T.join ", " (L.filter (\a -> C.voldoetAlle X.model a (C.eisen b)) (L.map C.actorNaam (C.actors X.model)))])
-         (C.bladen X.model))
-//%% [markdown]
-// Het scenario stap voor stap, en twee agents die het zelf spelen:
-// [het notebook taxi_minimal](notebook.html?nb=notebooks/taxi_minimal.spp&run=1).
-//%% [markdown]
 // ## Een taal bouwen en laden terwijl het systeem draait
 //
 // - Een taal is een Sapl-module: een parser en een vertaling naar een
@@ -254,6 +330,116 @@ D.table ["taak", "wie"]
 //
 // Live: [het taallab](taallab.html).
 //%% [markdown]
+// ## Tussenformaten: van Sapl+ tot bytecode
+//
+// <pre><code>Sapl+ (.spp) ─ voorbewerker ─► Sapl (.cfp)
+//   ─► parse ─► strictness ─► bool ─► lazytag ─► lift ─► <b>retag</b> ─► .jmvm (tekst) ─► .jvb (binair)</code></pre>
+//
+// Elke stap is te bekijken (`./compile x.cfp --emit=retag`, of aangevinkt in
+// de Workbench). Een klein programma, echte uitvoer van gen1:
+//
+// <pre><code>bron        kwadraten xs = case xs (Nil -> Nil) (Cons y ys -> Cons (y * y) (kwadraten ys))
+//             som xs = case xs (Nil -> 0) (Cons y ys -> y + som ys)
+//
+// strictness  kwadraten !xs = ...                (gevonden door de inferentie)
+//
+// lift        kwadraten !xs = case xs (Nil -> Nil) (Cons y ys -> Cons (lazy (kwadraten_1 y)) (lazy (kwadraten ys)))
+//             kwadraten_1 y = y * y
+//
+// retag       kwadraten !xs = case xs (Nil -> Nil) (Cons y ys -> Cons (thunk (kwadraten_1 y)) (thunk (kwadraten ys)))
+//             som !xs = case xs (Nil -> 0) (Cons y ys -> eval(y) + som (eval(ys)))
+//             kwadraten_1 y = eval(y) * eval(y)</code></pre>
+//
+// **De retag-vorm** is nog gewoon Sapl, maar met elke `eval`, `thunk` en
+// `closure` expliciet: precies de vorm uit het IFL 2016-paper. Alles wat
+// lui of strikt is, is daar beslist.
+//%% [markdown]
+// ## De retag-vorm als draaischijf
+//
+// - **Naar de JMVM:** stage 5 maakt er `.jmvm`/`.jvb` van.
+// - **Terug:** de decompiler maakt van een `.jmvm` weer de retag-vorm, ook
+//   in de Workbench; `retagcomp` vertaalt een (bewerkte) retag-vorm in de
+//   browser weer naar bytecode.
+// - **Linken:** modules worden op retag-niveau samengevoegd (`retaglink`).
+// - **Naar Clean's ABC:** een proef van ~800 regels Python vertaalt de
+//   retag-vorm naar ABC. Daarmee draaien alle benchmarks en gen1 zelf
+//   (byte voor byte hetzelfde fixpunt) op Clean's `cg` en de ABC-interpreter.
+//   Offline, nog niet in de browser.
+//
+// Dezelfde regel `kwadraten` in de twee achterkanten:
+//
+// <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px">
+// <pre><code>JMVM
+// kwadraten       load 0
+//                 jmpt 2 5 6
+// kwadraten_Nil   ccreatet 0 11 5 0
+//                 return 1
+// kwadraten_Cons  load 1
+//                 pushfunc 1 3      (kwadraten)
+//                 create 2 3
+//                 load 0
+//                 pushfunc 1 14     (kwadraten_1)
+//                 create 2 3
+//                 ccreatet 2 11 5 1
+//                 return 3</code></pre>
+// <pre><code>ABC
+// s_kwadraten  push_a 0
+//              eq_desc d_Nil 0 0
+//              jmp_true case.2
+//              eq_desc d_Cons 2 0
+//              jmp_true case.3
+// case.2       buildh d_Nil 0
+//              updatepop_a 0 2
+//              rtn
+// case.3       push_args 0 2 2
+//              push_a 1
+//              build _ 1 n_kwadraten
+//              push_a 1
+//              build _ 1 n_kwadraten_1
+//              buildh d_Cons 2
+//              updatepop_a 0 4
+//              rtn</code></pre>
+// </div>
+//%% [markdown]
+// ## Varianten van de VM
+//
+// Eén bron: 49 instructies en 34 hulpinstructies in een tabel, de bodies in
+// gewone C, de dispatchlus gegenereerd door een generator in Sapl. Daaruit:
+//%%
+D.table ["variant", "dispatch", "waarvoor"]
+  [ ["runfast, run", "musttail: elke instructie een eigen functie die de volgende als staartaanroep aanroept", "native standaard (run telt ook instructies)"],
+    ["rungoto", "computed goto: één grote functie, labels als adressen", "de oude standaard, om te vergelijken"],
+    ["runswitch", "één switch in een lus", "basis voor de debugger en de browser"],
+    ["runswitch-debug", "switch + trace van de laatste 4096 instructies", "bij een crash of een hang"],
+    ["jmvm.wasm", "switch, telt alleen aanroepen en allocaties", "WebSapl, dit notebook"],
+    ["jmvm_tel.wasm", "switch, telt alles", "WebSapl met ?tellen=1"],
+    ["wasm met musttail", "wasm-staartaanroepen (return_call_indirect)", "gemeten en verworpen, zie hierna"] ]
+//%% [markdown]
+// Native is musttail 5-54% sneller dan computed goto (gen1 −8,6%): de
+// registerallocator krijgt kleine functies in plaats van één reusachtige.
+//%% [markdown]
+// ## In de browser is het subtiel
+//
+// *Stand 29 oktober · alleen V8 (Chrome, node) gemeten, Safari/iPad en
+// Firefox niet.*
+//
+// - **Wat native wint, verliest in wasm.** musttail is in Chrome warm
+//   32-91% *trager* dan de switch. V8 zet een functie die al draait niet
+//   halverwege om naar geoptimaliseerde code: één lange run blijft in de
+//   basiscompiler, koud wint musttail dus wel. WebSapl warmt de VM daarom
+//   bij het laden op.
+// - **Code die niet draait telt mee.** Ongebruikte instructies weghalen:
+//   native ±0, in Chrome `fib` 21% trager. Een ongebruikte globale variabele
+//   weghalen: `fib` 14% trager.
+// - **Meten kost.** Elke instructie tellen: native mediaan +28%, in Chrome
+//   2-25%.
+// - **Geheugen.** De vaste heap is 687 MB per wasm-exemplaar, ook voor
+//   een klein programma; met een kleinere heap zijn de meeste benchmarks
+//   sneller.
+//
+// Daarom: elke VM-wijziging ook warm in Chrome meten, met afwisselende
+// rondes. Native ±0 zegt niets over de browser.
+//%% [markdown]
 // ## Snelheid: de browser tegen native
 //%%
 nfib n = if (n < 2) 1 (nfib (n - 1) + nfib (n - 2) + 1)
@@ -261,36 +447,104 @@ nfib n = if (n < 2) 1 (nfib (n - 1) + nfib (n - 2) + 1)
 nfib 30
 //%% [markdown]
 // Voer de cel opnieuw uit (**C**, dan Shift+Enter in de cel): de tijd staat
-// rechtsonder. Gemeten op een Apple M4, warm, wasm-tijd gedeeld door native
-// tijd (lager is beter):
+// rechtsonder. De JMVM op een Apple M4, Chrome 156 warm, in ms (stand 28
+// oktober; alleen V8 gemeten):
 //%%
-P.bars ["JMVM", "ABC", "ABC locals", "clean-llvm"] [1.43, 2.67, 1.76, 1.63]
+::Wasmmeting = { !wNaam : Str, !wNative : Int, !wSwitch : Int, !wMusttail : Int }
+
+wasmMetingen =:
+  [ Wasmmeting "fib" 243 655 996, Wasmmeting "primes" 364 466 722,
+    Wasmmeting "queens" 197 283 473, Wasmmeting "twice" 606 1025 1406,
+    Wasmmeting "knights" 100 133 176, Wasmmeting "match" 283 425 809,
+    Wasmmeting "sprimes" 1406 1553 1548, Wasmmeting "eval" 477 650 914,
+    Wasmmeting "eval2" 531 747 1250, Wasmmeting "hamming" 576 821 1358,
+    Wasmmeting "sort" 420 556 1040, Wasmmeting "parsetest" 728 943 1241,
+    Wasmmeting "prolog" 296 377 554 ]
+
+factor a b = itof b / itof a
+//%%
+D.table ["benchmark", "native (musttail)", "Chrome (switch)", "factor", "Chrome (musttail)", "factor"]
+  (L.map (\m -> [wNaam m, T.showInt (wNative m), T.showInt (wSwitch m), fx 2 (factor (wNative m) (wSwitch m)),
+                 T.showInt (wMusttail m), fx 2 (factor (wNative m) (wMusttail m))]) wasmMetingen)
 //%% [markdown]
-// JMVM en de ABC-interpreter in Chrome, de ABC-interpreter na het omzetten
-// van globals naar locals, en clean-llvm (fannkuch, in Node). Zie de
-// notitie *Clean, LLVM en de browser*.
+// Mediaan 1,36× van native. Alleen `fib` (veel aanroepen, weinig
+// allocatie) blijft ver achter (2,7×); `sprimes` (vooral GC) is overal 1,1×.
 //%% [markdown]
-// ## Hoe AI dit mogelijk maakte
+// ## De ABC-interpreter in de browser
 //
-// *Concept, nog aan te vullen.*
+// Dezelfde Sapl-programma's, dezelfde voorkant (gen1 tot en met de
+// retag-vorm), alleen een andere achterkant. Apple M4, Chrome 156, warm, in
+// seconden. *Stand 29 oktober · alleen V8 gemeten, Safari/iPad niet.*
+//%%
+::Abcmeting = { !aNaam : Str, !aJmvm : Float, !aAbc : Float, !aLocals : Float }
+
+abcMetingen =:
+  [ Abcmeting "fib" 0.641 2.243 1.737, Abcmeting "primes" 0.459 0.629 0.421,
+    Abcmeting "queens" 0.284 0.543 0.292, Abcmeting "sort" 0.554 0.773 0.524,
+    Abcmeting "knights" 0.133 0.191 0.115, Abcmeting "hamming" 0.820 0.965 0.634,
+    Abcmeting "match" 0.424 0.632 0.426, Abcmeting "twice" 1.025 1.032 0.735,
+    Abcmeting "eval" 0.656 0.856 0.555, Abcmeting "sprimes" 1.567 1.205 0.843,
+    Abcmeting "parsetest" 0.948 0.884 0.629, Abcmeting "prolog" 0.377 0.431 0.290,
+    Abcmeting "eval2" 0.750 1.762 1.017, Abcmeting "gen1" 1.059 1.216 0.814 ]
+//%% [markdown]
+// - **Zoals uitgeleverd** is de ABC-interpreter in Chrome gemiddeld 1,38×
+//   trager dan de JMVM, terwijl hij native op de M4 *sneller* is (0,74×).
+// - **De oorzaak:** Clean's wasm-interpreter houdt pc, stackpointers en heap
+//   in 25 wasm-globals, en V8 houdt globals niet in registers.
+// - **Alleen die globals naar locals omzetten** (een script van ~40 regels
+//   op de `.wasm`, verder niets veranderd): 34% minder tijd, en dan is de
+//   ABC-interpreter 0,91× van de JMVM (gen1 0,76×). Op Clean's eigen
+//   getypeerde bytecode (`clm`) ook 35%.
+// - Niet getoetst: iTasks' samenwerking tussen native code en de
+//   interpreter, en Safari/iPad.
+//%% [markdown]
+// ## De ABC-interpreter in de browser, per benchmark
 //
-// - **Ik kies, Claude bouwt.** Per onderwerp een plan als document, daarna
-//   mijn keuze, daarna een branch, de volledige regressie en een PR.
-// - **Regels en geheugen in de repo.** `CLAUDE.md`, de regeldocumenten
-//   voor Sapl en Amanda, en de documenten in `docs/` zijn wat elke nieuwe
-//   sessie eerst leest.
-// - **Meten in plaats van gissen.** Elke VM-wijziging wordt native en in
-//   de browser gemeten; elke compilerwijziging tegen de benchmarks en het
-//   fixpunt van gen1.
-// - **Fouten worden lessen.** Een fout die acht commits lang onopgemerkt
-//   bleef, staat nu als regel in `CLAUDE.md`: altijd de volledige
-//   regressie.
+// Apple M4, Chrome 156, warm, in seconden; ABC met `abcopt`. Onder 1: de
+// ABC-interpreter is sneller.
+//%%
+D.table ["benchmark", "JMVM", "ABC", "ABC / JMVM", "ABC met locals", "ABC / JMVM"]
+  (L.map (\m -> [aNaam m, fx 3 (aJmvm m), fx 3 (aAbc m), fx 2 (aAbc m / aJmvm m),
+                 fx 3 (aLocals m), fx 2 (aLocals m / aJmvm m)]) abcMetingen)
+//%% [markdown]
+// ## Hoeveel kost de browser?
+//
+// Wasm-tijd gedeeld door native tijd, Apple M4, warm, geometrisch gemiddelde
+// (lager is beter):
+//%%
+verliesNamen =: ["JMVM", "ABC", "ABC loc", "Clean", "Clean loc", "LLVM"]
+
+verlies =: [1.43, 2.67, 1.76, 2.46, 1.59, 1.63]
+//%%
+P.bars verliesNamen verlies
+//%%
+D.table verliesNamen [L.map (fx 2) verlies]
+//%% [markdown]
+// JMVM en ABC: Chrome, dezelfde voorkant; "loc": met locals. Clean: Clean's
+// eigen getypeerde code in de ABC-interpreter (node). LLVM: TOP's
+// clean-llvm, fannkuch (node). Na de locals zit het verschil met de JMVM helemaal in de
+// dispatch: computed goto wint native meer, en in wasm bestaat het niet.
+//%% [markdown]
+// ## Onderzoek voor de komende dagen
+//
+// - **Safari en de iPad** (JavaScriptCore) en Firefox: alle metingen hier
+//   zijn V8. Voor iTasks telt de iPad.
+// - **Locals in `interpretergen-wasm`** zelf, in plaats van achteraf de
+//   `.wasm` herschrijven; en toetsen met iTasks (`ABC.Interpreter`, het
+//   kopiëren van grafen).
+// - **Typen in de ABC-backend:** getallen kaal op de B-stack. Daar zit de
+//   achterstand bij `fib` en `eval2`.
+// - **De ABC-backend als stage van gen1** (`--emit=abc`, in Sapl), zodat hij
+//   ook in de browser vertaalt.
+// - **Een heap die meegroeit** in de JMVM, zoals Clean: minder geheugen per
+//   exemplaar, en sneller.
+// - **Notebooks op de ABC-interpreter:** eerst een tweedeling (REPL en
+//   compiler op de JMVM, het rekenen per run in de ABC-interpreter).
 //%% [markdown]
 // ## Volgende keer
 //
 // - Client en server: gedeelde information spaces, de server bewaart en
 //   herstelt, berekeningen verhuizen naar een snel rekenproces
-// - De TOP-laag: taken als data op de server, lenzen op gedeelde data,
-//   Toppyt als data
+// - De uitkomsten van het ABC-onderzoek, ook op de iPad
 //
 // Vragen?

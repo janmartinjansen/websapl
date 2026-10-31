@@ -71,6 +71,8 @@
     .md-view h1 { font-size: 24px; margin: 6px 0 8px; } .md-view h2 { font-size: 19px; margin: 6px 0; }
     .md-view code { font-family: var(--font-mono); font-size: 13px; background: var(--bg-code); padding: 1px 4px; border-radius: 4px; }
     .md-view p { margin: 6px 0; }
+    .md-view pre { background: var(--bg-code); padding: 8px 10px; border-radius: 8px; overflow-x: auto; margin: 6px 0; font-size: 12.5px; line-height: 1.4; }
+    .md-view pre code { background: none; padding: 0; font-size: inherit; }
     .out { padding: 6px 10px 2px; }
     .out:empty { display: none; }
     .out pre { margin: 0; white-space: pre-wrap; word-break: break-word; font-family: var(--font-mono); font-size: 13px; }
@@ -139,6 +141,8 @@
     body.present .md-view h3 { font-size: 29px; margin: 14px 0 6px; }
     body.present .md-view p, body.present .md-view li { margin: 8px 0; }
     body.present .md-view code { font-size: .88em; }
+    body.present .md-view pre { font-size: 15px; }
+    body.present .md-view pre code { font-size: inherit; }
     body.present textarea { font-size: 19px; }
     body.present .out pre, body.present .out table { font-size: 19px; }
     body.present .out .note, body.present .nb-interactive-foot { font-size: 14px; }
