@@ -181,7 +181,8 @@ D.table ["datum", "mijlpaal"]
     ["17-20 okt", "taalprototypes; :lang laadt een eigen taal in de REPL"],
     ["23 okt", "waarden (ook functies) bewaren over sessies heen"],
     ["24 okt", "musttail-dispatch: native 5-54% sneller"],
-    ["28-29 okt", "ABC-backend voor gen1 (proef); de ABC-interpreter in wasm gemeten"] ]
+    ["28-29 okt", "ABC-backend voor gen1 (proef); de ABC-interpreter in wasm gemeten"],
+    ["31 okt", "ABC uit de retag-vorm op 1,07× van Clean's eigen ABC"] ]
 //%% [markdown]
 // ## Functionele talen zijn gemaakt voor notebooks
 //
@@ -421,7 +422,7 @@ P.line xs (L.map (hoogte golf) xs)
 //   in de Workbench; `retagcomp` vertaalt een (bewerkte) retag-vorm in de
 //   browser weer naar bytecode.
 // - **Linken:** modules worden op retag-niveau samengevoegd (`retaglink`).
-// - **Naar Clean's ABC:** een proef van ~800 regels Python vertaalt de
+// - **Naar Clean's ABC:** een proef van ~1.400 regels Python vertaalt de
 //   retag-vorm naar ABC. Daarmee draaien alle benchmarks en gen1 zelf
 //   (byte voor byte hetzelfde fixpunt) op Clean's `cg` en de ABC-interpreter.
 //   Offline, nog niet in de browser.
@@ -585,15 +586,80 @@ D.table verliesNamen [L.map (fx 2) verlies]
 // clean-llvm, fannkuch (node). Na de locals zit het verschil met de JMVM helemaal in de
 // dispatch: computed goto wint native meer, en in wasm bestaat het niet.
 //%% [markdown]
+// ## ABC uit de retag-vorm tegen Clean's eigen ABC
+//
+// *31 oktober · native, Apple M4, dezelfde ABC-interpreter, allebei door
+// `abcopt`.* Hoeveel trager is de ABC uit onze backend dan wat Clean's
+// compiler maakt (geometrisch gemiddelde, 1 = even snel)?
+//%%
+D.table ["stap (31 oktober)", "alle 13", "zonder gen1"]
+  [ ["'s ochtends", "1,27×", "1,36×"],
+    ["+ int, case, scrut", "1,10×", "1,18×"],
+    ["+ velden, bool, repl, lits", "1,07×", "1,14×"] ]
+//%% [markdown]
+// - **Zonder typechecker**, alleen met wat er in de retag-vorm staat: een
+//   lokale analyse vindt getallen die kaal op de B-stack kunnen, kale
+//   getallen in constructorvelden en Bool-resultaten.
+// - **`fib` is optimaal:** precies Clean's 1.012 M uitgevoerde instructies,
+//   geen allocatie, even snel.
+// - Sneller dan Clean: `hamming`, `sprimes`, `parsetest`, `prolog` en gen1.
+// - In één dag, met alle uitvoer gelijk en het fixpunt van gen1 bij elke stap.
+//%% [markdown]
+// ## Per benchmark: retag-ABC, Clean-ABC en de JMVM
+//
+// Native, Apple M4, in seconden, de snelste van 9. Clean: de getypeerde
+// ports, `clm -bytecode`. gen1 is in Clean een ongetypeerde vertaling.
+//%%
+::Cleanmeting = { !cNaam : Str, !cJmvm : Float, !cRetag : Float, !cClean : Float }
+
+cleanMetingen =:
+  [ Cleanmeting "fib" 0.248 0.357 0.353, Cleanmeting "primes" 0.369 0.233 0.220,
+    Cleanmeting "queens" 0.197 0.148 0.134, Cleanmeting "sort" 0.422 0.268 0.212,
+    Cleanmeting "knights" 0.100 0.047 0.043, Cleanmeting "hamming" 0.563 0.305 0.328,
+    Cleanmeting "match" 0.282 0.227 0.156, Cleanmeting "twice" 0.619 0.531 0.371,
+    Cleanmeting "eval" 0.475 0.281 0.123, Cleanmeting "sprimes" 1.402 0.394 0.422,
+    Cleanmeting "parsetest" 0.727 0.374 0.474, Cleanmeting "prolog" 0.293 0.152 0.155,
+    Cleanmeting "gen1" 0.747 0.372 0.824 ]
+//%%
+D.table ["benchmark", "JMVM", "ABC retag", "ABC Clean", "retag / Clean"]
+  (L.map (\m -> [cNaam m, fx 3 (cJmvm m), fx 3 (cRetag m), fx 3 (cClean m), fx 2 (cRetag m / cClean m)]) cleanMetingen)
+//%% [markdown]
+// Wat overblijft: `eval` (2,3×) vraagt een analyse van closures (Clean weet
+// uit het type dat `op n m` een getal is), `match`, `twice` en `sort`
+// vragen minder `eval`. De browser is met deze ABC nog niet gemeten.
+//%% [markdown]
+// ## Waarom is de ABC-interpreter sneller dan de JMVM?
+//
+// *Native, M4, met de hardwaretellers van macOS.* Met de geoptimaliseerde
+// ABC is de ABC-interpreter native gemiddeld 1,63× sneller (`fib`: de JMVM
+// blijft sneller).
+//
+// - **Minder, maar dikkere instructies.** De JMVM voert 0,71× zoveel
+//   VM-instructies uit, maar 13-23 machine-instructies per VM-instructie
+//   tegen 8-10. De JMVM is een zuivere stackmachine: 41% van de instructies
+//   in gen1 is `load`. Een ABC-instructie krijgt de plek van zijn operand mee.
+// - **Vermoedens getoetst en verworpen**, onder meer aliasing, GC, page
+//   faults en de dispatch. Open: waar `sprimes` op wacht.
+// - **musttail voor de ABC-interpreter:** gemiddeld 0,99×, want clang houdt
+//   de registers daar al goed vast. Wel compileert `interpret.c` in 0,6 s
+//   in plaats van 66 s.
+// - **gen1 besteedt ~70% aan tekst als tekenlijst** (plakken, namen
+//   vergelijken), op beide VM's hetzelfde: een ontwerpkeuze in gen1, niet in
+//   de achterkant.
+//%% [markdown]
 // ## Onderzoek voor de komende dagen
 //
-// - **Safari en de iPad** (JavaScriptCore) en Firefox: alle metingen hier
-//   zijn V8. Voor iTasks telt de iPad.
+// - **De geoptimaliseerde ABC in de browser**, en Safari, de iPad
+//   (JavaScriptCore) en Firefox: alle browsermetingen hier zijn V8. Voor
+//   iTasks telt de iPad.
 // - **Locals in `interpretergen-wasm`** zelf, in plaats van achteraf de
 //   `.wasm` herschrijven; en toetsen met iTasks (`ABC.Interpreter`, het
 //   kopiëren van grafen).
-// - **Typen in de ABC-backend:** getallen kaal op de B-stack. Daar zit de
-//   achterstand bij `fib` en `eval2`.
+// - **De laatste afstand tot Clean:** een analyse van closures (`eval`), en
+//   meerdere waarden teruggeven op de stack.
+// - **Wat de JMVM van de ABC leert:** een `case` op een lokale variabele
+//   zonder `load`, minder heen en weer over de stack; in gen1 literals delen
+//   en namen als getal.
 // - **De ABC-backend als stage van gen1** (`--emit=abc`, in Sapl), zodat hij
 //   ook in de browser vertaalt.
 // - **Een heap die meegroeit** in de JMVM, zoals Clean: minder geheugen per
