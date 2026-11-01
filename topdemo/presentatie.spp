@@ -123,6 +123,7 @@ D.table ["proef", "uitkomst", "besluit"]
     ["dispatch met musttail (wasm)", "warm 32-91% trager dan switch", "niet gedaan"],
     ["Scott-codering i.p.v. ADT's", "1,0-3,2× trager over de benchmarks", "niet gedaan"],
     ["JMVM naar losse wasm compileren", "1,4-3,5× in Chrome, ~1,4× in Safari", "niet ingebouwd"],
+    ["dezelfde code naar C (jmvm2c, clang)", "1,55× sneller dan nu; gen1 op 1,5× van GHC", "proef, native"],
     ["REPL in Sapl i.p.v. repl-host", "25,7 naar 5,8 ms per regel", "de REPL"],
     ["ongebruikte instructies weg", "native ±0, Chrome fib +21%", "alleen een tag"],
     ["ABC-interpreter: globals naar locals", "34% minder tijd in Chrome", "voorstel aan TOP"],
@@ -603,10 +604,45 @@ D.table ["benchmark", "GHC", "JMVM voor", "factor", "JMVM nu", "factor"]
 // - De JMVM zit nu op **2,4× tot 8,4×** van GHC (totaal 4,5×, zonder
 //   `twice` 4,1×; was 5,7× en 5,2×). Bij `twice` (26×) deelt GHC ook
 //   zonder let-floating nog veel meer.
-// - **gen1 vertaalt zichzelf** in 0,72 s; dezelfde compiler, automatisch
-//   naar Haskell vertaald en met GHC `-O2` gebouwd, doet 0,33 s: **2,2×**.
+// - **gen1 vertaalt zichzelf** in 0,75 s; dezelfde compiler, automatisch
+//   naar getypeerd Haskell vertaald (`saplcomp_typed.hs`) en met GHC `-O2`
+//   gebouwd, doet 0,28 s: **2,6×** (in één ronde gemeten, 1 november).
 // - GHC gemeten op 24 oktober, de JMVM op 1 november zonder ("voor") en
 //   met ("nu") superinstructies, dezelfde machine.
+//%% [markdown]
+// ## Dezelfde bytecode naar C: `jmvm2c`
+//
+// `jmvm2c.py` vertaalt een `.jmvm` naar C, zonder interpreter: elk stuk
+// code tussen twee sprongpunten wordt een C-functie die de volgende met
+// `musttail` aanroept, met de VM-registers als parameters. Verder hetzelfde
+// ontwerp: een stack in het geheugen, getagde cellen, Cheney-GC. clang
+// `-O2` (dus LLVM) doet de rest. Apple M4, in ms, de snelste van 7:
+//%%
+::Tcmeting = { !tcNaam : Str, !tcGhc : Int, !tcJmvm : Int, !tcC : Int }
+
+tcMetingen =:
+  [ Tcmeting "fib" 100 244 123, Tcmeting "knights" 33 95 40,
+    Tcmeting "primes" 94 218 176, Tcmeting "sort" 121 295 232,
+    Tcmeting "parsetest" 180 685 442, Tcmeting "hamming" 109 476 277,
+    Tcmeting "queens" 34 180 110, Tcmeting "eval" 75 443 265,
+    Tcmeting "match" 44 244 162, Tcmeting "prolog" 34 280 161,
+    Tcmeting "sprimes" 167 802 787, Tcmeting "twice" 19 493 429 ]
+//%%
+D.table ["benchmark", "GHC", "JMVM nu", "C", "C tegen JMVM", "C tegen GHC"]
+  (L.append
+    (L.map (\m -> [tcNaam m, T.showInt (tcGhc m), T.showInt (tcJmvm m), T.showInt (tcC m),
+                   fx 2 (factor (tcC m) (tcJmvm m)), fx 1 (factor (tcGhc m) (tcC m))]) tcMetingen)
+    [["totaal", "1010", "4455", "3204", "1,39", "3,2"], ["gen1 vertaalt zichzelf", "283", "748", "434", "1,72", "1,5"]])
+//%% [markdown]
+// - **Correct:** alle uitvoer en het aantal aanroepen en allocaties gelijk
+//   aan de VM; gen1 in C vertaalt zichzelf byte voor byte.
+// - **1,0-2,4× sneller dan de JMVM** (geometrisch 1,55×), gen1 1,7×.
+//   Weinig winst waar de GC de tijd bepaalt (`sprimes`, `twice`): dezelfde
+//   heap en dezelfde GC.
+// - **gen1 op 1,5× van GHC:** hetzelfde algoritme, dezelfde
+//   datarepresentatie, en geen enkele optimalisatie boven op het ontwerp.
+// - **Prijs:** gen1 wordt 9,3 MB C, clang doet er 47 s over. In de browser
+//   (`jmvm2wat`, september) was de winst te klein om in te bouwen.
 //%% [markdown]
 // ## De ABC-interpreter in de browser
 //
