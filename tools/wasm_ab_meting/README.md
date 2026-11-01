@@ -27,6 +27,7 @@ cp -r $W/wasm_main $W/wasm_main2                                       # voor de
 node websapl/tools/wasm_ab_meting/meet_chrome.js $W                    # A tegen B in Chrome
 node websapl/tools/wasm_ab_meting/meet_chrome.js $W --var main,main2   # de ruis
 node websapl/tools/wasm_ab_meting/meet_node.js   $W                    # hetzelfde in node
+node websapl/tools/wasm_ab_meting/meet_safari.js $W                    # hetzelfde in Safari (zie hieronder)
 ```
 
 Opties van beide meetscripts: `-n rondes` (standaard 7), `--var a,b`
@@ -74,3 +75,13 @@ Chrome: node tiert anders.
   `websapl.h`): warm in Chrome −2% (`sprimes`) tot −25% (`queens`), mediaan
   ~−9%. Een tussenvorm zonder de globale `instrCount` was op `fib` 14%
   trager: meet het eindresultaat. Zie `docs/performance_bevindingen.md`.
+
+## Safari
+
+`meet_safari.js` draait dezelfde `meet.html` in Safari. Met
+"Sta automatisering op afstand toe" (Safari > Instellingen > Ontwikkelaar)
+via WebDriver (`safaridriver`); anders opent het script de pagina met
+`open -a Safari`, en die post de uitkomst terug. Safari opent een venster op
+het scherm: de Mac moet wakker zijn en het venster op de voorgrond, anders zet
+Safari de pagina stil (op 1 november 2026 gebeurde er bij een slapend scherm
+minutenlang niets).

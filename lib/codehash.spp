@@ -360,10 +360,10 @@ chOp_UPDSP = 23
 chOp_STOP = 24
 chOp_CREATE = 25
 chOp_PUSHFUNCNR = 26
-chOp_GET = 27
-chOp_GETN = 28
+chOp_JMPT_LV = 27
+chOp_LOAD_FORCE = 28
 chOp_UPDATE = 29
-chOp_GETALL = 30
+chOp_LOAD_EVAL = 30
 chOp_EVAL = 31
 chOp_BOX = 32
 chOp_CCREATE = 33
@@ -376,12 +376,12 @@ chOp_ARRAY_CREATE_DYNAMIC = 39
 chOp_ARRAY_GET = 40
 chOp_ARRAY_SET = 41
 chOp_ARRAY_SIZE = 42
-chOp_FADD = 43
-chOp_FSUB = 44
-chOp_FMULT = 45
+chOp_CCREATE_RETURN = 43
+chOp_LOAD_TAILCALL = 44
+chOp_EVAL_LOCAL = 45
 chOp_FDIV = 46
 chOp_FLOATOP = 47
-chOp_POW = 48
+chOp_LOAD2 = 48
 chOp_PUSHC = 49
 chOp__AUX = 50
 chOp_FORCE = 51
@@ -422,7 +422,7 @@ chAux_PackMax = 32
 chAux_Unpack = 33
 
 // De lengte van de instructie op i (opcode op); een onbekende opcode of subcode is een fout.
-chGLen j !i !op = if (op < 0) (chGOnbekend 0) (if (op > 52) (chGOnbekend 0) (if (op < 33) (if (op < 21) (if (op < 7) (if (op < 1) 2 (if (op < 6) 1 4)) (if (op < 15) (if (op < 14) 2 3) (if (op < 18) 1 2))) (if (op < 24) (if (op < 22) 3 (if (op < 23) 1 2)) (if (op < 27) (if (op < 25) 1 3) (if (op < 28) 2 1)))) (if (op < 43) (if (op < 37) (if (op < 34) 5 (if (op < 36) 2 3)) (if (op < 39) (if (op < 38) (2 + chW j (i + 1)) 3) (if (op < 40) 2 1))) (if (op < 49) (if (op < 47) (chGOnbekend 0) (if (op < 48) (if (chW j (i + 1) == 26) 3 2) 1)) (if (op < 51) (if (op < 50) 2 (chGLenAux j i (chW j (i + 1)))) (if (op < 52) 1 2))))))
+chGLen j !i !op = if (op < 0) (chGOnbekend 0) (if (op > 52) (chGOnbekend 0) (if (op < 31) (if (op < 21) (if (op < 7) (if (op < 1) 2 (if (op < 6) 1 4)) (if (op < 15) (if (op < 14) 2 3) (if (op < 18) 1 2))) (if (op < 25) (if (op < 23) (if (op < 22) 3 1) (if (op < 24) 2 1)) (if (op < 29) (if (op < 27) 3 (chGOnbekend 0)) (if (op < 30) 1 (chGOnbekend 0))))) (if (op < 40) (if (op < 36) (if (op < 33) 1 (if (op < 34) 5 2)) (if (op < 38) (if (op < 37) 3 (2 + chW j (i + 1))) (if (op < 39) 3 2))) (if (op < 49) (if (op < 47) (if (op < 43) 1 (chGOnbekend 0)) (if (op < 48) (if (chW j (i + 1) == 26) 3 2) (chGOnbekend 0))) (if (op < 51) (if (op < 50) 2 (chGLenAux j i (chW j (i + 1)))) (if (op < 52) 1 2))))))
 chGLenAux j !i !sub = if (sub < 0) (chGOnbekend 1) (if (sub > 33) (chGOnbekend 1) (if (sub < 8) (if (sub < 4) (if (sub < 2) (if (sub < 1) 3 2) (if (sub < 3) 3 4)) (if (sub < 6) (if (sub < 5) (3 + chW j (i + 2)) 3) (if (sub < 7) 4 2))) (if (sub < 24) (if (sub < 11) (if (sub < 9) 4 2) (if (sub < 12) 3 2)) (if (sub < 27) (if (sub < 25) 3 2) (if (sub < 28) 3 2)))))
 chGOnbekend !k = if (k == 0) (error "loadcode: onbekende opcode") (error "loadcode: onbekende subcode van _AUX")
 
