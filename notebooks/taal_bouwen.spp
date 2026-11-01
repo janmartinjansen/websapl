@@ -1,0 +1,391 @@
+//%% [markdown]
+// # Een eigen taal bouwen
+//
+// In dit notebook bouwen we een kleine programmeertaal, in vier stappen,
+// elk in een paar cellen: tekst in stukjes hakken (de lexer), de stukjes tot
+// een boom maken (de parser), de boom uitvoeren (een interpreter), en de boom
+// eerst vertalen naar Sapl-functies en die uitvoeren (een compiler). Alles
+// draait hier in de browser: deze cellen worden door de Sapl-compiler in de
+// pagina vertaald en door de VM in de pagina uitgevoerd.
+//
+// De taal heet Mini. Een programma is een reeks functies, gevolgd door één
+// expressie:
+//
+// ```
+// fun fib(n) = if n < 2 then n else fib(n - 1) + fib(n - 2); fib(22)
+// ```
+//
+// Mini kent gehele getallen, `+ - * / %`, `< <= ==`, `if then else`,
+// `let x = e in e` en functieaanroepen.
+//%% [markdown]
+// ## Het programma
+//
+// Pas de tekst aan: alle cellen hieronder rekenen dan opnieuw. Probeer ook
+// een fout, zoals een vergeten haakje (`fib(n - 1`), of een onbekende naam
+// in een tak die nooit draait:
+//
+// ```
+// fun f(x) = if x < 0 then y else x; f(2)
+// ```
+//
+// Bij die laatste geeft de interpreter gewoon 2, en meldt de compiler de fout
+// (zie stap 3 en 4).
+//%%
+import "lib/text.spp" as T
+import "lib/list.spp" as L
+
+::Programma = { !tekst : String }
+
+programma = Programma "fun fib(n) = if n < 2 then n else fib(n - 1) + fib(n - 2); fib(22)"
+//%%
+D.form programma
+//%% [markdown]
+// ## 1. De lexer
+//
+// De lexer loopt teken voor teken door de tekst en maakt er een lijst
+// tokens van: een getal, een naam of een leesteken. Spaties vallen weg.
+//%%
+::Tok = TGetal !n | TNaam !s | TTeken !s | TEinde
+
+lex s = lexVan s 0
+
+lexVan s !i = if (i >= T.length s) [TEinde] (lexTeken s i (T.at i s))
+
+lexTeken s !i c
+  | T.isSpace c = lexVan s (i + 1)
+  | T.isDigit c = lexGetal s i 0
+  | isLetter c = lexNaam s i (i + 1)
+  | twee s i = TTeken (T.slice i 2 s) : lexVan s (i + 2)
+  | otherwise = TTeken (T.slice i 1 s) : lexVan s (i + 1)
+
+isLetter c = ((c >= 'a') /\ (c <= 'z')) \/ ((c >= 'A') /\ (c <= 'Z'))
+
+// `<=` en `==` zijn één token.
+twee s !i = (i + 1 < T.length s) /\ (T.at (i + 1) s == '=') /\ ((T.at i s == '<') \/ (T.at i s == '='))
+
+lexGetal s !i !n
+  | (i < T.length s) /\ T.isDigit (T.at i s) = lexGetal s (i + 1) (n * 10 + (T.at i s - '0'))
+  | otherwise = TGetal n : lexVan s i
+
+lexNaam s !a !i
+  | (i < T.length s) /\ (isLetter (T.at i s) \/ T.isDigit (T.at i s)) = lexNaam s a (i + 1)
+  | otherwise = TNaam (T.slice a (i - a) s) : lexVan s i
+
+toonTok t = case t
+  (TGetal n -> T.showInt n)
+  (TNaam s -> s)
+  (TTeken s -> s)
+  (TEinde -> "het einde")
+//%%
+T.join "  " (L.map toonTok (lex (tekst programma)))
+//%% [markdown]
+// ## 2. De parser, met parsercombinators
+//
+// Een parser is hier een functie van een lijst tokens naar `Ok waarde rest`
+// (gelukt, met de tokens die over zijn) of `Fout melding`. Uit een paar
+// kleine parsers en een paar manieren om ze te combineren bouwen we de hele
+// grammatica:
+//
+// - `dan p f`: eerst `p`, en met de uitkomst daarvan verder met parser `f v`;
+// - `ofwel p q`: `p`, of als dat mislukt `q`;
+// - `veel p`, `gescheiden p s` en `links p op`: herhalen, met een
+//   scheidingsteken, en links-associatieve operatoren;
+// - `vast p`: een fout in `p` is definitief (`Vast melding`), `ofwel`
+//   probeert dan geen ander alternatief meer. Na `fun`, `if`, `let` of `(`
+//   weet de parser wat er moet komen; zo wijst de foutmelding naar de plek
+//   waar het misging, en niet naar het begin.
+//
+// Het resultaat is een boom (`Expr`) met de functies erbij (`Prog`).
+//%%
+::Res = Ok v rest | Fout melding | Vast melding
+
+terug v ts = Ok v ts
+
+dan p f ts = case (p ts) (Ok v rest -> f v rest) (Fout m -> Fout m) (Vast m -> Vast m)
+
+ofwel p q ts = case (p ts) (Ok v rest -> Ok v rest) (Fout m -> q ts) (Vast m -> Vast m)
+
+vast p ts = case (p ts) (Ok v rest -> Ok v rest) (Fout m -> Vast m) (Vast m -> Vast m)
+
+veel p = ofwel (dan p (\x -> dan (veel p) (\xs -> terug (x : xs)))) (terug [])
+
+gescheiden p s = ofwel (dan p (\x -> dan (veel (dan (teken s) (\k -> p))) (\xs -> terug (x : xs)))) (terug [])
+
+links p op = dan p (linksVerder p op)
+
+linksVerder p op x = ofwel (dan op (\f -> dan p (\y -> linksVerder p op (f x y)))) (terug x)
+
+verwacht wat ts = Fout (T.concat ["verwacht ", wat, ", maar zag ", toonTok (L.head ts)])
+
+teken s ts = case ts
+  (Cons t rest -> (case t (TTeken u -> if (u == s) (Ok s rest) (verwacht (T.concat ["'", s, "'"]) ts)) (_ -> verwacht (T.concat ["'", s, "'"]) ts)))
+  (Nil -> Fout "lege invoer")
+
+woord s ts = case ts
+  (Cons t rest -> (case t (TNaam u -> if (u == s) (Ok s rest) (verwacht s ts)) (_ -> verwacht s ts)))
+  (Nil -> Fout "lege invoer")
+
+sleutelwoorden = ["fun", "if", "then", "else", "let", "in"]
+
+naam ts = case ts
+  (Cons t rest -> (case t (TNaam u -> if (L.elem u sleutelwoorden) (verwacht "een naam" ts) (Ok u rest)) (_ -> verwacht "een naam" ts)))
+  (Nil -> Fout "lege invoer")
+
+getal ts = case ts
+  (Cons t rest -> (case t (TGetal n -> Ok n rest) (_ -> verwacht "een getal" ts)))
+  (Nil -> Fout "lege invoer")
+
+operator ops ts = case ts
+  (Cons t rest -> (case t (TTeken u -> if (L.elem u ops) (Ok (Bin u) rest) (verwacht "een operator" ts)) (_ -> verwacht "een operator" ts)))
+  (Nil -> Fout "lege invoer")
+//%%
+::Expr = Getal !n | Var !x | Bin !op a b | Als c a b | Laat !x e b | Roep !f args
+::Fun = Fun !naam params body
+::Prog = Prog funs body
+
+prog ts = dan (veel functie) (\fs -> dan expr (\e -> dan einde (\k -> terug (Prog fs e)))) ts
+
+einde ts = case ts
+  (Cons t rest -> (case t (TEinde -> Ok 0 rest) (_ -> verwacht "het einde" ts)))
+  (Nil -> Fout "lege invoer")
+
+functie ts =
+  dan (woord "fun") (\k -> vast (dan naam (\f -> dan (teken "(") (\k2 ->
+  dan (gescheiden naam ",") (\ps -> dan (teken ")") (\k3 -> dan (teken "=") (\k4 ->
+  dan expr (\e -> dan (teken ";") (\k5 -> terug (Fun f ps e)))))))))) ts
+
+expr ts = ofwel als (ofwel laat vergelijking) ts
+
+als ts = dan (woord "if") (\k -> vast (dan expr (\c -> dan (woord "then") (\k2 ->
+  dan expr (\a -> dan (woord "else") (\k3 -> dan expr (\b -> terug (Als c a b)))))))) ts
+
+laat ts = dan (woord "let") (\k -> vast (dan naam (\x -> dan (teken "=") (\k2 ->
+  dan expr (\e -> dan (woord "in") (\k3 -> dan expr (\b -> terug (Laat x e b)))))))) ts
+
+vergelijking ts = dan som (\a -> ofwel (dan (operator ["<", "<=", "=="]) (\f -> dan som (\b -> terug (f a b)))) (terug a)) ts
+
+som ts = links term (operator ["+", "-"]) ts
+
+term ts = links atoom (operator ["*", "/", "%"]) ts
+
+atoom ts = ofwel (dan getal (\n -> terug (Getal n))) (ofwel naamOfAanroep haakjes) ts
+
+naamOfAanroep ts = dan naam (\f -> ofwel (dan (teken "(") (\k -> vast (
+  dan (gescheiden expr ",") (\args -> dan (teken ")") (\k2 -> terug (Roep f args)))))) (terug (Var f))) ts
+
+haakjes ts = dan (teken "(") (\k -> vast (dan expr (\e -> dan (teken ")") (\k2 -> terug e)))) ts
+
+// De boom als tekst, met haakjes om elke operator.
+toonExpr e = case e
+  (Getal n -> T.showInt n)
+  (Var x -> x)
+  (Bin o a b -> T.concat ["(", toonExpr a, " ", o, " ", toonExpr b, ")"])
+  (Als c a b -> T.concat ["if ", toonExpr c, " then ", toonExpr a, " else ", toonExpr b])
+  (Laat x d b -> T.concat ["let ", x, " = ", toonExpr d, " in ", toonExpr b])
+  (Roep f args -> T.concat [f, "(", T.join ", " (L.map toonExpr args), ")"])
+
+toonFun f = case f (Fun n ps b -> T.concat ["fun ", n, "(", T.join ", " ps, ") = ", toonExpr b])
+
+toonProg p = case p (Prog fs e -> T.join "\n" (achter (L.map toonFun fs) (toonExpr e)))
+
+achter xs y = case xs (Nil -> [y]) (Cons x rest -> x : achter rest y)
+
+boom = prog (lex (tekst programma))
+
+// De boom gebruiken, of de foutmelding van de parser.
+metBoom f = case boom
+  (Ok p rest -> f p)
+  (Fout m -> T.concat ["fout: ", m])
+  (Vast m -> T.concat ["fout: ", m])
+//%%
+D.text (metBoom toonProg)
+//%% [markdown]
+// ## 3. Een interpreter
+//
+// De interpreter loopt over de boom. Variabelen staan in een lijst
+// `Bind naam waarde`, en worden bij elk gebruik op naam opgezocht; een
+// functie zoekt hij bij elke aanroep op naam op in de lijst functies. Zo
+// schrijf je een interpreter het snelst, maar hij doet bij elke stap werk dat
+// eigenlijk al vastligt voordat het programma begint.
+//%%
+::Bind = Bind !naam !waarde
+
+eval fs env e = case e
+  (Getal n -> n)
+  (Var x -> zoek x env)
+  (Bin o a b -> reken o (eval fs env a) (eval fs env b))
+  (Als c a b -> if (eval fs env c != 0) (eval fs env a) (eval fs env b))
+  (Laat x d b -> eval fs (Bind x (eval fs env d) : env) b)
+  (Roep f args -> roep fs (zoekFun f fs) (L.map (eval fs env) args))
+
+roep fs f vs = case f (Fun n ps b -> eval fs (L.zipWith Bind ps vs) b)
+
+zoek x env = case env
+  (Nil -> error (T.concat ["onbekende naam ", x]))
+  (Cons b rest -> case b (Bind y v -> if (x == y) v (zoek x rest)))
+
+zoekFun f fs = case fs
+  (Nil -> error (T.concat ["onbekende functie ", f]))
+  (Cons g rest -> case g (Fun n ps b -> if (f == n) g (zoekFun f rest)))
+
+reken o !a !b
+  | o == "+" = a + b
+  | o == "-" = a - b
+  | o == "*" = a * b
+  | o == "/" = a / b
+  | o == "%" = a % b
+  | o == "<" = if (a < b) 1 0
+  | o == "<=" = if (a <= b) 1 0
+  | otherwise = if (a == b) 1 0
+
+interpreteer p = case p (Prog fs e -> eval fs [] e)
+//%% [markdown]
+// ## 4. Een compiler naar Sapl-functies
+//
+// De compiler doet dat vaste werk één keer, vóór het programma draait:
+//
+// - een variabele wordt een plaats in de lijst argumenten (`#0`, `#1`, ...);
+// - een operator wordt de Sapl-functie die hem uitrekent;
+// - een functieaanroep wordt een plaats in de tabel van gecompileerde
+//   functies.
+//
+// Elke expressie wordt zo een Sapl-functie van de argumenten naar het
+// getal. Die functies zijn gewone (gedeeltelijk toegepaste) Sapl-functies,
+// die de VM direct uitvoert: er is geen boom meer om over te lopen. Een
+// onbekende naam is nu een fout bij het compileren, niet pas als die plek in
+// het programma uitgevoerd wordt.
+//
+// De cel hieronder laat zien wat de compiler van de namen maakt. Een `let`
+// zet zijn waarde vooraan in de lijst: daarna is `#0` de nieuwe variabele en
+// schuiven de andere een plaats op.
+//%%
+compileer p = case p (Prog fs e -> compileerMet fs e)
+
+compileerMet fs e =
+  let tabel = maakTabel fs tabel in
+  comp fs tabel [] e
+
+maakTabel fs tabel = L.map (compFun fs tabel) fs
+
+compFun fs tabel f = case f (Fun n ps b -> comp fs tabel ps b)
+
+comp fs tabel scope e = case e
+  (Getal n -> cGetal n)
+  (Var x -> maakVar (plaats x scope 0))
+  (Bin o a b -> maakBin (opFunctie o) (comp fs tabel scope a) (comp fs tabel scope b))
+  (Als c a b -> maakAls (comp fs tabel scope c) (comp fs tabel scope a) (comp fs tabel scope b))
+  (Laat x d b -> maakLaat (comp fs tabel scope d) (comp fs tabel (x : scope) b))
+  (Roep f args -> maakRoep tabel (funPlaats f fs 0) (L.map (comp fs tabel scope) args))
+
+// Sapl rekent lui: zonder de ! hieronder zou een tak die nooit draait ook
+// nooit gecompileerd worden, en een onbekende naam daarin niet gemeld.
+maakVar !k = cVar k
+maakBin f !a !b = cBin f a b
+maakAls !c !a !b = cAls c a b
+maakLaat !d !b = cLaat d b
+maakRoep tabel !k args = cRoep tabel k args
+
+plaats x scope !k = case scope
+  (Nil -> error (T.concat ["onbekende naam ", x]))
+  (Cons y rest -> if (x == y) k (plaats x rest (k + 1)))
+
+funPlaats f fs !k = case fs
+  (Nil -> error (T.concat ["onbekende functie ", f]))
+  (Cons g rest -> case g (Fun n ps b -> if (f == n) k (funPlaats f rest (k + 1))))
+
+opFunctie o
+  | o == "+" = plus
+  | o == "-" = minus
+  | o == "*" = maal
+  | o == "/" = deel
+  | o == "%" = modulo
+  | o == "<" = kleiner
+  | o == "<=" = hooguit
+  | otherwise = gelijk
+
+plus !a !b = a + b
+minus !a !b = a - b
+maal !a !b = a * b
+deel !a !b = a / b
+modulo !a !b = a % b
+kleiner !a !b = if (a < b) 1 0
+hooguit !a !b = if (a <= b) 1 0
+gelijk !a !b = if (a == b) 1 0
+
+// De gecompileerde stukken: elk krijgt als laatste argument de lijst
+// waarden van de variabelen.
+cGetal n env = n
+cVar !k env = op env k
+cBin f a b env = f (a env) (b env)
+cAls c a b env = if (c env != 0) (a env) (b env)
+cLaat d b env = b (d env : env)
+cRoep tabel !k args env = pas (op tabel k) (waarden args env)
+
+waarden args env = case args (Nil -> []) (Cons a rest -> a env : waarden rest env)
+
+pas f vs = f vs
+
+op xs !k = case xs (Cons x rest -> if (k == 0) x (op rest (k - 1))) (Nil -> error "te weinig argumenten")
+
+// Wat de compiler van de namen maakt: elke variabele als zijn plaats.
+toonPlaatsen fs scope e = case e
+  (Getal n -> T.showInt n)
+  (Var x -> T.concat ["#", T.showInt (plaats x scope 0)])
+  (Bin o a b -> T.concat ["(", toonPlaatsen fs scope a, " ", o, " ", toonPlaatsen fs scope b, ")"])
+  (Als c a b -> T.concat ["if ", toonPlaatsen fs scope c, " then ", toonPlaatsen fs scope a, " else ", toonPlaatsen fs scope b])
+  (Laat x d b -> T.concat ["let ", toonPlaatsen fs scope d, " in ", toonPlaatsen fs (x : scope) b])
+  (Roep f args -> T.concat ["f", T.showInt (funPlaats f fs 0), "(", T.join ", " (L.map (toonPlaatsen fs scope) args), ")"])
+
+toonGecompileerd p = case p (Prog fs e ->
+  T.join "\n" (achter (L.map (toonFunPlaatsen fs) fs) (toonPlaatsen fs [] e)))
+
+toonFunPlaatsen fs f = case f (Fun n ps b -> T.concat ["f", T.showInt (funPlaats n fs 0), " = ", toonPlaatsen fs ps b])
+//%%
+D.text (metBoom toonGecompileerd)
+//%% [markdown]
+// ## 5. Draaien en meten
+//
+// Klik in een cel om het programma uit te voeren: met de interpreter, met
+// de compiler, of als gewone Sapl (`fib` met de hand geschreven, als
+// vergelijking; die cel kijkt niet naar het programma hierboven). Onder elke
+// cel staat hoeveel milliseconden een klik gemiddeld kost. Klik een paar keer
+// in elke cel en vergelijk.
+//%%
+fibSapl !n = if (n < 2) n (fibSapl (n - 1) + fibSapl (n - 2))
+
+meetStap ev k = case ev (D.Click x y -> k + 1) (D.Key t -> k + 1) (_ -> k)
+
+meetBeeld naam route k
+  | k == 0 = D.text (T.concat [naam, ": klik om het programma te draaien."])
+  | otherwise = D.text (T.concat [naam, ": ", route, "  (", T.showInt k, " keer gedraaid)"])
+
+draai wat = metBoom (\p -> T.showInt (wat p))
+
+viaInterpreter k = meetBeeld "interpreter" (draai interpreteer) k
+
+viaCompiler k = meetBeeld "compiler" (draai voerUit) k
+
+voerUit p = compileer p []
+
+viaSapl k = meetBeeld "Sapl, fib 22" (T.showInt (fibSapl 22)) k
+//%%
+D.interactive 0 meetStap viaInterpreter
+//%%
+D.interactive 0 meetStap viaCompiler
+//%%
+D.interactive 0 meetStap viaSapl
+//%% [markdown]
+// ## Wat je hier ziet
+//
+// - **De hele keten draait in de pagina.** Elke cel hierboven is Sapl die de
+//   compiler in de browser vertaalt en typeert; de taal Mini is gewoon een
+//   paar definities daarin.
+// - **Parsercombinators zijn gewone functies.** `dan`, `ofwel` en `veel` zijn
+//   een paar regels; de grammatica van Mini staat er bijna letterlijk.
+// - **Compileren naar functies loont.** De compiler doet het opzoeken van
+//   namen één keer; de interpreter bij elke stap. Het verschil zie je onder de
+//   cellen van stap 5. De met de hand geschreven Sapl is nog sneller: daar
+//   is ook de lijst argumenten weg.
+// - **De volgende stap** is Mini naar Sapl-brontekst te vertalen en die door
+//   dezelfde compiler in de pagina te halen. Het taallab van WebSapl doet dat
+//   al (de JIT-route), maar nog niet vanuit een notebookcel.

@@ -156,6 +156,7 @@ const ENTRIES = [
   { src: "notebooks/formulieren.spp", dst: "notebooks/formulieren.spp" },
   { src: "notebooks/interactief.spp", dst: "notebooks/interactief.spp" },
   { src: "notebooks/lui_rekenen.spp", dst: "notebooks/lui_rekenen.spp" },
+  { src: "notebooks/taal_bouwen.spp", dst: "notebooks/taal_bouwen.spp" },
   { src: "notebooks/incidenten_gedeeld.spp", dst: "notebooks/incidenten_gedeeld.spp" },
   { src: "notebooks/rekenen_op_server.spp", dst: "notebooks/rekenen_op_server.spp" },
   { src: "notebooks/taxi_minimal.spp", dst: "notebooks/taxi_minimal.spp" },

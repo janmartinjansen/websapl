@@ -153,6 +153,32 @@ const cellsOf = (...srcs) => srcs.map((source) => ({ kind: "code", source }));
   m = await msg(priem.tok, NB.eventLine("key", "r"));
   check("lui_rekenen: r vraagt er weer 5, de 20 uitgerekende blijven", /^5 priemgetallen gevraagd, het grootste is 11\. Uitgerekend: 20 priemgetallen/.test(textOf(m.p)), textOf(m.p).slice(0, 200));
 
+  // == notebooks/taal_bouwen.spp: lexer, parser, interpreter en compiler =====
+  const taalSrc = fs.readFileSync(path.join(repo, "notebooks/taal_bouwen.spp"), "utf8");
+  const r6 = await run(NB.parseNotebook(taalSrc));
+  const taalTekst = Object.keys(r6.byCell).sort((a, b) => a - b).map((k) => r6.byCell[k]).map((c) => c && c.blocks ? c.blocks.filter((b) => b.kind !== "interactive" && b.kind !== "form").map((b) => b.content).join(" | ") : (c && c.error) || "");
+  check("taal_bouwen: geen fouten of typewaarschuwingen", !Object.keys(r6.p.defErrors || {}).length && !Object.keys(r6.p.typeWarnings).length, JSON.stringify(r6.p.defErrors) + JSON.stringify(r6.p.typeWarnings));
+  check("taal_bouwen: boom en plaatsen van fib", taalTekst.includes("fun fib(n) = if (n < 2) then n else (fib((n - 1)) + fib((n - 2)))\nfib(22)") && taalTekst.includes("f0 = if (#0 < 2) then #0 else (f0((#0 - 1)) + f0((#0 - 2)))\nf0(22)"), JSON.stringify(taalTekst));
+  const taalToks = Object.values(r6.byCell).map(tokOf).filter(Boolean);
+  m = await msg(taalToks[0].tok, NB.eventLine("click", "0", "0"));
+  const viaI = textOf(m.p);
+  m = await msg(taalToks[1].tok, NB.eventLine("click", "0", "0"));
+  const viaC = textOf(m.p);
+  m = await msg(taalToks[2].tok, NB.eventLine("click", "0", "0"));
+  check("taal_bouwen: interpreter, compiler en Sapl geven fib 22 = 17711", /^interpreter: 17711 /.test(viaI) && /^compiler: 17711 /.test(viaC) && /^Sapl, fib 22: 17711 /.test(textOf(m.p)), JSON.stringify([viaI, viaC, textOf(m.p)]));
+  // Een onbekende naam in een tak die niet draait: de interpreter merkt niets,
+  // de compiler meldt hem; een vergeten haakje geeft een fout op de goede plek.
+  const metProg = (t) => NB.parseNotebook(taalSrc.replace(/^programma = Programma ".*"$/m, `programma = Programma "${t}"`));
+  const r7 = await run(metProg("fun f(x) = if x < 0 then y else x; f(2)"));
+  const t7 = Object.values(r7.byCell).map(tokOf).filter(Boolean);
+  m = await msg(t7[0].tok, NB.eventLine("click", "0", "0"));
+  const i7 = textOf(m.p);
+  m = await msg(t7[1].tok, NB.eventLine("click", "0", "0"));
+  const c7 = Object.values(m.p.cells)[0];
+  check("taal_bouwen: onbekende naam alleen bij de compiler", /^interpreter: 2 /.test(i7) && c7 && /onbekende naam y/.test(c7.error || ""), JSON.stringify([i7, c7]));
+  const r8 = await run(metProg("fun fib(n) = fib(n - 1; fib(3)"));
+  check("taal_bouwen: vergeten haakje", Object.values(r8.byCell).some((c) => c && c.blocks && c.blocks.some((b) => b.content === "fout: verwacht ')', maar zag ;")), JSON.stringify(Object.values(r8.byCell)).slice(0, 400));
+
   // == Een trap (1 / 0 is in wasm geen vangbare fout): de sessie is weg ======
   const r4 = await run(teller);
   const i4 = tokOf(r4.byCell[2]);

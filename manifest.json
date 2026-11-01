@@ -1430,6 +1430,14 @@
           "isBinary": false
         },
         {
+          "name": "taal_bouwen.spp",
+          "path": "notebooks/taal_bouwen.spp",
+          "type": "file",
+          "ext": ".spp",
+          "size": 15121,
+          "isBinary": false
+        },
+        {
           "name": "taxi_minimal.spp",
           "path": "notebooks/taxi_minimal.spp",
           "type": "file",
@@ -2279,7 +2287,7 @@
               "path": "repl_sapl/build/mini_repl.jmvm",
               "type": "file",
               "ext": ".jmvm",
-              "size": 7344060,
+              "size": 7350355,
               "isBinary": false
             },
             {
@@ -2287,7 +2295,7 @@
               "path": "repl_sapl/build/mini_repl.jvb",
               "type": "file",
               "ext": ".jvb",
-              "size": 2737464,
+              "size": 2741616,
               "isBinary": true
             }
           ],
@@ -2306,7 +2314,7 @@
           "path": "sapl_compiler/ast_helpers.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 23911,
+          "size": 23971,
           "isBinary": false
         },
         {
@@ -2322,7 +2330,7 @@
           "path": "sapl_compiler/lexer2.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 13089,
+          "size": 13090,
           "isBinary": false
         },
         {
@@ -2346,7 +2354,7 @@
           "path": "sapl_compiler/stage5_codegen.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 76481,
+          "size": 76485,
           "isBinary": false
         }
       ],
@@ -2917,7 +2925,7 @@
       "path": "notebook.html",
       "type": "file",
       "ext": ".html",
-      "size": 78847,
+      "size": 78928,
       "isBinary": false
     },
     {
