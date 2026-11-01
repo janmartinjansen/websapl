@@ -1,0 +1,245 @@
+//%% [markdown]
+// # Lui rekenen zichtbaar maken
+//
+// Sapl rekent een waarde pas uit als die nodig is, en hooguit één keer.
+// Normaal zie je daar niets van: je krijgt de uitkomst, niet het werk.
+// Met `fieldIsValue x i` kun je het wel zien. Die kijkt of veld `i` van de
+// constructorwaarde `x` al een waarde is, of nog een uitgestelde
+// berekening, en rekent het veld er níet voor uit. Dit notebook gebruikt
+// dat om te laten zien welk deel van een lijst of tabel echt is
+// uitgerekend.
+//%% [markdown]
+// ## Een luie lijst
+//
+// De gewone lijst van Sapl heeft een strikte kop (`Cons !x xs`): een element
+// wordt uitgerekend zodra de lijstcel gemaakt wordt. Dat is sneller, maar
+// verbergt juist wat we willen zien. Daarom hier een eigen lijsttype `Lui`
+// zonder `!`: kop en staart blijven uitgesteld tot iemand ze nodig heeft.
+//
+// `toonLui` loopt alleen langs wat al bestaat: een `·` is een element dat nog
+// niet is uitgerekend, `…` een staart die nog niet bestaat.
+//%%
+import "lib/text.spp" as T
+import "lib/list.spp" as L
+
+::Lui = LNil | LCons kop staart
+
+vanaf n = LCons n (vanaf (n + 1))
+
+lmap f xs = case xs (LNil -> LNil) (LCons h t -> LCons (f h) (lmap f t))
+
+lfilter p xs = case xs
+  (LNil -> LNil)
+  (LCons h t -> if (p h) (LCons h (lfilter p t)) (lfilter p t))
+
+opIndex xs !k = case xs
+  (LCons h t -> if (k == 0) h (opIndex t (k - 1)))
+  (LNil -> error "opIndex: de lijst is te kort")
+
+// Wat er al is: de uitgerekende elementen, `·` voor de rest.
+toonLui xs = T.join " " (toonVan xs)
+
+toonVan xs = case xs
+  (LNil -> [])
+  (LCons h t -> Cons (if (fieldIsValue xs 0 == 1) (T.showInt (getField xs 0)) "·")
+                     (if (fieldIsValue xs 1 == 1) (toonVan t) ["…"]))
+
+// Element k als dat al is uitgerekend, anders -1. Rekent zelf niets uit.
+alUitgerekend xs !k =
+  if (k == 0) (if (fieldIsValue xs 0 == 1) (getField xs 0) (0 - 1))
+  (if (fieldIsValue xs 1 == 1) (alUitgerekend (getField xs 1) (k - 1)) (0 - 1))
+
+// Hoeveel lijstcellen er al bestaan.
+alGemaakt xs = if (fieldIsValue xs 1 == 1) (1 + alGemaakt (getField xs 1)) 1
+
+kwadraten =: lmap (\x -> x * x) (vanaf 0)
+//%% [markdown]
+// `kwadraten` is oneindig: de kwadraten van 0, 1, 2, enzovoort. Er bestaat
+// nog alleen de eerste cel.
+//%%
+toonLui kwadraten
+//%% [markdown]
+// Vraag twee elementen op.
+//%%
+opIndex kwadraten 5 + opIndex kwadraten 2
+//%% [markdown]
+// Om bij element 5 te komen zijn de eerste zes lijstcellen gemaakt, maar
+// alleen de elementen 2 en 5 zijn uitgerekend. Die blijven bewaard: een
+// volgende keer `opIndex kwadraten 5` kost niets meer.
+//%%
+toonLui kwadraten
+//%% [markdown]
+// Met **waarden bewaren** aan (bovenin, standaard aan) gaat dat zelfs over
+// sessies heen: herlaad de pagina en voer alles opnieuw uit, dan staat
+// `kwadraten` er al zoals hij was, en de cellen hierboven tonen meteen
+// `· · 4 · · 25 …`. Het notebook bewaart de waarde half uitgerekend: wat nog
+// uitgesteld was, blijft uitgesteld. Zet het vinkje uit om bij elke run
+// opnieuw te beginnen.
+//%% [markdown]
+// ## De editafstand, met een luie tabel
+//
+// Hoeveel letters moet je weglaten, toevoegen of vervangen om het ene woord
+// in het andere te veranderen? Vak `(i, j)` van de tabel is de afstand
+// tussen de eerste `i` letters van `van` en de eerste `j` van `naar`. Elk
+// vak rekent met zijn buren boven en links, en het antwoord staat
+// rechtsonder.
+//
+// Gewoonlijk vul je de hele tabel, rij voor rij. Hier is `tabel` een luie
+// tabel waarvan elk vak naar de tabel zelf verwijst, en vraagt de laatste
+// cel alleen het vak rechtsonder op. Zijn twee letters gelijk, dan is het
+// vak gelijk aan zijn buur linksboven en zijn de andere twee buren niet
+// nodig. Bij woorden die op elkaar lijken blijft zo een groot deel van de
+// tabel leeg.
+//
+// In het plaatje is een groen vak uitgerekend, een blauw vak ook, en daar
+// zijn de letters gelijk. Een grijs vakje is nooit nodig geweest. Probeer
+// ook `notebook` en `notebooks`, of twee woorden die niets gemeen hebben.
+//%%
+::Woorden = { !van : String, !naar : String }
+
+woorden = Woorden "evaluatie" "evolutie"
+//%%
+D.form woorden
+//%%
+n =: T.length (van woorden)
+m =: T.length (naar woorden)
+
+tabel =: rijen 0
+
+rijen i = if (i > n) LNil (LCons (kolommen i 0) (rijen (i + 1)))
+
+kolommen i j = if (j > m) LNil (LCons (afstand i j) (kolommen i (j + 1)))
+
+d i j = opIndex (opIndex tabel i) j
+
+gelijk i j = T.at (i - 1) (van woorden) == T.at (j - 1) (naar woorden)
+
+afstand i j =
+  if (i == 0) j
+  (if (j == 0) i
+  (if (gelijk i j) (d (i - 1) (j - 1))
+  (1 + min3 (d (i - 1) j) (d i (j - 1)) (d (i - 1) (j - 1)))))
+
+min3 a b c = if (a < b) (if (a < c) a c) (if (b < c) b c)
+
+// Vak (i, j) van tabel t als het al is uitgerekend, anders -1; rekent zelf
+// niets uit.
+vak t i j = vakIn (rij t i) j
+
+rij xs !i = if (i == 0) (if (fieldIsValue xs 0 == 1) (getField xs 0) LNil)
+  (if (fieldIsValue xs 1 == 1) (rij (getField xs 1) (i - 1)) LNil)
+
+vakIn r !j = case r (LNil -> 0 - 1) (LCons h t -> alUitgerekend r j)
+
+// Het plaatje: de letters van `naar` bovenaan, die van `van` links.
+grootte =: 1.8 / itof (if (n > m) (n + 2) (m + 2))
+
+kolX j = 0.0 - 0.9 + (itof j + 1.5) * grootte
+rijY i = 0.9 - (itof i + 1.5) * grootte
+
+tekst c x y s = G.GraphText c (G.Pt (x - 0.02 * itof (T.length s)) (y - 0.025)) s
+
+letter s k = T.fromChar (T.at k s)
+
+tabelBeeld t =
+  L.concat [
+    [ tekst 7 (kolX j) (rijY (0 - 1)) (letter (naar woorden) (j - 1)) | j <- L.range 1 m ],
+    [ tekst 7 (kolX (0 - 1)) (rijY i) (letter (van woorden) (i - 1)) | i <- L.range 1 n ],
+    L.concat [ vakTekening i j (vak t i j) | i <- L.range 0 n, j <- L.range 0 m ]]
+
+vakTekening i j v =
+  let x = kolX j, y = rijY i, r = grootte * 0.42, s = grootte * 0.12 in
+  if (v < 0)
+    [G.GraphRectangle 8 (G.Pt (x - s) (y - s)) (G.Pt (x + s) (y + s))]
+    [G.GraphDisc (vakKleur i j) (G.Pt (x - r) (y - r)) (G.Pt (x + r) (y + r)),
+     tekst 0 x y (T.showInt v)]
+
+vakKleur i j =
+  if ((i == n) /\ (j == m)) 14
+  (if ((i > 0) /\ (j > 0) /\ gelijk i j) 11 10)
+
+aantalUitgerekend t = L.length [ 1 | i <- L.range 0 n, j <- L.range 0 m, vak t i j >= 0 ]
+
+// Eerst het antwoord (de strikte parameter), dan pas kijken wat er gebeurd is.
+toonAfstand !a =
+  D.column [
+    D.text (T.concat ["afstand ", T.showInt a, ": ", T.showInt (aantalUitgerekend tabel),
+                      " van de ", T.showInt ((n + 1) * (m + 1)), " vakken uitgerekend"]),
+    D.picture (tabelBeeld tabel)]
+//%%
+toonAfstand (d n m)
+//%% [markdown]
+// ## Priemgetallen uit een oneindige lijst
+//
+// `priemen` is de oneindige lijst van alle priemgetallen. Om te kijken of
+// `k` priem is, deelt `isPriem` door de priemgetallen tot de wortel van `k`,
+// en die haalt hij uit `priemen` zelf. De lijst rekent dus met zijn eigen
+// begin.
+//
+// Een klik in de uitvoer (of een toets) vraagt vijf priemgetallen meer op.
+// In het plaatje is groen een gevonden priemgetal en grijs een getal dat
+// bekeken en afgewezen is. Een omlijnd getal is nog niet bekeken. De toets
+// `r` vraagt er weer vijf: het plaatje blijft vol, want wat eenmaal is
+// uitgerekend, blijft bewaard.
+//%%
+kandidaten =: vanaf 3
+
+priemen =: LCons 2 (lfilter isPriem kandidaten)
+
+isPriem k = geenDeler k priemen
+
+geenDeler k ps = case ps
+  (LCons p rest -> if (p * p > k) True (if (k % p == 0) False (geenDeler k rest)))
+  (LNil -> True)
+
+kol = 12
+rijenP = 12
+laatste =: 1 + kol * rijenP
+
+// De kandidaten zijn 3, 4, 5, ...: cel c van die lijst is het getal c + 3.
+bekekenTot ks = 2 + alGemaakt ks
+
+gevonden xs = if (fieldIsValue xs 0 == 0) []
+  (Cons (getField xs 0) (if (fieldIsValue xs 1 == 1) (gevonden (getField xs 1)) []))
+
+getalBeeld ps b k =
+  let i = (k - 2) / kol, j = (k - 2) % kol,
+      x = 0.0 - 0.9 + (itof j + 0.5) * 0.15, y = 0.9 - (itof i + 0.5) * 0.15,
+      rx = 0.068, ry = 0.068 in
+  if (L.elem k ps)
+    [G.GraphDisc 10 (G.Pt (x - rx) (y - ry)) (G.Pt (x + rx) (y + ry)), tekst 0 x y (T.showInt k)]
+  (if (k <= b)
+    [G.GraphDisc 8 (G.Pt (x - rx) (y - ry)) (G.Pt (x + rx) (y + ry)), tekst 7 x y (T.showInt k)]
+    [G.GraphRectangle 8 (G.Pt (x - rx) (y - ry)) (G.Pt (x + rx) (y + ry)), tekst 8 x y (T.showInt k)])
+
+priemStap ev aantal = case ev
+  (D.Click x y -> aantal + 5)
+  (D.Key k -> if (strEqual k "r") 5 (aantal + 5))
+  (_ -> aantal)
+
+// Eerst de gevraagde priemgetallen uitrekenen, dan kijken.
+priemBeeld aantal = toonPriemen aantal (opIndex priemen (aantal - 1))
+
+toonPriemen aantal !p =
+  let ps = gevonden priemen, b = bekekenTot kandidaten in
+  D.column [
+    D.text (T.concat [T.showInt aantal, " priemgetallen gevraagd, het grootste is ", T.showInt p,
+                      ". Uitgerekend: ", T.showInt (L.length ps), " priemgetallen, ",
+                      T.showInt (b - 1), " getallen bekeken."]),
+    D.picture (L.concatMap (getalBeeld ps b) (L.range 2 laatste))]
+//%%
+D.interactive 5 priemStap priemBeeld
+//%% [markdown]
+// ## Wat je hier ziet
+//
+// - **Uitgesteld:** een waarde is eerst een uitgestelde berekening. Pas als
+//   iets haar nodig heeft (een `case`, een rekenbewerking, het tonen) wordt
+//   ze uitgerekend.
+// - **Hooguit één keer:** daarna wordt de uitgestelde berekening vervangen
+//   door haar waarde. Iedereen die naar dezelfde cel wijst, ziet die meteen.
+//   Daardoor is de luie tabel dynamisch programmeren zonder dat je zelf een
+//   tabel bijhoudt, en kan `priemen` met zijn eigen begin rekenen.
+// - **Zonder iets uit te rekenen kijken:** `fieldIsValue` is een van de
+//   reflectieprimitieven van de VM (zie `docs/sapl_programmeer_regels.md`).
+//   Hetzelfde mechanisme laat de REPL `<fn:plus 1/1>` tonen zonder een
+//   argument te forceren.

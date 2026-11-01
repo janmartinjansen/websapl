@@ -1178,7 +1178,7 @@
           "path": "lib/codehash.spp",
           "type": "file",
           "ext": ".spp",
-          "size": 20349,
+          "size": 20464,
           "isBinary": false
         },
         {
@@ -1411,6 +1411,14 @@
           "type": "file",
           "ext": ".spp",
           "size": 2665,
+          "isBinary": false
+        },
+        {
+          "name": "lui_rekenen.spp",
+          "path": "notebooks/lui_rekenen.spp",
+          "type": "file",
+          "ext": ".spp",
+          "size": 9574,
           "isBinary": false
         },
         {
@@ -2271,7 +2279,7 @@
               "path": "repl_sapl/build/mini_repl.jmvm",
               "type": "file",
               "ext": ".jmvm",
-              "size": 7346960,
+              "size": 7344060,
               "isBinary": false
             },
             {
@@ -2279,7 +2287,7 @@
               "path": "repl_sapl/build/mini_repl.jvb",
               "type": "file",
               "ext": ".jvb",
-              "size": 2738528,
+              "size": 2737464,
               "isBinary": true
             }
           ],
@@ -2794,7 +2802,7 @@
           "path": "topdemo/presentatie.spp",
           "type": "file",
           "ext": ".spp",
-          "size": 24170,
+          "size": 40298,
           "isBinary": false
         }
       ],
@@ -2909,7 +2917,7 @@
       "path": "notebook.html",
       "type": "file",
       "ext": ".html",
-      "size": 78766,
+      "size": 78847,
       "isBinary": false
     },
     {

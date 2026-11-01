@@ -140,6 +140,19 @@ const cellsOf = (...srcs) => srcs.map((source) => ({ kind: "code", source }));
   m = await msg(hilb.tok, NB.eventLine("input", "soort", "Peano"));
   check("peano: begrensd tot niveau 3 (729 punten), begint bij 1 / 728", /Peano \(niveau 3\): 1 \/ 728 lijnstukken/.test(textOf(m.p)) && /GraphPolyLine 13 /.test(textOf(m.p)), textOf(m.p));
 
+  // == notebooks/lui_rekenen.spp: fieldIsValue laat zien wat er al is ======
+  const lui = NB.parseNotebook(fs.readFileSync(path.join(repo, "notebooks/lui_rekenen.spp"), "utf8"));
+  const r5 = await run(lui);
+  const luiTekst = Object.keys(r5.byCell).sort((a, b) => a - b).map((k) => r5.byCell[k]).map((c) => c && c.blocks ? c.blocks.filter((b) => b.kind !== "interactive" && b.kind !== "graphics").map((b) => b.content).join(" | ") : (c && c.error) || "");
+  check("lui_rekenen: geen fouten of typewaarschuwingen", !Object.keys(r5.p.defErrors || {}).length && !Object.keys(r5.p.typeWarnings).length, JSON.stringify(r5.p.defErrors) + JSON.stringify(r5.p.typeWarnings));
+  check("lui_rekenen: kwadraten eerst ·, daarna alleen element 2 en 5", luiTekst[0] === "· …" && luiTekst[1] === "29" && luiTekst[2] === "· · 4 · · 25 …", JSON.stringify(luiTekst.slice(0, 3)));
+  check("lui_rekenen: editafstand evaluatie/evolutie 2, 36 van de 90 vakken", luiTekst.some((t) => t === "afstand 2: 36 van de 90 vakken uitgerekend"), JSON.stringify(luiTekst));
+  const priem = Object.values(r5.byCell).map(tokOf).filter(Boolean)[0];
+  for (let i = 0; i < 3; i++) m = await msg(priem.tok, NB.eventLine("click", "0", "0"));
+  check("lui_rekenen: na drie klikken 20 priemgetallen, het grootste 71", /^20 priemgetallen gevraagd, het grootste is 71\. Uitgerekend: 20 priemgetallen, 70 getallen bekeken\./.test(textOf(m.p)) && (textOf(m.p).match(/GraphDisc 10 /g) || []).length === 20, textOf(m.p).slice(0, 200));
+  m = await msg(priem.tok, NB.eventLine("key", "r"));
+  check("lui_rekenen: r vraagt er weer 5, de 20 uitgerekende blijven", /^5 priemgetallen gevraagd, het grootste is 11\. Uitgerekend: 20 priemgetallen/.test(textOf(m.p)), textOf(m.p).slice(0, 200));
+
   // == Een trap (1 / 0 is in wasm geen vangbare fout): de sessie is weg ======
   const r4 = await run(teller);
   const i4 = tokOf(r4.byCell[2]);
