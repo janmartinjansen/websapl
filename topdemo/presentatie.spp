@@ -126,6 +126,8 @@ D.table ["proef", "uitkomst", "besluit"]
     ["REPL in Sapl i.p.v. repl-host", "25,7 naar 5,8 ms per regel", "de REPL"],
     ["ongebruikte instructies weg", "native ±0, Chrome fib +21%", "alleen een tag"],
     ["ABC-interpreter: globals naar locals", "34% minder tijd in Chrome", "voorstel aan TOP"],
+    ["superinstructies uit een voorstel (zes)", "3,5% buiten sprimes; plafond ~10%", "zoeken naar werk, niet naar dispatch"],
+    ["eval_local, gevonden door patronen te tellen", "primes −41%, sort −27%", "standaard, met de zes"],
     ["typewaarschuwingen: twee verse agents, aan en uit", "allebei 5 van 5 goed", "waarschuwingen, geen strenge modus"] ]
 //%% [markdown]
 // ## Drie maanden in commits
@@ -182,7 +184,8 @@ D.table ["datum", "mijlpaal"]
     ["23 okt", "waarden (ook functies) bewaren over sessies heen"],
     ["24 okt", "musttail-dispatch: native 5-54% sneller"],
     ["28-29 okt", "ABC-backend voor gen1 (proef); de ABC-interpreter in wasm gemeten"],
-    ["31 okt", "ABC uit de retag-vorm op 1,07× van Clean's eigen ABC"] ]
+    ["31 okt", "ABC uit de retag-vorm op 1,07× van Clean's eigen ABC"],
+    ["1 nov", "zeven superinstructies: native −15%, Chrome −13%, Safari −14%"] ]
 //%% [markdown]
 // ## Functionele talen zijn gemaakt voor notebooks
 //
@@ -508,28 +511,102 @@ nfib n = if (n < 2) 1 (nfib (n - 1) + nfib (n - 2) + 1)
 nfib 30
 //%% [markdown]
 // Voer de cel opnieuw uit (**C**, dan Shift+Enter in de cel): de tijd staat
-// rechtsonder. De JMVM op een Apple M4, Chrome 156 warm, in ms (stand 28
-// oktober; alleen V8 gemeten):
+// rechtsonder. De JMVM met superinstructies op een Apple M4, warm, in ms
+// (stand 1 november; Chrome 156 en Safari 26.6):
 //%%
-::Wasmmeting = { !wNaam : Str, !wNative : Int, !wSwitch : Int, !wMusttail : Int }
+::Wasmmeting = { !wNaam : Str, !wNative : Int, !wChrome : Int, !wSafari : Int }
 
 wasmMetingen =:
-  [ Wasmmeting "fib" 243 655 996, Wasmmeting "primes" 364 466 722,
-    Wasmmeting "queens" 197 283 473, Wasmmeting "twice" 606 1025 1406,
-    Wasmmeting "knights" 100 133 176, Wasmmeting "match" 283 425 809,
-    Wasmmeting "sprimes" 1406 1553 1548, Wasmmeting "eval" 477 650 914,
-    Wasmmeting "eval2" 531 747 1250, Wasmmeting "hamming" 576 821 1358,
-    Wasmmeting "sort" 420 556 1040, Wasmmeting "parsetest" 728 943 1241,
-    Wasmmeting "prolog" 296 377 554 ]
+  [ Wasmmeting "fib" 244 609 558, Wasmmeting "primes" 225 337 332,
+    Wasmmeting "queens" 185 253 250, Wasmmeting "twice" 500 772 737,
+    Wasmmeting "knights" 96 123 121, Wasmmeting "match" 256 380 366,
+    Wasmmeting "sprimes" 806 955 951, Wasmmeting "eval" 451 604 589,
+    Wasmmeting "eval2" 495 664 644, Wasmmeting "hamming" 481 724 709,
+    Wasmmeting "sort" 301 455 455, Wasmmeting "parsetest" 695 859 839,
+    Wasmmeting "prolog" 285 348 342 ]
 
 factor a b = itof b / itof a
 //%%
-D.table ["benchmark", "native (musttail)", "Chrome (switch)", "factor", "Chrome (musttail)", "factor"]
-  (L.map (\m -> [wNaam m, T.showInt (wNative m), T.showInt (wSwitch m), fx 2 (factor (wNative m) (wSwitch m)),
-                 T.showInt (wMusttail m), fx 2 (factor (wNative m) (wMusttail m))]) wasmMetingen)
+D.table ["benchmark", "native", "Chrome", "factor", "Safari", "factor"]
+  (L.map (\m -> [wNaam m, T.showInt (wNative m), T.showInt (wChrome m), fx 2 (factor (wNative m) (wChrome m)),
+                 T.showInt (wSafari m), fx 2 (factor (wNative m) (wSafari m))]) wasmMetingen)
 //%% [markdown]
-// Mediaan 1,36× van native. Alleen `fib` (veel aanroepen, weinig
-// allocatie) blijft ver achter (2,7×); `sprimes` (vooral GC) is overal 1,1×.
+// Gemiddeld (geometrisch) kost de browser 1,44× in Chrome en 1,40× in
+// Safari. Alleen `fib` (veel aanroepen, weinig allocatie) blijft ver achter
+// (2,3-2,5×); `sprimes` (vooral GC) is overal 1,2×.
+//%% [markdown]
+// ## Superinstructies (1 november)
+//
+// `makeCode` voegt bij het laden zeven vaste patronen samen tot één
+// instructie. De bytecode, gen1 en het `.jvb`-formaat blijven gelijk.
+//
+// - **Zes uit een voorstel** (o.a. `load k; jmpt` en `load a; load b`):
+//   21-24% minder VM-instructies, maar buiten `sprimes` maar 3,5% sneller.
+//   Een dispatch kost met musttail weinig; zuiver samenvoegen haalt hooguit
+//   ~10%.
+// - **De zevende vonden we door te tellen:** `load a; eval; store a`, een
+//   strikt argument dat lui binnenkwam. Is `a` al uitgerekend, dan vallen
+//   alle drie weg. Alleen al `primes` −29%, `sort` −22%.
+// - **Samen:** geen enkel programma trager, alle uitvoer gelijk, gen1
+//   vertaalt zichzelf nog byte voor byte. `JMVM_FUSE=uit` zet ze uit.
+//%%
+::Supermeting = { !sNaam : Str, !sNative : Float, !sChrome : Float, !sSafari : Float }
+
+superMetingen =:
+  [ Supermeting "fib" 0.4 1.1 0.7, Supermeting "primes" 41.2 24.3 30.4,
+    Supermeting "queens" 7.0 7.3 12.3, Supermeting "twice" 18.5 22.4 21.8,
+    Supermeting "knights" 5.2 4.7 3.2, Supermeting "match" 7.9 8.7 7.3,
+    Supermeting "sprimes" 42.8 37.2 37.6, Supermeting "eval" 5.9 3.7 5.2,
+    Supermeting "eval2" 8.3 11.0 9.4, Supermeting "hamming" 16.4 10.8 11.0,
+    Supermeting "sort" 26.8 16.2 18.6, Supermeting "parsetest" 5.4 7.4 7.5,
+    Supermeting "prolog" 4.0 4.9 5.3 ]
+
+// winst in procenten, getoond als −x%
+pct x = T.append "−" (T.append (fx 1 x) "%")
+//%% [markdown]
+// ## Superinstructies, per benchmark
+//
+// Tijdwinst tegen dezelfde VM zonder superinstructies (de snelste van 5-7
+// rondes, warm in de browser):
+//%%
+D.table ["benchmark", "native (M4)", "Chrome", "Safari"]
+  (L.append
+    (L.map (\m -> [sNaam m, pct (sNative m), pct (sChrome m), pct (sSafari m)]) superMetingen)
+    [["gemiddeld", "−15,0%", "−12,9%", "−13,8%"], ["zonder sprimes", "−12,0%", "−10,5%", "−11,5%"]])
+//%% [markdown]
+// Native ook gen1, die zichzelf vertaalt: 748 → 719 ms (−3,8%). Opgeteld
+// over de 13 benchmarks: native 6,3 → 5,0 s, Chrome 8,4 → 7,1 s, Safari
+// 8,3 → 6,9 s.
+//%% [markdown]
+// ## De JMVM tegenover GHC `-O2`
+//
+// Dezelfde 12 benchmarks als 1-op-1-port in Haskell (GHC 9.14.1, `-O2`
+// zonder let-floating en CSE, zodat GHC niet vaker deelt dan Sapl), Apple
+// M4, in ms. Hoeveel trager is de JMVM, een pure interpreter?
+//%%
+::Ghcmeting = { !gNaam : Str, !gGhc : Int, !gOud : Int, !gNu : Int }
+
+ghcMetingen =:
+  [ Ghcmeting "primes" 94 383 225, Ghcmeting "fib" 100 245 244,
+    Ghcmeting "sort" 121 411 301, Ghcmeting "knights" 33 101 96,
+    Ghcmeting "parsetest" 180 735 695, Ghcmeting "hamming" 109 575 481,
+    Ghcmeting "sprimes" 167 1410 806, Ghcmeting "queens" 34 199 185,
+    Ghcmeting "match" 44 278 256, Ghcmeting "eval" 75 479 451,
+    Ghcmeting "prolog" 34 297 285, Ghcmeting "twice" 19 613 500 ]
+//%%
+D.table ["benchmark", "GHC", "JMVM voor", "factor", "JMVM nu", "factor"]
+  (L.append
+    (L.map (\m -> [gNaam m, T.showInt (gGhc m), T.showInt (gOud m), fx 1 (factor (gGhc m) (gOud m)),
+                   T.showInt (gNu m), fx 1 (factor (gGhc m) (gNu m))]) ghcMetingen)
+    [["totaal", "1010", "5726", "5,7", "4524", "4,5"]])
+//%% [markdown]
+// - De JMVM zit nu op **2,4× tot 8,4×** van GHC (totaal 4,5×, zonder
+//   `twice` 4,1×; was 5,7× en 5,2×). Bij `twice` (26×) deelt GHC ook
+//   zonder let-floating nog veel meer.
+// - **gen1 vertaalt zichzelf** in 0,72 s; dezelfde compiler, automatisch
+//   naar Haskell vertaald en met GHC `-O2` gebouwd, doet 0,33 s: **2,2×**.
+// - GHC gemeten op 24 oktober, de JMVM op 1 november zonder ("voor") en
+//   met ("nu") superinstructies, dezelfde machine.
 //%% [markdown]
 // ## De ABC-interpreter in de browser
 //
@@ -537,16 +614,19 @@ D.table ["benchmark", "native (musttail)", "Chrome (switch)", "factor", "Chrome 
 // retag-vorm), alleen een andere achterkant. Apple M4, Chrome 156, warm, in
 // seconden. *Stand 29 oktober · alleen V8 gemeten, Safari/iPad niet.*
 //%%
-::Abcmeting = { !aNaam : Str, !aJmvm : Float, !aAbc : Float, !aLocals : Float }
+::Abcmeting = { !aNaam : Str, !aJmvm : Float, !aAbc : Float, !aLocals : Float, !aNu : Float }
 
 abcMetingen =:
-  [ Abcmeting "fib" 0.641 2.243 1.737, Abcmeting "primes" 0.459 0.629 0.421,
-    Abcmeting "queens" 0.284 0.543 0.292, Abcmeting "sort" 0.554 0.773 0.524,
-    Abcmeting "knights" 0.133 0.191 0.115, Abcmeting "hamming" 0.820 0.965 0.634,
-    Abcmeting "match" 0.424 0.632 0.426, Abcmeting "twice" 1.025 1.032 0.735,
-    Abcmeting "eval" 0.656 0.856 0.555, Abcmeting "sprimes" 1.567 1.205 0.843,
-    Abcmeting "parsetest" 0.948 0.884 0.629, Abcmeting "prolog" 0.377 0.431 0.290,
-    Abcmeting "eval2" 0.750 1.762 1.017, Abcmeting "gen1" 1.059 1.216 0.814 ]
+  [ Abcmeting "fib" 0.641 2.243 1.737 0.609, Abcmeting "primes" 0.459 0.629 0.421 0.337,
+    Abcmeting "queens" 0.284 0.543 0.292 0.253, Abcmeting "sort" 0.554 0.773 0.524 0.455,
+    Abcmeting "knights" 0.133 0.191 0.115 0.123, Abcmeting "hamming" 0.820 0.965 0.634 0.724,
+    Abcmeting "match" 0.424 0.632 0.426 0.380, Abcmeting "twice" 1.025 1.032 0.735 0.772,
+    Abcmeting "eval" 0.656 0.856 0.555 0.604, Abcmeting "sprimes" 1.567 1.205 0.843 0.955,
+    Abcmeting "parsetest" 0.948 0.884 0.629 0.859, Abcmeting "prolog" 0.377 0.431 0.290 0.348,
+    Abcmeting "eval2" 0.750 1.762 1.017 0.664, Abcmeting "gen1" 1.059 1.216 0.814 0.0 ]
+
+// een cel zonder meting (0.0): een streep
+nuOf x tekst = if (x > 0.0) tekst "–"
 //%% [markdown]
 // - **Zoals uitgeleverd** is de ABC-interpreter in Chrome gemiddeld 1,38×
 //   trager dan de JMVM, terwijl hij native op de M4 *sneller* is (0,74×).
@@ -556,17 +636,22 @@ abcMetingen =:
 //   op de `.wasm`, verder niets veranderd): 34% minder tijd, en dan is de
 //   ABC-interpreter 0,91× van de JMVM (gen1 0,76×). Op Clean's eigen
 //   getypeerde bytecode (`clm`) ook 35%.
+// - **Met de superinstructies** (1 november) is de JMVM in Chrome 13%
+//   sneller: de ABC-interpreter met locals is dan 1,09× van de JMVM (13
+//   benchmarks, zonder gen1; was 0,93×).
 // - Niet getoetst: iTasks' samenwerking tussen native code en de
-//   interpreter, en Safari/iPad.
+//   interpreter, en de ABC-interpreter in Safari/iPad.
 //%% [markdown]
 // ## De ABC-interpreter in de browser, per benchmark
 //
 // Apple M4, Chrome 156, warm, in seconden; ABC met `abcopt`. Onder 1: de
-// ABC-interpreter is sneller.
+// ABC-interpreter is sneller. "JMVM nu": met de superinstructies (1
+// november); gen1 is in Chrome niet opnieuw gemeten.
 //%%
-D.table ["benchmark", "JMVM", "ABC", "ABC / JMVM", "ABC met locals", "ABC / JMVM"]
+D.table ["benchmark", "JMVM", "ABC", "ABC / JMVM", "ABC met locals", "ABC / JMVM", "JMVM nu", "locals / JMVM nu"]
   (L.map (\m -> [aNaam m, fx 3 (aJmvm m), fx 3 (aAbc m), fx 2 (aAbc m / aJmvm m),
-                 fx 3 (aLocals m), fx 2 (aLocals m / aJmvm m)]) abcMetingen)
+                 fx 3 (aLocals m), fx 2 (aLocals m / aJmvm m),
+                 nuOf (aNu m) (fx 3 (aNu m)), nuOf (aNu m) (fx 2 (aLocals m / aNu m))]) abcMetingen)
 //%% [markdown]
 // ## Hoeveel kost de browser?
 //
@@ -609,22 +694,28 @@ D.table ["stap (31 oktober)", "alle 13", "zonder gen1"]
 //
 // Native, Apple M4, in seconden, de snelste van 9. Clean: de getypeerde
 // ports, `clm -bytecode`. gen1 is in Clean een ongetypeerde vertaling.
+// "JMVM nu": met de superinstructies (1 november, de snelste van 5).
 //%%
-::Cleanmeting = { !cNaam : Str, !cJmvm : Float, !cRetag : Float, !cClean : Float }
+::Cleanmeting = { !cNaam : Str, !cJmvm : Float, !cRetag : Float, !cClean : Float, !cNu : Float }
 
 cleanMetingen =:
-  [ Cleanmeting "fib" 0.248 0.357 0.353, Cleanmeting "primes" 0.369 0.233 0.220,
-    Cleanmeting "queens" 0.197 0.148 0.134, Cleanmeting "sort" 0.422 0.268 0.212,
-    Cleanmeting "knights" 0.100 0.047 0.043, Cleanmeting "hamming" 0.563 0.305 0.328,
-    Cleanmeting "match" 0.282 0.227 0.156, Cleanmeting "twice" 0.619 0.531 0.371,
-    Cleanmeting "eval" 0.475 0.281 0.123, Cleanmeting "sprimes" 1.402 0.394 0.422,
-    Cleanmeting "parsetest" 0.727 0.374 0.474, Cleanmeting "prolog" 0.293 0.152 0.155,
-    Cleanmeting "gen1" 0.747 0.372 0.824 ]
+  [ Cleanmeting "fib" 0.248 0.357 0.353 0.244, Cleanmeting "primes" 0.369 0.233 0.220 0.225,
+    Cleanmeting "queens" 0.197 0.148 0.134 0.185, Cleanmeting "sort" 0.422 0.268 0.212 0.301,
+    Cleanmeting "knights" 0.100 0.047 0.043 0.096, Cleanmeting "hamming" 0.563 0.305 0.328 0.481,
+    Cleanmeting "match" 0.282 0.227 0.156 0.256, Cleanmeting "twice" 0.619 0.531 0.371 0.500,
+    Cleanmeting "eval" 0.475 0.281 0.123 0.451, Cleanmeting "sprimes" 1.402 0.394 0.422 0.806,
+    Cleanmeting "parsetest" 0.727 0.374 0.474 0.695, Cleanmeting "prolog" 0.293 0.152 0.155 0.285,
+    Cleanmeting "gen1" 0.747 0.372 0.824 0.719 ]
 //%%
-D.table ["benchmark", "JMVM", "ABC retag", "ABC Clean", "retag / Clean"]
-  (L.map (\m -> [cNaam m, fx 3 (cJmvm m), fx 3 (cRetag m), fx 3 (cClean m), fx 2 (cRetag m / cClean m)]) cleanMetingen)
+D.table ["benchmark", "JMVM", "ABC retag", "ABC Clean", "retag / Clean", "JMVM nu", "JMVM nu / retag"]
+  (L.map (\m -> [cNaam m, fx 3 (cJmvm m), fx 3 (cRetag m), fx 3 (cClean m), fx 2 (cRetag m / cClean m),
+                 fx 3 (cNu m), fx 2 (cNu m / cRetag m)]) cleanMetingen)
 //%% [markdown]
-// Wat overblijft: `eval` (2,3×) vraagt een analyse van closures (Clean weet
+// Met de superinstructies is de JMVM gemiddeld 1,39× trager dan de
+// retag-ABC (was 1,63×) en 1,48× dan Clean's eigen ABC (was 1,75×); `primes`
+// en `twice` zijn nu even snel of sneller.
+//
+// Wat overblijft voor de ABC: `eval` (2,3×) vraagt een analyse van closures (Clean weet
 // uit het type dat `op n m` een getal is), `match`, `twice` en `sort`
 // vragen minder `eval`.
 //%% [markdown]
@@ -634,35 +725,43 @@ D.table ["benchmark", "JMVM", "ABC retag", "ABC Clean", "retag / Clean"]
 // wasm-interpreter met globals → locals. Dezelfde uitvoer als de JMVM; gen1
 // maakt ook in wasm byte voor byte `saplcomp.jmvm`.
 //%%
-::Abcwasm = { !bNaam : Str, !bJmvm : Float, !bOud : Float, !bNu : Float, !bNuLoc : Float }
+::Abcwasm = { !bNaam : Str, !bJmvm : Float, !bOud : Float, !bNu : Float, !bNuLoc : Float, !bSuper : Float }
 
 abcWasm =:
-  [ Abcwasm "fib" 0.624 2.260 0.973 0.907, Abcwasm "primes" 0.476 0.606 0.592 0.384,
-    Abcwasm "queens" 0.271 0.517 0.488 0.273, Abcwasm "sort" 0.549 0.747 0.685 0.464,
-    Abcwasm "knights" 0.126 0.187 0.125 0.077, Abcwasm "hamming" 0.787 0.954 0.830 0.530,
-    Abcwasm "match" 0.404 0.620 0.564 0.383, Abcwasm "twice" 0.990 0.992 1.007 0.726,
-    Abcwasm "eval" 0.620 0.829 0.717 0.474, Abcwasm "sprimes" 1.587 1.194 0.770 0.567,
-    Abcwasm "parsetest" 0.926 0.865 0.791 0.564, Abcwasm "prolog" 0.362 0.425 0.357 0.227,
-    Abcwasm "eval2" 0.709 1.707 1.640 0.974, Abcwasm "gen1" 1.023 1.191 0.884 0.609 ]
+  [ Abcwasm "fib" 0.624 2.260 0.973 0.907 0.989, Abcwasm "primes" 0.476 0.606 0.592 0.384 0.757,
+    Abcwasm "queens" 0.271 0.517 0.488 0.273 0.927, Abcwasm "sort" 0.549 0.747 0.685 0.464 0.838,
+    Abcwasm "knights" 0.126 0.187 0.125 0.077 0.953, Abcwasm "hamming" 0.787 0.954 0.830 0.530 0.892,
+    Abcwasm "match" 0.404 0.620 0.564 0.383 0.913, Abcwasm "twice" 0.990 0.992 1.007 0.726 0.776,
+    Abcwasm "eval" 0.620 0.829 0.717 0.474 0.963, Abcwasm "sprimes" 1.587 1.194 0.770 0.567 0.628,
+    Abcwasm "parsetest" 0.926 0.865 0.791 0.564 0.926, Abcwasm "prolog" 0.362 0.425 0.357 0.227 0.951,
+    Abcwasm "eval2" 0.709 1.707 1.640 0.974 0.890, Abcwasm "gen1" 1.023 1.191 0.884 0.609 0.0 ]
 //%%
-D.table ["benchmark", "JMVM", "ABC oud", "ABC nu", "nu + locals", "nu + locals / JMVM"]
-  (L.map (\m -> [bNaam m, fx 3 (bJmvm m), fx 3 (bOud m), fx 3 (bNu m), fx 3 (bNuLoc m), fx 2 (bNuLoc m / bJmvm m)]) abcWasm)
+D.table ["benchmark", "JMVM", "ABC oud", "ABC nu", "nu + locals", "nu + locals / JMVM", "… / JMVM nu*"]
+  (L.map (\m -> [bNaam m, fx 3 (bJmvm m), fx 3 (bOud m), fx 3 (bNu m), fx 3 (bNuLoc m), fx 2 (bNuLoc m / bJmvm m),
+                 nuOf (bSuper m) (fx 2 (bNuLoc m / (bJmvm m * bSuper m)))]) abcWasm)
 //%% [markdown]
 // Gemiddeld ABC / JMVM: oud 1,39×, nu 1,14×, oud + locals 0,93×, **nu +
 // locals 0,77×**. De winsten tellen op: in wasm heeft de ABC-interpreter nu 23%
-// minder tijd nodig dan de JMVM. Achter blijven `fib` en `eval2`. Chrome en Safari:
+// minder tijd nodig dan de JMVM. Achter blijven `fib` en `eval2`.
+//
+// \* De JMVM met superinstructies is in node niet gemeten; geschat met de
+// winst per benchmark in Chrome. Dan wordt het **~0,90×** (13 benchmarks):
+// de ABC-interpreter met locals blijft in wasm iets sneller, maar het
+// verschil is van 23% naar ~10% gegaan. De nieuwe ABC in Chrome en Safari:
 // nog te meten.
 //%% [markdown]
 // ## Waarom is de ABC-interpreter sneller dan de JMVM?
 //
-// *Native, M4, met de hardwaretellers van macOS.* Met de geoptimaliseerde
-// ABC is de ABC-interpreter native gemiddeld 1,63× sneller (`fib`: de JMVM
-// blijft sneller).
+// *Native, M4, met de hardwaretellers van macOS, gemeten vóór de
+// superinstructies.* Met de geoptimaliseerde ABC was de ABC-interpreter
+// native gemiddeld 1,63× sneller, nu 1,39× (`fib`: de JMVM blijft sneller).
 //
 // - **Minder, maar dikkere instructies.** De JMVM voert 0,71× zoveel
 //   VM-instructies uit, maar 13-23 machine-instructies per VM-instructie
 //   tegen 8-10. De JMVM is een zuivere stackmachine: 41% van de instructies
 //   in gen1 is `load`. Een ABC-instructie krijgt de plek van zijn operand mee.
+//   De superinstructies (`load k; jmpt`, `load a; load b`, …) halen daar
+//   een kwart van de VM-instructies af.
 // - **Vermoedens getoetst en verworpen**, onder meer aliasing, GC, page
 //   faults en de dispatch. Open: waar `sprimes` op wacht.
 // - **musttail voor de ABC-interpreter:** gemiddeld 0,99×, want clang houdt
@@ -672,23 +771,48 @@ D.table ["benchmark", "JMVM", "ABC oud", "ABC nu", "nu + locals", "nu + locals /
 //   vergelijken), op beide VM's hetzelfde: een ontwerpkeuze in gen1, niet in
 //   de achterkant.
 //%% [markdown]
+// ## Alle verhoudingen op een rij
+//
+// Apple M4, geometrisch gemiddelde tenzij anders vermeld; boven 1: de JMVM is
+// trager. "Voor": vóór de superinstructies (24-31 oktober), "nu": 1 november.
+//%%
+D.table ["vergelijking", "waar", "voor", "nu"]
+  [ ["JMVM / GHC -O2 (12 benchmarks, totale tijd)", "native", "5,7×", "4,5×"],
+    ["gen1 / dezelfde compiler in Haskell (zichzelf vertalen)", "native", "2,3×", "2,2×"],
+    ["JMVM / ABC-interpreter, ABC uit de retag-vorm", "native", "1,63×", "1,39×"],
+    ["JMVM / ABC-interpreter, Clean's eigen ABC", "native", "1,75×", "1,48×"],
+    ["ABC-interpreter met locals / JMVM (13 benchmarks)", "Chrome", "0,93×", "1,09×"],
+    ["nieuwe ABC met locals / JMVM (13 benchmarks)", "node", "0,78×", "~0,90× (geschat)"],
+    ["JMVM in de browser / native", "Chrome", "1,39×", "1,44×"],
+    ["JMVM in de browser / native", "Safari", "1,37×", "1,40×"] ]
+//%% [markdown]
+// - **De JMVM is in alle drie de omgevingen 13-15% sneller geworden**,
+//   zonder wijziging aan de bytecode of de compiler.
+// - **Native** blijft de ABC-interpreter sneller (1,39×): zijn ~850
+//   gespecialiseerde instructies doen per stap meer dan de 53 van de JMVM.
+// - **In de browser** is de JMVM nu sneller dan de ABC-interpreter van 29
+//   oktober (met locals), en zit hij op ~10% van de nieuwste ABC.
+// - Browser / native wordt iets hoger omdat native meer wint dan wasm.
+//%% [markdown]
 // ## Onderzoek voor de komende dagen
 //
-// - **De nieuwe ABC met locals in Chrome** (in node: 0,77× van de JMVM), en Safari, de iPad
-//   (JavaScriptCore) en Firefox: alle browsermetingen hier zijn V8. Voor
-//   iTasks telt de iPad.
+// - **De nieuwe ABC met locals in Chrome en Safari**, tegen de JMVM met
+//   superinstructies (in node geschat ~0,90×), en op de iPad (JavaScriptCore)
+//   en Firefox. Voor iTasks telt de iPad.
 // - **Locals in `interpretergen-wasm`** zelf, in plaats van achteraf de
 //   `.wasm` herschrijven; en toetsen met iTasks (`ABC.Interpreter`, het
 //   kopiëren van grafen).
 // - **De laatste afstand tot Clean:** een analyse van closures (`eval`), en
 //   meerdere waarden teruggeven op de stack.
 // - **Wat de JMVM van de ABC leert:** een `case` op een lokale variabele
-//   zonder `load`, minder heen en weer over de stack; in gen1 literals delen
-//   en namen als getal.
+//   zonder `load` zit nu in de superinstructies. Verder: gen1 zelf de `eval`
+//   van een strikt argument laten vermijden (wat `eval_local` nu bij het
+//   laden doet), en in gen1 literals delen en namen als getal.
 // - **De ABC-backend als stage van gen1** (`--emit=abc`, in Sapl), zodat hij
 //   ook in de browser vertaalt.
 // - **Een heap die meegroeit** in de JMVM, zoals Clean: minder geheugen per
-//   exemplaar, en sneller.
+//   exemplaar (in wasm 687 → 336 MB), en sneller. Gebouwd, nu samen met de
+//   superinstructies gemeten.
 // - **Notebooks op de ABC-interpreter:** eerst een tweedeling (REPL en
 //   compiler op de JMVM, het rekenen per run in de ABC-interpreter).
 //%% [markdown]
