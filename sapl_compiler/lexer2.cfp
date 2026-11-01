@@ -114,7 +114,7 @@ readFracDigits acc cs =
 // De grens (2^61 - 1) / 10 = 230584300921369395 wordt uitgerekend uit getallen
 // onder 2^31: een letterlijk getal boven 32 bits past in wasm32 niet in een
 // programmawoord, en deze compiler draait ook in WebSapl.
-numLimit = 230584300 * 1000000000 + 921369395
+numLimit =: 230584300 * 1000000000 + 921369395
 numFits acc d = (acc < numLimit) \/ ((acc == numLimit) /\ (d <= 1))
 
 numDigit acc d = if (numFits acc d) (acc * 10 + d) (error "saplcomp: getal te groot (een JMVM-int is 62 bits, max 2305843009213693951)")

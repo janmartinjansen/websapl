@@ -32,6 +32,243 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             pushfunc 0 1996                          || glueUnit
             create 1 3
             setcaf 10
+            pushfunc 0 9613                          || sm_flat__numLimit
+            create 1 3
+            setcaf 11
+            pushfunc 0 9768                          || sm_flat__retagUserPrefix
+            create 1 3
+            setcaf 12
+            pushfunc 0 9854                          || sm_flat__slashBackslash
+            create 1 3
+            setcaf 13
+            pushfunc 0 9856                          || sm_flat__backslashSlash
+            create 1 3
+            setcaf 14
+            pushfunc 0 9937                          || sm_flat__printKw
+            create 1 3
+            setcaf 15
+            pushfunc 0 9939                          || sm_flat__printCKw
+            create 1 3
+            setcaf 16
+            pushfunc 0 9941                          || sm_flat__printSKw
+            create 1 3
+            setcaf 17
+            pushfunc 0 9943                          || sm_flat__errorKw
+            create 1 3
+            setcaf 18
+            pushfunc 0 9945                          || sm_flat__strlenKw
+            create 1 3
+            setcaf 19
+            pushfunc 0 9947                          || sm_flat__stratKw
+            create 1 3
+            setcaf 20
+            pushfunc 0 9949                          || sm_flat__updateKw
+            create 1 3
+            setcaf 21
+            pushfunc 0 9951                          || sm_flat__getKw
+            create 1 3
+            setcaf 22
+            pushfunc 0 9953                          || sm_flat__strappendKw
+            create 1 3
+            setcaf 23
+            pushfunc 0 9955                          || sm_flat__strsliceKw
+            create 1 3
+            setcaf 24
+            pushfunc 0 9957                          || sm_flat__strcpyKw
+            create 1 3
+            setcaf 25
+            pushfunc 0 9993                          || sm_flat__readFileKw
+            create 1 3
+            setcaf 26
+            pushfunc 0 9995                          || sm_flat__writeFileKw
+            create 1 3
+            setcaf 27
+            pushfunc 0 9997                          || sm_flat__readLineKw
+            create 1 3
+            setcaf 28
+            pushfunc 0 9999                          || sm_flat__printStringKw
+            create 1 3
+            setcaf 29
+            pushfunc 0 10001                         || sm_flat__openFileKw
+            create 1 3
+            setcaf 30
+            pushfunc 0 10003                         || sm_flat__closeFileKw
+            create 1 3
+            setcaf 31
+            pushfunc 0 10005                         || sm_flat__readCharKw
+            create 1 3
+            setcaf 32
+            pushfunc 0 10007                         || sm_flat__writeCharKw
+            create 1 3
+            setcaf 33
+            pushfunc 0 10009                         || sm_flat__strcreateKw
+            create 1 3
+            setcaf 34
+            pushfunc 0 10042                         || sm_flat__sinKw
+            create 1 3
+            setcaf 35
+            pushfunc 0 10044                         || sm_flat__cosKw
+            create 1 3
+            setcaf 36
+            pushfunc 0 10046                         || sm_flat__tanKw
+            create 1 3
+            setcaf 37
+            pushfunc 0 10048                         || sm_flat__asinKw
+            create 1 3
+            setcaf 38
+            pushfunc 0 10050                         || sm_flat__acosKw
+            create 1 3
+            setcaf 39
+            pushfunc 0 10052                         || sm_flat__atanKw
+            create 1 3
+            setcaf 40
+            pushfunc 0 10054                         || sm_flat__logKw
+            create 1 3
+            setcaf 41
+            pushfunc 0 10056                         || sm_flat__log10Kw
+            create 1 3
+            setcaf 42
+            pushfunc 0 10058                         || sm_flat__expKw
+            create 1 3
+            setcaf 43
+            pushfunc 0 10060                         || sm_flat__sqrtKw
+            create 1 3
+            setcaf 44
+            pushfunc 0 10062                         || sm_flat__floorKw
+            create 1 3
+            setcaf 45
+            pushfunc 0 10064                         || sm_flat__ceilKw
+            create 1 3
+            setcaf 46
+            pushfunc 0 10066                         || sm_flat__roundKw
+            create 1 3
+            setcaf 47
+            pushfunc 0 10068                         || sm_flat__fabsKw
+            create 1 3
+            setcaf 48
+            pushfunc 0 10070                         || sm_flat__absKw
+            create 1 3
+            setcaf 49
+            pushfunc 0 10072                         || sm_flat__itofKw
+            create 1 3
+            setcaf 50
+            pushfunc 0 10074                         || sm_flat__ftoiKw
+            create 1 3
+            setcaf 51
+            pushfunc 0 10076                         || sm_flat__atofKw
+            create 1 3
+            setcaf 52
+            pushfunc 0 10078                         || sm_flat__ftoaKw
+            create 1 3
+            setcaf 53
+            pushfunc 0 10080                         || sm_flat__atan2Kw
+            create 1 3
+            setcaf 54
+            pushfunc 0 10196                         || sm_flat__typeIdKw
+            create 1 3
+            setcaf 55
+            pushfunc 0 10198                         || sm_flat__constrNameKw
+            create 1 3
+            setcaf 56
+            pushfunc 0 10200                         || sm_flat__getFieldKw
+            create 1 3
+            setcaf 57
+            pushfunc 0 10202                         || sm_flat__makeConstrKw
+            create 1 3
+            setcaf 58
+            pushfunc 0 10204                         || sm_flat__funcNameKw
+            create 1 3
+            setcaf 59
+            pushfunc 0 10206                         || sm_flat__funcArityKw
+            create 1 3
+            setcaf 60
+            pushfunc 0 10208                         || sm_flat__funcRemainingKw
+            create 1 3
+            setcaf 61
+            pushfunc 0 10210                         || sm_flat__applyDynamicKw
+            create 1 3
+            setcaf 62
+            pushfunc 0 10212                         || sm_flat__lookupKw
+            create 1 3
+            setcaf 63
+            pushfunc 0 10214                         || sm_flat__ordKw
+            create 1 3
+            setcaf 64
+            pushfunc 0 10216                         || sm_flat__chrKw
+            create 1 3
+            setcaf 65
+            pushfunc 0 10218                         || sm_flat__funcAddrKw
+            create 1 3
+            setcaf 66
+            pushfunc 0 10220                         || sm_flat__fieldIsValueKw
+            create 1 3
+            setcaf 67
+            pushfunc 0 10222                         || sm_flat__packKw
+            create 1 3
+            setcaf 68
+            pushfunc 0 10224                         || sm_flat__packMaxKw
+            create 1 3
+            setcaf 69
+            pushfunc 0 10226                         || sm_flat__unpackKw
+            create 1 3
+            setcaf 70
+            pushfunc 0 10228                         || sm_flat__reflectionKws
+            create 1 3
+            setcaf 71
+            pushfunc 0 10342                         || sm_flat__selectKw
+            create 1 3
+            setcaf 72
+            pushfunc 0 10348                         || sm_flat__nomatchKw
+            create 1 3
+            setcaf 73
+            pushfunc 0 10368                         || sm_flat__str2listOp
+            create 1 3
+            setcaf 74
+            pushfunc 0 10932                         || sm_flat__pipeOp
+            create 1 3
+            setcaf 75
+            pushfunc 0 11556                         || sm_flat__charConName
+            create 1 3
+            setcaf 76
+            pushfunc 0 11560                         || sm_flat__charAdt
+            create 1 3
+            setcaf 77
+            pushfunc 0 11623                         || sm_flat__charNumOps
+            create 1 3
+            setcaf 78
+            pushfunc 0 11861                         || sm_flat__strictBothOps
+            create 1 3
+            setcaf 79
+            pushfunc 0 11863                         || sm_flat__strictLeftOps
+            create 1 3
+            setcaf 80
+            pushfunc 0 12991                         || sm_flat__vlSeqOp
+            create 1 3
+            setcaf 81
+            pushfunc 0 14699                         || sm_flat__prefixCols
+            create 1 3
+            setcaf 82
+            pushfunc 0 14701                         || sm_flat__pipeSpace
+            create 1 3
+            setcaf 83
+            pushfunc 0 14731                         || sm_flat__prologueInstrs
+            create 1 3
+            setcaf 84
+            pushfunc 0 14749                         || sm_flat__nl
+            create 1 3
+            setcaf 85
+            pushfunc 0 15324                         || sm_flat__noAdts
+            create 1 3
+            setcaf 86
+            pushfunc 0 15520                         || sm_flat__jaPushF
+            create 1 3
+            setcaf 87
+            pushfunc 0 16012                         || sm_flat__jaTwo31
+            create 1 3
+            setcaf 88
+            pushfunc 0 16014                         || sm_flat__jaTwo32
+            create 1 3
+            setcaf 89
             call 2510                                || start
             print 4
             stop
@@ -40491,13 +40728,15 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 9614        load 0                                   || sm_flat__numFits_lazy
             eval
             store 0
-9615        call 9613                                || sm_flat__numLimit || sm_flat__numFits
+9615        pushcaf 11                               || sm_flat__numFits
+            eval
             load 0
             sub
             ifle 9616                                || sm_flat__numFits_else
             return_const 2 1
 9616        load 0                                   || sm_flat__numFits_else
-            call 9613                                || sm_flat__numLimit
+            pushcaf 11
+            eval
             sub
             ifneq 9618                               || sm_flat__numFits_else_else
             push 1
@@ -41196,7 +41435,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             call 9770                                || sm_flat__isRetagMarkerName
             ifeq 9776                                || sm_flat__retagEscapeHead_else
             load 0
-            call 9768                                || sm_flat__retagUserPrefix
+            pushcaf 12
+            eval
             tailcall 1 9493                          || sm_flat__append
 9776        load 0                                   || sm_flat__retagEscapeHead_else
             return 1
@@ -41205,7 +41445,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             store 0
 9778        load 0                                   || sm_flat__retagUnescapeHead
             dup
-            call 9768                                || sm_flat__retagUserPrefix
+            pushcaf 12
+            eval
             call 9783                                || sm_flat__retagStripPrefix
             load 0
             tailcall 1 9780                          || sm_flat__retagUnescapeCheck
@@ -41851,97 +42092,115 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 9958        load 0                                   || sm_flat__isPrintCall_lazy
             eval
             store 0
-9959        call 9937                                || sm_flat__printKw || sm_flat__isPrintCall
+9959        pushcaf 15                               || sm_flat__isPrintCall
+            eval
             load 0
             tailcall 1 9759                          || sm_flat__charListEq
 9960        load 0                                   || sm_flat__isPrintCCall_lazy
             eval
             store 0
-9961        call 9939                                || sm_flat__printCKw || sm_flat__isPrintCCall
+9961        pushcaf 16                               || sm_flat__isPrintCCall
+            eval
             load 0
             tailcall 1 9759                          || sm_flat__charListEq
 9962        load 0                                   || sm_flat__isPrintSCall_lazy
             eval
             store 0
-9963        call 9941                                || sm_flat__printSKw || sm_flat__isPrintSCall
+9963        pushcaf 17                               || sm_flat__isPrintSCall
+            eval
             load 0
             tailcall 1 9759                          || sm_flat__charListEq
 9964        load 0                                   || sm_flat__isErrorCall_lazy
             eval
             store 0
-9965        call 9943                                || sm_flat__errorKw || sm_flat__isErrorCall
+9965        pushcaf 18                               || sm_flat__isErrorCall
+            eval
             load 0
             tailcall 1 9759                          || sm_flat__charListEq
 9966        load 0                                   || sm_flat__isPredefCall_lazy
             eval
             store 0
-9967        call 9945                                || sm_flat__strlenKw || sm_flat__isPredefCall
+9967        pushcaf 19                               || sm_flat__isPredefCall
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 9968                                || sm_flat__isPredefCall_else
             return_const 1 1
-9968        call 9947                                || sm_flat__stratKw || sm_flat__isPredefCall_else
+9968        pushcaf 20                               || sm_flat__isPredefCall_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 9969                                || sm_flat__isPredefCall_else_else
             return_const 1 1
-9969        call 9949                                || sm_flat__updateKw || sm_flat__isPredefCall_else_else
+9969        pushcaf 21                               || sm_flat__isPredefCall_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 9970                                || sm_flat__isPredefCall_else_else_else
             return_const 1 1
-9970        call 9951                                || sm_flat__getKw || sm_flat__isPredefCall_else_else_else
+9970        pushcaf 22                               || sm_flat__isPredefCall_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 9971                                || sm_flat__isPredefCall_else_else_else_else
             return_const 1 1
-9971        call 9953                                || sm_flat__strappendKw || sm_flat__isPredefCall_else_else_else_else
+9971        pushcaf 23                               || sm_flat__isPredefCall_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 9972                                || sm_flat__isPredefCall_else_else_else_else_else
             return_const 1 1
-9972        call 9955                                || sm_flat__strsliceKw || sm_flat__isPredefCall_else_else_else_else_else
+9972        pushcaf 24                               || sm_flat__isPredefCall_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 9973                                || sm_flat__isPredefCall_else_else_else_else_else_else
             return_const 1 1
-9973        call 9957                                || sm_flat__strcpyKw || sm_flat__isPredefCall_else_else_else_else_else_else
+9973        pushcaf 25                               || sm_flat__isPredefCall_else_else_else_else_else_else
+            eval
             load 0
             tailcall 1 9759                          || sm_flat__charListEq
 9974        load 0                                   || sm_flat__predefArity_lazy
             eval
             store 0
-9975        call 9945                                || sm_flat__strlenKw || sm_flat__predefArity
+9975        pushcaf 19                               || sm_flat__predefArity
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 9976                                || sm_flat__predefArity_else
             return_const 1 1
-9976        call 9947                                || sm_flat__stratKw || sm_flat__predefArity_else
+9976        pushcaf 20                               || sm_flat__predefArity_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 9977                                || sm_flat__predefArity_else_else
             return_const 1 2
-9977        call 9949                                || sm_flat__updateKw || sm_flat__predefArity_else_else
+9977        pushcaf 21                               || sm_flat__predefArity_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 9978                                || sm_flat__predefArity_else_else_else
             return_const 1 3
-9978        call 9951                                || sm_flat__getKw || sm_flat__predefArity_else_else_else
+9978        pushcaf 22                               || sm_flat__predefArity_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 9979                                || sm_flat__predefArity_else_else_else_else
             return_const 1 2
-9979        call 9953                                || sm_flat__strappendKw || sm_flat__predefArity_else_else_else_else
+9979        pushcaf 23                               || sm_flat__predefArity_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 9980                                || sm_flat__predefArity_else_else_else_else_else
             return_const 1 2
-9980        call 9955                                || sm_flat__strsliceKw || sm_flat__predefArity_else_else_else_else_else
+9980        pushcaf 24                               || sm_flat__predefArity_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 9981                                || sm_flat__predefArity_else_else_else_else_else_else
             return_const 1 3
-9981        call 9957                                || sm_flat__strcpyKw || sm_flat__predefArity_else_else_else_else_else_else
+9981        pushcaf 25                               || sm_flat__predefArity_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 9982                                || sm_flat__predefArity_else_else_else_else_else_else_else
@@ -41952,37 +42211,44 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 9983        load 0                                   || sm_flat__predefIndex_lazy
             eval
             store 0
-9984        call 9945                                || sm_flat__strlenKw || sm_flat__predefIndex
+9984        pushcaf 19                               || sm_flat__predefIndex
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 9985                                || sm_flat__predefIndex_else
             return_const 1 2
-9985        call 9947                                || sm_flat__stratKw || sm_flat__predefIndex_else
+9985        pushcaf 20                               || sm_flat__predefIndex_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 9986                                || sm_flat__predefIndex_else_else
             return_const 1 4
-9986        call 9949                                || sm_flat__updateKw || sm_flat__predefIndex_else_else
+9986        pushcaf 21                               || sm_flat__predefIndex_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 9987                                || sm_flat__predefIndex_else_else_else
             return_const 1 3
-9987        call 9951                                || sm_flat__getKw || sm_flat__predefIndex_else_else_else
+9987        pushcaf 22                               || sm_flat__predefIndex_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 9988                                || sm_flat__predefIndex_else_else_else_else
             return_const 1 6
-9988        call 9953                                || sm_flat__strappendKw || sm_flat__predefIndex_else_else_else_else
+9988        pushcaf 23                               || sm_flat__predefIndex_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 9989                                || sm_flat__predefIndex_else_else_else_else_else
             return_const 1 0
-9989        call 9955                                || sm_flat__strsliceKw || sm_flat__predefIndex_else_else_else_else_else
+9989        pushcaf 24                               || sm_flat__predefIndex_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 9990                                || sm_flat__predefIndex_else_else_else_else_else_else
             return_const 1 1
-9990        call 9957                                || sm_flat__strcpyKw || sm_flat__predefIndex_else_else_else_else_else_else
+9990        pushcaf 25                               || sm_flat__predefIndex_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 9991                                || sm_flat__predefIndex_else_else_else_else_else_else_else
@@ -42020,83 +42286,99 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 10010       load 0                                   || sm_flat__isSyscallCall_lazy
             eval
             store 0
-10011       call 9993                                || sm_flat__readFileKw || sm_flat__isSyscallCall
+10011       pushcaf 26                               || sm_flat__isSyscallCall
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10012                               || sm_flat__isSyscallCall_else
             return_const 1 1
-10012       call 9995                                || sm_flat__writeFileKw || sm_flat__isSyscallCall_else
+10012       pushcaf 27                               || sm_flat__isSyscallCall_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10013                               || sm_flat__isSyscallCall_else_else
             return_const 1 1
-10013       call 9997                                || sm_flat__readLineKw || sm_flat__isSyscallCall_else_else
+10013       pushcaf 28                               || sm_flat__isSyscallCall_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10014                               || sm_flat__isSyscallCall_else_else_else
             return_const 1 1
-10014       call 9999                                || sm_flat__printStringKw || sm_flat__isSyscallCall_else_else_else
+10014       pushcaf 29                               || sm_flat__isSyscallCall_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10015                               || sm_flat__isSyscallCall_else_else_else_else
             return_const 1 1
-10015       call 10001                               || sm_flat__openFileKw || sm_flat__isSyscallCall_else_else_else_else
+10015       pushcaf 30                               || sm_flat__isSyscallCall_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10016                               || sm_flat__isSyscallCall_else_else_else_else_else
             return_const 1 1
-10016       call 10003                               || sm_flat__closeFileKw || sm_flat__isSyscallCall_else_else_else_else_else
+10016       pushcaf 31                               || sm_flat__isSyscallCall_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10017                               || sm_flat__isSyscallCall_else_else_else_else_else_else
             return_const 1 1
-10017       call 10005                               || sm_flat__readCharKw || sm_flat__isSyscallCall_else_else_else_else_else_else
+10017       pushcaf 32                               || sm_flat__isSyscallCall_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10018                               || sm_flat__isSyscallCall_else_else_else_else_else_else_else
             return_const 1 1
-10018       call 10007                               || sm_flat__writeCharKw || sm_flat__isSyscallCall_else_else_else_else_else_else_else
+10018       pushcaf 33                               || sm_flat__isSyscallCall_else_else_else_else_else_else_else
+            eval
             load 0
             tailcall 1 9759                          || sm_flat__charListEq
 10019       load 0                                   || sm_flat__syscallArity_lazy
             eval
             store 0
-10020       call 9993                                || sm_flat__readFileKw || sm_flat__syscallArity
+10020       pushcaf 26                               || sm_flat__syscallArity
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10021                               || sm_flat__syscallArity_else
             return_const 1 1
-10021       call 9995                                || sm_flat__writeFileKw || sm_flat__syscallArity_else
+10021       pushcaf 27                               || sm_flat__syscallArity_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10022                               || sm_flat__syscallArity_else_else
             return_const 1 2
-10022       call 9997                                || sm_flat__readLineKw || sm_flat__syscallArity_else_else
+10022       pushcaf 28                               || sm_flat__syscallArity_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10023                               || sm_flat__syscallArity_else_else_else
             return_const 1 0
-10023       call 9999                                || sm_flat__printStringKw || sm_flat__syscallArity_else_else_else
+10023       pushcaf 29                               || sm_flat__syscallArity_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10024                               || sm_flat__syscallArity_else_else_else_else
             return_const 1 1
-10024       call 10001                               || sm_flat__openFileKw || sm_flat__syscallArity_else_else_else_else
+10024       pushcaf 30                               || sm_flat__syscallArity_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10025                               || sm_flat__syscallArity_else_else_else_else_else
             return_const 1 2
-10025       call 10003                               || sm_flat__closeFileKw || sm_flat__syscallArity_else_else_else_else_else
+10025       pushcaf 31                               || sm_flat__syscallArity_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10026                               || sm_flat__syscallArity_else_else_else_else_else_else
             return_const 1 1
-10026       call 10005                               || sm_flat__readCharKw || sm_flat__syscallArity_else_else_else_else_else_else
+10026       pushcaf 32                               || sm_flat__syscallArity_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10027                               || sm_flat__syscallArity_else_else_else_else_else_else_else
             return_const 1 1
-10027       call 10007                               || sm_flat__writeCharKw || sm_flat__syscallArity_else_else_else_else_else_else_else
+10027       pushcaf 33                               || sm_flat__syscallArity_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10028                               || sm_flat__syscallArity_else_else_else_else_else_else_else_else
@@ -42107,42 +42389,50 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 10029       load 0                                   || sm_flat__syscallIndex_lazy
             eval
             store 0
-10030       call 9993                                || sm_flat__readFileKw || sm_flat__syscallIndex
+10030       pushcaf 26                               || sm_flat__syscallIndex
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10031                               || sm_flat__syscallIndex_else
             return_const 1 0
-10031       call 9995                                || sm_flat__writeFileKw || sm_flat__syscallIndex_else
+10031       pushcaf 27                               || sm_flat__syscallIndex_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10032                               || sm_flat__syscallIndex_else_else
             return_const 1 1
-10032       call 9997                                || sm_flat__readLineKw || sm_flat__syscallIndex_else_else
+10032       pushcaf 28                               || sm_flat__syscallIndex_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10033                               || sm_flat__syscallIndex_else_else_else
             return_const 1 2
-10033       call 9999                                || sm_flat__printStringKw || sm_flat__syscallIndex_else_else_else
+10033       pushcaf 29                               || sm_flat__syscallIndex_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10034                               || sm_flat__syscallIndex_else_else_else_else
             return_const 1 3
-10034       call 10001                               || sm_flat__openFileKw || sm_flat__syscallIndex_else_else_else_else
+10034       pushcaf 30                               || sm_flat__syscallIndex_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10035                               || sm_flat__syscallIndex_else_else_else_else_else
             return_const 1 4
-10035       call 10003                               || sm_flat__closeFileKw || sm_flat__syscallIndex_else_else_else_else_else
+10035       pushcaf 31                               || sm_flat__syscallIndex_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10036                               || sm_flat__syscallIndex_else_else_else_else_else_else
             return_const 1 5
-10036       call 10005                               || sm_flat__readCharKw || sm_flat__syscallIndex_else_else_else_else_else_else
+10036       pushcaf 32                               || sm_flat__syscallIndex_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10037                               || sm_flat__syscallIndex_else_else_else_else_else_else_else
             return_const 1 6
-10037       call 10007                               || sm_flat__writeCharKw || sm_flat__syscallIndex_else_else_else_else_else_else_else
+10037       pushcaf 33                               || sm_flat__syscallIndex_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10038                               || sm_flat__syscallIndex_else_else_else_else_else_else_else_else
@@ -42153,7 +42443,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 10039       load 0                                   || sm_flat__isStrcreateCall_lazy
             eval
             store 0
-10040       call 10009                               || sm_flat__strcreateKw || sm_flat__isStrcreateCall
+10040       pushcaf 34                               || sm_flat__isStrcreateCall
+            eval
             load 0
             tailcall 1 9759                          || sm_flat__charListEq
 10041       jmp 10042                                || sm_flat__sinKw || sm_flat__sinKw_lazy
@@ -42219,108 +42510,129 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 10081       load 0                                   || sm_flat__isFloatOpCall_lazy
             eval
             store 0
-10082       call 10042                               || sm_flat__sinKw || sm_flat__isFloatOpCall
+10082       pushcaf 35                               || sm_flat__isFloatOpCall
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10083                               || sm_flat__isFloatOpCall_else
             return_const 1 1
-10083       call 10044                               || sm_flat__cosKw || sm_flat__isFloatOpCall_else
+10083       pushcaf 36                               || sm_flat__isFloatOpCall_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10084                               || sm_flat__isFloatOpCall_else_else
             return_const 1 1
-10084       call 10046                               || sm_flat__tanKw || sm_flat__isFloatOpCall_else_else
+10084       pushcaf 37                               || sm_flat__isFloatOpCall_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10085                               || sm_flat__isFloatOpCall_else_else_else
             return_const 1 1
-10085       call 10048                               || sm_flat__asinKw || sm_flat__isFloatOpCall_else_else_else
+10085       pushcaf 38                               || sm_flat__isFloatOpCall_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10086                               || sm_flat__isFloatOpCall_else_else_else_else
             return_const 1 1
-10086       call 10050                               || sm_flat__acosKw || sm_flat__isFloatOpCall_else_else_else_else
+10086       pushcaf 39                               || sm_flat__isFloatOpCall_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10087                               || sm_flat__isFloatOpCall_else_else_else_else_else
             return_const 1 1
-10087       call 10052                               || sm_flat__atanKw || sm_flat__isFloatOpCall_else_else_else_else_else
+10087       pushcaf 40                               || sm_flat__isFloatOpCall_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10088                               || sm_flat__isFloatOpCall_else_else_else_else_else_else
             return_const 1 1
-10088       call 10054                               || sm_flat__logKw || sm_flat__isFloatOpCall_else_else_else_else_else_else
+10088       pushcaf 41                               || sm_flat__isFloatOpCall_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10089                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else
             return_const 1 1
-10089       call 10056                               || sm_flat__log10Kw || sm_flat__isFloatOpCall_else_else_else_else_else_else_else
+10089       pushcaf 42                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10090                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else
             return_const 1 1
-10090       call 10058                               || sm_flat__expKw || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else
+10090       pushcaf 43                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10091                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else
             return_const 1 1
-10091       call 10060                               || sm_flat__sqrtKw || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else
+10091       pushcaf 44                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10092                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else
             return_const 1 1
-10092       call 10062                               || sm_flat__floorKw || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else
+10092       pushcaf 45                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10093                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 1
-10093       call 10064                               || sm_flat__ceilKw || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else
+10093       pushcaf 46                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10094                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 1
-10094       call 10066                               || sm_flat__roundKw || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else
+10094       pushcaf 47                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10095                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 1
-10095       call 10068                               || sm_flat__fabsKw || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else
+10095       pushcaf 48                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10096                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 1
-10096       call 10070                               || sm_flat__absKw || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else
+10096       pushcaf 49                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10097                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 1
-10097       call 10072                               || sm_flat__itofKw || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
+10097       pushcaf 50                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10098                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 1
-10098       call 10074                               || sm_flat__ftoiKw || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
+10098       pushcaf 51                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10099                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 1
-10099       call 10076                               || sm_flat__atofKw || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
+10099       pushcaf 52                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10100                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 1
-10100       call 10078                               || sm_flat__ftoaKw || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
+10100       pushcaf 53                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10101                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 1
-10101       call 10080                               || sm_flat__atan2Kw || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
+10101       pushcaf 54                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
+            eval
             load 0
             tailcall 1 9759                          || sm_flat__charListEq
 10102       load 0                                   || sm_flat__floatOpArity_lazy
             eval
             store 0
-10103       call 10080                               || sm_flat__atan2Kw || sm_flat__floatOpArity
+10103       pushcaf 54                               || sm_flat__floatOpArity
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10104                               || sm_flat__floatOpArity_else
@@ -42329,102 +42641,122 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 10105       load 0                                   || sm_flat__floatOpIndex_lazy
             eval
             store 0
-10106       call 10042                               || sm_flat__sinKw || sm_flat__floatOpIndex
+10106       pushcaf 35                               || sm_flat__floatOpIndex
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10107                               || sm_flat__floatOpIndex_else
             return_const 1 0
-10107       call 10044                               || sm_flat__cosKw || sm_flat__floatOpIndex_else
+10107       pushcaf 36                               || sm_flat__floatOpIndex_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10108                               || sm_flat__floatOpIndex_else_else
             return_const 1 1
-10108       call 10046                               || sm_flat__tanKw || sm_flat__floatOpIndex_else_else
+10108       pushcaf 37                               || sm_flat__floatOpIndex_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10109                               || sm_flat__floatOpIndex_else_else_else
             return_const 1 2
-10109       call 10048                               || sm_flat__asinKw || sm_flat__floatOpIndex_else_else_else
+10109       pushcaf 38                               || sm_flat__floatOpIndex_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10110                               || sm_flat__floatOpIndex_else_else_else_else
             return_const 1 3
-10110       call 10050                               || sm_flat__acosKw || sm_flat__floatOpIndex_else_else_else_else
+10110       pushcaf 39                               || sm_flat__floatOpIndex_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10111                               || sm_flat__floatOpIndex_else_else_else_else_else
             return_const 1 4
-10111       call 10052                               || sm_flat__atanKw || sm_flat__floatOpIndex_else_else_else_else_else
+10111       pushcaf 40                               || sm_flat__floatOpIndex_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10112                               || sm_flat__floatOpIndex_else_else_else_else_else_else
             return_const 1 5
-10112       call 10054                               || sm_flat__logKw || sm_flat__floatOpIndex_else_else_else_else_else_else
+10112       pushcaf 41                               || sm_flat__floatOpIndex_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10113                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else
             return_const 1 6
-10113       call 10056                               || sm_flat__log10Kw || sm_flat__floatOpIndex_else_else_else_else_else_else_else
+10113       pushcaf 42                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10114                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else
             return_const 1 7
-10114       call 10058                               || sm_flat__expKw || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else
+10114       pushcaf 43                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10115                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else
             return_const 1 8
-10115       call 10060                               || sm_flat__sqrtKw || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else
+10115       pushcaf 44                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10116                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else
             return_const 1 9
-10116       call 10062                               || sm_flat__floorKw || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else
+10116       pushcaf 45                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10117                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 10
-10117       call 10064                               || sm_flat__ceilKw || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else
+10117       pushcaf 46                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10118                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 11
-10118       call 10066                               || sm_flat__roundKw || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else
+10118       pushcaf 47                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10119                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 12
-10119       call 10068                               || sm_flat__fabsKw || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else
+10119       pushcaf 48                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10120                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 13
-10120       call 10070                               || sm_flat__absKw || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else
+10120       pushcaf 49                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10121                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 13
-10121       call 10072                               || sm_flat__itofKw || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
+10121       pushcaf 50                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10122                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 14
-10122       call 10074                               || sm_flat__ftoiKw || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
+10122       pushcaf 51                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10123                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 15
-10123       call 10076                               || sm_flat__atofKw || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
+10123       pushcaf 52                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10124                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 16
-10124       call 10078                               || sm_flat__ftoaKw || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
+10124       pushcaf 53                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10125                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 17
-10125       call 10080                               || sm_flat__atan2Kw || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
+10125       pushcaf 54                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10126                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
@@ -42712,12 +43044,14 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 10227       jmp 10228                                || sm_flat__reflectionKws || sm_flat__reflectionKws_lazy
 10228       pushfunc 0 26008                         || sm_flat__reflectionKws_15 || sm_flat__reflectionKws
             create 1 3
-            call 10196                               || sm_flat__typeIdKw
+            pushcaf 55
+            eval
             ccreatet 2 11 5 1
             return 0
 10229       jmp 10230                                || sm_flat__isReflectionCall || sm_flat__isReflectionCall_lazy
 10230       load 0                                   || sm_flat__isReflectionCall
-            call 10228                               || sm_flat__reflectionKws
+            pushcaf 71
+            eval
             tailcall 1 9808                          || sm_flat__member
 10231       load 0                                   || sm_flat__sbIsBuiltin_lazy
             eval
@@ -42759,97 +43093,113 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 10241       load 0                                   || sm_flat__reflectionOpcode_lazy
             eval
             store 0
-10242       call 10196                               || sm_flat__typeIdKw || sm_flat__reflectionOpcode
+10242       pushcaf 55                               || sm_flat__reflectionOpcode
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10243                               || sm_flat__reflectionOpcode_else
             push "gettypeid"
             tailcall 1 9425                          || sm_flat__str2list
-10243       call 10198                               || sm_flat__constrNameKw || sm_flat__reflectionOpcode_else
+10243       pushcaf 56                               || sm_flat__reflectionOpcode_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10244                               || sm_flat__reflectionOpcode_else_else
             push "getconstrname"
             tailcall 1 9425                          || sm_flat__str2list
-10244       call 10200                               || sm_flat__getFieldKw || sm_flat__reflectionOpcode_else_else
+10244       pushcaf 57                               || sm_flat__reflectionOpcode_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10245                               || sm_flat__reflectionOpcode_else_else_else
             push "getfield"
             tailcall 1 9425                          || sm_flat__str2list
-10245       call 10202                               || sm_flat__makeConstrKw || sm_flat__reflectionOpcode_else_else_else
+10245       pushcaf 58                               || sm_flat__reflectionOpcode_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10246                               || sm_flat__reflectionOpcode_else_else_else_else
             push "makeconstr"
             tailcall 1 9425                          || sm_flat__str2list
-10246       call 10204                               || sm_flat__funcNameKw || sm_flat__reflectionOpcode_else_else_else_else
+10246       pushcaf 59                               || sm_flat__reflectionOpcode_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10247                               || sm_flat__reflectionOpcode_else_else_else_else_else
             push "getfuncname"
             tailcall 1 9425                          || sm_flat__str2list
-10247       call 10206                               || sm_flat__funcArityKw || sm_flat__reflectionOpcode_else_else_else_else_else
+10247       pushcaf 60                               || sm_flat__reflectionOpcode_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10248                               || sm_flat__reflectionOpcode_else_else_else_else_else_else
             push "getfuncarity"
             tailcall 1 9425                          || sm_flat__str2list
-10248       call 10208                               || sm_flat__funcRemainingKw || sm_flat__reflectionOpcode_else_else_else_else_else_else
+10248       pushcaf 61                               || sm_flat__reflectionOpcode_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10249                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else
             push "getfuncremaining"
             tailcall 1 9425                          || sm_flat__str2list
-10249       call 10210                               || sm_flat__applyDynamicKw || sm_flat__reflectionOpcode_else_else_else_else_else_else_else
+10249       pushcaf 62                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10250                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else
             push "applydynamic"
             tailcall 1 9425                          || sm_flat__str2list
-10250       call 10212                               || sm_flat__lookupKw || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else
+10250       pushcaf 63                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10251                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else
             push "lookup"
             tailcall 1 9425                          || sm_flat__str2list
-10251       call 10214                               || sm_flat__ordKw || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else
+10251       pushcaf 64                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10252                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else
             push "ord"
             tailcall 1 9425                          || sm_flat__str2list
-10252       call 10216                               || sm_flat__chrKw || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else
+10252       pushcaf 65                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10253                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else
             push "chr"
             tailcall 1 9425                          || sm_flat__str2list
-10253       call 10218                               || sm_flat__funcAddrKw || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else
+10253       pushcaf 66                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10254                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else_else
             push "funcaddr"
             tailcall 1 9425                          || sm_flat__str2list
-10254       call 10220                               || sm_flat__fieldIsValueKw || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else_else
+10254       pushcaf 67                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10255                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else_else_else
             push "fieldisvalue"
             tailcall 1 9425                          || sm_flat__str2list
-10255       call 10222                               || sm_flat__packKw || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else_else_else
+10255       pushcaf 68                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10256                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             push "pack"
             tailcall 1 9425                          || sm_flat__str2list
-10256       call 10224                               || sm_flat__packMaxKw || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else_else_else_else
+10256       pushcaf 69                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10257                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             push "packmax"
             tailcall 1 9425                          || sm_flat__str2list
-10257       call 10226                               || sm_flat__unpackKw || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
+10257       pushcaf 70                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10258                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
@@ -42861,29 +43211,34 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 10259       load 0                                   || sm_flat__reflectionArity_lazy
             eval
             store 0
-10260       call 10202                               || sm_flat__makeConstrKw || sm_flat__reflectionArity
+10260       pushcaf 58                               || sm_flat__reflectionArity
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10261                               || sm_flat__reflectionArity_else
             push 0
             dec
             return 1
-10261       call 10200                               || sm_flat__getFieldKw || sm_flat__reflectionArity_else
+10261       pushcaf 57                               || sm_flat__reflectionArity_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10262                               || sm_flat__reflectionArity_else_else
             return_const 1 2
-10262       call 10210                               || sm_flat__applyDynamicKw || sm_flat__reflectionArity_else_else
+10262       pushcaf 62                               || sm_flat__reflectionArity_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10263                               || sm_flat__reflectionArity_else_else_else
             return_const 1 2
-10263       call 10220                               || sm_flat__fieldIsValueKw || sm_flat__reflectionArity_else_else_else
+10263       pushcaf 67                               || sm_flat__reflectionArity_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10264                               || sm_flat__reflectionArity_else_else_else_else
             return_const 1 2
-10264       call 10224                               || sm_flat__packMaxKw || sm_flat__reflectionArity_else_else_else_else
+10264       pushcaf 69                               || sm_flat__reflectionArity_else_else_else_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10265                               || sm_flat__reflectionArity_else_else_else_else_else
@@ -43061,7 +43416,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             call 9759                                || sm_flat__charListEq
             ifeq 10362                               || sm_flat__isCaseIdent_else
             return_const 1 1
-10362       call 10342                               || sm_flat__selectKw || sm_flat__isCaseIdent_else
+10362       pushcaf 72                               || sm_flat__isCaseIdent_else
+            eval
             load 0
             tailcall 1 9759                          || sm_flat__charListEq
 10363       load 0                                   || sm_flat__parseAtom_lazy
@@ -43141,7 +43497,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             load 0
             ccreatet 1 11 107 2
             ccreatet 2 11 5 1
-            call 10368                               || sm_flat__str2listOp
+            pushcaf 74
+            eval
             ccreatet 2 11 107 5
             ccreatet 2 11 117 0
             return 3
@@ -43502,7 +43859,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 10468       pushfunc 0 26026                         || sm_flat__opTable_6 || sm_flat__opTable
             create 1 3
             push 1
-            call 9854                                || sm_flat__slashBackslash
+            pushcaf 13
+            eval
             ccreatet 2 11 118 0
             ccreatet 2 11 5 1
             return 0
@@ -43973,7 +44331,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             store 0
 10591       load 0                                   || sm_flat__collectBranchesTok
             jmpt 14 10592 10594 10595 10596 10597 10598 10599 10600 10601 10602 10603 10604 10605 10606 || lbs
-10592       call 10348                               || sm_flat__nomatchKw || sm_flat__collectBranchesTok_Sm_flat__TIdent
+10592       pushcaf 73                               || sm_flat__collectBranchesTok_Sm_flat__TIdent
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10593                               || sm_flat__collectBranchesTok_Sm_flat__TIdent_else
@@ -45223,7 +45582,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 10949       push "parseAdt: unexpected token in the field list" || sm_flat__collectConFieldsTok_Sm_flat__TStrList
             syscall 8
             return 4
-10950       call 10932                               || sm_flat__pipeOp || sm_flat__collectConFieldsTok_Sm_flat__TOp
+10950       pushcaf 75                               || sm_flat__collectConFieldsTok_Sm_flat__TOp
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 10951                               || sm_flat__collectConFieldsTok_Sm_flat__TOp_else
@@ -45491,7 +45851,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 11031       push "parseAdt: | expected between constructors" || sm_flat__afterAdtConTok_Sm_flat__TStrList
             syscall 8
             return 4
-11032       call 10932                               || sm_flat__pipeOp || sm_flat__afterAdtConTok_Sm_flat__TOp
+11032       pushcaf 75                               || sm_flat__afterAdtConTok_Sm_flat__TOp
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 11033                               || sm_flat__afterAdtConTok_Sm_flat__TOp_else
@@ -46735,7 +47096,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 11315       load 3                                   || sm_flat__resolveAppStr_lazy
             eval
             store 3
-11316       call 10368                               || sm_flat__str2listOp || sm_flat__resolveAppStr
+11316       pushcaf 74                               || sm_flat__resolveAppStr
+            eval
             load 3
             call 9759                                || sm_flat__charListEq
             ifeq 11318                               || sm_flat__resolveAppStr_else
@@ -47952,7 +48314,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             force
             ccreatet 1 11 107 0
             ccreatet 2 11 5 1
-            call 11556                               || sm_flat__charConName
+            pushcaf 76
+            eval
             ccreatet 2 11 107 7
             return 1
 11559       jmp 11560                                || sm_flat__charAdt || sm_flat__charAdt_lazy
@@ -47960,10 +48323,12 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             ccreatet 0 11 5 0
             push 1
             ccreatet 2 11 5 1
-            call 11556                               || sm_flat__charConName
+            pushcaf 76
+            eval
             ccreatet 2 11 110 0
             ccreatet 2 11 5 1
-            call 11556                               || sm_flat__charConName
+            pushcaf 76
+            eval
             ccreatet 2 11 111 0
             return 0
 11561       load 0                                   || sm_flat__isCharLit_lazy
@@ -47978,7 +48343,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 11567       return_const 4 0                         || sm_flat__isCharLit_Sm_flat__If
 11568       return_const 3 0                         || sm_flat__isCharLit_Sm_flat__App
 11569       return_const 3 0                         || sm_flat__isCharLit_Sm_flat__Prim
-11570       call 11556                               || sm_flat__charConName || sm_flat__isCharLit_Sm_flat__Ct
+11570       pushcaf 76                               || sm_flat__isCharLit_Sm_flat__Ct
+            eval
             load 0
             tailcall 3 9759                          || sm_flat__charListEq
 11571       return_const 3 0                         || sm_flat__isCharLit_Sm_flat__Case
@@ -48196,7 +48562,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             return 3
 11652       jmp 11653                                || sm_flat__clPrim || sm_flat__clPrim_lazy
 11653       load 0                                   || sm_flat__clPrim
-            call 11623                               || sm_flat__charNumOps
+            pushcaf 78
+            eval
             call 9808                                || sm_flat__member
             ifeq 11654                               || sm_flat__clPrim_else
             load 1
@@ -48291,7 +48658,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             tailcall 3 11699                         || sm_flat__anyExprUsesChar
 11682       load 1                                   || sm_flat__exprUsesChar_Sm_flat__Prim
             tailcall 3 11699                         || sm_flat__anyExprUsesChar
-11683       call 11556                               || sm_flat__charConName || sm_flat__exprUsesChar_Sm_flat__Ct
+11683       pushcaf 76                               || sm_flat__exprUsesChar_Sm_flat__Ct
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 11684                               || sm_flat__exprUsesChar_Sm_flat__Ct_else
@@ -49131,7 +49499,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 11862       jmp 11863                                || sm_flat__strictLeftOps || sm_flat__strictLeftOps_lazy
 11863       pushfunc 0 26086                         || sm_flat__strictLeftOps_1 || sm_flat__strictLeftOps
             create 1 3
-            call 9854                                || sm_flat__slashBackslash
+            pushcaf 13
+            eval
             ccreatet 2 11 5 1
             return 0
 11864       load 1                                   || sm_flat__paramShadowedBy_lazy
@@ -49279,7 +49648,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 11903       return_const 9 0                         || sm_flat__primStrictInRest2_Cons
 11904       jmp 11905                                || sm_flat__primStrictInTwo || sm_flat__primStrictInTwo_lazy
 11905       load 3                                   || sm_flat__primStrictInTwo
-            call 11861                               || sm_flat__strictBothOps
+            pushcaf 79
+            eval
             call 9808                                || sm_flat__member
             ifeq 11908                               || sm_flat__primStrictInTwo_else
             load 4
@@ -49922,12 +50292,14 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 12065       load 0                                   || sm_flat__isBoolConnective_lazy
             eval
             store 0
-12066       call 9854                                || sm_flat__slashBackslash || sm_flat__isBoolConnective
+12066       pushcaf 13                               || sm_flat__isBoolConnective
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 12067                               || sm_flat__isBoolConnective_else
             return_const 1 1
-12067       call 9856                                || sm_flat__backslashSlash || sm_flat__isBoolConnective_else
+12067       pushcaf 14                               || sm_flat__isBoolConnective_else
+            eval
             load 0
             tailcall 1 9759                          || sm_flat__charListEq
 12068       load 1                                   || sm_flat__stage1_lazy
@@ -50150,7 +50522,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 12102       load 1                                   || sm_flat__boolAsGateOp_lazy
             eval
             store 1
-12103       call 9854                                || sm_flat__slashBackslash || sm_flat__boolAsGateOp
+12103       pushcaf 13                               || sm_flat__boolAsGateOp
+            eval
             load 1
             call 9759                                || sm_flat__charListEq
             ifeq 12104                               || sm_flat__boolAsGateOp_else
@@ -50163,7 +50536,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             load 2
             force
             tailcall 6 12072                         || sm_flat__boolAsGate
-12104       call 9856                                || sm_flat__backslashSlash || sm_flat__boolAsGateOp_else
+12104       pushcaf 14                               || sm_flat__boolAsGateOp_else
+            eval
             load 1
             call 9759                                || sm_flat__charListEq
             ifeq 12105                               || sm_flat__boolAsGateOp_else_else
@@ -50272,7 +50646,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 12137       load 1                                   || sm_flat__boolValueOp_lazy
             eval
             store 1
-12138       call 9854                                || sm_flat__slashBackslash || sm_flat__boolValueOp
+12138       pushcaf 13                               || sm_flat__boolValueOp
+            eval
             load 1
             call 9759                                || sm_flat__charListEq
             ifeq 12139                               || sm_flat__boolValueOp_else
@@ -50284,7 +50659,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             load 2
             force
             tailcall 4 12072                         || sm_flat__boolAsGate
-12139       call 9856                                || sm_flat__backslashSlash || sm_flat__boolValueOp_else
+12139       pushcaf 14                               || sm_flat__boolValueOp_else
+            eval
             load 1
             call 9759                                || sm_flat__charListEq
             ifeq 12140                               || sm_flat__boolValueOp_else_else
@@ -51068,7 +51444,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 12306       load 3                                   || sm_flat__b1GateOp_lazy
             eval
             store 3
-12307       call 9854                                || sm_flat__slashBackslash || sm_flat__b1GateOp
+12307       pushcaf 13                               || sm_flat__b1GateOp
+            eval
             load 3
             call 9759                                || sm_flat__charListEq
             ifeq 12308                               || sm_flat__b1GateOp_else
@@ -51082,7 +51459,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             load 4
             load 0
             tailcall 8 12311                         || sm_flat__b1GateAnd
-12308       call 9856                                || sm_flat__backslashSlash || sm_flat__b1GateOp_else
+12308       pushcaf 14                               || sm_flat__b1GateOp_else
+            eval
             load 3
             call 9759                                || sm_flat__charListEq
             ifeq 12309                               || sm_flat__b1GateOp_else_else
@@ -51387,7 +51765,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 12370       load 3                                   || sm_flat__b1ValueOp_lazy
             eval
             store 3
-12371       call 9854                                || sm_flat__slashBackslash || sm_flat__b1ValueOp
+12371       pushcaf 13                               || sm_flat__b1ValueOp
+            eval
             load 3
             call 9759                                || sm_flat__charListEq
             ifeq 12372                               || sm_flat__b1ValueOp_else
@@ -51396,7 +51775,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             load 1
             load 0
             tailcall 6 12375                         || sm_flat__b1ValueAnd
-12372       call 9856                                || sm_flat__backslashSlash || sm_flat__b1ValueOp_else
+12372       pushcaf 14                               || sm_flat__b1ValueOp_else
+            eval
             load 3
             call 9759                                || sm_flat__charListEq
             ifeq 12373                               || sm_flat__b1ValueOp_else_else
@@ -54121,7 +54501,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 13039       load 2                                   || sm_flat__vlTailPrim_lazy
             eval
             store 2
-13040       call 12991                               || sm_flat__vlSeqOp || sm_flat__vlTailPrim
+13040       pushcaf 81                               || sm_flat__vlTailPrim
+            eval
             load 2
             call 9759                                || sm_flat__charListEq
             ifeq 13041                               || sm_flat__vlTailPrim_else
@@ -54146,7 +54527,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             load 1
             force
             load 2
-            call 12991                               || sm_flat__vlSeqOp
+            pushcaf 81
+            eval
             ccreatet 2 11 107 6
             ccreatet 3 11 134 0
             return 3
@@ -54168,8 +54550,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             load 0
             pushfunc 3 13123                         || sm_flat__vlValList_lazy
             create 4 3
-            pushfunc 0 12991                         || sm_flat__vlSeqOp
-            create 1 3
+            pushcaf 81
             tailcall 4 13134                         || sm_flat__vlWrapPrim
 13049       load 1                                   || sm_flat__vlTailSeqRest_Cons
             load 0
@@ -56582,13 +56963,15 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 13483       load 0                                   || sm_flat__reflectionInstrs_lazy
             eval
             store 0
-13484       call 10200                               || sm_flat__getFieldKw || sm_flat__reflectionInstrs
+13484       pushcaf 57                               || sm_flat__reflectionInstrs
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 13485                               || sm_flat__reflectionInstrs_else
             load 0
             tailcall 1 26131                         || sm_flat__reflectionInstrs_j1
-13485       call 10226                               || sm_flat__unpackKw || sm_flat__reflectionInstrs_else
+13485       pushcaf 70                               || sm_flat__reflectionInstrs_else
+            eval
             load 0
             call 9759                                || sm_flat__charListEq
             ifeq 13486                               || sm_flat__reflectionInstrs_else_else
@@ -62037,7 +62420,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             return 0
 14702       jmp 14703                                || sm_flat__commentSuffix || sm_flat__commentSuffix_lazy
 14703       load 0                                   || sm_flat__commentSuffix
-            call 14701                               || sm_flat__pipeSpace
+            pushcaf 83
+            eval
             tailcall 1 9493                          || sm_flat__append
 14704       load 1                                   || sm_flat__renderInstr_lazy
             eval
@@ -62119,7 +62503,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             load 0
             pushfunc 2 14704                         || sm_flat__renderInstr_lazy
             create 3 3
-            call 14699                               || sm_flat__prefixCols
+            pushcaf 82
+            eval
             tailcall 2 9493                          || sm_flat__append
 14718       load 3                                   || sm_flat__renderBlockLines_lazy
             eval
@@ -62326,8 +62711,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             create 3 3
             pushfunc 1 9857                          || sm_flat__concatAll_lazy
             create 2 3
-            pushfunc 0 14749                         || sm_flat__nl
-            create 1 3
+            pushcaf 85
             pushfunc 2 9492                          || sm_flat__append_lazy
             create 3 3
             load 2
@@ -62350,8 +62734,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 14767       load 2                                   || sm_flat__genFuncsBlockText_Cons
             pushfunc 1 9858                          || sm_flat__concatAll
             create 2 3
-            pushfunc 0 14749                         || sm_flat__nl
-            create 1 3
+            pushcaf 85
             pushfunc 2 9492                          || sm_flat__append_lazy
             create 3 3
             load 2
@@ -62377,8 +62760,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             load 1
             tailcall 2 24495                         || __pat_7228
 14774       jmp 14775                                || sm_flat__genFuncMetaLine || sm_flat__genFuncMetaLine_lazy
-14775       pushfunc 0 14749                         || sm_flat__nl || sm_flat__genFuncMetaLine
-            create 1 3
+14775       pushcaf 85                               || sm_flat__genFuncMetaLine
             load 3
             pushfunc 2 9492                          || sm_flat__append_lazy
             create 3 3
@@ -65396,7 +65778,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 15525       load 0                                   || sm_flat__jaFloatop
             push 0
             call 15456                               || sm_flat__jaArg
-            call 15520                               || sm_flat__jaPushF
+            pushcaf 87
+            eval
             sub
             ifneq 15526                              || sm_flat__jaFloatop_else
             load 0
@@ -67629,14 +68012,16 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             eval
             store 0
 16008       push 0                                   || sm_flat__jaFitsC
-            call 16012                               || sm_flat__jaTwo31
+            pushcaf 88
+            eval
             sub
             load 0
             sub
             ifle 16009                               || sm_flat__jaFitsC_else
             return_const 2 0
 16009       load 0                                   || sm_flat__jaFitsC_else
-            call 16012                               || sm_flat__jaTwo31
+            pushcaf 88
+            eval
             dec
             sub
             ifle 16010                               || sm_flat__jaFitsC_else_else
@@ -67967,7 +68352,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             load 0
             return 1
 16089       load 0                                   || sm_flat__jaU32_then
-            call 16014                               || sm_flat__jaTwo32
+            pushcaf 89
+            eval
             add
             return 1
 16090       load 0                                   || sm_flat__jaPut32_lazy
@@ -103943,8 +104329,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             pushfunc 2 15377                         || sm_flat__chunkExtNames_lazy
             create 3 3
             store 2
-            pushfunc 0 14731                         || sm_flat__prologueInstrs
-            create 1 3
+            pushcaf 84
             load 8
             pushfunc 1 14631                         || sm_flat__cafPrologue_lazy
             create 2 3
@@ -104406,8 +104791,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             pushfunc 2 14605                         || sm_flat__cafBlocks_lazy
             create 3 3
             store 0
-            pushfunc 0 14731                         || sm_flat__prologueInstrs
-            create 1 3
+            pushcaf 84
             load 5
             pushfunc 1 14631                         || sm_flat__cafPrologue_lazy
             create 2 3
@@ -104508,8 +104892,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             load 1
             pushfunc 2 14724                         || sm_flat__renderAllBlocks_lazy
             create 3 3
-            pushfunc 0 14731                         || sm_flat__prologueInstrs
-            create 1 3
+            pushcaf 84
             load 6
             pushfunc 1 14631                         || sm_flat__cafPrologue_lazy
             create 2 3
@@ -104957,8 +105340,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             load 0
             pushfunc 2 14724                         || sm_flat__renderAllBlocks_lazy
             create 3 3
-            pushfunc 0 14731                         || sm_flat__prologueInstrs
-            create 1 3
+            pushcaf 84
             load 2
             pushfunc 1 14631                         || sm_flat__cafPrologue_lazy
             create 2 3
@@ -105040,8 +105422,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             pushfunc 2 10174                         || sm_flat__conTag_lazy
             create 3 3
             store 1
-            pushfunc 0 14749                         || sm_flat__nl
-            create 1 3
+            pushcaf 85
             load 2
             pushfunc 1 9467                          || sm_flat__itoa_lazy
             create 2 3
@@ -105093,8 +105474,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             create 3 3
             pushfunc 1 9857                          || sm_flat__concatAll_lazy
             create 2 3
-            pushfunc 0 14749                         || sm_flat__nl
-            create 1 3
+            pushcaf 85
             pushfunc 2 9492                          || sm_flat__append_lazy
             create 3 3
             load 2
@@ -106030,7 +106410,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             force
             call 12665                               || sm_flat__liftedExpr
             ccreatet 2 11 5 1
-            call 12991                               || sm_flat__vlSeqOp
+            pushcaf 81
+            eval
             ccreatet 2 11 107 6
             ccreatet 3 11 134 0
             return 7
@@ -116517,91 +116898,106 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             return 1
 25979       jmp 25980                                || sm_flat__reflectionKws_1 || sm_flat__reflectionKws_1_lazy
 25980       ccreatet 0 11 5 0                        || sm_flat__reflectionKws_1
-            call 10226                               || sm_flat__unpackKw
+            pushcaf 70
+            eval
             ccreatet 2 11 5 1
             return 0
 25981       jmp 25982                                || sm_flat__reflectionKws_2 || sm_flat__reflectionKws_2_lazy
 25982       pushfunc 0 25980                         || sm_flat__reflectionKws_1 || sm_flat__reflectionKws_2
             create 1 3
-            call 10224                               || sm_flat__packMaxKw
+            pushcaf 69
+            eval
             ccreatet 2 11 5 1
             return 0
 25983       jmp 25984                                || sm_flat__reflectionKws_3 || sm_flat__reflectionKws_3_lazy
 25984       pushfunc 0 25982                         || sm_flat__reflectionKws_2 || sm_flat__reflectionKws_3
             create 1 3
-            call 10222                               || sm_flat__packKw
+            pushcaf 68
+            eval
             ccreatet 2 11 5 1
             return 0
 25985       jmp 25986                                || sm_flat__reflectionKws_4 || sm_flat__reflectionKws_4_lazy
 25986       pushfunc 0 25984                         || sm_flat__reflectionKws_3 || sm_flat__reflectionKws_4
             create 1 3
-            call 10220                               || sm_flat__fieldIsValueKw
+            pushcaf 67
+            eval
             ccreatet 2 11 5 1
             return 0
 25987       jmp 25988                                || sm_flat__reflectionKws_5 || sm_flat__reflectionKws_5_lazy
 25988       pushfunc 0 25986                         || sm_flat__reflectionKws_4 || sm_flat__reflectionKws_5
             create 1 3
-            call 10218                               || sm_flat__funcAddrKw
+            pushcaf 66
+            eval
             ccreatet 2 11 5 1
             return 0
 25989       jmp 25990                                || sm_flat__reflectionKws_6 || sm_flat__reflectionKws_6_lazy
 25990       pushfunc 0 25988                         || sm_flat__reflectionKws_5 || sm_flat__reflectionKws_6
             create 1 3
-            call 10216                               || sm_flat__chrKw
+            pushcaf 65
+            eval
             ccreatet 2 11 5 1
             return 0
 25991       jmp 25992                                || sm_flat__reflectionKws_7 || sm_flat__reflectionKws_7_lazy
 25992       pushfunc 0 25990                         || sm_flat__reflectionKws_6 || sm_flat__reflectionKws_7
             create 1 3
-            call 10214                               || sm_flat__ordKw
+            pushcaf 64
+            eval
             ccreatet 2 11 5 1
             return 0
 25993       jmp 25994                                || sm_flat__reflectionKws_8 || sm_flat__reflectionKws_8_lazy
 25994       pushfunc 0 25992                         || sm_flat__reflectionKws_7 || sm_flat__reflectionKws_8
             create 1 3
-            call 10212                               || sm_flat__lookupKw
+            pushcaf 63
+            eval
             ccreatet 2 11 5 1
             return 0
 25995       jmp 25996                                || sm_flat__reflectionKws_9 || sm_flat__reflectionKws_9_lazy
 25996       pushfunc 0 25994                         || sm_flat__reflectionKws_8 || sm_flat__reflectionKws_9
             create 1 3
-            call 10210                               || sm_flat__applyDynamicKw
+            pushcaf 62
+            eval
             ccreatet 2 11 5 1
             return 0
 25997       jmp 25998                                || sm_flat__reflectionKws_10 || sm_flat__reflectionKws_10_lazy
 25998       pushfunc 0 25996                         || sm_flat__reflectionKws_9 || sm_flat__reflectionKws_10
             create 1 3
-            call 10208                               || sm_flat__funcRemainingKw
+            pushcaf 61
+            eval
             ccreatet 2 11 5 1
             return 0
 25999       jmp 26000                                || sm_flat__reflectionKws_11 || sm_flat__reflectionKws_11_lazy
 26000       pushfunc 0 25998                         || sm_flat__reflectionKws_10 || sm_flat__reflectionKws_11
             create 1 3
-            call 10206                               || sm_flat__funcArityKw
+            pushcaf 60
+            eval
             ccreatet 2 11 5 1
             return 0
 26001       jmp 26002                                || sm_flat__reflectionKws_12 || sm_flat__reflectionKws_12_lazy
 26002       pushfunc 0 26000                         || sm_flat__reflectionKws_11 || sm_flat__reflectionKws_12
             create 1 3
-            call 10204                               || sm_flat__funcNameKw
+            pushcaf 59
+            eval
             ccreatet 2 11 5 1
             return 0
 26003       jmp 26004                                || sm_flat__reflectionKws_13 || sm_flat__reflectionKws_13_lazy
 26004       pushfunc 0 26002                         || sm_flat__reflectionKws_12 || sm_flat__reflectionKws_13
             create 1 3
-            call 10202                               || sm_flat__makeConstrKw
+            pushcaf 58
+            eval
             ccreatet 2 11 5 1
             return 0
 26005       jmp 26006                                || sm_flat__reflectionKws_14 || sm_flat__reflectionKws_14_lazy
 26006       pushfunc 0 26004                         || sm_flat__reflectionKws_13 || sm_flat__reflectionKws_14
             create 1 3
-            call 10200                               || sm_flat__getFieldKw
+            pushcaf 57
+            eval
             ccreatet 2 11 5 1
             return 0
 26007       jmp 26008                                || sm_flat__reflectionKws_15 || sm_flat__reflectionKws_15_lazy
 26008       pushfunc 0 26006                         || sm_flat__reflectionKws_14 || sm_flat__reflectionKws_15
             create 1 3
-            call 10198                               || sm_flat__constrNameKw
+            pushcaf 56
+            eval
             ccreatet 2 11 5 1
             return 0
 26009       jmp 26010                                || sm_flat__identExpr_j1 || sm_flat__identExpr_j1_lazy
@@ -116621,7 +117017,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             force
             ccreatet 1 11 107 2
             ccreatet 2 11 5 1
-            call 10368                               || sm_flat__str2listOp
+            pushcaf 74
+            eval
             ccreatet 2 11 107 5
             return 1
 26015       jmp 26016                                || sm_flat__opTable_1 || sm_flat__opTable_1_lazy
@@ -116714,7 +117111,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 26026       pushfunc 0 26024                         || sm_flat__opTable_5 || sm_flat__opTable_6
             create 1 3
             push 1
-            call 9856                                || sm_flat__backslashSlash
+            pushcaf 14
+            eval
             ccreatet 2 11 118 0
             ccreatet 2 11 5 1
             return 0
@@ -116915,7 +117313,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             return 0
 26071       jmp 26072                                || sm_flat__charLiteralsWith_1 || sm_flat__charLiteralsWith_1_lazy
 26072       ccreatet 0 11 5 0                        || sm_flat__charLiteralsWith_1
-            call 11560                               || sm_flat__charAdt
+            pushcaf 77
+            eval
             ccreatet 2 11 5 1
             return 0
 26073       jmp 26074                                || sm_flat__uaOne_1 || sm_flat__uaOne_1_lazy
@@ -116968,12 +117367,14 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             return 0
 26085       jmp 26086                                || sm_flat__strictLeftOps_1 || sm_flat__strictLeftOps_1_lazy
 26086       ccreatet 0 11 5 0                        || sm_flat__strictLeftOps_1
-            call 9856                                || sm_flat__backslashSlash
+            pushcaf 14
+            eval
             ccreatet 2 11 5 1
             return 0
 26087       jmp 26088                                || sm_flat__primStrictInTwo_j1 || sm_flat__primStrictInTwo_j1_lazy
 26088       load 0                                   || sm_flat__primStrictInTwo_j1
-            call 11863                               || sm_flat__strictLeftOps
+            pushcaf 80
+            eval
             call 9808                                || sm_flat__member
             ifeq 26089                               || sm_flat__primStrictInTwo_j1_else
             load 4
@@ -118341,8 +118742,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             ccreatet 2 11 5 1
             return 0
 26368       jmp 26369                                || sm_flat__genMetadataParts_j1 || sm_flat__genMetadataParts_j1_lazy
-26369       pushfunc 0 14749                         || sm_flat__nl || sm_flat__genMetadataParts_j1
-            create 1 3
+26369       pushcaf 85                               || sm_flat__genMetadataParts_j1
             push ".endmetadata"
             pushfunc 1 9425                          || sm_flat__str2list
             create 2 3
@@ -118358,8 +118758,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             create 2 3
             pushfunc 2 9492                          || sm_flat__append_lazy
             create 3 3
-            pushfunc 0 14749                         || sm_flat__nl
-            create 1 3
+            pushcaf 85
             pushfunc 2 9492                          || sm_flat__append_lazy
             create 3 3
             push ".metadata"
@@ -118367,7 +118766,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             create 2 3
             pushfunc 2 9492                          || sm_flat__append_lazy
             create 3 3
-            call 14749                               || sm_flat__nl
+            pushcaf 85
+            eval
             tailcall 2 9493                          || sm_flat__append
 26370       jmp 26371                                || sm_flat__ppPrimCheckTail_1 || sm_flat__ppPrimCheckTail_1_lazy
 26371       load 1                                   || sm_flat__ppPrimCheckTail_1
@@ -118532,7 +118932,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             force
             ccreatet 1 11 150 4
             ccreatet 2 11 5 1
-            call 15520                               || sm_flat__jaPushF
+            pushcaf 87
+            eval
             ccreatet 1 11 150 0
             ccreatet 2 11 5 1
             return 1
@@ -118557,7 +118958,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 26413       load 0                                   || sm_flat__jaFloatop_2
             pushfunc 1 26411                         || sm_flat__jaFloatop_1
             create 2 3
-            call 15520                               || sm_flat__jaPushF
+            pushcaf 87
+            eval
             ccreatet 1 11 150 0
             ccreatet 2 11 5 1
             return 1
@@ -123861,11 +124263,14 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 27673       jmp 27674                                || __pat_7913_1 || __pat_7913_1_lazy
 27674       load 0                                   || __pat_7913_1
             force
-            call 16014                               || sm_flat__jaTwo32
+            pushcaf 89
+            eval
             mod
-            call 16014                               || sm_flat__jaTwo32
+            pushcaf 89
+            eval
             add
-            call 16014                               || sm_flat__jaTwo32
+            pushcaf 89
+            eval
             mod
             return 1
 27675       jmp 27676                                || __pat_7913_2 || __pat_7913_2_lazy
@@ -123874,7 +124279,8 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             load 1
             force
             sub
-            call 16014                               || sm_flat__jaTwo32
+            pushcaf 89
+            eval
             div
             return 2
 27677       jmp 27678                                || __pat_7889_1 || __pat_7889_1_lazy

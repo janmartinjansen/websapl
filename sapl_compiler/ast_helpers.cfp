@@ -32,7 +32,7 @@ charListEq a b =
 // en, voor een aanroep zonder argumenten die als atoom terugkomt, bij Var).
 // Alleen de kop van een aanroep: een definitie of een parameter met zo'n naam
 // is niet dubbelzinnig.
-retagUserPrefix = ['__user_']
+retagUserPrefix =: ['__user_']
 isRetagMarkerName n = charListEq n ['eval'] \/ (charListEq n ['thunk'] \/ (charListEq n ['lazy'] \/ charListEq n ['closure']))
 retagEscapeHead n = if (isRetagMarkerName n) (append retagUserPrefix n) n
 retagUnescapeHead n = retagUnescapeCheck n (retagStripPrefix retagUserPrefix n n)
@@ -152,8 +152,8 @@ nsMemberAtNonzero cmp name left right =
 // `['...']` literal (no escape processing there, confirmed empirically) --
 // shared between parser.cfp's opTable and stage1_bool.cfp's isBoolConnective,
 // originally a local copy in each.
-slashBackslash = Cons '/' (Cons 92 Nil)
-backslashSlash = Cons 92 (Cons '/' Nil)
+slashBackslash =: Cons '/' (Cons 92 Nil)
+backslashSlash =: Cons 92 (Cons '/' Nil)
 
 concatAll xss =
   case xss
@@ -266,17 +266,17 @@ fiBuildNode leftFs leftCount fromMid rightCount =
 // `print` is a VM instruction (vm.cpp's `print:`), not a top-level function
 // in `prog` -- every stage must recognize it before isKnownFunc, else it's
 // treated as a call to an unknown (possibly higher-order) function.
-printKw = ['print']
-printCKw = ['printC']
-printSKw = ['printS']
-errorKw = ['error']
-strlenKw = ['strlen']
-stratKw = ['strat']
-updateKw = ['update']
-getKw = ['get']
-strappendKw = ['strappend']
-strsliceKw = ['strslice']
-strcpyKw = ['strcpy']
+printKw =: ['print']
+printCKw =: ['printC']
+printSKw =: ['printS']
+errorKw =: ['error']
+strlenKw =: ['strlen']
+stratKw =: ['strat']
+updateKw =: ['update']
+getKw =: ['get']
+strappendKw =: ['strappend']
+strsliceKw =: ['strslice']
+strcpyKw =: ['strcpy']
 
 isPrintCall name = charListEq name printKw
 isPrintCCall name = charListEq name printCKw
@@ -317,15 +317,15 @@ predefIndex name =
 // these eight names simply weren't recognized at all, so they fell through
 // to being treated as ordinary (unbound) variables). Arities/syscall
 // indices verified against vm.cpp's `case SysCall` (~line 1085-1208).
-readFileKw = ['readFile']
-writeFileKw = ['writeFile']
-readLineKw = ['readLine']
-printStringKw = ['printString']
-openFileKw = ['openFile']
-closeFileKw = ['closeFile']
-readCharKw = ['readChar']
-writeCharKw = ['writeChar']
-strcreateKw = ['strcreate']
+readFileKw =: ['readFile']
+writeFileKw =: ['writeFile']
+readLineKw =: ['readLine']
+printStringKw =: ['printString']
+openFileKw =: ['openFile']
+closeFileKw =: ['closeFile']
+readCharKw =: ['readChar']
+writeCharKw =: ['writeChar']
+strcreateKw =: ['strcreate']
 
 isSyscallCall name =
   charListEq name readFileKw \/ charListEq name writeFileKw \/ charListEq name readLineKw \/
@@ -359,26 +359,26 @@ syscallIndex name =
 isStrcreateCall name = charListEq name strcreateKw
 
 // Float builtins and generic floatop (mirrors parser.ama FloatOpE indices)
-sinKw = ['sin']
-cosKw = ['cos']
-tanKw = ['tan']
-asinKw = ['asin']
-acosKw = ['acos']
-atanKw = ['atan']
-logKw = ['log']
-log10Kw = ['log10']
-expKw = ['exp']
-sqrtKw = ['sqrt']
-floorKw = ['floor']
-ceilKw = ['ceil']
-roundKw = ['round']
-fabsKw = ['fabs']
-absKw = ['abs']
-itofKw = ['itof']
-ftoiKw = ['ftoi']
-atofKw = ['atof']
-ftoaKw = ['ftoa']
-atan2Kw = ['atan2']
+sinKw =: ['sin']
+cosKw =: ['cos']
+tanKw =: ['tan']
+asinKw =: ['asin']
+acosKw =: ['acos']
+atanKw =: ['atan']
+logKw =: ['log']
+log10Kw =: ['log10']
+expKw =: ['exp']
+sqrtKw =: ['sqrt']
+floorKw =: ['floor']
+ceilKw =: ['ceil']
+roundKw =: ['round']
+fabsKw =: ['fabs']
+absKw =: ['abs']
+itofKw =: ['itof']
+ftoiKw =: ['ftoi']
+atofKw =: ['atof']
+ftoaKw =: ['ftoa']
+atan2Kw =: ['atan2']
 
 isFloatOpCall name =
   charListEq name sinKw \/ charListEq name cosKw \/ charListEq name tanKw \/
@@ -487,32 +487,32 @@ conTypeId name adts = adtTypeId (adtName (findAdtByCon name adts)) adts
 // itself doesn't validate arity here either, and `makeConstr` has no fixed
 // arity at all -- the field count is itself one of the arguments (vm.cpp's
 // MakeConstr opcode: `[field_0..field_N-1, N, type_id, constr_aux]`).
-typeIdKw = ['typeId']
-constrNameKw = ['constrName']
-getFieldKw = ['getField']
-makeConstrKw = ['makeConstr']
-funcNameKw = ['funcName']
-funcArityKw = ['funcArity']
-funcRemainingKw = ['funcRemaining']
-applyDynamicKw = ['applyDynamic']
-lookupKw = ['lookup']
+typeIdKw =: ['typeId']
+constrNameKw =: ['constrName']
+getFieldKw =: ['getField']
+makeConstrKw =: ['makeConstr']
+funcNameKw =: ['funcName']
+funcArityKw =: ['funcArity']
+funcRemainingKw =: ['funcRemaining']
+applyDynamicKw =: ['applyDynamic']
+lookupKw =: ['lookup']
 // ord (char -> int) en chr (int -> char), 5 oktober 2026: _AUX Ord/Chr.
-ordKw = ['ord']
-chrKw = ['chr']
+ordKw =: ['ord']
+chrKw =: ['chr']
 // funcAddr (11 oktober 2026): het adres van de functie achter een
 // functiewaarde, of -1 (_AUX FuncAddr). gen1's eigen bron gebruikt het niet,
 // zodat parser.ama gen1 kan blijven bouwen (check_bootstrap).
-funcAddrKw = ['funcAddr']
+funcAddrKw =: ['funcAddr']
 // fieldIsValue obj i (11 oktober 2026): is veld i al een waarde (_AUX
 // FieldIsValue)? Ook dit gebruikt gen1's eigen bron niet.
-fieldIsValueKw = ['fieldIsValue']
+fieldIsValueKw =: ['fieldIsValue']
 // pack x, packMax max x, unpack s (24 oktober 2026, _AUX Pack/PackMax/Unpack):
 // een waarde als tekst en terug (vm/dynamics.h). Niet in gen1's eigen bron.
-packKw = ['pack']
-packMaxKw = ['packMax']
-unpackKw = ['unpack']
+packKw =: ['pack']
+packMaxKw =: ['packMax']
+unpackKw =: ['unpack']
 
-reflectionKws = Cons typeIdKw (Cons constrNameKw (Cons getFieldKw (Cons makeConstrKw (Cons funcNameKw (Cons funcArityKw (Cons funcRemainingKw (Cons applyDynamicKw (Cons lookupKw (Cons ordKw (Cons chrKw (Cons funcAddrKw (Cons fieldIsValueKw (Cons packKw (Cons packMaxKw (Cons unpackKw Nil)))))))))))))))
+reflectionKws =: Cons typeIdKw (Cons constrNameKw (Cons getFieldKw (Cons makeConstrKw (Cons funcNameKw (Cons funcArityKw (Cons funcRemainingKw (Cons applyDynamicKw (Cons lookupKw (Cons ordKw (Cons chrKw (Cons funcAddrKw (Cons fieldIsValueKw (Cons packKw (Cons packMaxKw (Cons unpackKw Nil)))))))))))))))
 
 isReflectionCall name = member reflectionKws name
 

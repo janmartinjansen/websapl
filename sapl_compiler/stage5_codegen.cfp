@@ -1503,9 +1503,9 @@ spaces k = if (k <= 0) Nil (Cons ' ' (spaces (k-1)))
 
 ljustify n s = if (length s >= n) s (append s (spaces (n - length s)))
 
-prefixCols = spaces 12
+prefixCols =: spaces 12
 
-pipeSpace = Cons ' ' (Cons '|' (Cons '|' (Cons ' ' Nil)))
+pipeSpace =: Cons ' ' (Cons '|' (Cons '|' (Cons ' ' Nil)))
 
 commentSuffix name = append pipeSpace name
 
@@ -1545,7 +1545,7 @@ renderAllBlocksAt bidx blocks idx =
     (Nil -> Nil)
     (Cons b rest -> append (renderBlockLines bidx idx (blockName b) (blockInstrs b)) (renderAllBlocksAt bidx rest (idx+1)))
 
-prologueInstrs = Cons (mkJ ['call'] ['start']) (Cons (mkI ['print 4']) (Cons (mkI ['stop']) Nil))
+prologueInstrs =: Cons (mkJ ['call'] ['start']) (Cons (mkI ['print 4']) (Cons (mkI ['stop']) Nil))
 
 // unwords/unlines aren't real Amanda builtins (only pg99.ama's prelude has
 // them, which this port deliberately doesn't import) -- own, subset-
@@ -1584,7 +1584,7 @@ headerLine blocks = append (myUnwords (map blockName blocks)) [' #']
 // escapes, confirmed empirically in ast_helpers.cfp's slashBackslash
 // comment) -- `nl` below builds one via a single-quoted char literal
 // instead, which DOES support `\n`.
-nl = Cons '\n' Nil
+nl =: Cons '\n' Nil
 
 // Unlike parser.ama's `isLifted` filter (dropping "lift_case_"-prefixed
 // names): this port's lambda-lift helpers are named `fname_1`/`fname_2`
