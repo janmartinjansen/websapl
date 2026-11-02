@@ -123,12 +123,14 @@ D.table ["proef", "uitkomst", "besluit"]
     ["dispatch met musttail (wasm)", "warm 32-91% trager dan switch", "niet gedaan"],
     ["Scott-codering i.p.v. ADT's", "1,0-3,2× trager over de benchmarks", "niet gedaan"],
     ["JMVM naar losse wasm compileren", "1,4-3,5× in Chrome, ~1,4× in Safari", "niet ingebouwd"],
-    ["dezelfde code naar C (jmvm2c, clang)", "1,55× sneller dan nu; gen1 op 1,5× van GHC", "proef, native"],
+    ["dezelfde code naar C (jmvm2c, clang)", "1,55× sneller dan de VM van 1 nov; gen1 op 1,5× van GHC", "proef, native"],
     ["REPL in Sapl i.p.v. repl-host", "25,7 naar 5,8 ms per regel", "de REPL"],
     ["ongebruikte instructies weg", "native ±0, Chrome fib +21%", "alleen een tag"],
     ["ABC-interpreter: globals naar locals", "34% minder tijd in Chrome", "voorstel aan TOP"],
     ["superinstructies uit een voorstel (zes)", "3,5% buiten sprimes; plafond ~10%", "zoeken naar werk, niet naar dispatch"],
     ["eval_local, gevonden door patronen te tellen", "primes −41%, sort −27%", "standaard, met de zes"],
+    ["force weghalen waar hij nooit werk doet (knights)", "−8% machine-instructies, cycli ±0", "niet gedaan: de VM wacht"],
+    ["case als echte sprong i.p.v. sprongtabel", "gen1 −25%; 1,21× native, 1,16× browser", "standaard"],
     ["typewaarschuwingen: twee verse agents, aan en uit", "allebei 5 van 5 goed", "waarschuwingen, geen strenge modus"] ]
 //%% [markdown]
 // ## Drie maanden in commits
@@ -186,7 +188,8 @@ D.table ["datum", "mijlpaal"]
     ["24 okt", "musttail-dispatch: native 5-54% sneller"],
     ["28-29 okt", "ABC-backend voor gen1 (proef); de ABC-interpreter in wasm gemeten"],
     ["31 okt", "ABC uit de retag-vorm op 1,07× van Clean's eigen ABC"],
-    ["1 nov", "zeven superinstructies: native −15%, Chrome −13%, Safari −14%"] ]
+    ["1 nov", "zeven superinstructies: native −15%, Chrome −13%, Safari −14%"],
+    ["2 nov", "hardwaretellers; de case als echte sprong: gen1 −25%"] ]
 //%% [markdown]
 // ## Functionele talen zijn gemaakt voor notebooks
 //
@@ -579,36 +582,114 @@ D.table ["benchmark", "native (M4)", "Chrome", "Safari"]
 // over de 13 benchmarks: native 6,3 → 5,0 s, Chrome 8,4 → 7,1 s, Safari
 // 8,3 → 6,9 s.
 //%% [markdown]
+// ## Waar wacht de JMVM op? (2 november)
+//
+// Met dezelfde voorkant voert de JMVM de helft van de VM-instructies uit
+// van Clean's ABC-interpreter, maar was gen1 er 1,46× zo traag. Minder
+// instructies hielp niet: 13 overbodige `force`s uit `knights` halen gaf
+// 8% minder machine-instructies en evenveel cycli. Dus: de hardwaretellers
+// van de M4 (kperf), gen1 die zichzelf vertaalt:
+//%%
+D.table ["gen1, Apple M4", "JMVM", "ABC-interpreter"]
+  [ ["cycli", "3,38 G", "2,36 G"],
+    ["sprongmissers per 1000 instructies", "0,7", "0,8"],
+    ["cache-missers (L1D, lezen) per 1000 instructies", "5,6", "6,2"],
+    ["cycli wachten op een cache-misser", "6,2%", "7,0%"],
+    ["cycli met volle wachtrijen (uops wachten op operanden)", "51,8%", "33,1%"] ]
+//%% [markdown]
+// - Geen sprongmissers, geen cache: **93% van het verschil** is wachten op
+//   operanden. Een keten van stappen die op elkaar wachten.
+// - Welke keten? De machinecode van de `case` (`jmpt`):
+//   `pc += pc[nr + 2]`. De nieuwe pc hangt aan vier geheugenlezingen
+//   (lokale variabele, knoop, constructornummer, sprongtabel), en de
+//   volgende instructie leest haar operanden via `pc`.
+// - De CPU voorspelt de volgende handler wel, maar niet de *waarde* van de
+//   pc. Na elke `case` stond alles ~15-20 cycli stil.
+//%% [markdown]
+// ## De case als echte sprong
+//
+// Clean's ABC-interpreter doet een case met `jmp_eq_desc`: vergelijken en
+// springen. Een voorwaardelijke sprong voorspelt de CPU, en de pc is dan
+// meteen bekend. Nu de JMVM ook, voor constructor 0 en 1 (de tabel blijft
+// voor de rest). Een paar regels C, een lege `asm` zodat clang er geen
+// `csel` van maakt; geen nieuwe instructie, compiler en bytecode gelijk.
+//
+// Speed-up (oud / nieuw), warm, de snelste van 7:
+//%%
+::Casemeting = { !csNaam : Str, !csNative : Float, !csChrome : Float, !csSafari : Float }
+
+caseMetingen =:
+  [ Casemeting "knights" 1.61 1.51 1.59, Casemeting "sprimes" 1.39 1.43 1.43,
+    Casemeting "eval" 1.38 1.27 1.28, Casemeting "prolog" 1.35 1.22 1.24,
+    Casemeting "queens" 1.28 1.17 1.15, Casemeting "parsetest" 1.27 1.15 1.16,
+    Casemeting "hamming" 1.24 1.17 1.20, Casemeting "eval2" 1.23 1.12 1.12,
+    Casemeting "sort" 1.08 1.02 1.02, Casemeting "match" 1.07 1.10 1.06,
+    Casemeting "fib" 1.00 1.00 1.00, Casemeting "primes" 1.01 1.01 1.00,
+    Casemeting "twice" 1.00 1.02 1.00 ]
+
+maal x = T.append (fx 2 x) "×"
+//%%
+D.table ["benchmark", "native (M4)", "Chrome", "Safari"]
+  (L.append
+    (L.map (\m -> [csNaam m, maal (csNative m), maal (csChrome m), maal (csSafari m)]) caseMetingen)
+    [["gemiddeld (geometrisch)", "1,21×", "1,16×", "1,16×"], ["gen1 vertaalt zichzelf", "1,34×", "–", "–"]])
+//%% [markdown]
+// - Geen programma trager, alle uitvoer gelijk, ook het aantal uitgevoerde
+//   instructies. Machine-instructies +1 tot +6%, cycli tot −41%.
+// - **Les:** meet waarop een interpreter wacht, niet hoeveel hij doet.
+//%% [markdown]
+// ## De JMVM tegenover de ABC-interpreter en Clean
+//
+// JMVM-tijd gedeeld door die van de ander, in cycli op de M4 (onder 1: de
+// JMVM is sneller), geometrisch gemiddelde over de 13 benchmarks. De
+// ABC-interpreter draait de ABC die onze backend uit dezelfde voorkant
+// maakt, zonder en met de optimalisaties uit type-informatie (`ABC_OPT`),
+// en Clean's eigen, met de hand getypeerde programma's:
+//%%
+D.table ["JMVM tegen", "1 nov", "2 nov", "gen1, 1 nov", "gen1, 2 nov"]
+  [ ["ABC-interpreter, dezelfde voorkant", "1,13", "0,92", "1,45", "1,05"],
+    ["idem, met ABC_OPT", "1,33", "1,07", "1,89", "1,37"],
+    ["Clean's getypeerde code in de ABC-interpreter", "1,57", "1,27", "0,88", "0,64"],
+    ["GHC -O2 (11 benchmarks; 2 nov geschat)", "3,75", "3,1", "2,6", "2,0"] ]
+//%% [markdown]
+// - De JMVM is nu even snel als de ABC-interpreter op dezelfde code.
+// - Wat `ABC_OPT` nog oplevert (gen1 1,37×) komt uit type-informatie:
+//   kale getallen op de B-stack en in velden.
+// - gen1 in Clean is een ongetypeerde vertaling (alles één type): daar is
+//   de JMVM 1,5× sneller.
+//%% [markdown]
 // ## De JMVM tegenover GHC `-O2`
 //
 // Dezelfde 12 benchmarks als 1-op-1-port in Haskell (GHC 9.14.1, `-O2`
 // zonder let-floating en CSE, zodat GHC niet vaker deelt dan Sapl), Apple
 // M4, in ms. Hoeveel trager is de JMVM, een pure interpreter?
 //%%
-::Ghcmeting = { !gNaam : Str, !gGhc : Int, !gOud : Int, !gNu : Int }
+::Ghcmeting = { !gNaam : Str, !gGhc : Int, !gOud : Int, !gNu : Int, !gCase : Int }
 
 ghcMetingen =:
-  [ Ghcmeting "primes" 94 383 225, Ghcmeting "fib" 100 245 244,
-    Ghcmeting "sort" 121 411 301, Ghcmeting "knights" 33 101 96,
-    Ghcmeting "parsetest" 180 735 695, Ghcmeting "hamming" 109 575 481,
-    Ghcmeting "sprimes" 167 1410 806, Ghcmeting "queens" 34 199 185,
-    Ghcmeting "match" 44 278 256, Ghcmeting "eval" 75 479 451,
-    Ghcmeting "prolog" 34 297 285, Ghcmeting "twice" 19 613 500 ]
+  [ Ghcmeting "primes" 94 383 225 230, Ghcmeting "fib" 100 245 244 253,
+    Ghcmeting "sort" 121 411 301 287, Ghcmeting "knights" 33 101 96 59,
+    Ghcmeting "parsetest" 180 735 695 558, Ghcmeting "hamming" 109 575 481 405,
+    Ghcmeting "sprimes" 167 1410 806 576, Ghcmeting "queens" 34 199 185 149,
+    Ghcmeting "match" 44 278 256 243, Ghcmeting "eval" 75 479 451 335,
+    Ghcmeting "prolog" 34 297 285 213, Ghcmeting "twice" 19 613 500 518 ]
 //%%
-D.table ["benchmark", "GHC", "JMVM voor", "factor", "JMVM nu", "factor"]
+D.table ["benchmark", "GHC", "JMVM 24 okt", "factor", "JMVM 1 nov", "factor", "JMVM 2 nov", "factor"]
   (L.append
     (L.map (\m -> [gNaam m, T.showInt (gGhc m), T.showInt (gOud m), fx 1 (factor (gGhc m) (gOud m)),
-                   T.showInt (gNu m), fx 1 (factor (gGhc m) (gNu m))]) ghcMetingen)
-    [["totaal", "1010", "5726", "5,7", "4524", "4,5"]])
+                   T.showInt (gNu m), fx 1 (factor (gGhc m) (gNu m)),
+                   T.showInt (gCase m), fx 1 (factor (gGhc m) (gCase m))]) ghcMetingen)
+    [["totaal", "1010", "5726", "5,7", "4524", "4,5", "3826", "3,8"]])
 //%% [markdown]
-// - De JMVM zit nu op **2,4× tot 8,4×** van GHC (totaal 4,5×, zonder
-//   `twice` 4,1×; was 5,7× en 5,2×). Bij `twice` (26×) deelt GHC ook
-//   zonder let-floating nog veel meer.
-// - **gen1 vertaalt zichzelf** in 0,75 s; dezelfde compiler, automatisch
+// - De JMVM zit nu op **1,8× tot 6,3×** van GHC (totaal 3,8×, zonder
+//   `twice` 3,3×; op 24 oktober 5,7× en 5,2×). Bij `twice` (27×) deelt GHC
+//   ook zonder let-floating nog veel meer.
+// - **gen1 vertaalt zichzelf** in 0,57 s; dezelfde compiler, automatisch
 //   naar getypeerd Haskell vertaald (`saplcomp_typed.hs`) en met GHC `-O2`
-//   gebouwd, doet 0,28 s: **2,6×** (in één ronde gemeten, 1 november).
-// - GHC gemeten op 24 oktober, de JMVM op 1 november zonder ("voor") en
-//   met ("nu") superinstructies, dezelfde machine.
+//   gebouwd, doet 0,28 s: **2,0×** (was 2,6×).
+// - GHC gemeten op 24 oktober; de JMVM op 24 oktober, 1 november (met
+//   superinstructies) en 2 november (met de case als echte sprong),
+//   dezelfde machine.
 //%% [markdown]
 // ## Dezelfde bytecode naar C: `jmvm2c`
 //
@@ -636,7 +717,8 @@ D.table ["benchmark", "GHC", "JMVM nu", "C", "C tegen JMVM", "C tegen GHC"]
 //%% [markdown]
 // - **Correct:** alle uitvoer en het aantal aanroepen en allocaties gelijk
 //   aan de VM; gen1 in C vertaalt zichzelf byte voor byte.
-// - **1,0-2,4× sneller dan de JMVM** (geometrisch 1,55×), gen1 1,7×.
+// - **1,0-2,4× sneller dan de JMVM** van 1 november (geometrisch 1,55×),
+//   gen1 1,7×; tegen de JMVM met de case-sprong voor gen1 nog ~1,3×.
 //   Weinig winst waar de GC de tijd bepaalt (`sprimes`, `twice`): dezelfde
 //   heap en dezelfde GC.
 // - **gen1 op 1,5× van GHC:** hetzelfde algoritme, dezelfde
