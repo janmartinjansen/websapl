@@ -420,10 +420,14 @@ chAux_FieldIsValue = 30
 chAux_Pack = 31
 chAux_PackMax = 32
 chAux_Unpack = 33
+chAux_MArrNew = 34
+chAux_MArrRead = 35
+chAux_MArrWrite = 36
+chAux_MArrSize = 37
 
 // De lengte van de instructie op i (opcode op); een onbekende opcode of subcode is een fout.
 chGLen j !i !op = if (op < 0) (chGOnbekend 0) (if (op > 52) (chGOnbekend 0) (if (op < 31) (if (op < 21) (if (op < 7) (if (op < 1) 2 (if (op < 6) 1 4)) (if (op < 15) (if (op < 14) 2 3) (if (op < 18) 1 2))) (if (op < 25) (if (op < 23) (if (op < 22) 3 1) (if (op < 24) 2 1)) (if (op < 29) (if (op < 27) 3 (chGOnbekend 0)) (if (op < 30) 1 (chGOnbekend 0))))) (if (op < 40) (if (op < 36) (if (op < 33) 1 (if (op < 34) 5 2)) (if (op < 38) (if (op < 37) 3 (2 + chW j (i + 1))) (if (op < 39) 3 2))) (if (op < 49) (if (op < 47) (if (op < 43) 1 (chGOnbekend 0)) (if (op < 48) (if (chW j (i + 1) == 26) 3 2) (chGOnbekend 0))) (if (op < 51) (if (op < 50) 2 (chGLenAux j i (chW j (i + 1)))) (if (op < 52) 1 2))))))
-chGLenAux j !i !sub = if (sub < 0) (chGOnbekend 1) (if (sub > 33) (chGOnbekend 1) (if (sub < 8) (if (sub < 4) (if (sub < 2) (if (sub < 1) 3 2) (if (sub < 3) 3 4)) (if (sub < 6) (if (sub < 5) (3 + chW j (i + 2)) 3) (if (sub < 7) 4 2))) (if (sub < 24) (if (sub < 11) (if (sub < 9) 4 2) (if (sub < 12) 3 2)) (if (sub < 27) (if (sub < 25) 3 2) (if (sub < 28) 3 2)))))
+chGLenAux j !i !sub = if (sub < 0) (chGOnbekend 1) (if (sub > 37) (chGOnbekend 1) (if (sub < 8) (if (sub < 4) (if (sub < 2) (if (sub < 1) 3 2) (if (sub < 3) 3 4)) (if (sub < 6) (if (sub < 5) (3 + chW j (i + 2)) 3) (if (sub < 7) 4 2))) (if (sub < 24) (if (sub < 11) (if (sub < 9) 4 2) (if (sub < 12) 3 2)) (if (sub < 27) (if (sub < 25) 3 2) (if (sub < 28) 3 2)))))
 chGOnbekend !k = if (k == 0) (error "loadcode: onbekende opcode") (error "loadcode: onbekende subcode van _AUX")
 
 // De positie (vanaf de opcode) van een operand van deze soort, of 0: een adres

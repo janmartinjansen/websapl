@@ -175,9 +175,10 @@ genReflectionCall prog adts args n as =
 // 2026 dwingt een `eval` direct na `getfield` het veld af, net als een
 // `case` op dat veld; op een al geëvalueerde waarde doet `eval` niets.
 // Ook `unpack` (24 oktober 2026): de teruggebouwde waarde kan een thunk zijn
-// (de tekst begint met `T`/`P`), dus ook daar een `force`.
+// (de tekst begint met `T`/`P`), dus ook daar een `force`. En `readMArray`
+// (3 november 2026): een element van een muteerbare array kan een thunk zijn.
 reflectionInstrs n =
-  if (charListEq n getFieldKw \/ charListEq n unpackKw)
+  if (charListEq n getFieldKw \/ charListEq n unpackKw \/ charListEq n readMArrayKw)
     (Cons (mkI (reflectionOpcode n)) (Cons (mkI ['force']) Nil))
     (Cons (mkI (reflectionOpcode n)) Nil)
 

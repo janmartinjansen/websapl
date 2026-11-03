@@ -511,8 +511,15 @@ fieldIsValueKw =: ['fieldIsValue']
 packKw =: ['pack']
 packMaxKw =: ['packMax']
 unpackKw =: ['unpack']
+// newMArray n x, readMArray a i, writeMArray a i x, sizeMArray a (3 november
+// 2026, _AUX MArr*, vm/instr/aux_marray.c): muteerbare arrays met waarden,
+// voor de Haskell-runtime. Niet in gen1's eigen bron.
+newMArrayKw =: ['newMArray']
+readMArrayKw =: ['readMArray']
+writeMArrayKw =: ['writeMArray']
+sizeMArrayKw =: ['sizeMArray']
 
-reflectionKws =: Cons typeIdKw (Cons constrNameKw (Cons getFieldKw (Cons makeConstrKw (Cons funcNameKw (Cons funcArityKw (Cons funcRemainingKw (Cons applyDynamicKw (Cons lookupKw (Cons ordKw (Cons chrKw (Cons funcAddrKw (Cons fieldIsValueKw (Cons packKw (Cons packMaxKw (Cons unpackKw Nil)))))))))))))))
+reflectionKws =: Cons typeIdKw (Cons constrNameKw (Cons getFieldKw (Cons makeConstrKw (Cons funcNameKw (Cons funcArityKw (Cons funcRemainingKw (Cons applyDynamicKw (Cons lookupKw (Cons ordKw (Cons chrKw (Cons funcAddrKw (Cons fieldIsValueKw (Cons packKw (Cons packMaxKw (Cons unpackKw (Cons newMArrayKw (Cons readMArrayKw (Cons writeMArrayKw (Cons sizeMArrayKw Nil)))))))))))))))))))
 
 isReflectionCall name = member reflectionKws name
 
@@ -542,7 +549,11 @@ reflectionOpcode name =
   (if (charListEq name packKw) ['pack']
   (if (charListEq name packMaxKw) ['packmax']
   (if (charListEq name unpackKw) ['unpack']
-  (error "reflectionOpcode: unknown reflection call"))))))))))))))))
+  (if (charListEq name newMArrayKw) ['marrnew']
+  (if (charListEq name readMArrayKw) ['marrread']
+  (if (charListEq name writeMArrayKw) ['marrwrite']
+  (if (charListEq name sizeMArrayKw) ['marrsize']
+  (error "reflectionOpcode: unknown reflection call"))))))))))))))))))))
 
 // Het aantal argumenten van een reflectieprimitief, -1 voor makeConstr (dat
 // zijn veldaantal zelf als argument krijgt). Alleen voor de controle in
@@ -550,8 +561,9 @@ reflectionOpcode name =
 // werd één aanroep met drie argumenten en gaf stil onzin.
 reflectionArity name =
   if (charListEq name makeConstrKw) (0 - 1)
-  (if (charListEq name getFieldKw \/ charListEq name applyDynamicKw \/ charListEq name fieldIsValueKw \/ charListEq name packMaxKw) 2
-  1)
+  (if (charListEq name getFieldKw \/ charListEq name applyDynamicKw \/ charListEq name fieldIsValueKw \/ charListEq name packMaxKw \/ charListEq name newMArrayKw \/ charListEq name readMArrayKw) 2
+  (if (charListEq name writeMArrayKw) 3
+  1))
 
 exprConstrNameOf e =
   case e
