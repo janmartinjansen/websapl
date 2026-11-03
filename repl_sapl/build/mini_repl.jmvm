@@ -2289,7 +2289,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             eval
             return 8
 400         pushcaf 4                                || stImg_NoSt
-            eval
+            force
             return 1
 401         load 0                                   || isNoSt_lazy
             eval
@@ -2344,7 +2344,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             push "/mr_u"
             call 27                                  || strcat
             pushcaf 0
-            eval
+            force
             tailcall 1 27                            || strcat
 420         load 0                                   || srcP_lazy
             eval
@@ -2426,7 +2426,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             pushfunc 1 466                           || extOfEntries_lazy
             create 2 3
             pushcaf 1
-            eval
+            force
             tailcall 1 10893                         || sm_flat__append
 448         jmp 449                                  || usedNames || usedNames_lazy
 449         load 0                                   || usedNames
@@ -2547,7 +2547,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             pushfunc 1 472                           || extAdtsOfEntries_lazy
             create 2 3
             pushcaf 2
-            eval
+            force
             tailcall 1 10893                         || sm_flat__append
 472         load 0                                   || extAdtsOfEntries_lazy
             eval
@@ -2859,7 +2859,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             call 691                                 || prefixOf
             ifeq 546                                 || adtLineStep_else
             pushcaf 3
-            eval
+            force
             load 0
             pushfunc 1 578                           || adtNameOf_lazy
             create 2 3
@@ -3422,7 +3422,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             create 2 3
             tailcall 1 665                           || preludeSchemesT
 663         pushcaf 8                                || preludeSchemesB_else
-            eval
+            force
             return 1
 664         jmp 665                                  || preludeSchemesT || preludeSchemesT_lazy
 665         load 0                                   || preludeSchemesT
@@ -3436,7 +3436,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             call 17597                               || tc_flat__str2list
             tailcall 1 25868                         || tc_flat__schemesFromText
 666         pushcaf 8                                || preludeSchemesT_else
-            eval
+            force
             return 1
 667         jmp 668                                  || preludeSchemesComputed || preludeSchemesComputed_lazy
 668         pushcaf 5                                || preludeSchemesComputed
@@ -6085,7 +6085,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 1214        load 1                                   || prebuiltFor
             load 0
             pushcaf 9
-            eval
+            force
             tailcall 2 1216                          || pbFind
 1215        load 0                                   || pbFind_lazy
             eval
@@ -11803,7 +11803,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 2260        jmp 2261                                 || nbLibFile || nbLibFile_lazy
 2261        push "/nb_libkey.txt"                    || nbLibFile
             pushcaf 0
-            eval
+            force
             tailcall 0 27                            || strcat
 2262        load 0                                   || nbModNames_lazy
             eval
@@ -45830,14 +45830,14 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             eval
             store 0
 11015       pushcaf 11                               || sm_flat__numFits
-            eval
+            force
             load 0
             sub
             ifle 11016                               || sm_flat__numFits_else
             return_const 2 1
 11016       load 0                                   || sm_flat__numFits_else
             pushcaf 11
-            eval
+            force
             sub
             ifneq 11018                              || sm_flat__numFits_else_else
             push 1
@@ -46537,7 +46537,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             ifeq 11176                               || sm_flat__retagEscapeHead_else
             load 0
             pushcaf 12
-            eval
+            force
             tailcall 1 10893                         || sm_flat__append
 11176       load 0                                   || sm_flat__retagEscapeHead_else
             return 1
@@ -46547,7 +46547,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 11178       load 0                                   || sm_flat__retagUnescapeHead
             dup
             pushcaf 12
-            eval
+            force
             call 11183                               || sm_flat__retagStripPrefix
             load 0
             tailcall 1 11180                         || sm_flat__retagUnescapeCheck
@@ -47194,114 +47194,114 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             eval
             store 0
 11359       pushcaf 15                               || sm_flat__isPrintCall
-            eval
+            force
             load 0
             tailcall 1 11159                         || sm_flat__charListEq
 11360       load 0                                   || sm_flat__isPrintCCall_lazy
             eval
             store 0
 11361       pushcaf 16                               || sm_flat__isPrintCCall
-            eval
+            force
             load 0
             tailcall 1 11159                         || sm_flat__charListEq
 11362       load 0                                   || sm_flat__isPrintSCall_lazy
             eval
             store 0
 11363       pushcaf 17                               || sm_flat__isPrintSCall
-            eval
+            force
             load 0
             tailcall 1 11159                         || sm_flat__charListEq
 11364       load 0                                   || sm_flat__isErrorCall_lazy
             eval
             store 0
 11365       pushcaf 18                               || sm_flat__isErrorCall
-            eval
+            force
             load 0
             tailcall 1 11159                         || sm_flat__charListEq
 11366       load 0                                   || sm_flat__isPredefCall_lazy
             eval
             store 0
 11367       pushcaf 19                               || sm_flat__isPredefCall
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11368                               || sm_flat__isPredefCall_else
             return_const 1 1
 11368       pushcaf 20                               || sm_flat__isPredefCall_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11369                               || sm_flat__isPredefCall_else_else
             return_const 1 1
 11369       pushcaf 21                               || sm_flat__isPredefCall_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11370                               || sm_flat__isPredefCall_else_else_else
             return_const 1 1
 11370       pushcaf 22                               || sm_flat__isPredefCall_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11371                               || sm_flat__isPredefCall_else_else_else_else
             return_const 1 1
 11371       pushcaf 23                               || sm_flat__isPredefCall_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11372                               || sm_flat__isPredefCall_else_else_else_else_else
             return_const 1 1
 11372       pushcaf 24                               || sm_flat__isPredefCall_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11373                               || sm_flat__isPredefCall_else_else_else_else_else_else
             return_const 1 1
 11373       pushcaf 25                               || sm_flat__isPredefCall_else_else_else_else_else_else
-            eval
+            force
             load 0
             tailcall 1 11159                         || sm_flat__charListEq
 11374       load 0                                   || sm_flat__predefArity_lazy
             eval
             store 0
 11375       pushcaf 19                               || sm_flat__predefArity
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11376                               || sm_flat__predefArity_else
             return_const 1 1
 11376       pushcaf 20                               || sm_flat__predefArity_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11377                               || sm_flat__predefArity_else_else
             return_const 1 2
 11377       pushcaf 21                               || sm_flat__predefArity_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11378                               || sm_flat__predefArity_else_else_else
             return_const 1 3
 11378       pushcaf 22                               || sm_flat__predefArity_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11379                               || sm_flat__predefArity_else_else_else_else
             return_const 1 2
 11379       pushcaf 23                               || sm_flat__predefArity_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11380                               || sm_flat__predefArity_else_else_else_else_else
             return_const 1 2
 11380       pushcaf 24                               || sm_flat__predefArity_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11381                               || sm_flat__predefArity_else_else_else_else_else_else
             return_const 1 3
 11381       pushcaf 25                               || sm_flat__predefArity_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11382                               || sm_flat__predefArity_else_else_else_else_else_else_else
@@ -47313,43 +47313,43 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             eval
             store 0
 11384       pushcaf 19                               || sm_flat__predefIndex
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11385                               || sm_flat__predefIndex_else
             return_const 1 2
 11385       pushcaf 20                               || sm_flat__predefIndex_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11386                               || sm_flat__predefIndex_else_else
             return_const 1 4
 11386       pushcaf 21                               || sm_flat__predefIndex_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11387                               || sm_flat__predefIndex_else_else_else
             return_const 1 3
 11387       pushcaf 22                               || sm_flat__predefIndex_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11388                               || sm_flat__predefIndex_else_else_else_else
             return_const 1 6
 11388       pushcaf 23                               || sm_flat__predefIndex_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11389                               || sm_flat__predefIndex_else_else_else_else_else
             return_const 1 0
 11389       pushcaf 24                               || sm_flat__predefIndex_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11390                               || sm_flat__predefIndex_else_else_else_else_else_else
             return_const 1 1
 11390       pushcaf 25                               || sm_flat__predefIndex_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11391                               || sm_flat__predefIndex_else_else_else_else_else_else_else
@@ -47388,98 +47388,98 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             eval
             store 0
 11411       pushcaf 26                               || sm_flat__isSyscallCall
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11412                               || sm_flat__isSyscallCall_else
             return_const 1 1
 11412       pushcaf 27                               || sm_flat__isSyscallCall_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11413                               || sm_flat__isSyscallCall_else_else
             return_const 1 1
 11413       pushcaf 28                               || sm_flat__isSyscallCall_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11414                               || sm_flat__isSyscallCall_else_else_else
             return_const 1 1
 11414       pushcaf 29                               || sm_flat__isSyscallCall_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11415                               || sm_flat__isSyscallCall_else_else_else_else
             return_const 1 1
 11415       pushcaf 30                               || sm_flat__isSyscallCall_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11416                               || sm_flat__isSyscallCall_else_else_else_else_else
             return_const 1 1
 11416       pushcaf 31                               || sm_flat__isSyscallCall_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11417                               || sm_flat__isSyscallCall_else_else_else_else_else_else
             return_const 1 1
 11417       pushcaf 32                               || sm_flat__isSyscallCall_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11418                               || sm_flat__isSyscallCall_else_else_else_else_else_else_else
             return_const 1 1
 11418       pushcaf 33                               || sm_flat__isSyscallCall_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             tailcall 1 11159                         || sm_flat__charListEq
 11419       load 0                                   || sm_flat__syscallArity_lazy
             eval
             store 0
 11420       pushcaf 26                               || sm_flat__syscallArity
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11421                               || sm_flat__syscallArity_else
             return_const 1 1
 11421       pushcaf 27                               || sm_flat__syscallArity_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11422                               || sm_flat__syscallArity_else_else
             return_const 1 2
 11422       pushcaf 28                               || sm_flat__syscallArity_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11423                               || sm_flat__syscallArity_else_else_else
             return_const 1 0
 11423       pushcaf 29                               || sm_flat__syscallArity_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11424                               || sm_flat__syscallArity_else_else_else_else
             return_const 1 1
 11424       pushcaf 30                               || sm_flat__syscallArity_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11425                               || sm_flat__syscallArity_else_else_else_else_else
             return_const 1 2
 11425       pushcaf 31                               || sm_flat__syscallArity_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11426                               || sm_flat__syscallArity_else_else_else_else_else_else
             return_const 1 1
 11426       pushcaf 32                               || sm_flat__syscallArity_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11427                               || sm_flat__syscallArity_else_else_else_else_else_else_else
             return_const 1 1
 11427       pushcaf 33                               || sm_flat__syscallArity_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11428                               || sm_flat__syscallArity_else_else_else_else_else_else_else_else
@@ -47491,49 +47491,49 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             eval
             store 0
 11430       pushcaf 26                               || sm_flat__syscallIndex
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11431                               || sm_flat__syscallIndex_else
             return_const 1 0
 11431       pushcaf 27                               || sm_flat__syscallIndex_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11432                               || sm_flat__syscallIndex_else_else
             return_const 1 1
 11432       pushcaf 28                               || sm_flat__syscallIndex_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11433                               || sm_flat__syscallIndex_else_else_else
             return_const 1 2
 11433       pushcaf 29                               || sm_flat__syscallIndex_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11434                               || sm_flat__syscallIndex_else_else_else_else
             return_const 1 3
 11434       pushcaf 30                               || sm_flat__syscallIndex_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11435                               || sm_flat__syscallIndex_else_else_else_else_else
             return_const 1 4
 11435       pushcaf 31                               || sm_flat__syscallIndex_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11436                               || sm_flat__syscallIndex_else_else_else_else_else_else
             return_const 1 5
 11436       pushcaf 32                               || sm_flat__syscallIndex_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11437                               || sm_flat__syscallIndex_else_else_else_else_else_else_else
             return_const 1 6
 11437       pushcaf 33                               || sm_flat__syscallIndex_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11438                               || sm_flat__syscallIndex_else_else_else_else_else_else_else_else
@@ -47545,7 +47545,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             eval
             store 0
 11440       pushcaf 34                               || sm_flat__isStrcreateCall
-            eval
+            force
             load 0
             tailcall 1 11159                         || sm_flat__charListEq
 11441       jmp 11442                                || sm_flat__sinKw || sm_flat__sinKw_lazy
@@ -47612,128 +47612,128 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             eval
             store 0
 11482       pushcaf 35                               || sm_flat__isFloatOpCall
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11483                               || sm_flat__isFloatOpCall_else
             return_const 1 1
 11483       pushcaf 36                               || sm_flat__isFloatOpCall_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11484                               || sm_flat__isFloatOpCall_else_else
             return_const 1 1
 11484       pushcaf 37                               || sm_flat__isFloatOpCall_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11485                               || sm_flat__isFloatOpCall_else_else_else
             return_const 1 1
 11485       pushcaf 38                               || sm_flat__isFloatOpCall_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11486                               || sm_flat__isFloatOpCall_else_else_else_else
             return_const 1 1
 11486       pushcaf 39                               || sm_flat__isFloatOpCall_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11487                               || sm_flat__isFloatOpCall_else_else_else_else_else
             return_const 1 1
 11487       pushcaf 40                               || sm_flat__isFloatOpCall_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11488                               || sm_flat__isFloatOpCall_else_else_else_else_else_else
             return_const 1 1
 11488       pushcaf 41                               || sm_flat__isFloatOpCall_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11489                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else
             return_const 1 1
 11489       pushcaf 42                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11490                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else
             return_const 1 1
 11490       pushcaf 43                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11491                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else
             return_const 1 1
 11491       pushcaf 44                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11492                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else
             return_const 1 1
 11492       pushcaf 45                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11493                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 1
 11493       pushcaf 46                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11494                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 1
 11494       pushcaf 47                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11495                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 1
 11495       pushcaf 48                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11496                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 1
 11496       pushcaf 49                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11497                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 1
 11497       pushcaf 50                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11498                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 1
 11498       pushcaf 51                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11499                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 1
 11499       pushcaf 52                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11500                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 1
 11500       pushcaf 53                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11501                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 1
 11501       pushcaf 54                               || sm_flat__isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             tailcall 1 11159                         || sm_flat__charListEq
 11502       load 0                                   || sm_flat__floatOpArity_lazy
             eval
             store 0
 11503       pushcaf 54                               || sm_flat__floatOpArity
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11504                               || sm_flat__floatOpArity_else
@@ -47743,121 +47743,121 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             eval
             store 0
 11506       pushcaf 35                               || sm_flat__floatOpIndex
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11507                               || sm_flat__floatOpIndex_else
             return_const 1 0
 11507       pushcaf 36                               || sm_flat__floatOpIndex_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11508                               || sm_flat__floatOpIndex_else_else
             return_const 1 1
 11508       pushcaf 37                               || sm_flat__floatOpIndex_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11509                               || sm_flat__floatOpIndex_else_else_else
             return_const 1 2
 11509       pushcaf 38                               || sm_flat__floatOpIndex_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11510                               || sm_flat__floatOpIndex_else_else_else_else
             return_const 1 3
 11510       pushcaf 39                               || sm_flat__floatOpIndex_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11511                               || sm_flat__floatOpIndex_else_else_else_else_else
             return_const 1 4
 11511       pushcaf 40                               || sm_flat__floatOpIndex_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11512                               || sm_flat__floatOpIndex_else_else_else_else_else_else
             return_const 1 5
 11512       pushcaf 41                               || sm_flat__floatOpIndex_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11513                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else
             return_const 1 6
 11513       pushcaf 42                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11514                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else
             return_const 1 7
 11514       pushcaf 43                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11515                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else
             return_const 1 8
 11515       pushcaf 44                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11516                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else
             return_const 1 9
 11516       pushcaf 45                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11517                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 10
 11517       pushcaf 46                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11518                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 11
 11518       pushcaf 47                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11519                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 12
 11519       pushcaf 48                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11520                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 13
 11520       pushcaf 49                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11521                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 13
 11521       pushcaf 50                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11522                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 14
 11522       pushcaf 51                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11523                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 15
 11523       pushcaf 52                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11524                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 16
 11524       pushcaf 53                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11525                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 17
 11525       pushcaf 54                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11526                               || sm_flat__floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
@@ -48146,13 +48146,13 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 11628       pushfunc 0 28935                         || sm_flat__reflectionKws_15 || sm_flat__reflectionKws
             create 1 3
             pushcaf 55
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 11629       jmp 11630                                || sm_flat__isReflectionCall || sm_flat__isReflectionCall_lazy
 11630       load 0                                   || sm_flat__isReflectionCall
             pushcaf 71
-            eval
+            force
             tailcall 1 11208                         || sm_flat__member
 11631       load 0                                   || sm_flat__sbIsBuiltin_lazy
             eval
@@ -48195,112 +48195,112 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             eval
             store 0
 11642       pushcaf 55                               || sm_flat__reflectionOpcode
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11643                               || sm_flat__reflectionOpcode_else
             push "gettypeid"
             tailcall 1 10825                         || sm_flat__str2list
 11643       pushcaf 56                               || sm_flat__reflectionOpcode_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11644                               || sm_flat__reflectionOpcode_else_else
             push "getconstrname"
             tailcall 1 10825                         || sm_flat__str2list
 11644       pushcaf 57                               || sm_flat__reflectionOpcode_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11645                               || sm_flat__reflectionOpcode_else_else_else
             push "getfield"
             tailcall 1 10825                         || sm_flat__str2list
 11645       pushcaf 58                               || sm_flat__reflectionOpcode_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11646                               || sm_flat__reflectionOpcode_else_else_else_else
             push "makeconstr"
             tailcall 1 10825                         || sm_flat__str2list
 11646       pushcaf 59                               || sm_flat__reflectionOpcode_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11647                               || sm_flat__reflectionOpcode_else_else_else_else_else
             push "getfuncname"
             tailcall 1 10825                         || sm_flat__str2list
 11647       pushcaf 60                               || sm_flat__reflectionOpcode_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11648                               || sm_flat__reflectionOpcode_else_else_else_else_else_else
             push "getfuncarity"
             tailcall 1 10825                         || sm_flat__str2list
 11648       pushcaf 61                               || sm_flat__reflectionOpcode_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11649                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else
             push "getfuncremaining"
             tailcall 1 10825                         || sm_flat__str2list
 11649       pushcaf 62                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11650                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else
             push "applydynamic"
             tailcall 1 10825                         || sm_flat__str2list
 11650       pushcaf 63                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11651                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else
             push "lookup"
             tailcall 1 10825                         || sm_flat__str2list
 11651       pushcaf 64                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11652                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else
             push "ord"
             tailcall 1 10825                         || sm_flat__str2list
 11652       pushcaf 65                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11653                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else
             push "chr"
             tailcall 1 10825                         || sm_flat__str2list
 11653       pushcaf 66                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11654                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else_else
             push "funcaddr"
             tailcall 1 10825                         || sm_flat__str2list
 11654       pushcaf 67                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11655                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else_else_else
             push "fieldisvalue"
             tailcall 1 10825                         || sm_flat__str2list
 11655       pushcaf 68                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11656                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             push "pack"
             tailcall 1 10825                         || sm_flat__str2list
 11656       pushcaf 69                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11657                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             push "packmax"
             tailcall 1 10825                         || sm_flat__str2list
 11657       pushcaf 70                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11658                               || sm_flat__reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
@@ -48313,7 +48313,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             eval
             store 0
 11660       pushcaf 58                               || sm_flat__reflectionArity
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11661                               || sm_flat__reflectionArity_else
@@ -48321,25 +48321,25 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             dec
             return 1
 11661       pushcaf 57                               || sm_flat__reflectionArity_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11662                               || sm_flat__reflectionArity_else_else
             return_const 1 2
 11662       pushcaf 62                               || sm_flat__reflectionArity_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11663                               || sm_flat__reflectionArity_else_else_else
             return_const 1 2
 11663       pushcaf 67                               || sm_flat__reflectionArity_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11664                               || sm_flat__reflectionArity_else_else_else_else
             return_const 1 2
 11664       pushcaf 69                               || sm_flat__reflectionArity_else_else_else_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11665                               || sm_flat__reflectionArity_else_else_else_else_else
@@ -48518,7 +48518,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             ifeq 11762                               || sm_flat__isCaseIdent_else
             return_const 1 1
 11762       pushcaf 72                               || sm_flat__isCaseIdent_else
-            eval
+            force
             load 0
             tailcall 1 11159                         || sm_flat__charListEq
 11763       load 0                                   || sm_flat__parseAtom_lazy
@@ -48599,7 +48599,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             ccreatet 1 11 114 2
             ccreatet 2 11 5 1
             pushcaf 74
-            eval
+            force
             ccreatet 2 11 114 5
             ccreatet 2 11 124 0
             return 3
@@ -48961,7 +48961,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             create 1 3
             push 1
             pushcaf 13
-            eval
+            force
             ccreatet 2 11 125 0
             ccreatet 2 11 5 1
             return 0
@@ -49433,7 +49433,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 11991       load 0                                   || sm_flat__collectBranchesTok
             jmpt 14 11992 11994 11995 11996 11997 11998 11999 12000 12001 12002 12003 12004 12005 12006 || lbs
 11992       pushcaf 73                               || sm_flat__collectBranchesTok_Sm_flat__TIdent
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 11993                               || sm_flat__collectBranchesTok_Sm_flat__TIdent_else
@@ -50684,7 +50684,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             syscall 8
             return 4
 12350       pushcaf 75                               || sm_flat__collectConFieldsTok_Sm_flat__TOp
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 12351                               || sm_flat__collectConFieldsTok_Sm_flat__TOp_else
@@ -50953,7 +50953,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             syscall 8
             return 4
 12432       pushcaf 75                               || sm_flat__afterAdtConTok_Sm_flat__TOp
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 12433                               || sm_flat__afterAdtConTok_Sm_flat__TOp_else
@@ -52198,7 +52198,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             eval
             store 3
 12716       pushcaf 74                               || sm_flat__resolveAppStr
-            eval
+            force
             load 3
             call 11159                               || sm_flat__charListEq
             ifeq 12718                               || sm_flat__resolveAppStr_else
@@ -53416,7 +53416,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             ccreatet 1 11 114 0
             ccreatet 2 11 5 1
             pushcaf 76
-            eval
+            force
             ccreatet 2 11 114 7
             return 1
 12959       jmp 12960                                || sm_flat__charAdt || sm_flat__charAdt_lazy
@@ -53425,11 +53425,11 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             push 1
             ccreatet 2 11 5 1
             pushcaf 76
-            eval
+            force
             ccreatet 2 11 117 0
             ccreatet 2 11 5 1
             pushcaf 76
-            eval
+            force
             ccreatet 2 11 118 0
             return 0
 12961       load 0                                   || sm_flat__isCharLit_lazy
@@ -53445,7 +53445,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 12968       return_const 3 0                         || sm_flat__isCharLit_Sm_flat__App
 12969       return_const 3 0                         || sm_flat__isCharLit_Sm_flat__Prim
 12970       pushcaf 76                               || sm_flat__isCharLit_Sm_flat__Ct
-            eval
+            force
             load 0
             tailcall 3 11159                         || sm_flat__charListEq
 12971       return_const 3 0                         || sm_flat__isCharLit_Sm_flat__Case
@@ -53664,7 +53664,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 13052       jmp 13053                                || sm_flat__clPrim || sm_flat__clPrim_lazy
 13053       load 0                                   || sm_flat__clPrim
             pushcaf 78
-            eval
+            force
             call 11208                               || sm_flat__member
             ifeq 13054                               || sm_flat__clPrim_else
             load 1
@@ -53760,7 +53760,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 13082       load 1                                   || sm_flat__exprUsesChar_Sm_flat__Prim
             tailcall 3 13099                         || sm_flat__anyExprUsesChar
 13083       pushcaf 76                               || sm_flat__exprUsesChar_Sm_flat__Ct
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 13084                               || sm_flat__exprUsesChar_Sm_flat__Ct_else
@@ -54601,7 +54601,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 13263       pushfunc 0 29013                         || sm_flat__strictLeftOps_1 || sm_flat__strictLeftOps
             create 1 3
             pushcaf 13
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 13264       load 1                                   || sm_flat__paramShadowedBy_lazy
@@ -54750,7 +54750,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 13304       jmp 13305                                || sm_flat__primStrictInTwo || sm_flat__primStrictInTwo_lazy
 13305       load 3                                   || sm_flat__primStrictInTwo
             pushcaf 79
-            eval
+            force
             call 11208                               || sm_flat__member
             ifeq 13308                               || sm_flat__primStrictInTwo_else
             load 4
@@ -55394,13 +55394,13 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             eval
             store 0
 13466       pushcaf 13                               || sm_flat__isBoolConnective
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 13467                               || sm_flat__isBoolConnective_else
             return_const 1 1
 13467       pushcaf 14                               || sm_flat__isBoolConnective_else
-            eval
+            force
             load 0
             tailcall 1 11159                         || sm_flat__charListEq
 13468       load 1                                   || sm_flat__stage1_lazy
@@ -55624,7 +55624,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             eval
             store 1
 13503       pushcaf 13                               || sm_flat__boolAsGateOp
-            eval
+            force
             load 1
             call 11159                               || sm_flat__charListEq
             ifeq 13504                               || sm_flat__boolAsGateOp_else
@@ -55638,7 +55638,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             force
             tailcall 6 13472                         || sm_flat__boolAsGate
 13504       pushcaf 14                               || sm_flat__boolAsGateOp_else
-            eval
+            force
             load 1
             call 11159                               || sm_flat__charListEq
             ifeq 13505                               || sm_flat__boolAsGateOp_else_else
@@ -55748,7 +55748,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             eval
             store 1
 13538       pushcaf 13                               || sm_flat__boolValueOp
-            eval
+            force
             load 1
             call 11159                               || sm_flat__charListEq
             ifeq 13539                               || sm_flat__boolValueOp_else
@@ -55761,7 +55761,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             force
             tailcall 4 13472                         || sm_flat__boolAsGate
 13539       pushcaf 14                               || sm_flat__boolValueOp_else
-            eval
+            force
             load 1
             call 11159                               || sm_flat__charListEq
             ifeq 13540                               || sm_flat__boolValueOp_else_else
@@ -56546,7 +56546,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             eval
             store 3
 13707       pushcaf 13                               || sm_flat__b1GateOp
-            eval
+            force
             load 3
             call 11159                               || sm_flat__charListEq
             ifeq 13708                               || sm_flat__b1GateOp_else
@@ -56561,7 +56561,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             load 0
             tailcall 8 13711                         || sm_flat__b1GateAnd
 13708       pushcaf 14                               || sm_flat__b1GateOp_else
-            eval
+            force
             load 3
             call 11159                               || sm_flat__charListEq
             ifeq 13709                               || sm_flat__b1GateOp_else_else
@@ -56867,7 +56867,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             eval
             store 3
 13771       pushcaf 13                               || sm_flat__b1ValueOp
-            eval
+            force
             load 3
             call 11159                               || sm_flat__charListEq
             ifeq 13772                               || sm_flat__b1ValueOp_else
@@ -56877,7 +56877,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             load 0
             tailcall 6 13775                         || sm_flat__b1ValueAnd
 13772       pushcaf 14                               || sm_flat__b1ValueOp_else
-            eval
+            force
             load 3
             call 11159                               || sm_flat__charListEq
             ifeq 13773                               || sm_flat__b1ValueOp_else_else
@@ -59603,7 +59603,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             eval
             store 2
 14440       pushcaf 81                               || sm_flat__vlTailPrim
-            eval
+            force
             load 2
             call 11159                               || sm_flat__charListEq
             ifeq 14441                               || sm_flat__vlTailPrim_else
@@ -59629,7 +59629,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             force
             load 2
             pushcaf 81
-            eval
+            force
             ccreatet 2 11 114 6
             ccreatet 3 11 141 0
             return 3
@@ -62065,14 +62065,14 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             eval
             store 0
 14884       pushcaf 57                               || sm_flat__reflectionInstrs
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 14885                               || sm_flat__reflectionInstrs_else
             load 0
             tailcall 1 29058                         || sm_flat__reflectionInstrs_j1
 14885       pushcaf 70                               || sm_flat__reflectionInstrs_else
-            eval
+            force
             load 0
             call 11159                               || sm_flat__charListEq
             ifeq 14886                               || sm_flat__reflectionInstrs_else_else
@@ -67522,7 +67522,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 16102       jmp 16103                                || sm_flat__commentSuffix || sm_flat__commentSuffix_lazy
 16103       load 0                                   || sm_flat__commentSuffix
             pushcaf 83
-            eval
+            force
             tailcall 1 10893                         || sm_flat__append
 16104       load 1                                   || sm_flat__renderInstr_lazy
             eval
@@ -67605,7 +67605,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             pushfunc 2 16104                         || sm_flat__renderInstr_lazy
             create 3 3
             pushcaf 82
-            eval
+            force
             tailcall 2 10893                         || sm_flat__append
 16118       load 3                                   || sm_flat__renderBlockLines_lazy
             eval
@@ -70880,7 +70880,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             push 0
             call 16856                               || sm_flat__jaArg
             pushcaf 87
-            eval
+            force
             sub
             ifneq 16926                              || sm_flat__jaFloatop_else
             load 0
@@ -73114,7 +73114,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             store 0
 17408       push 0                                   || sm_flat__jaFitsC
             pushcaf 88
-            eval
+            force
             sub
             load 0
             sub
@@ -73122,7 +73122,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             return_const 2 0
 17409       load 0                                   || sm_flat__jaFitsC_else
             pushcaf 88
-            eval
+            force
             dec
             sub
             ifle 17410                               || sm_flat__jaFitsC_else_else
@@ -73454,7 +73454,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             return 1
 17489       load 0                                   || sm_flat__jaU32_then
             pushcaf 89
-            eval
+            force
             add
             return 1
 17490       load 0                                   || sm_flat__jaPut32_lazy
@@ -116210,7 +116210,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             call 14065                               || sm_flat__liftedExpr
             ccreatet 2 11 5 1
             pushcaf 81
-            eval
+            force
             ccreatet 2 11 114 6
             ccreatet 3 11 141 0
             return 7
@@ -123184,7 +123184,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             create 1 3
             store 1
             pushcaf 8
-            eval
+            force
             call 1246                                || pbSchemesText
             load 0
             force
@@ -128306,105 +128306,105 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 28906       jmp 28907                                || sm_flat__reflectionKws_1 || sm_flat__reflectionKws_1_lazy
 28907       ccreatet 0 11 5 0                        || sm_flat__reflectionKws_1
             pushcaf 70
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 28908       jmp 28909                                || sm_flat__reflectionKws_2 || sm_flat__reflectionKws_2_lazy
 28909       pushfunc 0 28907                         || sm_flat__reflectionKws_1 || sm_flat__reflectionKws_2
             create 1 3
             pushcaf 69
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 28910       jmp 28911                                || sm_flat__reflectionKws_3 || sm_flat__reflectionKws_3_lazy
 28911       pushfunc 0 28909                         || sm_flat__reflectionKws_2 || sm_flat__reflectionKws_3
             create 1 3
             pushcaf 68
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 28912       jmp 28913                                || sm_flat__reflectionKws_4 || sm_flat__reflectionKws_4_lazy
 28913       pushfunc 0 28911                         || sm_flat__reflectionKws_3 || sm_flat__reflectionKws_4
             create 1 3
             pushcaf 67
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 28914       jmp 28915                                || sm_flat__reflectionKws_5 || sm_flat__reflectionKws_5_lazy
 28915       pushfunc 0 28913                         || sm_flat__reflectionKws_4 || sm_flat__reflectionKws_5
             create 1 3
             pushcaf 66
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 28916       jmp 28917                                || sm_flat__reflectionKws_6 || sm_flat__reflectionKws_6_lazy
 28917       pushfunc 0 28915                         || sm_flat__reflectionKws_5 || sm_flat__reflectionKws_6
             create 1 3
             pushcaf 65
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 28918       jmp 28919                                || sm_flat__reflectionKws_7 || sm_flat__reflectionKws_7_lazy
 28919       pushfunc 0 28917                         || sm_flat__reflectionKws_6 || sm_flat__reflectionKws_7
             create 1 3
             pushcaf 64
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 28920       jmp 28921                                || sm_flat__reflectionKws_8 || sm_flat__reflectionKws_8_lazy
 28921       pushfunc 0 28919                         || sm_flat__reflectionKws_7 || sm_flat__reflectionKws_8
             create 1 3
             pushcaf 63
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 28922       jmp 28923                                || sm_flat__reflectionKws_9 || sm_flat__reflectionKws_9_lazy
 28923       pushfunc 0 28921                         || sm_flat__reflectionKws_8 || sm_flat__reflectionKws_9
             create 1 3
             pushcaf 62
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 28924       jmp 28925                                || sm_flat__reflectionKws_10 || sm_flat__reflectionKws_10_lazy
 28925       pushfunc 0 28923                         || sm_flat__reflectionKws_9 || sm_flat__reflectionKws_10
             create 1 3
             pushcaf 61
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 28926       jmp 28927                                || sm_flat__reflectionKws_11 || sm_flat__reflectionKws_11_lazy
 28927       pushfunc 0 28925                         || sm_flat__reflectionKws_10 || sm_flat__reflectionKws_11
             create 1 3
             pushcaf 60
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 28928       jmp 28929                                || sm_flat__reflectionKws_12 || sm_flat__reflectionKws_12_lazy
 28929       pushfunc 0 28927                         || sm_flat__reflectionKws_11 || sm_flat__reflectionKws_12
             create 1 3
             pushcaf 59
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 28930       jmp 28931                                || sm_flat__reflectionKws_13 || sm_flat__reflectionKws_13_lazy
 28931       pushfunc 0 28929                         || sm_flat__reflectionKws_12 || sm_flat__reflectionKws_13
             create 1 3
             pushcaf 58
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 28932       jmp 28933                                || sm_flat__reflectionKws_14 || sm_flat__reflectionKws_14_lazy
 28933       pushfunc 0 28931                         || sm_flat__reflectionKws_13 || sm_flat__reflectionKws_14
             create 1 3
             pushcaf 57
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 28934       jmp 28935                                || sm_flat__reflectionKws_15 || sm_flat__reflectionKws_15_lazy
 28935       pushfunc 0 28933                         || sm_flat__reflectionKws_14 || sm_flat__reflectionKws_15
             create 1 3
             pushcaf 56
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 28936       jmp 28937                                || sm_flat__identExpr_j1 || sm_flat__identExpr_j1_lazy
@@ -128425,7 +128425,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             ccreatet 1 11 114 2
             ccreatet 2 11 5 1
             pushcaf 74
-            eval
+            force
             ccreatet 2 11 114 5
             return 1
 28942       jmp 28943                                || sm_flat__opTable_1 || sm_flat__opTable_1_lazy
@@ -128519,7 +128519,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             create 1 3
             push 1
             pushcaf 14
-            eval
+            force
             ccreatet 2 11 125 0
             ccreatet 2 11 5 1
             return 0
@@ -128721,7 +128721,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 28998       jmp 28999                                || sm_flat__charLiteralsWith_1 || sm_flat__charLiteralsWith_1_lazy
 28999       ccreatet 0 11 5 0                        || sm_flat__charLiteralsWith_1
             pushcaf 77
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 29000       jmp 29001                                || sm_flat__uaOne_1 || sm_flat__uaOne_1_lazy
@@ -128775,13 +128775,13 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 29012       jmp 29013                                || sm_flat__strictLeftOps_1 || sm_flat__strictLeftOps_1_lazy
 29013       ccreatet 0 11 5 0                        || sm_flat__strictLeftOps_1
             pushcaf 14
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 29014       jmp 29015                                || sm_flat__primStrictInTwo_j1 || sm_flat__primStrictInTwo_j1_lazy
 29015       load 0                                   || sm_flat__primStrictInTwo_j1
             pushcaf 80
-            eval
+            force
             call 11208                               || sm_flat__member
             ifeq 29016                               || sm_flat__primStrictInTwo_j1_else
             load 4
@@ -130057,7 +130057,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             load 0
             pushfunc 2 16012                         || sm_flat__cafInstrs_lazy
             create 3 3
-            push "eval"
+            push "force"
             pushfunc 1 10825                         || sm_flat__str2list
             create 2 3
             call 14804                               || sm_flat__mkI
@@ -130086,7 +130086,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             load 0
             pushfunc 3 29280                         || sm_flat__cafInstrT_2
             create 4 3
-            push "eval"
+            push "force"
             pushfunc 1 10825                         || sm_flat__str2list
             create 2 3
             call 14804                               || sm_flat__mkI
@@ -130174,7 +130174,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             pushfunc 2 10892                         || sm_flat__append_lazy
             create 3 3
             pushcaf 85
-            eval
+            force
             tailcall 2 10893                         || sm_flat__append
 29297       jmp 29298                                || sm_flat__ppPrimCheckTail_1 || sm_flat__ppPrimCheckTail_1_lazy
 29298       load 1                                   || sm_flat__ppPrimCheckTail_1
@@ -130340,7 +130340,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             ccreatet 1 11 157 4
             ccreatet 2 11 5 1
             pushcaf 87
-            eval
+            force
             ccreatet 1 11 157 0
             ccreatet 2 11 5 1
             return 1
@@ -130366,7 +130366,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             pushfunc 1 29338                         || sm_flat__jaFloatop_1
             create 2 3
             pushcaf 87
-            eval
+            force
             ccreatet 1 11 157 0
             ccreatet 2 11 5 1
             return 1
@@ -136149,13 +136149,13 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
 30819       load 0                                   || __pat_8354_1
             force
             pushcaf 89
-            eval
+            force
             mod
             pushcaf 89
-            eval
+            force
             add
             pushcaf 89
-            eval
+            force
             mod
             return 1
 30820       jmp 30821                                || __pat_8354_2 || __pat_8354_2_lazy
@@ -136165,7 +136165,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             force
             sub
             pushcaf 89
-            eval
+            force
             div
             return 2
 30822       jmp 30823                                || __pat_8330_1 || __pat_8330_1_lazy
@@ -137416,7 +137416,7 @@ append_lazy append append_Nil append_Cons length_lazy length length_Nil length_C
             pushfunc 2 31092                         || __pat_1226_1
             create 3 3
             pushcaf 10
-            eval
+            force
             ccreatet 2 11 5 1
             return 2
 31096       jmp 31097                                || __pat_1226_3 || __pat_1226_3_lazy

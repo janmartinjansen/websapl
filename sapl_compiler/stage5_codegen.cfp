@@ -1330,8 +1330,14 @@ optimizeBlockInstrs b =
 // een GC-wortel; tot 7 oktober 2026 bleef hij op stack[k] liggen). Een verwijzing ernaar wordt daarna, op de
 // gegenereerde instructies, omgezet:
 //   pushfunc 0 c; create 1 3   ->  pushcaf k                 (lui)
-//   call c                     ->  pushcaf k; eval           (strikt)
-//   tailcall n c               ->  pushcaf k; eval; return n (staart)
+//   call c                     ->  pushcaf k; force          (strikt)
+//   tailcall n c               ->  pushcaf k; force; return n (staart)
+// `force`, niet `eval` (3 november 2026): is de waarde van de CAF een
+// gedeeltelijke toepassing, dan past `eval` die toe op wat er al in het
+// frame ligt (het argument van een omringende aanroep `f x` met `f =: g a`),
+// en `call c` deed dat nooit. Gevonden met de Haskell-backend (MicroHs),
+// waar elke klassedictionary en combinator zo'n CAF is; zie
+// tests/caf/pap_toegepast.cfp.
 // Alleen namen uit de CAF-lijst, nooit "elke functie zonder argumenten"
 // (stage 1/3 maken ook zulke hulpfuncties, die mogen niet gedeeld worden).
 // Een vorm die hier niet herkend wordt (een closure, of een thunk met
@@ -1368,8 +1374,8 @@ cafInstr cafs i rest =
 
 cafInstrT cafs i t k rest =
   if (k < 0) (Cons i (cafInstrs cafs rest))
-  (if (charListEq t ['call']) (Cons (pushCafI k) (Cons (mkI ['eval']) (cafInstrs cafs rest)))
-  (if (hasPrefix t ['tailcall ']) (Cons (pushCafI k) (Cons (mkI ['eval']) (Cons (mkI (append ['return '] (dropN 9 t))) (cafInstrs cafs rest))))
+  (if (charListEq t ['call']) (Cons (pushCafI k) (Cons (mkI ['force']) (cafInstrs cafs rest)))
+  (if (hasPrefix t ['tailcall ']) (Cons (pushCafI k) (Cons (mkI ['force']) (Cons (mkI (append ['return '] (dropN 9 t))) (cafInstrs cafs rest))))
   (if (charListEq t ['pushfunc 0']) (cafPushfunc cafs i k rest)
   (Cons i (cafInstrs cafs rest)))))
 

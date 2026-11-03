@@ -1101,14 +1101,14 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             eval
             store 0
 198         pushcaf 0                                || numFits
-            eval
+            force
             load 0
             sub
             ifle 199                                 || numFits_else
             return_const 2 1
 199         load 0                                   || numFits_else
             pushcaf 0
-            eval
+            force
             sub
             ifneq 201                                || numFits_else_else
             push 1
@@ -1808,7 +1808,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             ifeq 359                                 || retagEscapeHead_else
             load 0
             pushcaf 1
-            eval
+            force
             tailcall 1 76                            || append
 359         load 0                                   || retagEscapeHead_else
             return 1
@@ -1818,7 +1818,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 361         load 0                                   || retagUnescapeHead
             dup
             pushcaf 1
-            eval
+            force
             call 366                                 || retagStripPrefix
             load 0
             tailcall 1 363                           || retagUnescapeCheck
@@ -2566,114 +2566,114 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             eval
             store 0
 542         pushcaf 4                                || isPrintCall
-            eval
+            force
             load 0
             tailcall 1 342                           || charListEq
 543         load 0                                   || isPrintCCall_lazy
             eval
             store 0
 544         pushcaf 5                                || isPrintCCall
-            eval
+            force
             load 0
             tailcall 1 342                           || charListEq
 545         load 0                                   || isPrintSCall_lazy
             eval
             store 0
 546         pushcaf 6                                || isPrintSCall
-            eval
+            force
             load 0
             tailcall 1 342                           || charListEq
 547         load 0                                   || isErrorCall_lazy
             eval
             store 0
 548         pushcaf 7                                || isErrorCall
-            eval
+            force
             load 0
             tailcall 1 342                           || charListEq
 549         load 0                                   || isPredefCall_lazy
             eval
             store 0
 550         pushcaf 8                                || isPredefCall
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 551                                 || isPredefCall_else
             return_const 1 1
 551         pushcaf 9                                || isPredefCall_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 552                                 || isPredefCall_else_else
             return_const 1 1
 552         pushcaf 10                               || isPredefCall_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 553                                 || isPredefCall_else_else_else
             return_const 1 1
 553         pushcaf 11                               || isPredefCall_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 554                                 || isPredefCall_else_else_else_else
             return_const 1 1
 554         pushcaf 12                               || isPredefCall_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 555                                 || isPredefCall_else_else_else_else_else
             return_const 1 1
 555         pushcaf 13                               || isPredefCall_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 556                                 || isPredefCall_else_else_else_else_else_else
             return_const 1 1
 556         pushcaf 14                               || isPredefCall_else_else_else_else_else_else
-            eval
+            force
             load 0
             tailcall 1 342                           || charListEq
 557         load 0                                   || predefArity_lazy
             eval
             store 0
 558         pushcaf 8                                || predefArity
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 559                                 || predefArity_else
             return_const 1 1
 559         pushcaf 9                                || predefArity_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 560                                 || predefArity_else_else
             return_const 1 2
 560         pushcaf 10                               || predefArity_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 561                                 || predefArity_else_else_else
             return_const 1 3
 561         pushcaf 11                               || predefArity_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 562                                 || predefArity_else_else_else_else
             return_const 1 2
 562         pushcaf 12                               || predefArity_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 563                                 || predefArity_else_else_else_else_else
             return_const 1 2
 563         pushcaf 13                               || predefArity_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 564                                 || predefArity_else_else_else_else_else_else
             return_const 1 3
 564         pushcaf 14                               || predefArity_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 565                                 || predefArity_else_else_else_else_else_else_else
@@ -2685,43 +2685,43 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             eval
             store 0
 567         pushcaf 8                                || predefIndex
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 568                                 || predefIndex_else
             return_const 1 2
 568         pushcaf 9                                || predefIndex_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 569                                 || predefIndex_else_else
             return_const 1 4
 569         pushcaf 10                               || predefIndex_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 570                                 || predefIndex_else_else_else
             return_const 1 3
 570         pushcaf 11                               || predefIndex_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 571                                 || predefIndex_else_else_else_else
             return_const 1 6
 571         pushcaf 12                               || predefIndex_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 572                                 || predefIndex_else_else_else_else_else
             return_const 1 0
 572         pushcaf 13                               || predefIndex_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 573                                 || predefIndex_else_else_else_else_else_else
             return_const 1 1
 573         pushcaf 14                               || predefIndex_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 574                                 || predefIndex_else_else_else_else_else_else_else
@@ -2760,98 +2760,98 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             eval
             store 0
 594         pushcaf 15                               || isSyscallCall
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 595                                 || isSyscallCall_else
             return_const 1 1
 595         pushcaf 16                               || isSyscallCall_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 596                                 || isSyscallCall_else_else
             return_const 1 1
 596         pushcaf 17                               || isSyscallCall_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 597                                 || isSyscallCall_else_else_else
             return_const 1 1
 597         pushcaf 18                               || isSyscallCall_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 598                                 || isSyscallCall_else_else_else_else
             return_const 1 1
 598         pushcaf 19                               || isSyscallCall_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 599                                 || isSyscallCall_else_else_else_else_else
             return_const 1 1
 599         pushcaf 20                               || isSyscallCall_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 600                                 || isSyscallCall_else_else_else_else_else_else
             return_const 1 1
 600         pushcaf 21                               || isSyscallCall_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 601                                 || isSyscallCall_else_else_else_else_else_else_else
             return_const 1 1
 601         pushcaf 22                               || isSyscallCall_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             tailcall 1 342                           || charListEq
 602         load 0                                   || syscallArity_lazy
             eval
             store 0
 603         pushcaf 15                               || syscallArity
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 604                                 || syscallArity_else
             return_const 1 1
 604         pushcaf 16                               || syscallArity_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 605                                 || syscallArity_else_else
             return_const 1 2
 605         pushcaf 17                               || syscallArity_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 606                                 || syscallArity_else_else_else
             return_const 1 0
 606         pushcaf 18                               || syscallArity_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 607                                 || syscallArity_else_else_else_else
             return_const 1 1
 607         pushcaf 19                               || syscallArity_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 608                                 || syscallArity_else_else_else_else_else
             return_const 1 2
 608         pushcaf 20                               || syscallArity_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 609                                 || syscallArity_else_else_else_else_else_else
             return_const 1 1
 609         pushcaf 21                               || syscallArity_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 610                                 || syscallArity_else_else_else_else_else_else_else
             return_const 1 1
 610         pushcaf 22                               || syscallArity_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 611                                 || syscallArity_else_else_else_else_else_else_else_else
@@ -2863,49 +2863,49 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             eval
             store 0
 613         pushcaf 15                               || syscallIndex
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 614                                 || syscallIndex_else
             return_const 1 0
 614         pushcaf 16                               || syscallIndex_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 615                                 || syscallIndex_else_else
             return_const 1 1
 615         pushcaf 17                               || syscallIndex_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 616                                 || syscallIndex_else_else_else
             return_const 1 2
 616         pushcaf 18                               || syscallIndex_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 617                                 || syscallIndex_else_else_else_else
             return_const 1 3
 617         pushcaf 19                               || syscallIndex_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 618                                 || syscallIndex_else_else_else_else_else
             return_const 1 4
 618         pushcaf 20                               || syscallIndex_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 619                                 || syscallIndex_else_else_else_else_else_else
             return_const 1 5
 619         pushcaf 21                               || syscallIndex_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 620                                 || syscallIndex_else_else_else_else_else_else_else
             return_const 1 6
 620         pushcaf 22                               || syscallIndex_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 621                                 || syscallIndex_else_else_else_else_else_else_else_else
@@ -2917,7 +2917,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             eval
             store 0
 623         pushcaf 23                               || isStrcreateCall
-            eval
+            force
             load 0
             tailcall 1 342                           || charListEq
 624         jmp 625                                  || sinKw || sinKw_lazy
@@ -2984,128 +2984,128 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             eval
             store 0
 665         pushcaf 24                               || isFloatOpCall
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 666                                 || isFloatOpCall_else
             return_const 1 1
 666         pushcaf 25                               || isFloatOpCall_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 667                                 || isFloatOpCall_else_else
             return_const 1 1
 667         pushcaf 26                               || isFloatOpCall_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 668                                 || isFloatOpCall_else_else_else
             return_const 1 1
 668         pushcaf 27                               || isFloatOpCall_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 669                                 || isFloatOpCall_else_else_else_else
             return_const 1 1
 669         pushcaf 28                               || isFloatOpCall_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 670                                 || isFloatOpCall_else_else_else_else_else
             return_const 1 1
 670         pushcaf 29                               || isFloatOpCall_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 671                                 || isFloatOpCall_else_else_else_else_else_else
             return_const 1 1
 671         pushcaf 30                               || isFloatOpCall_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 672                                 || isFloatOpCall_else_else_else_else_else_else_else
             return_const 1 1
 672         pushcaf 31                               || isFloatOpCall_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 673                                 || isFloatOpCall_else_else_else_else_else_else_else_else
             return_const 1 1
 673         pushcaf 32                               || isFloatOpCall_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 674                                 || isFloatOpCall_else_else_else_else_else_else_else_else_else
             return_const 1 1
 674         pushcaf 33                               || isFloatOpCall_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 675                                 || isFloatOpCall_else_else_else_else_else_else_else_else_else_else
             return_const 1 1
 675         pushcaf 34                               || isFloatOpCall_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 676                                 || isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 1
 676         pushcaf 35                               || isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 677                                 || isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 1
 677         pushcaf 36                               || isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 678                                 || isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 1
 678         pushcaf 37                               || isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 679                                 || isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 1
 679         pushcaf 38                               || isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 680                                 || isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 1
 680         pushcaf 39                               || isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 681                                 || isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 1
 681         pushcaf 40                               || isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 682                                 || isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 1
 682         pushcaf 41                               || isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 683                                 || isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 1
 683         pushcaf 42                               || isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 684                                 || isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 1
 684         pushcaf 43                               || isFloatOpCall_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             tailcall 1 342                           || charListEq
 685         load 0                                   || floatOpArity_lazy
             eval
             store 0
 686         pushcaf 43                               || floatOpArity
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 687                                 || floatOpArity_else
@@ -3115,121 +3115,121 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             eval
             store 0
 689         pushcaf 24                               || floatOpIndex
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 690                                 || floatOpIndex_else
             return_const 1 0
 690         pushcaf 25                               || floatOpIndex_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 691                                 || floatOpIndex_else_else
             return_const 1 1
 691         pushcaf 26                               || floatOpIndex_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 692                                 || floatOpIndex_else_else_else
             return_const 1 2
 692         pushcaf 27                               || floatOpIndex_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 693                                 || floatOpIndex_else_else_else_else
             return_const 1 3
 693         pushcaf 28                               || floatOpIndex_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 694                                 || floatOpIndex_else_else_else_else_else
             return_const 1 4
 694         pushcaf 29                               || floatOpIndex_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 695                                 || floatOpIndex_else_else_else_else_else_else
             return_const 1 5
 695         pushcaf 30                               || floatOpIndex_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 696                                 || floatOpIndex_else_else_else_else_else_else_else
             return_const 1 6
 696         pushcaf 31                               || floatOpIndex_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 697                                 || floatOpIndex_else_else_else_else_else_else_else_else
             return_const 1 7
 697         pushcaf 32                               || floatOpIndex_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 698                                 || floatOpIndex_else_else_else_else_else_else_else_else_else
             return_const 1 8
 698         pushcaf 33                               || floatOpIndex_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 699                                 || floatOpIndex_else_else_else_else_else_else_else_else_else_else
             return_const 1 9
 699         pushcaf 34                               || floatOpIndex_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 700                                 || floatOpIndex_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 10
 700         pushcaf 35                               || floatOpIndex_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 701                                 || floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 11
 701         pushcaf 36                               || floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 702                                 || floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 12
 702         pushcaf 37                               || floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 703                                 || floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 13
 703         pushcaf 38                               || floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 704                                 || floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 13
 704         pushcaf 39                               || floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 705                                 || floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 14
 705         pushcaf 40                               || floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 706                                 || floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 15
 706         pushcaf 41                               || floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 707                                 || floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 16
 707         pushcaf 42                               || floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 708                                 || floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             return_const 1 17
 708         pushcaf 43                               || floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 709                                 || floatOpIndex_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
@@ -3518,13 +3518,13 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 811         pushfunc 0 3843                          || reflectionKws_15 || reflectionKws
             create 1 3
             pushcaf 44
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 812         jmp 813                                  || isReflectionCall || isReflectionCall_lazy
 813         load 0                                   || isReflectionCall
             pushcaf 60
-            eval
+            force
             tailcall 1 391                           || member
 814         load 0                                   || sbIsBuiltin_lazy
             eval
@@ -3567,112 +3567,112 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             eval
             store 0
 825         pushcaf 44                               || reflectionOpcode
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 826                                 || reflectionOpcode_else
             push "gettypeid"
             tailcall 1 8                             || str2list
 826         pushcaf 45                               || reflectionOpcode_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 827                                 || reflectionOpcode_else_else
             push "getconstrname"
             tailcall 1 8                             || str2list
 827         pushcaf 46                               || reflectionOpcode_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 828                                 || reflectionOpcode_else_else_else
             push "getfield"
             tailcall 1 8                             || str2list
 828         pushcaf 47                               || reflectionOpcode_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 829                                 || reflectionOpcode_else_else_else_else
             push "makeconstr"
             tailcall 1 8                             || str2list
 829         pushcaf 48                               || reflectionOpcode_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 830                                 || reflectionOpcode_else_else_else_else_else
             push "getfuncname"
             tailcall 1 8                             || str2list
 830         pushcaf 49                               || reflectionOpcode_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 831                                 || reflectionOpcode_else_else_else_else_else_else
             push "getfuncarity"
             tailcall 1 8                             || str2list
 831         pushcaf 50                               || reflectionOpcode_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 832                                 || reflectionOpcode_else_else_else_else_else_else_else
             push "getfuncremaining"
             tailcall 1 8                             || str2list
 832         pushcaf 51                               || reflectionOpcode_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 833                                 || reflectionOpcode_else_else_else_else_else_else_else_else
             push "applydynamic"
             tailcall 1 8                             || str2list
 833         pushcaf 52                               || reflectionOpcode_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 834                                 || reflectionOpcode_else_else_else_else_else_else_else_else_else
             push "lookup"
             tailcall 1 8                             || str2list
 834         pushcaf 53                               || reflectionOpcode_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 835                                 || reflectionOpcode_else_else_else_else_else_else_else_else_else_else
             push "ord"
             tailcall 1 8                             || str2list
 835         pushcaf 54                               || reflectionOpcode_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 836                                 || reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else
             push "chr"
             tailcall 1 8                             || str2list
 836         pushcaf 55                               || reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 837                                 || reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else_else
             push "funcaddr"
             tailcall 1 8                             || str2list
 837         pushcaf 56                               || reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 838                                 || reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else_else_else
             push "fieldisvalue"
             tailcall 1 8                             || str2list
 838         pushcaf 57                               || reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 839                                 || reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             push "pack"
             tailcall 1 8                             || str2list
 839         pushcaf 58                               || reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 840                                 || reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
             push "packmax"
             tailcall 1 8                             || str2list
 840         pushcaf 59                               || reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 841                                 || reflectionOpcode_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else_else
@@ -3685,7 +3685,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             eval
             store 0
 843         pushcaf 47                               || reflectionArity
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 844                                 || reflectionArity_else
@@ -3693,25 +3693,25 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             dec
             return 1
 844         pushcaf 46                               || reflectionArity_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 845                                 || reflectionArity_else_else
             return_const 1 2
 845         pushcaf 51                               || reflectionArity_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 846                                 || reflectionArity_else_else_else
             return_const 1 2
 846         pushcaf 56                               || reflectionArity_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 847                                 || reflectionArity_else_else_else_else
             return_const 1 2
 847         pushcaf 58                               || reflectionArity_else_else_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 848                                 || reflectionArity_else_else_else_else_else
@@ -3844,7 +3844,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 924         jmp 925                                  || startsWithPrimPrefix || startsWithPrimPrefix_lazy
 925         load 0                                   || startsWithPrimPrefix
             pushcaf 62
-            eval
+            force
             tailcall 1 927                           || startsWithPrimPrefixAcc
 926         load 0                                   || startsWithPrimPrefixAcc_lazy
             eval
@@ -3882,7 +3882,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             syscall 8
             return 3
 937         pushcaf 64                               || rparseAtomTok_TIdent_else_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 938                                 || rparseAtomTok_TIdent_else_else_else
@@ -4542,7 +4542,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             ifeq 1069                                || risCaseIdent_else
             return_const 1 1
 1069        pushcaf 63                               || risCaseIdent_else
-            eval
+            force
             load 0
             tailcall 1 342                           || charListEq
 1070        load 0                                   || rparseAtom_lazy
@@ -4775,7 +4775,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             create 1 3
             push 1
             pushcaf 2
-            eval
+            force
             ccreatet 2 11 19 0
             ccreatet 2 11 5 1
             return 0
@@ -5260,7 +5260,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 1261        load 0                                   || rcollectBranchesTok
             jmpt 14 1262 1264 1265 1266 1267 1268 1269 1270 1271 1272 1273 1274 1275 1276 || lbs
 1262        pushcaf 64                               || rcollectBranchesTok_TIdent
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 1263                                || rcollectBranchesTok_TIdent_else
@@ -6385,7 +6385,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             syscall 8
             return 4
 1593        pushcaf 65                               || rcollectConFieldsTok_TOp
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 1594                                || rcollectConFieldsTok_TOp_else
@@ -6647,7 +6647,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             syscall 8
             return 4
 1672        pushcaf 65                               || rafterAdtConTok_TOp
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 1673                                || rafterAdtConTok_TOp_else
@@ -8119,14 +8119,14 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             eval
             store 0
 2011        pushcaf 46                               || reflectionInstrs
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 2012                                || reflectionInstrs_else
             load 0
             tailcall 1 3936                          || reflectionInstrs_j1
 2012        pushcaf 59                               || reflectionInstrs_else
-            eval
+            force
             load 0
             call 342                                 || charListEq
             ifeq 2013                                || reflectionInstrs_else_else
@@ -14152,7 +14152,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 3229        jmp 3230                                 || commentSuffix || commentSuffix_lazy
 3230        load 0                                   || commentSuffix
             pushcaf 67
-            eval
+            force
             tailcall 1 76                            || append
 3231        load 1                                   || renderInstr_lazy
             eval
@@ -14234,7 +14234,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             pushfunc 2 3231                          || renderInstr_lazy
             create 3 3
             pushcaf 66
-            eval
+            force
             tailcall 2 76                            || append
 3245        load 3                                   || renderBlockLines_lazy
             eval
@@ -16016,7 +16016,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             pushfunc 1 450                           || funcNameOf_lazy
             create 2 3
             pushcaf 70
-            eval
+            force
             call 3615                                || charListStartsWith
             ifeq 3627                                || isReflectionHookFunc_else
             return_const 1 1
@@ -16024,7 +16024,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             pushfunc 1 450                           || funcNameOf_lazy
             create 2 3
             pushcaf 71
-            eval
+            force
             tailcall 1 3615                          || charListStartsWith
 3628        load 0                                   || extraRootNames_lazy
             eval
@@ -16146,7 +16146,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 3657        jmp 3658                                 || rlIsShared || rlIsShared_lazy
 3658        load 0                                   || rlIsShared
             pushcaf 72
-            eval
+            force
             tailcall 1 3660                          || rlAnyPrefix
 3659        load 0                                   || rlAnyPrefix_lazy
             eval
@@ -16955,105 +16955,105 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
 3814        jmp 3815                                 || reflectionKws_1 || reflectionKws_1_lazy
 3815        ccreatet 0 11 5 0                        || reflectionKws_1
             pushcaf 59
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 3816        jmp 3817                                 || reflectionKws_2 || reflectionKws_2_lazy
 3817        pushfunc 0 3815                          || reflectionKws_1 || reflectionKws_2
             create 1 3
             pushcaf 58
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 3818        jmp 3819                                 || reflectionKws_3 || reflectionKws_3_lazy
 3819        pushfunc 0 3817                          || reflectionKws_2 || reflectionKws_3
             create 1 3
             pushcaf 57
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 3820        jmp 3821                                 || reflectionKws_4 || reflectionKws_4_lazy
 3821        pushfunc 0 3819                          || reflectionKws_3 || reflectionKws_4
             create 1 3
             pushcaf 56
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 3822        jmp 3823                                 || reflectionKws_5 || reflectionKws_5_lazy
 3823        pushfunc 0 3821                          || reflectionKws_4 || reflectionKws_5
             create 1 3
             pushcaf 55
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 3824        jmp 3825                                 || reflectionKws_6 || reflectionKws_6_lazy
 3825        pushfunc 0 3823                          || reflectionKws_5 || reflectionKws_6
             create 1 3
             pushcaf 54
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 3826        jmp 3827                                 || reflectionKws_7 || reflectionKws_7_lazy
 3827        pushfunc 0 3825                          || reflectionKws_6 || reflectionKws_7
             create 1 3
             pushcaf 53
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 3828        jmp 3829                                 || reflectionKws_8 || reflectionKws_8_lazy
 3829        pushfunc 0 3827                          || reflectionKws_7 || reflectionKws_8
             create 1 3
             pushcaf 52
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 3830        jmp 3831                                 || reflectionKws_9 || reflectionKws_9_lazy
 3831        pushfunc 0 3829                          || reflectionKws_8 || reflectionKws_9
             create 1 3
             pushcaf 51
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 3832        jmp 3833                                 || reflectionKws_10 || reflectionKws_10_lazy
 3833        pushfunc 0 3831                          || reflectionKws_9 || reflectionKws_10
             create 1 3
             pushcaf 50
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 3834        jmp 3835                                 || reflectionKws_11 || reflectionKws_11_lazy
 3835        pushfunc 0 3833                          || reflectionKws_10 || reflectionKws_11
             create 1 3
             pushcaf 49
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 3836        jmp 3837                                 || reflectionKws_12 || reflectionKws_12_lazy
 3837        pushfunc 0 3835                          || reflectionKws_11 || reflectionKws_12
             create 1 3
             pushcaf 48
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 3838        jmp 3839                                 || reflectionKws_13 || reflectionKws_13_lazy
 3839        pushfunc 0 3837                          || reflectionKws_12 || reflectionKws_13
             create 1 3
             pushcaf 47
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 3840        jmp 3841                                 || reflectionKws_14 || reflectionKws_14_lazy
 3841        pushfunc 0 3839                          || reflectionKws_13 || reflectionKws_14
             create 1 3
             pushcaf 46
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 3842        jmp 3843                                 || reflectionKws_15 || reflectionKws_15_lazy
 3843        pushfunc 0 3841                          || reflectionKws_14 || reflectionKws_15
             create 1 3
             pushcaf 45
-            eval
+            force
             ccreatet 2 11 5 1
             return 0
 3844        jmp 3845                                 || rcollectAppOnTok_1 || rcollectAppOnTok_1_lazy
@@ -17108,7 +17108,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             ccreatet 1 11 8 11
             return 2
 3852        pushcaf 61                               || rfinishApp_j1_else_else_else
-            eval
+            force
             load 0
             force
             call 342                                 || charListEq
@@ -17306,7 +17306,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             create 1 3
             push 1
             pushcaf 3
-            eval
+            force
             ccreatet 2 11 19 0
             ccreatet 2 11 5 1
             return 0
@@ -18734,7 +18734,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             load 0
             pushfunc 2 3139                          || cafInstrs_lazy
             create 3 3
-            push "eval"
+            push "force"
             pushfunc 1 8                             || str2list
             create 2 3
             call 1931                                || mkI
@@ -18763,7 +18763,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             load 0
             pushfunc 3 4186                          || cafInstrT_2
             create 4 3
-            push "eval"
+            push "force"
             pushfunc 1 8                             || str2list
             create 2 3
             call 1931                                || mkI
@@ -18865,7 +18865,7 @@ readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStr
             pushfunc 2 75                            || append_lazy
             create 3 3
             pushcaf 69
-            eval
+            force
             tailcall 2 76                            || append
 4207        jmp 4208                                 || genFuncMetas_1 || genFuncMetas_1_lazy
 4208        ccreatet 0 11 5 0                        || genFuncMetas_1
