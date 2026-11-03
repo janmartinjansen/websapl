@@ -24,8 +24,9 @@ f xs = case xs (Cons x rest -> case rest (Nil -> 1) (_ -> 2)) (_ -> 2)
 g xs = case xs (Nil -> 0) (_ -> 1)
 ```
 
-In Sapl+ zijn patronen in de functiekop echte patronen (`g Nil = 0` werkt
-daar), maar in een `case`-tak geldt dit ook.
+In Sapl+ zijn het echte patronen, in de functiekop (`g Nil = 0` werkt
+daar) en sinds 3 november 2026 ook in een `case`-tak: daar test
+`(Cons x Nil -> 1)` echt op een lege staart.
 
 ## `==` vergelijkt pointers, niet de inhoud
 
@@ -82,8 +83,8 @@ Een paar andere komen uit het binnenste van de parser:
 |---|---|
 | `appendArg: unexpected argument in this position` | Haskell-syntax: `case … of`, `where`, `if … then … else`, een `let` zonder komma's |
 | `findOpInfo: unknown operator` | een operator die Sapl niet kent: `\|\|` (commentaar is `//`, "of" is `\/`), `&&` (`/\`), `$`, `.`, `^`, `:` (alleen Sapl+), backticks |
-| `parseAtom: unexpected operator` | unaire min (schrijf `(0 - x)`), een operator als waarde (`(+)`), `--` |
-| `parseAtom: 'let'/'in' not allowed here` | een `let` die niet de hele functiebody is |
+| `parseAtom: unexpected operator` | unaire min (schrijf `(0 - x)`), een operator als waarde (`(+)`, in Sapl+ wel toegestaan), `--` |
+| `parseAtom: 'let'/'in' not allowed here` | een `let` die niet de hele functiebody is (in Sapl+ mag dat wel) |
 | `findAdtByCon: unknown constructor` | een niet-gedeclareerde constructor (`Nil`/`Cons` zonder `::`-declaratie), `True`/`False` in een `case`, of een variabele met een hoofdletter |
 | `parseFuncArgs: unexpected token in argument position` | een patroon of literal in de functiekop (alleen in Sapl+) |
 | `onbekende naam if` | een `if` als functie van een aanroep, of `then`/`else` |

@@ -81,6 +81,10 @@ sumList xs =
 - **Let op: een constructornaam op een veldplek wordt stil een variabele.**
   `(Cons x Nil -> ...)` matcht elke `Cons`. Schrijf
   `(Cons x rest -> case rest (Nil -> ...) (_ -> ...))`.
+- **In Sapl+** (sinds 3 november 2026) mag een tak elk patroon hebben, zoals
+  in Haskell: genest, een literal, een tupel, `x : xs`; past hij niet, dan
+  probeert de case de volgende tak. Daar test `(Cons x Nil -> ...)` dus echt
+  op een lege staart.
 - Branches mogen in willekeurige volgorde staan.
 - Je hoeft niet alle constructors af te dekken — een ontbrekende
   constructor geeft pas een fout als hij echt geraakt wordt
@@ -141,6 +145,12 @@ sub-expressie ergens anders (niet rechts van `<#>`, niet als tak van een
 allowed here`. Zet zo'n `let` in een eigen naamgegeven hulpfunctie. Een
 `if` of `case` als waarde van een binding mag wel.
 
+**In Sapl+** (sinds 3 november 2026) mag een `let` overal staan, ook
+geketend, en kan een binding een lokale functie zijn
+(`let go acc (y : ys) = go (acc + y) ys, go acc [] = acc in go 0 xs`). Een
+patroon in een `let` (`let (a, b) = e in ...`) is lui zoals in Haskell;
+`let !(a, b) = e` matcht meteen.
+
 ## 5. Eén clausule per functienaam
 
 In tegenstelling tot sommige andere functionele talen staat Sapl **geen**
@@ -170,7 +180,8 @@ basiscompiler de tekst ooit ziet.)
 ## 6. Operators zijn geen waarden; constructors wel
 
 Een constructor mag gewoon als functiewaarde: `map Cirkel xs`, `Rechthoek 2`.
-Een operator niet: er is geen `(+)`- of `(+1)`-syntax. Wikkel een operator
+Een operator niet: er is geen `(+)`- of `(+1)`-syntax (in Sapl+ sinds
+3 november 2026 wel: `(+)`, `(+ 1)`, `(10 -)`). Wikkel een operator
 in een naam:
 
 ```sapl

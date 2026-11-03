@@ -61,7 +61,7 @@ subst Error es = Error
 
 evol (App f r) es fs = evol f (Cons (evol r Nil fs) es) fs
 evol (Func f) es fs =
-  let (arity, body) = el f fs in
+  let !(arity, body) = el f fs in
   if (length es >= arity) (evol (subst body es) (drop arity es) fs) (rebuild (Func f) es)
 evol (Var n) es fs = el n es
 evol (Num n) es fs = Num n
