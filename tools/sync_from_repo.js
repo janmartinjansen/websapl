@@ -163,6 +163,8 @@ const ENTRIES = [
   { src: "notebooks/vm_metingen.spp", dst: "notebooks/vm_metingen.spp" },
   { src: "notebooks/waarden_bewaren.spp", dst: "notebooks/waarden_bewaren.spp" },
   { src: "notebooks/topdemo/presentatie.spp", dst: "topdemo/presentatie.spp" },
+  { src: "notebooks/afscheid/presentatie.spp", dst: "afscheid/presentatie.spp" },
+  { src: "notebooks/afscheid/paper_first_page.png", dst: "afscheid/paper_first_page.png" },
   { src: "docs/waarden_bewaren_gebruik.md", dst: "docs/waarden_bewaren.md" },
   { src: "notebooks/data/meting_info.csv", dst: "notebooks/data/meting_info.csv" },
   { src: "notebooks/data/benchmarks.csv", dst: "notebooks/data/benchmarks.csv" },

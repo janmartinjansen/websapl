@@ -1,0 +1,63 @@
+//%% [instellingen] waarden=uit code=verborgen
+//%% [markdown]
+// # Turning Proof-of-Concept Research into Full Blown Applications!
+//
+// ### A post-retirement Project
+//
+// **Jan Martin Jansen** · November 2026
+//
+// *An interactive presentation powered by Sapl & the JMVM. Running entirely in the browser (WebAssembly).*
+//
+// *(Navigation: **Space** / **PageDown** / **→** next slide · **PageUp** / **←** previous · **C** toggle code · **F** fullscreen · **Esc** to notebook view, **P** back to slides)*
+//%%
+import "lib/list.spp" as L
+import "lib/text.spp" as T
+//%% [markdown]
+// ## Starting Point
+//
+// - **IFL 2016 Conference Paper**
+// - Description of a small Virtual Machine: **JMVM**
+// - Aimed at the execution of Lazy Functional Languages
+// - A small prototype FP language **Sapl**
+// - Description of a compiler for Sapl
+// - A prototype implementation of the VM and a compiler:
+//   - VM in **1500 lines of C**
+//   - Sapl compiler in **1000 lines Amanda**
+// - The VM can run in **browser Apps**!
+// - The VM is **fast**! Stays within a factor of 5 of state-of-the-art implementations of FP languages like Clean and Haskell!
+//
+// <div style="text-align: center; margin: 18px 0 14px;">
+//   <img src="afscheid/paper_first_page.png" alt="IFL 2016 Paper - A Portable VM-based implementation Platform for non-strict Functional Programming Languages" style="max-height: 420px; border: 1px solid var(--border, #444); box-shadow: 0 4px 16px rgba(0,0,0,0.35); border-radius: 6px;" />
+// </div>
+//%%
+D.table ["Component (2016)", "Implementation", "Size / Key property"]
+  [ ["Virtual Machine (JMVM)", "C / JavaScript / asm.js", "~1500 lines C"],
+    ["Prototype Language (Sapl)", "Lazy functional core semantics", "Non-strict intermediate language"],
+    ["Compiler", "Amanda (via ama interpreter)", "~1000 lines Amanda"],
+    ["Execution Platform", "Native & Browser apps", "Portable client-side execution"],
+    ["Performance Target", "Within 5x of Clean & Haskell", "Fast graph reduction"] ]
+//%% [markdown]
+// ## Goal
+//
+// > *This work was simply too good to let go to waste!*
+//
+// - **How to turn these academic prototypes into robust, real-world applications?**
+//
+// ### Key Questions
+// - **Who is waiting for another compiler for an FP language?**
+// - **Only interesting in combination with a killer app!**
+//
+// <div style="display: flex; gap: 20px; align-items: stretch; margin: 22px 0;">
+//   <div style="flex: 1; padding: 18px 22px; border: 1px solid var(--border, #333); border-radius: 10px; background: rgba(56, 189, 248, 0.08);">
+//     <div style="font-size: 20px; font-weight: 700; color: #38bdf8; margin-bottom: 6px;">🔬 Academic Prototype</div>
+//     <div style="font-size: 15px; line-height: 1.45; color: var(--text-2, #a0aec0);">Elegant theoretical ideas, minimal proof of concept, command-line only, hard to use for outsiders.</div>
+//   </div>
+//   <div style="display: flex; align-items: center; justify-content: center; font-size: 32px; color: var(--muted, #888); padding: 0 4px;">➔</div>
+//   <div style="flex: 1; padding: 18px 22px; border: 2px solid #c084fc; border-radius: 10px; background: rgba(192, 132, 252, 0.12);">
+//     <div style="font-size: 20px; font-weight: 700; color: #c084fc; margin-bottom: 6px;">🚀 The Killer App</div>
+//     <div style="font-size: 15px; line-height: 1.45; color: var(--text-2, #a0aec0);">Zero-install interactive notebooks, WebAssembly in the browser, rich visualization, live modeling.</div>
+//   </div>
+// </div>
+//
+// - **Making real world applications is a lot of work!**
+// - **I could use some help for that...** &nbsp;<span style="opacity: 0.35; font-size: 0.85em; cursor: default;" title="AI">✨ 🤖</span>

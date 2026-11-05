@@ -1,6 +1,38 @@
 {
   "tree": [
     {
+      "name": "afscheid",
+      "path": "afscheid",
+      "type": "directory",
+      "children": [
+        {
+          "name": "index.html",
+          "path": "afscheid/index.html",
+          "type": "file",
+          "ext": ".html",
+          "size": 4629,
+          "isBinary": false
+        },
+        {
+          "name": "paper_first_page.png",
+          "path": "afscheid/paper_first_page.png",
+          "type": "file",
+          "ext": ".png",
+          "size": 596461,
+          "isBinary": true
+        },
+        {
+          "name": "presentatie.spp",
+          "path": "afscheid/presentatie.spp",
+          "type": "file",
+          "ext": ".spp",
+          "size": 3709,
+          "isBinary": false
+        }
+      ],
+      "_expanded": false
+    },
+    {
       "name": "benchmarks_sapl",
       "path": "benchmarks_sapl",
       "type": "directory",
@@ -130,7 +162,7 @@
           "path": "benchmarks_saplplus/eval.spp",
           "type": "file",
           "ext": ".spp",
-          "size": 6337,
+          "size": 6338,
           "isBinary": false
         },
         {
@@ -354,7 +386,7 @@
           "path": "docs/sapl_taalgids.md",
           "type": "file",
           "ext": ".md",
-          "size": 9492,
+          "size": 10109,
           "isBinary": false
         },
         {
@@ -362,7 +394,7 @@
           "path": "docs/veelgemaakte_fouten.md",
           "type": "file",
           "ext": ".md",
-          "size": 4027,
+          "size": 4135,
           "isBinary": false
         },
         {
@@ -1178,7 +1210,7 @@
           "path": "lib/codehash.spp",
           "type": "file",
           "ext": ".spp",
-          "size": 20464,
+          "size": 20544,
           "isBinary": false
         },
         {
@@ -2287,7 +2319,7 @@
               "path": "repl_sapl/build/mini_repl.jmvm",
               "type": "file",
               "ext": ".jmvm",
-              "size": 7350355,
+              "size": 8189110,
               "isBinary": false
             },
             {
@@ -2295,7 +2327,7 @@
               "path": "repl_sapl/build/mini_repl.jvb",
               "type": "file",
               "ext": ".jvb",
-              "size": 2741616,
+              "size": 3043600,
               "isBinary": true
             }
           ],
@@ -2314,7 +2346,7 @@
           "path": "sapl_compiler/ast_helpers.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 23971,
+          "size": 24692,
           "isBinary": false
         },
         {
@@ -2354,7 +2386,7 @@
           "path": "sapl_compiler/stage5_codegen.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 76485,
+          "size": 77001,
           "isBinary": false
         }
       ],
@@ -2810,7 +2842,7 @@
           "path": "topdemo/presentatie.spp",
           "type": "file",
           "ext": ".spp",
-          "size": 40298,
+          "size": 48169,
           "isBinary": false
         }
       ],
