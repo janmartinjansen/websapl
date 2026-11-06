@@ -61,3 +61,13 @@
 // gemiddelde xs = sum xs / fromIntegral (length xs)
 //%% [hs]
 // (gemiddelde [1, 2, 3, 4], sqrt 2, pi, round 2.5 :: Int, [0, 0.5 .. 2])
+//%% [markdown]
+// Uit `Data.List` en verwanten (`sort`, `sortOn`, `group`, `intercalate`,
+// `isPrefixOf`, `permutations`, `read`, ...):
+//%% [hs]
+// woordtelling :: String -> [(String, Int)]
+// woordtelling tekst = sortOn (negate . snd) [(head g, length g) | g <- group (sort (words tekst))]
+//%% [hs]
+// woordtelling "de kat en de hond en de muis"
+//%% [hs]
+// (intercalate ", " (map show (sort [3, 1, 2])), length (permutations "abcd"), sum (map read (words "1 2 3")) :: Int)

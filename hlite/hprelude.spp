@@ -501,3 +501,36 @@ hp_bQR10 a s !q = if (hp_bCmp a s >= 0) (hp_bQR10 (hp_bSub a s) s (q + 1)) (q, a
 
 hp_showT6 f1 f2 f3 f4 f5 f6 d (a1, a2, a3, a4, a5, a6) r = Cons '(' (f1 0 a1 (Cons ',' (f2 0 a2 (Cons ',' (f3 0 a3 (Cons ',' (f4 0 a4 (Cons ',' (f5 0 a5 (Cons ',' (f6 0 a6 (Cons ')' r))))))))))))
 hp_showT7 f1 f2 f3 f4 f5 f6 f7 d (a1, a2, a3, a4, a5, a6, a7) r = Cons '(' (f1 0 a1 (Cons ',' (f2 0 a2 (Cons ',' (f3 0 a3 (Cons ',' (f4 0 a4 (Cons ',' (f5 0 a5 (Cons ',' (f6 0 a6 (Cons ',' (f7 0 a7 (Cons ')' r))))))))))))))
+
+// == read (Int en Double) ==========================================================
+
+// read op Int: spaties, een eventuele -, cijfers, spaties.
+hp_readInt s = hp_readIntS (hp_dropSp s)
+hp_readIntS (Cons '-' cs) = 0 - hp_readNat cs
+hp_readIntS cs = hp_readNat cs
+hp_readNat cs = hp_readDig cs 0 0
+hp_readDig Nil !n !k = if (k > 0) n (error "Prelude.read: no parse")
+hp_readDig (Cons c cs) !n !k = if (h_isDigit c) (hp_readDig cs (n * 10 + (ord c - 48)) (k + 1))
+  (if (h_null (hp_dropSp (Cons c cs)) /\ k > 0) n (error "Prelude.read: no parse"))
+hp_dropSp Nil = Nil
+hp_dropSp (Cons c cs) = if (h_isSpace c) (hp_dropSp cs) (Cons c cs)
+
+// read op Double: [-]cijfers[.cijfers][e[-]cijfers].
+hp_readD s = hp_readDS (hp_dropSp s)
+hp_readDS (Cons '-' cs) = hp_negD (hp_readDPos cs)
+hp_readDS cs = hp_readDPos cs
+hp_readDPos cs = let (m, k, r1) = hp_rdDigs cs 0 0 in
+  if (k <= 0) (error "Prelude.read: no parse")
+  (let (m2, f, r2) = hp_rdFrac r1 m in let (e, r3) = hp_rdExp r2 in
+   if (h_null (hp_dropSp r3)) (hp_scale10 (itof m2) (e - f)) (error "Prelude.read: no parse"))
+hp_rdDigs Nil !m !k = (m, k, Nil)
+hp_rdDigs (Cons c cs) !m !k = if (h_isDigit c) (hp_rdDigs cs (m * 10 + (ord c - 48)) (k + 1)) (m, k, Cons c cs)
+hp_rdFrac (Cons '.' cs) !m = let (m2, k, r) = hp_rdDigs cs m 0 in (m2, k, r)
+hp_rdFrac cs !m = (m, 0, cs)
+hp_rdExp (Cons 'e' cs) = hp_rdExpS cs
+hp_rdExp (Cons 'E' cs) = hp_rdExpS cs
+hp_rdExp cs = (0, cs)
+hp_rdExpS (Cons '-' cs) = let (e, k, r) = hp_rdDigs cs 0 0 in (0 - e, r)
+hp_rdExpS (Cons '+' cs) = let (e, k, r) = hp_rdDigs cs 0 0 in (e, r)
+hp_rdExpS cs = let (e, k, r) = hp_rdDigs cs 0 0 in (e, r)
+hp_scale10 !x !e = if (e > 0) (hp_scale10 (x * 10.0) (e - 1)) (if (e < 0) (hp_scale10 (x / 10.0) (e + 1)) x)
