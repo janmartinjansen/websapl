@@ -134,6 +134,11 @@ const ENTRIES = [
   { src: "lamlift/shadowing.lfp", dst: "lamlift/shadowing.lfp" },
   { src: "lamlift/tromp.lfp", dst: "lamlift/tromp.lfp" },
   { src: "lc_repl/lc_repl.jmvm", dst: "lc_repl/lc_repl.jmvm" },
+  // Haskell lite (micro_haskell/hlite/): de front-end als .jvb en de Prelude,
+  // voor de Haskell-cellen van de notebook in de browser (HS_RUN in worker.js)
+  { src: "micro_haskell/hlite/hs2spp.jvb", dst: "hlite/hs2spp.jvb" },   // het binaire laadformaat (laadformaat/)
+  { src: "micro_haskell/hlite/hprelude_typen.hs", dst: "hlite/hprelude_typen.hs" },
+  { src: "micro_haskell/hlite/hprelude.spp", dst: "hlite/hprelude.spp" },
   { src: "lib/dict.cfp", dst: "lib/dict.cfp" },
   { src: "lib/display.spp", dst: "lib/display.spp" },
   { src: "lib/list.spp", dst: "lib/list.spp" },
@@ -160,6 +165,7 @@ const ENTRIES = [
   { src: "notebooks/incidenten_gedeeld.spp", dst: "notebooks/incidenten_gedeeld.spp" },
   { src: "notebooks/rekenen_op_server.spp", dst: "notebooks/rekenen_op_server.spp" },
   { src: "notebooks/taxi_minimal.spp", dst: "notebooks/taxi_minimal.spp" },
+  { src: "notebooks/haskell_lite.spp", dst: "notebooks/haskell_lite.spp" },
   { src: "notebooks/vm_metingen.spp", dst: "notebooks/vm_metingen.spp" },
   { src: "notebooks/waarden_bewaren.spp", dst: "notebooks/waarden_bewaren.spp" },
   { src: "notebooks/topdemo/presentatie.spp", dst: "topdemo/presentatie.spp" },

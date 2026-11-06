@@ -1057,6 +1057,38 @@
       "_expanded": false
     },
     {
+      "name": "hlite",
+      "path": "hlite",
+      "type": "directory",
+      "children": [
+        {
+          "name": "hprelude_typen.hs",
+          "path": "hlite/hprelude_typen.hs",
+          "type": "file",
+          "ext": ".hs",
+          "size": 5350,
+          "isBinary": false
+        },
+        {
+          "name": "hprelude.spp",
+          "path": "hlite/hprelude.spp",
+          "type": "file",
+          "ext": ".spp",
+          "size": 22288,
+          "isBinary": false
+        },
+        {
+          "name": "hs2spp.jvb",
+          "path": "hlite/hs2spp.jvb",
+          "type": "file",
+          "ext": ".jvb",
+          "size": 903024,
+          "isBinary": true
+        }
+      ],
+      "_expanded": false
+    },
+    {
       "name": "io",
       "path": "io",
       "type": "directory",
@@ -1419,6 +1451,14 @@
           "type": "file",
           "ext": ".spp",
           "size": 2311,
+          "isBinary": false
+        },
+        {
+          "name": "haskell_lite.spp",
+          "path": "notebooks/haskell_lite.spp",
+          "type": "file",
+          "ext": ".spp",
+          "size": 2129,
           "isBinary": false
         },
         {
@@ -2957,7 +2997,7 @@
       "path": "notebook.html",
       "type": "file",
       "ext": ".html",
-      "size": 78928,
+      "size": 81709,
       "isBinary": false
     },
     {

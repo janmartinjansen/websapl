@@ -1,0 +1,63 @@
+//%% [markdown]
+// # Haskell lite
+//
+// Deze Haskell-cellen gaan door de eigen front-end (*Haskell lite*, in
+// Sapl+): typen met klassen, `deriving`, eigen klassen en instances, records.
+// Overladen functies worden per type gespecialiseerd (geen dictionaries), dus
+// `==` op een `Int` is gewoon een vergelijking. Vertalen en compileren kost
+// zo'n 0,1 s. Een getal zonder type is een `Int`, een getal met een punt
+// een `Double` (een float van de VM, 32 bits: zo precies als Haskells
+// `Float`). Dit draait ook in de browser (WebSapl, zonder server); in de
+// Workbench vertaalt MicroHs wat Haskell lite nog niet kent (zie
+// `haskell.spp`).
+//%% [hs]
+// data Kleur = Rood | Groen | Blauw deriving (Show, Eq, Ord, Enum)
+//
+// data Punt = Punt { px :: Int, py :: Int } deriving (Show, Eq, Ord)
+//
+// afstand :: Punt -> Punt -> Int
+// afstand (Punt a b) (Punt c d) = abs (a - c) + abs (b - d)
+//%% [hs]
+// [Rood ..]
+//%% [hs]
+// maximum [Punt 1 2, Punt 3 0, Punt 3 (-1)]
+//%% [markdown]
+// Een eigen klasse, met een standaardmethode, en een eigen `Show`:
+//%% [hs]
+// class Vorm a where
+//   oppervlak :: a -> Int
+//   naam :: a -> String
+//   naam _ = "vorm"
+//
+// data Vierkant = Vierkant Int
+// data Rechthoek = Rechthoek Int Int
+//
+// instance Vorm Vierkant where
+//   oppervlak (Vierkant z) = z * z
+//   naam _ = "vierkant"
+//
+// instance Vorm Rechthoek where
+//   oppervlak (Rechthoek b h) = b * h
+//
+// instance Show Vierkant where
+//   show (Vierkant z) = "vierkant met zijde " ++ show z
+//
+// beschrijf :: Vorm a => a -> String
+// beschrijf v = naam v ++ ": " ++ show (oppervlak v)
+//%% [hs]
+// (beschrijf (Vierkant 3), beschrijf (Rechthoek 2 5))
+//%% [hs]
+// [Vierkant 1, Vierkant 2]
+//%% [markdown]
+// Een type zonder signatuur wordt afgeleid, met klassen:
+//%% [hs]
+// tel x xs = length (filter (== x) xs)
+//%% [hs]
+// (tel 'a' "banaan", tel Groen [Rood, Groen, Groen], tel (Punt 0 0) [])
+//%% [markdown]
+// Rekenen met `Double`:
+//%% [hs]
+// gemiddelde :: [Double] -> Double
+// gemiddelde xs = sum xs / fromIntegral (length xs)
+//%% [hs]
+// (gemiddelde [1, 2, 3, 4], sqrt 2, pi, round 2.5 :: Int, [0, 0.5 .. 2])

@@ -184,5 +184,25 @@ check("geen =:-tip bij een constructor met letterlijke waarden", nb.cafHintNames
   check("dia's: leeg notebook", nb.slideStarts([]), [0]);
 }
 
+// Haskell-cellen (4 november 2026): soort, de module, uitvoer en fouten per cel.
+{
+  const hs = (t) => ({ kind: "hs", source: t });
+  check("hs: definities", nb.hsCellKind("f :: Int -> Int\nf x = x + 1"), "def");
+  check("hs: data is een definitie", nb.hsCellKind("data K = A | B deriving Show"), "def");
+  check("hs: expressie", nb.hsCellKind("map f [1 .. 3]"), "expr");
+  check("hs: let-expressie is geen definitie", nb.hsCellKind("let y = 3 in y + 1"), "expr");
+  check("hs: vergelijking is geen definitie", nb.hsCellKind("x == 1"), "expr");
+  check("hs: IO-actie", nb.hsCellKind("mapM_ print [1, 2]"), "actie");
+  const cells = [hs("import Data.List (sort)\nf x = x * 2"), { kind: "markdown", source: "x" }, hs("f 3"), hs("putStrLn \"hoi\""), hs("g 1")];
+  const p = nb.hsProgram(cells);
+  check("hs: import bovenaan, na de modulekop", p.source.split("\n").slice(0, 2), ["module Nb where", "import Data.List (sort)"]);
+  check("hs: uitvoer per cel", nb.parseHsOutput("\x012\n6\n\x013\nhoi\n\x014", "mhs: uncaught exception: boem", p).cells,
+    { 0: { defs: true }, 2: { text: "6" }, 3: { text: "hoi" }, 4: { text: "", error: "uncaught exception: boem" } });
+  const regel = p.source.split("\n").indexOf("  g 1") + 1;
+  check("hs: compileerfout bij haar cel", nb.hsCompileError(`x/Nb.hs:${regel}:3: error: undefined value: g`, p), { cell: 4, text: "undefined value: g" });
+  const q = nb.hsProgram([hs("f x = x +"), hs("f 3")]);
+  check("hs: onafgemaakte regel hoort bij de cel ervoor", nb.hsCompileError("x/Nb.hs:3:1: error: syntax\n    found:    ;", q).cell, 0);
+}
+
 console.log(failures ? `${failures} fout(en)` : "notebook_core: alles goed");
 process.exit(failures ? 1 : 0);

@@ -1776,6 +1776,76 @@ async function runJmvmCapture(jmvmContent, extraFiles = {}, stdinText = "", onPr
 
 
 
+// == Haskell-cellen in de browser (6 november 2026) =========================
+// Haskell lite (micro_haskell/hlite/, docs/2026-11-04_haskell_lite_frontend_
+// plan.md): de front-end in Sapl+ (hlite/hs2spp.jvb) vertaalt de module van
+// alle Haskell-cellen (NB.hsProgram) naar Sapl+; daar komt de Prelude
+// (hlite/hprelude.spp) voor, zonder wat het programma zelf definieert (zoals
+// hlite.sh); dan de gewone Sapl+-keten (preprocessSpp, compileSapl) en
+// draaien. Antwoord zoals /api/notebook/hs van de Workbench: compileError,
+// of output en stderr (route "hlite"). Er is hier geen MicroHs om op terug te
+// vallen: wat Haskell lite niet kent, geeft een melding.
+let hliteFiles = null;
+async function hliteLoad() {
+  if (hliteFiles) return hliteFiles;
+  const get = async (name, binary) => {
+    const res = await fetch("../hlite/" + name + "?v=" + Date.now());
+    if (!res.ok) throw new Error("hlite/" + name + " niet gevonden");
+    return binary ? new Uint8Array(await res.arrayBuffer()) : await res.text();
+  };
+  hliteFiles = { hs2spp: await get("hs2spp.jvb", true), typen: await get("hprelude_typen.hs", false), prelude: await get("hprelude.spp", false) };
+  return hliteFiles;
+}
+
+// De uitvoer van een VM-run: { ok, body } -- ok als het programma tot
+// "res: N" kwam (body: wat ervoor stond), anders body = de melding (tot "stop").
+function hliteVmOutput(raw) {
+  const text = new TextDecoder().decode(Uint8Array.from(raw, (ch) => ch.charCodeAt(0) & 255));
+  const m = text.match(/execution started, progsize=\d+\r?\n?/);
+  const body = m ? text.slice(m.index + m[0].length) : text;
+  const res = body.lastIndexOf("res: ");
+  if (res >= 0 && /^res: -?\d+/.test(body.slice(res))) return { ok: true, body: body.slice(0, res) };
+  const stop = body.search(/stop\r?\n|Elapsed time/);
+  return { ok: false, body: (stop >= 0 ? body.slice(0, stop) : body).replace(/stop$/, "").trim() };
+}
+
+// De Prelude zonder de functies die het programma zelf definieert (de
+// regel "// hlite-namen: h_a h_b ..."; zoals de awk in hlite.sh).
+function hlitePrelude(prelude, vertaling) {
+  const m = vertaling.match(/\/\/ hlite-namen:(.*)/);
+  const weg = new Set(m ? m[1].trim().split(/\s+/).filter(Boolean) : []);
+  let skip = false;
+  const uit = [];
+  for (const line of prelude.split("\n")) {
+    if (/^[a-z]/.test(line)) skip = weg.has(line.split(/\s+/)[0]);
+    if (!skip) uit.push(line);
+  }
+  return uit.join("\n");
+}
+
+async function hsRun(source) {
+  const f = await hliteLoad();
+  const t0 = performance.now();
+  // 1. vertalen (een typefout of parsefout: met Nb.hs:regel, zoals de server)
+  const v = hliteVmOutput(await runJmvmCapture(f.hs2spp, { "/Nb.hs": source, "/micro_haskell/hlite/hprelude_typen.hs": f.typen }, "/Nb.hs\n"));
+  if (!v.ok) {
+    const r = v.body.match(/regel (\d+)/);
+    const pos = /^(typefout|verwacht|onbekende)/.test(v.body) && r && Number(r[1]) < 1000000 ? `Nb.hs:${r[1]}:1: ` : "";
+    return { success: true, compileError: pos + v.body, route: "hlite" };
+  }
+  const spp = hlitePrelude(f.prelude, v.body) + "\n" + v.body;
+  // 2. Sapl+ -> Sapl -> bytecode
+  const pre = await preprocessSpp(spp, "/tmp/Nb.spp");
+  if (!pre.success) return { success: true, compileError: "interne fout (Sapl+): " + pre.stdout.slice(-600), route: "hlite" };
+  const comp = await compileSapl(pre.files[0].content, "/tmp/Nb.cfp", ["jmvm"], true);
+  if (!comp.success || !comp.files.length) return { success: true, compileError: "interne fout (Sapl): " + (comp.stderr || comp.stdout).slice(-600), route: "hlite" };
+  const t1 = performance.now();
+  // 3. draaien
+  const r = hliteVmOutput(await runJmvmCapture(comp.files[0].content));
+  return { success: true, output: r.ok ? r.body : "", stderr: r.ok ? "" : r.body, route: "hlite",
+    ms: { vertalen: Math.round(t1 - t0), draaien: Math.round(performance.now() - t1) } };
+}
+
 /**
  * Handle messages from the UI thread
  */
@@ -1911,6 +1981,15 @@ self.onmessage = async function (e) {
         postMessage({ type: "LC_RESULT", id: msg.id, success: true, output });
       } catch (err) {
         postMessage({ type: "LC_RESULT", id: msg.id, success: false, error: err.message });
+      }
+      break;
+
+    case "HS_RUN":
+      // Haskell-cellen van de notebook (hsRun hierboven).
+      try {
+        postMessage(Object.assign({ type: "HS_RESULT", id: msg.id }, await hsRun(msg.source)));
+      } catch (err) {
+        postMessage({ type: "HS_RESULT", id: msg.id, success: false, error: err.message });
       }
       break;
 

@@ -88,10 +88,10 @@
   }
 
   // Celsoorten die in het bestand als commentaar staan.
-  const COMMENTED = ["markdown", "lc", "type"];
+  const COMMENTED = ["markdown", "lc", "type", "hs"];
 
   function markerKind(rest) {
-    const m = rest.match(/\[(?:[^[\]]*\b)?(markdown|lc|type)\b[^[\]]*\]/);
+    const m = rest.match(/\[(?:[^[\]]*\b)?(markdown|lc|type|hs)\b[^[\]]*\]/);
     return m ? m[1] : "code";
   }
 
@@ -415,6 +415,90 @@
       (out[l.cell] = out[l.cell] || []).push(entry);
     });
     return out;
+  }
+
+  // == Haskell-cellen (4 november 2026) ======================================
+  // Alle hs-cellen samen zijn één Haskell-module (MicroHs-front-end, vertaald
+  // naar de JMVM; /api/notebook/hs in de Workbench). Een cel is definities
+  // (data, class, instance, import, signaturen, f x = ...) of één expressie.
+  // Een expressie wordt een definitie nbCel<i> = ...; main drukt per
+  // expressiecel een markering af en dan de waarde (print), of voert de actie
+  // uit (een IO-expressie: begint met do, putStrLn, print, mapM_, ...).
+  const HS_ACTIE = /^(do\b|putStr|putStrLn|print|mapM_|forM_|sequence_|when|unless|interact|getLine)\b/;
+  const HS_DEF = /^(data|type|newtype|class|instance|import|infixl?|infixr|deriving)\b|^[a-z_][A-Za-z0-9_']*(\s+[^=]*?)?\s*(=(?![=>])|\|)|^\(?[^\s=]*\)?\s*::|^[a-z_][A-Za-z0-9_']*\s*,.*::/;
+
+  function hsCellKind(source) {
+    const lines = source.split("\n").filter((l) => l.trim() !== "" && !l.trim().startsWith("--"));
+    if (!lines.length) return "leeg";
+    if (lines.some((l) => !/^\s/.test(l) && HS_DEF.test(l) && !/^(let|if|case)\b/.test(l))) return "def";
+    return HS_ACTIE.test(lines[0].trim()) ? "actie" : "expr";
+  }
+
+  /** { source, lineCell: [celindex per regel (1-based)], cells: [{cell, kind}] } */
+  function hsProgram(cells) {
+    const out = [], lineCell = [null];
+    const push = (text, cell) => { out.push(text); lineCell.push(cell); };
+    push("module Nb where", null);
+    const hs = [];
+    cells.forEach((c, i) => { if (c.kind === "hs") hs.push({ cell: i, kind: hsCellKind(c.source), source: c.source }); });
+    // imports eerst (Haskell eist ze bovenaan)
+    for (const h of hs) for (const l of h.source.split("\n")) if (/^import\s/.test(l)) push(l, h.cell);
+    for (const h of hs) {
+      if (h.kind === "def") {
+        for (const l of h.source.split("\n")) if (!/^import\s/.test(l)) push(l, h.cell);
+      } else if (h.kind === "expr" || h.kind === "actie") {
+        push(`nbCel${h.cell} =`, h.cell);
+        for (const l of h.source.split("\n")) push("  " + l, h.cell);
+      }
+    }
+    push("main :: IO ()", null);
+    push("main = do", null);
+    const runs = hs.filter((h) => h.kind === "expr" || h.kind === "actie");
+    if (!runs.length) push("  return ()", null);
+    for (const h of runs) {
+      push(`  putStrLn ("\\x01" ++ "${h.cell}")`, null);
+      push(h.kind === "actie" ? `  nbCel${h.cell}` : `  print nbCel${h.cell}`, null);
+    }
+    return { source: out.join("\n") + "\n", lineCell, cells: hs };
+  }
+
+  /** De uitvoer per cel: { celindex: tekst }; de laatste cel met een markering krijgt een runtimefout. */
+  function parseHsOutput(output, stderr, prog) {
+    const by = {};
+    let cur = null;
+    for (const line of (output || "").split("\n")) {
+      const m = line.match(/^\x01(\d+)$/);
+      if (m) { cur = Number(m[1]); by[cur] = []; continue; }
+      if (cur !== null) by[cur].push(line);
+    }
+    const res = {};
+    for (const h of prog.cells) {
+      if (h.kind === "def") res[h.cell] = { defs: true };
+      else if (by[h.cell]) res[h.cell] = { text: by[h.cell].join("\n").replace(/\s+$/, "") };
+      else res[h.cell] = { notRun: true };
+    }
+    if (stderr && stderr.trim()) {
+      const laatste = prog.cells.filter((h) => by[h.cell]).pop();
+      const tekst = stderr.trim().replace(/^mhs: /, "");
+      if (laatste) res[laatste.cell] = Object.assign({}, res[laatste.cell], { error: tekst });
+      else return { all: tekst, cells: res };
+    }
+    return { cells: res };
+  }
+
+  /** Een compileerfout (Nb.hs:regel:kolom: ...) bij de cel van die regel. */
+  function hsCompileError(msg, prog) {
+    const m = (msg || "").match(/Nb\.hs:(\d+):(\d+)/);
+    const n = m ? Number(m[1]) : 0;
+    let cell = m ? prog.lineCell[n] : null;
+    // Een onafgemaakte regel aan het eind van een cel meldt MicroHs pas op
+    // de eerste regel van de volgende (de layout sluit daar met `;`).
+    if (cell !== null && cell !== undefined && /found:\s*[;}]/.test(msg) && prog.lineCell[n - 1] !== cell) {
+      const k = prog.cells.findIndex((h) => h.cell === cell);
+      if (k > 0) cell = prog.cells[k - 1].cell;
+    }
+    const tekst = (msg || "").replace(/^[^\n]*Nb\.hs:\d+:\d+:\s*(error:\s*)?/, "");
+    return { cell: cell === undefined ? null : cell, text: tekst.trim() || msg };
   }
 
   // == De notebookmodus van de REPL in Sapl (8 oktober 2026) ===============
@@ -744,6 +828,7 @@
     generateNbInput, parseNbOutput, parseSettings, NO_MESSAGE,
     parseNotebook, serializeNotebook, cellSummary, classifyCell, parseOutput, definedNames, cafHintNames,
     referencedNames, providedNames, dependents, lcInput, parseLcOutput,
+    hsCellKind, hsProgram, parseHsOutput, hsCompileError,
     parseForm, formBinding, findDefinition, saplLiteral, splitArgs, rewriteDefinition,
     parseInteractive, eventLine, switchLiteral, definitionArgs, canSwitch,
   };

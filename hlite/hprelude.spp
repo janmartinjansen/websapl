@@ -1,0 +1,503 @@
+// micro_haskell/hlite/hprelude.spp -- de Prelude van Haskell lite H0, in
+// Sapl+. naarspp.spp vertaalt een programma; hlite.sh zet deze tekst ervoor.
+//
+// Namen zoals de vertaling ze maakt: een functie x heet h_x, een constructor
+// C heet H_C, een operator heet op_ met een letter per teken (zie opCode in
+// naarspp.spp: + p, - m, * s, / d, < l, > g, = e, ! x, . o, $ a, & n, | v,
+// ^ c, : k). Lijsten zijn Nil/Cons met een luie kop (zoals in Haskell); Bool
+// is die van Sapl (een Int: show True geeft dus 1, tot H1 de typen kent).
+//
+// IO a is een functie van een wereldtoken naar HIORes a: de doos zorgt dat
+// het effect gebeurt als de actie wordt uitgevoerd, zonder de waarde zelf uit
+// te rekenen.
+
+::list = Nil | Cons x xs
+::HUnit = HUnit
+::HIORes = HIORes v
+::HT_Maybe = H_Nothing | H_Just x
+::HT_Either = H_Left x | H_Right x
+::HT_Ordering = H_LT | H_EQ | H_GT
+
+// == IO ===========================================================================
+
+h_return x w = HIORes x
+hp_bind m k w = case (m w) (HIORes a -> k a w)
+hp_then m k w = case (m w) (HIORes a -> k w)
+op_gge m k w = hp_bind m k w
+op_gg m k w = hp_then m k w
+
+h_putStr s w = hp_writeChars s <#> HIORes HUnit
+h_putStrLn s w = hp_writeChars s <#> writeChar 1 10 <#> HIORes HUnit
+h_print x w = h_putStrLn (h_show x) w
+h_putChar c w = writeChar 1 c <#> HIORes HUnit
+
+hp_writeChars Nil = 0
+hp_writeChars (Cons c cs) = writeChar 1 c <#> hp_writeChars cs
+
+h_mapM_ f Nil w = HIORes HUnit
+h_mapM_ f (Cons x xs) w = case (f x w) (HIORes a -> h_mapM_ f xs w)
+h_forM_ xs f w = h_mapM_ f xs w
+h_mapM f Nil w = HIORes Nil
+h_mapM f (Cons x xs) w = case (f x w) (HIORes a -> case (h_mapM f xs w) (HIORes as -> HIORes (Cons a as)))
+h_sequence_ Nil w = HIORes HUnit
+h_sequence_ (Cons m ms) w = case (m w) (HIORes a -> h_sequence_ ms w)
+h_when c m w = if c (m w) (HIORes HUnit)
+h_unless c m w = if c (HIORes HUnit) (m w)
+
+hp_runMain m = case (m 0) (HIORes a -> 0)
+
+// == Functies =====================================================================
+
+h_id x = x
+h_const x y = x
+h_flip f x y = f y x
+op_o f g x = f (g x)
+op_a f x = f x
+op_ax f !x = f x
+h_seq !a b = b
+h_fst (a, b) = a
+h_snd (a, b) = b
+h_curry f a b = f (a, b)
+h_uncurry f (a, b) = f a b
+h_not b = if b False True
+h_otherwise = True
+h_until p f x = if (p x) x (h_until p f (f x))
+h_error s = error (hp_pack s)
+h_undefined = error "Prelude.undefined"
+h_maybe d f H_Nothing = d
+h_maybe d f (H_Just x) = f x
+h_either f g (H_Left x) = f x
+h_either f g (H_Right y) = g y
+
+// == Getallen en tekens ===========================================================
+
+// == en /= op Int en Char zonder de structurele vergelijking van Sapl+
+// (__deepEq, een aanroep met typeIds): eqnum/neqnum van Sapl+.
+hp_eqI !a !b = eqnum a b
+hp_neI !a !b = neqnum a b
+
+op_p a b = a + b
+op_m a b = a - b
+op_s a b = a * b
+op_l a b = a < b
+op_le a b = a <= b
+op_g a b = a > b
+op_ge a b = a >= b
+op_ee a b = a == b
+op_de a b = a != b
+op_nn a b = if a b False
+op_vv a b = if a True b
+op_k a b = Cons a b
+
+h_quot a b = a / b
+h_rem a b = a % b
+h_div !a !b = hp_divR (a / b) (a % b) b
+hp_divR !q !r !b = if (r > 0) (if (b < 0) (q - 1) q) (if (r < 0) (if (b > 0) (q - 1) q) q)
+h_mod !a !b = hp_modR (a % b) b
+hp_modR !r !b = if (r > 0) (if (b < 0) (r + b) r) (if (r < 0) (if (b > 0) (r + b) r) r)
+h_divMod a b = (h_div a b, h_mod a b)
+h_quotRem a b = (a / b, a % b)
+h_negate x = 0 - x
+h_abs !x = if (x < 0) (0 - x) x
+h_signum !x = if (x < 0) (0 - 1) (if (x > 0) 1 0)
+h_max !a !b = if (a >= b) a b
+h_min !a !b = if (a <= b) a b
+h_even !x = hp_eqI (x % 2) 0
+h_odd !x = hp_neI (x % 2) 0
+h_gcd !a !b = hp_gcdA (h_abs a) (h_abs b)
+hp_gcdA !a !b = if (hp_eqI b 0) a (hp_gcdA b (a % b))
+h_lcm !a !b = if (hp_eqI a 0 \/ hp_eqI b 0) 0 (h_abs ((a / h_gcd a b) * b))
+op_c !a !n = if (n <= 0) 1 (a * op_c a (n - 1))
+h_subtract a b = b - a
+h_fromIntegral x = x
+h_fromInteger x = x
+h_toInteger x = x
+h_fromEnum x = ord x
+h_toEnum x = x
+h_succ x = x + 1
+h_pred x = x - 1
+h_compare !a !b = if (a < b) H_LT (if (a > b) H_GT H_EQ)
+h_ord c = ord c
+h_chr n = chr n
+h_isDigit c = c >= '0' /\ c <= '9'
+h_isUpper c = c >= 'A' /\ c <= 'Z'
+h_isLower c = c >= 'a' /\ c <= 'z'
+h_isAlpha c = h_isUpper c \/ h_isLower c
+h_isAlphaNum c = h_isAlpha c \/ h_isDigit c
+h_isSpace !c = hp_eqI c ' ' \/ (c >= 9 /\ c <= 13)
+h_toUpper c = if (h_isLower c) (chr (ord c - 32)) c
+h_toLower c = if (h_isUpper c) (chr (ord c + 32)) c
+h_digitToInt c = ord c - 48
+
+// == Lijsten ======================================================================
+
+op_pp Nil ys = ys
+op_pp (Cons x xs) ys = Cons x (op_pp xs ys)
+h_map f Nil = Nil
+h_map f (Cons x xs) = Cons (f x) (h_map f xs)
+h_filter p Nil = Nil
+h_filter p (Cons x xs) = if (p x) (Cons x (h_filter p xs)) (h_filter p xs)
+h_foldr f z Nil = z
+h_foldr f z (Cons x xs) = f x (h_foldr f z xs)
+h_foldl f z Nil = z
+h_foldl f z (Cons x xs) = h_foldl f (f z x) xs
+hp_foldl_q f !z Nil = z
+hp_foldl_q f !z (Cons x xs) = hp_foldl_q f (f z x) xs
+h_foldr1 f (Cons x Nil) = x
+h_foldr1 f (Cons x xs) = f x (h_foldr1 f xs)
+h_foldl1 f (Cons x xs) = h_foldl f x xs
+h_sum xs = hp_sumA 0 xs
+hp_sumA !a Nil = a
+hp_sumA !a (Cons x xs) = hp_sumA (a + x) xs
+h_product xs = hp_prodA 1 xs
+hp_prodA !a Nil = a
+hp_prodA !a (Cons x xs) = hp_prodA (a * x) xs
+h_length xs = hp_lenA 0 xs
+hp_lenA !a Nil = a
+hp_lenA !a (Cons x xs) = hp_lenA (a + 1) xs
+h_concat Nil = Nil
+h_concat (Cons xs xss) = op_pp xs (h_concat xss)
+hp_concatMap f Nil = Nil
+hp_concatMap f (Cons x xs) = op_pp (f x) (hp_concatMap f xs)
+h_take !n xs = if (n <= 0) Nil (case xs (Nil -> Nil) (Cons y ys -> Cons y (h_take (n - 1) ys)))
+h_drop !n xs = if (n <= 0) xs (case xs (Nil -> Nil) (Cons y ys -> h_drop (n - 1) ys))
+h_splitAt n xs = (h_take n xs, h_drop n xs)
+h_head (Cons x xs) = x
+h_head Nil = error "Prelude.head: empty list"
+h_tail (Cons x xs) = xs
+h_tail Nil = error "Prelude.tail: empty list"
+h_last (Cons x Nil) = x
+h_last (Cons x xs) = h_last xs
+h_init (Cons x Nil) = Nil
+h_init (Cons x xs) = Cons x (h_init xs)
+h_null Nil = True
+h_null xs = False
+h_reverse xs = hp_revA xs Nil
+hp_revA Nil acc = acc
+hp_revA (Cons x xs) acc = hp_revA xs (Cons x acc)
+h_zip (Cons a as) (Cons b bs) = Cons (a, b) (h_zip as bs)
+h_zip as bs = Nil
+h_zip3 (Cons a as) (Cons b bs) (Cons c cs) = Cons (a, b, c) (h_zip3 as bs cs)
+h_zip3 as bs cs = Nil
+h_zipWith f (Cons a as) (Cons b bs) = Cons (f a b) (h_zipWith f as bs)
+h_zipWith f as bs = Nil
+h_unzip Nil = (Nil, Nil)
+h_unzip (Cons (a, b) rest) = let (as, bs) = h_unzip rest in (Cons a as, Cons b bs)
+h_replicate !n x = if (n <= 0) Nil (Cons x (h_replicate (n - 1) x))
+h_iterate f x = Cons x (h_iterate f (f x))
+h_repeat x = let xs = Cons x xs in xs
+h_cycle xs = let ys = op_pp xs ys in ys
+h_takeWhile p Nil = Nil
+h_takeWhile p (Cons x xs) = if (p x) (Cons x (h_takeWhile p xs)) Nil
+h_dropWhile p Nil = Nil
+h_dropWhile p (Cons x xs) = if (p x) (h_dropWhile p xs) (Cons x xs)
+h_span p Nil = (Nil, Nil)
+h_span p (Cons x xs) = if (p x) (let (ys, zs) = h_span p xs in (Cons x ys, zs)) (Nil, Cons x xs)
+h_break p xs = h_span (\ x -> h_not (p x)) xs
+h_and Nil = True
+h_and (Cons x xs) = if x (h_and xs) False
+h_or Nil = False
+h_or (Cons x xs) = if x True (h_or xs)
+h_any p Nil = False
+h_any p (Cons x xs) = if (p x) True (h_any p xs)
+h_all p Nil = True
+h_all p (Cons x xs) = if (p x) (h_all p xs) False
+op_xx (Cons x xs) !n = if (eqnum n 0) x (op_xx xs (n - 1))
+op_xx Nil n = error "Prelude.!!: index too large"
+hp_enumFrom !a = Cons a (hp_enumFrom (a + 1))
+hp_enumFromTo !a !b = if (a > b) Nil (Cons a (hp_enumFromTo (a + 1) b))
+hp_enumFromThen !a !b = Cons a (hp_enumFromThen b (2 * b - a))
+hp_enumFromThenTo !a !b !c = let d = b - a in if (d >= 0) (hp_eftUp a d c) (hp_eftDown a d c)
+hp_eftUp !a !d !c = if (a > c) Nil (Cons a (hp_eftUp (a + d) d c))
+hp_eftDown !a !d !c = if (a < c) Nil (Cons a (hp_eftDown (a + d) d c))
+h_lines Nil = Nil
+h_lines s = let (l, rest) = h_break (\ c -> hp_eqI c '\n') s in Cons l (case rest (Nil -> Nil) (Cons c r -> h_lines r))
+h_unlines Nil = Nil
+h_unlines (Cons l ls) = op_pp l (Cons '\n' (h_unlines ls))
+h_words s = case (h_dropWhile h_isSpace s) (Nil -> Nil) (Cons c cs -> let (w, rest) = h_break h_isSpace (Cons c cs) in Cons w (h_words rest))
+h_unwords Nil = Nil
+h_unwords (Cons w Nil) = w
+h_unwords (Cons w ws) = op_pp w (Cons ' ' (h_unwords ws))
+
+// == Strings van Sapl =============================================================
+
+// Een gepakte string (een literal) als lijst van tekens, en terug.
+hp_unpack s = hp_unpackF s 0 (strlen s)
+hp_unpackF s !i !n = if (i >= n) Nil (Cons (strat i s) (hp_unpackF s (i + 1) n))
+hp_pack cs = hp_fill cs 0 (strcreate (h_length cs))
+hp_fill Nil !i t = t
+hp_fill (Cons c cs) !i t = hp_fill cs (i + 1) (update (chr c) i t)
+
+// == show (dynamisch, tot H2 de typen kent) =======================================
+
+// De tekst van een waarde, zoals Haskells show: getallen, tekens, strings
+// (een lijst van tekens), lijsten, tupels en constructors. hp_arity (van de
+// vertaling) geeft het aantal velden van een constructor van het programma.
+h_show x = hp_showsP 0 x Nil
+
+hp_showsP d x r
+  | typeId x == 1 = hp_showInt d x r
+  | typeId x == (0 - 1) = Cons 39 (hp_showCh 39 x (Cons 39 r))
+  | typeId x == 4 = op_pp (hp_unpack "<function>") r
+  | typeId x == 3 = Cons '"' (hp_showStrB (hp_unpack x) (Cons '"' r))
+  | otherwise = hp_showCon d x (constrName x) r
+
+hp_showInt d !n r = if (n < 0) (if (d > 6) (Cons '(' (Cons '-' (hp_digits (0 - n) (Cons ')' r)))) (Cons '-' (hp_digits (0 - n) r))) (hp_digits n r)
+hp_digits !n r = if (n < 10) (Cons (chr (n + 48)) r) (hp_digits (n / 10) (Cons (chr (n % 10 + 48)) r))
+
+hp_showCon d x n r
+  | n == "Nil" = Cons '[' (Cons ']' r)
+  | n == "Cons" = if (typeId (getField x 0) == (0 - 1)) (Cons '"' (hp_showStrB x (Cons '"' r))) (Cons '[' (hp_showsP 0 (getField x 0) (hp_showRest (getField x 1) (Cons ']' r))))
+  | n == "HUnit" = Cons '(' (Cons ')' r)
+  | n == "__Tuple2" = Cons '(' (hp_showFields x 0 2 (Cons ')' r))
+  | n == "__Tuple3" = Cons '(' (hp_showFields x 0 3 (Cons ')' r))
+  | n == "__Tuple4" = Cons '(' (hp_showFields x 0 4 (Cons ')' r))
+  | n == "__Tuple5" = Cons '(' (hp_showFields x 0 5 (Cons ')' r))
+  | otherwise = hp_showUser d x n (hp_arity n) r
+
+hp_showRest Nil r = r
+hp_showRest (Cons y ys) r = Cons ',' (hp_showsP 0 y (hp_showRest ys r))
+
+hp_showFields x !i !n r = if (i >= n) r (hp_showsP 0 (getField x i) (if (i + 1 < n) (Cons ',' (hp_showFields x (i + 1) n r)) r))
+
+hp_showUser d x n !k r = let nm = hp_unpack (strslice n 2 (strlen n)) in
+  if (k == 0) (op_pp nm r)
+  (if (d > 10) (Cons '(' (op_pp nm (hp_showArgs x 0 k (Cons ')' r)))) (op_pp nm (hp_showArgs x 0 k r)))
+hp_showArgs x !i !k r = if (i >= k) r (Cons ' ' (hp_showsP 11 (getField x i) (hp_showArgs x (i + 1) k r)))
+
+hp_showStrB Nil r = r
+hp_showStrB (Cons c cs) r = hp_showCh '"' c (hp_showStrB cs r)
+
+// Een teken in een string (q = ") of tussen ' (q = ').
+hp_showCh q c r
+  | c == q = Cons '\\' (Cons c r)
+  | c == '\\' = Cons '\\' (Cons '\\' r)
+  | c == '\n' = Cons '\\' (Cons 'n' r)
+  | c == '\t' = Cons '\\' (Cons 't' r)
+  | c >= 32 /\ c < 127 = Cons c r
+  | otherwise = Cons '\\' (hp_digits (ord c) r)
+
+hp_arityP n
+  | n == "H_Just" \/ n == "H_Left" \/ n == "H_Right" = 1
+  | otherwise = 0
+
+// Namen die een programma ook zelf kan gebruiken (de vertaling gebruikt de
+// hp_-versie, die een programma niet kan overschrijven).
+h_concatMap f xs = hp_concatMap f xs
+hp_map f Nil = Nil
+hp_map f (Cons x xs) = Cons (f x) (hp_map f xs)
+hp_filter p Nil = Nil
+hp_filter p (Cons x xs) = if (p x) (Cons x (hp_filter p xs)) (hp_filter p xs)
+h_enumFrom a = hp_enumFrom a
+h_enumFromTo a b = hp_enumFromTo a b
+h_enumFromThen a b = hp_enumFromThen a b
+h_enumFromThenTo a b c = hp_enumFromThenTo a b c
+h_foldl_q f z xs = hp_foldl_q f z xs
+
+// == Met de typen (H1b, typgebruik.spp) ===========================================
+
+// == en /= als waarde, en /= met een gegenereerde vergelijking.
+hp_eqnum a b = eqnum a b
+hp_neqnum a b = neqnum a b
+hp_not2 f a b = if (f a b) False True
+hq_U a b = True
+
+// show en print met een show-functie f d x r voor het type.
+hp_showWith f x = f 0 x Nil
+hp_printWith f x w = h_putStrLn (f 0 x Nil) w
+
+hs_C d c r = Cons 39 (hp_showCh 39 c (Cons 39 r))
+hs_B d b r = if b (op_pp (hp_unpack "True") r) (op_pp (hp_unpack "False") r)
+hs_U d u r = Cons '(' (Cons ')' r)
+hs_S d cs r = Cons '"' (hp_showStrB cs (Cons '"' r))
+hp_showListD f d Nil r = Cons '[' (Cons ']' r)
+hp_showListD f d (Cons x xs) r = Cons '[' (f 0 x (hp_showListRest f xs (Cons ']' r)))
+hp_showListRest f Nil r = r
+hp_showListRest f (Cons x xs) r = Cons ',' (f 0 x (hp_showListRest f xs r))
+hp_showT2 f1 f2 d (a1, a2) r = Cons '(' (f1 0 a1 (Cons ',' (f2 0 a2 (Cons ')' r))))
+hp_showT3 f1 f2 f3 d (a1, a2, a3) r = Cons '(' (f1 0 a1 (Cons ',' (f2 0 a2 (Cons ',' (f3 0 a3 (Cons ')' r))))))
+hp_showT4 f1 f2 f3 f4 d (a1, a2, a3, a4) r = Cons '(' (f1 0 a1 (Cons ',' (f2 0 a2 (Cons ',' (f3 0 a3 (Cons ',' (f4 0 a4 (Cons ')' r))))))))
+hp_showT5 f1 f2 f3 f4 f5 d (a1, a2, a3, a4, a5) r = Cons '(' (f1 0 a1 (Cons ',' (f2 0 a2 (Cons ',' (f3 0 a3 (Cons ',' (f4 0 a4 (Cons ',' (f5 0 a5 (Cons ')' r))))))))))
+
+// == Ord en Enum per type (H2b): c is een vergelijking (-1, 0, 1) ==================
+
+hp_cmpI !a !b = if (a < b) (0 - 1) (if (a > b) 1 0)
+hp_cmpU a b = 0
+hp_lex !c r = if (neqnum c 0) c r
+hp_ltBy c a b = c a b < 0
+hp_leBy c a b = c a b <= 0
+hp_gtBy c a b = c a b > 0
+hp_geBy c a b = c a b >= 0
+hp_compareBy c a b = hp_ord3 (c a b)
+hp_ord3 !c = if (c < 0) H_LT (if (c > 0) H_GT H_EQ)
+hp_maxBy c a b = if (c a b <= 0) b a
+hp_minBy c a b = if (c a b <= 0) a b
+
+// fi: van waarde naar plaats, ti: terug, mx: de laatste plaats.
+hp_succBy fi ti x = ti (fi x + 1)
+hp_predBy fi ti x = ti (fi x - 1)
+hp_enumFromIdx fi ti mx x = hp_map ti (hp_enumFromTo (fi x) mx)
+hp_enumFromToIdx fi ti a b = hp_map ti (hp_enumFromTo (fi a) (fi b))
+
+// Een Ordering als vergelijking (-1, 0, 1), voor een eigen instance Ord.
+hp_ordToInt H_LT = 0 - 1
+hp_ordToInt H_EQ = 0
+hp_ordToInt H_GT = 1
+
+// == Double: een float van de VM (32 bits) ========================================
+
+// Elke Double is tijdens het draaien een float (een getal in een
+// Double-context wordt 2.0); hp_toF vangt toch een Int op.
+hp_toF x = if (eqnum (typeId x) 1) (itof x) x
+hp_itof x = itof x
+// De vergelijkingen van de VM zijn bij NaN en oneindig niet te vertrouwen
+// (nan < nan is waar, en == werkt via het verschil, dus inf == inf is
+// onwaar). Eindig: x - x == 0.0; anders zegt ftoa (C's %g) "inf", "-inf" of
+// "nan" (alleen dan nodig, dus gewoon rekenen wordt er niet trager van).
+hp_isFin !x = eqnum (x - x) 0.0
+// 0 eindig, 1 inf, 2 -inf, 3 NaN
+hp_fcls !x = if (hp_isFin x) 0 (hp_fclsT (ftoa x))
+hp_fclsT t = if (t == "inf") 1 (if (t == "-inf") 2 3)
+hp_isNaN !x = eqnum (hp_fcls x) 3
+// == en /= op Double (NaN is niet gelijk, -0.0 wel aan 0.0).
+hp_eqD !a !b = if (hp_isFin a /\ hp_isFin b) (a <= b /\ b <= a) (hp_eqCls (hp_fcls a) (hp_fcls b))
+hp_eqCls !ca !cb = eqnum ca cb /\ h_not (eqnum ca 3)
+hp_negD !x = x * (0.0 - 1.0)
+hp_neD !a !b = if (hp_eqD a b) False True
+hp_signumD !x = if (x > 0.0) 1.0 (if (x < 0.0) (0.0 - 1.0) x)
+hp_sumD xs = hp_sumDA 0.0 xs
+hp_sumDA !a Nil = a
+hp_sumDA !a (Cons x xs) = hp_sumDA (a + x) xs
+hp_productD xs = hp_prodDA 1.0 xs
+hp_prodDA !a Nil = a
+hp_prodDA !a (Cons x xs) = hp_prodDA (a * x) xs
+hp_powD !a !n = if (n <= 0) 1.0 (a * hp_powD a (n - 1))
+hp_truncD !x = ftoi x
+hp_floorD !x = let f = ftoi x in if (itof f > x) (f - 1) f
+hp_ceilD !x = let f = ftoi x in if (itof f < x) (f + 1) f
+// Zoals Haskell: bij precies 0,5 naar het even getal.
+hp_roundD !x = let f = hp_floorD x in hp_roundR f (x - itof f)
+hp_roundR !f !r = if (r > 0.5) (f + 1) (if (r < 0.5) f (if (eqnum (f % 2) 0) f (f + 1)))
+// [a .. b] op Double gaat door tot b + 1/2 (zoals Haskell).
+hp_enumFromToD !a !b = if (a > b + 0.5) Nil (Cons a (hp_enumFromToD (a + 1.0) b))
+hp_enumFromThenToD !a !b !c = let d = b - a in if (d >= 0.0) (hp_eftUpD a d (c + d / 2.0)) (hp_eftDownD a d (c + d / 2.0))
+hp_eftUpD !a !d !m = if (a > m) Nil (Cons a (hp_eftUpD (a + d) d m))
+hp_eftDownD !a !d !m = if (a < m) Nil (Cons a (hp_eftDownD (a + d) d m))
+hp_enumFromD !a = Cons a (hp_enumFromD (a + 1.0))
+
+// De methoden van Fractional, Floating en RealFrac (alleen Double).
+op_d a b = a / b
+h_recip !x = 1.0 / x
+h_pi = 3.1415927
+h_exp !x = exp x
+h_log !x = log x
+h_sqrt !x = sqrt x
+h_sin !x = sin x
+h_cos !x = cos x
+h_tan !x = tan x
+h_asin !x = asin x
+h_acos !x = acos x
+h_atan !x = atan x
+op_ss !a !b = exp (b * log a)
+h_logBase !b !x = log x / log b
+h_truncate x = hp_truncD x
+h_round x = hp_roundD x
+h_floor x = hp_floorD x
+h_ceiling x = hp_ceilD x
+
+// == show op Double (zoals GHC show op Float) =====================================
+
+// showsPrec d x r: negatief tussen haakjes als d > 6; NaN, Infinity.
+hs_D d x r = let y = hp_toF x in
+  if (hp_isNaN y) (op_pp (hp_unpack "NaN") r)
+  (if (eqnum (hp_fcls y) 1) (op_pp (hp_unpack "Infinity") r)
+  (if (eqnum (hp_fcls y) 2) (if (d > 6) (op_pp (hp_unpack "(-Infinity)") r) (op_pp (hp_unpack "-Infinity") r))
+  (if (y < 0.0 \/ hp_isNegZero y)
+     (if (d > 6) (Cons '(' (Cons '-' (hp_showPosD (0.0 - y) (Cons ')' r)))) (Cons '-' (hp_showPosD (0.0 - y) r)))
+     (hp_showPosD y r))))
+hp_isNegZero !y = if (hp_eqD y 0.0) (eqnum (hp_fcls (1.0 / y)) 2) False
+
+// y eindig en >= 0.
+hp_showPosD !y r = (if (hp_eqD y 0.0) (op_pp (hp_unpack "0.0") r)
+  (let (f, e) = hp_decode y 0 in let (ds, k) = hp_floatToDigits f e (hp_estK y) in hp_fmtD ds k r))
+
+// y = f * 2^e met f van 24 bits (of kleiner bij de kleinste getallen, e = -149).
+hp_decode !a !e = if (a >= 16777216.0) (hp_decode (a / 2.0) (e + 1))
+  (if (a < 8388608.0 /\ e > (0 - 149)) (hp_decode (a * 2.0) (e - 1)) (ftoi a, e))
+
+// Een ondergrens voor k (log10 kan er één naast zitten; hp_fixK schuift op).
+hp_estK !y = ftoi (floor (log10 y)) - 1
+
+// Burger en Dybvig (zoals GHC's floatToDigits, basis 10): de kortste cijfers
+// ds (meest significant eerst) en k met y = 0.ds * 10^k.
+hp_floatToDigits !f !e !k0 = let m23 = eqnum f 8388608 in
+  if (e >= 0)
+    (let be = hp_bPow2 e in
+     if (m23) (hp_ftd2 (hp_bMulS (hp_bMulS be f) 4) (hp_bN 4) (hp_bMulS be 2) be k0)
+              (hp_ftd2 (hp_bMulS (hp_bMulS be f) 2) (hp_bN 2) be be k0))
+    (if (eqnum e (0 - 149) \/ h_not m23)
+       (hp_ftd2 (hp_bN (f * 2)) (hp_bMulS (hp_bPow2 (0 - e)) 2) (hp_bN 1) (hp_bN 1) k0)
+       (hp_ftd2 (hp_bN (f * 4)) (hp_bMulS (hp_bPow2 (1 - e)) 2) (hp_bN 2) (hp_bN 1) k0))
+
+hp_ftd2 r s mUp mDn k0 = let k = hp_fixK r s mUp k0 in
+  if (k >= 0) (hp_gen Nil r (hp_bMul10k s k) mUp mDn, k)
+  (hp_gen Nil (hp_bMul10k r (0 - k)) s (hp_bMul10k mUp (0 - k)) (hp_bMul10k mDn (0 - k)), k)
+
+// De kleinste k >= k0 met r + mUp <= s * 10^k.
+hp_fixK r s mUp !k = if (k >= 0)
+  (if (hp_bCmp (hp_bAdd r mUp) (hp_bMul10k s k) <= 0) k (hp_fixK r s mUp (k + 1)))
+  (if (hp_bCmp (hp_bMul10k (hp_bAdd r mUp) (0 - k)) s <= 0) k (hp_fixK r s mUp (k + 1)))
+
+// De cijfers (omgekeerd verzameld, aan het eind omgedraaid).
+hp_gen ds r s mUp mDn = let (dn, r2) = hp_bQR10 (hp_bMulS r 10) s 0, mUp2 = hp_bMulS mUp 10, mDn2 = hp_bMulS mDn 10 in
+  hp_gen2 ds dn r2 s mUp2 mDn2 (hp_bCmp r2 mDn2 < 0) (hp_bCmp (hp_bAdd r2 mUp2) s > 0)
+hp_gen2 ds !dn r2 s mUp2 mDn2 lo hi
+  | lo /\ h_not hi = h_reverse (Cons dn ds)
+  | hi /\ h_not lo = h_reverse (Cons (dn + 1) ds)
+  | lo /\ hi = if (hp_bCmp (hp_bMulS r2 2) s < 0) (h_reverse (Cons dn ds)) (h_reverse (Cons (dn + 1) ds))
+  | otherwise = hp_gen (Cons dn ds) r2 s mUp2 mDn2
+
+// Opmaak zoals GHC (FFGeneric): vast tussen 0.1 en 10^7, anders met e.
+hp_fmtD ds !e r = if (e < 0 \/ e > 7) (hp_fmtExp ds e r) (hp_fmtFix ds e r)
+hp_fmtExp (Cons d Nil) !e r = Cons (hp_dig d) (Cons '.' (Cons '0' (Cons 'e' (hp_showInt 0 (e - 1) r))))
+hp_fmtExp (Cons d ds) !e r = Cons (hp_dig d) (Cons '.' (hp_digs ds (Cons 'e' (hp_showInt 0 (e - 1) r))))
+hp_fmtFix ds !e r = if (e <= 0) (Cons '0' (Cons '.' (hp_zeros (0 - e) (hp_digs ds r)))) (hp_fmtInt ds e r)
+hp_fmtInt ds !e r = if (e <= 0) (Cons '.' (if (h_null ds) (Cons '0' r) (hp_digs ds r)))
+  (case ds (Nil -> Cons '0' (hp_fmtInt Nil (e - 1) r)) (Cons d rest -> Cons (hp_dig d) (hp_fmtInt rest (e - 1) r)))
+hp_dig !d = chr (d + 48)
+hp_digs Nil r = r
+hp_digs (Cons d ds) r = Cons (hp_dig d) (hp_digs ds r)
+hp_zeros !n r = if (n <= 0) r (Cons '0' (hp_zeros (n - 1) r))
+
+// == Grote natuurlijke getallen (voor show op Double) ================================
+// Een lijst van limbs (basis 10000), de minst significante eerst; 0 is Nil.
+
+hp_bN !n = if (n <= 0) Nil (Cons (n % 10000) (hp_bN (n / 10000)))
+hp_bMulS a !k = hp_bMulC a k 0
+hp_bMulC Nil !k !c = hp_bN c
+hp_bMulC (Cons x xs) !k !c = let t = x * k + c in Cons (t % 10000) (hp_bMulC xs k (t / 10000))
+hp_bAdd a b = hp_bAddC a b 0
+hp_bAddC Nil Nil !c = hp_bN c
+hp_bAddC Nil (Cons y ys) !c = hp_bAddC (Cons 0 Nil) (Cons y ys) c
+hp_bAddC (Cons x xs) Nil !c = hp_bAddC (Cons x xs) (Cons 0 Nil) c
+hp_bAddC (Cons x xs) (Cons y ys) !c = let t = x + y + c in Cons (t % 10000) (hp_bAddC xs ys (t / 10000))
+// a - b met a >= b.
+hp_bSub a b = hp_bNorm (hp_bSubC a b 0)
+hp_bSubC Nil b !c = Nil
+hp_bSubC (Cons x xs) Nil !c = let t = x - c in if (t < 0) (Cons (t + 10000) (hp_bSubC xs Nil 1)) (Cons t (hp_bSubC xs Nil 0))
+hp_bSubC (Cons x xs) (Cons y ys) !c = let t = x - y - c in if (t < 0) (Cons (t + 10000) (hp_bSubC xs ys 1)) (Cons t (hp_bSubC xs ys 0))
+hp_bNorm xs = h_reverse (hp_dropZ (h_reverse xs))
+hp_dropZ Nil = Nil
+hp_dropZ (Cons x xs) = if (eqnum x 0) (hp_dropZ xs) (Cons x xs)
+// -1, 0, 1
+hp_bCmp a b = let la = h_length a, lb = h_length b in
+  if (la < lb) (0 - 1) (if (la > lb) 1 (hp_bCmpR (h_reverse a) (h_reverse b)))
+hp_bCmpR Nil Nil = 0
+hp_bCmpR (Cons x xs) (Cons y ys) = if (x < y) (0 - 1) (if (x > y) 1 (hp_bCmpR xs ys))
+hp_bPow2 !e = if (e <= 0) (hp_bN 1) (hp_bMulS (hp_bPow2 (e - 1)) 2)
+hp_bMul10k a !k = if (k <= 0) a (hp_bMul10k (hp_bMulS a 10) (k - 1))
+// (q, r) van a / s met q < 10.
+hp_bQR10 a s !q = if (hp_bCmp a s >= 0) (hp_bQR10 (hp_bSub a s) s (q + 1)) (q, a)
+
+hp_showT6 f1 f2 f3 f4 f5 f6 d (a1, a2, a3, a4, a5, a6) r = Cons '(' (f1 0 a1 (Cons ',' (f2 0 a2 (Cons ',' (f3 0 a3 (Cons ',' (f4 0 a4 (Cons ',' (f5 0 a5 (Cons ',' (f6 0 a6 (Cons ')' r))))))))))))
+hp_showT7 f1 f2 f3 f4 f5 f6 f7 d (a1, a2, a3, a4, a5, a6, a7) r = Cons '(' (f1 0 a1 (Cons ',' (f2 0 a2 (Cons ',' (f3 0 a3 (Cons ',' (f4 0 a4 (Cons ',' (f5 0 a5 (Cons ',' (f6 0 a6 (Cons ',' (f7 0 a7 (Cons ')' r))))))))))))))

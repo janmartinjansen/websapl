@@ -175,6 +175,7 @@
         <option value="notebooks/taal_bouwen.spp">Een eigen taal bouwen</option>
         <option value="notebooks/waarden_bewaren.spp">Waarden bewaren</option>
         <option value="notebooks/vm_metingen.spp">Metingen aan VM en compiler</option>
+        <option value="notebooks/haskell_lite.spp">Haskell lite</option>
       </select>
       <label class="btn" title="Een .spp-notebook openen">Openen<input type="file" id="file-open" accept=".spp,.txt" /></label>
       <button id="btn-save" title="Opslaan als .spp">Opslaan</button>
@@ -205,6 +206,7 @@
       <button id="btn-add-code">+ Code</button>
       <button id="btn-add-md">+ Tekst</button>
       <button id="btn-add-lc" title="Lambda-calculus via lc_repl">+ λ</button>
+      <button id="btn-add-hs" title="Haskell (Haskell lite, vertaald naar de JMVM; in de Workbench ook via MicroHs)">+ Haskell</button>
       <button id="btn-add-type" title="Typen van expressies">+ Type</button>
     </div>
     <p class="help">
@@ -217,7 +219,11 @@
       (met de cellen die ervan afhangen), Ctrl/⌘+Enter alles. Grijze uitvoer is
       verouderd. Een λ-cel is pure lambda-calculus (<code>lc_repl</code>, bv.
       <code>:nf</code>, <code>:seval</code>, <code>:blc</code>); een type-cel
-      toont per regel het type van een expressie. Een cel mag een definitie uit
+      toont per regel het type van een expressie. Een Haskell-cel bevat
+      Haskell-definities óf één expressie; alle Haskell-cellen samen zijn één
+      module (Haskell lite: typen met klassen, een getal zonder type is een
+      <code>Int</code>; in de Workbench vertaalt MicroHs wat Haskell lite nog
+      niet kent). Een cel mag een definitie uit
       een latere cel gebruiken ("in elke volgorde"), tenzij je de volgorde op
       "van boven naar beneden" zet; een fout blijft bij haar cel, de cellen
       die ervan afhangen worden overgeslagen. <b>Presenteren</b> (of de toets
@@ -329,6 +335,7 @@
         return r;
       }
       if (msg.type === "NB_MSG") return post("/api/notebook/nbmsg", { tab: TAB, tok: msg.tok, event: msg.event });
+      if (msg.type === "HS_RUN") return post("/api/notebook/hs", { tab: TAB, source: msg.source });
       if (msg.type === "LC_RUN") {
         const r = await post("/api/notebook/lc", { stdin: msg.stdin });
         if (r.timedOut) throw new Error(`lc_repl: geen antwoord binnen ${TIMEOUT_MS / 1000} s (divergente term?).`);
@@ -366,6 +373,7 @@
       if (!c) return;
       if (c.kind === "markdown") { c.editing = false; renderAll(); return; }
       if (c.kind === "lc") return runCells(new Set(cells.map((x, j) => (x.kind === "lc" ? j : -1)).filter((j) => j >= 0)));
+      if (c.kind === "hs") return runCells(new Set(cells.map((x, j) => (x.kind === "hs" ? j : -1)).filter((j) => j >= 0)));
       return runCells(NB.dependents(cells, i));
     }
 
@@ -375,7 +383,7 @@
       el("btn-run").disabled = true;
       hideBanner();
       const exprT = new Set(), typeT = new Set(), defT = [];
-      let lcT = false;
+      let lcT = false, hsT = false;
       for (const i of targets) {
         const c = cells[i];
         if (!c) continue;
@@ -387,6 +395,7 @@
           else c.output = null;
         } else if (c.kind === "type") { typeT.add(i); c.output = { pending: true }; }
         else if (c.kind === "lc") { lcT = true; c.output = { pending: true }; }
+        else if (c.kind === "hs") { hsT = true; c.output = { pending: true }; }
         if (c.kind !== "markdown") c.stale = false;
       }
       renderOutputs();
@@ -396,7 +405,10 @@
       try {
         if (exprT.size || defT.length || typeT.size) { n += exprT.size + typeT.size; await runProgram(exprT, defT, typeT); }
         if (lcT) { n += 1; await runLc(); }
-        const rest = lastRestored ? `, ${lastRestored} ${lastRestored === 1 ? "waarde" : "waarden"} teruggezet` : "";
+        lastHsRoute = "";
+        if (hsT) { n += 1; await runHs(); }
+        const rest = (lastRestored ? `, ${lastRestored} ${lastRestored === 1 ? "waarde" : "waarden"} teruggezet` : "")
+          + (lastHsRoute ? `, Haskell via ${lastHsRoute === "hlite" ? "Haskell lite" : "MicroHs"}` : "");
         setStatus(`klaar (${Math.round(performance.now() - t0)} ms, ${targets.size === cells.length ? "alles" : targets.size + " cel" + (targets.size === 1 ? "" : "len")}${rest})`);
       } catch (err) {
         showBanner(err.message);
@@ -561,11 +573,37 @@
       cells.forEach((c, i) => { if (c.kind === "lc") c.output = { lc: byCell[i] || [] }; });
     }
 
+    // Haskell-cellen: één module voor allemaal (NB.hsProgram), vertaald en
+    // gedraaid door de server; de uitvoer gaat per cel terug.
+    // De route van de laatste Haskell-run: "hlite" (de eigen front-end,
+    // Haskell lite) of "microhs" (MicroHs, als Haskell lite iets nog niet kent).
+    let lastHsRoute = "";
+    async function runHs() {
+      const prog = NB.hsProgram(cells);
+      const r = await call({ type: "HS_RUN", source: prog.source }, TIMEOUT_MS);
+      lastHsRoute = r && r.route ? r.route : "";
+      const alle = prog.cells.map((h) => h.cell);
+      if (!r.success) { alle.forEach((i) => { cells[i].output = { error: r.error }; }); return; }
+      if (r.compileError) {
+        const e = NB.hsCompileError(r.compileError, prog);
+        alle.forEach((i) => { cells[i].output = i === e.cell ? { error: e.text } : { notRun: true }; });
+        if (e.cell === null) showBanner("Haskell: " + e.text);
+        return;
+      }
+      const p = NB.parseHsOutput(r.output, r.stderr, prog);
+      if (p.all) showBanner("Haskell: " + p.all);
+      for (const i of alle) {
+        const o = p.cells[i] || { notRun: true };
+        cells[i].output = o.error ? { hs: o.text || "", error: o.error } : o.defs ? null : o.notRun ? { notRun: true } : { hs: o.text };
+      }
+      if (r.timedOut) showBanner(`Haskell: geen antwoord binnen ${TIMEOUT_MS / 1000} s (een oneindige berekening?).`);
+    }
+
     // Een cel gewijzigd: haar uitvoer en die van afhankelijke cellen is
     // verouderd tot de volgende run (grijs weergegeven).
     function markStale(i) {
       const c = cells[i];
-      const set = c.kind === "lc" ? cells.map((x, j) => (x.kind === "lc" && j >= i ? j : -1)).filter((j) => j >= 0)
+      const set = c.kind === "lc" || c.kind === "hs" ? cells.map((x, j) => (x.kind === c.kind && j >= i ? j : -1)).filter((j) => j >= 0)
         : c.kind === "markdown" ? [] : [...NB.dependents(cells, i)];
       for (const j of set) {
         if (cells[j].output && !cells[j].stale) {
@@ -594,8 +632,8 @@
       row.dataset.kind = c.kind;
       const gutter = document.createElement("div");
       gutter.className = "gutter";
-      gutter.textContent = { code: `[${i + 1}]`, markdown: "md", lc: "λ", type: "::" }[c.kind];
-      gutter.title = { code: "Sapl+-code", markdown: "tekst (Markdown)", lc: "lambda-calculus (lc_repl)", type: "typen van expressies" }[c.kind];
+      gutter.textContent = { code: `[${i + 1}]`, markdown: "md", lc: "λ", type: "::", hs: "hs" }[c.kind];
+      gutter.title = { code: "Sapl+-code", markdown: "tekst (Markdown)", lc: "lambda-calculus (lc_repl)", type: "typen van expressies", hs: "Haskell (MicroHs, naar de JMVM)" }[c.kind];
       const body = document.createElement("div");
       body.className = "cell-body";
       body.appendChild(renderTools(i));
@@ -619,7 +657,7 @@
         ta.value = c.source;
         ta.rows = 1;
         ta.spellcheck = false;
-        ta.placeholder = { code: "definities of één expressie", lc: "lambda-calculus, bv. I = λx.x  of  :nf (λx y.x) 1 2 (typ \\ voor λ)", type: "een expressie per regel", markdown: "tekst" }[c.kind];
+        ta.placeholder = { code: "definities of één expressie", hs: "Haskell: definities of één expressie, bv. sum [x * x | x <- [1 .. 10]]", lc: "lambda-calculus, bv. I = λx.x  of  :nf (λx y.x) 1 2 (typ \\ voor λ)", type: "een expressie per regel", markdown: "tekst" }[c.kind];
         ta.addEventListener("input", () => {
           // In een λ-cel wordt een getypte `\` meteen een λ (lc_repl accepteert
           // beide, zie lc_repl/README.md).
@@ -667,9 +705,9 @@
       }
       mk("↑", "Omhoog", () => move(i, -1));
       mk("↓", "Omlaag", () => move(i, 1));
-      const next = { code: "markdown", markdown: "lc", lc: "type", type: "code" };
-      const label = { code: "code", markdown: "tekst", lc: "λ", type: "type" };
-      mk("soort: " + label[cells[i].kind], "Soort wisselen: code → tekst → λ → type", () => {
+      const next = { code: "markdown", markdown: "lc", lc: "type", type: "hs", hs: "code" };
+      const label = { code: "code", markdown: "tekst", lc: "λ", type: "type", hs: "Haskell" };
+      mk("soort: " + label[cells[i].kind], "Soort wisselen: code → tekst → λ → type → Haskell", () => {
         cells[i].kind = next[cells[i].kind];
         if (cells[i].kind === "markdown") delete cells[i].folded;
         cells[i].output = null; cells[i].editing = cells[i].kind === "markdown"; save(); renderAll();
@@ -707,6 +745,11 @@
       if (o.pending) return pre("note", "…");
       if (o.types) {
         for (const t of o.types) t.error ? pre("err", `${t.expr}: ${t.error}`) : pre("", `${t.expr} :: ${t.type}`);
+        return;
+      }
+      if (o.hs !== undefined) {
+        if (o.hs) pre("print", o.hs);
+        if (o.error) pre("err", o.error);
         return;
       }
       if (o.lc) {
@@ -1486,6 +1529,7 @@
     el("btn-add-code").addEventListener("click", () => addCell("code"));
     el("btn-add-md").addEventListener("click", () => addCell("markdown"));
     el("btn-add-lc").addEventListener("click", () => addCell("lc"));
+    el("btn-add-hs").addEventListener("click", () => addCell("hs"));
     el("btn-add-type").addEventListener("click", () => addCell("type"));
     el("btn-save").addEventListener("click", download);
     el("sel-example").addEventListener("change", (e) => { if (e.target.value) loadExample(e.target.value); e.target.value = ""; });

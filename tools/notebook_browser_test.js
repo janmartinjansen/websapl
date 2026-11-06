@@ -7,7 +7,7 @@
 // formulieren; waarden en het model van een interactieve cel bewaren (fase F);
 // interactieve cellen (fase E: klikken, een toets, de klok en
 // het aantal beelden per seconde, opnieuw uitvoeren, een ander notebook);
-// de presentatiemodus.
+// de presentatiemodus; Haskell-cellen (Haskell lite).
 //
 // Met --workbench dezelfde pagina in de Workbench (workbench/server.js,
 // `?engine=server`): de engine is daar een eigen ./rs-driver-proces
@@ -285,6 +285,15 @@ const mark = `document.getElementById("status").textContent = "(wacht)"; window.
     st = await open(WB ? "notebooks/topdemo/presentatie.spp" : "topdemo/presentatie.spp");
     const errs = await ev(`[...document.querySelectorAll(".out .err")].map((e) => e.textContent).join(" | ")`);
     check("topdemo/presentatie.spp: alles uitgevoerd, geen fout", st[0].startsWith("klaar (") && !st[1] && !errs, errs || st.join("\n"));
+    // Haskell-cellen (6 november 2026): Haskell lite, in WebSapl in de worker
+    // (hlite/hs2spp.jvb), in de Workbench op de server (/api/notebook/hs).
+    st = await open("notebooks/haskell_lite.spp");
+    check("haskell_lite.spp: alles via Haskell lite (klassen, records, Double)", /Haskell via Haskell lite/.test(st[0]) && !st[1] &&
+      st.includes("[Rood,Groen,Blauw]") && st.includes("Punt {px = 3, py = 0}") && st.includes('("vierkant: 9","vorm: 10")') &&
+      st.includes("(2.5,1.4142135,3.1415927,2,[0.0,0.5,1.0,1.5,2.0])"), st.join("\n"));
+    fs.writeFileSync(TEST_NB, "//%% [hs]\n// f :: Int -> Int\n// f x = x ++ \"a\"\n//%% [hs]\n// f 1\n");
+    st = await open("notebooks/_browser_test.spp");
+    check("Haskell: een typefout bij haar cel", /typefout in f \(regel 3\)/.test(st[2]) && /niet uitgevoerd/.test(st[3]), st.join("\n"));
     writeNb("1 + 2");   // zonder interactieve cel (de toets van het model liet er een staan)
     st = await open("notebooks/_browser_test.spp");
     check("een ander notebook: alle interactieve cellen gestopt", (await ev(`window.__nbWidgets.size`)) === 0, "");
