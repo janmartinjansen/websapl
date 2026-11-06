@@ -672,24 +672,25 @@ ghcMetingen =:
     Ghcmeting "parsetest" 180 735 695 558, Ghcmeting "hamming" 109 575 481 405,
     Ghcmeting "sprimes" 167 1410 806 576, Ghcmeting "queens" 34 199 185 149,
     Ghcmeting "match" 44 278 256 243, Ghcmeting "eval" 75 479 451 335,
-    Ghcmeting "prolog" 34 297 285 213, Ghcmeting "twice" 19 613 500 518 ]
+    Ghcmeting "prolog" 34 297 285 213, Ghcmeting "twice" 240 613 500 620 ]
 //%%
 D.table ["benchmark", "GHC", "JMVM 24 okt", "factor", "JMVM 1 nov", "factor", "JMVM 2 nov", "factor"]
   (L.append
     (L.map (\m -> [gNaam m, T.showInt (gGhc m), T.showInt (gOud m), fx 1 (factor (gGhc m) (gOud m)),
                    T.showInt (gNu m), fx 1 (factor (gGhc m) (gNu m)),
                    T.showInt (gCase m), fx 1 (factor (gGhc m) (gCase m))]) ghcMetingen)
-    [["totaal", "1010", "5726", "5,7", "4524", "4,5", "3826", "3,8"]])
+    [["totaal", "1231", "5726", "4,7", "4524", "3,7", "3928", "3,2"]])
 //%% [markdown]
-// - De JMVM zit nu op **1,8× tot 6,3×** van GHC (totaal 3,8×, zonder
-//   `twice` 3,3×; op 24 oktober 5,7× en 5,2×). Bij `twice` (27×) deelt GHC
-//   ook zonder let-floating nog veel meer.
+// - De JMVM zit nu op **1,8× tot 6,3×** van GHC (totaal **3,2×**; was 4,7×
+//   op 24 oktober en 3,7× op 1 november). Met de dynamische versie van
+//   `twice` (GHC 240 ms, JMVM 620 ms = 2,6×) kan GHC het werk niet langer
+//   vooraf reduceren, waardoor er geen scheve uitschieter meer is.
 // - **gen1 vertaalt zichzelf** in 0,57 s; dezelfde compiler, automatisch
 //   naar getypeerd Haskell vertaald (`saplcomp_typed.hs`) en met GHC `-O2`
 //   gebouwd, doet 0,28 s: **2,0×** (was 2,6×).
-// - GHC gemeten op 24 oktober; de JMVM op 24 oktober, 1 november (met
-//   superinstructies) en 2 november (met de case als echte sprong),
-//   dezelfde machine.
+// - GHC gemeten op 24 oktober (met `twice` geactualiseerd naar de dynamische
+//   versie); de JMVM op 24 oktober, 1 november (met superinstructies) en
+//   2 november (met de case als echte sprong), dezelfde machine.
 //%% [markdown]
 // ## Dezelfde bytecode naar C: `jmvm2c`
 //
@@ -708,13 +709,13 @@ tcMetingen =:
     Tcmeting "parsetest" 180 536 442, Tcmeting "hamming" 109 386 277,
     Tcmeting "queens" 34 143 109, Tcmeting "eval" 75 315 262,
     Tcmeting "match" 44 231 167, Tcmeting "prolog" 34 200 159,
-    Tcmeting "sprimes" 167 567 791, Tcmeting "twice" 19 501 432 ]
+    Tcmeting "sprimes" 167 567 791, Tcmeting "twice" 240 620 432 ]
 //%%
 D.table ["benchmark", "GHC", "JMVM nu", "C", "C tegen JMVM", "C tegen GHC"]
   (L.append
     (L.map (\m -> [tcNaam m, T.showInt (tcGhc m), T.showInt (tcJmvm m), T.showInt (tcC m),
                    fx 2 (factor (tcC m) (tcJmvm m)), fx 1 (factor (tcGhc m) (tcC m))]) tcMetingen)
-    [["totaal", "1010", "3676", "3219", "1,14", "3,2"], ["gen1 vertaalt zichzelf", "283", "556", "442", "1,26", "1,6"]])
+    [["totaal", "1231", "3795", "3219", "1,18", "2,6"], ["gen1 vertaalt zichzelf", "283", "556", "442", "1,26", "1,6"]])
 //%% [markdown]
 // - **Correct:** alle uitvoer en het aantal aanroepen en allocaties gelijk
 //   aan de VM; gen1 in C vertaalt zichzelf byte voor byte.

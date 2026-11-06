@@ -146,7 +146,7 @@
           "path": "benchmarks_sapl/twice.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 281,
+          "size": 317,
           "isBinary": false
         }
       ],
@@ -1778,7 +1778,7 @@
           "path": "repl_examples/twice.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 281,
+          "size": 317,
           "isBinary": false
         }
       ],
@@ -2842,7 +2842,7 @@
           "path": "topdemo/presentatie.spp",
           "type": "file",
           "ext": ".spp",
-          "size": 48169,
+          "size": 48326,
           "isBinary": false
         }
       ],
