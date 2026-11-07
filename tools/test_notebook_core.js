@@ -196,8 +196,8 @@ check("geen =:-tip bij een constructor met letterlijke waarden", nb.cafHintNames
   const cells = [hs("import Data.List (sort)\nf x = x * 2"), { kind: "markdown", source: "x" }, hs("f 3"), hs("putStrLn \"hoi\""), hs("g 1")];
   const p = nb.hsProgram(cells);
   check("hs: import bovenaan, na de modulekop", p.source.split("\n").slice(0, 2), ["module Nb where", "import Data.List (sort)"]);
-  check("hs: comprehensie is geen guard", ["table [\"a\"] [[show x] | x <- [1..3]]", "plot [(x, x) | x <- [0, 0.5 .. 2]]", "f [x] | x > 0 = 1", "f [] = 0", "g x | x > 0 = \"a|b\"", "putStrLn \"a = b\""].map(nb.hsCellKind),
-    ["expr", "expr", "def", "def", "def", "actie"]);
+  check("hs: comprehensie is geen guard", ["table [\"a\"] [[show x] | x <- [1..3]]", "plot [(x, x) | x <- [0, 0.5 .. 2]]", "f [x] | x > 0 = 1", "f [] = 0", "g x | x > 0 = \"a|b\"", "putStrLn \"a = b\"", "jan { leeftijd = 41 }", "f p = p { px = 1 }", "Punt { px = 1, py = 2 }"].map(nb.hsCellKind),
+    ["expr", "expr", "def", "def", "def", "actie", "expr", "def", "expr"]);
   check("hs: Display als blokken", nb.hsBlocks("voor\n@@table\na\tb\n1\t2\n@@/\nna\n@@graphics\nGraphDisc 1 0 0 1 1 \n@@/"),
     [{ kind: "print", content: "voor" }, { kind: "table", content: "a\tb\n1\t2" }, { kind: "print", content: "na" }, { kind: "graphics", content: "GraphDisc 1 0 0 1 1 " }]);
   check("hs: gewone tekst geen blokken", nb.hsBlocks("6\nhoi"), null);

@@ -22,6 +22,15 @@
 //%% [hs]
 // maximum [Punt 1 2, Punt 3 0, Punt 3 (-1)]
 //%% [markdown]
+// Records maken, veranderen en als patroon:
+//%% [hs]
+// oorsprong = Punt { px = 0, py = 0 }
+//
+// spiegel :: Punt -> Punt
+// spiegel p@Punt { px = x } = p { px = negate x }
+//%% [hs]
+// (oorsprong { py = 5 }, spiegel (Punt { py = 2, px = 3 }))
+//%% [markdown]
 // Een eigen klasse, met een standaardmethode, en een eigen `Show`:
 //%% [hs]
 // class Vorm a where

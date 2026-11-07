@@ -289,7 +289,7 @@ const mark = `document.getElementById("status").textContent = "(wacht)"; window.
     // (hlite/hs2spp.jvb), in de Workbench op de server (/api/notebook/hs).
     st = await open("notebooks/haskell_lite.spp");
     check("haskell_lite.spp: alles via Haskell lite (klassen, records, Double)", /Haskell via Haskell lite/.test(st[0]) && !st[1] &&
-      st.includes("[Rood,Groen,Blauw]") && st.includes("Punt {px = 3, py = 0}") && st.includes('("vierkant: 9","vorm: 10")') &&
+      st.includes("[Rood,Groen,Blauw]") && st.includes("Punt {px = 3, py = 0}") && st.includes("(Punt {px = 0, py = 5},Punt {px = -3, py = 2})") && st.includes('("vierkant: 9","vorm: 10")') &&
       st.includes("(2.5,1.4142135,3.1415927,2,[0.0,0.5,1.0,1.5,2.0])"), st.join("\n"));
     // Display-waarden (7 november 2026): tabel en plaatjes, zoals in Sapl-cellen.
     const hsDisp = await ev(`[document.querySelectorAll(".out table").length, document.querySelectorAll(".out canvas").length, [...document.querySelectorAll(".out table")].map((t) => t.textContent).join("")]`);

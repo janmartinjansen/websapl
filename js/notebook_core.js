@@ -434,12 +434,12 @@
     return HS_ACTIE.test(lines[0].trim()) ? "actie" : "expr";
   }
 
-  // Een regel zonder strings, tekens en wat tussen [ ] staat: de | van een
-  // lijstcomprehensie (`table [..] [[..] | x <- xs]`) is geen guard, en een
-  // = in een string geen definitie.
+  // Een regel zonder strings, tekens en wat tussen [ ] of { } staat: de | van
+  // een lijstcomprehensie (`table [..] [[..] | x <- xs]`) is geen guard, en
+  // een = in een string of een record (`p { px = 3 }`) geen definitie.
   function hsZonderHaken(l) {
     let t = l.replace(/"(\\.|[^"\\])*"/g, '""').replace(/'(\\.|[^'\\])'/g, "' '");
-    for (let vorige = null; vorige !== t;) { vorige = t; t = t.replace(/\[[^\[\]]*\]/g, ""); }
+    for (let vorige = null; vorige !== t;) { vorige = t; t = t.replace(/\[[^\[\]]*\]/g, "").replace(/\{[^{}]*\}/g, ""); }
     return t;
   }
 
