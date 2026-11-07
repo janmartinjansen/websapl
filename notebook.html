@@ -223,7 +223,9 @@
       Haskell-definities óf één expressie; alle Haskell-cellen samen zijn één
       module (Haskell lite: typen met klassen, een getal zonder type is een
       <code>Int</code>; in de Workbench vertaalt MicroHs wat Haskell lite nog
-      niet kent). Een cel mag een definitie uit
+      niet kent; een waarde van type <code>Display</code>, zoals
+      <code>table</code>, <code>bar</code>, <code>plot</code> of
+      <code>picture</code>, wordt een tabel of plaatje). Een cel mag een definitie uit
       een latere cel gebruiken ("in elke volgorde"), tenzij je de volgorde op
       "van boven naar beneden" zet; een fout blijft bij haar cel, de cellen
       die ervan afhangen worden overgeslagen. <b>Presenteren</b> (of de toets
@@ -594,7 +596,7 @@
       if (p.all) showBanner("Haskell: " + p.all);
       for (const i of alle) {
         const o = p.cells[i] || { notRun: true };
-        cells[i].output = o.error ? { hs: o.text || "", error: o.error } : o.defs ? null : o.notRun ? { notRun: true } : { hs: o.text };
+        cells[i].output = o.error ? { hs: o.text || "", error: o.error } : o.defs ? null : o.notRun ? { notRun: true } : o.blocks ? { hs: o.text, hsBlocks: o.blocks } : { hs: o.text };
       }
       if (r.timedOut) showBanner(`Haskell: geen antwoord binnen ${TIMEOUT_MS / 1000} s (een oneindige berekening?).`);
     }
@@ -748,7 +750,9 @@
         return;
       }
       if (o.hs !== undefined) {
-        if (o.hs) pre("print", o.hs);
+        // Een Display-waarde (Haskell lite): tabel, Markdown, plaatje.
+        if (o.hsBlocks) renderBlocks(out, c, o.hsBlocks);
+        else if (o.hs) pre("print", o.hs);
         if (o.error) pre("err", o.error);
         return;
       }

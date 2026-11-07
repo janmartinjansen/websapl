@@ -17,10 +17,20 @@
 ::HT_Maybe = H_Nothing | H_Just x
 ::HT_Either = H_Left x | H_Right x
 ::HT_Ordering = H_LT | H_EQ | H_GT
+::HT_Display = H_DText x | H_DMarkdown x | H_DTable x y | H_DGraphics x | H_DColumn x
+::HT_GShape = H_GText c p s | H_GPolyLine c ps | H_GPolygon c ps | H_GRect c p q | H_GEllipse c p q | H_GDisc c p q
+::HT_Map_ = H_MTip_ | H_MBin_ !n !k v !l !r
+::HT_Set_ = H_MSet_ !m
+
+// show van een Map of Set als argument van een constructor: tussen haakjes.
+hp_showPar d s r = if (d > 10) (Cons '(' (op_pp s (Cons ')' r))) (op_pp s r)
 
 // == IO ===========================================================================
 
 h_return x w = HIORes x
+h_ioReturn x w = HIORes x
+h_ioBind m k w = hp_bind m k w
+h_ioThen m k w = hp_then m k w
 hp_bind m k w = case (m w) (HIORes a -> k a w)
 hp_then m k w = case (m w) (HIORes a -> k w)
 op_gge m k w = hp_bind m k w

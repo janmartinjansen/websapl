@@ -71,3 +71,87 @@
 // woordtelling "de kat en de hond en de muis"
 //%% [hs]
 // (intercalate ", " (map show (sort [3, 1, 2])), length (permutations "abcd"), sum (map read (words "1 2 3")) :: Int)
+//%% [markdown]
+// ## Tabellen en plaatjes
+//
+// Een cel met een waarde van type `Display` wordt een tabel, Markdown of een
+// plaatje, zoals `D.table` en `D.lineChart` in Sapl-cellen: `table koppen
+// rijen` (rijen van strings), `markdown`, `text`, `bar` en `lineChart` (een
+// lijst getallen), `plot` (punten `(x, y)`), `picture` met vormen (`disc`,
+// `circle`, `rect`, `filledRect`, `line`, `polygon`, `textAt`, met een kleur
+// als `red` of `blue`; x en y van -1 tot 1) en `column` (onder elkaar).
+//%% [hs]
+// table ["woord", "aantal"] [[w, show n] | (w, n) <- woordtelling "de kat en de hond en de muis"]
+//%% [hs]
+// bar (map snd (woordtelling "de kat en de hond en de muis"))
+//%% [hs]
+// plot [(x, sin x * exp (-x / 5)) | x <- [0, 0.1 .. 12]]
+//%% [hs]
+// picture ([disc yellow (0, 0) 0.6, disc black (-0.2, 0.2) 0.08, disc black (0.2, 0.2) 0.08]
+//          ++ [line red [(x, 1.5 * x * x - 0.35) | x <- [-0.35, -0.3 .. 0.35]]])
+//%% [markdown]
+// ## Data.Map en Data.Set
+//
+// `import qualified Data.Map as M` (of `Data.Map.Strict`, `Data.Set`) met de
+// gebruikelijke functies: `M.fromList`, `M.fromListWith`, `M.insertWith`,
+// `M.lookup`, `M.!`, `M.toList`, `M.foldrWithKey`, `M.unionWith`, ... Een
+// gebalanceerde boom, in Haskell lite zelf geschreven.
+//%% [hs]
+// import qualified Data.Map as M
+// import qualified Data.Set as S
+//
+// klinkers :: String -> M.Map Char Int
+// klinkers t = M.fromListWith (+) [(c, 1) | c <- t, c `elem` "aeiou"]
+//%% [hs]
+// klinkers "de kat en de hond en de muis"
+//%% [hs]
+// bar (M.elems (klinkers "de kat en de hond en de muis"))
+//%% [hs]
+// S.toList (S.map (`mod` 7) (S.fromList [1 .. 20 :: Int]))
+//%% [markdown]
+// ## Functor, Applicative, Monad
+//
+// `do` werkt in elke monade: `Maybe`, lijsten, `Either e`, `IO` en eigen
+// monaden (met instances van `Functor`, `Applicative` en `Monad`). `mapM`,
+// `forM_`, `when`, `foldM`, `<$>`, `<*>`, ... werken in elke monade (over
+// lijsten). Een cel die met `do` begint en geen `IO` is, wordt afgedrukt.
+//%% [hs]
+// veiligDelen :: Int -> Int -> Maybe Int
+// veiligDelen _ 0 = Nothing
+// veiligDelen a b = Just (a `div` b)
+//
+// data Stapel s a = Stapel (s -> (a, s))
+//
+// draai :: Stapel s a -> s -> (a, s)
+// draai (Stapel f) s = f s
+//
+// instance Functor (Stapel s) where
+//   fmap f (Stapel g) = Stapel (\s -> let (a, s2) = g s in (f a, s2))
+//
+// instance Applicative (Stapel s) where
+//   pure a = Stapel (\s -> (a, s))
+//   Stapel f <*> Stapel g = Stapel (\s -> let (h, s2) = f s
+//                                             (a, s3) = g s2 in (h a, s3))
+//
+// instance Monad (Stapel s) where
+//   Stapel g >>= k = Stapel (\s -> let (a, s2) = g s in draai (k a) s2)
+//
+// duw :: a -> Stapel [a] ()
+// duw x = Stapel (\s -> ((), x : s))
+//
+// pak :: Stapel [a] a
+// pak = Stapel (\(x : s) -> (x, s))
+//%% [hs]
+// do
+//   a <- veiligDelen 100 5
+//   b <- veiligDelen a 2
+//   return (a + b)
+//%% [hs]
+// do
+//   x <- [1, 2, 3]
+//   y <- "ab"
+//   return (x, y)
+//%% [hs]
+// draai (do { mapM_ duw [1, 2, 3]; a <- pak; b <- pak; duw (a * b); pak }) []
+//%% [hs]
+// mapM (\x -> veiligDelen 60 x) [1, 2, 3]

@@ -291,6 +291,11 @@ const mark = `document.getElementById("status").textContent = "(wacht)"; window.
     check("haskell_lite.spp: alles via Haskell lite (klassen, records, Double)", /Haskell via Haskell lite/.test(st[0]) && !st[1] &&
       st.includes("[Rood,Groen,Blauw]") && st.includes("Punt {px = 3, py = 0}") && st.includes('("vierkant: 9","vorm: 10")') &&
       st.includes("(2.5,1.4142135,3.1415927,2,[0.0,0.5,1.0,1.5,2.0])"), st.join("\n"));
+    // Display-waarden (7 november 2026): tabel en plaatjes, zoals in Sapl-cellen.
+    const hsDisp = await ev(`[document.querySelectorAll(".out table").length, document.querySelectorAll(".out canvas").length, [...document.querySelectorAll(".out table")].map((t) => t.textContent).join("")]`);
+    check("haskell_lite.spp: table, bar, plot en picture als tabel en plaatjes", hsDisp[0] === 1 && hsDisp[1] === 4 && /woord.*aantal/.test(hsDisp[2]), JSON.stringify(hsDisp));
+    check("haskell_lite.spp: Data.Map en Data.Set", st.includes("fromList [('a',1),('e',5),('i',1),('o',1),('u',1)]") && st.includes("[0,1,2,3,4,5,6]"), st.join("\n"));
+    check("haskell_lite.spp: do in Maybe, lijsten en een eigen monade", st.includes("Just 30") && st.includes("[(1,'a'),(1,'b'),(2,'a'),(2,'b'),(3,'a'),(3,'b')]") && st.includes("(6,[1])") && st.includes("Just [60,30,20]"), st.join("\n"));
     fs.writeFileSync(TEST_NB, "//%% [hs]\n// f :: Int -> Int\n// f x = x ++ \"a\"\n//%% [hs]\n// f 1\n");
     st = await open("notebooks/_browser_test.spp");
     check("Haskell: een typefout bij haar cel", /typefout in f \(regel 3\)/.test(st[2]) && /niet uitgevoerd/.test(st[3]), st.join("\n"));

@@ -430,8 +430,17 @@
   function hsCellKind(source) {
     const lines = source.split("\n").filter((l) => l.trim() !== "" && !l.trim().startsWith("--"));
     if (!lines.length) return "leeg";
-    if (lines.some((l) => !/^\s/.test(l) && HS_DEF.test(l) && !/^(let|if|case)\b/.test(l))) return "def";
+    if (lines.some((l) => !/^\s/.test(l) && HS_DEF.test(hsZonderHaken(l)) && !/^(let|if|case)\b/.test(l))) return "def";
     return HS_ACTIE.test(lines[0].trim()) ? "actie" : "expr";
+  }
+
+  // Een regel zonder strings, tekens en wat tussen [ ] staat: de | van een
+  // lijstcomprehensie (`table [..] [[..] | x <- xs]`) is geen guard, en een
+  // = in een string geen definitie.
+  function hsZonderHaken(l) {
+    let t = l.replace(/"(\\.|[^"\\])*"/g, '""').replace(/'(\\.|[^'\\])'/g, "' '");
+    for (let vorige = null; vorige !== t;) { vorige = t; t = t.replace(/\[[^\[\]]*\]/g, ""); }
+    return t;
   }
 
   /** { source, lineCell: [celindex per regel (1-based)], cells: [{cell, kind}] } */
@@ -451,13 +460,21 @@
         for (const l of h.source.split("\n")) push("  " + l, h.cell);
       }
     }
+    // Een cel die met do begint kan IO zijn, of Maybe, een lijst, Either
+    // (Haskell lite H4): nbRun voert een IO-actie uit en drukt de rest af.
+    const isDo = (h) => h.kind === "actie" && /^do\b/.test(h.source.trim());
+    if (hs.some(isDo)) {
+      for (const l of ["class NbRun a where", "  nbRun :: a -> IO ()", "instance NbRun (IO a) where", "  nbRun m = m >> return ()",
+        "instance Show a => NbRun (Maybe a) where", "  nbRun x = print x", "instance Show a => NbRun [a] where", "  nbRun x = print x",
+        "instance (Show a, Show b) => NbRun (Either a b) where", "  nbRun x = print x"]) push(l, null);
+    }
     push("main :: IO ()", null);
     push("main = do", null);
     const runs = hs.filter((h) => h.kind === "expr" || h.kind === "actie");
     if (!runs.length) push("  return ()", null);
     for (const h of runs) {
       push(`  putStrLn ("\\x01" ++ "${h.cell}")`, null);
-      push(h.kind === "actie" ? `  nbCel${h.cell}` : `  print nbCel${h.cell}`, null);
+      push(isDo(h) ? `  nbRun nbCel${h.cell}` : h.kind === "actie" ? `  nbCel${h.cell}` : `  print nbCel${h.cell}`, null);
     }
     return { source: out.join("\n") + "\n", lineCell, cells: hs };
   }
@@ -474,7 +491,12 @@
     const res = {};
     for (const h of prog.cells) {
       if (h.kind === "def") res[h.cell] = { defs: true };
-      else if (by[h.cell]) res[h.cell] = { text: by[h.cell].join("\n").replace(/\s+$/, "") };
+      else if (by[h.cell]) {
+        const text = by[h.cell].join("\n").replace(/\s+$/, "");
+        res[h.cell] = { text };
+        const blocks = hsBlocks(text);
+        if (blocks) res[h.cell].blocks = blocks;
+      }
       else res[h.cell] = { notRun: true };
     }
     if (stderr && stderr.trim()) {
@@ -485,6 +507,33 @@
     }
     return { cells: res };
   }
+
+  /**
+   * Een waarde van type Display (Haskell lite, 7 november 2026) drukt het
+   * @@-protocol af: `@@table`, `@@graphics`, ... op een eigen regel, en
+   * `@@/` aan het eind van het blok (daarna weer gewone tekst). Zulke
+   * uitvoer als blokken (zoals parseOutput), anders null (gewone tekst).
+   */
+  function hsBlocks(text) {
+    const lines = text.split("\n");
+    if (!lines.some((l) => HS_BLOK_RE.test(l))) return null;
+    const blocks = [];
+    let b = null;
+    for (const l of lines) {
+      const m = l.match(HS_BLOK_RE);
+      if (m) { b = { kind: m[1], lines: [] }; blocks.push(b); }
+      else if (l === "@@/") b = null;
+      else {
+        if (!b) { b = { kind: "print", lines: [] }; blocks.push(b); }
+        b.lines.push(l);
+      }
+    }
+    return blocks.filter((x) => x.kind !== "print" || x.lines.some((l) => l !== "")).map((x) => {
+      while (x.lines.length && x.lines[x.lines.length - 1] === "") x.lines.pop();
+      return { kind: x.kind, content: x.lines.join("\n") };
+    });
+  }
+  const HS_BLOK_RE = /^@@(text|markdown|table|graphics)$/;
 
   /** Een compileerfout (Nb.hs:regel:kolom: ...) bij de cel van die regel. */
   function hsCompileError(msg, prog) {
@@ -828,7 +877,7 @@
     generateNbInput, parseNbOutput, parseSettings, NO_MESSAGE,
     parseNotebook, serializeNotebook, cellSummary, classifyCell, parseOutput, definedNames, cafHintNames,
     referencedNames, providedNames, dependents, lcInput, parseLcOutput,
-    hsCellKind, hsProgram, parseHsOutput, hsCompileError,
+    hsCellKind, hsProgram, parseHsOutput, hsBlocks, hsCompileError,
     parseForm, formBinding, findDefinition, saplLiteral, splitArgs, rewriteDefinition,
     parseInteractive, eventLine, switchLiteral, definitionArgs, canSwitch,
   };
