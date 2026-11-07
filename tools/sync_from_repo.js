@@ -219,6 +219,8 @@ const ENTRIES = [
   // Het taallab (taallab.html, 19 oktober 2026): het raamwerk van taalproto/,
   // de hybride route waar het op draait, de vier voorbeeldtalen en hun programma's.
   { src: "docs/2026-10-19_language_prototyping_guide.md", dst: "docs/language_prototyping_guide.md" },
+  // De gids van Haskell lite (Engels, 7 november 2026).
+  { src: "docs/2026-11-07_haskell_lite_guide.md", dst: "docs/haskell_lite_guide.md" },
   { src: "sapl_naar_lc/hybride.cfp", dst: "sapl_naar_lc/hybride.cfp" },
   { src: "sapl_naar_lc/compiler.cfp", dst: "sapl_naar_lc/compiler.cfp" },
   { src: "sapl_naar_lc/seval.cfp", dst: "sapl_naar_lc/seval.cfp" },

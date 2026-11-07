@@ -350,6 +350,14 @@
       "type": "directory",
       "children": [
         {
+          "name": "haskell_lite_guide.md",
+          "path": "docs/haskell_lite_guide.md",
+          "type": "file",
+          "ext": ".md",
+          "size": 13999,
+          "isBinary": false
+        },
+        {
           "name": "language_prototyping_guide.md",
           "path": "docs/language_prototyping_guide.md",
           "type": "file",
@@ -378,7 +386,7 @@
           "path": "docs/README.md",
           "type": "file",
           "ext": ".md",
-          "size": 2108,
+          "size": 2284,
           "isBinary": false
         },
         {
@@ -1066,7 +1074,7 @@
           "path": "hlite/hprelude_typen.hs",
           "type": "file",
           "ext": ".hs",
-          "size": 5350,
+          "size": 33711,
           "isBinary": false
         },
         {
@@ -1074,7 +1082,7 @@
           "path": "hlite/hprelude.spp",
           "type": "file",
           "ext": ".spp",
-          "size": 22288,
+          "size": 24533,
           "isBinary": false
         },
         {
@@ -1082,7 +1090,7 @@
           "path": "hlite/hs2spp.jvb",
           "type": "file",
           "ext": ".jvb",
-          "size": 903024,
+          "size": 1038168,
           "isBinary": true
         }
       ],
@@ -1458,7 +1466,7 @@
           "path": "notebooks/haskell_lite.spp",
           "type": "file",
           "ext": ".spp",
-          "size": 2129,
+          "size": 5984,
           "isBinary": false
         },
         {
@@ -2993,11 +3001,19 @@
       "_expanded": false
     },
     {
+      "name": "haskell_lite.html",
+      "path": "haskell_lite.html",
+      "type": "file",
+      "ext": ".html",
+      "size": 29781,
+      "isBinary": false
+    },
+    {
       "name": "notebook.html",
       "path": "notebook.html",
       "type": "file",
       "ext": ".html",
-      "size": 81709,
+      "size": 82143,
       "isBinary": false
     },
     {

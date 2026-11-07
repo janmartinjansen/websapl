@@ -4,6 +4,7 @@
 |---|---|
 | [`sapl_taalgids.md`](sapl_taalgids.md) | De basistaal Sapl: grammatica, `case`/`if`/`let`, strings, ingebouwde functies, reflectie |
 | [`waarden_bewaren.md`](waarden_bewaren.md) | Gebruiksaanwijzing: uitgerekende waarden bewaren over sessies heen (het notebook, `:save`/`:load` in de REPL, `pack`/`packMax`/`unpack`); om te proberen: het notebook *Waarden bewaren* |
+| [`haskell_lite_guide.md`](haskell_lite_guide.md) | *Haskell lite: a guide* (Engels): Haskell in de notebook, wat werkt, tabellen en plaatjes, snelheid, verschillen met GHC |
 | [`veelgemaakte_fouten.md`](veelgemaakte_fouten.md) | Praktische valkuilen die stil een verkeerd resultaat geven i.p.v. een duidelijke foutmelding |
 | [`lokale_tools_niet_in_websapl.md`](lokale_tools_niet_in_websapl.md) | Waarom de Linter/VM-debugger-tabs van de lokale Workbench hier niet bestaan |
 | [`main.pdf`](main.pdf) | Het IFL 2016-paper achter de JMVM/Sapl-implementatie (zie ook `paper_examples/`) |
