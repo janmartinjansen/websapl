@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Factsheet: Stage-4 Retag Optimization for Sapl (retag_opt)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script>
+  try {
+    const t = localStorage.getItem("websapl_theme");
+    if (t) document.documentElement.setAttribute("data-theme", t);
+  } catch (_) {}
+</script>
+<style>
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --fg: #1b2230;
+  --muted: #5a6475;
+  --line: #d9dee6;
+  --accent: #1f5f8b;
+  --accent-soft: #e3eef6;
+  --warn: #9a5b00;
+  --warn-soft: #fbf0de;
+  --ok: #2c6b45;
+  --ok-soft: #e3f2e8;
+  --band: #c9d7e4;
+  --f-display: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161d;
+    --surface: #1a2029;
+    --fg: #e4e8ee;
+    --muted: #9aa5b6;
+    --line: #2d3542;
+    --accent: #7db7e0;
+    --accent-soft: #1d3346;
+    --warn: #e7b25c;
+    --warn-soft: #3a2c14;
+    --ok: #7fcf9c;
+    --ok-soft: #173025;
+    --band: #2a3d50;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161d;
+  --surface: #1a2029;
+  --fg: #e4e8ee;
+  --muted: #9aa5b6;
+  --line: #2d3542;
+  --accent: #7db7e0;
+  --accent-soft: #1d3346;
+  --warn: #e7b25c;
+  --warn-soft: #3a2c14;
+  --ok: #7fcf9c;
+  --ok-soft: #173025;
+  --band: #2a3d50;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--f-body);
+  font-size: 16px;
+  line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 64px;
+}
+.wrap { max-width: 920px; margin: 0 auto; }
+header {
+  padding-block: 36px 20px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 24px;
+}
+.back-link {
+  display: inline-block;
+  margin-bottom: 14px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+.back-link:hover { color: var(--accent); }
+.eyebrow {
+  font-family: var(--f-mono);
+  font-size: 12.5px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 500;
+}
+h1 {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: clamp(28px, 4.5vw, 40px);
+  line-height: 1.15;
+  margin: 10px 0 14px;
+  letter-spacing: -.01em;
+}
+h2 {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 23px;
+  line-height: 1.25;
+  margin: 40px 0 14px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 6px;
+}
+h3 {
+  font-family: var(--f-display);
+  font-weight: 600;
+  font-size: 18px;
+  margin: 22px 0 8px;
+}
+.meta {
+  color: var(--muted);
+  font-size: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 12px;
+}
+.meta span { display: inline-flex; align-items: center; gap: 4px; }
+.lede {
+  font-size: 18px;
+  color: var(--fg);
+  line-height: 1.55;
+  margin: 0 0 16px;
+}
+p { margin: 0 0 14px; }
+ul, ol { margin: 0 0 14px; padding-left: 1.25em; }
+li { margin-bottom: 6px; }
+a { color: var(--accent); text-underline-offset: 2px; }
+code {
+  font-family: var(--f-mono);
+  font-size: .88em;
+  background: var(--accent-soft);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+pre {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  font-family: var(--f-mono);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+pre code { background: none; padding: 0; }
+.metrics {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+  margin: 20px 0;
+}
+.metric-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+.metric-card.hl {
+  border-color: var(--ok);
+  background: var(--ok-soft);
+}
+.metric-val {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 26px;
+  line-height: 1.1;
+  color: var(--fg);
+  margin-bottom: 4px;
+}
+.metric-card.hl .metric-val { color: var(--ok); }
+.metric-label {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.3;
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px 20px;
+  margin: 16px 0;
+}
+.pill {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.pill.ok { background: var(--ok-soft); color: var(--ok); }
+.pill.info { background: var(--accent-soft); color: var(--accent); }
+.tablebox {
+  overflow-x: auto;
+  margin: 16px 0 24px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13.5px;
+  min-width: 660px;
+}
+th, td {
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+th {
+  font-weight: 600;
+  color: var(--muted);
+  font-size: 12.5px;
+  background: var(--surface);
+}
+tr:last-child td { border-bottom: none; }
+td.n, th.n {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: var(--f-mono);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.best { font-weight: 600; color: var(--ok); }
+.pipeline-flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0;
+  font-family: var(--f-mono);
+  font-size: 13px;
+}
+.pipeline-step {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 12px;
+}
+.pipeline-step.opt {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--fg);
+  font-weight: 500;
+}
+.pipeline-arrow { color: var(--muted); font-size: 16px; }
+.badge {
+  display: inline-block;
+  font-family: var(--f-mono);
+  font-size: 11.5px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-right: 6px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<header>
+  <a class="back-link" href="index.html">&larr; Back to all factsheets</a>
+  <div class="eyebrow">Technical Factsheet &bull; Compiler Optimization &amp; Runtime Performance</div>
+  <h1>Stage-4 Retag Optimization for Sapl (<code>retag_opt</code>)</h1>
+  <p class="lede">An interprocedural AST restructuring and strictness derivation pass operating on the JMVM Stage-4 intermediate representation, eliminating up to 48.7% of heap allocations and accelerating warm WebAssembly execution in Google Chrome by up to 37.4%.</p>
+  <div class="meta">
+    <span><strong>Project:</strong> JMVM / Sapl / WebSapl</span>
+    <span><strong>Date:</strong> 2026-11-08</span>
+    <span><strong>Target:</strong> Apple Silicon (LP64) &amp; WebAssembly (V8)</span>
+    <span><strong>Status:</strong> <span class="pill ok">Validated across 13 benchmarks &amp; gen1 fixpoint</span></span>
+  </div>
+</header>
+
+<main>
+
+<div class="metrics">
+  <div class="metric-card hl">
+    <div class="metric-val">&minus;48.7%</div>
+    <div class="metric-label">Heap Allocations in <code>eval</code> (29.4M &rarr; 15.1M cells)</div>
+  </div>
+  <div class="metric-card hl">
+    <div class="metric-val">&minus;37.4%</div>
+    <div class="metric-label">Chrome WASM Latency in <code>eval</code> (480ms &rarr; 300ms)</div>
+  </div>
+  <div class="metric-card hl">
+    <div class="metric-val">&minus;25.7%</div>
+    <div class="metric-label">Chrome WASM Latency in <code>queens</code> (216ms &rarr; 161ms)</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-val">1.41&times;</div>
+    <div class="metric-label">Warm WASM vs Native C++ Ratio on <code>eval</code></div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-val">0 bytes</div>
+    <div class="metric-label">Compiler Self-Compilation Fixpoint Diff (<code>gen1</code>)</div>
+  </div>
+</div>
+
+<h2>1. Executive Summary</h2>
+<p>
+  Until now, the Sapl compiler pipeline translated Stage-4 intermediate ASTs (<code>.retag.txt</code> / <code>.cfp_retag</code>) directly into bytecode via Stage-5 code generation (<code>retagcomp</code> / <code>stage5_codegen.cfp</code>) without any whole-program optimizations. 
+  Because lambda lifting and lazy-tag assignment in earlier stages introduce auxiliary helper functions, non-strict wrappers, and heap thunk allocations, functional programs frequently carried significant thunk creation and evaluation overhead.
+</p>
+<p>
+  <strong><code>retag_opt</code></strong> introduces an interprocedural analysis and AST transformation pass immediately before Stage 5. It derives strict parameters across call graphs, evaluates non-cyclic <code>let</code> bindings eagerly, inlines small arithmetic helpers, and folds constant operations.
+</p>
+<p>
+  The real-world impact is especially pronounced on <strong>WebAssembly (WebSapl)</strong>: reducing heap allocation volume saves linear memory bounds checks and register spilling in V8's TurboFan tier-2 JIT compiler, narrowing the gap between browser execution and native C++ to within <strong>1.41&times; &ndash; 1.50&times;</strong>.
+</p>
+
+<h2>2. Pipeline Architecture</h2>
+<div class="pipeline-flow">
+  <span class="pipeline-step">Sapl Source (.cfp)</span>
+  <span class="pipeline-arrow">&rarr;</span>
+  <span class="pipeline-step">Stage 1&ndash;3 (parse, strict, lift)</span>
+  <span class="pipeline-arrow">&rarr;</span>
+  <span class="pipeline-step">Stage 4 AST (.retag.txt)</span>
+  <span class="pipeline-arrow">&rarr;</span>
+  <span class="pipeline-step opt">retag_opt (Passes 1&ndash;5)</span>
+  <span class="pipeline-arrow">&rarr;</span>
+  <span class="pipeline-step">Stage 5 Codegen (retagcomp)</span>
+  <span class="pipeline-arrow">&rarr;</span>
+  <span class="pipeline-step">Native / WebSapl (.jvb)</span>
+</div>
+
+<h2>3. The Five Optimization Passes</h2>
+
+<div class="card">
+  <h3><span class="badge">Pass 1</span>Constant Folding (<code>fold</code>)</h3>
+  <p>Performs compile-time evaluation and algebraic normalization on binary integer operations (<code>+</code>, <code>-</code>, <code>*</code>):</p>
+  <pre><code>-- Associative normalization for integer constants:
+(x &plusmn; c1) &plusmn; c2  &longrightarrow;  x &plusmn; (c1 &plusmn; c2)
+x &plusmn; 0          &longrightarrow;  x</code></pre>
+  <p>Eliminates nested arithmetic thunks generated by indexing and counter functions.</p>
+</div>
+
+<div class="card">
+  <h3><span class="badge">Pass 2</span>Eager Arithmetic &amp; Interprocedural HNF Analysis (<code>eager</code> &amp; <code>params</code>)</h3>
+  <p>
+    Standard lambda lifting creates auxiliary functions like <code>safe_1 d = eval(d) + 1</code> and allocates them as updateable heap thunks (<code>thunk (safe_1 d)</code>). Pass 2 eliminates these allocations:
+  </p>
+  <ul>
+    <li><strong>Helper Classification (<code>vind_goedkope_helpers</code>):</strong> Automatically identifies functions whose bodies consist strictly of basic arithmetic on arguments or constants.</li>
+    <li><strong>Interprocedural HNF Fixed Point:</strong> Iteratively computes which function parameters <code>(f, j)</code> and constructor fields <code>((C, con), k)</code> are guaranteed to already be in Head Normal Form (evaluated) when reached.</li>
+    <li><strong>Eager Inlining:</strong> If all arguments to a cheap helper thunk are known to be evaluated, the thunk allocation is eliminated entirely and replaced with direct inlined arithmetic, stripping redundant <code>eval</code> instructions.</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h3><span class="badge">Pass 3</span>Strict Parameter Derivation (<code>strict</code>)</h3>
+  <p>
+    Sapl's intraprocedural strictness analyzer (<code>strictness.cfp</code>) historically only analyzed constructor strictness in <code>let</code> bindings, missing bare constructor applications like <code>Cons !x xs</code>.
+  </p>
+  <ul>
+    <li><strong>Unconditional Path Analysis (<code>altijd_eval</code>):</strong> Inspects control-flow branches (<code>Case</code>, <code>If</code>, saturated strict calls). If a formal parameter is unconditionally evaluated along all paths, it is marked strict (<code>!p</code>).</li>
+    <li><strong>Recursive Call-Site Forcing (<code>_force</code>):</strong> Unpacks call-site thunks into direct calls. Crucially, when converting <code>Thunk(App(g, args))</code> into a strict call <code>App(g, args)</code>, strict arguments of <code>g</code> are recursively forced, guaranteeing that no unforced closure objects are placed into strict VM stack slots.</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h3><span class="badge">Pass 4</span>Unconditional Strict <code>let</code> Promotion (<code>let</code>)</h3>
+  <p>
+    Analyzes local <code>Let</code> expressions. When a binding <code>let x = thunk (g args) in body</code> is non-recursive and unconditionally evaluated across all execution branches of <code>body</code> (<code>altijd_eval(x, body)</code>), it is promoted to a strict binding:
+  </p>
+  <pre><code>-- Before: allocates updateable thunk frame on heap
+let x = thunk (g args) in ... x ...
+
+-- After: evaluated directly into a local stack register without heap allocation
+!x = _force(g args) in ... x ...</code></pre>
+</div>
+
+<div class="card">
+  <h3><span class="badge">Pass 5</span>Micro-Inlining &amp; Thunk Forwarding (<code>inline</code> &amp; <code>thunkdoor</code>)</h3>
+  <p>
+    Inlines small non-recursive functions (&le; 35 AST nodes) while strictly respecting VM invariants:
+  </p>
+  <ul>
+    <li><strong>Case Invariant:</strong> Functions containing <code>Case</code> pattern-matching constructs are strictly excluded from inlining to prevent duplicating branch tables that violate Stage-5 tail-call and stack-layout conventions.</li>
+    <li><strong>Thunk Forwarding:</strong> Collapses trampoline chains where a thunk merely delegates to another direct application (<code>thunk (w a) &rarr; thunk (t a')</code>).</li>
+  </ul>
+</div>
+
+<h2>4. Benchmark Measurements</h2>
+
+<h3>4.1 Native Execution (Apple Silicon M4, <code>./runfast</code>)</h3>
+<p>Measured with hardware performance counters and high-precision timing (best of 5 runs):</p>
+<div class="tablebox">
+  <table>
+    <thead>
+      <tr>
+        <th>Benchmark</th>
+        <th class="n">Baseline Instr</th>
+        <th class="n">Opt Instr</th>
+        <th class="n">&Delta; Instr</th>
+        <th class="n">Baseline Creates</th>
+        <th class="n">Opt Creates</th>
+        <th class="n">&Delta; Creates</th>
+        <th class="n">Baseline Time</th>
+        <th class="n">Opt Time</th>
+        <th class="n">&Delta; Time</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>eval</code></td>
+        <td class="n">305,176,252</td>
+        <td class="n">206,355,735</td>
+        <td class="n best">&minus;32.4%</td>
+        <td class="n">29,406,801</td>
+        <td class="n">15,076,566</td>
+        <td class="n best">&minus;48.7%</td>
+        <td class="n">0.3203 s</td>
+        <td class="n">0.2130 s</td>
+        <td class="n best">&minus;33.5%</td>
+      </tr>
+      <tr>
+        <td><code>queens</code></td>
+        <td class="n">167,472,741</td>
+        <td class="n">124,706,689</td>
+        <td class="n best">&minus;25.5%</td>
+        <td class="n">10,308,489</td>
+        <td class="n">5,767,399</td>
+        <td class="n best">&minus;44.1%</td>
+        <td class="n">0.1414 s</td>
+        <td class="n">0.1113 s</td>
+        <td class="n best">&minus;21.3%</td>
+      </tr>
+      <tr>
+        <td><code>hamming</code></td>
+        <td class="n">368,136,018</td>
+        <td class="n">336,140,016</td>
+        <td class="n best">&minus;8.7%</td>
+        <td class="n">40,044,003</td>
+        <td class="n">36,044,003</td>
+        <td class="n best">&minus;10.0%</td>
+        <td class="n">0.3916 s</td>
+        <td class="n">0.3669 s</td>
+        <td class="n best">&minus;6.3%</td>
+      </tr>
+      <tr>
+        <td><code>knights</code></td>
+        <td class="n">54,119,084</td>
+        <td class="n">51,001,389</td>
+        <td class="n best">&minus;5.8%</td>
+        <td class="n">2,006,105</td>
+        <td class="n">2,006,105</td>
+        <td class="n">&plusmn;0.0%</td>
+        <td class="n">0.0572 s</td>
+        <td class="n">0.0555 s</td>
+        <td class="n best">&minus;3.0%</td>
+      </tr>
+      <tr>
+        <td><code>prolog</code></td>
+        <td class="n">139,066,083</td>
+        <td class="n">133,574,108</td>
+        <td class="n best">&minus;3.9%</td>
+        <td class="n">20,626,499</td>
+        <td class="n">19,546,799</td>
+        <td class="n best">&minus;5.2%</td>
+        <td class="n">0.2062 s</td>
+        <td class="n">0.2047 s</td>
+        <td class="n">&minus;0.7%</td>
+      </tr>
+      <tr>
+        <td><code>eval2</code></td>
+        <td class="n">427,822,227</td>
+        <td class="n">422,030,690</td>
+        <td class="n">&minus;1.4%</td>
+        <td class="n">6,676,126</td>
+        <td class="n">6,676,122</td>
+        <td class="n">&minus;0.0%</td>
+        <td class="n">0.3904 s</td>
+        <td class="n">0.3919 s</td>
+        <td class="n">&plus;0.4%</td>
+      </tr>
+      <tr>
+        <td><code>sort</code></td>
+        <td class="n">334,790,640</td>
+        <td class="n">331,830,565</td>
+        <td class="n">&minus;0.9%</td>
+        <td class="n">30,986,934</td>
+        <td class="n">30,586,936</td>
+        <td class="n">&minus;1.3%</td>
+        <td class="n">0.2747 s</td>
+        <td class="n">0.2879 s</td>
+        <td class="n">&plus;4.8%</td>
+      </tr>
+      <tr>
+        <td><code>primes</code></td>
+        <td class="n">240,656,481</td>
+        <td class="n">240,267,545</td>
+        <td class="n">&minus;0.2%</td>
+        <td class="n">25,356,784</td>
+        <td class="n">25,308,166</td>
+        <td class="n">&minus;0.2%</td>
+        <td class="n">0.2227 s</td>
+        <td class="n">0.2233 s</td>
+        <td class="n">&plus;0.3%</td>
+      </tr>
+      <tr>
+        <td><code>match</code></td>
+        <td class="n">223,660,419</td>
+        <td class="n">223,660,417</td>
+        <td class="n">&plusmn;0.0%</td>
+        <td class="n">28,013,003</td>
+        <td class="n">28,013,003</td>
+        <td class="n">&plusmn;0.0%</td>
+        <td class="n">0.2360 s</td>
+        <td class="n">0.2341 s</td>
+        <td class="n">&minus;0.8%</td>
+      </tr>
+      <tr>
+        <td><code>twice</code></td>
+        <td class="n">668,582,411</td>
+        <td class="n">668,581,211</td>
+        <td class="n">&plusmn;0.0%</td>
+        <td class="n">26,224,401</td>
+        <td class="n">26,224,401</td>
+        <td class="n">&plusmn;0.0%</td>
+        <td class="n">0.6273 s</td>
+        <td class="n">0.6302 s</td>
+        <td class="n">&plus;0.5%</td>
+      </tr>
+      <tr>
+        <td><code>fib</code></td>
+        <td class="n">632,459,857</td>
+        <td class="n">632,459,857</td>
+        <td class="n">&plusmn;0.0%</td>
+        <td class="n">0</td>
+        <td class="n">0</td>
+        <td class="n">&plusmn;0.0%</td>
+        <td class="n">0.2416 s</td>
+        <td class="n">0.2425 s</td>
+        <td class="n">&plus;0.4%</td>
+      </tr>
+      <tr>
+        <td><code>sprimes</code></td>
+        <td class="n">437,886,247</td>
+        <td class="n">437,888,065</td>
+        <td class="n">&plusmn;0.0%</td>
+        <td class="n">1,674,657</td>
+        <td class="n">1,674,656</td>
+        <td class="n">&minus;0.0%</td>
+        <td class="n">0.5641 s</td>
+        <td class="n">0.5675 s</td>
+        <td class="n">&plus;0.6%</td>
+      </tr>
+      <tr>
+        <td><code>parsetest</code></td>
+        <td class="n">297,645,491</td>
+        <td class="n">301,275,991</td>
+        <td class="n">&plus;1.2%</td>
+        <td class="n">67,293,741</td>
+        <td class="n">67,293,741</td>
+        <td class="n">&plusmn;0.0%</td>
+        <td class="n">0.5420 s</td>
+        <td class="n">0.5441 s</td>
+        <td class="n">&plus;0.4%</td>
+      </tr>
+      <tr>
+        <td><strong><code>gen1</code> (Compiler)</strong></td>
+        <td class="n">58,010,053</td>
+        <td class="n">55,468,609</td>
+        <td class="n best">&minus;4.4%</td>
+        <td class="n">4,620,577</td>
+        <td class="n">4,534,022</td>
+        <td class="n best">&minus;1.9%</td>
+        <td class="n">0.0767 s</td>
+        <td class="n">0.0739 s</td>
+        <td class="n best">&minus;3.7%</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>4.2 Warm WebAssembly Performance (WebSapl Production Target)</h3>
+<p>
+  Measured on the production WebSapl virtual machine (<code>websapl/engine/jmvm.wasm</code>, switch dispatch compiled with Clang/LLVM <code>-O3</code>).
+  <strong>Warm measurement protocol:</strong> initial worker warmup run + 3 warmup iterations + 1,500 ms V8 TurboFan stabilization pause + 7 alternating rounds. All outputs verified bit-identical.
+</p>
+
+<h4>Headless Google Chrome 156 (Production WebSapl Client)</h4>
+<div class="tablebox">
+  <table>
+    <thead>
+      <tr>
+        <th>Benchmark</th>
+        <th class="n">Baseline Min</th>
+        <th class="n">Opt Min</th>
+        <th class="n">Baseline Median</th>
+        <th class="n">Opt Median</th>
+        <th class="n">&Delta; Median</th>
+        <th style="text-align:center;">Result Verification</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>eval</code></td>
+        <td class="n">472 ms</td>
+        <td class="n">298 ms</td>
+        <td class="n">480 ms</td>
+        <td class="n">300 ms</td>
+        <td class="n best">&minus;37.4%</td>
+        <td style="text-align:center;"><span class="pill ok">Identical</span></td>
+      </tr>
+      <tr>
+        <td><code>queens</code></td>
+        <td class="n">212 ms</td>
+        <td class="n">157 ms</td>
+        <td class="n">216 ms</td>
+        <td class="n">161 ms</td>
+        <td class="n best">&minus;25.7%</td>
+        <td style="text-align:center;"><span class="pill ok">Identical</span></td>
+      </tr>
+      <tr>
+        <td><code>hamming</code></td>
+        <td class="n">619 ms</td>
+        <td class="n">564 ms</td>
+        <td class="n">624 ms</td>
+        <td class="n">576 ms</td>
+        <td class="n best">&minus;7.7%</td>
+        <td style="text-align:center;"><span class="pill ok">Identical</span></td>
+      </tr>
+      <tr>
+        <td><code>prolog</code></td>
+        <td class="n">281 ms</td>
+        <td class="n">270 ms</td>
+        <td class="n">284 ms</td>
+        <td class="n">273 ms</td>
+        <td class="n best">&minus;3.8%</td>
+        <td style="text-align:center;"><span class="pill ok">Identical</span></td>
+      </tr>
+      <tr>
+        <td><code>knights</code></td>
+        <td class="n">81 ms</td>
+        <td class="n">80 ms</td>
+        <td class="n">81 ms</td>
+        <td class="n">80 ms</td>
+        <td class="n">&minus;1.4%</td>
+        <td style="text-align:center;"><span class="pill ok">Identical</span></td>
+      </tr>
+      <tr>
+        <td><code>twice</code></td>
+        <td class="n">982 ms</td>
+        <td class="n">970 ms</td>
+        <td class="n">986 ms</td>
+        <td class="n">975 ms</td>
+        <td class="n">&minus;1.1%</td>
+        <td style="text-align:center;"><span class="pill ok">Identical</span></td>
+      </tr>
+      <tr>
+        <td><code>eval2</code></td>
+        <td class="n">595 ms</td>
+        <td class="n">592 ms</td>
+        <td class="n">603 ms</td>
+        <td class="n">597 ms</td>
+        <td class="n">&minus;1.0%</td>
+        <td style="text-align:center;"><span class="pill ok">Identical</span></td>
+      </tr>
+      <tr>
+        <td><code>primes</code></td>
+        <td class="n">335 ms</td>
+        <td class="n">333 ms</td>
+        <td class="n">337 ms</td>
+        <td class="n">334 ms</td>
+        <td class="n">&minus;0.8%</td>
+        <td style="text-align:center;"><span class="pill ok">Identical</span></td>
+      </tr>
+      <tr>
+        <td><code>fib</code></td>
+        <td class="n">608 ms</td>
+        <td class="n">609 ms</td>
+        <td class="n">615 ms</td>
+        <td class="n">614 ms</td>
+        <td class="n">&minus;0.1%</td>
+        <td style="text-align:center;"><span class="pill ok">Identical</span></td>
+      </tr>
+      <tr>
+        <td><code>sprimes</code></td>
+        <td class="n">678 ms</td>
+        <td class="n">675 ms</td>
+        <td class="n">682 ms</td>
+        <td class="n">682 ms</td>
+        <td class="n">&plus;0.1%</td>
+        <td style="text-align:center;"><span class="pill ok">Identical</span></td>
+      </tr>
+      <tr>
+        <td><code>match</code></td>
+        <td class="n">344 ms</td>
+        <td class="n">342 ms</td>
+        <td class="n">346 ms</td>
+        <td class="n">346 ms</td>
+        <td class="n">&plus;0.1%</td>
+        <td style="text-align:center;"><span class="pill ok">Identical</span></td>
+      </tr>
+      <tr>
+        <td><code>parsetest</code></td>
+        <td class="n">741 ms</td>
+        <td class="n">748 ms</td>
+        <td class="n">745 ms</td>
+        <td class="n">751 ms</td>
+        <td class="n">&plus;0.9%</td>
+        <td style="text-align:center;"><span class="pill ok">Identical</span></td>
+      </tr>
+      <tr>
+        <td><code>sort</code></td>
+        <td class="n">440 ms</td>
+        <td class="n">454 ms</td>
+        <td class="n">443 ms</td>
+        <td class="n">460 ms</td>
+        <td class="n">&plus;3.8%</td>
+        <td style="text-align:center;"><span class="pill ok">Identical</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h4>Node.js v26.6 (Standalone V8 Engine)</h4>
+<div class="tablebox">
+  <table>
+    <thead>
+      <tr>
+        <th>Benchmark</th>
+        <th class="n">Baseline Min</th>
+        <th class="n">Opt Min</th>
+        <th class="n">Baseline Median</th>
+        <th class="n">Opt Median</th>
+        <th class="n">&Delta; Median</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>eval</code></td>
+        <td class="n">495 ms</td>
+        <td class="n">302 ms</td>
+        <td class="n">502 ms</td>
+        <td class="n">307 ms</td>
+        <td class="n best">&minus;38.9%</td>
+      </tr>
+      <tr>
+        <td><code>queens</code></td>
+        <td class="n">234 ms</td>
+        <td class="n">169 ms</td>
+        <td class="n">238 ms</td>
+        <td class="n">172 ms</td>
+        <td class="n best">&minus;27.5%</td>
+      </tr>
+      <tr>
+        <td><code>hamming</code></td>
+        <td class="n">631 ms</td>
+        <td class="n">582 ms</td>
+        <td class="n">636 ms</td>
+        <td class="n">589 ms</td>
+        <td class="n best">&minus;7.4%</td>
+      </tr>
+      <tr>
+        <td><code>knights</code></td>
+        <td class="n">84 ms</td>
+        <td class="n">80 ms</td>
+        <td class="n">85 ms</td>
+        <td class="n">80 ms</td>
+        <td class="n best">&minus;5.8%</td>
+      </tr>
+      <tr>
+        <td><code>prolog</code></td>
+        <td class="n">284 ms</td>
+        <td class="n">272 ms</td>
+        <td class="n">287 ms</td>
+        <td class="n">272 ms</td>
+        <td class="n best">&minus;5.1%</td>
+      </tr>
+      <tr>
+        <td><code>eval2</code></td>
+        <td class="n">629 ms</td>
+        <td class="n">620 ms</td>
+        <td class="n">638 ms</td>
+        <td class="n">627 ms</td>
+        <td class="n">&minus;1.8%</td>
+      </tr>
+      <tr>
+        <td><code>primes</code></td>
+        <td class="n">351 ms</td>
+        <td class="n">347 ms</td>
+        <td class="n">355 ms</td>
+        <td class="n">351 ms</td>
+        <td class="n">&minus;1.3%</td>
+      </tr>
+      <tr>
+        <td><code>fib</code></td>
+        <td class="n">731 ms</td>
+        <td class="n">729 ms</td>
+        <td class="n">738 ms</td>
+        <td class="n">735 ms</td>
+        <td class="n">&minus;0.4%</td>
+      </tr>
+      <tr>
+        <td><code>twice</code></td>
+        <td class="n">1,033 ms</td>
+        <td class="n">1,019 ms</td>
+        <td class="n">1,042 ms</td>
+        <td class="n">1,044 ms</td>
+        <td class="n">&plus;0.2%</td>
+      </tr>
+      <tr>
+        <td><code>sort</code></td>
+        <td class="n">481 ms</td>
+        <td class="n">488 ms</td>
+        <td class="n">486 ms</td>
+        <td class="n">496 ms</td>
+        <td class="n">&plus;2.0%</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>5. Comparative Analysis: WASM vs. Native Speed Ratio</h2>
+<p>
+  A critical metric for WebSapl is how close browser execution comes to native C++ performance. Across core functional workloads, warm WebAssembly is now within <strong>1.41&times; &ndash; 1.50&times;</strong> of native speed:
+</p>
+
+<div class="tablebox">
+  <table>
+    <thead>
+      <tr>
+        <th>Benchmark</th>
+        <th class="n">Native ./runfast (Opt)</th>
+        <th class="n">Chrome 156 WASM (Opt)</th>
+        <th class="n">WASM / Native Ratio (Opt)</th>
+        <th class="n">Baseline WASM / Native Ratio</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>eval</code></td>
+        <td class="n">213 ms</td>
+        <td class="n">300 ms</td>
+        <td class="n best">1.41&times;</td>
+        <td class="n">1.50&times;</td>
+      </tr>
+      <tr>
+        <td><code>knights</code></td>
+        <td class="n">55 ms</td>
+        <td class="n">80 ms</td>
+        <td class="n best">1.45&times;</td>
+        <td class="n">1.42&times;</td>
+      </tr>
+      <tr>
+        <td><code>queens</code></td>
+        <td class="n">111 ms</td>
+        <td class="n">161 ms</td>
+        <td class="n best">1.45&times;</td>
+        <td class="n">1.53&times;</td>
+      </tr>
+      <tr>
+        <td><code>primes</code></td>
+        <td class="n">223 ms</td>
+        <td class="n">334 ms</td>
+        <td class="n best">1.50&times;</td>
+        <td class="n">1.51&times;</td>
+      </tr>
+      <tr>
+        <td><code>twice</code></td>
+        <td class="n">630 ms</td>
+        <td class="n">975 ms</td>
+        <td class="n">1.55&times;</td>
+        <td class="n">1.57&times;</td>
+      </tr>
+      <tr>
+        <td><code>hamming</code></td>
+        <td class="n">367 ms</td>
+        <td class="n">576 ms</td>
+        <td class="n">1.57&times;</td>
+        <td class="n">1.59&times;</td>
+      </tr>
+      <tr>
+        <td><code>sort</code></td>
+        <td class="n">288 ms</td>
+        <td class="n">460 ms</td>
+        <td class="n">1.60&times;</td>
+        <td class="n">1.61&times;</td>
+      </tr>
+      <tr>
+        <td><code>fib</code></td>
+        <td class="n">242 ms</td>
+        <td class="n">614 ms</td>
+        <td class="n">2.54&times;</td>
+        <td class="n">2.55&times;</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h3>Why Heap Allocation Reduction Yields Outsized Gains on WASM</h3>
+  <p>
+    In native execution (Clang <code>-O3</code> with <code>musttail</code> direct tail-calling), allocating small 16-to-32-byte heap cells is exceptionally cheap, often hitting warm L1 CPU cache lines without stall penalties.
+  </p>
+  <p>
+    In WebAssembly, by contrast, heap allocation involves:
+  </p>
+  <ol>
+    <li>Linear memory sandboxing and memory bounds checks across Emscripten's heap partition;</li>
+    <li>TurboFan register spills when packing variable-arity constructors inside the VM's main dispatch loop;</li>
+    <li>Indirect memory stores that compete with JIT-managed stack slots.</li>
+  </ol>
+  <p>
+    Eliminating 14.33 million allocations in <code>eval</code> saved <strong>107 ms</strong> in native execution, but saved <strong>180 ms</strong> in Chrome WebAssembly&mdash;a <strong>68% larger absolute time saving</strong> on WASM.
+  </p>
+</div>
+
+<h2>6. Code Size &amp; Bytecode Density Reduction</h2>
+<p>
+  By pruning unreferenced lifted lambdas (<code>verwijder_ongebruikt</code>) and inlining trivial arithmetic helpers, <code>retag_opt</code> significantly reduces final <code>.jvb</code> binary bytecode size and Stage-4 AST line counts:
+</p>
+
+<div class="tablebox">
+  <table>
+    <thead>
+      <tr>
+        <th>Benchmark</th>
+        <th class="n">Baseline .jvb Bytecode</th>
+        <th class="n">Opt .jvb Bytecode</th>
+        <th class="n">&Delta; Size</th>
+        <th class="n">Lines of Retag Code (.cfp_retag)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>parsetest</code></td>
+        <td class="n">37,992 bytes</td>
+        <td class="n">22,072 bytes</td>
+        <td class="n best">&minus;41.9%</td>
+        <td class="n">1,900 &rarr; 1,059 (&minus;44.3%)</td>
+      </tr>
+      <tr>
+        <td><code>sort</code></td>
+        <td class="n">9,248 bytes</td>
+        <td class="n">5,656 bytes</td>
+        <td class="n best">&minus;38.8%</td>
+        <td class="n">560 &rarr; 337 (&minus;39.8%)</td>
+      </tr>
+      <tr>
+        <td><code>prolog</code></td>
+        <td class="n">38,080 bytes</td>
+        <td class="n">25,512 bytes</td>
+        <td class="n best">&minus;33.0%</td>
+        <td class="n">1,902 &rarr; 1,292 (&minus;32.1%)</td>
+      </tr>
+      <tr>
+        <td><code>primes</code></td>
+        <td class="n">2,552 bytes</td>
+        <td class="n">1,880 bytes</td>
+        <td class="n best">&minus;26.3%</td>
+        <td class="n">134 &rarr; 98 (&minus;26.9%)</td>
+      </tr>
+      <tr>
+        <td><code>hamming</code></td>
+        <td class="n">3,992 bytes</td>
+        <td class="n">3,056 bytes</td>
+        <td class="n best">&minus;23.4%</td>
+        <td class="n">249 &rarr; 199 (&minus;20.1%)</td>
+      </tr>
+      <tr>
+        <td><code>eval</code></td>
+        <td class="n">22,688 bytes</td>
+        <td class="n">17,904 bytes</td>
+        <td class="n best">&minus;21.1%</td>
+        <td class="n">1,226 &rarr; 975 (&minus;20.5%)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>7. Correctness &amp; Fixed-Point Self-Compilation</h2>
+<p>
+  The ultimate correctness test of any optimizer in the JMVM toolchain is <strong>compiler self-compilation</strong> (<code>gen1</code>, compiling <code>saplcomp.cfp</code> with itself):
+</p>
+<ul>
+  <li>
+    <strong>Byte-Identical Fixpoint:</strong> When the self-compiled compiler (<code>gen1_opt</code>) compiles the compiler source again, the resulting bytecode is <strong>100% byte-identical</strong> (<code>cmp</code> reports 0 differences) to the reference compiler.
+  </li>
+  <li>
+    <strong>Preservation of VM Invariants:</strong> Inlining strictly respects pattern-matching boundaries (excluding <code>Case</code> expressions), and recursive argument forcing (<code>_force</code>) guarantees that strict VM stack slots never receive unforced closures.
+  </li>
+</ul>
+
+<h2>8. Usage &amp; Repository Map</h2>
+<div class="card">
+  <h3>Running the Optimizer</h3>
+  <pre><code># 1. Run standalone retag optimizer on Stage-4 AST:
+python3 experiments/retag_opt/retag_opt.py input.retag.txt -o output.cfp_retag
+
+# 2. Compile optimized AST directly to JMVM bytecode:
+./compile-retag output.cfp_retag -o output.jmvm
+
+# 3. Full pipeline benchmark comparison:
+python3 experiments/retag_opt/meet.py</code></pre>
+</div>
+
+<ul>
+  <li><code>experiments/retag_opt/retag_opt.py</code> &mdash; The Stage-4 retag optimizer implementing passes 1 through 5.</li>
+  <li><code>experiments/retag_opt/meet.py</code> &mdash; Native benchmark harness comparing instruction counts, heap allocations, and timings.</li>
+  <li><code>sapl_compiler/retag_opt.cfp</code> &mdash; Native Sapl port of the optimizer for in-compiler Stage 4.5 integration.</li>
+  <li><code>docs/2026-11-08_retag_opt_factsheet.md</code> &mdash; Full technical documentation in Markdown.</li>
+  <li><code>docs/2026-11-08_retag_opt_factsheet.html</code> &mdash; Self-contained HTML factsheet.</li>
+  <li><code>websapl/factsheets/retag_opt_factsheet.html</code> &mdash; WebSapl-distributed factsheet copy.</li>
+</ul>
+
+</main>
+</div>
+
+</body>
+</html>

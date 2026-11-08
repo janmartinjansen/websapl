@@ -570,7 +570,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/clean_abc_to_jmvm_retag_factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 28850,
+        "size": 28860,
         "isBinary": false
       },
       {
@@ -594,7 +594,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/index.html",
         "type": "file",
         "ext": ".html",
-        "size": 6961,
+        "size": 7734,
         "isBinary": false
       },
       {
@@ -611,6 +611,14 @@ window.WEBSAPL_TREE = [
         "type": "file",
         "ext": ".html",
         "size": 47928,
+        "isBinary": false
+      },
+      {
+        "name": "retag_opt_factsheet.html",
+        "path": "factsheets/retag_opt_factsheet.html",
+        "type": "file",
+        "ext": ".html",
+        "size": 35908,
         "isBinary": false
       },
       {
