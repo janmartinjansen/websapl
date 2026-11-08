@@ -533,7 +533,8 @@ td.n, th.n {
 clm -nt -optabc -bytecode prog -o prog
 
 # 2. ABC -> Stage-4 retag
-python3 experiments/abc2jmvm/abc2retag.py "Clean System Files/prog.opt.abc" -o prog.cfp_retag
+python3 experiments/abc2jmvm/abc2retag.py "Clean System Files/prog.opt.abc" -o prog.cfp_retag \
+    --lib "$CLEAN_HOME/lib/StdEnv/Clean System Files"
 
 # 3. retag -> JMVM bytecode (.jmvm and .jvb)
 ./compile-retag prog.cfp_retag prog.jmvm
@@ -547,6 +548,7 @@ python3 experiments/abc2jmvm/abc2retag.py "Clean System Files/prog.opt.abc" -o p
 
 <div class="card">
   <h3>A program that works</h3>
+  <p>Ordinary Clean with StdEnv, for example <code>Start = sum [x * x \\ x &lt;- [1..1000] | isOdd x]</code>, works. The test set <code>experiments/abc2jmvm/clean_toets/</code> (lists, strings, type classes, records, quicksort, tuples, guards, higher-order functions, text processing, trees) gives the same output as Clean's ABC interpreter; <code>bash experiments/abc2jmvm/clean_toets/route.sh prog.icl</code> runs a program both ways and compares. A program without imports, such as the one below, also works:</p>
 <pre><code>module squares2
 import StdOverloaded, StdClass, StdInt, StdBool
 
@@ -567,8 +569,8 @@ Start = sumSq (upto 1 1000) rem 1000007</code></pre>
 <div class="card">
   <h3>Current limitations</h3>
   <ul>
-    <li><strong>One module.</strong> Only the main module's <code>.opt.abc</code> is translated. Functions from StdEnv modules (<code>sum</code>, <code>map</code>, <code>++</code>, list comprehensions over <code>[1..n]</code>, &hellip;) live in other modules and are not linked in yet; the working programs define such helpers themselves, as above. Integer arithmetic, comparisons, strings (<code>{#Char}</code>), records, ADTs, higher-order functions and laziness work.</li>
-    <li><strong>A subset of ABC.</strong> The decompiler handles the instructions that the 13 benchmarks and gen1 use. Anything else stops with <code>onbekende ABC-instructie: &hellip;</code> (for example <code>andIio</code>, which Clean generates for <code>isOdd</code>). Floating point (<code>Real</code>) is not supported yet.</li>
+    <li><strong>Modules are linked.</strong> abc2retag also translates the modules a program imports (StdEnv and others), each separately, and keeps only what is reachable. It looks for their <code>.opt.abc</code> next to the program and in <code>--lib</code> directories (Clean puts StdEnv's in <code>$CLEAN_HOME/lib/StdEnv/Clean System Files/</code>); <code>--geen-link</code> translates the main module only. Lists, <code>[1..n]</code> and comprehensions, strings, records, tuples, type classes, higher-order functions, laziness and <code>Int</code>/<code>Char</code> arithmetic work.
+    <li><strong>Not yet supported:</strong> floating point (<code>Real</code>), file I/O beyond reading and writing whole files (<code>StdFile</code>), and indirect instance calls (<code>jsr_i</code>), which about 100 of StdEnv's 4,000 functions use. A library function that uses one of these is translated to an error that names the function and the instruction, and only matters if the program actually calls it; in the program's own module an unknown instruction stops abc2retag with <code>onbekende ABC-instructie: &hellip;</code>.
     <li><strong>Errors.</strong> A Clean <code>abort</code> becomes a JMVM <code>nomatch</code>: the program still stops, but without Clean's message.</li>
   </ul>
 </div>
