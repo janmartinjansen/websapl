@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Factsheets — WebSapl</title>
+  <script>
+    // Same theme choice as the home page and the IDE, before the first paint
+    try { document.documentElement.setAttribute("data-theme", localStorage.getItem("websapl_theme") || "dark"); } catch (_) {}
+  </script>
+  <style>
+    :root {
+      --bg: #12151c; --bg-card: #1a1e27; --bg-hover: #232834;
+      --border: #2e3546; --text: #e6edf3; --text-2: #9aa4b2; --muted: #647083;
+      --accent: #38bdf8;
+      --c1: #38bdf8; --c2: #34d399; --c3: #c084fc; --c4: #e99642; --c5: #d97735;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'Fira Code', 'SF Mono', Consolas, Monaco, monospace;
+    }
+    [data-theme="light"] {
+      --bg: #f8fafc; --bg-card: #ffffff; --bg-hover: #f1f5f9;
+      --border: #e2e8f0; --text: #0f172a; --text-2: #475569; --muted: #94a3b8;
+      --accent: #0284c7;
+      --c1: #0284c7; --c2: #059669; --c3: #7e22ce; --c4: #c2410c; --c5: #b45309;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font-family: var(--font-sans); font-size: 15px; line-height: 1.55;
+    }
+    .wrap { max-width: 920px; margin: 0 auto; padding: 32px 16px 48px; }
+    .back { color: var(--text-2); text-decoration: none; font-size: 14px; }
+    .back:hover { color: var(--accent); }
+    h1 { font-size: 30px; margin: 18px 0 6px; letter-spacing: -0.01em; }
+    .lead { color: var(--text-2); margin: 0 0 28px; max-width: 70ch; }
+    .list { display: grid; gap: 14px; }
+    a.card {
+      display: block; text-decoration: none; color: inherit;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-left: 4px solid var(--card-color, var(--accent));
+      border-radius: 10px; padding: 16px 18px;
+      transition: background 0.15s, transform 0.15s;
+    }
+    a.card:hover { background: var(--bg-hover); transform: translateY(-1px); }
+    .card h2 { font-size: 18px; margin: 0 0 4px; }
+    .card p { margin: 6px 0 0; color: var(--text-2); }
+    .tags { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag {
+      font-family: var(--font-mono); font-size: 12px; color: var(--text-2);
+      border: 1px solid var(--border); border-radius: 999px; padding: 1px 9px;
+    }
+    .go { display: inline-block; margin-top: 10px; color: var(--card-color, var(--accent)); font-weight: 600; font-size: 14px; }
+    footer { margin-top: 32px; color: var(--muted); font-size: 13px; }
+    code { font-family: var(--font-mono); font-size: 0.92em; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="../index.html">&larr; WebSapl home</a>
+    <h1>Factsheets</h1>
+    <p class="lead">
+      Technical overviews of the JMVM, the Sapl family of languages and the tools around them:
+      what each part does, how the pieces fit together, and what has been measured.
+      Each factsheet is a single page and opens in this tab.
+    </p>
+
+    <div class="list">
+      <a class="card" href="sapl_jmvm_clean_haskell_factsheet.html" style="--card-color: var(--c1);">
+        <h2>The ecosystem: Sapl(+), JMVM, Clean, ABC &amp; Haskell Lite</h2>
+        <p>The big picture. The frontends (Haskell Lite, MicroHs, Sapl+, Core Sapl, Clean), the
+          shared Stage-4 retag representation, the bridges to and from Clean's ABC code,
+          the backends (native JMVM, WebSapl, Clean's code generator and ABC interpreter),
+          six compilation pipelines and the full toolchain.</p>
+        <div class="tags"><span class="tag">overview</span><span class="tag">pipelines</span><span class="tag">toolchain</span></div>
+        <span class="go">Open &rarr;</span>
+      </a>
+
+      <a class="card" href="factsheet.html" style="--card-color: var(--c2);">
+        <h2>JMVM, Sapl &amp; ecosystem</h2>
+        <p>The architectural foundations of the JMVM: the lazy stack machine, the compiler
+          stages, the main performance breakthroughs and the tooling around them.</p>
+        <div class="tags"><span class="tag">VM</span><span class="tag">compiler</span></div>
+        <span class="go">Open &rarr;</span>
+      </a>
+
+      <a class="card" href="notebooks_factsheet.html" style="--card-color: var(--c3);">
+        <h2>Reactive lazy notebooks &amp; the JMVM toolchain</h2>
+        <p>WebSapl's notebooks: client-side execution in the browser, interactive tables,
+          graphics and charts, and how compiled code chunks are linked into a running session.</p>
+        <div class="tags"><span class="tag">WebSapl</span><span class="tag">notebooks</span></div>
+        <span class="go">Open &rarr;</span>
+      </a>
+
+      <a class="card" href="performance_factsheet.html" style="--card-color: var(--c4);">
+        <h2>JMVM performance: native, WebAssembly, Clean &amp; GHC</h2>
+        <p>How fast the JMVM is and why: musttail dispatch, superinstructions, measurements
+          native and in the browser, and comparisons with Clean and GHC.</p>
+        <div class="tags"><span class="tag">performance</span><span class="tag">wasm</span></div>
+        <span class="go">Open &rarr;</span>
+      </a>
+
+      <a class="card" href="clean_abc_to_jmvm_retag_factsheet.html" style="--card-color: var(--c5);">
+        <h2>Clean programs on the JMVM: ABC &rarr; Stage-4 retag &rarr; JMVM</h2>
+        <p>Using the JMVM as a backend for Clean. Clean's optimised ABC code is decompiled to
+          Stage-4 retag and compiled to JMVM bytecode. Covers the design, the benchmark
+          results (0.74&ndash;1.24&times; of handwritten Sapl), the typed Clean port of the
+          compiler that reaches its fixed point this way, and a step-by-step guide on how to
+          use it, including the current limitations.</p>
+        <div class="tags"><span class="tag">Clean</span><span class="tag">ABC</span><span class="tag">how to use</span></div>
+        <span class="go">Open &rarr;</span>
+      </a>
+    </div>
+
+    <footer>
+      The factsheets are kept in <code>docs/</code> in the repository and copied here by
+      <code>websapl/tools/sync_from_repo.js</code>.
+    </footer>
+  </div>
+</body>
+</html>

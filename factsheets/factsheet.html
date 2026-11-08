@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Factsheet: JMVM, Sapl & Ecosystem</title>
+  <style>
+    /* ==========================================================================
+       Theming & CSS Variables (Aligned with WebSapl & Modern Tech Factsheets)
+       ========================================================================== */
+    :root, [data-theme="light"] {
+      --bg-primary: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-card: #ffffff;
+      --bg-card-subtle: #f1f5f9;
+      --bg-code: #0f172a;
+      --text-code: #f8fafc;
+      --border-color: #e2e8f0;
+      --border-focus: #3b82f6;
+
+      --text-primary: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+
+      --accent-blue: #2563eb;
+      --accent-blue-light: #eff6ff;
+      --accent-cyan: #0284c7;
+      --accent-emerald: #059669;
+      --accent-emerald-light: #ecfdf5;
+      --accent-amber: #d97706;
+      --accent-purple: #7c3aed;
+      --accent-rose: #e11d48;
+
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -1px rgba(0,0,0,0.04);
+      --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.1);
+      --gradient-brand: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+    }
+
+    [data-theme="dark"] {
+      --bg-primary: #090d16;
+      --bg-surface: #0f1422;
+      --bg-card: #131b2e;
+      --bg-card-subtle: #19233c;
+      --bg-code: #070a12;
+      --text-code: #e2e8f0;
+      --border-color: #222f4c;
+      --border-focus: #60a5fa;
+
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #8292ab;
+
+      --accent-blue: #3b82f6;
+      --accent-blue-light: rgba(59, 130, 246, 0.15);
+      --accent-cyan: #38bdf8;
+      --accent-emerald: #10b981;
+      --accent-emerald-light: rgba(16, 185, 129, 0.15);
+      --accent-amber: #f59e0b;
+      --accent-purple: #a855f7;
+      --accent-rose: #f43f5e;
+
+      --shadow-sm: 0 2px 4px rgba(0,0,0,0.4);
+      --shadow-md: 0 6px 12px rgba(0,0,0,0.5);
+      --shadow-lg: 0 16px 32px rgba(0,0,0,0.6);
+      --gradient-brand: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    }
+
+    /* ==========================================================================
+       Typography & Base
+       ========================================================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: 60px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ==========================================================================
+       Header & Hero Nav
+       ========================================================================== */
+    header.hero {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-color);
+      padding: 40px 0 32px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    header.hero::after {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: var(--gradient-brand);
+    }
+
+    .hero-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .badge-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-radius: 9999px;
+      background: var(--bg-card-subtle);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+    }
+
+    .badge.highlight {
+      background: var(--accent-blue-light);
+      color: var(--accent-blue);
+      border-color: var(--accent-blue);
+    }
+
+    .theme-toggle-btn {
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 6px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .theme-toggle-btn:hover {
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
+    .hero-title-group h1 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.8px;
+      margin-bottom: 10px;
+      background: var(--gradient-brand);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: inline-block;
+    }
+
+    .hero-lead {
+      font-size: 16px;
+      color: var(--text-secondary);
+      max-width: 950px;
+      line-height: 1.6;
+    }
+
+    /* Key stats bar */
+    .hero-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
+      margin-top: 28px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px 20px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .stat-card::before {
+      content: "";
+      position: absolute;
+      top: 12px;
+      left: 0;
+      width: 4px;
+      height: calc(100% - 24px);
+      border-radius: 0 4px 4px 0;
+      background: var(--accent-blue);
+    }
+
+    .stat-card.green::before { background: var(--accent-emerald); }
+    .stat-card.purple::before { background: var(--accent-purple); }
+    .stat-card.amber::before { background: var(--accent-amber); }
+
+    .stat-number {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    .stat-number small {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent-emerald);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .stat-sub {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    /* ==========================================================================
+       Navigation Anchors
+       ========================================================================== */
+    .nav-anchor-bar {
+      display: flex;
+      gap: 8px;
+      margin: 28px 0;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .nav-pill {
+      text-decoration: none;
+      color: var(--text-secondary);
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+
+    .nav-pill:hover {
+      color: var(--accent-blue);
+      border-color: var(--accent-blue);
+      background: var(--bg-card-subtle);
+    }
+
+    /* ==========================================================================
+       Section Blocks
+       ========================================================================== */
+    .section-block {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 28px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .section-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--accent-blue);
+    }
+
+    .section-header-text h2 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: var(--text-primary);
+    }
+
+    .section-header-text p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: 3px;
+    }
+
+    /* Grid layout */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .grid-2, .grid-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+    }
+
+    .card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-primary);
+    }
+
+    .card p, .card li {
+      font-size: 13.5px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    .card ul {
+      padding-left: 20px;
+      margin-top: 8px;
+    }
+
+    .card li {
+      margin-bottom: 6px;
+    }
+
+    /* Highlight box */
+    .highlight-box {
+      background: var(--bg-card-subtle);
+      border-left: 3px solid var(--accent-blue);
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      margin: 14px 0;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .highlight-box.green {
+      border-left-color: var(--accent-emerald);
+      background: var(--accent-emerald-light);
+    }
+
+    /* Code & Pre */
+    pre, code {
+      font-family: "SF Mono", "Fira Code", Menlo, Monaco, Consolas, monospace;
+    }
+
+    code.inline {
+      background: var(--bg-card-subtle);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: var(--accent-cyan);
+      border: 1px solid var(--border-color);
+    }
+
+    pre.code-block {
+      background: var(--bg-code);
+      color: var(--text-code);
+      padding: 14px 18px;
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1.5;
+      overflow-x: auto;
+      border: 1px solid var(--border-color);
+      margin: 12px 0;
+    }
+
+    .code-comment { color: #64748b; }
+    .code-keyword { color: #f43f5e; font-weight: 600; }
+    .code-func { color: #38bdf8; font-weight: 600; }
+    .code-type { color: #a855f7; }
+    .code-str { color: #10b981; }
+
+    /* ==========================================================================
+       Tables (Performance & Retag Pipeline)
+       ========================================================================== */
+    .table-container {
+      overflow-x: auto;
+      margin: 16px 0;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      background: var(--bg-card);
+    }
+
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+      text-align: left;
+    }
+
+    table.data-table th {
+      background: var(--bg-card-subtle);
+      color: var(--text-primary);
+      padding: 10px 14px;
+      font-weight: 700;
+      border-bottom: 1px solid var(--border-color);
+      white-space: nowrap;
+    }
+
+    table.data-table td {
+      padding: 8px 14px;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-secondary);
+    }
+
+    table.data-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    table.data-table tr.total-row {
+      font-weight: 700;
+      background: var(--bg-card-subtle);
+      color: var(--text-primary);
+    }
+
+    .pill-diff {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 11px;
+    }
+
+    .pill-diff.win {
+      background: var(--accent-emerald-light);
+      color: var(--accent-emerald);
+    }
+
+    /* ==========================================================================
+       Pipeline Visualization
+       ========================================================================== */
+    .flow-wrapper {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      margin: 18px 0;
+    }
+
+    .flow-steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+      gap: 10px;
+      position: relative;
+    }
+
+    .flow-step-box {
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+      position: relative;
+    }
+
+    .flow-step-box.highlight {
+      border-color: var(--accent-purple);
+      background: rgba(168, 85, 247, 0.1);
+    }
+
+    .flow-step-number {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--accent-cyan);
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .flow-step-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .flow-step-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      line-height: 1.3;
+    }
+
+    /* ==========================================================================
+       Print Styles for PDF Export
+       ========================================================================== */
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-size: 10pt;
+        padding: 0;
+      }
+
+      header.hero {
+        background: transparent !important;
+        border-bottom: 2px solid #000;
+        padding: 10px 0 15px;
+      }
+
+      .theme-toggle-btn, .nav-anchor-bar {
+        display: none !important;
+      }
+
+      .section-block {
+        border: 1px solid #ccc !important;
+        background: #fff !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+        margin-bottom: 16px;
+        padding: 16px;
+      }
+
+      .card {
+        border: 1px solid #ddd !important;
+        background: #fafafa !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+      }
+
+      pre.code-block {
+        background: #f4f4f4 !important;
+        color: #111 !important;
+        border: 1px solid #ccc !important;
+      }
+
+      table.data-table th, table.data-table td {
+        border-color: #ddd !important;
+        color: #000 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==========================================================================
+       HERO HEADER & QUICK STATS
+       ========================================================================== -->
+  <header class="hero">
+    <div class="container">
+      <div class="hero-top-bar">
+        <div class="badge-group">
+          <span class="badge highlight">Technical Factsheet</span>
+          <span class="badge">JMVM 2026 Architecture</span>
+          <span class="badge">Sapl + Retag Pipeline</span>
+          <span class="badge">WebAssembly & In-Memory JIT</span>
+        </div>
+        <button class="theme-toggle-btn" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle theme">
+          <span id="themeIcon">☀️</span> <span id="themeLabel">Light Mode</span>
+        </button>
+      </div>
+
+      <div class="hero-title-group">
+        <h1>JMVM & Sapl Ecosystem</h1>
+        <p class="hero-lead">
+          A comprehensive overview of the modern architecture: the stack-based virtual machine for lazy functional programming languages, 
+          the self-hosting compilation pipeline featuring the pivotal <strong>retag</strong> intermediate format, on-the-fly JIT tooling, 
+          and interactive browser and reactive notebook applications.
+        </p>
+      </div>
+
+      <div class="hero-stats-grid">
+        <div class="stat-card green">
+          <div class="stat-number">−41.2% <small>1.70×</small></div>
+          <div class="stat-label">Native Execution Time</div>
+          <div class="stat-sub">From 7.21s to 4.23s across all 13 core benchmarks</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-number">1.13× <small>ABC</small></div>
+          <div class="stat-label">Vs. Clean ABC Interpreter</div>
+          <div class="stat-sub">Gap virtually closed (faster on fib, primes, twice, queens)</div>
+        </div>
+
+        <div class="stat-card purple">
+          <div class="stat-number">~6 ms <small>.jvb</small></div>
+          <div class="stat-label">REPL & Tool Startup</div>
+          <div class="stat-sub">Binary format replaces textual bytecode parser (was 117 ms)</div>
+        </div>
+
+        <div class="stat-card amber">
+          <div class="stat-number">1.45× <small>Wasm</small></div>
+          <div class="stat-label">Browser vs Native ARM64</div>
+          <div class="stat-sub">Minimal WebAssembly overhead running in V8 / Chrome</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- Quick navigation anchors -->
+    <nav class="nav-anchor-bar">
+      <a href="#vm" class="nav-pill">1. JMVM & Performance</a>
+      <a href="#sapl" class="nav-pill">2. Sapl & Retag Pipeline</a>
+      <a href="#tooling" class="nav-pill">3. Tooling, Self-Hosting & JIT</a>
+      <a href="#applications" class="nav-pill">4. WebAssembly & Notebooks</a>
+    </nav>
+
+    <!-- ==========================================================================
+         SECTION 1: THE VIRTUAL MACHINE (JMVM) & PERFORMANCE REVOLUTION
+         ========================================================================== -->
+    <section class="section-block" id="vm">
+      <div class="section-header">
+        <div class="section-icon">⚡</div>
+        <div class="section-header-text">
+          <h2>1. JMVM: Architectural Foundations & Recent Performance Revolution</h2>
+          <p>From lazy graph reduction to high-throughput direct machine dispatch on modern silicon.</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>Architectural Foundations</h3>
+          <p>
+            JMVM is a stack-based virtual machine purpose-built for executing <strong>lazy, pure functional programming languages</strong> 
+            (sharing heritage with the Clean ABC machine and GHC's Spineless Tagless G-machine).
+          </p>
+          <ul>
+            <li><strong>Dual Stack Design:</strong> Dedicated evaluation stack (<code>sp</code>) for intermediate values and arguments, paired with an independent control stack (<code>csp</code>) for function returns and thunk updates.</li>
+            <li><strong>Graph Reduction & Thunk Sharing:</strong> Unevaluated expressions are allocated on the heap (<code>hv</code>) as thunks. When forced, the thunk is overwritten in-place with its evaluated result, preventing duplicate computations.</li>
+            <li><strong>Explicit Evaluation Semantics:</strong> Crisp separation between unevaluated closures (<code>eval</code> / <code>force</code>) and unboxed/evaluated constructor values and primitives.</li>
+            <li><strong>Constant Applicative Forms (CAFs):</strong> Global constants and shared closures are evaluated at most once and cached in a global CAF table.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>Recent Evolution (July – November 2026)</h3>
+          <p>
+            Over recent months, JMVM transitioned from a monolithic interpreter to a highly modular, hardware-optimized runtime platform:
+          </p>
+          <ul>
+            <li><strong>Binary Format (<code>.jvb</code>):</strong> Introduction of a compact binary loading format. The native VM and WebAssembly client completely eliminated runtime textual bytecode parsing, reducing module/REPL startup from ~117 ms to ~6 ms.</li>
+            <li><strong>Modular C Architecture:</strong> Instruction bodies partitioned into clean, self-contained units (<code>vm/instr/*.c</code>), driven by a specification table (<code>vm/instructies.tab</code>) and an automated Sapl code generator (<code>vm/genereer.cfp</code>).</li>
+            <li><strong>Ring-Buffer Flight Recorder:</strong> The debug build (<code>runswitch-debug</code>) maintains an in-memory ring-buffer of the last 4,096 instructions, automatically dumping symbolic backtraces upon crashes or hangs (<code>SIGALRM</code>).</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- The Three Performance Breakthroughs -->
+      <div style="margin-top: 24px;">
+        <h3 style="font-size: 16px; margin-bottom: 12px; color: var(--text-primary);">The Three Waves of Performance Optimization (Fall 2026)</h3>
+        <div class="grid-3">
+          <div class="card">
+            <div class="flow-step-number">Phase 1 • Oct 24, 2026</div>
+            <h3 style="color: var(--accent-blue);">Musttail Direct Threading</h3>
+            <p>
+              Replaced monolithic <code>computed goto</code> with tail-call direct threading using <code>[[clang::musttail]]</code> and <code>__attribute__((preserve_none))</code>.
+            </p>
+            <div class="highlight-box">
+              <strong>Impact:</strong> Eliminated Clang register allocation bottlenecks. Each opcode became an independent function with 6 pinned CPU registers. <code>fib</code> runtime was cut in half (<strong>−54.3%</strong>, 2.19× faster).
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="flow-step-number">Phase 2 • Nov 1, 2026</div>
+            <h3 style="color: var(--accent-purple);">Superinstructions (Fusion)</h3>
+            <p>
+              During bytecode load time (<code>makeCode</code>), the loader fuses 7 hot instruction sequences: <code>jmpt_lv</code>, <code>load_force</code>, <code>eval_local</code>, <code>load2</code>, etc.
+            </p>
+            <div class="highlight-box">
+              <strong>Impact:</strong> Eliminated 21% of all executed VM instructions and stack round-trips. Major speedups on memory-bound workloads: <code>sprimes</code> dropped from 1411 ms to 806 ms (<strong>−43%</strong>).
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="flow-step-number">Phase 3 • Nov 2, 2026</div>
+            <h3 style="color: var(--accent-emerald);">Hardware Case Branching</h3>
+            <p>
+              Hardware profiling with Apple <code>kperf</code> revealed severe pipeline stalls caused by a 4-deep dependent memory read chain in <code>jmpt</code>. Replaced with direct hardware conditional branches (<code>cmp</code>/<code>b.eq</code>) for constructors 0/1.
+            </p>
+            <div class="highlight-box green">
+              <strong>Impact:</strong> Hardware branch predictors now predict pattern matching targets without pipeline bubbles. <code>knights</code> improved by <strong>−38%</strong>, and self-compilation of <code>gen1</code> sped up by <strong>−25%</strong>.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Performance Comparison & Factor Summary -->
+      <div style="margin-top: 24px;">
+        <h3 style="font-size: 16px; margin-bottom: 8px; color: var(--text-primary);">Performance Factor Summary & System Comparisons</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">
+          Across all 13 core benchmarks, cumulative runtime dropped from <strong>7.21s to 4.23s (−41.2%, 1.70× overall speedup)</strong>. Below is a high-level summary of the optimization levers and cross-system comparison factors:
+        </p>
+        
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Comparison Dimension</th>
+                <th>Target System / Baseline</th>
+                <th>Performance Factor</th>
+                <th>Summary & Key Takeaway</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Cumulative Native Gains</strong></td>
+                <td>JMVM Baseline (Goto) $\to$ Current</td>
+                <td><span class="pill-diff win">1.70× speedup (−41.2%)</span></td>
+                <td>Musttail (2.19× on fib), Superinstructions (−43% on sprimes), Case branch (−38% on knights).</td>
+              </tr>
+              <tr>
+                <td><strong>vs. Clean ABC Native</strong></td>
+                <td><code>abci-interpret</code> (Clean bytecode)</td>
+                <td><span class="pill-diff win">0.92× (JMVM wins)</span></td>
+                <td>JMVM matches or outperforms ABC Native interpreter; faster on <code>fib</code>, <code>primes</code>, <code>twice</code>, <code>queens</code>.</td>
+              </tr>
+              <tr>
+                <td><strong>vs. Clean ABC Web (Wasm)</strong></td>
+                <td>Clean ABC in Chrome (with Locals)</td>
+                <td><span class="pill-diff win">1.02× (Near Parity)</span></td>
+                <td>Virtual dead heat in browser execution (1.52× faster against unoptimized stock ABC Web).</td>
+              </tr>
+              <tr>
+                <td><strong>WebAssembly Overhead</strong></td>
+                <td>JMVM Web vs. JMVM Native ARM64</td>
+                <td><span class="pill-diff win">1.45× – 1.53×</span></td>
+                <td>Near theoretical C-to-Wasm efficiency in Chrome/V8 without JIT latency or container startup.</td>
+              </tr>
+              <tr>
+                <td><strong>vs. Clean 3.1 Native ARM64</strong></td>
+                <td>Compiled native machine code (Lima/M4)</td>
+                <td><span class="pill-diff neutral">2.48× (gen1: 1.42×)</span></td>
+                <td>Interpreter vs. native AOT code using unboxed B-stack CPU registers.</td>
+              </tr>
+              <tr>
+                <td><strong>vs. GHC 9.14.1 Native (-O2)</strong></td>
+                <td>Optimized native Haskell ARM64</td>
+                <td><span class="pill-diff neutral">3.02× (gen1: 2.0×)</span></td>
+                <td>3.0× overall geometric mean; narrows to only <strong>2.0×</strong> on large programs (<code>gen1</code> self-compilation).</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="highlight-box green" style="margin-top: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <strong>Detailed Benchmark Breakdown:</strong> For the full 14-benchmark itemized measurement table (including <code>fib</code>, <code>sprimes</code>, <code>sort</code>, <code>gen1</code>) and deep micro-architectural analyses, see the dedicated factsheet:
+          </div>
+          <div>
+            <a href="performance_factsheet.html" class="nav-pill" style="display: inline-block; font-size: 12px; padding: 4px 12px; background: var(--bg-card); color: var(--accent-blue);">Open Performance Factsheet &rarr;</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         SECTION 2: SAPL LANGUAGE & THE RETAG COMPILATION PIPELINE
+         ========================================================================== -->
+    <section class="section-block" id="sapl">
+      <div class="section-header">
+        <div class="section-icon">💎</div>
+        <div class="section-header-text">
+          <h2>2. Sapl: The Language & The Retag Compilation Pipeline</h2>
+          <p>An expressive pure functional language and its 7-stage formal transformation.</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>The Sapl Language & Extensions</h3>
+          <p>
+            Sapl (Simple Applicative Programming Language) combines theoretical clarity with practical expressiveness, 
+            making lazy graph reduction explicit and deterministic.
+          </p>
+          <ul>
+            <li><strong>Sapl+ (<code>.spp</code>) Preprocessor:</strong> Enriches the language with modern features: typed records with dot access, nested deep pattern matching, multi-branch guards, modular qualified imports (<code>import M as Mod</code>), and lambdas with automatic lambda lifting.</li>
+            <li><strong>Automatic Strictness Inference:</strong> Built-in abstract interpretation (<code>strictness.cfp</code>) automatically deduces strict argument positions and annotates them with <code>!</code>, eliminating redundant thunks without manual developer intervention.</li>
+            <li><strong>Explicit CAFs (<code>=:</code>):</strong> Formal CAF semantics guarantee that shared constant closures and partial applications are safely evaluated once and preserved across calls.</li>
+            <li><strong>Dynamic Typing & Reflection:</strong> Built-in primitives for <code>lookup</code>, <code>typeId</code>, and <code>applyDynamic</code>, enabling dynamic dispatch and plug-in architectures.</li>
+            <li><strong>Robust Exception System:</strong> First-class <code>try</code>/<code>catchNr</code> mechanism wired directly into VM dispatch via <code>SetJMP</code>/<code>GoJMP</code>.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>The Pivotal Retag Intermediate Format</h3>
+          <p>
+            The cornerstone of the compilation pipeline is the <strong>retag</strong> intermediate representation (grounded in the formal IFL 2016 model). 
+            It translates implicit laziness into unambiguous evaluation and allocation operations.
+          </p>
+          <div class="highlight-box">
+            <strong>Why Retag is essential:</strong>
+            <ul style="margin-top: 6px;">
+              <li><strong>Semantic Transparency:</strong> Every evaluation point (<code>eval</code>), thunk creation (<code>thunk</code>), and partial application (<code>closure</code>) is made explicit before code generation.</li>
+              <li><strong>Universal Intermediate Representation:</strong> Acts as an abstract bridge, decoupling frontends from machine backends. Alternative codegen targets (such as the experimental Clean ABC backend) attach directly to retag.</li>
+              <li><strong>Modular Tooling:</strong> <code>retagcomp</code> and <code>retaglink</code> enable independent per-module compilation and cross-module optimizations.</li>
+            </ul>
+          </div>
+          <p style="font-size: 12.5px; color: var(--text-muted); margin-top: 8px;">
+            The <code>--emit=retag</code> flag allows developers to inspect the exact annotated intermediate representation at any point.
+          </p>
+        </div>
+      </div>
+
+      <!-- Pipeline Visualization -->
+      <div class="flow-wrapper">
+        <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 14px; color: var(--text-primary);">The 7 Compilation Stages: Source to Bytecode</h3>
+        <div class="flow-steps-grid">
+          <div class="flow-step-box">
+            <div class="flow-step-number">Stage 0</div>
+            <div class="flow-step-title">Source & Parse</div>
+            <div class="flow-step-desc">Lexing and parsing into raw Abstract Syntax Tree (AST).</div>
+          </div>
+          <div class="flow-step-box">
+            <div class="flow-step-number">Analysis</div>
+            <div class="flow-step-title">Strictness</div>
+            <div class="flow-step-desc">Infers strict argument positions (<code>!</code>) via fixed-point analysis.</div>
+          </div>
+          <div class="flow-step-box">
+            <div class="flow-step-number">Stage 1</div>
+            <div class="flow-step-title">Bool Expansion</div>
+            <div class="flow-step-desc">Booleans and conditionals expanded into explicit branches.</div>
+          </div>
+          <div class="flow-step-box">
+            <div class="flow-step-number">Stage 2</div>
+            <div class="flow-step-title">Lazytag</div>
+            <div class="flow-step-desc">Marks non-strict positions with explicit <code>lazy (...)</code> tags.</div>
+          </div>
+          <div class="flow-step-box">
+            <div class="flow-step-number">Stage 3</div>
+            <div class="flow-step-title">Lambda Lifting</div>
+            <div class="flow-step-desc">Extracts non-strict subexpressions into top-level helper functions.</div>
+          </div>
+          <div class="flow-step-box highlight">
+            <div class="flow-step-number" style="color: var(--accent-purple);">Stage 4</div>
+            <div class="flow-step-title">Retag Format ★</div>
+            <div class="flow-step-desc">Explicit <code>eval</code>, <code>thunk</code>, and <code>closure</code> annotations.</div>
+          </div>
+          <div class="flow-step-box">
+            <div class="flow-step-number">Stage 5</div>
+            <div class="flow-step-title">Codegen & .jvb</div>
+            <div class="flow-step-desc">Emits JMVM bytecode or directly writes compact binary <code>.jvb</code>.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Code Transformation Example -->
+      <div class="grid-2" style="margin-top: 16px;">
+        <div class="card">
+          <h3>Sapl Source Code (<code>primes.cfp</code>)</h3>
+          <pre class="code-block"><span class="code-comment">// Infinite stream generation and lazy sieve filtering</span>
+<span class="code-type">::list</span> = Nil | Cons !x xs
+
+<span class="code-func">from</span> !a  = Cons a (from (a + 1))
+<span class="code-func">sieve</span> xs = <span class="code-keyword">case</span> xs (Cons a as -> Cons a (sieve (filter (nmz a) as)))
+<span class="code-func">primes</span>   = sieve (from 2)</pre>
+          <p style="font-size: 12px; color: var(--text-muted);">
+            Contrast between strict and lazy arguments: <code>from !a</code> has a strict parameter, while <code>sieve xs</code> receives its stream lazily.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>Emitted Retag Form (<code>primes.retag.txt</code>)</h3>
+          <pre class="code-block"><span class="code-comment">// Stage 4: Strict argument vs lazy argument forcing</span>
+<span class="code-func">from</span> !a  = Cons a (<span class="code-type">thunk</span> (from (a + 1)))
+
+<span class="code-func">sieve</span> xs = <span class="code-keyword">case</span> (<span class="code-type">eval</span>(xs)) (Cons a as -> 
+             Cons a (<span class="code-type">thunk</span> (sieve (<span class="code-type">thunk</span> (filter (<span class="code-type">closure</span> (nmz a)) as)))))</pre>
+          <p style="font-size: 12px; color: var(--text-muted);">
+            <strong>Retag contrast:</strong> In <code>from !a</code>, strict <code>a</code> needs no <code>eval</code>. In <code>sieve xs</code>, lazy <code>xs</code> is explicitly demanded via <code>eval(xs)</code>. Filter predicate is a <code>closure</code>, and stream tails are deferred as <code>thunk</code>.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         SECTION 3: TOOLING, SELF-HOSTING & IN-MEMORY JIT
+         ========================================================================== -->
+    <section class="section-block" id="tooling">
+      <div class="section-header">
+        <div class="section-icon">🛠️</div>
+        <div class="section-header-text">
+          <h2>3. Tooling: Self-Hosting & On-the-Fly In-Memory JIT</h2>
+          <p>A self-hosted compiler, in-memory linking, and instantaneous dynamic code injection.</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>The Self-Hosting Compiler ("gen1")</h3>
+          <p>
+            As of September 2026, the primary production compiler is 100% <strong>self-hosted</strong>: written in Sapl and running on JMVM (<code>saplcomp.jmvm</code>).
+          </p>
+          <ul>
+            <li><strong>Fixed-Point Stability:</strong> The compiler compiles its own source code to produce byte-for-byte identical bytecode, verified by <code>./check_bootstrap</code> in ~12 seconds.</li>
+            <li><strong>Haskell Anchor:</strong> To eliminate circular bootstrapping risks, a toolchain generator maintains a typed Haskell equivalent (<code>saplcomp_typed.hs</code>) which, when built with GHC, emits the exact same bytecode.</li>
+            <li><strong>Compiler Velocity:</strong> Thanks to recent VM execution optimizations, gen1 self-compiles its entire codebase in just <strong>574 ms</strong> on an Apple M4.</li>
+            <li><strong>Integrated Typechecker:</strong> Sinds mid-October 2026, an integrated static typechecker (<code>typecheck.cfp</code>) verifies program consistency during build time.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>On-the-Fly Compilation & In-Memory Dynamic Linking</h3>
+          <p>
+            JMVM provides infrastructure to compile, link, and dynamically hot-load code directly into a running VM without disk overhead:
+          </p>
+          <ul>
+            <li><strong>Modular Compiler (<code>saplcomp_module</code>):</strong> Translates isolated expressions and function definitions into in-memory binary <code>.jvb</code> chunks (<code>SM.chunkJvbBytes</code>).</li>
+            <li><strong>In-Memory Linker in Sapl (<code>laadformaat/link.cfp</code>):</strong> A complete linker written in pure Sapl (<code>LK.lkLink</code>). Resolves symbol offsets, jumps, and module imports entirely in RAM.</li>
+            <li><strong>Dynamic Hot-Loading (<code>@install</code>):</strong> Using the VM primitive <code>lookup "@install:..."</code>, newly assembled bytecode chunks are injected directly into the running VM's code and type tables.</li>
+            <li><strong>Immediate Invocation (<code>applyDynamic</code>):</strong> Newly installed functions can be called dynamically without restarting or reloading the process.</li>
+            <li><strong>Blazing-Fast REPL (<code>repl_sapl</code>):</strong> Boots in just <strong>~6 ms</strong>, retains global state and evaluated CAFs across entries, and supports full session persistence (<code>@@values</code>/<code>@@restore</code>).</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         SECTION 4: APPLICATIONS: WEBASSEMBLY & REACTIVE NOTEBOOKS
+         ========================================================================== -->
+    <section class="section-block" id="applications">
+      <div class="section-header">
+        <div class="section-icon">🌐</div>
+        <div class="section-header-text">
+          <h2>4. Applications: WebAssembly & Interactive Notebooks</h2>
+          <p>Seamless synergy between the compiler tooling, WebAssembly, and reactive client-side notebooks.</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>WebSapl: 100% Client-Side WebAssembly</h3>
+          <p>
+            Thanks to the binary <code>.jvb</code> loading architecture, the full JMVM environment executes entirely within the browser via WebAssembly (<code>jmvm.wasm</code>):
+          </p>
+          <ul>
+            <li><strong>Zero Parser Overhead in Wasm:</strong> The wasm VM build contains no textual tokenizer or parser; it consumes pre-encoded <code>.jvb</code> binaries directly. This minimizes binary size and accelerates startup.</li>
+            <li><strong>Near-Native V8 Performance:</strong> In Chrome, the WebAssembly engine runs within <strong>1.45× to 1.49×</strong> of native bare-metal ARM64 speeds.</li>
+            <li><strong>Web Worker Isolation:</strong> All execution occurs inside a dedicated Web Worker (<code>worker.js</code>), ensuring the browser UI never freezes during heavy evaluation or infinite stream reduction.</li>
+            <li><strong>Zero Server Infrastructure:</strong> A complete compiler, linker, REPL, and virtual machine packaged as static assets; works offline or directly from local file URLs.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>Interactive Reactive Notebooks (<code>notebook.html</code>)</h3>
+          <p>
+            The Sapl Notebook blends Jupyter-style interactive exploration with the advantages of pure lazy evaluation and incremental linking:
+          </p>
+          <ul>
+            <li><strong>Cell-Level Incremental Compilation:</strong> When a user edits a notebook cell, only that individual cell is compiled by <code>saplcomp_module</code> and injected live via <code>@install</code>.</li>
+            <li><strong>State & Heap Preservation:</strong> Global definitions, bindings, and evaluated CAFs persist in-memory across cell executions without full-document re-computation.</li>
+            <li><strong>Split Compute Architecture:</strong> Intensive numeric operations can be delegated to a dedicated background compute process (<code>:reken</code>, <code>server/rekenen/</code>), maintaining UI responsiveness.</li>
+            <li><strong>Functional Visualizations:</strong> Built-in integration with graphics libraries (<code>grafisch/graphics.cfp</code>). Lazy streams of 2D vectors and algebraic shapes are streamed directly to interactive HTML5 Canvas or SVG outputs.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="flow-wrapper" style="margin-top: 24px;">
+        <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 12px; color: var(--text-primary);">Subtle Synergy in the Notebook Lifecycle</h3>
+        <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+          How the UI, Worker, Modular Compiler, and VM cooperate during incremental cell execution:
+        </p>
+        <div class="flow-steps-grid">
+          <div class="flow-step-box">
+            <div class="flow-step-number">1. UI Cell</div>
+            <div class="flow-step-title">User Edit</div>
+            <div class="flow-step-desc">Expression or definition edited in Monaco/CodeMirror.</div>
+          </div>
+          <div class="flow-step-box">
+            <div class="flow-step-number">2. Worker</div>
+            <div class="flow-step-title">Message <code>:nb</code> / <code>:nbdefs</code></div>
+            <div class="flow-step-desc">Web Worker receives incremental code chunk.</div>
+          </div>
+          <div class="flow-step-box">
+            <div class="flow-step-number">3. Compiler</div>
+            <div class="flow-step-title"><code>saplcomp_module</code></div>
+            <div class="flow-step-desc">Compiled in-memory directly to binary <code>.jvb</code> bytes.</div>
+          </div>
+          <div class="flow-step-box">
+            <div class="flow-step-number">4. Linker</div>
+            <div class="flow-step-title"><code>LK.lkLink</code></div>
+            <div class="flow-step-desc">In-memory resolution of symbols and relative offsets.</div>
+          </div>
+          <div class="flow-step-box highlight">
+            <div class="flow-step-number" style="color: var(--accent-purple);">5. Dynamic JIT</div>
+            <div class="flow-step-title"><code>@install</code> & <code>applyDynamic</code></div>
+            <div class="flow-step-desc">New code linked directly into running VM tables.</div>
+          </div>
+          <div class="flow-step-box">
+            <div class="flow-step-number">6. Rendering</div>
+            <div class="flow-step-title">Stream / Canvas Output</div>
+            <div class="flow-step-desc">Result value, chart, or graphic rendered in the notebook.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         EXECUTIVE SUMMARY & STATUS
+         ========================================================================== -->
+    <section class="section-block" style="border-left: 4px solid var(--accent-emerald);">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div>
+          <h3 style="font-size: 17px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">Executive Summary</h3>
+          <p style="font-size: 13.5px; color: var(--text-secondary); max-width: 850px;">
+            The JMVM ecosystem unites academic rigor (lazy graph reduction with sharing, formal <code>retag</code> intermediate representation) 
+            with modern systems-level performance (musttail direct threading, hardware branch prediction, in-memory JIT, and WebAssembly). 
+            The result is a robust, responsive platform for functional programming, interactive educational notebooks, and language research.
+          </p>
+        </div>
+        <div style="text-align: right;">
+          <span class="badge highlight" style="font-size: 12px; padding: 6px 12px;">JMVM v2026.11 • Production Ready</span>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Script for dark/light mode toggle -->
+  <script>
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme') || 'dark';
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', newTheme);
+      
+      const themeIcon = document.getElementById('themeIcon');
+      const themeLabel = document.getElementById('themeLabel');
+      if (newTheme === 'dark') {
+        themeIcon.textContent = '☀️';
+        themeLabel.textContent = 'Light Mode';
+      } else {
+        themeIcon.textContent = '🌙';
+        themeLabel.textContent = 'Dark Mode';
+      }
+      
+      try {
+        localStorage.setItem('jmvm-factsheet-theme', newTheme);
+      } catch (e) {}
+    }
+
+    // Init theme from storage or preference
+    (function() {
+      try {
+        const savedTheme = localStorage.getItem('jmvm-factsheet-theme');
+        if (savedTheme) {
+          document.documentElement.setAttribute('data-theme', savedTheme);
+          const themeIcon = document.getElementById('themeIcon');
+          const themeLabel = document.getElementById('themeLabel');
+          if (savedTheme === 'light') {
+            themeIcon.textContent = '🌙';
+            themeLabel.textContent = 'Dark Mode';
+          } else {
+            themeIcon.textContent = '☀️';
+            themeLabel.textContent = 'Light Mode';
+          }
+        }
+      } catch (e) {}
+    })();
+  </script>
+</body>
+</html>

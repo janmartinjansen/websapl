@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Factsheet: Reactive Lazy Notebooks & The JMVM Toolchain</title>
+  <style>
+    /* ==========================================================================
+       Theming & CSS Variables (Aligned with WebSapl & Modern Tech Factsheets)
+       ========================================================================== */
+    :root, [data-theme="light"] {
+      --bg-primary: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-card: #ffffff;
+      --bg-card-subtle: #f1f5f9;
+      --bg-code: #0f172a;
+      --text-code: #f8fafc;
+      --border-color: #e2e8f0;
+      --border-focus: #3b82f6;
+
+      --text-primary: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+
+      --accent-blue: #2563eb;
+      --accent-blue-light: #eff6ff;
+      --accent-cyan: #0284c7;
+      --accent-emerald: #059669;
+      --accent-emerald-light: #ecfdf5;
+      --accent-amber: #d97706;
+      --accent-purple: #7c3aed;
+      --accent-rose: #e11d48;
+
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -1px rgba(0,0,0,0.04);
+      --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.1);
+      --gradient-brand: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+    }
+
+    [data-theme="dark"] {
+      --bg-primary: #090d16;
+      --bg-surface: #0f1422;
+      --bg-card: #131b2e;
+      --bg-card-subtle: #19233c;
+      --bg-code: #070a12;
+      --text-code: #e2e8f0;
+      --border-color: #222f4c;
+      --border-focus: #60a5fa;
+
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #8292ab;
+
+      --accent-blue: #3b82f6;
+      --accent-blue-light: rgba(59, 130, 246, 0.15);
+      --accent-cyan: #38bdf8;
+      --accent-emerald: #10b981;
+      --accent-emerald-light: rgba(16, 185, 129, 0.15);
+      --accent-amber: #f59e0b;
+      --accent-purple: #a855f7;
+      --accent-rose: #f43f5e;
+
+      --shadow-sm: 0 2px 4px rgba(0,0,0,0.4);
+      --shadow-md: 0 6px 12px rgba(0,0,0,0.5);
+      --shadow-lg: 0 16px 32px rgba(0,0,0,0.6);
+      --gradient-brand: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: 60px;
+    }
+
+    .container {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Header & Hero */
+    header.hero {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-color);
+      padding: 40px 0 32px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    header.hero::after {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: var(--gradient-brand);
+    }
+
+    .hero-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .badge-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-radius: 9999px;
+      background: var(--bg-card-subtle);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+    }
+
+    .badge.highlight {
+      background: var(--accent-blue-light);
+      color: var(--accent-blue);
+      border-color: var(--accent-blue);
+    }
+
+    .theme-toggle-btn {
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 6px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .theme-toggle-btn:hover {
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
+    .hero-title-group h1 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.8px;
+      margin-bottom: 10px;
+      background: var(--gradient-brand);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: inline-block;
+    }
+
+    .hero-lead {
+      font-size: 16px;
+      color: var(--text-secondary);
+      max-width: 980px;
+      line-height: 1.6;
+    }
+
+    /* Key stats bar */
+    .hero-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 28px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px 20px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .stat-card::before {
+      content: "";
+      position: absolute;
+      top: 12px;
+      left: 0;
+      width: 4px;
+      height: calc(100% - 24px);
+      border-radius: 0 4px 4px 0;
+      background: var(--accent-blue);
+    }
+
+    .stat-card.green::before { background: var(--accent-emerald); }
+    .stat-card.purple::before { background: var(--accent-purple); }
+    .stat-card.amber::before { background: var(--accent-amber); }
+
+    .stat-number {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    .stat-number small {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent-emerald);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .stat-sub {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    /* Navigation Anchors */
+    .nav-anchor-bar {
+      display: flex;
+      gap: 8px;
+      margin: 28px 0;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .nav-pill {
+      text-decoration: none;
+      color: var(--text-secondary);
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+
+    .nav-pill:hover {
+      color: var(--accent-blue);
+      border-color: var(--accent-blue);
+      background: var(--bg-card-subtle);
+    }
+
+    /* Sections */
+    .section-block {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 28px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .section-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--accent-blue);
+    }
+
+    .section-header-text h2 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: var(--text-primary);
+    }
+
+    .section-header-text p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: 3px;
+    }
+
+    /* Layout Grids */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .grid-2, .grid-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+    }
+
+    .card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-primary);
+    }
+
+    .card p, .card li {
+      font-size: 13.5px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    .card ul {
+      padding-left: 20px;
+      margin-top: 8px;
+    }
+
+    .card li {
+      margin-bottom: 6px;
+    }
+
+    /* Highlight Boxes */
+    .highlight-box {
+      background: var(--bg-card-subtle);
+      border-left: 3px solid var(--accent-blue);
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      margin: 14px 0;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .highlight-box.green {
+      border-left-color: var(--accent-emerald);
+      background: var(--accent-emerald-light);
+    }
+
+    .highlight-box.amber {
+      border-left-color: var(--accent-amber);
+      background: rgba(245, 158, 11, 0.1);
+    }
+
+    .highlight-box.purple {
+      border-left-color: var(--accent-purple);
+      background: rgba(168, 85, 247, 0.1);
+    }
+
+    /* Pipeline Flow */
+    .flow-wrapper {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      margin: 18px 0;
+    }
+
+    .flow-steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      position: relative;
+    }
+
+    .flow-step-box {
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+      position: relative;
+    }
+
+    .flow-step-box.highlight {
+      border-color: var(--accent-purple);
+      background: rgba(168, 85, 247, 0.1);
+    }
+
+    .flow-step-number {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--accent-cyan);
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .flow-step-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .flow-step-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      line-height: 1.35;
+    }
+
+    /* Code Blocks */
+    pre, code {
+      font-family: "SF Mono", "Fira Code", Menlo, Monaco, Consolas, monospace;
+    }
+
+    pre.code-block {
+      background: var(--bg-code);
+      color: var(--text-code);
+      padding: 14px 18px;
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1.5;
+      overflow-x: auto;
+      border: 1px solid var(--border-color);
+      margin: 12px 0;
+    }
+
+    .code-comment { color: #64748b; }
+    .code-keyword { color: #f43f5e; font-weight: 600; }
+    .code-func { color: #38bdf8; font-weight: 600; }
+    .code-type { color: #a855f7; }
+    .code-str { color: #10b981; }
+
+    /* Print Styles */
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-size: 10pt;
+        padding: 0;
+      }
+      header.hero {
+        background: transparent !important;
+        border-bottom: 2px solid #000;
+        padding: 10px 0 15px;
+      }
+      .theme-toggle-btn, .nav-anchor-bar {
+        display: none !important;
+      }
+      .section-block {
+        border: 1px solid #ccc !important;
+        background: #fff !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+        margin-bottom: 16px;
+        padding: 16px;
+      }
+      .card {
+        border: 1px solid #ddd !important;
+        background: #fafafa !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==========================================================================
+       HERO HEADER & EXECUTIVE METRICS
+       ========================================================================== -->
+  <header class="hero">
+    <div class="container">
+      <div class="hero-top-bar">
+        <div class="badge-group">
+          <span class="badge highlight">Notebook Architecture Factsheet</span>
+          <span class="badge">Pure & Lazy Computational Notebooks</span>
+          <span class="badge">Zero-Server WebAssembly</span>
+          <span class="badge">Sub-10ms Incremental JIT</span>
+        </div>
+        <button class="theme-toggle-btn" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle theme">
+          <span id="themeIcon">☀️</span> <span id="themeLabel">Light Mode</span>
+        </button>
+      </div>
+
+      <div class="hero-title-group">
+        <h1>Why Notebooks are the Ideal Use-Case for JMVM</h1>
+        <p class="hero-lead">
+          Interactive computational notebooks often struggle with hidden mutable state, out-of-order execution, and heavy container boot overhead. 
+          The synergy between <strong>pure laziness, graph reduction, and the JMVM toolchain</strong> creates an unprecedented notebook experience: 
+          100% client-side in the browser, instant incremental cell execution (6–8 ms), automatic dependency evaluation, and zero-cost memoized definitions.
+        </p>
+      </div>
+
+      <div class="hero-stats-grid">
+        <div class="stat-card green">
+          <div class="stat-number">6–8 ms <small>per cell</small></div>
+          <div class="stat-label">Incremental Cell Re-execution</div>
+          <div class="stat-sub">Compile + Link + @install in pure WebAssembly</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-number">Zero <small>Cost</small></div>
+          <div class="stat-label">Unused Definition Cells</div>
+          <div class="stat-sub">Call-by-need laziness incurs zero CPU/heap until queried</div>
+        </div>
+
+        <div class="stat-card purple">
+          <div class="stat-number">100% <small>Client-Side</small></div>
+          <div class="stat-label">Zero Cloud / Container Overhead</div>
+          <div class="stat-sub">Works fully offline, zero server latency, complete privacy</div>
+        </div>
+
+        <div class="stat-card amber">
+          <div class="stat-number">60 fps <small>Isolated</small></div>
+          <div class="stat-label">Web Worker Thread Separation</div>
+          <div class="stat-sub">Infinite streams & recursion never freeze the browser UI</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- Anchor Bar -->
+    <nav class="nav-anchor-bar">
+      <a href="#paradigm" class="nav-pill">1. The Notebook Paradigm Shift</a>
+      <a href="#why-vm" class="nav-pill">2. Why JMVM is the Ideal Match</a>
+      <a href="#toolchain" class="nav-pill">3. Supporting Toolchain Features</a>
+      <a href="#interactivity" class="nav-pill">4. Reactive UI & Graphics</a>
+      <a href="#lifecycle" class="nav-pill">5. Execution Lifecycle & Benchmark</a>
+    </nav>
+
+    <!-- ==========================================================================
+         SECTION 1: THE NOTEBOOK PARADIGM SHIFT
+         ========================================================================== -->
+    <section class="section-block" id="paradigm">
+      <div class="section-header">
+        <div class="section-icon">🔄</div>
+        <div class="section-header-text">
+          <h2>1. The Notebook Paradigm Shift: Curing Mutable Hidden State</h2>
+          <p>How functional purity and call-by-need laziness eliminate the fundamental flaws of Jupyter and Python.</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>The Pain Point: The "Out-of-Order" Curse in Python</h3>
+          <p>
+            Traditional interactive notebooks (like Jupyter with Python) suffer from notorious architectural flaws rooted in mutable global state:
+          </p>
+          <ul>
+            <li><strong>Hidden Mutable State:</strong> Cells can be executed in arbitrary order. Deleting or modifying an earlier cell leaves mutated objects lingering in the kernel, making results non-reproducible.</li>
+            <li><strong>Re-computation Penalty:</strong> Because statements mutate state, changing an upstream parameter often requires a nuclear "Restart Kernel & Run All" operation.</li>
+            <li><strong>Eager Data Ingestion:</strong> Ingesting large datasets or infinite sequences immediately forces memory allocations, frequently exhausting RAM or crashing the browser.</li>
+            <li><strong>Heavy Cloud Infrastructure:</strong> Running Python requires spinning up remote Docker containers (taking 15–40 seconds on Binder/Colab), incurring recurring hosting bills and data privacy vulnerabilities.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>The Pure & Lazy Solution in WebSapl</h3>
+          <p>
+            Modern reactive tools (like Pluto.jl, Observable, and marimo) attempt to build reactive dependency graphs, but constantly fight against variable mutation. 
+            <strong>In Sapl, mutation does not exist:</strong>
+          </p>
+          <div class="highlight-box green">
+            <strong>Purity + Laziness = Seamless Reactivity:</strong>
+            <ul style="margin-top: 6px;">
+              <li><strong>Zero Mutation, Zero Invalidation Conflicts:</strong> Functions are pure expressions. A cell's output is an immutable mathematical function of its inputs.</li>
+              <li><strong>Laziness Amortizes Definition Cost:</strong> Defining a massive data pipeline, parsing an entire dataset, or generating an infinite stream costs <em>zero</em> machine cycles until a downstream display cell demands it.</li>
+              <li><strong>Automatic Memoization (Thunk Sharing):</strong> Once a cell computes a value or Constant Applicative Form (<code>=:</code>), the JMVM updates the thunk in-place (graph reduction). Downstream cells reuse the cached result instantly.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         SECTION 2: WHY JMVM IS THE IDEAL RUNTIME FOR NOTEBOOKS
+         ========================================================================== -->
+    <section class="section-block" id="why-vm">
+      <div class="section-header">
+        <div class="section-icon">⚙️</div>
+        <div class="section-header-text">
+          <h2>2. Why JMVM is the Ideal Execution Engine for Notebooks</h2>
+          <p>Key virtual machine properties engineered for interactive, exploratory computing.</p>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="flow-step-number">Pillar 1</div>
+          <h3 style="color: var(--accent-blue);">Thunk Graph Reduction</h3>
+          <p>
+            Unevaluated expressions live on the heap as lightweight thunk pointers. When an interactive widget or cell requests a slice of data, only the exact needed elements are forced.
+          </p>
+          <div class="highlight-box">
+            Enables natural manipulation of infinite streams (e.g., <code>from 1</code>, prime sieves, event streams) and pagination without pagination logic.
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="flow-step-number">Pillar 2</div>
+          <h3 style="color: var(--accent-purple);">Persistent Heap & CAFs</h3>
+          <p>
+            When re-evaluating an edited cell, the active VM heap remains alive. Shared global definitions (CAFs declared with <code>=:</code>) retain their evaluated state.
+          </p>
+          <div class="highlight-box purple">
+            Modifying cell 10 does not cause cell 1 through 9 to be discarded or re-allocated; previous work is instantly accessible.
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="flow-step-number">Pillar 3</div>
+          <h3 style="color: var(--accent-emerald);">Web Worker Isolation</h3>
+          <p>
+            The JMVM engine runs entirely inside an isolated Web Worker (<code>worker.js</code>), communicating with the UI thread via non-blocking messages.
+          </p>
+          <div class="highlight-box green">
+            Infinite recursion or heavy graph searches cannot lock the browser tab. The user can cancel, pause, or inspect live execution at 60 fps.
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top: 20px;">
+        <div class="card">
+          <h3>Fault Isolation & Resilient Runtime</h3>
+          <p>
+            In typical compiled languages (C, Rust, Go), a memory violation or stack overflow terminates the operating system process. 
+            In the JMVM notebook:
+          </p>
+          <ul>
+            <li><strong>Built-in Exception Mechanism:</strong> <code>try</code>/<code>catchNr</code> wired into VM execution via <code>SetJMP</code>/<code>GoJMP</code> traps division-by-zero, pattern match exhaustion, and runtime errors cleanly.</li>
+            <li><strong>Symbolic Flight Recorder:</strong> If an infinite loop or unexpected branch occurs, the VM flight recorder dumps a human-readable symbolic trace directly into the cell error banner, pinpointing the offending function and argument.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>100% Client-Side Privacy & Portability</h3>
+          <p>
+            The entire runtime—compiler, linker, standard library, and virtual machine—is delivered as static WebAssembly and JavaScript assets:
+          </p>
+          <ul>
+            <li><strong>Works Offline:</strong> Open <code>notebook.html</code> directly from local disk (or host it on GitHub Pages/CDN). No Python kernels, Jupyter servers, or Docker containers required.</li>
+            <li><strong>Zero Server Costs:</strong> Universities, schools, and organizations can serve thousands of students simultaneously with zero compute infrastructure costs.</li>
+            <li><strong>Total Data Privacy:</strong> User datasets (CSV, JSON, proprietary models) never leave the browser.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         SECTION 3: SUPPORTING TOOLCHAIN FEATURES
+         ========================================================================== -->
+    <section class="section-block" id="toolchain">
+      <div class="section-header">
+        <div class="section-icon">🛠️</div>
+        <div class="section-header-text">
+          <h2>3. The Toolchain: In-Memory JIT & Dynamic Code Injection</h2>
+          <p>The subtle technical coordination that enables sub-10ms incremental cell execution.</p>
+        </div>
+      </div>
+
+      <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px;">
+        A naive compiler architecture would write each edited cell to disk, invoke a shell process, compile a full binary, and restart the VM. 
+        JMVM replaces this with an <strong>entirely in-memory, pure-functional compiler-linker pipeline</strong>:
+      </p>
+
+      <div class="flow-wrapper">
+        <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 14px; color: var(--text-primary);">The Sub-10ms Cell Execution Pipeline</h3>
+        <div class="flow-steps-grid">
+          <div class="flow-step-box">
+            <div class="flow-step-number">Step 1</div>
+            <div class="flow-step-title">UI Change</div>
+            <div class="flow-step-desc">User edits code in Monaco/CodeMirror cell editor.</div>
+          </div>
+          <div class="flow-step-box">
+            <div class="flow-step-number">Step 2</div>
+            <div class="flow-step-title">Post Message</div>
+            <div class="flow-step-desc">UI sends <code>:nb</code> or <code>:nbdefs</code> message to Web Worker.</div>
+          </div>
+          <div class="flow-step-box highlight">
+            <div class="flow-step-number" style="color: var(--accent-purple);">Step 3</div>
+            <div class="flow-step-title"><code>saplcomp_module</code></div>
+            <div class="flow-step-desc">Compiles just the edited chunk into binary <code>.jvb</code> bytes in RAM.</div>
+          </div>
+          <div class="flow-step-box highlight">
+            <div class="flow-step-number" style="color: var(--accent-purple);">Step 4</div>
+            <div class="flow-step-title"><code>LK.lkLink</code></div>
+            <div class="flow-step-desc">In-memory linker in Sapl resolves symbols & offsets.</div>
+          </div>
+          <div class="flow-step-box highlight">
+            <div class="flow-step-number" style="color: var(--accent-emerald);">Step 5</div>
+            <div class="flow-step-title"><code>@install</code></div>
+            <div class="flow-step-desc">VM primitive hot-links binary bytecode into active code table.</div>
+          </div>
+          <div class="flow-step-box">
+            <div class="flow-step-number">Step 6</div>
+            <div class="flow-step-title"><code>applyDynamic</code></div>
+            <div class="flow-step-desc">Instantly invokes the newly installed function.</div>
+          </div>
+          <div class="flow-step-box">
+            <div class="flow-step-number">Step 7</div>
+            <div class="flow-step-title">DOM Render</div>
+            <div class="flow-step-desc">Values, SVG, or Canvas rendered in output pane.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top: 20px;">
+        <div class="card">
+          <h3>1. Modular Compiler: <code>saplcomp_module</code></h3>
+          <p>
+            Unlike batch compilers that process whole files, <code>saplcomp_module.cfp</code> is specialized for incremental compilation:
+          </p>
+          <ul>
+            <li>Compiles single expressions or isolated top-level functions into binary <code>.jvb</code> byte lists (<code>SM.chunkJvbBytes</code>) in memory.</li>
+            <li>Produces symbol import and export tables describing required external binders.</li>
+            <li>Eliminates full parsing of the standard library by referencing pre-compiled module headers.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>2. In-Memory Linker in Pure Sapl (<code>link.cfp</code>)</h3>
+          <p>
+            Dynamic linking is implemented entirely in Sapl itself (<code>laadformaat/link.cfp</code>, <code>LK.lkLink</code>):
+          </p>
+          <ul>
+            <li>Calculates relative jump relocations and patches bytecode offsets in memory.</li>
+            <li>Merges the module's constructor and type descriptors with the running program's type dictionary.</li>
+            <li>Returns a self-contained binary payload (<code>LkImg</code>) ready for kernel installation.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>3. Hot Installation: <code>lookup "@install:..."</code></h3>
+          <p>
+            The bridge between Sapl code and the C/Wasm runtime:
+          </p>
+          <ul>
+            <li>The VM exposes an internal primitive via <code>lookup "@install:<bytes>"</code>.</li>
+            <li>The runtime appends the newly linked bytecode block directly to the active <code>program[]</code> array without restarting the interpreter loop.</li>
+            <li><code>applyDynamic</code> immediately executes the newly registered entry point.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>4. State Checkpointing (<code>@@values</code> / <code>@@restore</code>)</h3>
+          <p>
+            True session persistence across browser reloads:
+          </p>
+          <ul>
+            <li>Serializes evaluated values and global bindings into portable binary representations.</li>
+            <li>Restores full computational graphs when reopening a notebook document, bypassing re-execution of expensive upstream computations.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         SECTION 4: REACTIVE UI & FUNCTIONAL VISUALIZATIONS
+         ========================================================================== -->
+    <section class="section-block" id="interactivity">
+      <div class="section-header">
+        <div class="section-icon">🎨</div>
+        <div class="section-header-text">
+          <h2>4. Declarative Graphics & Reactive Elm-Style Interactivity</h2>
+          <p>Turning functional data structures into dynamic visual experiences.</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>Functional Graphics (<code>grafisch/graphics.cfp</code>)</h3>
+          <p>
+            In pythonic notebooks, generating a plot requires heavyweight libraries (matplotlib, bokeh) serializing millions of coordinates across JSON bridges. 
+            In WebSapl, graphics are first-class functional algebraic data types:
+          </p>
+          <pre class="code-block"><span class="code-comment">// Algebraic 2D drawing pipeline in Sapl</span>
+<span class="code-func">myPlot</span> = <span class="code-type">Group</span> [
+  <span class="code-type">Rect</span> 0 0 400 300 (<span class="code-type">Fill</span> <span class="code-str">"#1e293b"</span>),
+  <span class="code-type">Polyline</span> (map toCoord (take 100 dataStream)) (<span class="code-type">Stroke</span> <span class="code-str">"#38bdf8"</span> 2)
+]</pre>
+          <p style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">
+            The notebook engine renders these structures directly to HTML5 Canvas or SVG with native hardware acceleration, smoothly streaming updates as data arrives.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>Elm-Style Interactive Cells (<code>:nbmsg</code>)</h3>
+          <p>
+            Notebook cells can define reactive, self-contained interactive micro-applications using the Elm architecture (Model-View-Update):
+          </p>
+          <ul>
+            <li><strong>Model:</strong> A pure Sapl data structure representing application state.</li>
+            <li><strong>View:</strong> A declarative function transforming the Model into HTML forms, sliders, and buttons.</li>
+            <li><strong>Update:</strong> A pure event handler <code>update : Msg -> Model -> Model</code>.</li>
+            <li><strong>Zero Latency:</strong> When the user moves a slider, the browser dispatches a message (<code>:nbmsg</code>) to the worker, which evaluates the update function in milliseconds and repaints the view.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         SECTION 5: PERFORMANCE BREAKDOWN & TIMINGS
+         ========================================================================== -->
+    <section class="section-block" id="lifecycle">
+      <div class="section-header">
+        <div class="section-icon">📊</div>
+        <div class="section-header-text">
+          <h2>5. Performance Profile: Where the Time Goes in a Notebook Cell</h2>
+          <p>Measured timings in the WebSapl WebAssembly worker across typical notebook operations.</p>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <h3 style="color: var(--accent-blue);">Single Cell Edit</h3>
+          <div class="stat-number" style="font-size: 22px; color: var(--accent-emerald);">6–8 ms</div>
+          <p style="font-size: 12.5px; color: var(--text-secondary); margin-top: 6px;">
+            Modifying a single calculation cell. Parsing, modular bytecode generation, in-memory linking, and execution complete well under the 16ms frame budget (60 fps).
+          </p>
+        </div>
+
+        <div class="card">
+          <h3 style="color: var(--accent-purple);">Definition Cell + Dependents</h3>
+          <div class="stat-number" style="font-size: 22px; color: var(--accent-purple);">19–25 ms</div>
+          <p style="font-size: 12.5px; color: var(--text-secondary); margin-top: 6px;">
+            Modifying a function definition that triggers automatic re-evaluation of downstream dependent cells along the reactive dependency graph.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3 style="color: var(--accent-emerald);">Full Notebook Cold Boot</h3>
+          <div class="stat-number" style="font-size: 22px; color: var(--accent-cyan);">122–250 ms</div>
+          <p style="font-size: 12.5px; color: var(--text-secondary); margin-top: 6px;">
+            Complete initial run of all tutorial notebooks (<code>kennismaking</code>, <code>data_verkennen</code>) including standard library loading and DOM mounting.
+          </p>
+        </div>
+      </div>
+
+      <div class="highlight-box green" style="margin-top: 24px;">
+        <strong>Strategic Summary:</strong><br>
+        By uniting a lightweight, lazy virtual machine with a self-hosting modular compiler and in-memory dynamic linking, the Sapl notebook eliminates the compromises of legacy notebook systems. 
+        It delivers <strong>true mathematical reproducibility, instant responsiveness, infinite stream processing, and complete client-side independence</strong> in a single, elegant platform.
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme') || 'dark';
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', newTheme);
+      
+      const themeIcon = document.getElementById('themeIcon');
+      const themeLabel = document.getElementById('themeLabel');
+      if (newTheme === 'dark') {
+        themeIcon.textContent = '☀️';
+        themeLabel.textContent = 'Light Mode';
+      } else {
+        themeIcon.textContent = '🌙';
+        themeLabel.textContent = 'Dark Mode';
+      }
+      
+      try {
+        localStorage.setItem('jmvm-notebook-factsheet-theme', newTheme);
+      } catch (e) {}
+    }
+
+    (function() {
+      try {
+        const savedTheme = localStorage.getItem('jmvm-notebook-factsheet-theme');
+        if (savedTheme) {
+          document.documentElement.setAttribute('data-theme', savedTheme);
+          const themeIcon = document.getElementById('themeIcon');
+          const themeLabel = document.getElementById('themeLabel');
+          if (savedTheme === 'light') {
+            themeIcon.textContent = '🌙';
+            themeLabel.textContent = 'Dark Mode';
+          } else {
+            themeIcon.textContent = '☀️';
+            themeLabel.textContent = 'Light Mode';
+          }
+        }
+      } catch (e) {}
+    })();
+  </script>
+</body>
+</html>

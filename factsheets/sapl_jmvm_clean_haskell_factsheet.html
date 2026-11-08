@@ -1,0 +1,2079 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Factsheet: Sapl(+), JMVM, Clean, ABC & Haskell Lite Ecosystem</title>
+  <style>
+    /* ==========================================================================
+       Theming & CSS Variables (Matches WebSapl & Modern Tech Factsheets)
+       ========================================================================== */
+    :root, [data-theme="light"] {
+      --bg-primary: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-card: #ffffff;
+      --bg-card-subtle: #f1f5f9;
+      --bg-code: #0f172a;
+      --text-code: #f8fafc;
+      --border-color: #e2e8f0;
+      --border-focus: #3b82f6;
+
+      --text-primary: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+
+      --accent-blue: #2563eb;
+      --accent-blue-light: #eff6ff;
+      --accent-cyan: #0284c7;
+      --accent-emerald: #059669;
+      --accent-emerald-light: #ecfdf5;
+      --accent-amber: #d97706;
+      --accent-amber-light: #fffbeb;
+      --accent-purple: #7c3aed;
+      --accent-purple-light: #f5f3ff;
+      --accent-rose: #e11d48;
+      --accent-rose-light: #fff1f2;
+
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -1px rgba(0,0,0,0.04);
+      --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.1);
+      --gradient-brand: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+      --diagram-bg: #f8fafc;
+      --node-bg: #ffffff;
+      --node-border: #cbd5e1;
+    }
+
+    [data-theme="dark"] {
+      --bg-primary: #090d16;
+      --bg-surface: #0f1422;
+      --bg-card: #131b2e;
+      --bg-card-subtle: #19233c;
+      --bg-code: #070a12;
+      --text-code: #e2e8f0;
+      --border-color: #222f4c;
+      --border-focus: #60a5fa;
+
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #8292ab;
+
+      --accent-blue: #3b82f6;
+      --accent-blue-light: rgba(59, 130, 246, 0.15);
+      --accent-cyan: #38bdf8;
+      --accent-emerald: #10b981;
+      --accent-emerald-light: rgba(16, 185, 129, 0.15);
+      --accent-amber: #f59e0b;
+      --accent-amber-light: rgba(245, 158, 11, 0.15);
+      --accent-purple: #a855f7;
+      --accent-purple-light: rgba(168, 85, 247, 0.15);
+      --accent-rose: #f43f5e;
+      --accent-rose-light: rgba(244, 63, 94, 0.15);
+
+      --shadow-sm: 0 2px 4px rgba(0,0,0,0.4);
+      --shadow-md: 0 6px 12px rgba(0,0,0,0.5);
+      --shadow-lg: 0 16px 32px rgba(0,0,0,0.6);
+      --gradient-brand: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+      --diagram-bg: #0b111e;
+      --node-bg: #131c31;
+      --node-border: #2b3b60;
+    }
+
+    /* ==========================================================================
+       Typography & Base
+       ========================================================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: 80px;
+    }
+
+    .container {
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ==========================================================================
+       Header & Hero Nav
+       ========================================================================== */
+    header.hero {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-color);
+      padding: 44px 0 32px;
+      position: relative;
+    }
+
+    .hero-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .brand-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      background: var(--accent-blue-light);
+      color: var(--accent-blue);
+      border: 1px solid var(--border-color);
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 800;
+      line-height: 1.2;
+      background: var(--gradient-brand);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    p.subtitle {
+      font-size: 16px;
+      color: var(--text-secondary);
+      max-width: 920px;
+    }
+
+    .theme-toggle-btn {
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .theme-toggle-btn:hover {
+      background: var(--bg-card);
+      border-color: var(--accent-blue);
+      color: var(--text-primary);
+    }
+
+    /* Anchor Nav */
+    .nav-anchor-bar {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 16px 0 4px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 32px;
+      position: sticky;
+      top: 0;
+      background: var(--bg-primary);
+      z-index: 100;
+      backdrop-filter: blur(8px);
+    }
+
+    .nav-pill {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+      border: 1px solid transparent;
+    }
+
+    .nav-pill:hover {
+      color: var(--text-primary);
+      background: var(--bg-card);
+      border-color: var(--border-color);
+    }
+
+    .nav-pill.active {
+      color: var(--accent-blue);
+      background: var(--accent-blue-light);
+      border-color: var(--accent-blue);
+    }
+
+    /* ==========================================================================
+       Sections & Cards
+       ========================================================================== */
+    .section-block {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 28px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .section-icon {
+      font-size: 24px;
+      line-height: 1;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border-color);
+    }
+
+    .section-header-text h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .section-header-text p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Grids */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 20px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 20px;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .card:hover {
+      border-color: var(--accent-blue);
+      box-shadow: var(--shadow-md);
+    }
+
+    .card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card p {
+      font-size: 13.5px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+
+    .card ul {
+      list-style-type: none;
+      padding: 0;
+      margin-top: 8px;
+    }
+
+    .card ul li {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      position: relative;
+      padding-left: 18px;
+    }
+
+    .card ul li::before {
+      content: "•";
+      position: absolute;
+      left: 4px;
+      color: var(--accent-blue);
+      font-weight: bold;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .badge-blue { background: var(--accent-blue-light); color: var(--accent-blue); border: 1px solid var(--accent-blue); }
+    .badge-purple { background: var(--accent-purple-light); color: var(--accent-purple); border: 1px solid var(--accent-purple); }
+    .badge-emerald { background: var(--accent-emerald-light); color: var(--accent-emerald); border: 1px solid var(--accent-emerald); }
+    .badge-amber { background: var(--accent-amber-light); color: var(--accent-amber); border: 1px solid var(--accent-amber); }
+    .badge-rose { background: var(--accent-rose-light); color: var(--accent-rose); border: 1px solid var(--accent-rose); }
+
+    /* Highlights & Notes */
+    .highlight-box {
+      background: var(--bg-card-subtle);
+      border-left: 4px solid var(--accent-blue);
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      margin: 14px 0;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    .highlight-box.emerald { border-left-color: var(--accent-emerald); }
+    .highlight-box.amber { border-left-color: var(--accent-amber); }
+    .highlight-box.purple { border-left-color: var(--accent-purple); }
+    .highlight-box.rose { border-left-color: var(--accent-rose); }
+
+    /* Code Blocks */
+    pre.code-block {
+      background: var(--bg-code);
+      color: var(--text-code);
+      padding: 14px 16px;
+      border-radius: 8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12.5px;
+      line-height: 1.5;
+      overflow-x: auto;
+      border: 1px solid var(--border-color);
+      margin: 10px 0;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.88em;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--accent-cyan);
+    }
+
+    /* Tables */
+    .table-container {
+      overflow-x: auto;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      margin: 16px 0;
+    }
+
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    table.data-table th {
+      background: var(--bg-card-subtle);
+      color: var(--text-primary);
+      font-weight: 700;
+      padding: 12px 14px;
+      border-bottom: 2px solid var(--border-color);
+      white-space: nowrap;
+    }
+
+    table.data-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-secondary);
+    }
+
+    table.data-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    table.data-table tr:hover td {
+      background: var(--bg-card-subtle);
+    }
+
+    /* Pipeline Interactive Flowcharts */
+    .pipeline-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .pipeline-tab-btn {
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .pipeline-tab-btn:hover {
+      border-color: var(--accent-blue);
+      color: var(--text-primary);
+    }
+
+    .pipeline-tab-btn.active {
+      background: var(--accent-blue);
+      color: #ffffff;
+      border-color: var(--accent-blue);
+    }
+
+    .pipeline-view {
+      display: none;
+    }
+    .pipeline-view.active {
+      display: block;
+    }
+
+    /* Interactive Pipeline Steps Graphic */
+    .flow-steps {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 16px 6px;
+      margin: 12px 0 16px;
+    }
+
+    .flow-step-box {
+      flex: 1;
+      min-width: 130px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px 10px;
+      text-align: center;
+      position: relative;
+    }
+
+    .flow-step-box.highlight-blue {
+      border-color: var(--accent-blue);
+      background: var(--accent-blue-light);
+    }
+    .flow-step-box.highlight-purple {
+      border-color: var(--accent-purple);
+      background: var(--accent-purple-light);
+    }
+    .flow-step-box.highlight-emerald {
+      border-color: var(--accent-emerald);
+      background: var(--accent-emerald-light);
+    }
+    .flow-step-box.highlight-amber {
+      border-color: var(--accent-amber);
+      background: var(--accent-amber-light);
+    }
+    .flow-step-box.highlight-rose {
+      border-color: var(--accent-rose);
+      background: var(--accent-rose-light);
+    }
+
+    .flow-step-num {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .flow-step-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .flow-step-tool {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: ui-monospace, SFMono-Regular, monospace;
+    }
+
+    .flow-arrow {
+      color: var(--text-muted);
+      font-size: 16px;
+      font-weight: bold;
+      user-select: none;
+    }
+
+    /* Architecture Visualizer SVG */
+    .svg-container {
+      width: 100%;
+      background: var(--diagram-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 16px;
+      margin: 16px 0;
+      display: flex;
+      justify-content: center;
+      overflow-x: auto;
+    }
+
+    svg.ecosystem-svg {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==========================================================================
+       HERO HEADER
+       ========================================================================== -->
+  <header class="hero">
+    <div class="container">
+      <div class="hero-top-row">
+        <div>
+          <span class="brand-tag">Technical Factsheet & Ecosystem Blueprint</span>
+          <h1>Sapl(+), JMVM, Clean, ABC & Haskell Lite</h1>
+          <p class="subtitle">
+            An in-depth architectural guide to frontend languages, intermediate representations, 
+            the <strong>bidirectional Retag &harr; Clean ABC bridge</strong>, compilation pipelines, 
+            execution backends, and toolchains across native silicon and WebAssembly.
+          </p>
+        </div>
+        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()">
+          <span id="themeIcon">☀️</span> <span id="themeLabel">Light Mode</span>
+        </button>
+      </div>
+
+      <!-- Quick Navigation Bar -->
+      <nav class="nav-anchor-bar">
+        <a href="#landscape" class="nav-pill active">1. Ecosystem Map</a>
+        <a href="#frontends" class="nav-pill">2. Frontends</a>
+        <a href="#pipelines" class="nav-pill">3. Compilation Pipelines</a>
+        <a href="#retag-abc" class="nav-pill">4. Bidirectional Retag &harr; ABC Bridge</a>
+        <a href="#backends" class="nav-pill">5. Backends & Runtimes</a>
+        <a href="#tools" class="nav-pill">6. Toolchain Matrix</a>
+        <a href="#comparison" class="nav-pill">7. Benchmarks & Feature Matrix</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- ==========================================================================
+         SECTION 1: HIGH-LEVEL ECOSYSTEM BLUEPRINT
+         ========================================================================== -->
+    <section class="section-block" id="landscape">
+      <div class="section-header">
+        <div class="section-icon">🗺️</div>
+        <div class="section-header-text">
+          <h2>1. The Big Picture: Architectural Landscape</h2>
+          <p>How functional frontends converge onto shared graph reduction intermediate representations and diverse machine targets.</p>
+        </div>
+      </div>
+
+      <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 16px;">
+        The system unites pure lazy functional programming languages across four tiers: 
+        <strong>Frontends</strong> (Haskell Lite, MicroHs, Sapl+, Core Sapl, and Clean), 
+        <strong>Intermediate Representations</strong> (Sapl+ AST, Core Sapl, Stage 4 Retag IR, and Clean ABC code), 
+        <strong>Universal Two-Way Bridges</strong> (<code>sapl_naar_abc.py</code> and the newly validated <code>abc2retag.py</code> symbolic decompiler), 
+        <strong>Virtual & Native Backends</strong> (JMVM Native, WebSapl WebAssembly, Clean <code>cg</code>, Clean ABC-Interpreter, and LLVM), 
+        and <strong>Interactive Environments</strong> (WebSapl Browser Notebooks, Desktop Workbench, and REPLs).
+      </p>
+
+      <!-- SVG Architectural Diagram -->
+      <div class="svg-container">
+        <svg class="ecosystem-svg" viewBox="0 0 1020 560" width="1020" height="560" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#64748b" />
+            </marker>
+            <marker id="arrow-blue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#3b82f6" />
+            </marker>
+            <marker id="arrow-purple" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#a855f7" />
+            </marker>
+            <marker id="arrow-emerald" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#10b981" />
+            </marker>
+            <marker id="arrow-amber" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#f59e0b" />
+            </marker>
+            <filter id="card-shadow" x="-5%" y="-5%" width="110%" height="115%">
+              <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15" />
+            </filter>
+          </defs>
+
+          <!-- TIER BACKGROUND REGIONS -->
+          <rect x="20" y="20" width="220" height="515" rx="10" fill="var(--bg-card)" stroke="var(--border-color)" stroke-width="1.5" />
+          <text x="35" y="45" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="var(--text-muted)" letter-spacing="1">1. FRONTENDS</text>
+
+          <rect x="270" y="20" width="230" height="515" rx="10" fill="var(--bg-card)" stroke="var(--border-color)" stroke-width="1.5" />
+          <text x="285" y="45" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="var(--text-muted)" letter-spacing="1">2. INTERMEDIATE LAYERS</text>
+
+          <rect x="530" y="20" width="210" height="515" rx="10" fill="var(--bg-card)" stroke="var(--border-color)" stroke-width="1.5" />
+          <text x="545" y="45" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="var(--text-muted)" letter-spacing="1">3. CODE GENERATION / BRIDGES</text>
+
+          <rect x="770" y="20" width="230" height="515" rx="10" fill="var(--bg-card)" stroke="var(--border-color)" stroke-width="1.5" />
+          <text x="785" y="45" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="var(--text-muted)" letter-spacing="1">4. EXECUTION TARGETS</text>
+
+          <!-- FRONTEND NODES -->
+          <!-- Haskell Lite -->
+          <g transform="translate(35, 65)">
+            <rect width="190" height="65" rx="6" fill="var(--node-bg)" stroke="#3b82f6" stroke-width="1.5" filter="url(#card-shadow)" />
+            <text x="12" y="24" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="var(--text-primary)">Haskell Lite (.hs)</text>
+            <text x="12" y="42" font-family="-apple-system, sans-serif" font-size="10.5" fill="var(--text-muted)">In-VM front-end in Sapl+</text>
+            <text x="12" y="56" font-family="-apple-system, sans-serif" font-size="9.5" fill="#3b82f6" font-weight="600">Zero Dictionaries • Specialization</text>
+          </g>
+
+          <!-- MicroHs -->
+          <g transform="translate(35, 145)">
+            <rect width="190" height="55" rx="6" fill="var(--node-bg)" stroke="var(--node-border)" stroke-width="1" filter="url(#card-shadow)" />
+            <text x="12" y="24" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="var(--text-primary)">MicroHs (.hs)</text>
+            <text x="12" y="42" font-family="-apple-system, sans-serif" font-size="10.5" fill="var(--text-muted)">adtmhs server-side oracle</text>
+          </g>
+
+          <!-- Sapl+ -->
+          <g transform="translate(35, 215)">
+            <rect width="190" height="65" rx="6" fill="var(--node-bg)" stroke="#a855f7" stroke-width="1.5" filter="url(#card-shadow)" />
+            <text x="12" y="24" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="var(--text-primary)">Sapl+ (.spp)</text>
+            <text x="12" y="42" font-family="-apple-system, sans-serif" font-size="10.5" fill="var(--text-muted)">High-level syntactic extensions</text>
+            <text x="12" y="56" font-family="-apple-system, sans-serif" font-size="9.5" fill="#a855f7" font-weight="600">Records • Guards • Struct. Eq</text>
+          </g>
+
+          <!-- Core Sapl -->
+          <g transform="translate(35, 295)">
+            <rect width="190" height="60" rx="6" fill="var(--node-bg)" stroke="#10b981" stroke-width="1.5" filter="url(#card-shadow)" />
+            <text x="12" y="24" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="var(--text-primary)">Core Sapl (.cfp)</text>
+            <text x="12" y="42" font-family="-apple-system, sans-serif" font-size="10.5" fill="var(--text-muted)">Explicit lazy graph reduction</text>
+            <text x="12" y="54" font-family="-apple-system, sans-serif" font-size="9.5" fill="#10b981" font-weight="600">Strictness ! • CAFs =:</text>
+          </g>
+
+          <!-- Clean -->
+          <g transform="translate(35, 370)">
+            <rect width="190" height="65" rx="6" fill="var(--node-bg)" stroke="#f59e0b" stroke-width="1.5" filter="url(#card-shadow)" />
+            <text x="12" y="24" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="var(--text-primary)">Clean (.icl / .dcl)</text>
+            <text x="12" y="42" font-family="-apple-system, sans-serif" font-size="10.5" fill="var(--text-muted)">Pure functional graph rewrites</text>
+            <text x="12" y="56" font-family="-apple-system, sans-serif" font-size="9.5" fill="#f59e0b" font-weight="600">Uniqueness • iTasks</text>
+          </g>
+
+          <!-- INTERMEDIATE STAGES -->
+          <!-- Sapl+ AST -->
+          <g transform="translate(285, 95)">
+            <rect width="200" height="50" rx="6" fill="var(--node-bg)" stroke="var(--node-border)" stroke-width="1" filter="url(#card-shadow)" />
+            <text x="12" y="22" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="var(--text-primary)">Preprocessor Driver</text>
+            <text x="12" y="38" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">Desugar records, guards, modules</text>
+          </g>
+
+          <!-- Strictness & Lifting -->
+          <g transform="translate(285, 175)">
+            <rect width="200" height="55" rx="6" fill="var(--node-bg)" stroke="var(--node-border)" stroke-width="1" filter="url(#card-shadow)" />
+            <text x="12" y="20" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="var(--text-primary)">Analysis & Transform</text>
+            <text x="12" y="36" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">Abstract strictness inference (!)</text>
+            <text x="12" y="48" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">Lambda lifting & bool expansion</text>
+          </g>
+
+          <!-- Retag IR (Pivotal Bridge) -->
+          <g transform="translate(285, 260)">
+            <rect width="200" height="85" rx="6" fill="var(--node-bg)" stroke="#a855f7" stroke-width="2" filter="url(#card-shadow)" />
+            <text x="12" y="24" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#a855f7">Stage 4: Retag IR ★</text>
+            <text x="12" y="42" font-family="-apple-system, sans-serif" font-size="10.5" fill="var(--text-primary)">Universal Semantic Pivot</text>
+            <text x="12" y="58" font-family="-apple-system, sans-serif" font-size="9.5" fill="var(--text-muted)">eval • thunk • closure • case</text>
+            <text x="12" y="72" font-family="-apple-system, sans-serif" font-size="9.5" fill="#10b981" font-weight="600">&#x2194; Two-Way Highway with ABC &#x2194;</text>
+          </g>
+
+          <!-- Clean ABC Code -->
+          <g transform="translate(285, 385)">
+            <rect width="200" height="75" rx="6" fill="var(--node-bg)" stroke="#f59e0b" stroke-width="1.5" filter="url(#card-shadow)" />
+            <text x="12" y="22" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#f59e0b">Clean ABC Code (.abc)</text>
+            <text x="12" y="38" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">3-Stack Abstract B-Machine</text>
+            <text x="12" y="54" font-family="-apple-system, sans-serif" font-size="9.5" fill="var(--text-muted)">A-stack (nodes) • B (unboxed) • C (ret)</text>
+            <text x="12" y="68" font-family="-apple-system, sans-serif" font-size="9.5" fill="var(--accent-blue)">From Clean (.icl) or from Retag</text>
+          </g>
+
+          <!-- CODEGEN / EMIT STAGES & BRIDGES -->
+          <!-- Gen1 Codegen -->
+          <g transform="translate(545, 140)">
+            <rect width="180" height="70" rx="6" fill="var(--node-bg)" stroke="#10b981" stroke-width="1.5" filter="url(#card-shadow)" />
+            <text x="12" y="22" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#10b981">Gen1 Codegen</text>
+            <text x="12" y="40" font-family="-apple-system, sans-serif" font-size="10.5" fill="var(--text-primary)">.jmvm (Text Bytecode)</text>
+            <text x="12" y="58" font-family="-apple-system, sans-serif" font-size="10.5" fill="#10b981" font-weight="700">.jvb (Binary Bytecode)</text>
+          </g>
+
+          <!-- Retag to ABC Bridge -->
+          <g transform="translate(545, 260)">
+            <rect width="180" height="55" rx="6" fill="var(--node-bg)" stroke="#f59e0b" stroke-width="1.5" filter="url(#card-shadow)" />
+            <text x="12" y="20" font-family="-apple-system, sans-serif" font-size="11.5" font-weight="700" fill="#f59e0b">Retag &rarr; ABC</text>
+            <text x="12" y="36" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">sapl_naar_abc.py</text>
+            <text x="12" y="48" font-family="-apple-system, sans-serif" font-size="9.5" fill="var(--text-secondary)">Emits Clean .abc</text>
+          </g>
+
+          <!-- ABC to Retag Bridge (NEW & PROVEN) -->
+          <g transform="translate(545, 335)">
+            <rect width="180" height="65" rx="6" fill="var(--node-bg)" stroke="#3b82f6" stroke-width="2" filter="url(#card-shadow)" />
+            <text x="12" y="20" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#3b82f6">ABC &rarr; Retag Decompiler ★</text>
+            <text x="12" y="36" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">abc2retag.py (Symbolic)</text>
+            <text x="12" y="50" font-family="-apple-system, sans-serif" font-size="9.5" fill="#10b981" font-weight="600">Evaporates A/B Stacks (-95% ops)</text>
+            <text x="12" y="62" font-family="-apple-system, sans-serif" font-size="9" fill="var(--text-secondary)">Compiles via compile-retag</text>
+          </g>
+
+          <!-- Clean Native cg -->
+          <g transform="translate(545, 435)">
+            <rect width="180" height="55" rx="6" fill="var(--node-bg)" stroke="var(--node-border)" stroke-width="1" filter="url(#card-shadow)" />
+            <text x="12" y="22" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="var(--text-primary)">Clean Code Generator (cg)</text>
+            <text x="12" y="40" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">x86 / x86-64 / ARM Assembly</text>
+          </g>
+
+          <!-- EXECUTION TARGETS -->
+          <!-- JMVM Native -->
+          <g transform="translate(785, 75)">
+            <rect width="200" height="75" rx="6" fill="var(--node-bg)" stroke="#3b82f6" stroke-width="2" filter="url(#card-shadow)" />
+            <text x="12" y="22" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#3b82f6">JMVM Native Engine</text>
+            <text x="12" y="40" font-family="-apple-system, sans-serif" font-size="10.5" fill="var(--text-primary)">./runfast • ./run</text>
+            <text x="12" y="56" font-family="-apple-system, sans-serif" font-size="9.5" fill="var(--text-muted)">musttail direct-threading</text>
+            <text x="12" y="68" font-family="-apple-system, sans-serif" font-size="9.5" fill="var(--text-muted)">2.5B instrs/s • Superinstr. fusion</text>
+          </g>
+
+          <!-- WebSapl Browser Wasm -->
+          <g transform="translate(785, 175)">
+            <rect width="200" height="75" rx="6" fill="var(--node-bg)" stroke="#10b981" stroke-width="2" filter="url(#card-shadow)" />
+            <text x="12" y="22" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#10b981">WebSapl (Browser Wasm)</text>
+            <text x="12" y="40" font-family="-apple-system, sans-serif" font-size="10.5" fill="var(--text-primary)">run.wasm (151 KB)</text>
+            <text x="12" y="56" font-family="-apple-system, sans-serif" font-size="9.5" fill="var(--text-muted)">Zero-Server • 100% Client-Side</text>
+            <text x="12" y="68" font-family="-apple-system, sans-serif" font-size="9.5" fill="var(--text-muted)">Reactive Notebooks • Graphics</text>
+          </g>
+
+          <!-- Clean Native Executable -->
+          <g transform="translate(785, 275)">
+            <rect width="200" height="65" rx="6" fill="var(--node-bg)" stroke="#f59e0b" stroke-width="1.5" filter="url(#card-shadow)" />
+            <text x="12" y="22" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#f59e0b">Native Machine Code</text>
+            <text x="12" y="38" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">Linked with Clean runtime</text>
+            <text x="12" y="54" font-family="-apple-system, sans-serif" font-size="9.5" fill="var(--text-emerald)" font-weight="600">5×–7× faster than bytecode</text>
+          </g>
+
+          <!-- Clean ABC Interpreter -->
+          <g transform="translate(785, 360)">
+            <rect width="200" height="65" rx="6" fill="var(--node-bg)" stroke="var(--node-border)" stroke-width="1" filter="url(#card-shadow)" />
+            <text x="12" y="22" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="var(--text-primary)">Clean ABC Interpreter</text>
+            <text x="12" y="38" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">abci (Native) / Wasm (Browser)</text>
+            <text x="12" y="54" font-family="-apple-system, sans-serif" font-size="9.5" fill="var(--text-muted)">Dynamic code sharing & sandboxing</text>
+          </g>
+
+          <!-- Clean LLVM -->
+          <g transform="translate(785, 450)">
+            <rect width="200" height="45" rx="6" fill="var(--node-bg)" stroke="var(--node-border)" stroke-width="1" filter="url(#card-shadow)" />
+            <text x="12" y="20" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="var(--text-muted)">clean-llvm (abc2bc)</text>
+            <text x="12" y="36" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">LLVM IR backend for Clean</text>
+          </g>
+
+          <!-- CONNECTING PATHS / ARROWS -->
+          <!-- Haskell Lite -> Sapl+ -->
+          <path d="M 225 97 L 255 97 L 255 120 L 285 120" fill="none" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow-blue)" />
+          <!-- MicroHs -> Core Sapl -->
+          <path d="M 225 172 L 255 172 L 255 315 L 225 315" fill="none" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)" />
+          <!-- Sapl+ -> Preprocessor -->
+          <path d="M 225 247 L 255 247 L 255 130 L 285 130" fill="none" stroke="#a855f7" stroke-width="2" marker-end="url(#arrow-purple)" />
+          <!-- Preprocessor -> Analysis -->
+          <path d="M 385 145 L 385 175" fill="none" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)" />
+          <!-- Core Sapl -> Analysis -->
+          <path d="M 225 325 L 255 325 L 255 202 L 285 202" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#arrow-emerald)" />
+          <!-- Analysis -> Retag IR -->
+          <path d="M 385 230 L 385 260" fill="none" stroke="#a855f7" stroke-width="2" marker-end="url(#arrow-purple)" />
+          
+          <!-- Retag IR -> Gen1 Codegen -->
+          <path d="M 485 290 L 515 290 L 515 175 L 545 175" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#arrow-emerald)" />
+          <!-- Retag IR -> Retag to ABC -->
+          <path d="M 485 300 L 545 285" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
+          
+          <!-- Retag to ABC -> Clean ABC -->
+          <path d="M 635 315 L 635 370 L 485 410" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3" marker-end="url(#arrow-amber)" />
+          
+          <!-- Clean (.icl) -> Clean ABC -->
+          <path d="M 225 402 L 285 417" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
+          
+          <!-- Clean ABC -> ABC to Retag (NEW HIGHWAY) -->
+          <path d="M 485 425 L 515 425 L 515 370 L 545 370" fill="none" stroke="#3b82f6" stroke-width="2.5" marker-end="url(#arrow-blue)" />
+          <!-- ABC to Retag -> Retag IR (Loop back into Stage 4) -->
+          <path d="M 635 335 L 635 245 L 435 245 L 435 260" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="4" marker-end="url(#arrow-blue)" />
+          <!-- ABC to Retag -> Gen1 Codegen (Direct compile-retag) -->
+          <path d="M 635 335 L 635 210" fill="none" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrow-blue)" />
+
+          <!-- Clean ABC -> cg -->
+          <path d="M 485 440 L 545 455" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
+          
+          <!-- Retag to ABC -> cg / ABC interpreter -->
+          <path d="M 725 285 L 755 285 L 755 307 L 785 307" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
+          <path d="M 725 455 L 755 455 L 755 320 L 785 320" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
+          <path d="M 485 450 L 515 450 L 515 392 L 785 392" fill="none" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arrow-amber)" />
+
+          <!-- Gen1 Codegen -> JMVM Native -->
+          <path d="M 725 160 L 755 160 L 755 112 L 785 112" fill="none" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow-blue)" />
+          <!-- Gen1 Codegen -> WebSapl Wasm -->
+          <path d="M 725 185 L 755 185 L 755 212 L 785 212" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#arrow-emerald)" />
+
+          <!-- Clean ABC -> Clean LLVM -->
+          <path d="M 485 460 L 515 460 L 515 472 L 785 472" fill="none" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4" marker-end="url(#arrow)" />
+        </svg>
+      </div>
+
+      <div class="highlight-box emerald" style="margin-top: 10px;">
+        <strong>The Bidirectional Highway:</strong> The system supports seamless translation in <em>both directions</em>:
+        <ul style="margin-top: 6px;">
+          <li><strong>Sapl &rarr; Clean ABC:</strong> Compile Sapl/Haskell Lite to Clean ABC to leverage Clean's native assembly generator <code>cg</code> (5×–7× faster than bytecode).</li>
+          <li><strong>Clean ABC &rarr; Retag &rarr; JMVM:</strong> Clean programs can be compiled by Clean's compiler to <code>.opt.abc</code>, symbolically decompiled by <code>abc2retag.py</code> to Stage-4 Retag AST, and executed on the JMVM and inside browser WebSapl with zero server overhead!</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         SECTION 2: FRONTENDS
+         ========================================================================== -->
+    <section class="section-block" id="frontends">
+      <div class="section-header">
+        <div class="section-icon">🔤</div>
+        <div class="section-header-text">
+          <h2>2. The Frontends: Language Dialects & Capabilities</h2>
+          <p>Different entry points catering to educational notebooks, high-level functional idioms, and systems programming.</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <!-- Haskell Lite -->
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h3>Haskell Lite</h3>
+            <span class="badge badge-blue">Frontend • .hs</span>
+          </div>
+          <p>
+            A lightweight Haskell 2010 dialect implemented <strong>entirely in Sapl+</strong> (<code>micro_haskell/hlite/</code>). 
+            Runs inside the JMVM both natively and in client-side WebAssembly without requiring any external server.
+          </p>
+          <ul>
+            <li><strong>Core Language:</strong> Pattern matching (nested, guards, <code>@</code>-patterns, <code>!</code>/<code>~</code>), <code>where</code>, <code>let</code>, <code>case</code>, operator sections, list comprehensions, <code>[1..]</code> ranges.</li>
+            <li><strong>Type System:</strong> Full Hindley-Milner type inference with type classes, let-polymorphism, defaulting (<code>Num</code> &rarr; <code>Int</code>, fractional &rarr; <code>Double</code>), and higher kinds (<code>Functor</code>, <code>Monad</code>).</li>
+            <li><strong>Zero Runtime Dictionaries:</strong> Overloaded functions and operators are specialised per type for the whole program. <code>==</code> on an <code>Int</code> becomes a machine comparison; <code>show</code> on <code>Maybe [Int]</code> is a dedicated specialized function.</li>
+            <li><strong>Interactive Notebook Integration:</strong> In WebSapl, <code>+ Haskell</code> notebook cells share definitions across cells and render live SVG, Canvas, and interactive HTML tables.</li>
+          </ul>
+          <pre class="code-block"><span style="color:#60a5fa">data</span> Shape = Circle Double | Rect Double Double <span style="color:#60a5fa">deriving</span> Show
+
+<span style="color:#34d399">area</span> :: Shape -> Double
+<span style="color:#34d399">area</span> (Circle r) = pi * r * r
+<span style="color:#34d399">area</span> (Rect w h) = w * h</pre>
+        </div>
+
+        <!-- Sapl+ -->
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h3>Sapl+</h3>
+            <span class="badge badge-purple">High-Level • .spp</span>
+          </div>
+          <p>
+            An ergonomic superset of Sapl featuring modern language constructs designed for rapid prototyping, rich data manipulation, and clean module boundaries.
+          </p>
+          <ul>
+            <li><strong>Named Records:</strong> Record construction <code>Rec { a = 1, b = 2 }</code>, dot access <code>r.field</code>, record updates <code>r { field = 3 }</code>, and field pattern matching.</li>
+            <li><strong>Multi-Branch Guards:</strong> Pattern equations with boolean guards <code>f x | cond1 = r1 | cond2 = r2</code>.</li>
+            <li><strong>Structural Equality:</strong> Deep recursive <code>==</code> and <code>!=</code> comparisons on algebraic data structures and strings.</li>
+            <li><strong>Modular Namespaces:</strong> Explicit imports with aliases (<code>#import "lib/draw.spp" as D</code>) and name scoping.</li>
+            <li><strong>Lambda Lifting:</strong> Inline anonymous functions (<code>\x y -> x + y</code>) automatically lifted into top-level definitions.</li>
+          </ul>
+          <pre class="code-block"><span style="color:#c084fc">record</span> Point = { x :: Int, y :: Int }
+
+<span style="color:#34d399">distanceSq</span> p1 p2 = 
+  <span style="color:#c084fc">let</span> dx = p2.x - p1.x
+      dy = p2.y - p1.y
+  <span style="color:#c084fc">in</span> dx * dx + dy * dy</pre>
+        </div>
+
+        <!-- Core Sapl -->
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h3>Core Sapl</h3>
+            <span class="badge badge-emerald">Kernel • .cfp</span>
+          </div>
+          <p>
+            Simple Applicative Programming Language: the pure, minimal lazy functional core targeting the JMVM stack machine directly.
+          </p>
+          <ul>
+            <li><strong>Explicit Laziness & Strictness:</strong> Strict arguments explicitly marked with <code>!</code> (e.g. <code>add !x !y = x + y</code>); lazy arguments defer evaluation into heap-allocated thunks.</li>
+            <li><strong>Explicit Constant Applicative Forms (CAFs):</strong> Global shared expressions defined via <code>=:</code> are evaluated once at runtime and memoized permanently.</li>
+            <li><strong>Algebraic Data Types:</strong> <code>::List a = Nil | Cons !a (List a)</code> with direct constructor dispatch.</li>
+            <li><strong>First-Class Exceptions:</strong> Robust <code>try expr catchNr handler</code> integrated with VM <code>SetJMP</code>/<code>GoJMP</code> opcodes.</li>
+          </ul>
+          <pre class="code-block"><span style="color:#34d399">::list</span> = Nil | Cons !x xs
+
+<span style="color:#60a5fa">from</span> !a  = Cons a (from (a + 1))
+<span style="color:#60a5fa">sieve</span> xs = <span style="color:#f43f5e">case</span> xs (Cons a as -> Cons a (sieve (filter (nmz a) as)))
+<span style="color:#60a5fa">primes</span>   =: sieve (from 2)</pre>
+        </div>
+
+        <!-- Clean -->
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h3>Clean & ABC</h3>
+            <span class="badge badge-amber">Reference • .icl / .abc</span>
+          </div>
+          <p>
+            The general-purpose, pure lazy functional language from Radboud University Nijmegen / TOP Software, powering the iTasks task-oriented programming ecosystem.
+          </p>
+          <ul>
+            <li><strong>ABC Intermediate Machine:</strong> Clean compiles to ABC code—a formal abstract graph rewriting machine featuring a triple-stack architecture (A, B, and C stacks).</li>
+            <li><strong>High-Performance Native Codegen:</strong> The Clean <code>cg</code> compiler transforms ABC into native machine code (x86, x86-64, ARM) achieving near-C execution speeds.</li>
+            <li><strong>Dual Interpreter:</strong> Clean's <code>abc-interpreter</code> runs native C or WebAssembly in the browser, enabling dynamic functional graph shipping across client-server tiers.</li>
+            <li><strong>Historical Connection:</strong> Jan Martin Jansen (2007) and László Domoszlai (2011–2018) originally authored <code>gensapl.icl</code> inside the Clean compiler to emit Sapl code.</li>
+          </ul>
+          <pre class="code-block"><span style="color:#fbbf24">module</span> primes
+<span style="color:#fbbf24">import</span> StdEnv
+
+<span style="color:#34d399">Start</span> = take 1000 primes
+  <span style="color:#fbbf24">where</span>
+    primes = sieve [2..]
+    sieve [p:xs] = [p : sieve [x \\ x &lt;- xs | x rem p &lt;&gt; 0]]</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         SECTION 3: COMPILATION PIPELINES
+         ========================================================================== -->
+    <section class="section-block" id="pipelines">
+      <div class="section-header">
+        <div class="section-icon">⚙️</div>
+        <div class="section-header-text">
+          <h2>3. Compilation Pipelines: End-to-End Workflows</h2>
+          <p>Six concrete transformation routes connecting source code to native hardware and WebAssembly execution.</p>
+        </div>
+      </div>
+
+      <!-- Pipeline Selector Tabs -->
+      <div class="pipeline-tabs">
+        <button class="pipeline-tab-btn active" onclick="switchPipeline('pipe-hlite')">Pipeline A: Haskell Lite &rarr; JMVM</button>
+        <button class="pipeline-tab-btn" onclick="switchPipeline('pipe-websapl')">Pipeline B: In-Browser WebSapl</button>
+        <button class="pipeline-tab-btn" onclick="switchPipeline('pipe-spp')">Pipeline C: Sapl+ &rarr; Native JMVM</button>
+        <button class="pipeline-tab-btn" onclick="switchPipeline('pipe-abc')">Pipeline D: Sapl &rarr; Clean ABC / Native</button>
+        <button class="pipeline-tab-btn" onclick="switchPipeline('pipe-abc2retag')">Pipeline E: Clean ABC &rarr; Retag &rarr; JMVM ★</button>
+        <button class="pipeline-tab-btn" onclick="switchPipeline('pipe-microhs')">Pipeline F: MicroHs Server Route</button>
+      </div>
+
+      <!-- VIEW A: HASKELL LITE PIPELINE -->
+      <div id="pipe-hlite" class="pipeline-view active">
+        <div class="card" style="border-left: 4px solid var(--accent-blue);">
+          <h3>Pipeline A: Haskell Lite to JMVM Bytecode</h3>
+          <p>
+            Translates standard Haskell source code into Sapl+, performs whole-program dictionary elimination via type specialization, and compiles to binary <code>.jvb</code>.
+          </p>
+          <div class="flow-steps">
+            <div class="flow-step-box highlight-blue">
+              <div class="flow-step-num">Step 1</div>
+              <div class="flow-step-name">Haskell Source</div>
+              <div class="flow-step-tool">Program.hs</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step-box">
+              <div class="flow-step-num">Step 2</div>
+              <div class="flow-step-name">HLite Front-End</div>
+              <div class="flow-step-tool">hlite.sh (Sapl+)</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step-box">
+              <div class="flow-step-num">Step 3</div>
+              <div class="flow-step-name">HM Inference & Spec</div>
+              <div class="flow-step-tool">No Dictionaries!</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step-box highlight-purple">
+              <div class="flow-step-num">Step 4</div>
+              <div class="flow-step-name">Sapl+ Source</div>
+              <div class="flow-step-tool">Program.spp</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step-box">
+              <div class="flow-step-num">Step 5</div>
+              <div class="flow-step-name">Gen1 Compiler</div>
+              <div class="flow-step-tool">./compile</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step-box highlight-emerald">
+              <div class="flow-step-num">Step 6</div>
+              <div class="flow-step-name">Execution</div>
+              <div class="flow-step-tool">./runfast (Musttail)</div>
+            </div>
+          </div>
+
+          <div class="highlight-box">
+            <strong>Key Stages in <code>micro_haskell/hlite/</code>:</strong>
+            <code>lexer.spp</code> (lexing & layout marks) &rarr; <code>layout.spp</code> (Haskell 2010 offside rule) &rarr; <code>parser.spp</code> (AST) &rarr; <code>fixity.spp</code> (operator precedence) &rarr; <code>desugar.spp</code> &rarr; <code>typecheck.spp</code> (Hindley-Milner) &rarr; <code>spec.spp</code> (monomorphization) &rarr; <code>compile.spp</code> (emits <code>.spp</code>).
+          </div>
+          <pre class="code-block"><span class="code-comment"># One-shot command to translate, compile, and execute Haskell Lite:</span>
+bash micro_haskell/hlite/hlite.sh Program.hs
+
+<span class="code-comment"># Or inspect the emitted Sapl+ intermediate representation:</span>
+bash micro_haskell/hlite/hlite.sh --spp Program.hs</pre>
+        </div>
+      </div>
+
+      <!-- VIEW B: WEBSAPL IN-BROWSER PIPELINE -->
+      <div id="pipe-websapl" class="pipeline-view">
+        <div class="card" style="border-left: 4px solid var(--accent-emerald);">
+          <h3>Pipeline B: 100% Client-Side WebAssembly (WebSapl)</h3>
+          <p>
+            The entire toolchain runs inside the user's web browser compiled to WebAssembly. Zero network calls or backend servers required.
+          </p>
+          <div class="flow-steps">
+            <div class="flow-step-box highlight-blue">
+              <div class="flow-step-num">Step 1</div>
+              <div class="flow-step-name">Notebook Cell</div>
+              <div class="flow-step-tool">Haskell / Sapl+</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step-box">
+              <div class="flow-step-num">Step 2</div>
+              <div class="flow-step-name">Wasm Compiler</div>
+              <div class="flow-step-tool">gen1 in Wasm</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step-box highlight-emerald">
+              <div class="flow-step-num">Step 3</div>
+              <div class="flow-step-name">Binary Chunk</div>
+              <div class="flow-step-tool">In-Memory .jvb</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step-box">
+              <div class="flow-step-num">Step 4</div>
+              <div class="flow-step-name">Dynamic Linking</div>
+              <div class="flow-step-tool">@install opcode</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step-box highlight-purple">
+              <div class="flow-step-num">Step 5</div>
+              <div class="flow-step-name">WebSapl Engine</div>
+              <div class="flow-step-tool">run.wasm (151 KB)</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step-box">
+              <div class="flow-step-num">Step 6</div>
+              <div class="flow-step-name">Browser DOM</div>
+              <div class="flow-step-tool">SVG / Canvas / Tables</div>
+            </div>
+          </div>
+
+          <div class="highlight-box emerald">
+            <strong>Instant Iteration:</strong> Because WebSapl dynamically links <code>.jvb</code> bytecode chunks into the running heap, notebook cell re-execution takes just <strong>5–10 milliseconds</strong>!
+          </div>
+          <pre class="code-block"><span class="code-comment"># Build the WebSapl WebAssembly runtime and tools:</span>
+bash websapl/tools/build_wasm.sh
+
+<span class="code-comment"># Launch the interactive local environment:</span>
+./start_workbench   <span class="code-comment"># Launches local IDE and WebSapl notebook interface</span></pre>
+        </div>
+      </div>
+
+      <!-- VIEW C: SAPL+ PIPELINE -->
+      <div id="pipe-spp" class="pipeline-view">
+        <div class="card" style="border-left: 4px solid var(--accent-purple);">
+          <h3>Pipeline C: Sapl+ & Core Sapl to Native JMVM</h3>
+          <p>
+            The primary production compilation chain for native performance with automatic strictness analysis and hardware optimization.
+          </p>
+          <div class="flow-steps">
+            <div class="flow-step-box highlight-purple">
+              <div class="flow-step-num">Stage 0</div>
+              <div class="flow-step-name">Sapl+ Source</div>
+              <div class="flow-step-tool">program.spp</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step-box">
+              <div class="flow-step-num">Stage 1</div>
+              <div class="flow-step-name">Preprocessor</div>
+              <div class="flow-step-tool">driver.jmvm &rarr; .cfp</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step-box">
+              <div class="flow-step-num">Stage 2</div>
+              <div class="flow-step-name">Strictness Analysis</div>
+              <div class="flow-step-tool">strictness.cfp (!)</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step-box highlight-blue">
+              <div class="flow-step-num">Stage 3</div>
+              <div class="flow-step-name">Retag IR</div>
+              <div class="flow-step-tool">eval / thunk / closure</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step-box">
+              <div class="flow-step-num">Stage 4</div>
+              <div class="flow-step-name">Codegen</div>
+              <div class="flow-step-tool">.jmvm + .jvb</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step-box highlight-emerald">
+              <div class="flow-step-num">Stage 5</div>
+              <div class="flow-step-name">Execution</div>
+              <div class="flow-step-tool">./runfast / ./run</div>
+            </div>
+          </div>
+
+          <div class="highlight-box purple">
+            <strong>Self-Hosting Compiler:</strong> The compiler (<code>saplcomp.jmvm</code>, gen1) is written in Sapl itself. It reaches a verifiable fixed point and is anchored by a typed Haskell version (<code>saplcomp_typed.hs</code>) compiled via GHC.
+          </div>
+          <pre class="code-block"><span class="code-comment"># Compile Sapl+ to bytecode (.jmvm and .jvb):</span>
+./compile-spp program.spp
+
+<span class="code-comment"># Execute with optimized musttail dispatch:</span>
+./runfast program.jvb
+
+<span class="code-comment"># Compile and execute in one step:</span>
+./run-spp program.spp</pre>
+        </div>
+      </div>
+
+      <!-- VIEW D: CLEAN ABC PIPELINE -->
+      <div id="pipe-abc" class="pipeline-view">
+        <div class="card" style="border-left: 4px solid var(--accent-amber);">
+          <h3>Pipeline D: Sapl to Clean Native Machine Code via ABC Backend</h3>
+          <p>
+            Connects the Sapl ecosystem directly to Clean's industrial-grade code generation infrastructure (<code>cg</code>) and the Clean ABC interpreter.
+          </p>
+          <div class="flow-steps">
+            <div class="flow-step-box highlight-purple">
+              <div class="flow-step-num">Step 1</div>
+              <div class="flow-step-name">Sapl Program</div>
+              <div class="flow-step-tool">program.cfp</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step-box highlight-blue">
+              <div class="flow-step-num">Step 2</div>
+              <div class="flow-step-name">Emit Retag IR</div>
+              <div class="flow-step-tool">./compile --emit=retag</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step-box highlight-amber">
+              <div class="flow-step-num">Step 3</div>
+              <div class="flow-step-name">Retag-to-ABC</div>
+              <div class="flow-step-tool">sapl_naar_abc.py</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step-box">
+              <div class="flow-step-num">Step 4</div>
+              <div class="flow-step-name">Clean Codegen (cg)</div>
+              <div class="flow-step-tool">cg program.abc</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step-box">
+              <div class="flow-step-num">Step 5</div>
+              <div class="flow-step-name">Native Link</div>
+              <div class="flow-step-tool">gcc + Clean runtime</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step-box highlight-emerald">
+              <div class="flow-step-num">Step 6</div>
+              <div class="flow-step-name">Native Binary</div>
+              <div class="flow-step-tool">5×–7× faster than VM</div>
+            </div>
+          </div>
+
+          <div class="highlight-box amber">
+            <strong>Direct Hardware Execution:</strong> By compiling Sapl retag form to Clean ABC, programs compile directly to native machine code via <code>cg</code>. The compiler itself (gen1) self-compiles in just <strong>0.63 seconds</strong> native!
+          </div>
+          <pre class="code-block"><span class="code-comment"># Generate Clean ABC from Sapl program via retag:</span>
+./compile program.cfp --emit=retag
+python3 experiments/abc_backend/sapl_naar_abc.py program.retag.txt program > program.abc
+
+<span class="code-comment"># Compile to native binary via Clean's cg and link with Clean runtime:</span>
+cg program.abc -o program.o
+gcc -O2 program.o clean_runtime/_startup.o clean_runtime/_system.o -o program_native
+
+<span class="code-comment"># Or run inside Clean's ABC-interpreter:</span>
+bcgen program.abc && bclink program.abc.o -o program.bc && abci program.bc</pre>
+        </div>
+      </div>
+
+      <!-- VIEW E: CLEAN ABC TO RETAG TO JMVM PIPELINE (NEW!) -->
+      <div id="pipe-abc2retag" class="pipeline-view">
+        <div class="card" style="border-left: 4px solid var(--accent-emerald);">
+          <h3>Pipeline E: Clean ABC &rarr; Stage-4 Retag &rarr; JMVM Bytecode ★</h3>
+          <p>
+            The newly completed reverse bridge! Compiles genuine Clean programs into Clean ABC bytecode, 
+            then uses the symbolic decompiler <code>abc2retag.py</code> to <strong>completely evaporate ABC stack shuffling</strong> 
+            and reconstruct clean Stage-4 Core AST (<code>.cfp_retag</code>) for execution on the JMVM and inside browser WebSapl!
+          </p>
+          <div class="flow-steps">
+            <div class="flow-step-box highlight-amber">
+              <div class="flow-step-num">Step 1</div>
+              <div class="flow-step-name">Clean Source</div>
+              <div class="flow-step-tool">Program.icl</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step-box">
+              <div class="flow-step-num">Step 2</div>
+              <div class="flow-step-name">Clean ABC Compiler</div>
+              <div class="flow-step-tool">clm -optabc (.opt.abc)</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step-box highlight-blue">
+              <div class="flow-step-num">Step 3</div>
+              <div class="flow-step-name">Symbolic Decompiler</div>
+              <div class="flow-step-tool">abc2retag.py</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step-box highlight-purple">
+              <div class="flow-step-num">Step 4</div>
+              <div class="flow-step-name">Stage-4 Retag AST</div>
+              <div class="flow-step-tool">Program.cfp_retag</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step-box">
+              <div class="flow-step-num">Step 5</div>
+              <div class="flow-step-name">compile-retag</div>
+              <div class="flow-step-tool">retagcomp.jmvm</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step-box highlight-emerald">
+              <div class="flow-step-num">Step 6</div>
+              <div class="flow-step-name">JMVM Target</div>
+              <div class="flow-step-tool">./runfast / run.wasm</div>
+            </div>
+          </div>
+
+          <div class="highlight-box emerald">
+            <strong>Why abc2retag beats direct stack emulation (abc2jmvm.py):</strong>
+            <ul style="margin-top: 6px;">
+              <li><strong>Total Stack Evaporation:</strong> ABC basic blocks are saturated with stack shufflers (<code>swap_a</code>, <code>dup_a</code>, <code>updatepop_a</code>, <code>push_b2</code>). <code>abc2retag.py</code> tracks symbolic values through abstract interpretation, eliminating all stack operations at compile time and reconstructing clean functional <code>let</code>-expressions.</li>
+              <li><strong>Huge Instruction Reduction:</strong> On <code>sort</code>, instructions dropped by <strong>-95.6%</strong> (from 9,670M to 425.9M instructions), cutting runtime from 6.49s to 0.36s (<strong>17.5× faster</strong>)!</li>
+              <li><strong>Faster than handwritten Sapl on <code>eval</code>:</strong> 0.20s vs 0.31s (250M vs 305M instructions); partly because the Clean port carries different strictness annotations than <code>benchmarks/eval.cfp</code>. Clean's interprocedural strictness optimizations carry directly into Retag, reducing GC cycles from 3 to 1!</li>
+              <li><strong>Fixed point:</strong> the typed Clean port of <code>gen1</code> (<code>gen1_naar_clean_getypeerd.py</code>) compiles itself via <code>abc2retag.py</code> on the JMVM byte-for-byte into <code>saplcomp.jmvm</code> (0.74 s; gen1 itself 0.56 s).</li>
+            </ul>
+          </div>
+          <pre class="code-block"><span class="code-comment"># 1. Compile Clean to optimized ABC assembly:</span>
+clm -nt -optabc -bytecode primes -o primes
+
+<span class="code-comment"># 2. Decompile Clean ABC assembly into Stage-4 Retag AST:</span>
+python3 experiments/abc2jmvm/abc2retag.py "Clean System Files/primes.opt.abc" -o primes.cfp_retag
+
+<span class="code-comment"># 3. Compile Stage-4 Retag AST to native JMVM bytecode (.jmvm and .jvb):</span>
+./compile-retag primes.cfp_retag primes_retag.jmvm
+
+<span class="code-comment"># 4. Execute on native JMVM or WebSapl WebAssembly:</span>
+./runfast primes_retag.jvb</pre>
+        </div>
+      </div>
+
+      <!-- VIEW F: MICROHS PIPELINE -->
+      <div id="pipe-microhs" class="pipeline-view">
+        <div class="card" style="border-left: 4px solid var(--accent-rose);">
+          <h3>Pipeline F: MicroHs Server-Side Route</h3>
+          <p>
+            Uses the native MicroHs compiler (<code>adtmhs</code>) as a heavy-duty server frontend and reference oracle for comprehensive Haskell language coverage.
+          </p>
+          <div class="flow-steps">
+            <div class="flow-step-box highlight-blue">
+              <div class="flow-step-num">Step 1</div>
+              <div class="flow-step-name">Haskell File</div>
+              <div class="flow-step-tool">Program.hs</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step-box highlight-rose">
+              <div class="flow-step-num">Step 2</div>
+              <div class="flow-step-name">MicroHs Frontend</div>
+              <div class="flow-step-tool">adtmhs -Ccache</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step-box">
+              <div class="flow-step-num">Step 3</div>
+              <div class="flow-step-name">Generated Sapl</div>
+              <div class="flow-step-tool">Program.cfp</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step-box">
+              <div class="flow-step-num">Step 4</div>
+              <div class="flow-step-name">Gen1 (Big Heap)</div>
+              <div class="flow-step-tool">./runfast-big compile</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step-box highlight-emerald">
+              <div class="flow-step-num">Step 5</div>
+              <div class="flow-step-name">JMVM Target</div>
+              <div class="flow-step-tool">Program.jvb</div>
+            </div>
+          </div>
+
+          <div class="highlight-box">
+            <strong>Server Fallback in Workbench:</strong> When Haskell code in the local Workbench uses constructs not yet implemented in Haskell Lite, the editor automatically falls back to this MicroHs route.
+          </div>
+          <pre class="code-block"><span class="code-comment"># Compile Haskell to JMVM using the MicroHs frontend:</span>
+./compile-hs path/to/Program.hs
+
+<span class="code-comment"># Run the resulting binary bytecode:</span>
+./run-hs path/to/Program.hs</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         SECTION 4: RETAG & ABC CORRESPONDENCE & DECOMPILATION
+         ========================================================================== -->
+    <section class="section-block" id="retag-abc">
+      <div class="section-header">
+        <div class="section-icon">🌉</div>
+        <div class="section-header-text">
+          <h2>4. The Universal Bridge: Retag IR & Clean ABC Machine</h2>
+          <p>The two-way operational correspondence between Sapl Stage-4 Retag IR and Clean's ABC abstract graph reduction model.</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>The Retag Intermediate Representation</h3>
+          <p>
+            In Stage 4 (<code>--emit=retag</code>), the Sapl compiler transforms all implicit lazy reduction dynamics into 
+            <strong>explicit operational annotations</strong>. There is zero ambiguity remaining about evaluation timing.
+          </p>
+          <ul>
+            <li><code>eval(x)</code>: Explicit evaluation demand. Forces a thunk into normal form or returns the evaluated value immediately.</li>
+            <li><code>thunk (f a b)</code>: Explicit deferred computation node allocated on the heap with unevaluated arguments.</li>
+            <li><code>closure (f a)</code>: Partial application node capturing unsaturated function parameters.</li>
+            <li><code>C a b</code>: Fully evaluated algebraic data constructor with boxed or unboxed fields.</li>
+            <li><code>=:</code>: Constant Applicative Form evaluated at most once and cached globally.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>The Clean ABC Machine Model</h3>
+          <p>
+            Clean's ABC machine uses three dedicated stacks to execute lazy functional code with minimal boxing:
+          </p>
+          <ul>
+            <li><strong>A-Stack (Argument / Node Stack):</strong> Holds references to heap nodes (constructors, thunks, closures).</li>
+            <li><strong>B-Stack (Basic Value Stack):</strong> Holds unboxed raw primitive values (integers, booleans, floating-point numbers). Bypasses heap allocation for arithmetic!</li>
+            <li><strong>C-Stack (Control Stack):</strong> Stores return subroutine addresses and frame linkages.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Formal 1-to-1 Mapping Table -->
+      <div class="table-container" style="margin-top: 20px;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Functional Concept</th>
+              <th>Sapl Retag IR (Stage 4)</th>
+              <th>Clean ABC Instruction</th>
+              <th>JMVM Bytecode Equivalent</th>
+              <th>Operational Semantic</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Evaluate Thunk</strong></td>
+              <td><code>eval(x)</code></td>
+              <td><code>jsr_eval 0</code> / <code>jmp_eval</code></td>
+              <td><code>eval</code> / <code>load_force</code></td>
+              <td>Forces node into Head Normal Form; updates thunk in-place.</td>
+            </tr>
+            <tr>
+              <td><strong>Unknown Function Call</strong></td>
+              <td><code>eval(f x)</code></td>
+              <td><code>jsr_ap 1</code> / <code>jmp_ap 1</code></td>
+              <td><code>evalap 1</code></td>
+              <td>Evaluates closure, checks arity, and branches or creates PAP.</td>
+            </tr>
+            <tr>
+              <td><strong>Create Thunk</strong></td>
+              <td><code>thunk (f a b)</code></td>
+              <td><code>build _ 2 n_f</code></td>
+              <td><code>create f 2</code></td>
+              <td>Allocates lazy node with entrypoint to evaluate when forced.</td>
+            </tr>
+            <tr>
+              <td><strong>Partial Application</strong></td>
+              <td><code>closure (f a)</code></td>
+              <td><code>buildh d_f 1</code></td>
+              <td><code>create f 1</code> (PAP)</td>
+              <td>Constructs unsaturated function closure.</td>
+            </tr>
+            <tr>
+              <td><strong>Data Constructor</strong></td>
+              <td><code>Cons a b</code></td>
+              <td><code>buildh d_Cons 2</code></td>
+              <td><code>ccreate Cons 2</code></td>
+              <td>Allocates algebraic data constructor node.</td>
+            </tr>
+            <tr>
+              <td><strong>Pattern Match Case</strong></td>
+              <td><code>case x (Cons h t -> ...)</code></td>
+              <td><code>eq_desc d_Cons 2 0; jmp_true; push_args</code></td>
+              <td><code>jmpt / jmpt_lv</code></td>
+              <td>Matches constructor tag; extracts arguments to stack.</td>
+            </tr>
+            <tr>
+              <td><strong>Strict Function Argument</strong></td>
+              <td><code>f !a b = ...</code></td>
+              <td>Entries <code>s_f</code> (strict), <code>ea_f</code>, <code>n_f</code></td>
+              <td>Direct register value in <code>sp</code></td>
+              <td>Caller pre-evaluates argument; no thunk allocated.</td>
+            </tr>
+            <tr>
+              <td><strong>Shared Constant (CAF)</strong></td>
+              <td><code>x =: expr</code></td>
+              <td><code>testcaf / pushcaf / fillcaf</code></td>
+              <td><code>caf x</code></td>
+              <td>Evaluates expression on first access and caches result.</td>
+            </tr>
+            <tr>
+              <td><strong>Unboxed Arithmetic</strong></td>
+              <td><code>a + b</code></td>
+              <td><code>pushI_a; addI; buildI_b</code> (via B-stack)</td>
+              <td><code>add</code> / <code>addI</code> (direct unboxed)</td>
+              <td>Evaluates operands, performs raw ALU addition without GC.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Deep Dive on the Decompiler (abc2retag.py) -->
+      <div style="margin-top: 24px;">
+        <h3 style="font-size: 16px; margin-bottom: 12px; color: var(--text-primary);">Decompilation Mechanics: How <code>abc2retag.py</code> Translates ABC to Retag</h3>
+        <div class="grid-3">
+          <div class="card">
+            <h4 style="font-size: 14px; color: var(--accent-blue); margin-bottom: 6px;">1. Symbolic Stack State</h4>
+            <p style="font-size: 12.5px;">
+              Basic blocks are tracked with symbolic expressions in A- and B-stacks. Operations like <code>push_a</code>, <code>swap_a</code>, and <code>pop_a</code> update compiler lists without emitting code. Intermediate stack manipulation evaporates completely.
+            </p>
+          </div>
+          <div class="card">
+            <h4 style="font-size: 14px; color: var(--accent-purple); margin-bottom: 6px;">2. Resolving Graph Mutations</h4>
+            <p style="font-size: 12.5px;">
+              Clean often generates <code>create</code> nodes followed later by <code>fillh</code> or <code>fill_r</code>. The decompiler tracks uninitialized references and resolves them into clean, immutable Retag constructor calls or functional <code>let</code>-bindings.
+            </p>
+          </div>
+          <div class="card">
+            <h4 style="font-size: 14px; color: var(--accent-emerald); margin-bottom: 6px;">3. Strictness & Unboxed Primitives</h4>
+            <p style="font-size: 12.5px;">
+              Clean's interprocedural strictness analysis is preserved: primitive values on the B-stack are reconstructed into unboxed arithmetic calls, avoiding redundant boxing and heap allocations.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         SECTION 5: BACKENDS & RUNTIMES
+         ========================================================================== -->
+    <section class="section-block" id="backends">
+      <div class="section-header">
+        <div class="section-icon">⚡</div>
+        <div class="section-header-text">
+          <h2>5. Backends & Execution Platforms</h2>
+          <p>From microarchitectural optimizations on native silicon to zero-overhead client-side WebAssembly.</p>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <!-- JMVM Native (Musttail) -->
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h3>JMVM Native Engine</h3>
+            <span class="badge badge-blue">Native C++</span>
+          </div>
+          <p>
+            Ultra-fast stack machine built with Clang <code>[[clang::musttail]]</code> and <code>__attribute__((preserve_none))</code>.
+          </p>
+          <ul>
+            <li><strong>2.5 Billion Op/s:</strong> Six VM registers permanently pinned in CPU hardware registers. Eliminates stack frame overhead on dispatch.</li>
+            <li><strong>Superinstruction Fusion:</strong> Fuses 7 hot patterns at load time (<code>load_force</code>, <code>jmpt_lv</code>, <code>eval_local</code>), eliminating 21% of all executed instructions.</li>
+            <li><strong>Hardware Case Branching:</strong> Pattern matches for constructors 0 & 1 use direct hardware conditional branches (<code>cmp</code>/<code>b.eq</code>), avoiding pipeline stalls.</li>
+            <li><strong>Binary Format (<code>.jvb</code>):</strong> Instant startup in ~6 ms without runtime textual parsing.</li>
+          </ul>
+        </div>
+
+        <!-- WebSapl Browser Wasm -->
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h3>WebSapl (Browser Wasm)</h3>
+            <span class="badge badge-emerald">Client-Side Wasm</span>
+          </div>
+          <p>
+            Full VM and toolchain compiled to WebAssembly via Emscripten (<code>run.wasm</code>, 151 KB).
+          </p>
+          <ul>
+            <li><strong>Zero Server Dependency:</strong> Everything (lexer, parser, compiler, VM, graphics) executes in the client browser.</li>
+            <li><strong>Dedicated Stacks in Linear Memory:</strong> Does not consume JavaScript call stack; immune to browser recursion limits.</li>
+            <li><strong>High Relative Velocity:</strong> Runs at 1.38&times;–1.65&times; native speed in Chrome/V8, matching standard C-to-Wasm performance.</li>
+            <li><strong>In-Memory Chunk Loader:</strong> Enables live reactive notebooks and interactive REPL sessions.</li>
+          </ul>
+        </div>
+
+        <!-- Clean cg Native -->
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h3>Clean Native (cg)</h3>
+            <span class="badge badge-amber">AOT Assembly</span>
+          </div>
+          <p>
+            Compiles ABC intermediate code directly into machine instructions (x86, x86-64, ARM).
+          </p>
+          <ul>
+            <li><strong>Peak Performance:</strong> 5&times; to 7&times; faster than interpreted bytecode; nearly matches hand-written C.</li>
+            <li><strong>Dedicated ABC Stacks:</strong> Direct machine register allocation for A, B, and C stack pointers.</li>
+            <li><strong>Self-Hosting Speed:</strong> gen1 compiles itself via Clean ABC in just 0.63 seconds native!</li>
+            <li><strong>Proven Runtime:</strong> Decades of mature GC, memory management, and uniqueness typing optimizations.</li>
+          </ul>
+        </div>
+
+        <!-- Clean ABC Interpreter -->
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h3>Clean ABC Interpreter</h3>
+            <span class="badge badge-purple">abci • Native / Wasm</span>
+          </div>
+          <p>
+            Official Clean bytecode interpreter generated from a formal specification (<code>interpretergen-c</code> and <code>interpretergen-wasm</code>).
+          </p>
+          <ul>
+            <li><strong>Dynamic Interworking:</strong> Enables shipping lazy thunks and functions between servers and clients.</li>
+            <li><strong>Sandboxing:</strong> Safe isolated evaluation of untrusted functional bytecode.</li>
+            <li><strong>Performance:</strong> Comparable to JMVM native; slightly slower in WebAssembly unless locals optimization is applied.</li>
+          </ul>
+        </div>
+
+        <!-- AOT C / Clang Musttail -->
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h3>AOT C Translation (jmvm2c)</h3>
+            <span class="badge badge-blue">Experimental AOT</span>
+          </div>
+          <p>
+            Ahead-of-time compiler converting JMVM bytecode into continuous C functions connected by <code>musttail</code>.
+          </p>
+          <ul>
+            <li><strong>1.7&times;–2.4&times; Speedup:</strong> Delivers significant acceleration over the bytecode interpreter.</li>
+            <li><strong>Clang Optimization:</strong> Clang extracts additional hardware pipeline throughput from structured C continuations.</li>
+            <li><strong>Tradeoff:</strong> Large generated C files (gen1 is ~8.3 MB C) with compilation taking ~41s under <code>-O2</code>.</li>
+          </ul>
+        </div>
+
+        <!-- Standalone Wasm (jmvm2wat) -->
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h3>Direct Wasm (jmvm2wat)</h3>
+            <span class="badge badge-emerald">Experimental AOT</span>
+          </div>
+          <p>
+            Directly translates bytecode to standalone WebAssembly modules using <code>return_call</code> continuations.
+          </p>
+          <ul>
+            <li><strong>1.5&times; Speedup in Chrome:</strong> Runs faster than the cold Wasm interpreter.</li>
+            <li><strong>Eliminates VM Dispatch:</strong> Bytecode instructions turn directly into Wasm instructions with linear memory stacks.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         SECTION 6: TOOLS MATRIX
+         ========================================================================== -->
+    <section class="section-block" id="tools">
+      <div class="section-header">
+        <div class="section-icon">🧰</div>
+        <div class="section-header-text">
+          <h2>6. Comprehensive Toolchain Reference</h2>
+          <p>Command-line utilities, compilers, virtual machines, converters, and development environments.</p>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Tool / Command</th>
+              <th>Category</th>
+              <th>Primary Role & Capabilities</th>
+              <th>Typical Invocation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>hlite.sh</code></td>
+              <td><span class="badge badge-blue">Frontend</span></td>
+              <td>Translates Haskell Lite (<code>.hs</code>) to Sapl+, desugars, infers types, specializes type classes, compiles, and runs.</td>
+              <td><code>bash micro_haskell/hlite/hlite.sh File.hs [--spp]</code></td>
+            </tr>
+            <tr>
+              <td><code>./compile-spp</code></td>
+              <td><span class="badge badge-purple">Compiler</span></td>
+              <td>Preprocesses Sapl+ (<code>.spp</code>) into Core Sapl (<code>.cfp</code>) and compiles to <code>.jmvm</code> and <code>.jvb</code>.</td>
+              <td><code>./compile-spp path/to/file.spp</code></td>
+            </tr>
+            <tr>
+              <td><code>./compile</code></td>
+              <td><span class="badge badge-purple">Compiler</span></td>
+              <td>Production self-hosted Sapl compiler (gen1). Performs strictness analysis, emits bytecode and <code>.jvb</code>.</td>
+              <td><code>./compile file.cfp [--nostrict] [--emit=retag]</code></td>
+            </tr>
+            <tr>
+              <td><code>./compile-retag</code></td>
+              <td><span class="badge badge-purple">Tool</span></td>
+              <td>Compiles Stage-4 Retag IR (<code>.cfp_retag</code>) directly to JMVM bytecode using <code>retagcomp.jmvm</code>.</td>
+              <td><code>./compile-retag file.cfp_retag file.jmvm</code></td>
+            </tr>
+            <tr>
+              <td><code>abc2retag.py</code></td>
+              <td><span class="badge badge-emerald">Bridge ★</span></td>
+              <td><strong>Symbolic decompiler:</strong> Converts Clean ABC assembly (<code>.opt.abc</code>) into Stage-4 Retag AST (<code>.cfp_retag</code>), evaporating stack ops.</td>
+              <td><code>python3 experiments/abc2jmvm/abc2retag.py file.opt.abc -o file.cfp_retag</code></td>
+            </tr>
+            <tr>
+              <td><code>abc2jmvm.py</code></td>
+              <td><span class="badge badge-rose">Prototype</span></td>
+              <td>Historic direct stack emulator for ABC (instruction-heavy; superseded by <code>abc2retag.py</code>).</td>
+              <td><code>python3 experiments/abc2jmvm/abc2jmvm.py file.opt.abc > file.jmvm</code></td>
+            </tr>
+            <tr>
+              <td><code>sapl_naar_abc.py</code></td>
+              <td><span class="badge badge-amber">Bridge</span></td>
+              <td>Translates Sapl Stage-4 Retag IR into Clean ABC assembly (<code>.abc</code>) for native Clean compilation.</td>
+              <td><code>python3 experiments/abc_backend/sapl_naar_abc.py file.retag.txt mod > file.abc</code></td>
+            </tr>
+            <tr>
+              <td><code>./compile-hs</code></td>
+              <td><span class="badge badge-blue">Frontend</span></td>
+              <td>Compiles Haskell via the MicroHs frontend (<code>adtmhs</code>) into Sapl and JMVM bytecode.</td>
+              <td><code>./compile-hs path/to/file.hs</code></td>
+            </tr>
+            <tr>
+              <td><code>clm / cg</code></td>
+              <td><span class="badge badge-amber">Clean Tool</span></td>
+              <td>Clean Make tool and native code generator. Compiles ABC to native machine objects.</td>
+              <td><code>cg file.abc -o file.o && gcc file.o ...</code></td>
+            </tr>
+            <tr>
+              <td><code>bcgen / abci</code></td>
+              <td><span class="badge badge-amber">Clean Tool</span></td>
+              <td>Generates Clean bytecode (<code>.bc</code>) and executes it inside Clean's ABC-interpreter.</td>
+              <td><code>bcgen file.abc && bclink file.abc.o -o file.bc && abci file.bc</code></td>
+            </tr>
+            <tr>
+              <td><code>./runfast</code></td>
+              <td><span class="badge badge-blue">Runtime</span></td>
+              <td>High-throughput native JMVM executor using <code>musttail</code> dispatch without profiling overhead.</td>
+              <td><code>./runfast path/to/file.jvb</code></td>
+            </tr>
+            <tr>
+              <td><code>./run</code></td>
+              <td><span class="badge badge-blue">Runtime</span></td>
+              <td>Native JMVM execution with instruction counting, timing, and allocation statistics.</td>
+              <td><code>./run path/to/file.jmvm</code></td>
+            </tr>
+            <tr>
+              <td><code>./runswitch-debug</code></td>
+              <td><span class="badge badge-blue">Debugger</span></td>
+              <td>Debug VM with 4,096-instruction ring-buffer flight recorder; dumps backtrace on crash/SIGALRM.</td>
+              <td><code>./runswitch-debug path/to/file.jmvm</code></td>
+            </tr>
+            <tr>
+              <td><code>./jmvm2jvb</code></td>
+              <td><span class="badge badge-emerald">Format</span></td>
+              <td>Converts human-readable textual <code>.jmvm</code> bytecode into compact binary <code>.jvb</code>.</td>
+              <td><code>./jmvm2jvb file.jmvm -o file.jvb</code></td>
+            </tr>
+            <tr>
+              <td><code>./jvb2jmvm</code></td>
+              <td><span class="badge badge-emerald">Format</span></td>
+              <td>Decompiles/converts binary <code>.jvb</code> format back into readable <code>.jmvm</code> text.</td>
+              <td><code>./jvb2jmvm file.jvb -o file.jmvm</code></td>
+            </tr>
+            <tr>
+              <td><code>./start_workbench</code></td>
+              <td><span class="badge badge-purple">IDE</span></td>
+              <td>Launches the local developer workbench: interactive IDE, live AST inspection, bytecode viewer.</td>
+              <td><code>./start_workbench</code></td>
+            </tr>
+            <tr>
+              <td><code>WebSapl Notebook</code></td>
+              <td><span class="badge badge-emerald">Environment</span></td>
+              <td>Interactive in-browser reactive notebook (<code>websapl/notebook.html</code>) supporting Haskell Lite & Sapl+.</td>
+              <td>Open in browser: <code>websapl/notebook.html</code></td>
+            </tr>
+            <tr>
+              <td><code>rs-driver (REPL)</code></td>
+              <td><span class="badge badge-purple">Environment</span></td>
+              <td>Interactive terminal REPL written in Sapl itself. Dynamic expression evaluation and session saving.</td>
+              <td><code>./rs-driver repl_sapl/build/mini_repl.jmvm</code></td>
+            </tr>
+            <tr>
+              <td><code>./check_bootstrap</code></td>
+              <td><span class="badge badge-blue">QA / Test</span></td>
+              <td>Verifies compiler fixed-point and tests typed Haskell GHC anchor equivalence in ~12 seconds.</td>
+              <td><code>./check_bootstrap</code></td>
+            </tr>
+            <tr>
+              <td><code>test_r1..r3.sh / test_gen1.sh</code></td>
+              <td><span class="badge badge-emerald">QA / Test</span></td>
+              <td>End-to-end regression suites for Clean ABC &rarr; Retag &rarr; JMVM translation (100% pass across 13 benchmarks & gen1).</td>
+              <td><code>bash experiments/abc2jmvm/test_gen1.sh</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         SECTION 7: BENCHMARK RESULTS & FEATURE MATRIX
+         ========================================================================== -->
+    <section class="section-block" id="comparison">
+      <div class="section-header">
+        <div class="section-icon">📊</div>
+        <div class="section-header-text">
+          <h2>7. Benchmark Results & Capability Matrix</h2>
+          <p>Verified performance across the 13 standard Clean benchmarks and comparative ecosystem capabilities.</p>
+        </div>
+      </div>
+
+      <h3 style="font-size: 16px; margin-bottom: 10px; color: var(--text-primary);">Clean ABC &rarr; Retag &rarr; JMVM Benchmark Results (13 Benchmarks)</h3>
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">
+        Measured on Apple Silicon macOS host. Compares Clean's official <code>abci</code> interpreter, the direct stack emulator (<code>abc2jmvm.py</code>), 
+        the symbolic decompiler (<code>abc2retag.py</code> running on JMVM <code>./runfast</code>), and standard handwritten native Sapl.
+        abc2retag and Sapl: state of 8 November 2026 (after the optimisation pass), <code>./runfast</code> best of 5, instructions from <code>./run</code>.
+        The abci and direct-stack columns are from 7 November; abci is wall-clock including startup, so not like-for-like. GC cycles were not re-measured.
+      </p>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Benchmark</th>
+              <th>Clean <code>abci</code></th>
+              <th>Direct Stack (abc2jmvm)</th>
+              <th><strong>abc2retag &rarr; JMVM</strong></th>
+              <th>Native Sapl (runfast)</th>
+              <th><strong>abc2retag Instructions</strong></th>
+              <th>Native Sapl Instructions</th>
+              <th>GC Cycles (retag / std)</th>
+              <th>Result Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong><code>fib</code></strong></td>
+              <td>0.352s</td>
+              <td>1.340s</td>
+              <td><strong>0.240s</strong></td>
+              <td>0.230s</td>
+              <td><strong>632.5M</strong></td>
+              <td>632.5M</td>
+              <td>&mdash;</td>
+              <td><span class="badge badge-emerald">100% Match</span></td>
+            </tr>
+            <tr>
+              <td><strong><code>primes</code></strong></td>
+              <td>0.226s</td>
+              <td>0.980s</td>
+              <td><strong>0.220s</strong></td>
+              <td>0.210s</td>
+              <td><strong>253.0M</strong></td>
+              <td>240.7M</td>
+              <td>&mdash;</td>
+              <td><span class="badge badge-emerald">100% Match</span></td>
+            </tr>
+            <tr>
+              <td><strong><code>twice</code></strong></td>
+              <td>0.377s</td>
+              <td>0.880s</td>
+              <td><strong>0.490s</strong></td>
+              <td>0.620s</td>
+              <td><strong>537.5M</strong></td>
+              <td>668.6M</td>
+              <td>&mdash;</td>
+              <td><span class="badge badge-emerald">100% Match</span></td>
+            </tr>
+            <tr>
+              <td><strong><code>queens</code></strong></td>
+              <td>0.133s</td>
+              <td>0.560s</td>
+              <td><strong>0.120s</strong></td>
+              <td>0.130s</td>
+              <td><strong>165.8M</strong></td>
+              <td>167.5M</td>
+              <td>&mdash;</td>
+              <td><span class="badge badge-emerald">100% Match</span></td>
+            </tr>
+            <tr>
+              <td><strong><code>sort</code></strong></td>
+              <td>0.211s</td>
+              <td>6.490s (9.67B instrs)</td>
+              <td><strong>0.300s</strong></td>
+              <td>0.270s</td>
+              <td><strong>377.4M</strong></td>
+              <td>334.8M</td>
+              <td>&mdash;</td>
+              <td><span class="badge badge-emerald">100% Match</span></td>
+            </tr>
+            <tr>
+              <td><strong><code>knights</code></strong></td>
+              <td>0.043s</td>
+              <td><em>(failed)</em></td>
+              <td><strong>0.060s</strong></td>
+              <td>0.050s</td>
+              <td><strong>60.8M</strong></td>
+              <td>54.1M</td>
+              <td>&mdash;</td>
+              <td><span class="badge badge-emerald">100% Match</span></td>
+            </tr>
+            <tr>
+              <td><strong><code>match</code></strong></td>
+              <td>0.157s</td>
+              <td>0.860s</td>
+              <td><strong>0.240s</strong></td>
+              <td>0.220s</td>
+              <td><strong>251.7M</strong></td>
+              <td>223.7M</td>
+              <td>&mdash;</td>
+              <td><span class="badge badge-emerald">100% Match</span></td>
+            </tr>
+            <tr>
+              <td><strong><code>eval</code></strong></td>
+              <td>0.125s</td>
+              <td><em>(failed)</em></td>
+              <td><strong>0.200s</strong></td>
+              <td>0.310s</td>
+              <td><strong>250.2M</strong></td>
+              <td>305.2M</td>
+              <td>&mdash;</td>
+              <td><span class="badge badge-emerald">Beats Sapl</span></td>
+            </tr>
+            <tr>
+              <td><strong><code>hamming</code></strong></td>
+              <td>0.330s</td>
+              <td><em>(failed)</em></td>
+              <td><strong>0.380s</strong></td>
+              <td>0.380s</td>
+              <td><strong>364.3M</strong></td>
+              <td>368.1M</td>
+              <td>&mdash;</td>
+              <td><span class="badge badge-emerald">100% Match</span></td>
+            </tr>
+            <tr>
+              <td><strong><code>sprimes</code></strong></td>
+              <td>0.430s</td>
+              <td><em>(failed)</em></td>
+              <td><strong>0.560s</strong></td>
+              <td>0.560s</td>
+              <td><strong>382.1M</strong></td>
+              <td>437.9M</td>
+              <td>&mdash;</td>
+              <td><span class="badge badge-emerald">100% Match</span></td>
+            </tr>
+            <tr>
+              <td><strong><code>parsetest</code></strong></td>
+              <td>0.480s</td>
+              <td><em>(failed)</em></td>
+              <td><strong>0.710s</strong></td>
+              <td>0.530s</td>
+              <td><strong>402.8M</strong></td>
+              <td>297.6M</td>
+              <td>&mdash;</td>
+              <td><span class="badge badge-emerald">100% Match</span></td>
+            </tr>
+            <tr>
+              <td><strong><code>prolog</code></strong></td>
+              <td>0.158s</td>
+              <td><em>(failed)</em></td>
+              <td><strong>0.230s</strong></td>
+              <td>0.200s</td>
+              <td><strong>176.3M</strong></td>
+              <td>139.1M</td>
+              <td>&mdash;</td>
+              <td><span class="badge badge-emerald">100% Match</span></td>
+            </tr>
+            <tr>
+              <td><strong><code>eval2</code></strong></td>
+              <td>0.253s</td>
+              <td><em>(failed)</em></td>
+              <td><strong>0.440s</strong></td>
+              <td>0.390s</td>
+              <td><strong>481.9M</strong></td>
+              <td>427.8M</td>
+              <td>&mdash;</td>
+              <td><span class="badge badge-emerald">100% Match</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top: 28px;">
+        <h3 style="font-size: 16px; margin-bottom: 10px; color: var(--text-primary);">General Ecosystem Capability Matrix</h3>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Dimension</th>
+                <th>Haskell Lite &rarr; JMVM</th>
+                <th>Sapl+ &rarr; Native JMVM</th>
+                <th>Clean ABC &rarr; Retag &rarr; JMVM ★</th>
+                <th>Sapl &rarr; Clean ABC (cg)</th>
+                <th>Standard Clean (clm)</th>
+                <th>GHC (Haskell)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Evaluation Strategy</strong></td>
+                <td>Lazy (graph reduction)</td>
+                <td>Lazy (graph reduction)</td>
+                <td>Lazy (graph reduction)</td>
+                <td>Lazy (graph reduction)</td>
+                <td>Lazy (graph reduction)</td>
+                <td>Lazy (STG / Graph)</td>
+              </tr>
+              <tr>
+                <td><strong>Type System</strong></td>
+                <td>Hindley-Milner + Classes</td>
+                <td>Typechecker warnings</td>
+                <td>Clean Uniqueness / Static</td>
+                <td>Untyped (from retag)</td>
+                <td>Uniqueness + Classes</td>
+                <td>Full GHC Extensions</td>
+              </tr>
+              <tr>
+                <td><strong>Type Class Handling</strong></td>
+                <td>Monomorphization (No dicts!)</td>
+                <td>Manual / structural</td>
+                <td>Resolved by Clean compiler</td>
+                <td>Resolved in frontend</td>
+                <td>Dictionaries</td>
+                <td>Dictionary passing / Spec</td>
+              </tr>
+              <tr>
+                <td><strong>Browser Execution</strong></td>
+                <td><strong>Yes</strong> (100% client Wasm)</td>
+                <td><strong>Yes</strong> (WebSapl Wasm)</td>
+                <td><strong>Yes</strong> (Runs on WebSapl!)</td>
+                <td>Via Clean Wasm abci</td>
+                <td>Via Clean Wasm abci</td>
+                <td>GHC Wasm backend (heavy)</td>
+              </tr>
+              <tr>
+                <td><strong>Serverless Notebooks</strong></td>
+                <td><strong>Yes</strong> (&lt;0.5s turnaround)</td>
+                <td><strong>Yes</strong> (5–10ms turnaround)</td>
+                <td><strong>Yes</strong> (in WebSapl)</td>
+                <td>No</td>
+                <td>No</td>
+                <td>Requires Jupyter / IHaskell</td>
+              </tr>
+              <tr>
+                <td><strong>Compilation Speed</strong></td>
+                <td>Very Fast (~0.15s)</td>
+                <td>Ultra-Fast (~12ms)</td>
+                <td>Fast (Clean + abc2retag)</td>
+                <td>Fast (~0.63s self)</td>
+                <td>Moderate (~1.2s self)</td>
+                <td>Heavy (~1.0s–3.0s+)</td>
+              </tr>
+              <tr>
+                <td><strong>Runtime Velocity</strong></td>
+                <td>Fast (1.0&times;–1.2&times; of Sapl)</td>
+                <td>Fast (2.5B op/s, musttail)</td>
+                <td>0.74&ndash;1.24&times; of handwritten Sapl (instructions)</td>
+                <td><strong>Very Fast</strong> (5&times;–7&times; over VM)</td>
+                <td><strong>Peak Native</strong> (~1.1&times; of C)</td>
+                <td><strong>Peak Native</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Concluding Summary Callout -->
+      <div class="highlight-box emerald" style="margin-top: 24px; padding: 18px;">
+        <h3 style="font-size: 15px; color: var(--accent-emerald); margin-bottom: 6px;">Key Ecosystem Synthesis</h3>
+        <p style="font-size: 13.5px; line-height: 1.6; color: var(--text-secondary);">
+          The convergence of <strong>Haskell Lite</strong>, <strong>Sapl(+)</strong>, <strong>JMVM</strong>, and <strong>Clean ABC</strong> creates a completely closed, bidirectional functional computing stack:
+          developers gain the ergonomic clarity and educational appeal of standard Haskell in frictionless, zero-server browser notebooks (via WebSapl), 
+          the modular simplicity of a lightweight stack machine (JMVM), 
+          an immediate route to near-C native execution speed by targeting Clean's <code>cg</code> compiler via Retag &rarr; ABC, 
+          and <strong>the ability to decompile Clean ABC programs into Retag AST</strong> via <code>abc2retag.py</code>, enabling Clean programs to run directly on the JMVM and inside browser notebooks!
+        </p>
+      </div>
+    </section>
+
+  </div>
+
+  <footer style="text-align: center; padding: 32px 0; color: var(--text-muted); font-size: 12px; border-top: 1px solid var(--border-color); margin-top: 40px;">
+    JMVM &bull; Sapl(+) &bull; Clean &bull; ABC &bull; Haskell Lite &mdash; Technical Factsheet (November 2026)
+  </footer>
+
+  <!-- ==========================================================================
+       INTERACTIVE SCRIPTS (Theme Toggle & Pipeline Switcher)
+       ========================================================================== -->
+  <script>
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme') || 'dark';
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      updateThemeBtn(newTheme);
+    }
+
+    function updateThemeBtn(theme) {
+      const icon = document.getElementById('themeIcon');
+      const label = document.getElementById('themeLabel');
+      if (theme === 'light') {
+        icon.textContent = '🌙';
+        label.textContent = 'Dark Mode';
+      } else {
+        icon.textContent = '☀️';
+        label.textContent = 'Light Mode';
+      }
+    }
+
+    function switchPipeline(viewId) {
+      // Hide all pipeline views
+      const views = document.querySelectorAll('.pipeline-view');
+      views.forEach(v => v.classList.remove('active'));
+
+      // Deactivate all buttons
+      const btns = document.querySelectorAll('.pipeline-tab-btn');
+      btns.forEach(b => b.classList.remove('active'));
+
+      // Show selected view
+      const targetView = document.getElementById(viewId);
+      if (targetView) targetView.classList.add('active');
+
+      // Highlight clicked button
+      if (event && event.target) {
+        event.target.classList.add('active');
+      }
+    }
+
+    // Initialize theme from storage
+    (function() {
+      const savedTheme = localStorage.getItem('theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      updateThemeBtn(savedTheme);
+    })();
+  </script>
+</body>
+</html>

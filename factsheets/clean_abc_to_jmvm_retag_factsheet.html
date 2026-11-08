@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Factsheet: Clean ABC to JMVM Compilation via Stage-4 Retag</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --fg: #1b2230;
+  --muted: #5a6475;
+  --line: #d9dee6;
+  --accent: #1f5f8b;
+  --accent-soft: #e3eef6;
+  --warn: #9a5b00;
+  --warn-soft: #fbf0de;
+  --ok: #2c6b45;
+  --ok-soft: #e3f2e8;
+  --band: #c9d7e4;
+  --f-display: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161d;
+    --surface: #1a2029;
+    --fg: #e4e8ee;
+    --muted: #9aa5b6;
+    --line: #2d3542;
+    --accent: #7db7e0;
+    --accent-soft: #1d3346;
+    --warn: #e7b25c;
+    --warn-soft: #3a2c14;
+    --ok: #7fcf9c;
+    --ok-soft: #173025;
+    --band: #2a3d50;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161d;
+  --surface: #1a2029;
+  --fg: #e4e8ee;
+  --muted: #9aa5b6;
+  --line: #2d3542;
+  --accent: #7db7e0;
+  --accent-soft: #1d3346;
+  --warn: #e7b25c;
+  --warn-soft: #3a2c14;
+  --ok: #7fcf9c;
+  --ok-soft: #173025;
+  --band: #2a3d50;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--f-body);
+  font-size: 16px;
+  line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 64px;
+}
+.wrap { max-width: 900px; margin: 0 auto; }
+header {
+  padding-block: 48px 24px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 24px;
+}
+.eyebrow {
+  font-family: var(--f-mono);
+  font-size: 12.5px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 500;
+}
+h1 {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: clamp(30px, 5vw, 44px);
+  line-height: 1.1;
+  margin: 10px 0 14px;
+  letter-spacing: -.01em;
+}
+h2 {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 1.2;
+  margin: 36px 0 12px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 6px;
+}
+h3 {
+  font-family: var(--f-display);
+  font-weight: 600;
+  font-size: 18px;
+  margin: 20px 0 6px;
+}
+.meta {
+  color: var(--muted);
+  font-size: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 12px;
+}
+.meta span { display: inline-flex; align-items: center; gap: 4px; }
+.lede {
+  font-size: 18px;
+  color: var(--fg);
+  line-height: 1.5;
+  margin: 0 0 16px;
+}
+p { margin: 0 0 12px; }
+ul, ol { margin: 0 0 12px; padding-left: 1.25em; }
+li { margin-bottom: 6px; }
+a { color: var(--accent); text-underline-offset: 2px; }
+code {
+  font-family: var(--f-mono);
+  font-size: .88em;
+  background: var(--accent-soft);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+pre {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  font-family: var(--f-mono);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+pre code { background: none; padding: 0; }
+.metrics {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  margin: 20px 0;
+}
+.metric-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+.metric-card.hl {
+  border-color: var(--ok);
+  background: var(--ok-soft);
+}
+.metric-val {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 1.1;
+  color: var(--fg);
+  margin-bottom: 4px;
+}
+.metric-card.hl .metric-val { color: var(--ok); }
+.metric-label {
+  font-size: 13.5px;
+  color: var(--muted);
+  line-height: 1.3;
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px 20px;
+  margin: 16px 0;
+}
+.pill {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.pill.ok { background: var(--ok-soft); color: var(--ok); }
+.pill.info { background: var(--accent-soft); color: var(--accent); }
+.tablebox {
+  overflow-x: auto;
+  margin: 16px 0 20px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 14px;
+  min-width: 680px;
+}
+th, td {
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+th {
+  font-weight: 600;
+  color: var(--muted);
+  font-size: 13px;
+  background: var(--surface);
+}
+tr:last-child td { border-bottom: none; }
+td.n, th.n {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: var(--f-mono);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.best { font-weight: 600; color: var(--ok); }
+.pipeline-flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0;
+  font-family: var(--f-mono);
+  font-size: 13.5px;
+}
+.pipeline-step {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 12px;
+}
+.pipeline-arrow { color: var(--muted); font-size: 16px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Technical Factsheet &bull; Architecture &amp; Benchmarks</div>
+  <h1>Clean ABC to JMVM Compilation via Stage-4 Retag</h1>
+  <p class="lede">A generic, stack-evaporating symbolic decompiler translating Clean ABC assembly to Stage-4 Retag Core AST, achieving up to 18&times; speedup and 100% test pass rate across all 13 benchmarks.</p>
+  <div class="meta">
+    <span><strong>Project:</strong> JMVM / Sapl</span>
+    <span><strong>Date:</strong> 2026-11-07, updated 2026-11-08</span>
+    <span><strong>In main:</strong> PR #148 and #149</span>
+    <span><strong>Status:</strong> <span class="pill ok">Validated 13 / 13 Benchmarks</span></span>
+  </div>
+</header>
+
+<main>
+
+<div class="metrics">
+  <div class="metric-card hl">
+    <div class="metric-val">13 / 13</div>
+    <div class="metric-label">Clean benchmarks passing with exact bitwise output</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-val">17.5&times;</div>
+    <div class="metric-label">Max execution speedup on <code>sort</code> vs direct stack emission</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-val">-95.6%</div>
+    <div class="metric-label">Instruction count reduction on <code>sort</code> (from 9.67B to 425.9M)</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-val">0.74&ndash;1.24&times;</div>
+    <div class="metric-label">Of handwritten Sapl in executed instructions, after the optimisation pass of 8 November (6 of 13 at or above Sapl)</div>
+  </div>
+  <div class="metric-card hl">
+    <div class="metric-val">Fixed point</div>
+    <div class="metric-label">A typed Clean port of the Sapl compiler (gen1) compiles itself via abc2retag on the JMVM byte-for-byte</div>
+  </div>
+</div>
+
+<h2>1. Pipeline Architecture</h2>
+<p>The compilation chain bridges Clean's graph-rewriting abstract machine (Clean ABC) to the register/slot-based execution model of the JMVM:</p>
+
+<div class="pipeline-flow">
+  <div class="pipeline-step">Clean Source (<code>.icl</code>)</div>
+  <div class="pipeline-arrow">&rarr;</div>
+  <div class="pipeline-step">Clean Frontend (<code>clm / abcopt</code>)</div>
+  <div class="pipeline-arrow">&rarr;</div>
+  <div class="pipeline-step">Clean Bytecode (<code>.opt.abc</code>)</div>
+  <div class="pipeline-arrow">&rarr;</div>
+  <div class="pipeline-step" style="border-color: var(--accent); background: var(--accent-soft);"><strong>abc2retag.py</strong></div>
+  <div class="pipeline-arrow">&rarr;</div>
+  <div class="pipeline-step">Stage-4 Retag AST (<code>.cfp_retag</code>)</div>
+  <div class="pipeline-arrow">&rarr;</div>
+  <div class="pipeline-step">Stage 5 Codegen (<code>compile-retag</code>)</div>
+  <div class="pipeline-arrow">&rarr;</div>
+  <div class="pipeline-step">JMVM Bytecode (<code>.jmvm</code>)</div>
+</div>
+
+<h2>2. Why Retag? (The Architectural Rationale)</h2>
+
+<div class="card">
+  <h3>The Impedance Mismatch Between ABC and JMVM</h3>
+  <p><strong>Clean ABC</strong> is an abstract machine designed specifically for graph reduction. It employs a <em>dual stack architecture</em>:</p>
+  <ul>
+    <li><strong>A-Stack:</strong> contains pointers to heap graph nodes, closures, and evaluation thunks.</li>
+    <li><strong>B-Stack:</strong> contains unboxed primitive values (integers, booleans, characters).</li>
+  </ul>
+  <p>Because Clean functions receive arguments across both stacks without named local variable slots, Clean ABC code is heavily saturated with stack-shuffling opcodes: <code>swap_a</code>, <code>exchange_a</code>, <code>dup_a</code>, <code>updatepop_a</code>, <code>updates2_a</code>, <code>updates3pop_a</code>, <code>push_update_a</code>, and <code>push_b2</code>.</p>
+  <p><strong>JMVM</strong>, on the other hand, is an expression-oriented virtual machine with indexed local variable slots inside structured activation frames (<code>load &lt;idx&gt;</code>, <code>store &lt;idx&gt;</code>). Pattern matching is dispatched directly via constructor tags (<code>case</code>, <code>jmpt</code>).</p>
+</div>
+
+<h3>Why Direct Stack Emulation (<code>abc2jmvm.py</code>) Failed to Scale</h3>
+<p>The initial prototype (<code>abc2jmvm.py</code>) attempted to emit JMVM bytecode instructions directly opcode-by-opcode, emulating the A- and B-stacks at runtime in memory slots. This caused three critical bottlenecks:</p>
+<ol>
+  <li><strong>Excessive Memory Loads &amp; Stores:</strong> Every Clean stack manipulation (e.g. <code>push_a</code>, <code>update_a</code>, <code>swap_a</code>) turned into active memory accesses within activation frames.</li>
+  <li><strong>Instruction Explosion:</strong> On algorithmic benchmarks like <code>sort</code>, stack-shuffling resulted in an astonishing <strong>9,670,000,000 instructions</strong> executed, taking 6.5&ndash;7.3 seconds.</li>
+  <li><strong>Fragile Calling Conventions:</strong> Complex control flow with multi-entry loops and tail calls required intricate ad-hoc patching, leading to premature termination bugs on benchmarks like <code>knights</code>.</li>
+</ol>
+
+<h3>The Breakthrough: Symbolic Decompilation to Stage-4 Retag</h3>
+<p>By shifting the target to <strong>Stage-4 Retag Core AST (<code>.cfp_retag</code>)</strong>, <code>abc2retag.py</code> solves these challenges fundamentally:</p>
+<ul>
+  <li><strong>Total Stack Evaporation:</strong> The decompiler tracks the A- and B-stacks <em>symbolically at compile time</em>. All intermediate stack shuffling operations evaporate completely, leaving clean, functional <code>let</code>-variable bindings and expression trees.</li>
+  <li><strong>Leveraging Battle-Tested Codegen:</strong> The existing Stage-5 compiler (<code>stage5_codegen.cfp</code>) already contains sophisticated algorithms for local frame slot allocation, tail-call optimization (<code>jmpt</code>), and closure/thunk construction.</li>
+  <li><strong>Interprocedural Strictness Preservation:</strong> Clean's front-end strictness analyzer annotations (<code>!x</code>) are preserved and fed directly into Stage 5, generating unboxed evaluation paths natively.</li>
+</ul>
+
+<h2>3. Full 13-Benchmark Performance Comparison</h2>
+<p>Apple Silicon (macOS). abc2retag and Sapl: state of 8 November 2026 (after the optimisation pass), <code>./runfast</code> best of 5, instructions counted by <code>./run</code>. The <code>abc2jmvm.py</code> and <code>abci</code> columns are from 7 November; <code>abci</code> is wall-clock including process start-up, so it is not a like-for-like comparison. GC counts were not re-measured. Measured with <code>./runfast</code> (musttail dispatch, no counting) and <code>./run</code> (instruction counting and GC metrics):</p>
+
+<div class="tablebox">
+  <table>
+    <thead>
+      <tr>
+        <th>Benchmark</th>
+        <th class="n">abc2retag <code>runfast</code></th>
+        <th class="n">Direct Sapl <code>runfast</code></th>
+        <th class="n">Direct <code>abc2jmvm.py</code></th>
+        <th class="n">Clean <code>abci</code></th>
+        <th class="n">abc2retag Instr.</th>
+        <th class="n">Direct Sapl Instr.</th>
+        <th class="n">GC (retag / std)</th>
+        <th>Output Verification</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>fib</code></td>
+        <td class="n best">0.240s</td>
+        <td class="n">0.230s</td>
+        <td class="n">1.340s</td>
+        <td class="n">0.352s</td>
+        <td class="n">632.5M</td>
+        <td class="n">632.5M</td>
+        <td class="n">&mdash;</td>
+        <td><code>res: 126491971</code></td>
+      </tr>
+      <tr>
+        <td><code>primes</code></td>
+        <td class="n best">0.220s</td>
+        <td class="n">0.210s</td>
+        <td class="n">0.980s</td>
+        <td class="n">0.226s</td>
+        <td class="n">253.0M</td>
+        <td class="n">240.7M</td>
+        <td class="n">&mdash;</td>
+        <td><code>res: 48619</code></td>
+      </tr>
+      <tr>
+        <td><code>twice</code></td>
+        <td class="n best">0.490s</td>
+        <td class="n">0.620s</td>
+        <td class="n">0.880s</td>
+        <td class="n">0.377s</td>
+        <td class="n">537.5M</td>
+        <td class="n">668.6M</td>
+        <td class="n">&mdash;</td>
+        <td>400&times; 65536, <code>res: 0</code></td>
+      </tr>
+      <tr>
+        <td><code>queens</code></td>
+        <td class="n best">0.120s</td>
+        <td class="n">0.130s</td>
+        <td class="n">0.560s</td>
+        <td class="n">0.133s</td>
+        <td class="n">165.8M</td>
+        <td class="n">167.5M</td>
+        <td class="n">&mdash;</td>
+        <td><code>res: 2680</code></td>
+      </tr>
+      <tr>
+        <td><code>sort</code></td>
+        <td class="n best">0.300s</td>
+        <td class="n">0.270s</td>
+        <td class="n">6.490s</td>
+        <td class="n">0.211s</td>
+        <td class="n">377.4M</td>
+        <td class="n">334.8M</td>
+        <td class="n">&mdash;</td>
+        <td><code>49995000 17997000 ... res: 0</code></td>
+      </tr>
+      <tr>
+        <td><code>knights</code></td>
+        <td class="n best">0.060s</td>
+        <td class="n">0.050s</td>
+        <td class="n">&mdash;</td>
+        <td class="n">0.043s</td>
+        <td class="n">60.8M</td>
+        <td class="n">54.1M</td>
+        <td class="n">&mdash;</td>
+        <td>50 numbers, <code>res: 0</code></td>
+      </tr>
+      <tr>
+        <td><code>match</code></td>
+        <td class="n best">0.240s</td>
+        <td class="n">0.220s</td>
+        <td class="n">0.860s</td>
+        <td class="n">0.157s</td>
+        <td class="n">251.7M</td>
+        <td class="n">223.7M</td>
+        <td class="n">&mdash;</td>
+        <td><code>res: 16996000</code></td>
+      </tr>
+      <tr>
+        <td><code>eval</code></td>
+        <td class="n best">0.200s</td>
+        <td class="n">0.310s</td>
+        <td class="n">&mdash;</td>
+        <td class="n">0.125s</td>
+        <td class="n">250.2M</td>
+        <td class="n">305.2M</td>
+        <td class="n">&mdash;</td>
+        <td><code>res: 547</code></td>
+      </tr>
+      <tr>
+        <td><code>hamming</code></td>
+        <td class="n best">0.380s</td>
+        <td class="n">0.380s</td>
+        <td class="n">&mdash;</td>
+        <td class="n">0.330s</td>
+        <td class="n">364.3M</td>
+        <td class="n">368.1M</td>
+        <td class="n">&mdash;</td>
+        <td><code>res: 3564000</code></td>
+      </tr>
+      <tr>
+        <td><code>sprimes</code></td>
+        <td class="n best">0.560s</td>
+        <td class="n">0.560s</td>
+        <td class="n">&mdash;</td>
+        <td class="n">0.430s</td>
+        <td class="n">382.1M</td>
+        <td class="n">437.9M</td>
+        <td class="n">&mdash;</td>
+        <td><code>res: 1823</code></td>
+      </tr>
+      <tr>
+        <td><code>parsetest</code></td>
+        <td class="n best">0.710s</td>
+        <td class="n">0.530s</td>
+        <td class="n">&mdash;</td>
+        <td class="n">0.480s</td>
+        <td class="n">402.8M</td>
+        <td class="n">297.6M</td>
+        <td class="n">&mdash;</td>
+        <td>20&times; 400, <code>res: 0</code></td>
+      </tr>
+      <tr>
+        <td><code>prolog</code></td>
+        <td class="n best">0.230s</td>
+        <td class="n">0.200s</td>
+        <td class="n">&mdash;</td>
+        <td class="n">0.158s</td>
+        <td class="n">176.3M</td>
+        <td class="n">139.1M</td>
+        <td class="n">&mdash;</td>
+        <td><code>res: 27000</code></td>
+      </tr>
+      <tr>
+        <td><code>eval2</code></td>
+        <td class="n best">0.440s</td>
+        <td class="n">0.390s</td>
+        <td class="n">&mdash;</td>
+        <td class="n">0.253s</td>
+        <td class="n">481.9M</td>
+        <td class="n">427.8M</td>
+        <td class="n">&mdash;</td>
+        <td><code>res: 1229</code></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>4. Advanced Functional Patterns Handled</h2>
+
+<div class="card">
+  <h3>Cyclic Graph Knot-Tying (<code>hamming</code> &amp; <code>eval2</code>)</h3>
+  <p>In Clean, infinite streams and cyclic environments are created by allocating an uninitialized graph root (<code>create</code>), passing it as an argument to downstream thunks (e.g. <code>c21 root</code>), and filling it afterwards (<code>fillh</code> / <code>fill</code>). <code>abc2retag.py</code> detects unfilled cyclic slots and binds them to direct <code>let</code> variables. Stage 5 Phase B (<code>genLet</code>) emits JMVM's native cycle knotting (<code>push 666</code> followed by an in-place <code>update</code>).</p>
+</div>
+
+<div class="card">
+  <h3>Tail Recursion Modulo Cons (TRMC, <code>sprimes</code>)</h3>
+  <p>Clean optimizes list generation loops by lazily instantiating constructor cells with a destination hole and jumping into the next iteration with the hole passed as an argument. The decompiler tracks destination slots across tail calls (<code>jmp</code>) and final returns (<code>rtn</code>), generating clean recursive functional expressions.</p>
+</div>
+
+<div class="card">
+  <h3>Lazy Higher-Order Combinators (<code>parsetest</code> &amp; <code>prolog</code>)</h3>
+  <p>Recursive parser combinators construct lazy function applications via <code>e_system_nAP</code>. The decompiler translates these into lazy thunks (<code>__ap2 f x = eval(f x)</code>), preventing premature eager evaluation during grammar construction.</p>
+</div>
+
+<div class="card">
+  <h3>Polymorphic Strings &amp; Character Arrays</h3>
+  <p>Clean's <code>ARRAY CHAR</code> operations are lowered to JMVM's native heap-allocated string primitives: <code>strlen</code>, <code>strat</code>, <code>update</code>, <code>strappend</code>, <code>strcreate</code>, along with recursive content equality <code>__eqAC</code> (since JMVM pointer equality <code>==</code> compares references rather than string characters).</p>
+</div>
+
+<h2>5. How to Use It</h2>
+
+<div class="card">
+  <h3>What you need</h3>
+  <ul>
+    <li><strong>Clean 5.1</strong> to turn <code>.icl</code> into ABC. The Clean compiler only exists for Linux x86-64 (and Windows). On a Mac it runs in a small Lima VM with <code>qemu-user</code>; the full recipe is in <code>experiments/clean_vergelijking/README.md</code> (section &ldquo;Getypeerde gen1&rdquo;), and <code>experiments/clean_vergelijking/setup_clean.sh</code> installs Clean from TOP's package registry.</li>
+    <li>A built JMVM in the repository root (<code>make</code>: <code>run</code>, <code>runfast</code>, <code>runfast-big</code>, <code>jmvm2jvb</code>) and Python 3. Run everything from the repository root.</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h3>The four steps</h3>
+<pre><code># 1. Clean -> optimised ABC (on Linux / in the VM); writes "Clean System Files/prog.opt.abc"
+clm -nt -optabc -bytecode prog -o prog
+
+# 2. ABC -> Stage-4 retag
+python3 experiments/abc2jmvm/abc2retag.py "Clean System Files/prog.opt.abc" -o prog.cfp_retag
+
+# 3. retag -> JMVM bytecode (.jmvm and .jvb)
+./compile-retag prog.cfp_retag prog.jmvm
+
+# 4. run (or ./run for instruction counts)
+./runfast prog.jmvm</code></pre>
+  <p>Step 1 also produces <code>prog.bc</code> for Clean's own ABC interpreter, which is handy as a reference: <code>abci-interpret prog.bc</code> must print the same value. <code>clm</code> prints &ldquo;Can't execute the linker&rdquo; in the VM; that only concerns the native executable and can be ignored.</p>
+  <p><strong>Large programs:</strong> <code>./compile-retag</code> runs the retag compiler on the standard VM. For a program the size of gen1, call it with the large-heap VM instead:
+  <code>printf 'prog.cfp_retag\nprog.jvb\n' | ./runfast-big sapl_compiler/retagcomp.jmvm</code>, and run the result with <code>./runfast-big prog.jvb</code>.</p>
+</div>
+
+<div class="card">
+  <h3>A program that works</h3>
+<pre><code>module squares2
+import StdOverloaded, StdClass, StdInt, StdBool
+
+:: L a = Nil | Cons !a (L a)
+
+upto :: Int Int -> L Int
+upto a b = if (a > b) Nil (Cons a (upto (a + 1) b))
+
+sumSq :: (L Int) -> Int
+sumSq Nil = 0
+sumSq (Cons x xs) = if (x rem 2 == 1) (x * x + sumSq xs) (sumSq xs)
+
+Start :: Int
+Start = sumSq (upto 1 1000) rem 1000007</code></pre>
+  <p>Through the four steps this prints <code>res: 665338</code>, the same as <code>abci-interpret</code>. <code>Start</code> may be an <code>Int</code>, a list (printed element by element), or <code>*World -&gt; *World</code> with file I/O through <code>StdFile</code> (as in the gen1 port).</p>
+</div>
+
+<div class="card">
+  <h3>Current limitations</h3>
+  <ul>
+    <li><strong>One module.</strong> Only the main module's <code>.opt.abc</code> is translated. Functions from StdEnv modules (<code>sum</code>, <code>map</code>, <code>++</code>, list comprehensions over <code>[1..n]</code>, &hellip;) live in other modules and are not linked in yet; the working programs define such helpers themselves, as above. Integer arithmetic, comparisons, strings (<code>{#Char}</code>), records, ADTs, higher-order functions and laziness work.</li>
+    <li><strong>A subset of ABC.</strong> The decompiler handles the instructions that the 13 benchmarks and gen1 use. Anything else stops with <code>onbekende ABC-instructie: &hellip;</code> (for example <code>andIio</code>, which Clean generates for <code>isOdd</code>). Floating point (<code>Real</code>) is not supported yet.</li>
+    <li><strong>Errors.</strong> A Clean <code>abort</code> becomes a JMVM <code>nomatch</code>: the program still stops, but without Clean's message.</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h3>Measuring and switching optimisations off</h3>
+<pre><code># all 13 benchmarks plus both gen1 ports (output check, fixed point, counts)
+python3 experiments/abc2jmvm/meet.py --gen1 --vergelijk experiments/abc2jmvm/basislijn.tsv
+
+# one optimisation off, for an A/B comparison
+python3 experiments/abc2jmvm/abc2retag.py prog.opt.abc -o prog.cfp_retag --uit=wrappers
+
+# a small Sapl program through Clean, abci and abc2retag side by side
+bash experiments/clean_vergelijking/typed_toets/route.sh prog.cfp</code></pre>
+  <p>The optimisation steps are <code>fold</code> (constant folding), <code>wrappers</code> (collapsing <code>nX &rarr; eaX &rarr; sX</code> chains), <code>evals</code>/<code>params</code>/<code>velden</code> (dropping <code>eval</code> where a value is certainly evaluated) and <code>eager</code> (computing <code>x + 1</code> directly instead of via a thunk). Details: <code>docs/2026-11-08_abc_naar_retag_perf_plan.md</code>.</p>
+</div>
+
+<h2>6. Repository File Map</h2>
+<ul>
+  <li><code>experiments/abc2jmvm/abc2retag.py</code> &mdash; Core symbolic decompiler from Clean ABC to Stage-4 Retag.</li>
+  <li><code>compile-retag</code> &mdash; Shell script invoking <code>sapl_compiler/retagcomp.jmvm</code> to produce <code>.jmvm</code> bytecode.</li>
+  <li><code>experiments/abc2jmvm/test_r1.sh</code> &mdash; Verification suite for Milestone R1 (<code>fib</code>, <code>primes</code>, <code>twice</code>).</li>
+  <li><code>experiments/abc2jmvm/test_r2.sh</code> &mdash; Verification suite for Milestone R2 (<code>queens</code>, <code>sort</code>, <code>knights</code>, <code>match</code>, <code>eval</code>).</li>
+  <li><code>experiments/abc2jmvm/test_r3.sh</code> &mdash; Verification suite for Milestone R3 (<code>hamming</code>, <code>sprimes</code>, <code>parsetest</code>, <code>prolog</code>, <code>eval2</code>).</li>
+  <li><code>experiments/abc2jmvm/run_benchmarks_r4.py</code> &mdash; Benchmark harness measuring runtime, instructions, and GC counts (7 November).</li>
+  <li><code>experiments/abc2jmvm/meet.py</code> &mdash; Current harness: 13 benchmarks with output check, both gen1 ports with fixed-point check, comparison against <code>basislijn.tsv</code>.</li>
+  <li><code>experiments/clean_vergelijking/gen1_naar_clean_getypeerd.py</code> &mdash; Typed Clean port of gen1 (the compiler that reaches the fixed point via abc2retag).</li>
+  <li><code>experiments/clean_vergelijking/typed_toets/route.sh</code> &mdash; Runs a small program directly, through abci, and through abc2retag.</li>
+  <li><code>docs/2026-11-07_clean_abc_to_jmvm_retag_factsheet.md</code> &mdash; Markdown version of this technical factsheet.</li>
+</ul>
+
+</main>
+</div>
+
+</body>
+</html>

@@ -561,6 +561,62 @@
       "_expanded": false
     },
     {
+      "name": "factsheets",
+      "path": "factsheets",
+      "type": "directory",
+      "children": [
+        {
+          "name": "clean_abc_to_jmvm_retag_factsheet.html",
+          "path": "factsheets/clean_abc_to_jmvm_retag_factsheet.html",
+          "type": "file",
+          "ext": ".html",
+          "size": 25676,
+          "isBinary": false
+        },
+        {
+          "name": "factsheet.html",
+          "path": "factsheets/factsheet.html",
+          "type": "file",
+          "ext": ".html",
+          "size": 46785,
+          "isBinary": false
+        },
+        {
+          "name": "index.html",
+          "path": "factsheets/index.html",
+          "type": "file",
+          "ext": ".html",
+          "size": 6277,
+          "isBinary": false
+        },
+        {
+          "name": "notebooks_factsheet.html",
+          "path": "factsheets/notebooks_factsheet.html",
+          "type": "file",
+          "ext": ".html",
+          "size": 35172,
+          "isBinary": false
+        },
+        {
+          "name": "performance_factsheet.html",
+          "path": "factsheets/performance_factsheet.html",
+          "type": "file",
+          "ext": ".html",
+          "size": 43496,
+          "isBinary": false
+        },
+        {
+          "name": "sapl_jmvm_clean_haskell_factsheet.html",
+          "path": "factsheets/sapl_jmvm_clean_haskell_factsheet.html",
+          "type": "file",
+          "ext": ".html",
+          "size": 102873,
+          "isBinary": false
+        }
+      ],
+      "_expanded": false
+    },
+    {
       "name": "funcprog",
       "path": "funcprog",
       "type": "directory",
