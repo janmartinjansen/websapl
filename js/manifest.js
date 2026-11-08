@@ -570,7 +570,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/clean_abc_to_jmvm_retag_factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 25676,
+        "size": 25953,
         "isBinary": false
       },
       {
@@ -618,7 +618,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/sapl_jmvm_clean_haskell_factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 102873,
+        "size": 101960,
         "isBinary": false
       }
     ],

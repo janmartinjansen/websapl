@@ -1262,7 +1262,7 @@ bcgen program.abc && bclink program.abc.o -o program.bc && abci program.bc</pre>
               <li><strong>Total Stack Evaporation:</strong> ABC basic blocks are saturated with stack shufflers (<code>swap_a</code>, <code>dup_a</code>, <code>updatepop_a</code>, <code>push_b2</code>). <code>abc2retag.py</code> tracks symbolic values through abstract interpretation, eliminating all stack operations at compile time and reconstructing clean functional <code>let</code>-expressions.</li>
               <li><strong>Huge Instruction Reduction:</strong> On <code>sort</code>, instructions dropped by <strong>-95.6%</strong> (from 9,670M to 425.9M instructions), cutting runtime from 6.49s to 0.36s (<strong>17.5× faster</strong>)!</li>
               <li><strong>Faster than handwritten Sapl on <code>eval</code>:</strong> 0.20s vs 0.31s (250M vs 305M instructions); partly because the Clean port carries different strictness annotations than <code>benchmarks/eval.cfp</code>. Clean's interprocedural strictness optimizations carry directly into Retag, reducing GC cycles from 3 to 1!</li>
-              <li><strong>Fixed point:</strong> the typed Clean port of <code>gen1</code> (<code>gen1_naar_clean_getypeerd.py</code>) compiles itself via <code>abc2retag.py</code> on the JMVM byte-for-byte into <code>saplcomp.jmvm</code> (0.74 s; gen1 itself 0.56 s).</li>
+              <li><strong>Fixed point:</strong> the typed Clean port of <code>gen1</code> (<code>gen1_naar_clean_getypeerd.py</code>) compiles itself via <code>abc2retag.py</code> on the JMVM byte-for-byte into <code>saplcomp.jmvm</code> (0.545 s; gen1 itself 0.571 s).</li>
             </ul>
           </div>
           <pre class="code-block"><span class="code-comment"># 1. Compile Clean to optimized ABC assembly:</span>
@@ -1754,7 +1754,7 @@ python3 experiments/abc2jmvm/abc2retag.py "Clean System Files/primes.opt.abc" -o
       <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">
         Measured on Apple Silicon macOS host. Compares Clean's official <code>abci</code> interpreter, the direct stack emulator (<code>abc2jmvm.py</code>), 
         the symbolic decompiler (<code>abc2retag.py</code> running on JMVM <code>./runfast</code>), and standard handwritten native Sapl.
-        abc2retag and Sapl: state of 8 November 2026 (after the optimisation pass), <code>./runfast</code> best of 5, instructions from <code>./run</code>.
+        abc2retag and Sapl: state of 8 November 2026 (after the second optimisation round), <code>./runfast</code> best of 5, instructions from <code>./run</code>.
         The abci and direct-stack columns are from 7 November; abci is wall-clock including startup, so not like-for-like. GC cycles were not re-measured.
       </p>
 
@@ -1776,147 +1776,147 @@ python3 experiments/abc2jmvm/abc2retag.py "Clean System Files/primes.opt.abc" -o
           <tbody>
             <tr>
               <td><strong><code>fib</code></strong></td>
-              <td>0.352s</td>
-              <td>1.340s</td>
-              <td><strong>0.240s</strong></td>
-              <td>0.230s</td>
-              <td><strong>632.5M</strong></td>
-              <td>632.5M</td>
-              <td>&mdash;</td>
-              <td><span class="badge badge-emerald">100% Match</span></td>
-            </tr>
+        <td>0.352s</td>
+        <td>1.340s</td>
+        <td><strong>0.240s</strong></td>
+        <td>0.240s</td>
+        <td>632.5M</td>
+        <td>632.5M</td>
+        <td>&mdash;</td>
+        <td><span class="badge badge-emerald">100% Match</span></td>
+      </tr>
             <tr>
               <td><strong><code>primes</code></strong></td>
-              <td>0.226s</td>
-              <td>0.980s</td>
-              <td><strong>0.220s</strong></td>
-              <td>0.210s</td>
-              <td><strong>253.0M</strong></td>
-              <td>240.7M</td>
-              <td>&mdash;</td>
-              <td><span class="badge badge-emerald">100% Match</span></td>
-            </tr>
+        <td>0.226s</td>
+        <td>0.980s</td>
+        <td><strong>0.200s</strong></td>
+        <td>0.220s</td>
+        <td>240.3M</td>
+        <td>240.7M</td>
+        <td>&mdash;</td>
+        <td><span class="badge badge-emerald">100% Match</span></td>
+      </tr>
             <tr>
               <td><strong><code>twice</code></strong></td>
-              <td>0.377s</td>
-              <td>0.880s</td>
-              <td><strong>0.490s</strong></td>
-              <td>0.620s</td>
-              <td><strong>537.5M</strong></td>
-              <td>668.6M</td>
-              <td>&mdash;</td>
-              <td><span class="badge badge-emerald">100% Match</span></td>
-            </tr>
+        <td>0.377s</td>
+        <td>0.880s</td>
+        <td><strong>0.480s</strong></td>
+        <td>0.630s</td>
+        <td>511.3M</td>
+        <td>668.6M</td>
+        <td>&mdash;</td>
+        <td><span class="badge badge-emerald">100% Match</span></td>
+      </tr>
             <tr>
               <td><strong><code>queens</code></strong></td>
-              <td>0.133s</td>
-              <td>0.560s</td>
-              <td><strong>0.120s</strong></td>
-              <td>0.130s</td>
-              <td><strong>165.8M</strong></td>
-              <td>167.5M</td>
-              <td>&mdash;</td>
-              <td><span class="badge badge-emerald">100% Match</span></td>
-            </tr>
+        <td>0.133s</td>
+        <td>0.560s</td>
+        <td><strong>0.110s</strong></td>
+        <td>0.140s</td>
+        <td>158.1M</td>
+        <td>167.5M</td>
+        <td>&mdash;</td>
+        <td><span class="badge badge-emerald">100% Match</span></td>
+      </tr>
             <tr>
               <td><strong><code>sort</code></strong></td>
-              <td>0.211s</td>
-              <td>6.490s (9.67B instrs)</td>
-              <td><strong>0.300s</strong></td>
-              <td>0.270s</td>
-              <td><strong>377.4M</strong></td>
-              <td>334.8M</td>
-              <td>&mdash;</td>
-              <td><span class="badge badge-emerald">100% Match</span></td>
-            </tr>
+        <td>0.211s</td>
+        <td>6.490s (9.67B instrs)</td>
+        <td><strong>0.270s</strong></td>
+        <td>0.270s</td>
+        <td>333.4M</td>
+        <td>334.8M</td>
+        <td>&mdash;</td>
+        <td><span class="badge badge-emerald">100% Match</span></td>
+      </tr>
             <tr>
               <td><strong><code>knights</code></strong></td>
-              <td>0.043s</td>
-              <td><em>(failed)</em></td>
-              <td><strong>0.060s</strong></td>
-              <td>0.050s</td>
-              <td><strong>60.8M</strong></td>
-              <td>54.1M</td>
-              <td>&mdash;</td>
-              <td><span class="badge badge-emerald">100% Match</span></td>
-            </tr>
+        <td>0.043s</td>
+        <td><em>(failed)</em></td>
+        <td><strong>0.060s</strong></td>
+        <td>0.050s</td>
+        <td>57.0M</td>
+        <td>54.1M</td>
+        <td>&mdash;</td>
+        <td><span class="badge badge-emerald">100% Match</span></td>
+      </tr>
             <tr>
               <td><strong><code>match</code></strong></td>
-              <td>0.157s</td>
-              <td>0.860s</td>
-              <td><strong>0.240s</strong></td>
-              <td>0.220s</td>
-              <td><strong>251.7M</strong></td>
-              <td>223.7M</td>
-              <td>&mdash;</td>
-              <td><span class="badge badge-emerald">100% Match</span></td>
-            </tr>
+        <td>0.157s</td>
+        <td>0.860s</td>
+        <td><strong>0.210s</strong></td>
+        <td>0.220s</td>
+        <td>221.7M</td>
+        <td>223.7M</td>
+        <td>&mdash;</td>
+        <td><span class="badge badge-emerald">100% Match</span></td>
+      </tr>
             <tr>
               <td><strong><code>eval</code></strong></td>
-              <td>0.125s</td>
-              <td><em>(failed)</em></td>
-              <td><strong>0.200s</strong></td>
-              <td>0.310s</td>
-              <td><strong>250.2M</strong></td>
-              <td>305.2M</td>
-              <td>&mdash;</td>
-              <td><span class="badge badge-emerald">Beats Sapl</span></td>
-            </tr>
+        <td>0.125s</td>
+        <td><em>(failed)</em></td>
+        <td><strong>0.200s</strong></td>
+        <td>0.310s</td>
+        <td>250.0M</td>
+        <td>305.2M</td>
+        <td>&mdash;</td>
+        <td><span class="badge badge-emerald">Beats Sapl</span></td>
+      </tr>
             <tr>
               <td><strong><code>hamming</code></strong></td>
-              <td>0.330s</td>
-              <td><em>(failed)</em></td>
-              <td><strong>0.380s</strong></td>
-              <td>0.380s</td>
-              <td><strong>364.3M</strong></td>
-              <td>368.1M</td>
-              <td>&mdash;</td>
-              <td><span class="badge badge-emerald">100% Match</span></td>
-            </tr>
+        <td>0.330s</td>
+        <td><em>(failed)</em></td>
+        <td><strong>0.370s</strong></td>
+        <td>0.380s</td>
+        <td>354.3M</td>
+        <td>368.1M</td>
+        <td>&mdash;</td>
+        <td><span class="badge badge-emerald">100% Match</span></td>
+      </tr>
             <tr>
               <td><strong><code>sprimes</code></strong></td>
-              <td>0.430s</td>
-              <td><em>(failed)</em></td>
-              <td><strong>0.560s</strong></td>
-              <td>0.560s</td>
-              <td><strong>382.1M</strong></td>
-              <td>437.9M</td>
-              <td>&mdash;</td>
-              <td><span class="badge badge-emerald">100% Match</span></td>
-            </tr>
+        <td>0.430s</td>
+        <td><em>(failed)</em></td>
+        <td><strong>0.560s</strong></td>
+        <td>0.560s</td>
+        <td>382.0M</td>
+        <td>437.9M</td>
+        <td>&mdash;</td>
+        <td><span class="badge badge-emerald">100% Match</span></td>
+      </tr>
             <tr>
               <td><strong><code>parsetest</code></strong></td>
-              <td>0.480s</td>
-              <td><em>(failed)</em></td>
-              <td><strong>0.710s</strong></td>
-              <td>0.530s</td>
-              <td><strong>402.8M</strong></td>
-              <td>297.6M</td>
-              <td>&mdash;</td>
-              <td><span class="badge badge-emerald">100% Match</span></td>
-            </tr>
+        <td>0.480s</td>
+        <td><em>(failed)</em></td>
+        <td><strong>0.680s</strong></td>
+        <td>0.540s</td>
+        <td>383.8M</td>
+        <td>297.6M</td>
+        <td>&mdash;</td>
+        <td><span class="badge badge-emerald">100% Match</span></td>
+      </tr>
             <tr>
               <td><strong><code>prolog</code></strong></td>
-              <td>0.158s</td>
-              <td><em>(failed)</em></td>
-              <td><strong>0.230s</strong></td>
-              <td>0.200s</td>
-              <td><strong>176.3M</strong></td>
-              <td>139.1M</td>
-              <td>&mdash;</td>
-              <td><span class="badge badge-emerald">100% Match</span></td>
-            </tr>
+        <td>0.158s</td>
+        <td><em>(failed)</em></td>
+        <td><strong>0.220s</strong></td>
+        <td>0.200s</td>
+        <td>163.1M</td>
+        <td>139.1M</td>
+        <td>&mdash;</td>
+        <td><span class="badge badge-emerald">100% Match</span></td>
+      </tr>
             <tr>
               <td><strong><code>eval2</code></strong></td>
-              <td>0.253s</td>
-              <td><em>(failed)</em></td>
-              <td><strong>0.440s</strong></td>
-              <td>0.390s</td>
-              <td><strong>481.9M</strong></td>
-              <td>427.8M</td>
-              <td>&mdash;</td>
-              <td><span class="badge badge-emerald">100% Match</span></td>
-            </tr>
+        <td>0.253s</td>
+        <td><em>(failed)</em></td>
+        <td><strong>0.420s</strong></td>
+        <td>0.390s</td>
+        <td>477.0M</td>
+        <td>427.8M</td>
+        <td>&mdash;</td>
+        <td><span class="badge badge-emerald">100% Match</span></td>
+      </tr>
           </tbody>
         </table>
       </div>
@@ -1995,7 +1995,7 @@ python3 experiments/abc2jmvm/abc2retag.py "Clean System Files/primes.opt.abc" -o
                 <td><strong>Runtime Velocity</strong></td>
                 <td>Fast (1.0&times;–1.2&times; of Sapl)</td>
                 <td>Fast (2.5B op/s, musttail)</td>
-                <td>0.74&ndash;1.24&times; of handwritten Sapl (instructions)</td>
+                <td>0.78&ndash;1.31&times; of handwritten Sapl (instructions)</td>
                 <td><strong>Very Fast</strong> (5&times;–7&times; over VM)</td>
                 <td><strong>Peak Native</strong> (~1.1&times; of C)</td>
                 <td><strong>Peak Native</strong></td>

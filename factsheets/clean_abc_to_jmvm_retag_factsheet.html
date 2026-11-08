@@ -272,12 +272,12 @@ td.n, th.n {
     <div class="metric-label">Instruction count reduction on <code>sort</code> (from 9.67B to 425.9M)</div>
   </div>
   <div class="metric-card">
-    <div class="metric-val">0.74&ndash;1.24&times;</div>
-    <div class="metric-label">Of handwritten Sapl in executed instructions, after the optimisation pass of 8 November (6 of 13 at or above Sapl)</div>
+    <div class="metric-val">0.78&ndash;1.31&times;</div>
+    <div class="metric-label">Of handwritten Sapl in executed instructions after two optimisation rounds (8 November); as fast or faster in time on 9 of 13</div>
   </div>
   <div class="metric-card hl">
     <div class="metric-val">Fixed point</div>
-    <div class="metric-label">A typed Clean port of the Sapl compiler (gen1) compiles itself via abc2retag on the JMVM byte-for-byte</div>
+    <div class="metric-label">A typed Clean port of the Sapl compiler (gen1) compiles itself via abc2retag on the JMVM byte-for-byte, in 0.545 s against 0.571 s for gen1 itself</div>
   </div>
 </div>
 
@@ -330,7 +330,7 @@ td.n, th.n {
 </ul>
 
 <h2>3. Full 13-Benchmark Performance Comparison</h2>
-<p>Apple Silicon (macOS). abc2retag and Sapl: state of 8 November 2026 (after the optimisation pass), <code>./runfast</code> best of 5, instructions counted by <code>./run</code>. The <code>abc2jmvm.py</code> and <code>abci</code> columns are from 7 November; <code>abci</code> is wall-clock including process start-up, so it is not a like-for-like comparison. GC counts were not re-measured. Measured with <code>./runfast</code> (musttail dispatch, no counting) and <code>./run</code> (instruction counting and GC metrics):</p>
+<p>Apple Silicon (macOS). abc2retag and Sapl: state of 8 November 2026 (after the second optimisation round), <code>./runfast</code> best of 5, instructions counted by <code>./run</code>. The <code>abc2jmvm.py</code> and <code>abci</code> columns are from 7 November; <code>abci</code> is wall-clock including process start-up, so it is not a like-for-like comparison. GC counts were not re-measured. Measured with <code>./runfast</code> (musttail dispatch, no counting) and <code>./run</code> (instruction counting and GC metrics):</p>
 
 <div class="tablebox">
   <table>
@@ -351,7 +351,7 @@ td.n, th.n {
       <tr>
         <td><code>fib</code></td>
         <td class="n best">0.240s</td>
-        <td class="n">0.230s</td>
+        <td class="n">0.240s</td>
         <td class="n">1.340s</td>
         <td class="n">0.352s</td>
         <td class="n">632.5M</td>
@@ -361,44 +361,44 @@ td.n, th.n {
       </tr>
       <tr>
         <td><code>primes</code></td>
-        <td class="n best">0.220s</td>
-        <td class="n">0.210s</td>
+        <td class="n best">0.200s</td>
+        <td class="n">0.220s</td>
         <td class="n">0.980s</td>
         <td class="n">0.226s</td>
-        <td class="n">253.0M</td>
+        <td class="n">240.3M</td>
         <td class="n">240.7M</td>
         <td class="n">&mdash;</td>
         <td><code>res: 48619</code></td>
       </tr>
       <tr>
         <td><code>twice</code></td>
-        <td class="n best">0.490s</td>
-        <td class="n">0.620s</td>
+        <td class="n best">0.480s</td>
+        <td class="n">0.630s</td>
         <td class="n">0.880s</td>
         <td class="n">0.377s</td>
-        <td class="n">537.5M</td>
+        <td class="n">511.3M</td>
         <td class="n">668.6M</td>
         <td class="n">&mdash;</td>
         <td>400&times; 65536, <code>res: 0</code></td>
       </tr>
       <tr>
         <td><code>queens</code></td>
-        <td class="n best">0.120s</td>
-        <td class="n">0.130s</td>
+        <td class="n best">0.110s</td>
+        <td class="n">0.140s</td>
         <td class="n">0.560s</td>
         <td class="n">0.133s</td>
-        <td class="n">165.8M</td>
+        <td class="n">158.1M</td>
         <td class="n">167.5M</td>
         <td class="n">&mdash;</td>
         <td><code>res: 2680</code></td>
       </tr>
       <tr>
         <td><code>sort</code></td>
-        <td class="n best">0.300s</td>
+        <td class="n best">0.270s</td>
         <td class="n">0.270s</td>
         <td class="n">6.490s</td>
         <td class="n">0.211s</td>
-        <td class="n">377.4M</td>
+        <td class="n">333.4M</td>
         <td class="n">334.8M</td>
         <td class="n">&mdash;</td>
         <td><code>49995000 17997000 ... res: 0</code></td>
@@ -409,18 +409,18 @@ td.n, th.n {
         <td class="n">0.050s</td>
         <td class="n">&mdash;</td>
         <td class="n">0.043s</td>
-        <td class="n">60.8M</td>
+        <td class="n">57.0M</td>
         <td class="n">54.1M</td>
         <td class="n">&mdash;</td>
         <td>50 numbers, <code>res: 0</code></td>
       </tr>
       <tr>
         <td><code>match</code></td>
-        <td class="n best">0.240s</td>
+        <td class="n best">0.210s</td>
         <td class="n">0.220s</td>
         <td class="n">0.860s</td>
         <td class="n">0.157s</td>
-        <td class="n">251.7M</td>
+        <td class="n">221.7M</td>
         <td class="n">223.7M</td>
         <td class="n">&mdash;</td>
         <td><code>res: 16996000</code></td>
@@ -431,18 +431,18 @@ td.n, th.n {
         <td class="n">0.310s</td>
         <td class="n">&mdash;</td>
         <td class="n">0.125s</td>
-        <td class="n">250.2M</td>
+        <td class="n">250.0M</td>
         <td class="n">305.2M</td>
         <td class="n">&mdash;</td>
         <td><code>res: 547</code></td>
       </tr>
       <tr>
         <td><code>hamming</code></td>
-        <td class="n best">0.380s</td>
+        <td class="n best">0.370s</td>
         <td class="n">0.380s</td>
         <td class="n">&mdash;</td>
         <td class="n">0.330s</td>
-        <td class="n">364.3M</td>
+        <td class="n">354.3M</td>
         <td class="n">368.1M</td>
         <td class="n">&mdash;</td>
         <td><code>res: 3564000</code></td>
@@ -453,40 +453,40 @@ td.n, th.n {
         <td class="n">0.560s</td>
         <td class="n">&mdash;</td>
         <td class="n">0.430s</td>
-        <td class="n">382.1M</td>
+        <td class="n">382.0M</td>
         <td class="n">437.9M</td>
         <td class="n">&mdash;</td>
         <td><code>res: 1823</code></td>
       </tr>
       <tr>
         <td><code>parsetest</code></td>
-        <td class="n best">0.710s</td>
-        <td class="n">0.530s</td>
+        <td class="n best">0.680s</td>
+        <td class="n">0.540s</td>
         <td class="n">&mdash;</td>
         <td class="n">0.480s</td>
-        <td class="n">402.8M</td>
+        <td class="n">383.8M</td>
         <td class="n">297.6M</td>
         <td class="n">&mdash;</td>
         <td>20&times; 400, <code>res: 0</code></td>
       </tr>
       <tr>
         <td><code>prolog</code></td>
-        <td class="n best">0.230s</td>
+        <td class="n best">0.220s</td>
         <td class="n">0.200s</td>
         <td class="n">&mdash;</td>
         <td class="n">0.158s</td>
-        <td class="n">176.3M</td>
+        <td class="n">163.1M</td>
         <td class="n">139.1M</td>
         <td class="n">&mdash;</td>
         <td><code>res: 27000</code></td>
       </tr>
       <tr>
         <td><code>eval2</code></td>
-        <td class="n best">0.440s</td>
+        <td class="n best">0.420s</td>
         <td class="n">0.390s</td>
         <td class="n">&mdash;</td>
         <td class="n">0.253s</td>
-        <td class="n">481.9M</td>
+        <td class="n">477.0M</td>
         <td class="n">427.8M</td>
         <td class="n">&mdash;</td>
         <td><code>res: 1229</code></td>
@@ -583,7 +583,7 @@ python3 experiments/abc2jmvm/abc2retag.py prog.opt.abc -o prog.cfp_retag --uit=w
 
 # a small Sapl program through Clean, abci and abc2retag side by side
 bash experiments/clean_vergelijking/typed_toets/route.sh prog.cfp</code></pre>
-  <p>The optimisation steps are <code>fold</code> (constant folding), <code>wrappers</code> (collapsing <code>nX &rarr; eaX &rarr; sX</code> chains), <code>evals</code>/<code>params</code>/<code>velden</code> (dropping <code>eval</code> where a value is certainly evaluated) and <code>eager</code> (computing <code>x + 1</code> directly instead of via a thunk). Details: <code>docs/2026-11-08_abc_naar_retag_perf_plan.md</code>.</p>
+  <p>The optimisation steps are <code>fold</code> (constant folding), <code>wrappers</code> (collapsing <code>nX &rarr; eaX &rarr; sX</code> chains), <code>evals</code>/<code>params</code>/<code>velden</code> (dropping <code>eval</code> where a value is certainly evaluated) and <code>eager</code> (computing <code>x + 1</code> directly instead of via a thunk), <code>inline</code> (inlining small functions, in particular closure entries), <code>thunkdoor</code> (pointing a thunk straight at the real function) and <code>bshare</code> (sharing copied calls on the B-stack). Details: <code>docs/2026-11-08_abc_naar_retag_perf_plan.md</code>.</p>
 </div>
 
 <h2>6. Repository File Map</h2>
