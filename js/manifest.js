@@ -354,7 +354,7 @@ window.WEBSAPL_TREE = [
         "path": "docs/haskell_lite_guide.md",
         "type": "file",
         "ext": ".md",
-        "size": 13999,
+        "size": 14056,
         "isBinary": false
       },
       {
@@ -582,11 +582,19 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
+        "name": "haskell_lite.html",
+        "path": "factsheets/haskell_lite.html",
+        "type": "file",
+        "ext": ".html",
+        "size": 29781,
+        "isBinary": false
+      },
+      {
         "name": "index.html",
         "path": "factsheets/index.html",
         "type": "file",
         "ext": ".html",
-        "size": 6277,
+        "size": 6961,
         "isBinary": false
       },
       {
@@ -3057,19 +3065,11 @@ window.WEBSAPL_TREE = [
     "_expanded": false
   },
   {
-    "name": "haskell_lite.html",
-    "path": "haskell_lite.html",
-    "type": "file",
-    "ext": ".html",
-    "size": 29781,
-    "isBinary": false
-  },
-  {
     "name": "notebook.html",
     "path": "notebook.html",
     "type": "file",
     "ext": ".html",
-    "size": 82143,
+    "size": 82154,
     "isBinary": false
   },
   {

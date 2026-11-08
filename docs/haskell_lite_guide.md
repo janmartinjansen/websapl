@@ -11,8 +11,8 @@ at the end, and everything that is not supported gives a clear message
 ("niet in Haskell lite: ...") rather than a wrong result.
 
 *Written 7 November 2026. Also as a web page:
-<https://janmartinjansen.github.io/websapl/haskell_lite.html>
-(`websapl/haskell_lite.html`). The development record (in Dutch, with all
+<https://janmartinjansen.github.io/websapl/factsheets/haskell_lite.html>
+(`docs/haskell_lite_guide.html`, in WebSapl `factsheets/haskell_lite.html`). The development record (in Dutch, with all
 measurements) is `docs/2026-11-04_haskell_lite_frontend_plan.md`.*
 
 ## Contents
