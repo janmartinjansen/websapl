@@ -570,7 +570,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/clean_abc_to_jmvm_retag_factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 26838,
+        "size": 28850,
         "isBinary": false
       },
       {
@@ -578,7 +578,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 46785,
+        "size": 47351,
         "isBinary": false
       },
       {
@@ -610,7 +610,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/performance_factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 43496,
+        "size": 47928,
         "isBinary": false
       },
       {
@@ -618,7 +618,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/sapl_jmvm_clean_haskell_factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 101960,
+        "size": 102213,
         "isBinary": false
       }
     ],

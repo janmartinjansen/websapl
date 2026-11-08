@@ -264,12 +264,12 @@ td.n, th.n {
     <div class="metric-label">Clean benchmarks passing with exact bitwise output</div>
   </div>
   <div class="metric-card">
-    <div class="metric-val">17.5&times;</div>
+    <div class="metric-val">24&times;</div>
     <div class="metric-label">Max execution speedup on <code>sort</code> vs direct stack emission</div>
   </div>
   <div class="metric-card">
-    <div class="metric-val">-95.6%</div>
-    <div class="metric-label">Instruction count reduction on <code>sort</code> (from 9.67B to 425.9M)</div>
+    <div class="metric-val">-96.6%</div>
+    <div class="metric-label">Instruction count reduction on <code>sort</code> (from 9.67B to 333.4M)</div>
   </div>
   <div class="metric-card">
     <div class="metric-val">0.78&ndash;1.31&times;</div>
@@ -277,7 +277,7 @@ td.n, th.n {
   </div>
   <div class="metric-card hl">
     <div class="metric-val">Fixed point</div>
-    <div class="metric-label">A typed Clean port of the Sapl compiler (gen1) compiles itself via abc2retag on the JMVM byte-for-byte, in 0.545 s against 0.571 s for gen1 itself</div>
+    <div class="metric-label">A typed Clean port of the Sapl compiler (gen1) compiles itself via abc2retag on the JMVM byte-for-byte, at the same speed as gen1 itself (550&ndash;574 ms against 557 ms)</div>
   </div>
 </div>
 
@@ -495,6 +495,26 @@ td.n, th.n {
   </table>
 </div>
 
+<h3>gen1 on every route</h3>
+<p>The largest Clean program here is the typed Clean port of the Sapl compiler itself (7,500 lines of Sapl, 1,500 functions). It compiles its own source to the same <code>saplcomp.jmvm</code>, byte for byte, on every route below. Apple M4, same input, best of 7, wall-clock including start-up (<code>python3 experiments/clean_vergelijking/meet_gen1.py</code>):</p>
+<div class="tablebox">
+  <table>
+    <thead>
+      <tr><th>Route</th><th class="n">Time</th><th class="n">vs. JMVM gen1</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Clean 3.1 native ARM64, typed port</td><td class="n best">166 ms</td><td class="n">3.4&times; faster</td></tr>
+      <tr><td>GHC 9.14.1 <code>-O2</code>, typed Haskell port</td><td class="n">278 ms</td><td class="n">2.0&times; faster</td></tr>
+      <tr><td>Clean 3.1 native ARM64, untyped port (one <code>Val</code> type)</td><td class="n">305 ms</td><td class="n">1.8&times; faster</td></tr>
+      <tr><td>Clean ABC interpreter (abci), typed port</td><td class="n">438 ms</td><td class="n">1.27&times; faster</td></tr>
+      <tr><td><strong>JMVM, the Sapl compiler gen1 itself</strong></td><td class="n">557 ms</td><td class="n">reference</td></tr>
+      <tr><td><strong>JMVM, the typed Clean port via abc2retag</strong> (<code>runfast</code> / <code>runfast-big</code>)</td><td class="n">574 / 550 ms</td><td class="n">same speed (noise)</td></tr>
+      <tr><td>Clean ABC interpreter (abci), untyped port</td><td class="n">791 ms</td><td class="n">1.42&times; slower</td></tr>
+    </tbody>
+  </table>
+</div>
+<p>Two things stand out. The JMVM runs compiled Clean code as fast as its own, hand-written compiler. And how the Clean program is written matters more than the route: the typed port is 1.8&times; faster than the untyped one both natively and in abci. The ABC interpreter is 1.3&times; faster than the JMVM on the typed port, which is expected for an interpreter with specialised opcodes for exactly this code.</p>
+
 <h2>4. Advanced Functional Patterns Handled</h2>
 
 <div class="card">
@@ -569,8 +589,8 @@ Start = sumSq (upto 1 1000) rem 1000007</code></pre>
 <div class="card">
   <h3>Current limitations</h3>
   <ul>
-    <li><strong>Modules are linked.</strong> abc2retag also translates the modules a program imports (StdEnv and others), each separately, and keeps only what is reachable. It looks for their <code>.opt.abc</code> next to the program and in <code>--lib</code> directories (Clean puts StdEnv's in <code>$CLEAN_HOME/lib/StdEnv/Clean System Files/</code>); <code>--geen-link</code> translates the main module only. Lists, <code>[1..n]</code> and comprehensions, strings, records, tuples, type classes, higher-order functions, laziness and <code>Int</code>/<code>Char</code> arithmetic work.
-    <li><strong>Not yet supported:</strong> floating point (<code>Real</code>), file I/O beyond reading and writing whole files (<code>StdFile</code>), and indirect instance calls (<code>jsr_i</code>), which about 100 of StdEnv's 4,000 functions use. A library function that uses one of these is translated to an error that names the function and the instruction, and only matters if the program actually calls it; in the program's own module an unknown instruction stops abc2retag with <code>onbekende ABC-instructie: &hellip;</code>.
+    <li><strong>Modules are linked.</strong> abc2retag also translates the modules a program imports (StdEnv and others), each separately, and keeps only what is reachable. It looks for their <code>.opt.abc</code> next to the program and in <code>--lib</code> directories (Clean puts StdEnv's in <code>$CLEAN_HOME/lib/StdEnv/Clean System Files/</code>); <code>--geen-link</code> translates the main module only. Lists, <code>[1..n]</code> and comprehensions, strings, records, tuples, type classes, higher-order functions, laziness and <code>Int</code>/<code>Char</code> arithmetic work.</li>
+    <li><strong>Not yet supported:</strong> floating point (<code>Real</code>), file I/O beyond reading and writing whole files (<code>StdFile</code>), and indirect instance calls (<code>jsr_i</code>), which about 100 of StdEnv's 4,000 functions use. A library function that uses one of these is translated to an error that names the function and the instruction, and only matters if the program actually calls it; in the program's own module an unknown instruction stops abc2retag with <code>onbekende ABC-instructie: &hellip;</code>.</li>
     <li><strong>Errors.</strong> A Clean <code>abort</code> becomes a JMVM <code>nomatch</code>: the program still stops, but without Clean's message.</li>
   </ul>
 </div>

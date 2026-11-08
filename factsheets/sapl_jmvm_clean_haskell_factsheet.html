@@ -1260,9 +1260,9 @@ bcgen program.abc && bclink program.abc.o -o program.bc && abci program.bc</pre>
             <strong>Why abc2retag beats direct stack emulation (abc2jmvm.py):</strong>
             <ul style="margin-top: 6px;">
               <li><strong>Total Stack Evaporation:</strong> ABC basic blocks are saturated with stack shufflers (<code>swap_a</code>, <code>dup_a</code>, <code>updatepop_a</code>, <code>push_b2</code>). <code>abc2retag.py</code> tracks symbolic values through abstract interpretation, eliminating all stack operations at compile time and reconstructing clean functional <code>let</code>-expressions.</li>
-              <li><strong>Huge Instruction Reduction:</strong> On <code>sort</code>, instructions dropped by <strong>-95.6%</strong> (from 9,670M to 425.9M instructions), cutting runtime from 6.49s to 0.36s (<strong>17.5× faster</strong>)!</li>
+              <li><strong>Huge Instruction Reduction:</strong> On <code>sort</code>, instructions dropped by <strong>-96.6%</strong> (from 9,670M to 333.4M instructions), cutting runtime from 6.49s to 0.27s (<strong>24× faster</strong>)!</li>
               <li><strong>Faster than handwritten Sapl on <code>eval</code>:</strong> 0.20s vs 0.31s (250M vs 305M instructions); partly because the Clean port carries different strictness annotations than <code>benchmarks/eval.cfp</code>. Clean's interprocedural strictness optimizations carry directly into Retag, reducing GC cycles from 3 to 1!</li>
-              <li><strong>Fixed point:</strong> the typed Clean port of <code>gen1</code> (<code>gen1_naar_clean_getypeerd.py</code>) compiles itself via <code>abc2retag.py</code> on the JMVM byte-for-byte into <code>saplcomp.jmvm</code> (0.545 s; gen1 itself 0.571 s).</li>
+              <li><strong>Fixed point:</strong> the typed Clean port of <code>gen1</code> (<code>gen1_naar_clean_getypeerd.py</code>) compiles itself via <code>abc2retag.py</code> on the JMVM byte-for-byte into <code>saplcomp.jmvm</code> (0.55&ndash;0.57 s, the same as gen1 itself at 0.56 s).</li>
             </ul>
           </div>
           <pre class="code-block"><span class="code-comment"># 1. Compile Clean to optimized ABC assembly:</span>
@@ -1536,7 +1536,7 @@ python3 experiments/abc2jmvm/abc2retag.py "Clean System Files/primes.opt.abc" -o
           <ul>
             <li><strong>Peak Performance:</strong> 5&times; to 7&times; faster than interpreted bytecode; nearly matches hand-written C.</li>
             <li><strong>Dedicated ABC Stacks:</strong> Direct machine register allocation for A, B, and C stack pointers.</li>
-            <li><strong>Self-Hosting Speed:</strong> gen1 compiles itself via Clean ABC in just 0.63 seconds native!</li>
+            <li><strong>Self-Hosting Speed:</strong> gen1 compiles itself via Clean ABC in just 0.63 seconds native (Sapl &rarr; ABC &rarr; <code>cg</code> route, earlier measurement). The typed Clean port of gen1 takes <strong>166 ms</strong> natively on ARM64 (Clean 3.1), against 557 ms for gen1 on the JMVM and 278 ms for typed Haskell on GHC.</li>
             <li><strong>Proven Runtime:</strong> Decades of mature GC, memory management, and uniqueness typing optimizations.</li>
           </ul>
         </div>

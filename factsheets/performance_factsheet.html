@@ -539,7 +539,7 @@
         <div class="stat-card amber">
           <div class="stat-number">2.0× <small>vs. GHC -O2</small></div>
           <div class="stat-label">Compiler Self-Compilation (gen1)</div>
-          <div class="stat-sub">JMVM Interpreter (574 ms) vs. GHC Native (283 ms)</div>
+          <div class="stat-sub">JMVM Interpreter (557 ms) vs. GHC Native (278 ms)</div>
         </div>
       </div>
     </div>
@@ -724,14 +724,24 @@
               <td>—</td>
             </tr>
             <tr style="background: var(--bg-card-subtle);">
-              <td><strong>gen1</strong> (Self-compile)</td>
-              <td><strong>574 ms</strong></td>
+              <td><strong>gen1</strong> (Self-compile; JMVM runs the Sapl compiler, abci the untyped Clean port)</td>
+              <td><strong>557 ms</strong></td>
               <td>850 ms</td>
-              <td>780 ms</td>
+              <td>791 ms</td>
               <td>2,050 ms</td>
               <td>1,350 ms</td>
-              <td><span class="pill-diff win">1.48×</span></td>
-              <td><span class="pill-diff warn">2.63×</span></td>
+              <td><span class="pill-diff win">1.53×</span></td>
+              <td><span class="pill-diff warn">2.59×</span></td>
+            </tr>
+            <tr style="background: var(--bg-card-subtle);">
+              <td><strong>gen1</strong> (typed Clean port: the same program on both)</td>
+              <td><strong>574 ms</strong> <small>(via abc2retag)</small></td>
+              <td>&mdash;</td>
+              <td>438 ms</td>
+              <td>&mdash;</td>
+              <td>&mdash;</td>
+              <td>&mdash;</td>
+              <td>&mdash;</td>
             </tr>
             <tr class="total-row">
               <td>Geometric Mean</td>
@@ -758,7 +768,7 @@
           <ul>
             <li><strong>Parity Achieved:</strong> With musttail direct threading, fused superinstructions, and hardware case branching, JMVM Native now matches or outperforms Clean ABC native (ratio <strong>0.92×</strong> across identical frontend code).</li>
             <li><strong>Decisive Wins on Recursion:</strong> JMVM Native is substantially faster on <code>fib</code> (253 ms vs. 480 ms, <strong>1.90× faster</strong>) and <code>primes</code> (230 ms vs. 260 ms).</li>
-            <li><strong>Complex Workloads:</strong> On the 7,500-line self-hosting compiler (<code>gen1</code>), JMVM Native completes in 574 ms vs. 780 ms for ABC native (<strong>1.36× faster</strong>).</li>
+            <li><strong>Complex Workloads:</strong> On the 7,500-line self-hosting compiler (<code>gen1</code>), JMVM Native completes in 557 ms vs. 791 ms for the untyped Clean port in ABC native (<strong>1.42× faster</strong>). That compares two different programs. On the <em>same</em> program, the typed Clean port, the ABC interpreter needs 438 ms against 574 ms for the JMVM running it via abc2retag (<strong>1.31× faster for abci</strong>).</li>
           </ul>
         </div>
 
@@ -986,16 +996,57 @@
               <td><span class="pill-diff neutral"><strong>3.02×</strong></span></td>
             </tr>
             <tr style="background: rgba(59, 130, 246, 0.08);">
-              <td><strong>gen1 (Self-hosting compiler)</strong></td>
-              <td><strong>556 ms (now 574 ms)</strong></td>
-              <td><strong>404 ms</strong></td>
-              <td><strong>283 ms</strong></td>
-              <td><span class="pill-diff win"><strong>1.43×</strong></span></td>
-              <td><span class="pill-diff win"><strong>1.42×</strong></span></td>
-              <td><span class="pill-diff win"><strong>2.0×</strong></span></td>
+              <td><strong>gen1 (self-hosting compiler)</strong>, untyped Clean port (one <code>Val</code> type)</td>
+              <td><strong>557 ms</strong></td>
+              <td><strong>305 ms</strong></td>
+              <td><strong>278 ms</strong></td>
+              <td><span class="pill-diff neutral"><strong>1.10×</strong></span></td>
+              <td><span class="pill-diff neutral"><strong>1.83×</strong></span></td>
+              <td><span class="pill-diff neutral"><strong>2.0×</strong></span></td>
+            </tr>
+            <tr style="background: rgba(59, 130, 246, 0.08);">
+              <td><strong>gen1 (self-hosting compiler)</strong>, typed Clean port (own types, <code>Int</code>, <code>String</code>)</td>
+              <td><strong>557 ms</strong></td>
+              <td><strong>166 ms</strong></td>
+              <td><strong>278 ms</strong></td>
+              <td><span class="pill-diff win"><strong>0.60×</strong></span></td>
+              <td><span class="pill-diff warn"><strong>3.4×</strong></span></td>
+              <td><span class="pill-diff neutral"><strong>2.0×</strong></span></td>
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- gen1 op alle routes -->
+      <div class="card" style="margin-top: 16px;">
+        <h3>gen1 self-compilation on every route (Apple M4, 8 November 2026)</h3>
+        <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">
+          The same input (the flattened 7,500-line source of gen1) on every route, best of 7, wall-clock including start-up.
+          Every route produces <code>saplcomp.jmvm</code> byte for byte (the fixed point). Reproduce with
+          <code>python3 experiments/clean_vergelijking/meet_gen1.py</code>.
+        </p>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr><th>Route</th><th>Time</th><th>vs. JMVM gen1</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Clean 3.1 native ARM64, <strong>typed</strong> Clean port</td><td><strong>166 ms</strong></td><td>3.4× faster</td></tr>
+              <tr><td>Clean 3.1 native ARM64, untyped (<code>Val</code>) Clean port</td><td>305 ms</td><td>1.8× faster</td></tr>
+              <tr><td>GHC 9.14.1 <code>-O2</code>, typed Haskell port (<code>saplcomp_typed.hs</code>)</td><td>278 ms</td><td>2.0× faster</td></tr>
+              <tr><td>Clean ABC interpreter (abci), <strong>typed</strong> Clean port</td><td>438 ms</td><td>1.27× faster</td></tr>
+              <tr style="background: var(--bg-card-subtle);"><td><strong>JMVM, the Sapl compiler gen1 itself</strong> (<code>./runfast</code>)</td><td><strong>557 ms</strong></td><td>reference</td></tr>
+              <tr><td>JMVM running the typed Clean port via abc2retag (<code>./runfast</code> / <code>./runfast-big</code>)</td><td>574 / 550 ms</td><td>same speed (within noise)</td></tr>
+              <tr><td>Clean ABC interpreter (abci), untyped (<code>Val</code>) Clean port</td><td>791 ms</td><td>1.42× slower</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <ul style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">
+          <li><strong>Types matter.</strong> The typed port is 1.8× faster than the untyped one natively and 1.8× faster in abci: with <code>Int</code> and its own constructors Clean keeps numbers unboxed on the B-stack, and a pattern match no longer goes through a 98-constructor type.</li>
+          <li><strong>Clean native beats GHC</strong> on this program (166 ms vs. 278 ms), although the Haskell port is also typed and follows the same source.</li>
+          <li><strong>The JMVM runs compiled Clean code as fast as its own compiler:</strong> the typed port through abc2retag takes 550&ndash;574 ms against 557 ms for hand-written Sapl.</li>
+          <li><strong>Method.</strong> Native Clean binaries need <code>-h 800M -s 100M</code> (without the stack option they segfault). The Clean 3.1 ARM64 binaries run in a Lima VM (no emulation) and are timed inside it. The abci rows run Clean 5.1.1 bytecode. The Wasm columns above were not re-measured.</li>
+        </ul>
       </div>
 
       <!-- Additional Data from x86-64 Xeon Comparison -->
@@ -1007,7 +1058,7 @@
         <ul style="font-size: 13px; color: var(--text-secondary);">
           <li><strong>Micro-benchmarks:</strong> On tight algebraic loops (<code>queens</code>, <code>match</code>, <code>prolog</code>), Clean native is 4.6×–7.2× faster than the JMVM interpreter due to unboxed register parameters on the B-stack.</li>
           <li><strong>Heap & Stream Workloads:</strong> On <code>fib</code> and <code>primes</code>, Clean native is only 2.6×–4.1× faster than JMVM, while JMVM beats the ABC interpreter native.</li>
-          <li><strong>Real-World Compiler (gen1):</strong> JMVM executes <code>gen1</code> in 2.05 s, while Clean native takes 1.20 s (Clean is only <strong>1.71× faster</strong>) and GHC takes 0.96 s (GHC is <strong>2.1× faster</strong>).</li>
+          <li><strong>Real-World Compiler (gen1, untyped Clean port, measured 28 October):</strong> JMVM executes <code>gen1</code> in 2.05 s, while Clean native takes 1.20 s (Clean is only <strong>1.71× faster</strong>) and GHC takes 0.96 s (GHC is <strong>2.1× faster</strong>).</li>
         </ul>
       </div>
     </section>
@@ -1040,7 +1091,7 @@
         <div class="card">
           <h3>2. Why the Gap Narrows to 2.0× on Real-World Code (gen1)</h3>
           <p>
-            When scaling from toy benchmarks to real-world software—such as the 7,500-line self-hosting compiler <code>gen1</code>—the performance gap between the JMVM interpreter and GHC <code>-O2</code> drops dramatically to just <strong>2.0×</strong> (574 ms vs. 283 ms):
+            When scaling from toy benchmarks to real-world software—such as the 7,500-line self-hosting compiler <code>gen1</code>—the performance gap between the JMVM interpreter and GHC <code>-O2</code> drops dramatically to just <strong>2.0×</strong> (557 ms vs. 278 ms):
           </p>
           <ul>
             <li><strong>Memory & Cache Dominance:</strong> Real programs allocate rich algebraic data structures (ASTs, symbol tables, environments). Execution time is dominated by cache lines, pointer chasing, and heap allocations—which cost the exact same time in compiled code as in interpreted code.</li>
