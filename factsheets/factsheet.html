@@ -619,9 +619,9 @@
         </div>
 
         <div class="stat-card">
-          <div class="stat-number">1.13× <small>ABC</small></div>
+          <div class="stat-number">0.80× <small>ABC time</small></div>
           <div class="stat-label">Vs. Clean ABC Interpreter</div>
-          <div class="stat-sub">Gap virtually closed (faster on fib, primes, twice, queens)</div>
+          <div class="stat-sub">Natively Clean's ABC interpreter is ~20% faster on typed Clean programs; on the same Sapl programs it is level (1.07×). JMVM is faster on fib</div>
         </div>
 
         <div class="stat-card purple">
@@ -631,7 +631,7 @@
         </div>
 
         <div class="stat-card amber">
-          <div class="stat-number">1.45× <small>Wasm</small></div>
+          <div class="stat-number">1.47× <small>Wasm</small></div>
           <div class="stat-label">Browser vs Native ARM64</div>
           <div class="stat-sub">Minimal WebAssembly overhead running in V8 / Chrome</div>
         </div>
@@ -754,25 +754,25 @@
               <tr>
                 <td><strong>vs. Clean ABC Native</strong></td>
                 <td><code>abci-interpret</code> (Clean bytecode)</td>
-                <td><span class="pill-diff win">0.92× (JMVM wins)</span></td>
-                <td>JMVM matches or outperforms ABC Native interpreter; faster on <code>fib</code>, <code>primes</code>, <code>twice</code>, <code>queens</code>.</td>
+                <td><span class="pill-diff neutral">0.80× (ABC faster)</span></td>
+                <td>Typed Clean programs in Clean's own interpreter: ABC needs 0.80× the JMVM time (geometric mean over 13 benchmarks, re-measured 9 November 2026); JMVM is faster on <code>fib</code> and <code>queens</code>, level on <code>primes</code>. On the same Sapl programs (Sapl &rarr; ABC with <code>abcopt</code>) the ABC interpreter needs 1.07&times; the JMVM time.</td>
               </tr>
               <tr>
                 <td><strong>vs. Clean ABC Web (Wasm)</strong></td>
                 <td>Clean ABC in Chrome (with Locals)</td>
-                <td><span class="pill-diff win">1.02× (Near Parity)</span></td>
-                <td>Virtual dead heat in browser execution (1.52× faster against unoptimized stock ABC Web).</td>
+                <td><span class="pill-diff neutral">1.19× (ABC+Locals faster)</span></td>
+                <td>Node 26, typed Clean programs: JMVM Web needs 1.19× the time of ABC Web with locals and is 1.30× faster than unoptimized stock ABC Web. On the same Sapl programs JMVM Web is the faster one (ABC+locals needs 1.16× the JMVM time).</td>
               </tr>
               <tr>
                 <td><strong>WebAssembly Overhead</strong></td>
                 <td>JMVM Web vs. JMVM Native ARM64</td>
-                <td><span class="pill-diff win">1.45× – 1.53×</span></td>
+                <td><span class="pill-diff win">1.47× (Chrome) – 1.58× (Node)</span></td>
                 <td>Near theoretical C-to-Wasm efficiency in Chrome/V8 without JIT latency or container startup.</td>
               </tr>
               <tr>
                 <td><strong>vs. Clean 3.1 Native ARM64</strong></td>
                 <td>Compiled native machine code (Lima/M4)</td>
-                <td><span class="pill-diff neutral">2.48× (gen1: 1.8× untyped port, 3.4× typed port)</span></td>
+                <td><span class="pill-diff neutral">2.52× (gen1: 1.8× untyped port, 3.4× typed port)</span></td>
                 <td>Interpreter vs. native AOT code using unboxed B-stack CPU registers. On the compiler itself the gap depends on how the Clean port is written: 1.8× for a port with one universal type, 3.4× for a typed port.</td>
               </tr>
               <tr>
@@ -936,7 +936,7 @@
           <ul>
             <li><strong>Fixed-Point Stability:</strong> The compiler compiles its own source code to produce byte-for-byte identical bytecode, verified by <code>./check_bootstrap</code> in ~12 seconds.</li>
             <li><strong>Haskell Anchor:</strong> To eliminate circular bootstrapping risks, a toolchain generator maintains a typed Haskell equivalent (<code>saplcomp_typed.hs</code>) which, when built with GHC, emits the exact same bytecode.</li>
-            <li><strong>Compiler Velocity:</strong> Thanks to recent VM execution optimizations, gen1 self-compiles its entire codebase in just <strong>557 ms</strong> on an Apple M4 (typed Haskell on GHC <code>-O2</code>: 278 ms).</li>
+            <li><strong>Compiler Velocity:</strong> Thanks to recent VM execution optimizations, gen1 self-compiles its entire codebase in just <strong>598 ms</strong> on an Apple M4 (typed Haskell on GHC <code>-O2</code>: 295 ms).</li>
             <li><strong>The Same Compiler in Clean:</strong> A typed Clean port of gen1 reaches the same fixed point natively (Clean 3.1 ARM64: 166 ms), in Clean's ABC interpreter (438 ms), and on the JMVM itself through the ABC &rarr; retag decompiler (550&ndash;574 ms, the same speed as gen1). See the performance factsheet for every route.</li>
             <li><strong>Integrated Typechecker:</strong> Sinds mid-October 2026, an integrated static typechecker (<code>typecheck.cfp</code>) verifies program consistency during build time.</li>
           </ul>
@@ -978,7 +978,7 @@
           </p>
           <ul>
             <li><strong>Zero Parser Overhead in Wasm:</strong> The wasm VM build contains no textual tokenizer or parser; it consumes pre-encoded <code>.jvb</code> binaries directly. This minimizes binary size and accelerates startup.</li>
-            <li><strong>Near-Native V8 Performance:</strong> In Chrome, the WebAssembly engine runs within <strong>1.45× to 1.49×</strong> of native bare-metal ARM64 speeds.</li>
+            <li><strong>Near-Native V8 Performance:</strong> In Chrome, the WebAssembly engine runs within about <strong>1.47×</strong> (geometric mean; 1.2× to 2.4× per benchmark) of native bare-metal ARM64 speeds.</li>
             <li><strong>Web Worker Isolation:</strong> All execution occurs inside a dedicated Web Worker (<code>worker.js</code>), ensuring the browser UI never freezes during heavy evaluation or infinite stream reduction.</li>
             <li><strong>Zero Server Infrastructure:</strong> A complete compiler, linker, REPL, and virtual machine packaged as static assets; works offline or directly from local file URLs.</li>
           </ul>
