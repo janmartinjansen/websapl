@@ -618,7 +618,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/retag_opt_factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 35908,
+        "size": 36792,
         "isBinary": false
       },
       {

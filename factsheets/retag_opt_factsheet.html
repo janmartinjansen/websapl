@@ -313,6 +313,8 @@ td.n, th.n {
   </div>
 </div>
 
+<p class="lede" style="border-left:3px solid #c80; padding-left:12px"><strong>Update 9 November 2026:</strong> the optimizer is no longer part of gen1 (it made gen1's .jvb 2.1× larger); it is a separate stage behind ./compile --opt (gen1 &rarr; retagopt &rarr; retagcomp). The inline and thunkdoor passes were removed (they gained next to nothing and miscompiled gen1 without strict); the default is fold, let, params and eager, with strict as an option. Four semantic bugs were fixed (closure arguments were forced early, a <#> b reordered side effects, thunkdoor evaluated too early, try bodies were skipped) and dead-code removal was dropped (it broke programs that load functions by name, such as the REPL). The optimizer itself is about 3&times; faster. The tables below are the original measurements; the current numbers are in docs/2026-11-09_retag_opt_sneller_plan.md. </p>
+
 <h2>1. Executive Summary</h2>
 <p>
   Until now, the Sapl compiler pipeline translated Stage-4 intermediate ASTs (<code>.retag.txt</code> / <code>.cfp_retag</code>) directly into bytecode via Stage-5 code generation (<code>retagcomp</code> / <code>stage5_codegen.cfp</code>) without any whole-program optimizations. 
