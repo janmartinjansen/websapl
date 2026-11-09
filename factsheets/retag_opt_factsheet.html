@@ -314,6 +314,49 @@ td.n, th.n {
 </div>
 
 <p class="lede" style="border-left:3px solid #c80; padding-left:12px"><strong>Update 9 November 2026:</strong> the optimizer is no longer part of gen1 (it made gen1's .jvb 2.1× larger); it is a separate stage behind ./compile --opt (gen1 &rarr; retagopt &rarr; retagcomp). The inline and thunkdoor passes were removed (they gained next to nothing and miscompiled gen1 without strict); the default is fold, let, params and eager, with strict as an option. Four semantic bugs were fixed (closure arguments were forced early, a <#> b reordered side effects, thunkdoor evaluated too early, try bodies were skipped) and dead-code removal was dropped (it broke programs that load functions by name, such as the REPL). The optimizer itself is about 3&times; faster. The tables below are the original measurements; the current numbers are in docs/2026-11-09_retag_opt_sneller_plan.md. </p>
+<div class="lede" style="border-left:3px solid #c80; padding-left:12px">
+<p><strong>Update 9 November 2026 (second update): part of this is now done by gen1 itself.</strong> The biggest single source of the gains below, replacing a cheap lazy <code>n - 1</code> / <code>d + 1</code> by its value when <code>n</code> is already evaluated on that path, now happens in gen1's stage 2 (<code>tagLazyMaybe</code>, <code>sapl_compiler/stage2_lazytag.cfp</code>; see <code>docs/2026-11-09_goedkope_thunk_vervangen_plan.md</code>) for every program, with or without <code>./compile --opt</code>. It is a local, per-function rule, so the <code>eager</code> pass finds nothing left to do at those places; <code>params</code> (dropping <code>eval(x)</code> when every caller passes a value) remains the part only <code>--opt</code> provides. The "Baseline" columns in section 4 are the old gen1; the tables below compare old gen1, new gen1 and new gen1 + <code>--opt</code> (instructions from <code>./run</code>, time best of 5 with <code>./runfast</code>, WASM warm in headless Chrome 156, minimum of 7 rounds).</p>
+<p><strong>Native (Apple Silicon): instructions and time</strong></p>
+<table>
+<thead><tr><th>Benchmark</th><th>Instr old gen1</th><th>Instr new gen1</th><th>Instr new + --opt</th><th>Time old</th><th>Time new</th><th>Time new + --opt</th></tr></thead>
+<tbody>
+<tr><td><code>fib</code></td><td>632,459,857</td><td>632,459,857 (+0.0%)</td><td>632,459,857 (+0.0%)</td><td>0.240 s</td><td>0.241 s</td><td>0.241 s</td></tr>
+<tr><td><code>primes</code></td><td>240,656,481</td><td>240,656,481 (+0.0%)</td><td>240,267,545 (−0.2%)</td><td>0.221 s</td><td>0.223 s</td><td>0.224 s</td></tr>
+<tr><td><code>queens</code></td><td>167,472,741</td><td>145,699,223 (−13.0%)</td><td>124,372,841 (−25.7%)</td><td>0.141 s</td><td>0.115 s</td><td>0.111 s</td></tr>
+<tr><td><code>sort</code></td><td>334,790,640</td><td>334,790,640 (+0.0%)</td><td>323,860,071 (−3.3%)</td><td>0.274 s</td><td>0.274 s</td><td>0.270 s</td></tr>
+<tr><td><code>twice</code></td><td>668,582,411</td><td>668,582,411 (+0.0%)</td><td>668,582,411 (+0.0%)</td><td>0.630 s</td><td>0.630 s</td><td>0.629 s</td></tr>
+<tr><td><code>eval</code></td><td>305,176,252</td><td>220,685,972 (−27.7%)</td><td>206,355,737 (−32.4%)</td><td>0.318 s</td><td>0.213 s</td><td>0.215 s</td></tr>
+<tr><td><code>eval2</code></td><td>427,822,227</td><td>427,822,227 (+0.0%)</td><td>422,031,518 (−1.4%)</td><td>0.393 s</td><td>0.394 s</td><td>0.392 s</td></tr>
+<tr><td><code>hamming</code></td><td>368,136,018</td><td>340,140,018 (−7.6%)</td><td>336,140,018 (−8.7%)</td><td>0.396 s</td><td>0.367 s</td><td>0.367 s</td></tr>
+<tr><td><code>sprimes</code></td><td>437,886,247</td><td>437,886,247 (+0.0%)</td><td>437,886,247 (+0.0%)</td><td>0.566 s</td><td>0.568 s</td><td>0.564 s</td></tr>
+<tr><td><code>parsetest</code></td><td>297,645,491</td><td>297,645,491 (+0.0%)</td><td>296,789,491 (−0.3%)</td><td>0.541 s</td><td>0.542 s</td><td>0.541 s</td></tr>
+<tr><td><code>prolog</code></td><td>139,066,083</td><td>139,066,083 (+0.0%)</td><td>137,404,577 (−1.2%)</td><td>0.205 s</td><td>0.205 s</td><td>0.205 s</td></tr>
+<tr><td><code>knights</code></td><td>54,119,084</td><td>54,119,084 (+0.0%)</td><td>51,001,390 (−5.8%)</td><td>0.057 s</td><td>0.057 s</td><td>0.056 s</td></tr>
+<tr><td><code>match</code></td><td>223,660,419</td><td>223,660,419 (+0.0%)</td><td>223,660,419 (+0.0%)</td><td>0.233 s</td><td>0.233 s</td><td>0.235 s</td></tr>
+</tbody>
+</table>
+<p>Creates of <code>eval</code>, <code>queens</code> and <code>hamming</code> with the new gen1 already equal the <code>--opt</code> numbers (15.08 M, 5.77 M, 36.04 M); <code>--opt</code> still adds instructions: <code>queens</code> 145.7 M &rarr; 124.4 M, <code>knights</code> 54.1 M &rarr; 51.0 M, <code>sort</code> 334.8 M &rarr; 323.9 M, <code>eval</code> 220.7 M &rarr; 206.4 M. On <code>eval</code> and <code>hamming</code> the time is the same with and without <code>--opt</code>; on <code>queens</code> <code>--opt</code> is about 3% faster.</p>
+<p><strong>Warm WebAssembly (headless Chrome 156), minimum in ms</strong></p>
+<table>
+<thead><tr><th>Benchmark</th><th>old gen1</th><th>new gen1</th><th>new + --opt</th></tr></thead>
+<tbody>
+<tr><td><code>fib</code></td><td>621</td><td>608 (−2.1%)</td><td>621 (+0.0%)</td></tr>
+<tr><td><code>primes</code></td><td>337</td><td>335 (−0.6%)</td><td>334 (−0.9%)</td></tr>
+<tr><td><code>queens</code></td><td>214</td><td>173 (−19.2%)</td><td>159 (−25.7%)</td></tr>
+<tr><td><code>sort</code></td><td>445</td><td>440 (−1.1%)</td><td>437 (−1.8%)</td></tr>
+<tr><td><code>twice</code></td><td>971</td><td>959 (−1.2%)</td><td>960 (−1.1%)</td></tr>
+<tr><td><code>eval</code></td><td>476</td><td>302 (−36.6%)</td><td>295 (−38.0%)</td></tr>
+<tr><td><code>eval2</code></td><td>597</td><td>596 (−0.2%)</td><td>596 (−0.2%)</td></tr>
+<tr><td><code>hamming</code></td><td>626</td><td>572 (−8.6%)</td><td>573 (−8.5%)</td></tr>
+<tr><td><code>sprimes</code></td><td>682</td><td>671 (−1.6%)</td><td>677 (−0.7%)</td></tr>
+<tr><td><code>parsetest</code></td><td>748</td><td>736 (−1.6%)</td><td>741 (−0.9%)</td></tr>
+<tr><td><code>prolog</code></td><td>283</td><td>282 (−0.4%)</td><td>281 (−0.7%)</td></tr>
+<tr><td><code>knights</code></td><td>81</td><td>80 (−1.2%)</td><td>80 (−1.2%)</td></tr>
+<tr><td><code>match</code></td><td>342</td><td>342 (+0.0%)</td><td>343 (+0.3%)</td></tr>
+</tbody>
+</table>
+<p>On WebAssembly the new rule gives <code>eval</code> &minus;36%, <code>queens</code> &minus;19% and <code>hamming</code> &minus;8%; <code>--opt</code> adds another &minus;3% on <code>eval</code> and &minus;9% on <code>queens</code>; the rest is within noise. Decision (9 November 2026): keep <code>--opt</code>; it does not get in the way and still earns its place on <code>queens</code>, <code>knights</code> and <code>sort</code>.</p>
+</div>
 
 <h2>1. Executive Summary</h2>
 <p>

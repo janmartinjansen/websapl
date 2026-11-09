@@ -618,7 +618,7 @@
           "path": "factsheets/retag_opt_factsheet.html",
           "type": "file",
           "ext": ".html",
-          "size": 36792,
+          "size": 42725,
           "isBinary": false
         },
         {
@@ -1996,7 +1996,7 @@
                   "path": "repl_sapl/build/modules/mlibcsvspp.jvb",
                   "type": "file",
                   "ext": ".jvb",
-                  "size": 36740,
+                  "size": 36468,
                   "isBinary": true
                 },
                 {
@@ -2092,7 +2092,7 @@
                   "path": "repl_sapl/build/modules/mliblistspp.jvb",
                   "type": "file",
                   "ext": ".jvb",
-                  "size": 22084,
+                  "size": 21948,
                   "isBinary": true
                 },
                 {
@@ -2236,7 +2236,7 @@
                   "path": "repl_sapl/build/modules/mlibstatsspp.jvb",
                   "type": "file",
                   "ext": ".jvb",
-                  "size": 22276,
+                  "size": 21980,
                   "isBinary": true
                 },
                 {
@@ -2380,7 +2380,7 @@
                   "path": "repl_sapl/build/modules/nbglue.jvb",
                   "type": "file",
                   "ext": ".jvb",
-                  "size": 66500,
+                  "size": 66116,
                   "isBinary": true
                 },
                 {
@@ -2439,7 +2439,7 @@
               "path": "repl_sapl/build/mini_repl.jmvm",
               "type": "file",
               "ext": ".jmvm",
-              "size": 8189110,
+              "size": 8215778,
               "isBinary": false
             },
             {
@@ -2447,7 +2447,7 @@
               "path": "repl_sapl/build/mini_repl.jvb",
               "type": "file",
               "ext": ".jvb",
-              "size": 3043600,
+              "size": 3054064,
               "isBinary": true
             }
           ],
