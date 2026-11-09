@@ -333,7 +333,8 @@ td.n, th.n {
 <p>Apple Silicon (macOS). abc2retag and Sapl: state of 8 November 2026 (after the second optimisation round), <code>./runfast</code> best of 5, instructions counted by <code>./run</code>. The <code>abc2jmvm.py</code> and <code>abci</code> columns are from 7 November; <code>abci</code> is wall-clock including process start-up, so it is not a like-for-like comparison. GC counts were not re-measured. Measured with <code>./runfast</code> (musttail dispatch, no counting) and <code>./run</code> (instruction counting and GC metrics):</p>
 
 <div class="tablebox">
-  <table>
+  <p style="border-left:3px solid #c80; padding-left:12px"><em>Update 9 November 2026:</em> the "Native Sapl" columns of <code>queens</code>, <code>eval</code> and <code>hamming</code> use the new gen1, which replaces a cheap lazy <code>n - 1</code> by its value when <code>n</code> is already evaluated (instructions exact; time scaled with the measured old/new ratio). The abc2retag and Clean columns are unchanged.</p>
+<table>
     <thead>
       <tr>
         <th>Benchmark</th>
@@ -384,11 +385,11 @@ td.n, th.n {
       <tr>
         <td><code>queens</code></td>
         <td class="n best">0.110s</td>
-        <td class="n">0.140s</td>
+        <td class="n">0.114s</td>
         <td class="n">0.560s</td>
         <td class="n">0.133s</td>
         <td class="n">158.1M</td>
-        <td class="n">167.5M</td>
+        <td class="n">145.7M</td>
         <td class="n">&mdash;</td>
         <td><code>res: 2680</code></td>
       </tr>
@@ -428,22 +429,22 @@ td.n, th.n {
       <tr>
         <td><code>eval</code></td>
         <td class="n best">0.200s</td>
-        <td class="n">0.310s</td>
+        <td class="n">0.209s</td>
         <td class="n">&mdash;</td>
         <td class="n">0.125s</td>
         <td class="n">250.0M</td>
-        <td class="n">305.2M</td>
+        <td class="n">220.7M</td>
         <td class="n">&mdash;</td>
         <td><code>res: 547</code></td>
       </tr>
       <tr>
         <td><code>hamming</code></td>
-        <td class="n best">0.370s</td>
-        <td class="n">0.380s</td>
+        <td class="n">0.370s</td>
+        <td class="n best">0.359s</td>
         <td class="n">&mdash;</td>
         <td class="n">0.330s</td>
         <td class="n">354.3M</td>
-        <td class="n">368.1M</td>
+        <td class="n">340.1M</td>
         <td class="n">&mdash;</td>
         <td><code>res: 3564000</code></td>
       </tr>

@@ -519,19 +519,19 @@
 
       <div class="hero-stats-grid">
         <div class="stat-card green">
-          <div class="stat-number">1.02× <small>Parity</small></div>
+          <div class="stat-number">0.96× <small>Parity</small></div>
           <div class="stat-label">JMVM Web vs. Clean ABC (Locals)</div>
-          <div class="stat-sub">Virtually equal in Chrome (1.52× faster vs. unoptimized stock)</div>
+          <div class="stat-sub">Virtually equal in Chrome (1.62× faster vs. unoptimized stock)</div>
         </div>
 
         <div class="stat-card">
           <div class="stat-number">1.45× <small>vs 1.72×</small></div>
           <div class="stat-label">Wasm Slowdown (Web vs. Native)</div>
-          <div class="stat-sub">JMVM 1.45× vs. Clean ABC with Locals 1.72× (Stock: 2.57×)</div>
+          <div class="stat-sub">JMVM 1.44× vs. Clean ABC with Locals 1.72× (Stock: 2.57×)</div>
         </div>
 
         <div class="stat-card purple">
-          <div class="stat-number">0.92× <small>ABC Native</small></div>
+          <div class="stat-number">0.87× <small>ABC Native</small></div>
           <div class="stat-label">JMVM Native vs. Clean ABC Native</div>
           <div class="stat-sub">JMVM matches or outperforms ABC Native interpreter</div>
         </div>
@@ -574,6 +574,17 @@
           The benchmarks represent 12 classical functional algorithms, <code>eval2</code> (the self-interpreter), and <code>gen1</code> (the 7,500-line self-hosting compiler translating itself). 
           All test variants yield 100% byte-identical output.
         </p>
+        <p style="border-left:3px solid #c80; padding-left:12px; margin-top:12px">
+          <strong>Update 9 November 2026:</strong> gen1 now replaces a cheap lazy <code>n - 1</code> / <code>d + 1</code> by its value
+          when <code>n</code> is already evaluated on that path (stage 2, on by default, also without <code>./compile --opt</code>).
+          This only changes the bytecode of <code>queens</code>, <code>eval</code> and <code>hamming</code> (instructions
+          &minus;13.0%, &minus;27.7%, &minus;7.6%; heap allocations &minus;44%, &minus;49%, &minus;10%); every other benchmark runs
+          identical bytecode. The JMVM cells of those three rows (and the ratios, totals and means derived from them) were
+          updated by scaling with the change measured old versus new on the same machine, run alternately: native best of 7
+          (<code>queens</code> &times;0.82, <code>eval</code> &times;0.67, <code>hamming</code> &times;0.94), WebAssembly warm in Chrome 156
+          (&times;0.81, &times;0.63, &times;0.91). The ratios against Clean ABC Web (Chrome: 1.02&times; &rarr; 0.96&times;; overall against stock ABC: 1.52&times; &rarr; 1.62&times;) were scaled the same way. The Clean, ABC and GHC columns and the <code>gen1</code> rows (&plusmn;0.2%) are unchanged.
+        </p>
+
       </div>
 
       <!-- Table 1: Interpreters Native & Web -->
@@ -615,12 +626,12 @@
             </tr>
             <tr>
               <td><strong>queens</strong></td>
-              <td><strong>149 ms</strong></td>
-              <td>215 ms</td>
+              <td><strong>122 ms</strong></td>
+              <td>174 ms</td>
               <td>160 ms</td>
               <td>407 ms</td>
               <td>219 ms</td>
-              <td><span class="pill-diff win">1.44×</span></td>
+              <td><span class="pill-diff win">1.43×</span></td>
               <td><span class="pill-diff warn">2.54×</span></td>
             </tr>
             <tr>
@@ -645,12 +656,12 @@
             </tr>
             <tr>
               <td><strong>hamming</strong></td>
-              <td><strong>405 ms</strong></td>
-              <td>580 ms</td>
+              <td><strong>382 ms</strong></td>
+              <td>530 ms</td>
               <td>420 ms</td>
               <td>896 ms</td>
               <td>469 ms</td>
-              <td><span class="pill-diff win">1.43×</span></td>
+              <td><span class="pill-diff win">1.39×</span></td>
               <td><span class="pill-diff warn">2.13×</span></td>
             </tr>
             <tr>
@@ -675,12 +686,12 @@
             </tr>
             <tr>
               <td><strong>eval</strong></td>
-              <td><strong>335 ms</strong></td>
-              <td>470 ms</td>
+              <td><strong>225 ms</strong></td>
+              <td>298 ms</td>
               <td>340 ms</td>
               <td>301 ms</td>
               <td>207 ms</td>
-              <td><span class="pill-diff win">1.40×</span></td>
+              <td><span class="pill-diff win">1.32×</span></td>
               <td><span class="pill-diff win">0.89×</span></td>
             </tr>
             <tr>
@@ -746,11 +757,11 @@
             <tr class="total-row">
               <td>Geometric Mean</td>
               <td><strong>Reference</strong></td>
-              <td><strong>1.45×</strong></td>
-              <td><strong>1.09×</strong></td>
+              <td><strong>1.44×</strong></td>
+              <td><strong>1.15×</strong></td>
               <td><strong>2.57×</strong></td>
               <td><strong>1.72×</strong></td>
-              <td><span class="pill-diff win">1.45× – 1.53×</span></td>
+              <td><span class="pill-diff win">1.44× – 1.53×</span></td>
               <td><span class="pill-diff warn">2.57× – 2.67×</span></td>
             </tr>
           </tbody>
@@ -766,7 +777,7 @@
             However, following the November 2026 breakthroughs:
           </p>
           <ul>
-            <li><strong>Parity Achieved:</strong> With musttail direct threading, fused superinstructions, and hardware case branching, JMVM Native now matches or outperforms Clean ABC native (ratio <strong>0.92×</strong> across identical frontend code).</li>
+            <li><strong>Parity Achieved:</strong> With musttail direct threading, fused superinstructions, and hardware case branching, JMVM Native now matches or outperforms Clean ABC native (ratio <strong>0.87×</strong> across identical frontend code).</li>
             <li><strong>Decisive Wins on Recursion:</strong> JMVM Native is substantially faster on <code>fib</code> (253 ms vs. 480 ms, <strong>1.90× faster</strong>) and <code>primes</code> (230 ms vs. 260 ms).</li>
             <li><strong>Complex Workloads:</strong> On the 7,500-line self-hosting compiler (<code>gen1</code>), JMVM Native completes in 557 ms vs. 791 ms for the untyped Clean port in ABC native (<strong>1.42× faster</strong>). That compares two different programs. On the <em>same</em> program, the typed Clean port, the ABC interpreter needs 438 ms against 574 ms for the JMVM running it via abc2retag (<strong>1.31× faster for abci</strong>).</li>
           </ul>
@@ -779,9 +790,9 @@
           </p>
           <ul>
             <li><strong>Fair Architectural Baseline (Locals):</strong> The stock ABC interpreter in Wasm is artificially hobbled by storing VM state in WebAssembly globals. Hoisting these to locals is a straightforward code generator fix, not an algorithmic alteration. Therefore, <strong>Clean ABC Web (+Locals) is the fairest baseline</strong>.</li>
-            <li><strong>Near Parity:</strong> Against the locals-optimized ABC interpreter, JMVM Web and Clean ABC Web are in a virtual dead heat (ratio <strong>1.02× in Chrome 156</strong>, and <strong>0.96× in Node 26</strong>).</li>
+            <li><strong>Near Parity:</strong> Against the locals-optimized ABC interpreter, JMVM Web and Clean ABC Web are in a virtual dead heat (ratio <strong>0.96× in Chrome 156</strong>, and <strong>0.96× in Node 26</strong>).</li>
             <li><strong>Wasm Slowdown Comparison:</strong> JMVM incurs a <strong>1.45×</strong> penalty from native, while Clean ABC (+Locals) incurs a <strong>1.72×</strong> penalty. Both operate well within the normal theoretical 1.45×–1.75× band of C/Wasm execution.</li>
-            <li><strong>Stock Reference:</strong> Against the unoptimized stock ABC build currently shipped, JMVM is 1.52× faster overall, and 2.41× faster on <code>gen1</code> (850 ms vs. 2,050 ms).</li>
+            <li><strong>Stock Reference:</strong> Against the unoptimized stock ABC build currently shipped, JMVM is 1.62× faster overall, and 2.41× faster on <code>gen1</code> (850 ms vs. 2,050 ms).</li>
           </ul>
         </div>
       </div>
@@ -803,7 +814,7 @@
         <div class="card">
           <h3>The Root Cause: Wasm Globals vs. Register Allocation</h3>
           <p>
-            Why does Clean ABC lose 2.67× going to WebAssembly while JMVM loses only 1.45×? 
+            Why does Clean ABC lose 2.67× going to WebAssembly while JMVM loses only 1.44×? 
             Investigation revealed that Clean's wasm generator (<code>tools/interpretergen-wasm</code>) stores the virtual machine's central registers—the program counter (<code>pc</code>), stack pointers (<code>asp</code>, <code>bsp</code>), and heap pointer (<code>hp</code>)—in <strong>WebAssembly global variables</strong> (<code>global.get</code> / <code>global.set</code>).
           </p>
           <div class="highlight-box amber">
@@ -822,7 +833,7 @@
           <ul>
             <li><strong>35% Execution Time Reduction:</strong> Transforming globals to locals cuts execution time by 35% across the 12 typed Clean benchmarks in Node 26 (approx. <strong>1.5× speedup</strong>).</li>
             <li><strong>Narrowing the Browser Gap:</strong> With locals, ABC's slowdown drops from 2.67× to <strong>1.72×–1.76×</strong>.</li>
-            <li><strong>Clean vs. JMVM:</strong> With locals applied, ABC Web and JMVM Web achieve near parity (ratio 1.02× in Chrome, 0.96× in Node). However, JMVM achieves this out-of-the-box without requiring post-processing or auxiliary tooling.</li>
+            <li><strong>Clean vs. JMVM:</strong> With locals applied, ABC Web and JMVM Web achieve near parity (ratio 0.96× in Chrome, 0.96× in Node). However, JMVM achieves this out-of-the-box without requiring post-processing or auxiliary tooling.</li>
           </ul>
         </div>
       </div>
@@ -916,30 +927,30 @@
             </tr>
             <tr>
               <td><strong>hamming</strong></td>
-              <td>386 ms</td>
+              <td>364 ms</td>
               <td>133 ms</td>
               <td><strong>109 ms</strong></td>
               <td><span class="pill-diff neutral">1.22×</span></td>
-              <td>2.9×</td>
-              <td>3.5×</td>
+              <td>2.7×</td>
+              <td>3.3×</td>
             </tr>
             <tr>
               <td><strong>queens</strong></td>
-              <td>143 ms</td>
+              <td>117 ms</td>
               <td>44 ms</td>
               <td><strong>34 ms</strong></td>
               <td><span class="pill-diff neutral">1.29×</span></td>
-              <td>3.3×</td>
-              <td>4.2×</td>
+              <td>2.7×</td>
+              <td>3.4×</td>
             </tr>
             <tr>
               <td><strong>eval</strong></td>
-              <td>315 ms</td>
+              <td>212 ms</td>
               <td><strong>46 ms</strong></td>
               <td>75 ms</td>
               <td><span class="pill-diff win">0.61× (Clean wins 1.6×)</span></td>
-              <td>6.8×</td>
-              <td>4.2×</td>
+              <td>4.6×</td>
+              <td>2.8×</td>
             </tr>
             <tr>
               <td><strong>match</strong></td>
@@ -988,12 +999,12 @@
             </tr>
             <tr class="total-row" style="background: var(--bg-card-subtle);">
               <td><strong>TOTAL (12 benchmarks with GHC)</strong></td>
-              <td><strong>3,721 ms</strong></td>
+              <td><strong>3,570 ms</strong></td>
               <td><strong>1,498 ms</strong></td>
               <td><strong>1,231 ms</strong></td>
               <td><span class="pill-diff win"><strong>1.21× (Nearly Equal!)</strong></span></td>
-              <td><span class="pill-diff neutral"><strong>2.48×</strong></span></td>
-              <td><span class="pill-diff neutral"><strong>3.02×</strong></span></td>
+              <td><span class="pill-diff neutral"><strong>2.38×</strong></span></td>
+              <td><span class="pill-diff neutral"><strong>2.90×</strong></span></td>
             </tr>
             <tr style="background: rgba(59, 130, 246, 0.08);">
               <td><strong>gen1 (self-hosting compiler)</strong>, untyped Clean port (one <code>Val</code> type)</td>
