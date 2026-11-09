@@ -621,7 +621,7 @@
         <div class="stat-card">
           <div class="stat-number">0.80× <small>ABC time</small></div>
           <div class="stat-label">Vs. Clean ABC Interpreter</div>
-          <div class="stat-sub">Natively Clean's ABC interpreter is ~20% faster on typed Clean programs; on the same Sapl programs it is level (1.07×). JMVM is faster on fib</div>
+          <div class="stat-sub">Natively Clean's ABC interpreter is ~20% faster on typed Clean programs; on the same Sapl programs it is 9% faster (0.91×). JMVM is faster on fib</div>
         </div>
 
         <div class="stat-card purple">
@@ -760,8 +760,8 @@
               <tr>
                 <td><strong>vs. Clean ABC Web (Wasm)</strong></td>
                 <td>Clean ABC in Chrome (with Locals)</td>
-                <td><span class="pill-diff win">1.18× faster (same Sapl programs)</span></td>
-                <td>Client-side web is the primary platform. Running the same Sapl programs (Node 26, ABC with abcopt), JMVM Web is 1.77× faster than the stock ABC interpreter and 1.18× faster than ABC with locals; on Clean's own typed programs ABC with locals is 1.19× ahead.</td>
+                <td><span class="pill-diff neutral">0.96× (level, same Sapl programs)</span></td>
+                <td>Client-side web is the primary platform. Running the same Sapl programs (Node 26, ABC with all its optimizations and abcopt), JMVM Web is 1.43× faster than the shipped (stock) ABC interpreter and level with ABC with the locals fix (ABC needs 0.96× the JMVM time; 0.77× on gen1); on Clean's own typed programs ABC with locals is 1.19× ahead.</td>
               </tr>
               <tr>
                 <td><strong>WebAssembly Overhead</strong></td>
@@ -1102,4 +1102,4 @@
     })();
   </script>
 </body>
-</html>
+</html>On the same Sapl programs (Sapl &rarr; ABC with all optimizations and abcopt) the ABC interpreter needs 0.91&times; the JMVM time (1.08&times; without abcopt).

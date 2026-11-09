@@ -578,7 +578,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 47903,
+        "size": 48155,
         "isBinary": false
       },
       {
@@ -610,7 +610,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/performance_factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 63006,
+        "size": 63807,
         "isBinary": false
       },
       {
