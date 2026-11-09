@@ -519,9 +519,9 @@
 
       <div class="hero-stats-grid">
         <div class="stat-card green">
-          <div class="stat-number">1.19× <small>of ABC+Locals</small></div>
-          <div class="stat-label">JMVM Web vs. Clean ABC (Locals)</div>
-          <div class="stat-sub">In Node 26, JMVM Web needs 1.19× the time of Clean ABC Web with locals and is 1.30× faster than unoptimized stock ABC (geometric means, 12 benchmarks, all measured on the same machine on 9 November 2026)</div>
+          <div class="stat-number">1.18× <small>faster in the browser</small></div>
+          <div class="stat-label">JMVM Web vs. Clean ABC Web (+Locals), same Sapl programs</div>
+          <div class="stat-sub">Client-side web is the primary platform. Node 26, 14 benchmarks, ABC with <code>abcopt</code>: JMVM is 1.77× faster than stock ABC and 1.18× faster than ABC with locals (Table 1a). On Clean's own typed programs ABC with locals is 1.19× ahead (Table 1b).</div>
         </div>
 
         <div class="stat-card">
@@ -548,7 +548,7 @@
   <div class="container">
     <!-- Anchor Bar -->
     <nav class="nav-anchor-bar">
-      <a href="#table1" class="nav-pill">1. Interpreter & Web Comparison</a>
+      <a href="#table1" class="nav-pill">1. Interpreter & Web Comparison (web first)</a>
       <a href="#wasm-analysis" class="nav-pill">2. WebAssembly Analysis (Globals vs. Locals)</a>
       <a href="#table2" class="nav-pill">3. Native Compilers Showdown (GHC & Clean)</a>
       <a href="#architectural-insights" class="nav-pill">4. Architectural Insights & Gap Closing</a>
@@ -590,8 +590,204 @@
 
       </div>
 
+            <!-- Table 1a: dezelfde Sapl-programma's op beide interpreters -->
+      <h3 style="font-size: 15px; margin-bottom: 8px; color: var(--text-primary);">Table 1a: The same Sapl programs on both interpreters (Execution Time in Milliseconds) &mdash; the client-side web is the primary deployment platform</h3>
+      <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">
+        What Sapl actually runs is Sapl code. Here both interpreters execute <em>the same program from the same front end</em> (gen1 stages 1&ndash;4;
+        JMVM: stage 5 &rarr; <code>.jvb</code>; ABC: <code>sapl_naar_abc.py</code> &rarr; <code>abcopt</code> &rarr; <code>.pbc</code>, <code>experiments/abc_backend/</code>).
+        ABC is given Clean's optimizer (<code>abcopt</code>), which is the best case for it. Web: warm, Node 26, <code>jmvm.wasm</code> against Clean's
+        <code>abc-interpreter.wasm</code>, stock and with the globals&rarr;locals fix. Ratios are ABC time / JMVM time, so above 1 the JMVM is faster.
+      </p>
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Benchmark</th>
+              <th>JMVM Native<br><small>(runfast)</small></th>
+              <th>ABC Native<br><small>(abci, abcopt)</small></th>
+              <th>JMVM Web<br><small>(Wasm, Node 26)</small></th>
+              <th>ABC Web, Stock<br><small>(abcopt)</small></th>
+              <th>ABC Web, + Locals<br><small>(abcopt)</small></th>
+              <th>Native<br><small>(ABC / JMVM)</small></th>
+              <th>Web vs. Stock<br><small>(ABC / JMVM)</small></th>
+              <th>Web vs. Locals<br><small>(ABC / JMVM)</small></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>fib</strong></td>
+              <td><strong>242 ms</strong></td>
+              <td>655 ms</td>
+              <td><strong>748 ms</strong></td>
+              <td>2,325 ms</td>
+              <td>1,690 ms</td>
+              <td><span class="pill-diff win">2.71×</span></td>
+              <td><span class="pill-diff win">3.11×</span></td>
+              <td><span class="pill-diff win">2.26×</span></td>
+            </tr>
+            <tr>
+              <td><strong>primes</strong></td>
+              <td><strong>223 ms</strong></td>
+              <td>246 ms</td>
+              <td><strong>353 ms</strong></td>
+              <td>615 ms</td>
+              <td>404 ms</td>
+              <td><span class="pill-diff win">1.10×</span></td>
+              <td><span class="pill-diff win">1.74×</span></td>
+              <td><span class="pill-diff win">1.14×</span></td>
+            </tr>
+            <tr>
+              <td><strong>queens</strong></td>
+              <td><strong>117 ms</strong></td>
+              <td>133 ms</td>
+              <td><strong>185 ms</strong></td>
+              <td>460 ms</td>
+              <td>251 ms</td>
+              <td><span class="pill-diff win">1.14×</span></td>
+              <td><span class="pill-diff win">2.49×</span></td>
+              <td><span class="pill-diff win">1.36×</span></td>
+            </tr>
+            <tr>
+              <td><strong>sort</strong></td>
+              <td><strong>277 ms</strong></td>
+              <td>293 ms</td>
+              <td><strong>484 ms</strong></td>
+              <td>747 ms</td>
+              <td>512 ms</td>
+              <td><span class="pill-diff win">1.06×</span></td>
+              <td><span class="pill-diff win">1.54×</span></td>
+              <td><span class="pill-diff win">1.06×</span></td>
+            </tr>
+            <tr>
+              <td><strong>knights</strong></td>
+              <td><strong>58 ms</strong></td>
+              <td>67 ms</td>
+              <td><strong>83 ms</strong></td>
+              <td>187 ms</td>
+              <td>113 ms</td>
+              <td><span class="pill-diff win">1.16×</span></td>
+              <td><span class="pill-diff win">2.25×</span></td>
+              <td><span class="pill-diff win">1.36×</span></td>
+            </tr>
+            <tr>
+              <td><strong>hamming</strong></td>
+              <td><strong>371 ms</strong></td>
+              <td>324 ms</td>
+              <td><strong>587 ms</strong></td>
+              <td>885 ms</td>
+              <td>550 ms</td>
+              <td><span class="pill-diff warn">0.87×</span></td>
+              <td><span class="pill-diff win">1.51×</span></td>
+              <td><span class="pill-diff warn">0.94×</span></td>
+            </tr>
+            <tr>
+              <td><strong>match</strong></td>
+              <td><strong>235 ms</strong></td>
+              <td>249 ms</td>
+              <td><strong>352 ms</strong></td>
+              <td>621 ms</td>
+              <td>422 ms</td>
+              <td><span class="pill-diff win">1.06×</span></td>
+              <td><span class="pill-diff win">1.76×</span></td>
+              <td><span class="pill-diff win">1.20×</span></td>
+            </tr>
+            <tr>
+              <td><strong>twice</strong></td>
+              <td><strong>640 ms</strong></td>
+              <td>593 ms</td>
+              <td><strong>1,002 ms</strong></td>
+              <td>1,031 ms</td>
+              <td>784 ms</td>
+              <td><span class="pill-diff warn">0.93×</span></td>
+              <td><span class="pill-diff win">1.03×</span></td>
+              <td><span class="pill-diff warn">0.78×</span></td>
+            </tr>
+            <tr>
+              <td><strong>eval</strong></td>
+              <td><strong>215 ms</strong></td>
+              <td>230 ms</td>
+              <td><strong>331 ms</strong></td>
+              <td>639 ms</td>
+              <td>434 ms</td>
+              <td><span class="pill-diff win">1.07×</span></td>
+              <td><span class="pill-diff win">1.93×</span></td>
+              <td><span class="pill-diff win">1.31×</span></td>
+            </tr>
+            <tr>
+              <td><strong>sprimes</strong></td>
+              <td><strong>566 ms</strong></td>
+              <td>562 ms</td>
+              <td><strong>689 ms</strong></td>
+              <td>1,197 ms</td>
+              <td>847 ms</td>
+              <td><span class="pill-diff warn">0.99×</span></td>
+              <td><span class="pill-diff win">1.74×</span></td>
+              <td><span class="pill-diff win">1.23×</span></td>
+            </tr>
+            <tr>
+              <td><strong>parsetest</strong></td>
+              <td><strong>544 ms</strong></td>
+              <td>404 ms</td>
+              <td><strong>761 ms</strong></td>
+              <td>862 ms</td>
+              <td>620 ms</td>
+              <td><span class="pill-diff warn">0.74×</span></td>
+              <td><span class="pill-diff win">1.13×</span></td>
+              <td><span class="pill-diff warn">0.81×</span></td>
+            </tr>
+            <tr>
+              <td><strong>prolog</strong></td>
+              <td><strong>208 ms</strong></td>
+              <td>178 ms</td>
+              <td><strong>288 ms</strong></td>
+              <td>427 ms</td>
+              <td>287 ms</td>
+              <td><span class="pill-diff warn">0.86×</span></td>
+              <td><span class="pill-diff win">1.48×</span></td>
+              <td><span class="pill-diff warn">1.00×</span></td>
+            </tr>
+            <tr>
+              <td><strong>eval2</strong></td>
+              <td><strong>397 ms</strong></td>
+              <td>458 ms</td>
+              <td><strong>634 ms</strong></td>
+              <td>1,710 ms</td>
+              <td>1,004 ms</td>
+              <td><span class="pill-diff win">1.15×</span></td>
+              <td><span class="pill-diff win">2.70×</span></td>
+              <td><span class="pill-diff win">1.58×</span></td>
+            </tr>
+            <tr style="background: rgba(59, 130, 246, 0.08);">
+              <td><strong>gen1</strong></td>
+              <td><strong>590 ms</strong></td>
+              <td>539 ms</td>
+              <td><strong>868 ms</strong></td>
+              <td>1,351 ms</td>
+              <td>903 ms</td>
+              <td><span class="pill-diff warn">0.91×</span></td>
+              <td><span class="pill-diff win">1.56×</span></td>
+              <td><span class="pill-diff win">1.04×</span></td>
+            </tr>
+            <tr class="total-row">
+              <td>Geometric Mean</td>
+              <td colspan="5"><strong>ABC time relative to JMVM time (&gt; 1: JMVM faster)</strong></td>
+              <td><span class="pill-diff warn"><strong>1.07×</strong></span></td>
+              <td><span class="pill-diff win"><strong>1.77×</strong></span></td>
+              <td><span class="pill-diff win"><strong>1.18×</strong></span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size: 13px; color: var(--text-secondary); margin: 8px 0 20px;">
+        <strong>In the browser the JMVM is the faster interpreter on Sapl programs:</strong> 1.77&times; faster than the shipped (stock) ABC interpreter and 1.18&times; faster than ABC with locals,
+        even with <code>abcopt</code>; without <code>abcopt</code> the margins are 2.25&times; and 1.48&times;. On <code>gen1</code>, the realistic workload, the locals variant comes level (1.03&times;).
+        Natively the two are level (ABC 1.07&times; the JMVM time with <code>abcopt</code>, 1.26&times; without). Measured 9 November 2026, same machine and day as the other tables.
+        The JMVM needs more memory per instance in wasm (about 687 MB reserved against 320 MB for ABC; see <code>docs/2026-10-29_jmvm_tegenover_abc_interpreter.md</code>).
+        <em>Not measured:</em> ABC in Chrome and Safari (only Node).
+      </p>
+
       <!-- Table 1: Interpreters Native & Web -->
-      <h3 style="font-size: 15px; margin-bottom: 8px; color: var(--text-primary);">Table 1: Interpreters Across Native & WebAssembly (Execution Time in Milliseconds)</h3>
+      <h3 style="font-size: 15px; margin-bottom: 8px; color: var(--text-primary);">Table 1b: Typed Clean programs in Clean's interpreter against the Sapl originals in JMVM (Execution Time in Milliseconds)</h3>
       <div class="table-container">
         <table class="data-table">
           <thead>
@@ -832,7 +1028,7 @@
           </p>
           <ul>
             <li><strong>Fair Architectural Baseline (Locals):</strong> The stock ABC interpreter in Wasm is artificially hobbled by storing VM state in WebAssembly globals. Hoisting these to locals is a straightforward code generator fix, not an algorithmic alteration. Therefore, <strong>Clean ABC Web (+Locals) is the fairest baseline</strong>.</li>
-            <li><strong>Close, not equal:</strong> Against the locals-optimized ABC interpreter (typed Clean programs, Node 26), JMVM Web needs 1.19&times; the time (geometric mean over the 12 benchmarks with both; JMVM Web is faster on <code>fib</code>, <code>queens</code> and <code>parsetest</code>, level on <code>primes</code>, slower on the rest, up to 2&times; on <code>twice</code>). With the same Sapl programs on both (<code>experiments/abc_backend/</code>), JMVM Web is the faster one: ABC with locals and <code>abcopt</code> needs 1.16&times; the JMVM time (1.47&times; without <code>abcopt</code>; on <code>gen1</code> 1.03&times;).</li>
+            <li><strong>Close, not equal:</strong> Against the locals-optimized ABC interpreter (typed Clean programs, Node 26), JMVM Web needs 1.19&times; the time (geometric mean over the 12 benchmarks with both; JMVM Web is faster on <code>fib</code>, <code>queens</code> and <code>parsetest</code>, level on <code>primes</code>, slower on the rest, up to 2&times; on <code>twice</code>). With the same Sapl programs on both (<code>experiments/abc_backend/</code>), JMVM Web is the faster one: ABC with locals and <code>abcopt</code> needs 1.18&times; the JMVM time (1.49&times; without <code>abcopt</code>; on <code>gen1</code> 1.03&times;; Table 1a).</li>
             <li><strong>Wasm Slowdown Comparison:</strong> JMVM incurs a <strong>1.58&times;</strong> penalty from native in Node (Chrome: 1.47&times;; from 1.2&times; on <code>sprimes</code> to 2.4&times; on <code>fib</code>), Clean ABC (+Locals) a <strong>1.63&times;</strong> penalty and stock ABC <strong>2.52&times;</strong>, each against its own native interpreter.</li>
             <li><strong>Stock Reference:</strong> Against the unoptimized stock ABC build currently shipped, JMVM Web is 1.30&times; faster overall (Node 26, typed Clean programs).</li>
           </ul>
@@ -875,7 +1071,7 @@
           <ul>
             <li><strong>35% Execution Time Reduction:</strong> Transforming globals to locals cuts execution time by 35% across the 12 typed Clean benchmarks in Node 26 (approx. <strong>1.5× speedup</strong>).</li>
             <li><strong>Narrowing the Browser Gap:</strong> With locals, ABC's slowdown drops from 2.52&times; to <strong>1.63&times;</strong> (measured again on 9 November 2026).</li>
-            <li><strong>Clean vs. JMVM:</strong> With locals applied, ABC Web is still 1.19&times; faster than JMVM Web on the typed Clean programs (Node 26) and slower on the same Sapl programs (1.16&times;). JMVM reaches its numbers out-of-the-box, without post-processing or auxiliary tooling.</li>
+            <li><strong>Clean vs. JMVM:</strong> With locals applied, ABC Web is still 1.19&times; faster than JMVM Web on the typed Clean programs (Node 26) and slower on the same Sapl programs (1.18&times;, Table 1a). JMVM reaches its numbers out-of-the-box, without post-processing or auxiliary tooling.</li>
           </ul>
         </div>
       </div>
