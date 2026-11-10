@@ -3101,7 +3101,7 @@ window.WEBSAPL_TREE = [
     "path": "notebook.html",
     "type": "file",
     "ext": ".html",
-    "size": 82154,
+    "size": 82499,
     "isBinary": false
   },
   {
