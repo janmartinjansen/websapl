@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notebooks: the Killer App</title>
+  <script>
+    try { document.documentElement.setAttribute("data-theme", localStorage.getItem("websapl_theme") || "dark"); } catch (_) {}
+  </script>
+  <!--
+    Start page of the presentation "Notebooks: the Killer App for Sapl & the JMVM".
+    The presentation is itself a notebook (notebooks/notebookdemo/presentatie.spp in the repo),
+    shown in the presentation mode of notebook.html. Everything runs live in the browser.
+  -->
+  <style>
+    :root {
+      --bg: #12151c; --bg-card: #1a1e27; --bg-hover: #232834; --border: #2e3546;
+      --text: #e6edf3; --text-2: #9aa4b2; --muted: #647083; --accent: #38bdf8; --purple: #c084fc;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'Fira Code', 'SF Mono', Consolas, Monaco, monospace;
+    }
+    [data-theme="light"] {
+      --bg: #f8fafc; --bg-card: #ffffff; --bg-hover: #f1f5f9; --border: #e2e8f0;
+      --text: #0f172a; --text-2: #475569; --muted: #94a3b8; --accent: #0284c7; --purple: #7e22ce;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font-sans); line-height: 1.5; }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 48px 16px 80px; }
+    .back { color: var(--muted); text-decoration: none; font-size: 14px; }
+    h1 { font-size: 34px; margin: 10px 0 6px; line-height: 1.2; }
+    .sub { color: var(--text-2); margin: 0 0 28px; }
+    a.start {
+      display: inline-block; background: var(--accent); color: #fff; text-decoration: none; font-weight: 600;
+      padding: 12px 24px; border-radius: 8px; font-size: 17px;
+    }
+    a.start:hover { filter: brightness(1.1); }
+    .keys { color: var(--text-2); font-size: 14px; margin: 14px 0 36px; }
+    kbd { font-family: var(--font-mono); font-size: 12px; border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: var(--bg-card); }
+    h2 { font-size: 18px; margin: 0 0 12px; color: var(--text-2); font-weight: 600; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+    a.card { display: block; text-decoration: none; color: var(--text); background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+    a.card:hover { background: var(--bg-hover); border-color: var(--text-2); }
+    a.card b { display: block; margin-bottom: 4px; }
+    a.card span { color: var(--text-2); font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="../index.html">WebSapl ›</a>
+    <h1>Notebooks: the Killer App for Sapl &amp; the JMVM</h1>
+    <p class="sub">Pure, lazy, interactive documents, entirely in the browser. Jan Martin Jansen · November 2026. An interactive presentation as a live notebook in WebAssembly.</p>
+
+    <a class="start" href="../notebook.html?nb=notebookdemo/presentatie.spp&amp;run=1&amp;presenteer=1">Start the presentation →</a>
+    <p class="keys">
+      <kbd>PageDown</kbd> / <kbd>space</kbd> / <kbd>→</kbd> next slide ·
+      <kbd>PageUp</kbd> / <kbd>←</kbd> previous ·
+      <kbd>C</kbd> show code ·
+      <kbd>F</kbd> full screen ·
+      <kbd>T</kbd> light or dark ·
+      <kbd>Esc</kbd> to the notebook, <kbd>P</kbd> back to the slides
+    </p>
+
+    <h2>More</h2>
+    <div class="grid">
+      <a class="card" href="../notebook.html?nb=notebookdemo/presentatie.spp"><b>Notebook view</b><span>Read and edit the presentation notebook itself.</span></a>
+      <a class="card" href="../factsheets/notebooks_factsheet.html"><b>Notebook factsheet</b><span>Architecture, toolchain and timings of the notebooks.</span></a>
+      <a class="card" href="../notebook.html?nb=notebooks/interactief.spp&amp;run=1"><b>Interactive cells</b><span>Sieve, bouncing ball, rotating cube, space-filling curves.</span></a>
+      <a class="card" href="../notebook.html?nb=notebooks/haskell_lite.spp&amp;run=1"><b>Haskell lite</b><span>Haskell cells in the notebook.</span></a>
+      <a class="card" href="../afscheid/index.html"><b>From proof of concept to applications</b><span>The previous presentation.</span></a>
+      <a class="card" href="../topdemo/index.html"><b>TOP Software demo</b><span>Benchmarks and VM measurements (Dutch).</span></a>
+    </div>
+  </div>
+</body>
+</html>

@@ -10,7 +10,7 @@
           "path": "afscheid/index.html",
           "type": "file",
           "ext": ".html",
-          "size": 4629,
+          "size": 4802,
           "isBinary": false
         },
         {
@@ -1451,6 +1451,30 @@
           "type": "file",
           "ext": ".spp",
           "size": 2859,
+          "isBinary": false
+        }
+      ],
+      "_expanded": false
+    },
+    {
+      "name": "notebookdemo",
+      "path": "notebookdemo",
+      "type": "directory",
+      "children": [
+        {
+          "name": "index.html",
+          "path": "notebookdemo/index.html",
+          "type": "file",
+          "ext": ".html",
+          "size": 4522,
+          "isBinary": false
+        },
+        {
+          "name": "presentatie.spp",
+          "path": "notebookdemo/presentatie.spp",
+          "type": "file",
+          "ext": ".spp",
+          "size": 15751,
           "isBinary": false
         }
       ],
@@ -2954,7 +2978,7 @@
           "path": "topdemo/index.html",
           "type": "file",
           "ext": ".html",
-          "size": 4754,
+          "size": 4939,
           "isBinary": false
         },
         {
