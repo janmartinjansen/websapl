@@ -633,7 +633,7 @@
           <text x="285" y="45" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="var(--text-muted)" letter-spacing="1">2. INTERMEDIATE LAYERS</text>
 
           <rect x="530" y="20" width="210" height="515" rx="10" fill="var(--bg-card)" stroke="var(--border-color)" stroke-width="1.5" />
-          <text x="545" y="45" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="var(--text-muted)" letter-spacing="1">3. CODE GENERATION / BRIDGES</text>
+          <text x="545" y="45" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="var(--text-muted)" letter-spacing="1">3. CODEGEN / BRIDGES</text>
 
           <rect x="770" y="20" width="230" height="515" rx="10" fill="var(--bg-card)" stroke="var(--border-color)" stroke-width="1.5" />
           <text x="785" y="45" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="var(--text-muted)" letter-spacing="1">4. EXECUTION TARGETS</text>
@@ -769,7 +769,7 @@
             <rect width="200" height="65" rx="6" fill="var(--node-bg)" stroke="#f59e0b" stroke-width="1.5" filter="url(#card-shadow)" />
             <text x="12" y="22" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#f59e0b">Native Machine Code</text>
             <text x="12" y="38" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">Linked with Clean runtime</text>
-            <text x="12" y="54" font-family="-apple-system, sans-serif" font-size="9.5" fill="var(--text-emerald)" font-weight="600">5×–7× faster than bytecode</text>
+            <text x="12" y="54" font-family="-apple-system, sans-serif" font-size="9.5" fill="#10b981" font-weight="600">5×–7× faster than bytecode</text>
           </g>
 
           <!-- Clean ABC Interpreter -->
@@ -787,53 +787,54 @@
             <text x="12" y="36" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">LLVM IR backend for Clean</text>
           </g>
 
-          <!-- CONNECTING PATHS / ARROWS -->
-          <!-- Haskell Lite -> Sapl+ -->
-          <path d="M 225 97 L 255 97 L 255 120 L 285 120" fill="none" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow-blue)" />
-          <!-- MicroHs -> Core Sapl -->
-          <path d="M 225 172 L 255 172 L 255 315 L 225 315" fill="none" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)" />
+          <!-- CONNECTING PATHS / ARROWS (each in its own lane, never through a box) -->
+          <!-- Haskell Lite -> Preprocessor (emits .spp) -->
+          <path d="M 225 97 L 252 97 L 252 113 L 283 113" fill="none" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow-blue)" />
+          <!-- MicroHs -> Core Sapl (left margin) -->
+          <path d="M 35 172 L 27 172 L 27 322 L 33 322" fill="none" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)" />
           <!-- Sapl+ -> Preprocessor -->
-          <path d="M 225 247 L 255 247 L 255 130 L 285 130" fill="none" stroke="#a855f7" stroke-width="2" marker-end="url(#arrow-purple)" />
+          <path d="M 225 247 L 244 247 L 244 132 L 283 132" fill="none" stroke="#a855f7" stroke-width="2" marker-end="url(#arrow-purple)" />
           <!-- Preprocessor -> Analysis -->
-          <path d="M 385 145 L 385 175" fill="none" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)" />
+          <path d="M 385 145 L 385 173" fill="none" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)" />
           <!-- Core Sapl -> Analysis -->
-          <path d="M 225 325 L 255 325 L 255 202 L 285 202" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#arrow-emerald)" />
+          <path d="M 225 325 L 260 325 L 260 205 L 283 205" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#arrow-emerald)" />
           <!-- Analysis -> Retag IR -->
-          <path d="M 385 230 L 385 260" fill="none" stroke="#a855f7" stroke-width="2" marker-end="url(#arrow-purple)" />
-          
+          <path d="M 385 230 L 385 258" fill="none" stroke="#a855f7" stroke-width="2" marker-end="url(#arrow-purple)" />
+
           <!-- Retag IR -> Gen1 Codegen -->
-          <path d="M 485 290 L 515 290 L 515 175 L 545 175" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#arrow-emerald)" />
+          <path d="M 485 275 L 515 275 L 515 175 L 543 175" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#arrow-emerald)" />
           <!-- Retag IR -> Retag to ABC -->
-          <path d="M 485 300 L 545 285" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
-          
-          <!-- Retag to ABC -> Clean ABC -->
-          <path d="M 635 315 L 635 370 L 485 410" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3" marker-end="url(#arrow-amber)" />
-          
+          <path d="M 485 300 L 543 300" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
+          <!-- Retag to ABC -> Clean ABC (emits .abc) -->
+          <path d="M 565 315 L 565 326 L 500 326 L 500 372 L 460 372 L 460 383" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3" marker-end="url(#arrow-amber)" />
+
           <!-- Clean (.icl) -> Clean ABC -->
-          <path d="M 225 402 L 285 417" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
-          
+          <path d="M 225 402 L 283 417" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
+
           <!-- Clean ABC -> ABC to Retag (NEW HIGHWAY) -->
-          <path d="M 485 425 L 515 425 L 515 370 L 545 370" fill="none" stroke="#3b82f6" stroke-width="2.5" marker-end="url(#arrow-blue)" />
-          <!-- ABC to Retag -> Retag IR (Loop back into Stage 4) -->
-          <path d="M 635 335 L 635 245 L 435 245 L 435 260" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="4" marker-end="url(#arrow-blue)" />
-          <!-- ABC to Retag -> Gen1 Codegen (Direct compile-retag) -->
-          <path d="M 635 335 L 635 210" fill="none" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrow-blue)" />
+          <path d="M 485 405 L 520 405 L 520 368 L 543 368" fill="none" stroke="#3b82f6" stroke-width="2.5" marker-end="url(#arrow-blue)" />
+          <!-- ABC to Retag -> Gen1 Codegen (direct compile-retag), via the lane right of column 3 -->
+          <path d="M 725 345 L 741 345 L 741 225 L 690 225 L 690 212" fill="none" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrow-blue)" />
+          <!-- ABC to Retag -> Retag IR (loop back into Stage 4) -->
+          <path d="M 741 239 L 435 239 L 435 258" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="4" marker-end="url(#arrow-blue)" />
 
           <!-- Clean ABC -> cg -->
-          <path d="M 485 440 L 545 455" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
-          
-          <!-- Retag to ABC -> cg / ABC interpreter -->
-          <path d="M 725 285 L 755 285 L 755 307 L 785 307" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
-          <path d="M 725 455 L 755 455 L 755 320 L 785 320" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
-          <path d="M 485 450 L 515 450 L 515 392 L 785 392" fill="none" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arrow-amber)" />
+          <path d="M 485 440 L 520 440 L 520 455 L 543 455" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
+          <!-- Clean ABC -> ABC interpreter (through the gap between the decompiler and cg) -->
+          <path d="M 485 418 L 783 418" fill="none" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arrow-amber)" />
+
+          <!-- Retag to ABC -> native machine code -->
+          <path d="M 725 287 L 756 287 L 756 300 L 783 300" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
+          <!-- cg -> native machine code -->
+          <path d="M 725 462 L 771 462 L 771 325 L 783 325" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
 
           <!-- Gen1 Codegen -> JMVM Native -->
-          <path d="M 725 160 L 755 160 L 755 112 L 785 112" fill="none" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow-blue)" />
+          <path d="M 725 160 L 755 160 L 755 112 L 783 112" fill="none" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow-blue)" />
           <!-- Gen1 Codegen -> WebSapl Wasm -->
-          <path d="M 725 185 L 755 185 L 755 212 L 785 212" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#arrow-emerald)" />
+          <path d="M 725 185 L 755 185 L 755 212 L 783 212" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#arrow-emerald)" />
 
-          <!-- Clean ABC -> Clean LLVM -->
-          <path d="M 485 460 L 515 460 L 515 472 L 785 472" fill="none" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4" marker-end="url(#arrow)" />
+          <!-- Clean ABC -> Clean LLVM (below column 3) -->
+          <path d="M 420 460 L 420 512 L 885 512 L 885 497" fill="none" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4" marker-end="url(#arrow)" />
         </svg>
       </div>
 
