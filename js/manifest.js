@@ -594,7 +594,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/index.html",
         "type": "file",
         "ext": ".html",
-        "size": 7734,
+        "size": 8470,
         "isBinary": false
       },
       {
@@ -626,7 +626,15 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/sapl_jmvm_clean_haskell_factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 102213,
+        "size": 102468,
+        "isBinary": false
+      },
+      {
+        "name": "toolchain_factsheet.html",
+        "path": "factsheets/toolchain_factsheet.html",
+        "type": "file",
+        "ext": ".html",
+        "size": 32814,
         "isBinary": false
       }
     ],
