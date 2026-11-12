@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sapl to Native C</title>
+<meta name="description" content="Sapl compiled to C, one C function per Sapl function, on the JMVM memory model: 0.39x the interpreter time, on par with Clean native, gen1 self-compiles in 246 ms.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script>
+  try {
+    const t = localStorage.getItem("websapl_theme");
+    if (t) document.documentElement.setAttribute("data-theme", t);
+  } catch (_) {}
+</script>
+<style>
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --fg: #1b2230;
+  --muted: #5a6475;
+  --line: #d9dee6;
+  --accent: #1f5f8b;
+  --accent-soft: #e3eef6;
+  --warn: #9a5b00;
+  --warn-soft: #fbf0de;
+  --ok: #2c6b45;
+  --ok-soft: #e3f2e8;
+  --band: #c9d7e4;
+  --f-display: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161d;
+    --surface: #1a2029;
+    --fg: #e4e8ee;
+    --muted: #9aa5b6;
+    --line: #2d3542;
+    --accent: #7db7e0;
+    --accent-soft: #1d3346;
+    --warn: #e7b25c;
+    --warn-soft: #3a2c14;
+    --ok: #7fcf9c;
+    --ok-soft: #173025;
+    --band: #2a3d50;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161d;
+  --surface: #1a2029;
+  --fg: #e4e8ee;
+  --muted: #9aa5b6;
+  --line: #2d3542;
+  --accent: #7db7e0;
+  --accent-soft: #1d3346;
+  --warn: #e7b25c;
+  --warn-soft: #3a2c14;
+  --ok: #7fcf9c;
+  --ok-soft: #173025;
+  --band: #2a3d50;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--f-body);
+  font-size: 16px;
+  line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 64px;
+}
+.wrap { max-width: 920px; margin: 0 auto; }
+header {
+  padding-block: 36px 20px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 24px;
+}
+.back-link {
+  display: inline-block;
+  margin-bottom: 14px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+.back-link:hover { color: var(--accent); }
+.eyebrow {
+  font-family: var(--f-mono);
+  font-size: 12.5px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 500;
+}
+h1 {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: clamp(28px, 4.5vw, 40px);
+  line-height: 1.15;
+  margin: 10px 0 14px;
+  letter-spacing: -.01em;
+}
+h2 {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 23px;
+  line-height: 1.25;
+  margin: 40px 0 14px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 6px;
+}
+h3 {
+  font-family: var(--f-display);
+  font-weight: 600;
+  font-size: 18px;
+  margin: 22px 0 8px;
+}
+.meta {
+  color: var(--muted);
+  font-size: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 12px;
+}
+.meta span { display: inline-flex; align-items: center; gap: 4px; }
+.lede {
+  font-size: 18px;
+  color: var(--fg);
+  line-height: 1.55;
+  margin: 0 0 16px;
+}
+p { margin: 0 0 14px; }
+ul, ol { margin: 0 0 14px; padding-left: 1.25em; }
+li { margin-bottom: 6px; }
+a { color: var(--accent); text-underline-offset: 2px; }
+code {
+  font-family: var(--f-mono);
+  font-size: .88em;
+  background: var(--accent-soft);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+pre {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  font-family: var(--f-mono);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+pre code { background: none; padding: 0; }
+.metrics {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+  margin: 20px 0;
+}
+.metric-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+.metric-card.hl {
+  border-color: var(--ok);
+  background: var(--ok-soft);
+}
+.metric-val {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 26px;
+  line-height: 1.1;
+  color: var(--fg);
+  margin-bottom: 4px;
+}
+.metric-card.hl .metric-val { color: var(--ok); }
+.metric-label {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.3;
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px 20px;
+  margin: 16px 0;
+}
+.pill {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.pill.ok { background: var(--ok-soft); color: var(--ok); }
+.pill.info { background: var(--accent-soft); color: var(--accent); }
+.tablebox {
+  overflow-x: auto;
+  margin: 16px 0 24px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13.5px;
+  min-width: 660px;
+}
+th, td {
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+th {
+  font-weight: 600;
+  color: var(--muted);
+  font-size: 12.5px;
+  background: var(--surface);
+}
+tr:last-child td { border-bottom: none; }
+td.n, th.n {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: var(--f-mono);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.best { font-weight: 600; color: var(--ok); }
+.pipeline-flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0;
+  font-family: var(--f-mono);
+  font-size: 13px;
+}
+.pipeline-step {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 12px;
+}
+.pipeline-step.opt {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--fg);
+  font-weight: 500;
+}
+.pipeline-arrow { color: var(--muted); font-size: 16px; }
+.badge {
+  display: inline-block;
+  font-family: var(--f-mono);
+  font-size: 11.5px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-right: 6px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+.bar { display:flex; align-items:center; gap:8px; }
+.bar span.b { display:inline-block; height:9px; border-radius:3px; background: var(--accent); }
+.bar span.b.c { background: var(--muted); }
+td.note { color: var(--muted); font-size: 12.5px; }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+<header>
+  <a class="back-link" href="index.html">&larr; Back to all factsheets</a>
+  <div class="eyebrow">Technical Factsheet &bull; Native Code Generation</div>
+  <h1>Sapl to native code via C: one C function per Sapl function</h1>
+  <p class="lede"><code>sapl2c</code> translates gen1&rsquo;s Stage-4 retag form into C, one C function per Sapl function, on the JMVM&rsquo;s own memory model and GC &mdash; optionally the VM&rsquo;s own runtime code. All 13 core benchmarks run in 0.39&times; the interpreter&rsquo;s time, on par with Clean&rsquo;s native code generator, and the Sapl compiler compiles itself natively in 246&nbsp;ms.</p>
+  <div class="meta">
+    <span><strong>Project:</strong> JMVM / Sapl</span>
+    <span><strong>Date:</strong> 2026-11-12 (first version 11 Nov)</span>
+    <span><strong>Target:</strong> Apple M4, clang 21</span>
+    <span><strong>Status:</strong> <span class="pill ok">Phases 1&ndash;3 done</span> <span class="pill info">next: optimisations, ./compile --native</span></span>
+  </div>
+</header>
+<main>
+<div class="metrics">
+  <div class="metric-card hl"><div class="metric-val">0.39&times;</div><div class="metric-label">time of the JMVM interpreter (<code>runfast</code>), geometric mean of 13</div></div>
+  <div class="metric-card hl"><div class="metric-val">0.99&times;</div><div class="metric-label">time of Clean native, geometric mean of 12</div></div>
+  <div class="metric-card"><div class="metric-val">1.16&times;</div><div class="metric-label">time of GHC <code>-O2</code> (Clean native: also 1.16&times;)</div></div>
+  <div class="metric-card hl"><div class="metric-val">246 ms</div><div class="metric-label">gen1 compiles itself natively, fixed point (interpreter 580 ms)</div></div>
+  <div class="metric-card"><div class="metric-val">0 diffs</div><div class="metric-label">output and allocation count vs the VM, also under GC stress</div></div>
+</div>
+
+<h2>Pipeline</h2>
+<div class="pipeline-flow">
+  <span class="pipeline-step">x.cfp</span><span class="pipeline-arrow">&rarr;</span>
+  <span class="pipeline-step">gen1 <code>--emit=retag</code></span><span class="pipeline-arrow">&rarr;</span>
+  <span class="pipeline-step opt">sapl_naar_c.py</span><span class="pipeline-arrow">&rarr;</span>
+  <span class="pipeline-step">x.c + rt.h</span><span class="pipeline-arrow">&rarr;</span>
+  <span class="pipeline-step">clang -O2</span><span class="pipeline-arrow">&rarr;</span>
+  <span class="pipeline-step">native binary</span>
+</div>
+<p>The retag form already has explicit <code>eval</code>, <code>thunk</code> and <code>closure</code>, strictness annotations and lifted helper functions, so each line becomes one C function. With <code>-DVM_RT</code>, heap, copying GC, strings, packed arrays and the CAF table are the VM&rsquo;s own code (<code>vm/vm.cpp</code>, unchanged, through <code>vm_brug.cpp</code>); both runtimes give identical results at the same speed.</p>
+
+<h2>Results: the 13 benchmarks</h2>
+<p>ms. JMVM and sapl2c measured 12 November (best of 5, interleaved). Clean native (Clean 3.1, ARM64, Linux VM on the same M4) and GHC 9.14.1 <code>-O2</code> as published in the <a href="performance_factsheet.html">performance factsheet</a> (Table 2). Green: fastest in the row, or sapl2c faster in the ratio columns.</p>
+<div class="tablebox"><table>
+<thead><tr><th>benchmark</th><th class="n">runfast</th><th class="n">sapl2c</th><th class="n">Clean native</th><th class="n">GHC -O2</th><th class="n">/ runfast</th><th class="n">/ Clean</th><th class="n">/ GHC</th></tr></thead>
+<tbody>
+<tr><td><code>fib</code></td><td class="n">240</td><td class="n"><strong>92</strong></td><td class="n best">90</td><td class="n">97</td><td class="n">0.38</td><td class="n">1.02</td><td class="n best">0.95</td></tr>
+<tr><td><code>knights</code></td><td class="n">50</td><td class="n best"><strong>13</strong></td><td class="n">14</td><td class="n">29</td><td class="n">0.26</td><td class="n best">0.93</td><td class="n best">0.45</td></tr>
+<tr><td><code>primes</code></td><td class="n">220</td><td class="n"><strong>125</strong></td><td class="n">115</td><td class="n best">100</td><td class="n">0.57</td><td class="n">1.09</td><td class="n">1.25</td></tr>
+<tr><td><code>sort</code></td><td class="n">260</td><td class="n"><strong>147</strong></td><td class="n">&ndash;&sup1;</td><td class="n best">115</td><td class="n">0.57</td><td class="n">&ndash;</td><td class="n">1.28</td></tr>
+<tr><td><code>parsetest</code></td><td class="n">530</td><td class="n"><strong>223</strong></td><td class="n">192</td><td class="n best">179</td><td class="n">0.42</td><td class="n">1.16</td><td class="n">1.25</td></tr>
+<tr><td><code>hamming</code></td><td class="n">360</td><td class="n best"><strong>93</strong></td><td class="n">133</td><td class="n">105</td><td class="n">0.26</td><td class="n best">0.70</td><td class="n best">0.89</td></tr>
+<tr><td><code>queens</code></td><td class="n">110</td><td class="n"><strong>33</strong></td><td class="n">50</td><td class="n best">27</td><td class="n">0.30</td><td class="n best">0.66</td><td class="n">1.22</td></tr>
+<tr><td><code>eval</code></td><td class="n">200</td><td class="n"><strong>67</strong></td><td class="n best">47</td><td class="n">72</td><td class="n">0.34</td><td class="n">1.43</td><td class="n best">0.93</td></tr>
+<tr><td><code>match</code></td><td class="n">220</td><td class="n"><strong>69</strong></td><td class="n">74</td><td class="n best">44</td><td class="n">0.31</td><td class="n best">0.93</td><td class="n">1.57</td></tr>
+<tr><td><code>prolog</code></td><td class="n">200</td><td class="n"><strong>67</strong></td><td class="n">62</td><td class="n best">32</td><td class="n">0.34</td><td class="n">1.08</td><td class="n">2.09</td></tr>
+<tr><td><code>sprimes</code></td><td class="n">560</td><td class="n"><strong>239</strong></td><td class="n">234</td><td class="n best">170</td><td class="n">0.43</td><td class="n">1.02</td><td class="n">1.41</td></tr>
+<tr><td><code>twice</code></td><td class="n">630</td><td class="n"><strong>416</strong></td><td class="n">353</td><td class="n best">250</td><td class="n">0.66</td><td class="n">1.18</td><td class="n">1.66</td></tr>
+<tr><td><code>eval2</code></td><td class="n">380</td><td class="n"><strong>193</strong></td><td class="n">187</td><td class="n best">175</td><td class="n">0.51</td><td class="n">1.03</td><td class="n">1.10</td></tr>
+<tr><td><strong>geometric mean</strong></td><td></td><td></td><td></td><td></td><td class="n"><strong>0.39</strong></td><td class="n"><strong>0.99</strong></td><td class="n"><strong>1.16</strong></td></tr>
+</tbody></table></div>
+<p style="color:var(--muted);font-size:14px">&sup1; Clean 3.1 on ARM64 gives a wrong result for <code>sort</code>. <code>twice</code> is the fair, dynamic variant everywhere (<code>step d</code>); GHC&rsquo;s lead there comes from cheaper application of unknown functions, not shared work. The comparison with Clean (Linux VM vs macOS, different days) is indicative.</p>
+
+<h2>Results: gen1 compiling itself</h2>
+<div class="tablebox"><table style="min-width:420px">
+<thead><tr><th>route</th><th class="n">ms</th></tr></thead>
+<tbody>
+<tr><td>Clean native, typed Clean port (8 Nov)</td><td class="n best">166</td></tr>
+<tr><td><strong>sapl2c native</strong> (the Sapl compiler gen1 itself)</td><td class="n"><strong>246</strong></td></tr>
+<tr><td>GHC <code>-O2</code>, typed Haskell port</td><td class="n">295</td></tr>
+<tr><td>Clean native, untyped (<code>Val</code>) port (8 Nov)</td><td class="n">305</td></tr>
+<tr><td>GHC <code>-O2</code>, untyped port</td><td class="n">346</td></tr>
+<tr><td><code>jmvm2c</code> (bytecode to C, 1 Nov)</td><td class="n">442</td></tr>
+<tr><td>JMVM <code>runfast</code></td><td class="n">580</td></tr>
+</tbody></table></div>
+<p>The untyped ports do the same work as Sapl (one <code>Val</code> type, every number a node); there sapl2c is the fastest. With types, Clean&rsquo;s front end keeps numbers unboxed and is 1.5&times; faster.</p>
+<p><strong>Build time.</strong> gen1 becomes 2.9&nbsp;MB of C: retag 0.42&nbsp;s, generator 0.22&nbsp;s, clang <code>-O0</code>/<code>-O1</code>/<code>-O2</code> 1.1/3.4/4.1&nbsp;s. The resulting compiler self-compiles in 739/271/282&nbsp;ms, so <code>-O1</code> is the sensible default. The benchmarks build in 0.06&ndash;0.6&nbsp;s. (<code>jmvm2c</code>: 9.3&nbsp;MB, 47&nbsp;s.)</p>
+
+<h2>Why the earlier <code>jmvm2c</code> was slow</h2>
+<p><code>jmvm2c</code> translated the <em>bytecode</em>: every piece between two jump points became a C function chained with <code>musttail</code>, the interpreter without dispatch. Every argument and temporary stays on the VM stack in memory, clang never sees a whole Sapl function, and returns are indirect jumps.</p>
+
+<h2>Design</h2>
+<div class="card"><span class="badge">calls</span>Every function is <code>R f(cell* hp, cell* sp, cell a0 &hellip; a5)</code>; <code>R = {value, hp}</code> comes back in two registers. One uniform signature, so every tail call is <code>musttail</code>; further arguments go on the shadow stack.</div>
+<div class="card"><span class="badge">GC roots</span>The shadow stack is the VM stack. A value that may be a pointer and is still needed after a call goes to <code>sp[0..k-1]</code> before the call and is read back after. Cells are tagged, so no stack maps are needed.</div>
+<div class="card"><span class="badge">proofs</span>A variable is not saved when it is proven not to be a pointer on the current path. Three kinds &mdash; int, non-pointer (int, char or float), any &mdash; and a fixpoint over all functions for the kind of each result.</div>
+<div class="card"><span class="badge">laziness</span>Thunks are VM <code>CLOSURE</code> nodes; evaluation is an inline tag test, and the thunk entry evaluates and overwrites the node. One C frame per level of a thunk chain: beyond ~50 nested calls the return predictor fails (4.8&nbsp;ns instead of 0.7&nbsp;ns per return).</div>
+<div class="card"><span class="badge">language</span>Floats, strings, I/O, CAFs, <code>try</code>/<code>throw</code>/<code>error</code> (<code>_setjmp</code> with the VM&rsquo;s handler semantics), reflection, mutable arrays, catchable VM faults with the VM&rsquo;s messages.</div>
+
+<h2>Correctness</h2>
+<ul>
+  <li>The 13 benchmarks: byte-identical output and equal allocation counts, with both runtimes.</li>
+  <li><strong>GC stress:</strong> a GC at every heap check on small inputs, every 1009th on full inputs, the old half-space poisoned after each GC. A deliberately dropped root fails at once.</li>
+  <li><strong>gen1:</strong> the fixed point (also under GC stress), and the same output as the VM&rsquo;s gen1 for all benchmarks in the <code>jmvm</code>, <code>jvb</code> and <code>retag</code> stages; all 1,368 tail calls are jumps.</li>
+  <li>A sweep over 149 programs in <code>tests/</code> and <code>examples/</code>: 105 identical, 6 refused (<code>pack</code>/<code>unpack</code>), 8 known differences.</li>
+</ul>
+
+<h2>Where Clean and GHC are still ahead</h2>
+<div class="tablebox"><table>
+<thead><tr><th>benchmark</th><th class="n">vs Clean</th><th class="n">vs GHC</th><th>likely cause</th><th>remedy</th></tr></thead>
+<tbody>
+<tr><td><code>eval</code></td><td class="n">1.43</td><td class="n">0.93</td><td>unknown function applied to two arguments via the general <code>apply_n</code></td><td>fast paths for 2 and 3 arguments</td></tr>
+<tr><td><code>twice</code></td><td class="n">1.18</td><td class="n">1.66</td><td>partial and over-application of unknown functions</td><td>as above</td></tr>
+<tr><td><code>prolog</code>, <code>match</code></td><td class="n">1.08, 0.93</td><td class="n">2.09, 1.57</td><td>GHC&rsquo;s unboxing and worker/wrapper</td><td>type information from the Sapl+ typechecker</td></tr>
+<tr><td><code>primes</code></td><td class="n">1.08</td><td class="n">1.25</td><td>192&nbsp;MB heap does not fit in the cache</td><td>a growing heap (prototype 127 &rarr; 111&nbsp;ms)</td></tr>
+<tr><td><code>fib</code></td><td class="n">1.02</td><td class="n">0.95</td><td>int-or-char test on every operation</td><td>proven <code>Int</code>s (prototype 92 &rarr; 74&nbsp;ms)</td></tr>
+</tbody></table></div>
+<p>Estimate (not measured): with these, about 0.85&ndash;0.9&times; Clean.</p>
+
+<h2>Not supported</h2>
+<p><code>pack</code>/<code>unpack</code> (they serialize bytecode), <code>lookup "@..."</code>, and a stack overflow as a catchable error (the C stack has no guard page yet). Not for the browser: the C stack is the call stack. Source: <code>docs/2026-11-11_sapl2c_native_factsheet.md</code>, <code>experiments/sapl2c/</code>.</p>
+</main>
+</div>
+</body>
+</html>

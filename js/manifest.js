@@ -578,7 +578,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 48155,
+        "size": 48892,
         "isBinary": false
       },
       {
@@ -594,7 +594,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/index.html",
         "type": "file",
         "ext": ".html",
-        "size": 8470,
+        "size": 8481,
         "isBinary": false
       },
       {
@@ -610,7 +610,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/performance_factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 63807,
+        "size": 67101,
         "isBinary": false
       },
       {
@@ -626,15 +626,15 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/sapl_jmvm_clean_haskell_factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 102468,
+        "size": 103810,
         "isBinary": false
       },
       {
-        "name": "toolchain_factsheet.html",
-        "path": "factsheets/toolchain_factsheet.html",
+        "name": "sapl2c_native_factsheet.html",
+        "path": "factsheets/sapl2c_native_factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 32814,
+        "size": 19381,
         "isBinary": false
       }
     ],
