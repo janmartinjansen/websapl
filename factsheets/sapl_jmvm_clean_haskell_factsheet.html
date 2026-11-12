@@ -782,8 +782,8 @@
             Translates gen1&rsquo;s Stage-4 retag form into C, one C function per Sapl function, on the JMVM&rsquo;s own memory model and GC (optionally the VM&rsquo;s own runtime code), compiled with <code>clang -O2</code>.
           </p>
           <ul>
-            <li><strong>Performance:</strong> 0.39&times; the JMVM interpreter&rsquo;s time on the 13 core benchmarks; on par with Clean native (0.99&times;) and 1.16&times; GHC <code>-O2</code> (geometric means).</li>
-            <li><strong>Self-Hosting Speed:</strong> gen1 compiles itself natively in <strong>246 ms</strong> and reaches the fixed point (interpreter 580 ms; Clean native untyped port 305 ms, typed 166 ms; GHC typed 295 ms).</li>
+            <li><strong>Performance:</strong> 0.34&times; the JMVM interpreter&rsquo;s time on the 13 core benchmarks; faster than Clean native (0.87&times;) and on par with GHC <code>-O2</code> (1.02&times;; geometric means, with a growing heap).</li>
+            <li><strong>Self-Hosting Speed:</strong> gen1 compiles itself natively in <strong>248 ms</strong> and reaches the fixed point (interpreter 580 ms; Clean native untyped port 305 ms, typed 166 ms; GHC typed 295 ms).</li>
             <li><strong>Exact:</strong> the same output and allocation count as the VM, also under GC stress. Not for the browser (the C stack is the call stack).</li>
           </ul>
           <p style="margin-top:6px"><a href="sapl2c_native_factsheet.html">sapl2c factsheet &rarr;</a></p>
