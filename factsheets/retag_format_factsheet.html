@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Stage-4 Retag Format — The Universal Pivot</title>
+<meta name="description" content="Why the Stage-4 Retag intermediate representation sits at the center of the Sapl, Haskell Lite, Clean ABC, JMVM, and sapl2c toolchain.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script>
+  try {
+    const t = localStorage.getItem("websapl_theme");
+    if (t) document.documentElement.setAttribute("data-theme", t);
+  } catch (_) {}
+</script>
+<style>
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --fg: #1b2230;
+  --muted: #5a6475;
+  --line: #d9dee6;
+  --accent: #1f5f8b;
+  --accent-soft: #e3eef6;
+  --purple: #6d28d9;
+  --purple-soft: #f3e8ff;
+  --emerald: #047857;
+  --emerald-soft: #d1fae5;
+  --amber: #b45309;
+  --amber-soft: #fef3c7;
+  --f-display: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161d;
+    --surface: #1a2029;
+    --fg: #e4e8ee;
+    --muted: #9aa5b6;
+    --line: #2d3542;
+    --accent: #7db7e0;
+    --accent-soft: #1d3346;
+    --purple: #c084fc;
+    --purple-soft: #2e1d47;
+    --emerald: #34d399;
+    --emerald-soft: #133529;
+    --amber: #f59e0b;
+    --amber-soft: #3a2910;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161d;
+  --surface: #1a2029;
+  --fg: #e4e8ee;
+  --muted: #9aa5b6;
+  --line: #2d3542;
+  --accent: #7db7e0;
+  --accent-soft: #1d3346;
+  --purple: #c084fc;
+  --purple-soft: #2e1d47;
+  --emerald: #34d399;
+  --emerald-soft: #133529;
+  --amber: #f59e0b;
+  --amber-soft: #3a2910;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15.5px/1.62 var(--f-body);
+}
+.wrap { max-width: 980px; margin: 0 auto; padding: 32px 20px 64px; }
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; font-size: 14px; }
+.topbar a { color: var(--muted); text-decoration: none; }
+.topbar a:hover { color: var(--accent); }
+.theme-btn {
+  background: var(--surface); color: var(--fg); border: 1px solid var(--line);
+  border-radius: 6px; padding: 5px 11px; font: 13px var(--f-body); cursor: pointer;
+}
+header { border-bottom: 2px solid var(--line); padding-bottom: 18px; margin-bottom: 28px; }
+.eyebrow {
+  font: 600 12px/1.2 var(--f-mono); text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--purple); margin-bottom: 8px;
+}
+h1 { font: 700 32px/1.15 var(--f-display); margin: 0 0 10px; letter-spacing: -0.01em; }
+.lead { color: var(--muted); font-size: 16.5px; margin: 0; max-width: 74ch; }
+h2 { font: 700 22px/1.25 var(--f-display); margin: 36px 0 12px; }
+h3 { font: 600 16.5px/1.3 var(--f-display); margin: 0 0 8px; }
+p { margin: 0 0 12px; }
+ul { margin: 6px 0 14px; padding-left: 20px; }
+li { margin: 4px 0; }
+code { font-family: var(--f-mono); font-size: 0.9em; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+a { color: var(--accent); }
+.diagram-box {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  padding: 18px; margin: 20px 0 28px; overflow-x: auto;
+}
+.diagram-box svg { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 14px 0; }
+@media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 18px 20px;
+}
+.card.accent-purple { border-top: 3px solid var(--purple); }
+.card.accent-emerald { border-top: 3px solid var(--emerald); }
+.card.accent-amber { border-top: 3px solid var(--amber); }
+.card.accent-blue { border-top: 3px solid var(--accent); }
+pre {
+  background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+  padding: 12px 14px; overflow-x: auto; font: 13px/1.5 var(--f-mono); margin: 10px 0;
+}
+table {
+  width: 100%; border-collapse: collapse; margin: 16px 0; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 8px; overflow: hidden; font-size: 14px;
+}
+th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { background: var(--accent-soft); font-weight: 600; }
+tr:last-child td { border-bottom: none; }
+.callout {
+  background: var(--purple-soft); border-left: 3px solid var(--purple);
+  padding: 12px 15px; border-radius: 0 8px 8px 0; margin: 18px 0; font-size: 14.5px;
+}
+footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a href="index.html">&larr; Factsheets</a>
+    <button class="theme-btn" id="themeBtn" type="button">Theme</button>
+  </div>
+
+  <header>
+    <div class="eyebrow">Intermediate Representation &bull; The Central Hub</div>
+    <h1>Stage-4 Retag Format: The Universal Pivot</h1>
+    <p class="lead">
+      Between four functional frontends and four execution backends sits one compact, human-readable
+      intermediate representation: <strong>Stage-4 Retag</strong>. Every frontend lowers into it, and every
+      code generator consumes it &mdash; turning an M&times;N compiler problem into M + N.
+    </p>
+  </header>
+
+  <h2>1. Central Place in the Toolchain</h2>
+  <p>
+    Retag sits at the narrow waist of an hourglass architecture. Frontends resolve syntax, type classes,
+    lambda lifting, and strictness analysis down to Retag; backends translate Retag directly into bytecode,
+    C, or Clean ABC without duplicating any frontend logic.
+  </p>
+
+  <div class="diagram-box">
+    <svg viewBox="0 0 940 410" width="940" height="410" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arr-blue" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#3b82f6" />
+        </marker>
+        <marker id="arr-purple" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#a855f7" />
+        </marker>
+        <marker id="arr-emerald" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#10b981" />
+        </marker>
+        <marker id="arr-amber" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#f59e0b" />
+        </marker>
+      </defs>
+
+      <!-- Column Labels -->
+      <text x="20" y="24" font-family="IBM Plex Mono, monospace" font-size="11.5" font-weight="600" fill="var(--muted)">FRONTENDS (M)</text>
+      <text x="355" y="24" font-family="IBM Plex Mono, monospace" font-size="11.5" font-weight="600" fill="var(--purple)">CENTRAL PIVOT</text>
+      <text x="650" y="24" font-family="IBM Plex Mono, monospace" font-size="11.5" font-weight="600" fill="var(--muted)">BACKENDS &amp; TARGETS (N)</text>
+
+      <!-- FRONTENDS -->
+      <g transform="translate(20, 46)">
+        <rect width="235" height="66" rx="8" fill="var(--bg)" stroke="#3b82f6" stroke-width="1.6" />
+        <text x="14" y="24" font-family="IBM Plex Sans, sans-serif" font-size="13.5" font-weight="700" fill="var(--fg)">Haskell Lite (.hs)</text>
+        <text x="14" y="42" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--muted)">Type classes &bull; specialization</text>
+        <text x="14" y="57" font-family="IBM Plex Mono, monospace" font-size="10" fill="#3b82f6">hl_pre &rarr; gen1 stages 1&ndash;4</text>
+      </g>
+
+      <g transform="translate(20, 128)">
+        <rect width="235" height="66" rx="8" fill="var(--bg)" stroke="#a855f7" stroke-width="1.6" />
+        <text x="14" y="24" font-family="IBM Plex Sans, sans-serif" font-size="13.5" font-weight="700" fill="var(--fg)">Sapl+ (.spp)</text>
+        <text x="14" y="42" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--muted)">Records, guards, modules</text>
+        <text x="14" y="57" font-family="IBM Plex Mono, monospace" font-size="10" fill="#a855f7">driver &rarr; gen1 stages 1&ndash;4</text>
+      </g>
+
+      <g transform="translate(20, 210)">
+        <rect width="235" height="66" rx="8" fill="var(--bg)" stroke="#10b981" stroke-width="1.6" />
+        <text x="14" y="24" font-family="IBM Plex Sans, sans-serif" font-size="13.5" font-weight="700" fill="var(--fg)">Core Sapl (.cfp)</text>
+        <text x="14" y="42" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--muted)">Strictness !, CAFs =:, lazytag</text>
+        <text x="14" y="57" font-family="IBM Plex Mono, monospace" font-size="10" fill="#10b981">gen1 --emit=retag</text>
+      </g>
+
+      <g transform="translate(20, 292)">
+        <rect width="235" height="66" rx="8" fill="var(--bg)" stroke="#f59e0b" stroke-width="1.6" />
+        <text x="14" y="24" font-family="IBM Plex Sans, sans-serif" font-size="13.5" font-weight="700" fill="var(--fg)">Clean (.icl &rarr; .opt.abc)</text>
+        <text x="14" y="42" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--muted)">Symbolic stack decompilation</text>
+        <text x="14" y="57" font-family="IBM Plex Mono, monospace" font-size="10" fill="#f59e0b">abc2retag.py</text>
+      </g>
+
+      <!-- CENTRAL RETAG HUB -->
+      <g transform="translate(345, 110)">
+        <rect width="225" height="190" rx="12" fill="var(--purple-soft)" stroke="#a855f7" stroke-width="2.5" />
+        <text x="18" y="34" font-family="Bricolage Grotesque, sans-serif" font-size="17" font-weight="700" fill="var(--purple)">Stage-4 Retag IR</text>
+        <text x="18" y="54" font-family="IBM Plex Mono, monospace" font-size="11.5" fill="var(--fg)">.retag.txt / .cfp_retag</text>
+        <line x1="18" y1="68" x2="207" y2="68" stroke="var(--line)" stroke-width="1" />
+        <text x="18" y="90" font-family="IBM Plex Mono, monospace" font-size="11.5" fill="var(--fg)">eval(x)       <tspan fill="var(--muted)">demand WHNF</tspan></text>
+        <text x="18" y="110" font-family="IBM Plex Mono, monospace" font-size="11.5" fill="var(--fg)">thunk (f a)   <tspan fill="var(--muted)">defer work</tspan></text>
+        <text x="18" y="130" font-family="IBM Plex Mono, monospace" font-size="11.5" fill="var(--fg)">closure (f a) <tspan fill="var(--muted)">PAP node</tspan></text>
+        <text x="18" y="150" font-family="IBM Plex Mono, monospace" font-size="11.5" fill="var(--fg)">!arg  /  =:   <tspan fill="var(--muted)">strict / CAF</tspan></text>
+        <text x="18" y="174" font-family="IBM Plex Sans, sans-serif" font-size="10.5" font-weight="600" fill="var(--purple)">No hidden laziness &bull; Whole functions</text>
+      </g>
+
+      <!-- BACKENDS -->
+      <g transform="translate(650, 46)">
+        <rect width="270" height="66" rx="8" fill="var(--bg)" stroke="#10b981" stroke-width="1.6" />
+        <text x="14" y="24" font-family="IBM Plex Sans, sans-serif" font-size="13.5" font-weight="700" fill="var(--fg)">JMVM Native &amp; WebSapl</text>
+        <text x="14" y="42" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--muted)">./runfast &bull; run.wasm (151 KB)</text>
+        <text x="14" y="57" font-family="IBM Plex Mono, monospace" font-size="10" fill="#10b981">retagcomp / gen1 &rarr; .jmvm / .jvb</text>
+      </g>
+
+      <g transform="translate(650, 128)">
+        <rect width="270" height="66" rx="8" fill="var(--bg)" stroke="#f59e0b" stroke-width="1.8" />
+        <text x="14" y="24" font-family="IBM Plex Sans, sans-serif" font-size="13.5" font-weight="700" fill="var(--fg)">sapl2c Native C Backend</text>
+        <text x="14" y="42" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--muted)">0.34&times; runfast &bull; 248 ms gen1</text>
+        <text x="14" y="57" font-family="IBM Plex Mono, monospace" font-size="10" fill="#f59e0b">sapl_naar_c.py &rarr; .c + clang -O2</text>
+      </g>
+
+      <g transform="translate(650, 210)">
+        <rect width="270" height="66" rx="8" fill="var(--bg)" stroke="#f59e0b" stroke-width="1.4" />
+        <text x="14" y="24" font-family="IBM Plex Sans, sans-serif" font-size="13.5" font-weight="700" fill="var(--fg)">Clean ABC Backend</text>
+        <text x="14" y="42" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--muted)">Clean cg (native) &bull; abci (interpreter)</text>
+        <text x="14" y="57" font-family="IBM Plex Mono, monospace" font-size="10" fill="#f59e0b">sapl_naar_abc.py &rarr; .abc</text>
+      </g>
+
+      <g transform="translate(650, 292)">
+        <rect width="270" height="66" rx="8" fill="var(--bg)" stroke="#3b82f6" stroke-width="1.4" />
+        <text x="14" y="24" font-family="IBM Plex Sans, sans-serif" font-size="13.5" font-weight="700" fill="var(--fg)">Modular Linking &amp; Tools</text>
+        <text x="14" y="42" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--muted)">Per-module compile &bull; inspection</text>
+        <text x="14" y="57" font-family="IBM Plex Mono, monospace" font-size="10" fill="#3b82f6">retaglink &bull; retagopt (--opt)</text>
+      </g>
+
+      <!-- ARROWS: Frontends -> Retag -->
+      <path d="M 255 79 L 300 79 L 300 148 L 342 148" fill="none" stroke="#3b82f6" stroke-width="2" marker-end="url(#arr-blue)" />
+      <path d="M 255 161 L 286 161 L 286 180 L 342 180" fill="none" stroke="#a855f7" stroke-width="2" marker-end="url(#arr-purple)" />
+      <path d="M 255 243 L 286 243 L 286 220 L 342 220" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#arr-emerald)" />
+      <path d="M 255 325 L 300 325 L 300 262 L 342 262" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arr-amber)" />
+
+      <!-- ARROWS: Retag -> Backends -->
+      <path d="M 570 148 L 610 148 L 610 79 L 647 79" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#arr-emerald)" />
+      <path d="M 570 180 L 624 180 L 624 161 L 647 161" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arr-amber)" />
+      <path d="M 570 220 L 624 220 L 624 243 L 647 243" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arr-amber)" />
+      <path d="M 570 262 L 610 262 L 610 325 L 647 325" fill="none" stroke="#3b82f6" stroke-width="2" marker-end="url(#arr-blue)" />
+
+      <!-- Caption -->
+      <text x="470" y="392" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-size="12" fill="var(--muted)">
+        Every frontend lowers to Stage-4 Retag once; every backend reads Stage-4 Retag directly.
+      </text>
+    </svg>
+  </div>
+
+  <h2>2. Why Stage-4 Retag Works So Well</h2>
+  <div class="grid-2">
+    <div class="card accent-purple">
+      <h3>1. Explicit Laziness, Zero Guesswork</h3>
+      <p>
+        In a lazy language, the hardest question for a backend is <em>&ldquo;is this expression already evaluated,
+        or must I build a thunk or force it?&rdquo;</em> Retag answers that completely before codegen:
+        <code>eval</code>, <code>thunk</code>, and <code>closure</code> are all explicit AST nodes.
+      </p>
+    </div>
+
+    <div class="card accent-amber">
+      <h3>2. Expression-Level, Not Stack-Machine Level</h3>
+      <p>
+        Bytecode (<code>.jmvm</code>) and Clean&rsquo;s <code>.abc</code> flatten functions into stack operations.
+        Retag keeps <strong>named variables, whole functions, and structured <code>case</code> trees</strong>.
+        That is why <code>sapl2c</code> (Retag &rarr; C) generates 2.9 MB of C and compiles <code>gen1</code> in
+        4.1 s (<strong>248 ms</strong> self-compile, <strong>0.34&times;</strong> <code>runfast</code>), whereas
+        <code>jmvm2c</code> (bytecode &rarr; C) produced 9.3 MB of C (47 s build, 442 ms).
+      </p>
+    </div>
+
+    <div class="card accent-blue">
+      <h3>3. Bidirectional Bridge with Clean ABC</h3>
+      <p>
+        Retag is high-level enough to lower cleanly to Clean&rsquo;s 3-stack ABC machine (<code>sapl_naar_abc.py</code>)
+        and structured enough that <code>abc2retag.py</code> can symbolically decompile <code>.opt.abc</code> back
+        into Retag &mdash; evaporating ~95% of ABC stack pushes/pops so Clean programs run on the JMVM at
+        0.78&times;&ndash;1.31&times; of handwritten Sapl.
+      </p>
+    </div>
+
+    <div class="card accent-emerald">
+      <h3>4. Plain Text, Modular &amp; Bootstrap-Safe</h3>
+      <p>
+        <code>--emit=retag</code> dumps the exact IR as readable text. Compiling <code>gen1</code> with
+        <code>--emit=retag</code> and feeding that into <code>compile-retag</code> produces
+        <strong>byte-identical</strong> <code>.jmvm</code>/<code>.jvb</code> output &mdash; making it a
+        trustworthy interface for modular linking (<code>retaglink</code>) and standalone backends.
+      </p>
+    </div>
+  </div>
+
+  <h2>3. Concrete Example: Source vs. Stage-4 Retag</h2>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Sapl Source (<code>primes.cfp</code>)</h3>
+      <pre>// Infinite stream and lazy sieve
+::list = Nil | Cons !x xs
+
+from !a  = Cons a (from (a + 1))
+sieve xs = case xs (Cons a as -&gt;
+             Cons a (sieve (filter (nmz a) as)))
+primes   = sieve (from 2)</pre>
+    </div>
+    <div class="card">
+      <h3>Stage-4 Retag (<code>primes.retag.txt</code>)</h3>
+      <pre>// Laziness &amp; evaluation made explicit
+from !a  = Cons a (thunk (from (a + 1)))
+
+sieve xs = case (eval(xs)) (Cons a as -&gt;
+             Cons a (thunk (sieve
+               (thunk (filter (closure (nmz a)) as)))))</pre>
+    </div>
+  </div>
+
+  <h2>4. Core Constructs in Retag</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Construct</th>
+        <th>Meaning</th>
+        <th>Backend Lowering (JMVM / <code>sapl2c</code> / ABC)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>eval(x)</code></td>
+        <td>Demand Weak Head Normal Form of variable <code>x</code></td>
+        <td>Tag check + thunk entry if unevaluated; skipped for <code>!</code> strict args</td>
+      </tr>
+      <tr>
+        <td><code>eval(f x)</code></td>
+        <td>Apply an unknown function / closure expression</td>
+        <td><code>evalap</code> in JMVM; closure arity dispatch in C; <code>jsr_ap</code> in ABC</td>
+      </tr>
+      <tr>
+        <td><code>thunk (f a b)</code></td>
+        <td>Allocate a deferred, updatable heap computation</td>
+        <td><code>CLOSURE</code> node updated in-place on first evaluation</td>
+      </tr>
+      <tr>
+        <td><code>closure (f a)</code></td>
+        <td>Allocate an unsaturated partial application (PAP)</td>
+        <td><code>PAP</code> / closure node capturing supplied arguments</td>
+      </tr>
+      <tr>
+        <td><code>C a b</code> / <code>case</code></td>
+        <td>Strict constructor allocation and pattern match</td>
+        <td>Constructor node + direct tag switch (hardware branch for tags 0/1)</td>
+      </tr>
+      <tr>
+        <td><code>f =: expr</code></td>
+        <td>Constant Applicative Form (CAF)</td>
+        <td>Zero-arity thunk evaluated at most once and cached globally</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <strong>Try it yourself:</strong> run <code>./compile --emit=retag examples/primes.cfp</code> to inspect
+    the exact Stage-4 Retag output, and <code>./compile-retag examples/primes.retag.txt</code> to compile it
+    back to JMVM bytecode.
+  </div>
+
+  <footer>
+    Part of the JMVM &amp; Sapl factsheet series. Maintained in <code>docs/2026-11-13_retag_format_factsheet.html</code>.
+  </footer>
+</div>
+
+<script>
+document.getElementById("themeBtn").addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme") ||
+    (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  const next = cur === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("websapl_theme", next); } catch (_) {}
+});
+</script>
+</body>
+</html>
