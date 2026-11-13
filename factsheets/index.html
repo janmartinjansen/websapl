@@ -24,34 +24,88 @@
       --c1: #0284c7; --c2: #059669; --c3: #7e22ce; --c4: #c2410c; --c5: #b45309;
     }
     * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
     body {
       margin: 0; background: var(--bg); color: var(--text);
       font-family: var(--font-sans); font-size: 15px; line-height: 1.55;
     }
-    .wrap { max-width: 920px; margin: 0 auto; padding: 32px 16px 48px; }
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 32px 20px 56px; }
     .back { color: var(--text-2); text-decoration: none; font-size: 14px; }
     .back:hover { color: var(--accent); }
     h1 { font-size: 30px; margin: 18px 0 6px; letter-spacing: -0.01em; }
-    .lead { color: var(--text-2); margin: 0 0 28px; max-width: 70ch; }
-    .list { display: grid; gap: 14px; }
+    .lead { color: var(--text-2); margin: 0 0 20px; max-width: 72ch; }
+
+    .jump-nav {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      margin: 0 0 32px;
+    }
+    .jump-nav a {
+      text-decoration: none; color: var(--text-2); font-size: 13px; font-weight: 500;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 999px; padding: 5px 12px;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .jump-nav a:hover {
+      background: var(--bg-hover); color: var(--text); border-color: var(--accent);
+    }
+
+    .group {
+      margin-bottom: 36px;
+      padding: 20px;
+      background: color-mix(in srgb, var(--bg-card) 45%, transparent);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+    .group-head {
+      display: flex; align-items: baseline; justify-content: space-between;
+      flex-wrap: wrap; gap: 8px;
+      margin-bottom: 14px; padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .group-head h2 {
+      font-size: 19px; margin: 0; letter-spacing: -0.01em;
+    }
+    .group-desc {
+      margin: 2px 0 0; color: var(--text-2); font-size: 13.5px;
+    }
+    .group-count {
+      font-family: var(--font-mono); font-size: 12px; color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 14px;
+    }
     a.card {
-      display: block; text-decoration: none; color: inherit;
+      display: flex; flex-direction: column;
+      text-decoration: none; color: inherit;
       background: var(--bg-card); border: 1px solid var(--border);
       border-left: 4px solid var(--card-color, var(--accent));
-      border-radius: 10px; padding: 16px 18px;
+      border-radius: 10px; padding: 15px 17px;
       transition: background 0.15s, transform 0.15s;
     }
     a.card:hover { background: var(--bg-hover); transform: translateY(-1px); }
-    .card h2 { font-size: 18px; margin: 0 0 4px; }
-    .card p { margin: 6px 0 0; color: var(--text-2); }
-    .tags { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
-    .tag {
-      font-family: var(--font-mono); font-size: 12px; color: var(--text-2);
-      border: 1px solid var(--border); border-radius: 999px; padding: 1px 9px;
+    .card h3 { font-size: 16.5px; margin: 0 0 6px; line-height: 1.35; }
+    .card p { margin: 0; color: var(--text-2); font-size: 14px; flex: 1; }
+    .card-foot {
+      margin-top: 12px; display: flex; align-items: center;
+      justify-content: space-between; gap: 10px; flex-wrap: wrap;
     }
-    .go { display: inline-block; margin-top: 10px; color: var(--card-color, var(--accent)); font-weight: 600; font-size: 14px; }
-    footer { margin-top: 32px; color: var(--muted); font-size: 13px; }
+    .tags { display: flex; flex-wrap: wrap; gap: 5px; }
+    .tag {
+      font-family: var(--font-mono); font-size: 11.5px; color: var(--text-2);
+      border: 1px solid var(--border); border-radius: 999px; padding: 1px 8px;
+    }
+    .go { color: var(--card-color, var(--accent)); font-weight: 600; font-size: 13.5px; white-space: nowrap; }
+
+    footer { margin-top: 28px; color: var(--muted); font-size: 13px; }
     code { font-family: var(--font-mono); font-size: 0.92em; }
+
+    @media (max-width: 560px) {
+      .group { padding: 14px; }
+      .grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -64,126 +118,201 @@
       Each factsheet is a single page and opens in this tab.
     </p>
 
-    <div class="list">
-      <a class="card" href="sapl_jmvm_clean_haskell_factsheet.html" style="--card-color: var(--c1);">
-        <h2>The ecosystem: Sapl(+), JMVM, Clean, ABC &amp; Haskell Lite</h2>
-        <p>The big picture. The frontends (Haskell Lite, MicroHs, Sapl+, Core Sapl, Clean), the
-          shared Stage-4 retag representation, the bridges to and from Clean's ABC code,
-          the backends (native JMVM, WebSapl, Clean's code generator and ABC interpreter),
-          six compilation pipelines and the full toolchain.</p>
-        <div class="tags"><span class="tag">overview</span><span class="tag">pipelines</span><span class="tag">toolchain</span></div>
-        <span class="go">Open &rarr;</span>
-      </a>
+    <nav class="jump-nav" aria-label="Factsheet categories">
+      <a href="#architecture">Architecture &amp; Ecosystem (4)</a>
+      <a href="#native-performance">Native C (<code>sapl2c</code>) &amp; Performance (5)</a>
+      <a href="#languages-notebooks">Languages, Notebooks &amp; Clean (3)</a>
+      <a href="#retrospective">Retrospective (1)</a>
+    </nav>
 
-      <a class="card" href="retag_format_factsheet.html" style="--card-color: var(--c3);">
-        <h2>Stage-4 Retag format: the universal pivot</h2>
-        <p>The hourglass intermediate representation at the center of the toolchain: why explicit
-          <code>eval</code>, <code>thunk</code>, and <code>closure</code> annotations at expression level
-          decouple four frontends from four backends (JMVM, WebSapl, <code>sapl2c</code>, Clean ABC).</p>
-        <div class="tags"><span class="tag">Retag IR</span><span class="tag">architecture</span><span class="tag">hub</span></div>
-        <span class="go">Open &rarr;</span>
-      </a>
+    <section class="group" id="architecture">
+      <div class="group-head">
+        <div>
+          <h2>Architecture &amp; Ecosystem</h2>
+          <p class="group-desc">The big picture: the VM, the self-hosted toolchain, and the Stage-4 Retag pivot connecting frontends and backends.</p>
+        </div>
+        <span class="group-count">4 sheets</span>
+      </div>
+      <div class="grid">
+        <a class="card" href="sapl_jmvm_clean_haskell_factsheet.html" style="--card-color: var(--c1);">
+          <h3>The ecosystem: Sapl(+), JMVM, Clean, ABC &amp; Haskell Lite</h3>
+          <p>The big picture. The frontends (Haskell Lite, MicroHs, Sapl+, Core Sapl, Clean), the
+            shared Stage-4 retag representation, the bridges to and from Clean's ABC code,
+            the backends (native JMVM, WebSapl, Clean's code generator and ABC interpreter),
+            six compilation pipelines and the full toolchain.</p>
+          <div class="card-foot">
+            <div class="tags"><span class="tag">overview</span><span class="tag">pipelines</span><span class="tag">toolchain</span></div>
+            <span class="go">Open &rarr;</span>
+          </div>
+        </a>
 
-      <a class="card" href="haskell_lite.html" style="--card-color: var(--c3);">
-        <h2>Haskell lite guide</h2>
-        <p>A small Haskell that runs entirely on the JMVM, natively and in the browser: what it
-          supports (pattern matching, type classes without runtime dictionaries, records,
-          <code>Functor</code>/<code>Monad</code>, <code>Data.Map</code>), how to use it from the
-          command line and in WebSapl notebooks, how the frontend works, and its limits.</p>
-        <div class="tags"><span class="tag">Haskell</span><span class="tag">how to use</span><span class="tag">notebooks</span></div>
-        <span class="go">Open &rarr;</span>
-      </a>
+        <a class="card" href="retag_format_factsheet.html" style="--card-color: var(--c3);">
+          <h3>Stage-4 Retag format: the universal pivot</h3>
+          <p>The hourglass intermediate representation at the center of the toolchain: why explicit
+            <code>eval</code>, <code>thunk</code>, and <code>closure</code> annotations at expression level
+            decouple four frontends from four backends (JMVM, WebSapl, <code>sapl2c</code>, Clean ABC).</p>
+          <div class="card-foot">
+            <div class="tags"><span class="tag">Retag IR</span><span class="tag">architecture</span><span class="tag">hub</span></div>
+            <span class="go">Open &rarr;</span>
+          </div>
+        </a>
 
-      <a class="card" href="factsheet.html" style="--card-color: var(--c2);">
-        <h2>JMVM, Sapl &amp; ecosystem</h2>
-        <p>The architectural foundations of the JMVM: the lazy stack machine, the compiler
-          stages, the main performance breakthroughs and the tooling around them.</p>
-        <div class="tags"><span class="tag">VM</span><span class="tag">compiler</span></div>
-        <span class="go">Open &rarr;</span>
-      </a>
+        <a class="card" href="toolchain_factsheet.html" style="--card-color: var(--c1);">
+          <h3>The toolchain is the program: one VM, everything else in Sapl</h3>
+          <p>Why the JMVM&rsquo;s only C is one small VM, and what that buys: the compiler, linker, typechecker and
+            REPL as bytecode (65 KB of wasm, 6 ms REPL start-up), compiling as a function call, notebooks
+            for free, one VM on both sides of the wire, and an honest comparison with native Clean on speed
+            and costs.</p>
+          <div class="card-foot">
+            <div class="tags"><span class="tag">toolchain</span><span class="tag">self-hosting</span><span class="tag">portability</span></div>
+            <span class="go">Open &rarr;</span>
+          </div>
+        </a>
 
-      <a class="card" href="notebooks_factsheet.html" style="--card-color: var(--c3);">
-        <h2>Reactive lazy notebooks &amp; the JMVM toolchain</h2>
-        <p>WebSapl's notebooks: client-side execution in the browser, interactive tables,
-          graphics and charts, and how compiled code chunks are linked into a running session.</p>
-        <div class="tags"><span class="tag">WebSapl</span><span class="tag">notebooks</span></div>
-        <span class="go">Open &rarr;</span>
-      </a>
+        <a class="card" href="factsheet.html" style="--card-color: var(--c2);">
+          <h3>JMVM, Sapl &amp; ecosystem</h3>
+          <p>The architectural foundations of the JMVM: the lazy stack machine, the compiler
+            stages, the main performance breakthroughs and the tooling around them.</p>
+          <div class="card-foot">
+            <div class="tags"><span class="tag">VM</span><span class="tag">compiler</span></div>
+            <span class="go">Open &rarr;</span>
+          </div>
+        </a>
+      </div>
+    </section>
 
-      <a class="card" href="performance_factsheet.html" style="--card-color: var(--c4);">
-        <h2>JMVM performance: native, WebAssembly, Clean &amp; GHC</h2>
-        <p>How fast the JMVM is and why: musttail dispatch, superinstructions, measurements
-          native and in the browser, and comparisons with Clean and GHC.</p>
-        <div class="tags"><span class="tag">performance</span><span class="tag">wasm</span></div>
-        <span class="go">Open &rarr;</span>
-      </a>
+    <section class="group" id="native-performance">
+      <div class="group-head">
+        <div>
+          <h2>Native C (<code>sapl2c</code>) &amp; Performance</h2>
+          <p class="group-desc">Compiling Stage-4 Retag to native C, how <code>sapl2c</code> works under the hood, and benchmarks against Clean and GHC.</p>
+        </div>
+        <span class="group-count">5 sheets</span>
+      </div>
+      <div class="grid">
+        <a class="card" href="sapl2c_native_factsheet.html" style="--card-color: var(--c4);">
+          <h3>Sapl to native code via C: one C function per Sapl function</h3>
+          <p>gen1&rsquo;s retag form translated to C on the JMVM&rsquo;s own memory model and GC (optionally the VM&rsquo;s own runtime code).
+            All 13 core benchmarks run in 0.34&times; the interpreter&rsquo;s time, faster than Clean&rsquo;s native code generator
+            and on par with GHC, and the Sapl compiler compiles itself natively in 248 ms (12 November 2026).</p>
+          <div class="card-foot">
+            <div class="tags"><span class="tag">native</span><span class="tag">C</span><span class="tag">performance</span></div>
+            <span class="go">Open &rarr;</span>
+          </div>
+        </a>
 
-      <a class="card" href="clean_abc_to_jmvm_retag_factsheet.html" style="--card-color: var(--c5);">
-        <h2>Clean programs on the JMVM: ABC &rarr; Stage-4 retag &rarr; JMVM</h2>
-        <p>Using the JMVM as a backend for Clean. Clean's optimised ABC code is decompiled to
-          Stage-4 retag and compiled to JMVM bytecode. Covers the design, the benchmark
-          results (0.78&ndash;1.31&times; of handwritten Sapl), the typed Clean port of the
-          compiler that reaches its fixed point this way, and a step-by-step guide on how to
-          use it, including the current limitations.</p>
-        <div class="tags"><span class="tag">Clean</span><span class="tag">ABC</span><span class="tag">how to use</span></div>
-        <span class="go">Open &rarr;</span>
-      </a>
+        <a class="card" href="sapl2c_translation_factsheet.html" style="--card-color: var(--c5);">
+          <h3>How <code>sapl2c</code> translates Stage-4 Retag to C</h3>
+          <p>Under the hood of <code>sapl2c</code>: the uniform <code>MUSTTAIL</code> calling convention,
+            the shadow stack for the moving GC, non-pointer proofs that eliminate spills in <code>fib</code>,
+            coalesced heap checks, thunks, <code>FnDesc</code> closures, and annotated excerpts from generated C.</p>
+          <div class="card-foot">
+            <div class="tags"><span class="tag">sapl2c</span><span class="tag">shadow stack</span><span class="tag">GC</span></div>
+            <span class="go">Open &rarr;</span>
+          </div>
+        </a>
 
-      <a class="card" href="sapl2c_native_factsheet.html" style="--card-color: var(--c4);">
-        <h2>Sapl to native code via C: one C function per Sapl function</h2>
-        <p>gen1&rsquo;s retag form translated to C on the JMVM&rsquo;s own memory model and GC (optionally the VM&rsquo;s own runtime code).
-          All 13 core benchmarks run in 0.34&times; the interpreter&rsquo;s time, faster than Clean&rsquo;s native code generator
-          and on par with GHC, and the Sapl compiler compiles itself natively in 248 ms (12 November 2026).</p>
-        <div class="tags"><span class="tag">native</span><span class="tag">C</span><span class="tag">performance</span><span class="tag">compiler</span></div>
-        <span class="go">Open &rarr;</span>
-      </a>
+        <a class="card" href="sapl2c_competitive_performance_factsheet.html" style="--card-color: var(--c2);">
+          <h3>How can a simple, small compiler compete with Haskell and Clean?</h3>
+          <p>Why <code>sapl2c</code> (~2,000 LOC) matches GHC <code>-O2</code> (1.02&times;) and beats Clean native
+            (0.87&times;): whole-function C for <code>clang -O2</code>, <code>MUSTTAIL</code> + 2-register ABI,
+            non-pointer spill elimination, cache-hot 8 MB Cheney nursery, and where GHC/Clean still lead.</p>
+          <div class="card-foot">
+            <div class="tags"><span class="tag">sapl2c</span><span class="tag">GHC</span><span class="tag">Clean</span></div>
+            <span class="go">Open &rarr;</span>
+          </div>
+        </a>
 
-      <a class="card" href="sapl2c_translation_factsheet.html" style="--card-color: var(--c5);">
-        <h2>How <code>sapl2c</code> translates Stage-4 Retag to C</h2>
-        <p>Under the hood of <code>sapl2c</code>: the uniform <code>MUSTTAIL</code> calling convention,
-          the shadow stack for the moving GC, non-pointer proofs that eliminate spills in <code>fib</code>,
-          coalesced heap checks, thunks, <code>FnDesc</code> closures, and annotated excerpts from generated C.</p>
-        <div class="tags"><span class="tag">sapl2c</span><span class="tag">shadow stack</span><span class="tag">GC</span><span class="tag">internals</span></div>
-        <span class="go">Open &rarr;</span>
-      </a>
+        <a class="card" href="sapl2c_secret_factsheet.html" style="--card-color: var(--c2);">
+          <h3>What is the secret behind <code>sapl2c</code>&rsquo;s performance?</h3>
+          <p>Not one secret but three multiplying factors: the Retag format unlocks <code>clang -O2</code>
+            (same clang from bytecode: 442 vs. 248 ms), a cache-hot Cheney nursery makes memory fast, and Sapl
+            leaves little abstraction to compile away. Plus where static types still win.</p>
+          <div class="card-foot">
+            <div class="tags"><span class="tag">sapl2c</span><span class="tag">performance</span><span class="tag">Retag</span></div>
+            <span class="go">Open &rarr;</span>
+          </div>
+        </a>
 
-      <a class="card" href="sapl2c_competitive_performance_factsheet.html" style="--card-color: var(--c2);">
-        <h2>How can a simple, small compiler compete with Haskell and Clean?</h2>
-        <p>Why <code>sapl2c</code> (~2,000 LOC) matches GHC <code>-O2</code> (1.02&times;) and beats Clean native
-          (0.87&times;): whole-function C for <code>clang -O2</code>, <code>MUSTTAIL</code> + 2-register ABI,
-          non-pointer spill elimination, cache-hot 8 MB Cheney nursery, and where GHC/Clean still lead.</p>
-        <div class="tags"><span class="tag">sapl2c</span><span class="tag">performance</span><span class="tag">GHC</span><span class="tag">Clean</span></div>
-        <span class="go">Open &rarr;</span>
-      </a>
+        <a class="card" href="performance_factsheet.html" style="--card-color: var(--c4);">
+          <h3>JMVM performance: native, WebAssembly, Clean &amp; GHC</h3>
+          <p>How fast the JMVM is and why: musttail dispatch, superinstructions, measurements
+            native and in the browser, and comparisons with Clean and GHC.</p>
+          <div class="card-foot">
+            <div class="tags"><span class="tag">performance</span><span class="tag">wasm</span></div>
+            <span class="go">Open &rarr;</span>
+          </div>
+        </a>
+      </div>
+    </section>
 
-      <a class="card" href="sapl2c_secret_factsheet.html" style="--card-color: var(--c2);">
-        <h2>What is the secret behind sapl2c&rsquo;s performance?</h2>
-        <p>Not one secret but three multiplying factors: the Retag format unlocks <code>clang -O2</code>
-          (same clang from bytecode: 442 vs. 248 ms), a cache-hot Cheney nursery makes memory fast, and Sapl
-          leaves little abstraction to compile away. Plus where static types still win.</p>
-        <div class="tags"><span class="tag">sapl2c</span><span class="tag">performance</span><span class="tag">Retag</span></div>
-        <span class="go">Open &rarr;</span>
-      </a>
+    <section class="group" id="languages-notebooks">
+      <div class="group-head">
+        <div>
+          <h2>Languages, Notebooks &amp; Clean Interoperability</h2>
+          <p class="group-desc">Running Haskell Lite and Clean programs on the JMVM, plus reactive browser notebooks.</p>
+        </div>
+        <span class="group-count">3 sheets</span>
+      </div>
+      <div class="grid">
+        <a class="card" href="haskell_lite.html" style="--card-color: var(--c3);">
+          <h3>Haskell lite guide</h3>
+          <p>A small Haskell that runs entirely on the JMVM, natively and in the browser: what it
+            supports (pattern matching, type classes without runtime dictionaries, records,
+            <code>Functor</code>/<code>Monad</code>, <code>Data.Map</code>), how to use it from the
+            command line and in WebSapl notebooks, how the frontend works, and its limits.</p>
+          <div class="card-foot">
+            <div class="tags"><span class="tag">Haskell</span><span class="tag">how to use</span><span class="tag">notebooks</span></div>
+            <span class="go">Open &rarr;</span>
+          </div>
+        </a>
 
-      <a class="card" href="toolchain_factsheet.html" style="--card-color: var(--c1);">
-        <h2>The toolchain is the program: one VM, everything else in Sapl</h2>
-        <p>Why the JMVM&rsquo;s only C is one small VM, and what that buys: the compiler, linker, typechecker and
-          REPL as bytecode (65 KB of wasm, 6 ms REPL start-up), compiling as a function call, notebooks
-          for free, one VM on both sides of the wire, and an honest comparison with native Clean on speed
-          and costs.</p>
-        <div class="tags"><span class="tag">toolchain</span><span class="tag">self-hosting</span><span class="tag">Clean</span><span class="tag">portability</span></div>
-        <span class="go">Open &rarr;</span>
-      </a>
+        <a class="card" href="notebooks_factsheet.html" style="--card-color: var(--c3);">
+          <h3>Reactive lazy notebooks &amp; the JMVM toolchain</h3>
+          <p>WebSapl's notebooks: client-side execution in the browser, interactive tables,
+            graphics and charts, and how compiled code chunks are linked into a running session.</p>
+          <div class="card-foot">
+            <div class="tags"><span class="tag">WebSapl</span><span class="tag">notebooks</span></div>
+            <span class="go">Open &rarr;</span>
+          </div>
+        </a>
 
-      <a class="card" href="superseded_experiments_factsheet.html" style="--card-color: var(--muted);">
-        <h2>Superseded &amp; parked experiments: lessons learned</h2>
-        <p>What was tried, what we learned, and what replaced it: the whole-program <code>retag_opt</code> pass
-          (whose main win now lives locally in <code>gen1</code>), <code>jmvm2c</code> (superseded by <code>sapl2c</code>),
-          <code>jmvm2wat</code>, and the MicroHs server-side route (<code>adtmhs</code>).</p>
-        <div class="tags"><span class="tag">retrospective</span><span class="tag">retag_opt</span><span class="tag">jmvm2c</span><span class="tag">jmvm2wat</span></div>
-        <span class="go">Open &rarr;</span>
-      </a>
-    </div>
+        <a class="card" href="clean_abc_to_jmvm_retag_factsheet.html" style="--card-color: var(--c5);">
+          <h3>Clean programs on the JMVM: ABC &rarr; Stage-4 retag &rarr; JMVM</h3>
+          <p>Using the JMVM as a backend for Clean. Clean's optimised ABC code is decompiled to
+            Stage-4 retag and compiled to JMVM bytecode. Covers the design, the benchmark
+            results (0.78&ndash;1.31&times; of handwritten Sapl), the typed Clean port of the
+            compiler that reaches its fixed point this way, and a step-by-step guide on how to
+            use it, including the current limitations.</p>
+          <div class="card-foot">
+            <div class="tags"><span class="tag">Clean</span><span class="tag">ABC</span><span class="tag">how to use</span></div>
+            <span class="go">Open &rarr;</span>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <section class="group" id="retrospective">
+      <div class="group-head">
+        <div>
+          <h2>Retrospective</h2>
+          <p class="group-desc">Earlier approaches that were replaced or parked, and what we learned from them.</p>
+        </div>
+        <span class="group-count">1 sheet</span>
+      </div>
+      <div class="grid">
+        <a class="card" href="superseded_experiments_factsheet.html" style="--card-color: var(--muted);">
+          <h3>Superseded &amp; parked experiments: lessons learned</h3>
+          <p>What was tried, what we learned, and what replaced it: the whole-program <code>retag_opt</code> pass
+            (whose main win now lives locally in <code>gen1</code>), <code>jmvm2c</code> (superseded by <code>sapl2c</code>),
+            <code>jmvm2wat</code>, and the MicroHs server-side route (<code>adtmhs</code>).</p>
+          <div class="card-foot">
+            <div class="tags"><span class="tag">retrospective</span><span class="tag">retag_opt</span><span class="tag">jmvm2c</span></div>
+            <span class="go">Open &rarr;</span>
+          </div>
+        </a>
+      </div>
+    </section>
 
     <footer>
       The factsheets are kept in <code>docs/</code> in the repository and copied here by
