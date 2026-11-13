@@ -713,6 +713,14 @@
           </g>
 
           <!-- CODEGEN / EMIT STAGES & BRIDGES -->
+          <!-- sapl2c: Sapl to C -->
+          <g transform="translate(545, 65)">
+            <rect width="180" height="62" rx="6" fill="var(--node-bg)" stroke="#f59e0b" stroke-width="2" filter="url(#card-shadow)" />
+            <text x="12" y="20" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#f59e0b">sapl2c (Sapl &rarr; C) ★</text>
+            <text x="12" y="36" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">sapl_naar_c.py &rarr; .c + clang -O2</text>
+            <text x="12" y="52" font-family="-apple-system, sans-serif" font-size="9.5" fill="#10b981" font-weight="600">0.34&times; runfast &bull; 248 ms gen1</text>
+          </g>
+
           <!-- Gen1 Codegen -->
           <g transform="translate(545, 140)">
             <rect width="180" height="70" rx="6" fill="var(--node-bg)" stroke="#10b981" stroke-width="1.5" filter="url(#card-shadow)" />
@@ -768,8 +776,8 @@
           <g transform="translate(785, 275)">
             <rect width="200" height="65" rx="6" fill="var(--node-bg)" stroke="#f59e0b" stroke-width="1.5" filter="url(#card-shadow)" />
             <text x="12" y="22" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#f59e0b">Native Machine Code</text>
-            <text x="12" y="38" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">Linked with Clean runtime</text>
-            <text x="12" y="54" font-family="-apple-system, sans-serif" font-size="9.5" fill="#10b981" font-weight="600">5×–7× faster than bytecode</text>
+            <text x="12" y="38" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">Clean runtime &bull; sapl2c (clang -O2)</text>
+            <text x="12" y="54" font-family="-apple-system, sans-serif" font-size="9.5" fill="#10b981" font-weight="600">5&times;&ndash;7&times; faster &bull; 0.34&times; runfast</text>
           </g>
 
           <!-- Clean ABC Interpreter -->
@@ -801,6 +809,8 @@
           <!-- Analysis -> Retag IR -->
           <path d="M 385 230 L 385 258" fill="none" stroke="#a855f7" stroke-width="2" marker-end="url(#arrow-purple)" />
 
+          <!-- Retag IR -> sapl2c -->
+          <path d="M 485 268 L 503 268 L 503 95 L 543 95" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
           <!-- Retag IR -> Gen1 Codegen -->
           <path d="M 485 275 L 515 275 L 515 175 L 543 175" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#arrow-emerald)" />
           <!-- Retag IR -> Retag to ABC -->
@@ -823,6 +833,8 @@
           <!-- Clean ABC -> ABC interpreter (through the gap between the decompiler and cg) -->
           <path d="M 485 418 L 783 418" fill="none" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arrow-amber)" />
 
+          <!-- sapl2c -> native machine code -->
+          <path d="M 725 95 L 763 95 L 763 280 L 783 280" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
           <!-- Retag to ABC -> native machine code -->
           <path d="M 725 287 L 756 287 L 756 300 L 783 300" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
           <!-- cg -> native machine code -->
