@@ -230,6 +230,7 @@ const ENTRIES = [
   { src: "docs/2026-11-07_clean_abc_to_jmvm_retag_factsheet.html", dst: "factsheets/clean_abc_to_jmvm_retag_factsheet.html" },
   { src: "docs/2026-11-08_retag_opt_factsheet.html", dst: "factsheets/retag_opt_factsheet.html" },
   { src: "docs/2026-11-11_sapl2c_native_factsheet.html", dst: "factsheets/sapl2c_native_factsheet.html" },
+  { src: "docs/2026-11-13_superseded_experiments_factsheet.html", dst: "factsheets/superseded_experiments_factsheet.html" },
   // De gids van Haskell lite als webpagina; tot 8 november 2026 stond hij als
   // websapl/haskell_lite.html (nu een doorverwijzing, voor oude links).
   { src: "docs/haskell_lite_guide.html", dst: "factsheets/haskell_lite.html" },

@@ -120,22 +120,21 @@
         <span class="go">Open &rarr;</span>
       </a>
 
-      <a class="card" href="retag_opt_factsheet.html" style="--card-color: var(--c2);">
-        <h2>Stage-4 retag optimization: <code>retag_opt</code></h2>
-        <p>Interprocedural AST restructuring and strictness derivation pass before Stage-5 code generation.
-          Eliminates up to 48.7% of heap allocations, speeds up warm WebAssembly in Chrome by up to 37.4%,
-          brings warm browser execution to within 1.41&times;&ndash;1.50&times; of native C++, and achieves
-          a byte-identical compiler self-compilation fixed point.</p>
-        <div class="tags"><span class="tag">optimization</span><span class="tag">wasm</span><span class="tag">performance</span><span class="tag">compiler</span></div>
-        <span class="go">Open &rarr;</span>
-      </a>
-
       <a class="card" href="sapl2c_native_factsheet.html" style="--card-color: var(--c4);">
         <h2>Sapl to native code via C: one C function per Sapl function</h2>
         <p>gen1&rsquo;s retag form translated to C on the JMVM&rsquo;s own memory model and GC (optionally the VM&rsquo;s own runtime code).
           All 13 core benchmarks run in 0.34&times; the interpreter&rsquo;s time, faster than Clean&rsquo;s native code generator
           and on par with GHC, and the Sapl compiler compiles itself natively in 248 ms (12 November 2026).</p>
         <div class="tags"><span class="tag">native</span><span class="tag">C</span><span class="tag">performance</span><span class="tag">compiler</span></div>
+        <span class="go">Open &rarr;</span>
+      </a>
+
+      <a class="card" href="superseded_experiments_factsheet.html" style="--card-color: var(--muted);">
+        <h2>Superseded &amp; parked experiments: lessons learned</h2>
+        <p>What was tried, what we learned, and what replaced it: the whole-program <code>retag_opt</code> pass
+          (whose main win now lives locally in <code>gen1</code>), <code>jmvm2c</code> (superseded by <code>sapl2c</code>),
+          <code>jmvm2wat</code>, and the MicroHs server-side route (<code>adtmhs</code>).</p>
+        <div class="tags"><span class="tag">retrospective</span><span class="tag">retag_opt</span><span class="tag">jmvm2c</span><span class="tag">jmvm2wat</span></div>
         <span class="go">Open &rarr;</span>
       </a>
     </div>

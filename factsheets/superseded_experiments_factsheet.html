@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Superseded &amp; Parked Experiments — Lessons Learned</title>
+<meta name="description" content="Summary of superseded and parked JMVM/Sapl experiments (retag_opt, jmvm2c, jmvm2wat, adtmhs): what was tried, what was learned, and what replaced them.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script>
+  try {
+    const t = localStorage.getItem("websapl_theme");
+    if (t) document.documentElement.setAttribute("data-theme", t);
+  } catch (_) {}
+</script>
+<style>
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --fg: #1b2230;
+  --muted: #5a6475;
+  --line: #d9dee6;
+  --accent: #1f5f8b;
+  --accent-soft: #e3eef6;
+  --warn: #9a5b00;
+  --warn-soft: #fbf0de;
+  --ok: #2c6b45;
+  --ok-soft: #e3f2e8;
+  --f-display: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161d;
+    --surface: #1a2029;
+    --fg: #e4e8ee;
+    --muted: #9aa5b6;
+    --line: #2d3542;
+    --accent: #7db7e0;
+    --accent-soft: #1d3346;
+    --warn: #e7b25c;
+    --warn-soft: #3a2c14;
+    --ok: #7fcf9c;
+    --ok-soft: #173025;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161d;
+  --surface: #1a2029;
+  --fg: #e4e8ee;
+  --muted: #9aa5b6;
+  --line: #2d3542;
+  --accent: #7db7e0;
+  --accent-soft: #1d3346;
+  --warn: #e7b25c;
+  --warn-soft: #3a2c14;
+  --ok: #7fcf9c;
+  --ok-soft: #173025;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15.5px/1.62 var(--f-body);
+}
+.wrap { max-width: 920px; margin: 0 auto; padding: 32px 20px 64px; }
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; font-size: 14px; }
+.topbar a { color: var(--muted); text-decoration: none; }
+.topbar a:hover { color: var(--accent); }
+.theme-btn {
+  background: var(--surface); color: var(--fg); border: 1px solid var(--line);
+  border-radius: 6px; padding: 5px 11px; font: 13px var(--f-body); cursor: pointer;
+}
+header { border-bottom: 2px solid var(--line); padding-bottom: 18px; margin-bottom: 28px; }
+.eyebrow {
+  font: 600 12px/1.2 var(--f-mono); text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--warn); margin-bottom: 8px;
+}
+h1 { font: 700 32px/1.15 var(--f-display); margin: 0 0 10px; letter-spacing: -0.01em; }
+.lead { color: var(--muted); font-size: 16.5px; margin: 0; max-width: 72ch; }
+h2 { font: 700 22px/1.25 var(--f-display); margin: 34px 0 10px; }
+h3 { font: 600 16.5px/1.3 var(--f-display); margin: 18px 0 6px; }
+p { margin: 0 0 12px; }
+ul { margin: 6px 0 14px; padding-left: 20px; }
+li { margin: 4px 0; }
+code { font-family: var(--f-mono); font-size: 0.9em; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+a { color: var(--accent); }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 18px 20px; margin: 16px 0;
+}
+.card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+.card-head h2 { margin: 0; font-size: 20px; }
+.pill {
+  font: 600 12px/1 var(--f-mono); padding: 4px 9px; border-radius: 999px;
+  background: var(--warn-soft); color: var(--warn); white-space: nowrap;
+}
+.pill.ok { background: var(--ok-soft); color: var(--ok); }
+.callout {
+  background: var(--accent-soft); border-left: 3px solid var(--accent);
+  padding: 12px 14px; border-radius: 0 6px 6px 0; margin: 14px 0; font-size: 14.5px;
+}
+table { width: 100%; border-collapse: collapse; margin: 16px 0; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; font-size: 14px; }
+th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { background: var(--accent-soft); font-weight: 600; }
+tr:last-child td { border-bottom: none; }
+footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a href="index.html">&larr; Factsheets</a>
+    <button class="theme-btn" id="themeBtn" type="button">Theme</button>
+  </div>
+
+  <header>
+    <div class="eyebrow">Historical Record &bull; November 2026</div>
+    <h1>Superseded &amp; Parked Experiments</h1>
+    <p class="lead">
+      Not every promising prototype earns a permanent place in the main toolchain. This page documents
+      experiments that were superseded by simpler or faster designs — why they were built, what we
+      learned from them, and where their useful ideas ended up.
+    </p>
+  </header>
+
+  <h2>Summary Matrix</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Experiment</th>
+        <th>Original Goal</th>
+        <th>Why Superseded / Parked</th>
+        <th>Current Replacement</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>retag_opt</code></td>
+        <td>Whole-program Stage-4 Retag optimizer (<code>fold</code>, <code>let</code>, <code>strict</code>, <code>inline</code>, <code>thunkdoor</code>, <code>params</code>, <code>eager</code>)</td>
+        <td>Doubled <code>gen1.jvb</code> size (2.1&times;), introduced 4 semantic bugs; the main win turned out to be a local per-function rule.</td>
+        <td>Local <code>tagLazyMaybe</code> rule in <code>gen1</code> stage 2 (#157); optional <code>./compile --opt</code> kept only for class-A <code>params</code> (~3% on <code>queens</code>).</td>
+      </tr>
+      <tr>
+        <td><code>jmvm2c</code></td>
+        <td>Translate JMVM bytecode basic blocks to C with <code>musttail</code></td>
+        <td>Kept all temps on the VM stack in memory; <code>gen1</code> became 9.3 MB of C (47 s <code>clang -O2</code> build, 442 ms self-compile).</td>
+        <td><a href="sapl2c_native_factsheet.html"><code>sapl2c</code></a> (Stage-4 Retag &rarr; C, 2.9 MB C, 4.1 s build, 248 ms <code>gen1</code>, 0.34&times; <code>runfast</code>).</td>
+      </tr>
+      <tr>
+        <td><code>jmvm2wat</code></td>
+        <td>Direct JMVM bytecode &rarr; standalone WebAssembly using <code>return_call</code></td>
+        <td>1.5&times; faster than the <em>cold</em> Wasm interpreter, but overtaken by warm V8 JIT on <code>run.wasm</code> (151 KB) + <code>gen1</code> improvements.</td>
+        <td>WebSapl <code>run.wasm</code> (1.38&times;&ndash;1.65&times; native in Chrome).</td>
+      </tr>
+      <tr>
+        <td><code>adtmhs</code> (MicroHs)</td>
+        <td>Server-side Haskell &rarr; Sapl compilation via MicroHs</td>
+        <td>Requires a server-side binary; cannot run standalone in the browser.</td>
+        <td><a href="haskell_lite.html">Haskell Lite</a> (in-VM frontend in Sapl+, runs natively and in WebSapl).</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>1. <code>retag_opt</code>: Whole-Program Stage-4 Retag Optimizer</h2>
+      <span class="pill ok">Core win absorbed into gen1</span>
+    </div>
+    <p>
+      Built first in Python (<code>retag_opt.py</code>) and then ported to Sapl (<code>sapl_compiler/retagopt.cfp</code>),
+      <code>retag_opt</code> ran between Stage 4 (lazy/strict tagging) and Stage 5 (bytecode emission). Early hand-crafted
+      prototypes looked dramatic: &minus;32% instructions and &minus;49% heap allocations on <code>eval</code>, and
+      &minus;23% / &minus;44% on <code>queens</code>.
+    </p>
+    <h3>What we learned</h3>
+    <ul>
+      <li><strong>Almost all the gain came from one local pattern:</strong> avoiding a thunk for <code>n - 1</code> or <code>d + 1</code> when <code>n</code> is already evaluated on that path (affecting 4 of the 13 core benchmarks: <code>eval</code>, <code>queens</code>, <code>hamming</code>, <code>knights</code>).</li>
+      <li><strong>High complexity cost:</strong> embedding it in <code>gen1</code> grew <code>gen1.jvb</code> by 2.1&times; (~720 KB extra browser download), <code>inline</code> and <code>thunkdoor</code> yielded &le;0.1% and were removed, dead-code elimination broke REPL name lookup, and four subtle semantic bugs had to be fixed.</li>
+      <li><strong>The local rule won:</strong> implementing <code>tagLazyMaybe</code> directly in <code>gen1</code>&rsquo;s stage 2 (<code>stage2_lazytag.cfp</code>, #157) captured 100% of the heap-allocation savings for every program automatically (<code>eval</code> &minus;27.7%, <code>queens</code> &minus;13.0%, <code>hamming</code> &minus;7.6% instructions), with zero whole-program analysis.</li>
+      <li><strong>What remains in <code>--opt</code>:</strong> only whole-program &ldquo;class A&rdquo; <code>params</code> (omitting <code>eval(x)</code> when every caller passes an evaluated value), worth ~3% wall-clock time on <code>queens</code> and &plusmn;0% on <code>eval</code> and <code>hamming</code>.</li>
+    </ul>
+    <div class="callout">
+      <strong>Sources:</strong> <a href="retag_opt_factsheet.html">Original 8 Nov retag_opt factsheet</a> (historical measurements) and
+      <code>docs/2026-11-09_retag_opt_terugblik_en_kansen.md</code> (retrospective &amp; open local-eagerness ideas).
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>2. <code>jmvm2c</code>: Bytecode-to-C Continuation Compiler</h2>
+      <span class="pill">Superseded by sapl2c</span>
+    </div>
+    <p>
+      <code>jmvm2c.py</code> translated JMVM bytecode into C by turning every basic block between jump points into a
+      C function chained via <code>[[clang::musttail]]</code>.
+    </p>
+    <ul>
+      <li><strong>Measured speed:</strong> 3,219 ms total on the 12-benchmark suite (more than 2&times; slower than Clean native&rsquo;s 1,498 ms) and 442 ms for <code>gen1</code> self-compilation (vs. 580 ms in <code>runfast</code>).</li>
+      <li><strong>Build weight:</strong> <code>gen1</code> expanded to <strong>9.3 MB of C</strong> and took <strong>47 s</strong> to compile with <code>clang -O2</code>.</li>
+      <li><strong>Why it hit a ceiling:</strong> translating <em>bytecode</em> meant every argument and temporary stayed on the VM stack in memory, <code>clang</code> never saw a whole Sapl function, and returns remained indirect jumps.</li>
+      <li><strong>Replacement:</strong> <a href="sapl2c_native_factsheet.html"><code>sapl2c</code></a> translates Stage-4 Retag IR instead — one C function per Sapl function — shrinking <code>gen1</code> to 2.9 MB of C (4.1 s build), cutting <code>gen1</code> self-compilation to <strong>248 ms</strong>, and running the 13 core benchmarks in <strong>0.34&times;</strong> <code>runfast</code>.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>3. <code>jmvm2wat</code>: Direct Bytecode-to-Wasm Compiler</h2>
+      <span class="pill">Parked</span>
+    </div>
+    <p>
+      An experimental AOT translator that lowered JMVM bytecode directly to standalone WebAssembly modules using
+      Wasm <code>return_call</code> tail-call continuations and linear-memory stacks.
+    </p>
+    <ul>
+      <li><strong>Measured speed:</strong> ~1.5&times; speedup over the <em>cold</em> Wasm bytecode interpreter in Chrome by eliminating VM dispatch.</li>
+      <li><strong>Why parked:</strong> once V8 warms up, the standard 151 KB <code>run.wasm</code> interpreter already runs within 1.38&times;&ndash;1.65&times; of native C++, without needing per-program Wasm compilation or toolchain complexity.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>4. <code>adtmhs</code>: MicroHs Server-Side Route</h2>
+      <span class="pill">Parked for interactive use</span>
+    </div>
+    <p>
+      Compiled Haskell via the MicroHs frontend (<code>adtmhs -Ccache</code>) to Core Sapl (<code>.cfp</code>) and then
+      to JMVM bytecode. Useful as a server-side reference oracle, but superseded for everyday and browser use by
+      <a href="haskell_lite.html">Haskell Lite</a>, which is written in Sapl+ and runs directly inside the VM and WebSapl notebooks.
+    </p>
+  </div>
+
+  <footer>
+    Part of the JMVM &amp; Sapl factsheet series. Maintained in <code>docs/2026-11-13_superseded_experiments_factsheet.html</code>.
+  </footer>
+</div>
+
+<script>
+document.getElementById("themeBtn").addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme") ||
+    (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  const next = cur === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("websapl_theme", next); } catch (_) {}
+});
+</script>
+</body>
+</html>
