@@ -309,8 +309,23 @@ function checkJvbSource(src) {
   throw new Error(`${src} heeft geen SRC-sectie ${fix}`);
 }
 
+// Een .jvb die niet in git staat (afgeleid, `*.jvb` in .gitignore) maar uit zijn
+// .jmvm te maken is, ontbreekt in een verse checkout of worktree: maak hem dan,
+// zoals ./compile dat doet (./jmvm2jvb x.jmvm x.jvb, met de SRC-sectie).
+function ensureJvb(src) {
+  const jvbPath = path.join(REPO, src);
+  if (fs.existsSync(jvbPath)) return;
+  const jmvmPath = jvbPath.replace(/\.jvb$/, ".jmvm");
+  if (!fs.existsSync(jmvmPath)) return;   // dan komt de gewone fout bij het lezen
+  const tool = path.join(REPO, "jmvm2jvb");
+  if (!fs.existsSync(tool)) throw new Error(`${src} ontbreekt en ./jmvm2jvb ook (make jmvm2jvb)`);
+  const r = require("child_process").spawnSync(tool, [jmvmPath, jvbPath], { cwd: REPO });
+  if (r.status !== 0 || !fs.existsSync(jvbPath)) throw new Error(`${src} maken uit ${path.relative(REPO, jmvmPath)} mislukt`);
+  console.log(`gemaakt   ${src}  (uit ${path.relative(REPO, jmvmPath)}, afgeleid)`);
+}
+
 function expected(entry) {
-  if (entry.src.endsWith(".jvb")) checkJvbSource(entry.src);
+  if (entry.src.endsWith(".jvb")) { ensureJvb(entry.src); checkJvbSource(entry.src); }
   const buf = fs.readFileSync(path.join(REPO, entry.src));
   if (!entry.rewrite) return buf;
   let text = buf.toString("utf8");
