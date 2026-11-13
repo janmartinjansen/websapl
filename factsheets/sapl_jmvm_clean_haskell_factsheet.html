@@ -772,24 +772,7 @@
             <text x="12" y="54" font-family="-apple-system, sans-serif" font-size="9.5" fill="#10b981" font-weight="600">5×–7× faster than bytecode</text>
           </g>
 
-          <!-- sapl2c: Sapl naar C (12 november 2026) -->
-        <div class="card">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <h3>sapl2c: Sapl to C</h3>
-            <span class="badge badge-amber">AOT via clang</span>
-          </div>
-          <p>
-            Translates gen1&rsquo;s Stage-4 retag form into C, one C function per Sapl function, on the JMVM&rsquo;s own memory model and GC (optionally the VM&rsquo;s own runtime code), compiled with <code>clang -O2</code>.
-          </p>
-          <ul>
-            <li><strong>Performance:</strong> 0.34&times; the JMVM interpreter&rsquo;s time on the 13 core benchmarks; faster than Clean native (0.87&times;) and on par with GHC <code>-O2</code> (1.02&times;; geometric means, with a growing heap).</li>
-            <li><strong>Self-Hosting Speed:</strong> gen1 compiles itself natively in <strong>248 ms</strong> and reaches the fixed point (interpreter 580 ms; Clean native untyped port 305 ms, typed 166 ms; GHC typed 295 ms).</li>
-            <li><strong>Exact:</strong> the same output and allocation count as the VM, also under GC stress. Not for the browser (the C stack is the call stack).</li>
-          </ul>
-          <p style="margin-top:6px"><a href="sapl2c_native_factsheet.html">sapl2c factsheet &rarr;</a></p>
-        </div>
-
-        <!-- Clean ABC Interpreter -->
+          <!-- Clean ABC Interpreter -->
           <g transform="translate(785, 360)">
             <rect width="200" height="65" rx="6" fill="var(--node-bg)" stroke="var(--node-border)" stroke-width="1" filter="url(#card-shadow)" />
             <text x="12" y="22" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="var(--text-primary)">Clean ABC Interpreter</text>
@@ -1557,6 +1540,23 @@ python3 experiments/abc2jmvm/abc2retag.py "Clean System Files/primes.opt.abc" -o
             <li><strong>Self-Hosting Speed:</strong> gen1 compiles itself via Clean ABC in just 0.63 seconds native (Sapl &rarr; ABC &rarr; <code>cg</code> route, earlier measurement). The typed Clean port of gen1 takes <strong>166 ms</strong> natively on ARM64 (Clean 3.1), against 557 ms for gen1 on the JMVM and 278 ms for typed Haskell on GHC.</li>
             <li><strong>Proven Runtime:</strong> Decades of mature GC, memory management, and uniqueness typing optimizations.</li>
           </ul>
+        </div>
+
+        <!-- sapl2c: Sapl naar C (12 november 2026) -->
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h3>sapl2c: Sapl to C</h3>
+            <span class="badge badge-amber">AOT via clang</span>
+          </div>
+          <p>
+            Translates gen1&rsquo;s Stage-4 retag form into C, one C function per Sapl function, on the JMVM&rsquo;s own memory model and GC (optionally the VM&rsquo;s own runtime code), compiled with <code>clang -O2</code>.
+          </p>
+          <ul>
+            <li><strong>Performance:</strong> 0.34&times; the JMVM interpreter&rsquo;s time on the 13 core benchmarks; faster than Clean native (0.87&times;) and on par with GHC <code>-O2</code> (1.02&times;; geometric means, with a growing heap).</li>
+            <li><strong>Self-Hosting Speed:</strong> gen1 compiles itself natively in <strong>248 ms</strong> and reaches the fixed point (interpreter 580 ms; Clean native untyped port 305 ms, typed 166 ms; GHC typed 295 ms).</li>
+            <li><strong>Exact:</strong> the same output and allocation count as the VM, also under GC stress. Not for the browser (the C stack is the call stack).</li>
+          </ul>
+          <p style="margin-top:6px"><a href="sapl2c_native_factsheet.html">sapl2c factsheet &rarr;</a></p>
         </div>
 
         <!-- Clean ABC Interpreter -->
