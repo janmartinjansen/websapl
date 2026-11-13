@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>How sapl2c Translates Retag to C — Design &amp; Challenges</title>
+<meta name="description" content="Technical walkthrough of how sapl2c translates Stage-4 Retag IR into native C: calling convention, shadow stack for moving GC, non-pointer proofs, thunks, closures, and real generated examples.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script>
+  try {
+    const t = localStorage.getItem("websapl_theme");
+    if (t) document.documentElement.setAttribute("data-theme", t);
+  } catch (_) {}
+</script>
+<style>
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --fg: #1b2230;
+  --muted: #5a6475;
+  --line: #d9dee6;
+  --accent: #1f5f8b;
+  --accent-soft: #e3eef6;
+  --warn: #9a5b00;
+  --warn-soft: #fbf0de;
+  --ok: #2c6b45;
+  --ok-soft: #e3f2e8;
+  --purple: #6d28d9;
+  --purple-soft: #f3e8ff;
+  --f-display: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161d;
+    --surface: #1a2029;
+    --fg: #e4e8ee;
+    --muted: #9aa5b6;
+    --line: #2d3542;
+    --accent: #7db7e0;
+    --accent-soft: #1d3346;
+    --warn: #e7b25c;
+    --warn-soft: #3a2c14;
+    --ok: #7fcf9c;
+    --ok-soft: #173025;
+    --purple: #c084fc;
+    --purple-soft: #2e1d47;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161d;
+  --surface: #1a2029;
+  --fg: #e4e8ee;
+  --muted: #9aa5b6;
+  --line: #2d3542;
+  --accent: #7db7e0;
+  --accent-soft: #1d3346;
+  --warn: #e7b25c;
+  --warn-soft: #3a2c14;
+  --ok: #7fcf9c;
+  --ok-soft: #173025;
+  --purple: #c084fc;
+  --purple-soft: #2e1d47;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15.5px/1.62 var(--f-body);
+}
+.wrap { max-width: 980px; margin: 0 auto; padding: 32px 20px 64px; }
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; font-size: 14px; }
+.topbar a { color: var(--muted); text-decoration: none; }
+.topbar a:hover { color: var(--accent); }
+.theme-btn {
+  background: var(--surface); color: var(--fg); border: 1px solid var(--line);
+  border-radius: 6px; padding: 5px 11px; font: 13px var(--f-body); cursor: pointer;
+}
+header { border-bottom: 2px solid var(--line); padding-bottom: 18px; margin-bottom: 28px; }
+.eyebrow {
+  font: 600 12px/1.2 var(--f-mono); text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--warn); margin-bottom: 8px;
+}
+h1 { font: 700 32px/1.15 var(--f-display); margin: 0 0 10px; letter-spacing: -0.01em; }
+.lead { color: var(--muted); font-size: 16.5px; margin: 0; max-width: 74ch; }
+h2 { font: 700 22px/1.25 var(--f-display); margin: 36px 0 12px; }
+h3 { font: 600 16.5px/1.3 var(--f-display); margin: 0 0 8px; }
+p { margin: 0 0 12px; }
+ul { margin: 6px 0 14px; padding-left: 20px; }
+li { margin: 4px 0; }
+code { font-family: var(--f-mono); font-size: 0.88em; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+a { color: var(--accent); }
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 14px 0; }
+@media (max-width: 760px) { .grid-2 { grid-template-columns: 1fr; } }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 18px 20px; margin: 14px 0;
+}
+.card.warn { border-left: 4px solid var(--warn); }
+.card.ok { border-left: 4px solid var(--ok); }
+.card.purple { border-left: 4px solid var(--purple); }
+pre {
+  background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+  padding: 12px 14px; overflow-x: auto; font: 12.5px/1.5 var(--f-mono); margin: 10px 0;
+}
+.callout {
+  background: var(--accent-soft); border-left: 3px solid var(--accent);
+  padding: 12px 15px; border-radius: 0 8px 8px 0; margin: 16px 0; font-size: 14.5px;
+}
+table {
+  width: 100%; border-collapse: collapse; margin: 16px 0; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 8px; overflow: hidden; font-size: 14px;
+}
+th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { background: var(--accent-soft); font-weight: 600; }
+tr:last-child td { border-bottom: none; }
+footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a href="index.html">&larr; Factsheets</a>
+    <button class="theme-btn" id="themeBtn" type="button">Theme</button>
+  </div>
+
+  <header>
+    <div class="eyebrow">Compiler Internals &bull; sapl2c</div>
+    <h1>How <code>sapl2c</code> Translates Stage-4 Retag to C</h1>
+    <p class="lead">
+      <code>sapl2c</code> lowers Stage-4 Retag IR into one C function per Sapl function on the JMVM&rsquo;s
+      tagged memory model and copying garbage collector. This sheet explains the translation scheme,
+      the hard compiler problems it solves &mdash; starting with the shadow stack &mdash; and concrete
+      examples from the generated C code.
+    </p>
+  </header>
+
+  <h2>1. Overall Translation Model</h2>
+  <p>
+    Unlike the earlier <code>jmvm2c</code> prototype (which translated bytecode blocks), <code>sapl2c</code>
+    starts from <a href="retag_format_factsheet.html">Stage-4 Retag IR</a>. Both the Python reference
+    (<code>experiments/sapl2c/sapl_naar_c.py</code>) and the self-hosted Sapl implementation
+    (<code>sapl_compiler/sapl2c.cfp</code>) emit identical C linked against a single runtime header
+    (<code>experiments/sapl2c/rt.h</code>).
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Aspect</th>
+        <th>Mechanism in Generated C</th>
+        <th>Why It Matters</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Function signature</strong></td>
+        <td><code>static R f_name(cell* hp, cell* sp, cell a0, ..., cell a5)</code></td>
+        <td>Uniform ABI: every tail call uses <code>MUSTTAIL return</code> (a single jump instruction).</td>
+      </tr>
+      <tr>
+        <td><strong>Return value</strong></td>
+        <td><code>typedef struct { cell v; cell* hp; } R;</code></td>
+        <td>Returns both the result value and updated heap pointer in two hardware registers.</td>
+      </tr>
+      <tr>
+        <td><strong>Self tail-recursion</strong></td>
+        <td><code>{ cell n0_ = ...; p_n = n0_; } goto top;</code></td>
+        <td>Loops in-place without touching the C stack or reloading registers.</td>
+      </tr>
+      <tr>
+        <td><strong>Tagged values (<code>cell</code>)</strong></td>
+        <td>2-bit tag: integers/chars/bools unboxed (<code>SL(n)</code>), heap pointers aligned</td>
+        <td>No stack maps needed; the GC distinguishes pointers from scalars by inspecting tag bits.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>2. Problem 1: The Moving GC &amp; The Shadow Stack</h2>
+  <div class="card warn">
+    <h3>The Core Problem</h3>
+    <p>
+      The JMVM uses a <strong>copying (moving) garbage collector</strong>. Whenever a function triggers GC
+      (during heap allocation, a <code>CALL</code>, or an <code>EVALK</code> that forces a thunk), live heap
+      objects are moved to new addresses. However, C local variables live in CPU registers or C stack frames
+      that the GC cannot see or rewrite.
+    </p>
+    <h3>The Solution: The VM Stack as a Shadow Stack (<code>sp</code>)</h3>
+    <p>
+      Any live local variable that <em>might</em> hold a heap pointer across a GC-capable point is spilled to
+      <code>sp[0..k-1]</code> immediately before the call/GC and reloaded right after. Because every
+      <code>cell</code> is self-describing (tagged), the GC simply scans <code>sp</code> up to the current
+      stack pointer and updates pointers in place.
+    </p>
+  </div>
+
+  <h3>Example A: Shadow Stack in Action (<code>f_filter</code> from <code>primes.c</code>)</h3>
+  <p>
+    In <code>filter p (Cons a as)</code>, applying <code>p a</code> via <code>ap1</code> may allocate or
+    trigger GC. Three live values (<code>p_p</code>, <code>v2_a</code>, <code>v3_as</code>) are saved on
+    <code>sp[0..2]</code>, the callee receives <code>sp + 3</code>, and the caller reloads them after
+    <code>CALL</code>. Likewise, <code>HEAPFULL(7)</code> only spills on the slow GC path:
+  </p>
+<pre>v2_a = PTR(p_xs)[1];
+v3_as = PTR(p_xs)[2];
+sp[0] = p_p; sp[1] = v2_a; sp[2] = v3_as;
+CALL(v4_ap, ap1(hp, sp + 3, p_p, v2_a));
+p_p = sp[0]; v2_a = sp[1]; v3_as = sp[2];
+if (truth(v4_ap)) {
+  if (HEAPFULL(7)) { sp[0] = p_p; sp[1] = v2_a; sp[2] = v3_as; GC(3); p_p = sp[0]; v2_a = sp[1]; v3_as = sp[2]; }
+  { cell* r_ = hp; hp += 7; CNT_CREATE(2);
+    ...
+  }
+}</pre>
+
+  <h3>Optimization: Non-Pointer Proofs Eliminate Spills (<code>fib.c</code>)</h3>
+  <p>
+    Spilling every live variable on every call would be expensive. <code>sapl2c</code> therefore runs a
+    flow-sensitive <strong>non-pointer analysis</strong> with three kinds (<code>int</code>,
+    <code>non-pointer</code> = int/char/float, and <code>any</code>) and a whole-program fixpoint over
+    function return kinds. A variable proven to be a non-pointer on the current path is <strong>never
+    spilled</strong>.
+  </p>
+<pre>static R f_nfib(cell* hp, cell* sp, cell p_n, cell u1_, cell u2_, cell u3_, cell u4_, cell u5_) {
+  cell v1_r, v2_nfib, v3_r, v4_nfib, v5_r, v6_r;
+ top: ;
+  if ((LIKELY(!((p_n) &amp; 3)) ? (p_n &lt; SL(2)) : cmp_slow('&lt;', p_n, SL(2)))) {
+    RET(SL(1));
+  } else {
+    v1_r = (LIKELY(!((p_n) &amp; 3)) ? (p_n - SL(1)) : arith_slow('-', p_n, SL(1)));
+    CALL(v2_nfib, f_nfib(hp, sp + 0, v1_r, 0, 0, 0, 0, 0));
+    v3_r = (LIKELY(!((p_n) &amp; 3)) ? (p_n - SL(2)) : arith_slow('-', p_n, SL(2)));
+    CALL(v4_nfib, f_nfib(hp, sp + 0, v3_r, 0, 0, 0, 0, 0));
+    v5_r = (LIKELY(!((v2_nfib | v4_nfib) &amp; 3)) ? (v2_nfib + v4_nfib) : arith_slow('+', v2_nfib, v4_nfib));
+    v6_r = (LIKELY(!((v5_r) &amp; 3)) ? (v5_r + SL(1)) : arith_slow('+', v5_r, SL(1)));
+    RET(v6_r);
+  }
+}</pre>
+  <p>
+    Notice <code>sp + 0</code> on both recursive calls: <code>p_n</code> and <code>v2_nfib</code> are proven
+    integers, so <code>nfib</code> performs <strong>zero</strong> shadow-stack writes.
+  </p>
+
+  <h2>3. Problem 2: Laziness, Thunks &amp; Coalesced Allocation</h2>
+  <div class="card purple">
+    <h3>The Challenge</h3>
+    <p>
+      Lazy evaluation requires allocating thunk nodes, forcing them at most once via an inline tag check,
+      and overwriting the thunk node in place (<code>UPDATE</code>) so subsequent demands see the result.
+      Meanwhile, checking for heap overflow before every small node would bloat code size.
+    </p>
+  </div>
+  <p>
+    In <code>f_take</code> (from <code>primes.c</code>), <code>sapl2c</code> coalesces all allocations in a
+    straight-line block into <strong>one</strong> <code>HEAPFULL(7)</code> check (4 words for the
+    <code>take</code> thunk + 3 words for the <code>Cons</code> cell):
+  </p>
+<pre>v2_xs = p_xs;
+EVALK(v2_xs, 1, {sp[0] = p_n;}, {p_n = sp[0];});
+if (AUXF(*PTR(v2_xs)) == 0) {   /* Nil */
+  ...
+} else {   /* Cons */
+  v4_x = PTR(v2_xs)[1];
+  v5_xs = PTR(v2_xs)[2];
+  v6_r = (LIKELY(!((p_n) &amp; 3)) ? (p_n - SL(1)) : arith_slow('-', p_n, SL(1)));
+  if (HEAPFULL(7)) { sp[0] = v4_x; sp[1] = v5_xs; GC(2); v4_x = sp[0]; v5_xs = sp[1]; }
+  { cell* r_ = hp; hp += 7; CNT_CREATE(2);
+    v7_thunk = TAGP(r_ + 0);
+    v8_Cons = TAGP(r_ + 4);
+    r_[0] = ADM_THUNK(2); r_[1] = v6_r; r_[2] = v5_xs; r_[3] = FNCELL(d_take);
+    r_[4] = ADM(T_CONSTR, 5, 1, 3); r_[5] = v4_x; r_[6] = v7_thunk;
+  }
+  RET(v8_Cons);
+}</pre>
+  <p>
+    Notice two details here: <code>v6_r</code> is proven <code>int</code> (result of <code>- 1</code>), so
+    <code>GC(2)</code> only saves <code>v4_x</code> and <code>v5_xs</code>; and the thunk entry
+    <code>t_take</code> saves <code>self</code> on <code>sp</code>, evaluates strict argument <code>e0</code>,
+    calls <code>f_take</code>, and overwrites the thunk node in place with <code>UPDATE(sp[-1], r.v)</code>.
+  </p>
+
+  <h2>4. Problem 3: Higher-Order Calls, PAPs &amp; &gt;6 Arguments</h2>
+  <p>
+    Functions that can appear in closures or partial applications (like <code>nmz</code> in
+    <code>filter (nmz a) as</code>) get a <code>FnDesc</code> descriptor with three entry points:
+  </p>
+  <ul>
+    <li><code>t_nmz</code> &mdash; thunk entry (evaluates a deferred <code>nmz</code> node and updates it).</li>
+    <li><code>a_nmz</code> &mdash; apply-1 entry (completes a 1-arg partial application with one more argument).</li>
+    <li><code>s_nmz</code> &mdash; saturated stack entry (takes arguments from <code>sp</code> when called dynamically or with &gt;6 parameters).</li>
+  </ul>
+  <p>
+    Functions with <strong>more than 6 parameters</strong> pass arguments 0&ndash;5 in C parameters
+    <code>a0..a5</code> and any remaining arguments on the shadow stack <code>sp</code>, keeping the
+    <code>MUSTTAIL</code> ABI uniform across the entire program.
+  </p>
+
+  <h2>5. Problem 4: Unboxed Fast Paths, C Call Stack &amp; Runtime</h2>
+  <ul>
+    <li><strong>Tagged arithmetic with slow fallback:</strong> <code>LIKELY(!((x | y) &amp; 3))</code> executes
+      native integer operations directly in registers; only overloaded or non-int operands fall back to
+      <code>arith_slow</code> / <code>cmp_slow</code>.</li>
+    <li><strong>C stack &amp; return predictor:</strong> Unlike the JMVM interpreter (which keeps its control
+      stack in linear memory), <code>sapl2c</code> uses the hardware C call stack for non-tail calls. Beyond
+      ~50 nested thunk evaluations, the CPU return-address predictor overflows (4.8 ns instead of 0.7 ns per
+      return). This is also why <code>sapl2c</code> targets native silicon rather than the browser (where
+      WebSapl&rsquo;s <code>run.wasm</code> remains immune to JS/Wasm call-stack limits).</li>
+    <li><strong>Runtime reuse:</strong> Generated C uses <code>rt.h</code> (matching the VM&rsquo;s GC,
+      arrays, strings, I/O, and catchable <code>try</code>/<code>throw</code> errors) or can optionally link
+      against the VM&rsquo;s own C++ runtime.</li>
+  </ul>
+
+  <div class="callout">
+    <strong>Further reading:</strong> see <a href="sapl2c_native_factsheet.html">Sapl to Native C</a> for
+    benchmark measurements (0.34&times; <code>runfast</code>, 248 ms <code>gen1</code> self-compile) and
+    <code>docs/2026-11-11_sapl_naar_c_plan.md</code> for the full implementation design.
+  </div>
+
+  <footer>
+    Part of the JMVM &amp; Sapl factsheet series. Maintained in <code>docs/2026-11-13_sapl2c_translation_factsheet.html</code>.
+  </footer>
+</div>
+
+<script>
+document.getElementById("themeBtn").addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme") ||
+    (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  const next = cur === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("websapl_theme", next); } catch (_) {}
+});
+</script>
+</body>
+</html>
