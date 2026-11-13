@@ -157,7 +157,16 @@
           </div>
         </a>
 
-        <a class="card" href="toolchain_factsheet.html" style="--card-color: var(--c1);">
+        <a class="card" href="top_advice_factsheet.html" style="--card-color: var(--c1);">
+        <h2>Advice for TOP Software</h2>
+        <p>Lead with the interpreter and toolchain, treat native code as an add-on: what the measurements show
+          (0.95&times; Clean native on small benchmarks, 1.35&ndash;1.43&times; behind on a large typed program,
+          about equal to GHC) and what has not been measured.</p>
+        <div class="tags"><span class="tag">advice</span><span class="tag">Clean</span><span class="tag">TOP</span></div>
+        <span class="go">Open &rarr;</span>
+      </a>
+
+      <a class="card" href="toolchain_factsheet.html" style="--card-color: var(--c1);">
           <h3>The toolchain is the program: one VM, everything else in Sapl</h3>
           <p>Why the JMVM&rsquo;s only C is one small VM, and what that buys: the compiler, linker, typechecker and
             REPL as bytecode (65 KB of wasm, 6 ms REPL start-up), compiling as a function call, notebooks

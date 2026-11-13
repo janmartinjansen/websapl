@@ -594,7 +594,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/index.html",
         "type": "file",
         "ext": ".html",
-        "size": 11952,
+        "size": 16952,
         "isBinary": false
       },
       {
@@ -683,6 +683,14 @@ window.WEBSAPL_TREE = [
         "type": "file",
         "ext": ".html",
         "size": 32814,
+        "isBinary": false
+      },
+      {
+        "name": "top_advice_factsheet.html",
+        "path": "factsheets/top_advice_factsheet.html",
+        "type": "file",
+        "ext": ".html",
+        "size": 11137,
         "isBinary": false
       }
     ],

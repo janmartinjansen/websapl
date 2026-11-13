@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Advice for TOP Software</title>
+<meta name="description" content="One-page advice for TOP Software: lead with the interpreter and toolchain, treat native code as an add-on, and what the measurements do and do not show.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script>
+  try {
+    const t = localStorage.getItem("websapl_theme");
+    if (t) document.documentElement.setAttribute("data-theme", t);
+  } catch (_) {}
+</script>
+<style>
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --fg: #1b2230;
+  --muted: #5a6475;
+  --line: #d9dee6;
+  --accent: #1f5f8b;
+  --accent-soft: #e3eef6;
+  --ok: #2c6b45;
+  --ok-soft: #e3f2e8;
+  --warn: #9a5b00;
+  --warn-soft: #fbf0de;
+  --purple: #6d28d9;
+  --purple-soft: #f3e8ff;
+  --f-display: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161d;
+    --surface: #1a2029;
+    --fg: #e4e8ee;
+    --muted: #9aa5b6;
+    --line: #2d3542;
+    --accent: #7db7e0;
+    --accent-soft: #1d3346;
+    --ok: #7fcf9c;
+    --ok-soft: #173025;
+    --warn: #e7b25c;
+    --warn-soft: #3a2c14;
+    --purple: #c084fc;
+    --purple-soft: #2e1d47;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161d;
+  --surface: #1a2029;
+  --fg: #e4e8ee;
+  --muted: #9aa5b6;
+  --line: #2d3542;
+  --accent: #7db7e0;
+  --accent-soft: #1d3346;
+  --ok: #7fcf9c;
+  --ok-soft: #173025;
+  --warn: #e7b25c;
+  --warn-soft: #3a2c14;
+  --purple: #c084fc;
+  --purple-soft: #2e1d47;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15.5px/1.62 var(--f-body);
+}
+.wrap { max-width: 980px; margin: 0 auto; padding: 32px 20px 64px; }
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; font-size: 14px; }
+.topbar a { color: var(--muted); text-decoration: none; }
+.topbar a:hover { color: var(--accent); }
+.theme-btn {
+  background: var(--surface); color: var(--fg); border: 1px solid var(--line);
+  border-radius: 6px; padding: 5px 11px; font: 13px var(--f-body); cursor: pointer;
+}
+header { border-bottom: 2px solid var(--line); padding-bottom: 18px; margin-bottom: 26px; }
+.eyebrow {
+  font: 600 12px/1.2 var(--f-mono); text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--ok); margin-bottom: 8px;
+}
+h1 { font: 700 32px/1.15 var(--f-display); margin: 0 0 10px; letter-spacing: -0.01em; }
+.lead { color: var(--muted); font-size: 16.5px; margin: 0; max-width: 74ch; }
+h2 { font: 700 22px/1.25 var(--f-display); margin: 34px 0 12px; }
+h3 { font: 600 16.5px/1.3 var(--f-display); margin: 0 0 8px; }
+p { margin: 0 0 12px; }
+ul { margin: 6px 0 14px; padding-left: 20px; }
+li { margin: 4px 0; }
+code { font-family: var(--f-mono); font-size: 0.88em; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+a { color: var(--accent); }
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 20px 0 28px; }
+@media (max-width: 760px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.kpi {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px;
+}
+.kpi .val { font: 700 26px/1.1 var(--f-display); color: var(--accent); }
+.kpi .lbl { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 14px 0; }
+@media (max-width: 760px) { .grid-2 { grid-template-columns: 1fr; } }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 18px 20px;
+}
+.card.ok { border-top: 3px solid var(--ok); }
+.card.accent { border-top: 3px solid var(--accent); }
+.card.warn { border-top: 3px solid var(--warn); }
+.card.purple { border-top: 3px solid var(--purple); }
+table {
+  width: 100%; border-collapse: collapse; margin: 16px 0; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 8px; overflow: hidden; font-size: 14px;
+}
+th, td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { background: var(--accent-soft); font-weight: 600; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tr:last-child td { border-bottom: none; }
+.win { color: var(--ok); font-weight: 600; }
+.callout {
+  background: var(--ok-soft); border-left: 3px solid var(--ok);
+  padding: 12px 15px; border-radius: 0 8px 8px 0; margin: 16px 0; font-size: 14.5px;
+}
+footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a href="index.html">&larr; Factsheets</a>
+    <button class="theme-btn" id="themeBtn" type="button">Theme</button>
+  </div>
+
+  <header>
+    <div class="eyebrow">Advice &bull; Clean in the browser and on the server</div>
+    <h1>Advice for TOP Software: Lead with the Toolchain, Treat Native as an Add-on</h1>
+    <p class="lead">
+      What the JMVM / Sapl experiments suggest for Clean, based on measurements of 13 November 2026
+      (Apple M4, one machine). The strongest argument is not speed.
+    </p>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi"><div class="val">~6 ms</div><div class="lbl">REPL start-up from a loaded <code>.jvb</code>; one small VM, the whole toolchain as bytecode</div></div>
+    <div class="kpi"><div class="val">0.95&times;</div><div class="lbl">Clean via Retag to C, vs. Clean native (12 small benchmarks)</div></div>
+    <div class="kpi"><div class="val">1.35&ndash;1.43&times;</div><div class="lbl">slower than Clean native on a large typed program (2,700 functions)</div></div>
+    <div class="kpi"><div class="val">&asymp; GHC</div><div class="lbl">on gen1 self-compile once GHC&rsquo;s nursery is tuned (226 vs. 234 ms)</div></div>
+  </div>
+
+  <h2>1. Recommendation</h2>
+  <div class="grid-2">
+    <div class="card ok">
+      <h3>Lead with the interpreter and toolchain</h3>
+      <p>One small VM, with compiler, linker, typechecker and REPL as bytecode running on it, on both
+        sides of the wire. That is what answers &ldquo;Clean in the browser&rdquo;, and no native backend
+        competes with it.</p>
+    </div>
+    <div class="card accent">
+      <h3>Treat native code as an add-on</h3>
+      <p>For servers or hot code where speed matters. It needs nothing changed in the VM, and on small
+        programs it reaches Clean native. On large typed code Clean&rsquo;s <code>cg</code> stays ahead.</p>
+    </div>
+  </div>
+
+  <h2>2. If TOP goes native: the lesson about the input</h2>
+  <p>
+    The level of the intermediate language mattered more than the backend. The same <code>clang -O2</code>
+    gave a C program that was 2.2&times; slower than Clean native when fed from stack-machine bytecode
+    (<code>jmvm2c</code>), and one that matches or beats it on small benchmarks when fed from a structured
+    form with named variables, explicit case trees and explicit thunks (Retag, via <code>sapl2c</code>).
+    ABC is stack code, like the JMVM bytecode. Whoever starts from ABC should expect to rebuild that structure
+    first, as <code>abc2retag</code> does.
+  </p>
+  <ul>
+    <li><strong>Keep the types.</strong> Retag is untyped, which is where the gap on large typed code comes from. A
+      type side file (annotations only, erasable) is the natural next step; it is untested. Upper bound
+      for the simplest form (tag checks removed on integer code): &minus;5.5% on ten safe benchmarks, up to &minus;17% on <code>fib</code>.</li>
+    <li><strong>Do not expect to beat <code>cg</code> on large typed programs.</strong> Clean native took 164&ndash;173 ms on
+      the typed self-compile, the Retag route 234 ms.</li>
+  </ul>
+
+  <h2>3. The numbers, and how to read them</h2>
+  <table>
+    <tr><th>Measurement</th><th class="num">Result</th><th>Reading</th></tr>
+    <tr><td>12 Clean benchmarks: Clean &rarr; ABC &rarr; Retag &rarr; C vs. Clean native</td><td class="num">0.95&times;</td><td>best case: short recursion, many small allocations</td></tr>
+    <tr><td>Typed self-compile (<code>gen1t</code>, 2,700 functions)</td><td class="num">234 vs. 164&ndash;173 ms</td><td>closer to a real program: lexing, parsing, ADT recursion</td></tr>
+    <tr><td><code>sapl2c</code> vs. GHC <code>-O2</code>, 13 benchmarks</td><td class="num">1.02&times;</td><td>on par</td></tr>
+    <tr><td>GHC self-compile, default vs. tuned nursery</td><td class="num">271 vs. 226 ms</td><td>about half of GHC&rsquo;s default time is GC</td></tr>
+  </table>
+  <p>
+    The benchmark average is not an average program. The two benchmarks that resemble a compiler
+    (<code>parsetest</code>, <code>eval</code>) are where the Retag route is slowest (1.4&ndash;1.75&times;), and the
+    self-compile lands in the same range.
+  </p>
+
+  <h2>4. What has not been measured</h2>
+  <ul>
+    <li>An iTasks-sized application: speed, and <strong>compile time</strong> (the typed self-compile is 3.7&nbsp;MB of C and takes 4.2&nbsp;s in <code>clang -O2</code>).</li>
+    <li>Parts of Clean the benchmarks do not use: uniqueness and arrays, records, <code>ccall</code>, dynamics.</li>
+    <li>The native route in WebAssembly, and compatibility of the heap and descriptor layout with the ABC interpreter (iTasks ships graphs between native server and browser).</li>
+    <li>Windows (<code>musttail</code> needs clang). One machine; Clean native ran in a Linux VM, with noise of 15&ndash;20% on some benchmarks.</li>
+  </ul>
+
+  <div class="callout">
+    <strong>Suggested next step with TOP:</strong> measure one real iTasks application through the existing
+    <code>abc2retag</code> route: speed, compile time and graph compatibility. A day of joint work would turn this
+    advice from a plausible argument into a measured one.
+  </div>
+
+  <footer>
+    Part of the JMVM &amp; Sapl factsheet series. Sources: <code>docs/2026-11-13_clean_via_abc2retag_sapl2c_meting.md</code>,
+    <a href="sapl2c_secret_factsheet.html">What is the secret behind sapl2c&rsquo;s performance?</a>
+    Maintained in <code>docs/2026-11-13_top_advice_factsheet.html</code>.
+  </footer>
+</div>
+
+<script>
+document.getElementById("themeBtn").addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme") ||
+    (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  const next = cur === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("websapl_theme", next); } catch (_) {}
+});
+</script>
+</body>
+</html>
