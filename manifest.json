@@ -594,7 +594,7 @@
           "path": "factsheets/index.html",
           "type": "file",
           "ext": ".html",
-          "size": 9199,
+          "size": 11952,
           "isBinary": false
         },
         {
@@ -614,6 +614,14 @@
           "isBinary": false
         },
         {
+          "name": "retag_format_factsheet.html",
+          "path": "factsheets/retag_format_factsheet.html",
+          "type": "file",
+          "ext": ".html",
+          "size": 20440,
+          "isBinary": false
+        },
+        {
           "name": "retag_opt_factsheet.html",
           "path": "factsheets/retag_opt_factsheet.html",
           "type": "file",
@@ -630,11 +638,35 @@
           "isBinary": false
         },
         {
+          "name": "sapl2c_competitive_performance_factsheet.html",
+          "path": "factsheets/sapl2c_competitive_performance_factsheet.html",
+          "type": "file",
+          "ext": ".html",
+          "size": 17592,
+          "isBinary": false
+        },
+        {
           "name": "sapl2c_native_factsheet.html",
           "path": "factsheets/sapl2c_native_factsheet.html",
           "type": "file",
           "ext": ".html",
           "size": 19782,
+          "isBinary": false
+        },
+        {
+          "name": "sapl2c_secret_factsheet.html",
+          "path": "factsheets/sapl2c_secret_factsheet.html",
+          "type": "file",
+          "ext": ".html",
+          "size": 12462,
+          "isBinary": false
+        },
+        {
+          "name": "sapl2c_translation_factsheet.html",
+          "path": "factsheets/sapl2c_translation_factsheet.html",
+          "type": "file",
+          "ext": ".html",
+          "size": 15487,
           "isBinary": false
         },
         {
@@ -2487,7 +2519,7 @@
               "path": "repl_sapl/build/mini_repl.jmvm",
               "type": "file",
               "ext": ".jmvm",
-              "size": 8215778,
+              "size": 8247796,
               "isBinary": false
             },
             {
@@ -2495,7 +2527,7 @@
               "path": "repl_sapl/build/mini_repl.jvb",
               "type": "file",
               "ext": ".jvb",
-              "size": 3054064,
+              "size": 3065352,
               "isBinary": true
             }
           ],
@@ -2554,7 +2586,7 @@
           "path": "sapl_compiler/stage5_codegen.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 77001,
+          "size": 82110,
           "isBinary": false
         }
       ],
