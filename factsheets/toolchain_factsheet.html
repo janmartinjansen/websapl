@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Factsheet: The Toolchain Is the Program (JMVM)</title>
+  <style>
+    /* ==========================================================================
+       Theming & CSS Variables (Aligned with WebSapl & Modern Tech Factsheets)
+       ========================================================================== */
+    :root, [data-theme="light"] {
+      --bg-primary: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-card: #ffffff;
+      --bg-card-subtle: #f1f5f9;
+      --bg-code: #0f172a;
+      --text-code: #f8fafc;
+      --border-color: #e2e8f0;
+      --border-focus: #3b82f6;
+
+      --text-primary: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+
+      --accent-blue: #2563eb;
+      --accent-blue-light: #eff6ff;
+      --accent-cyan: #0284c7;
+      --accent-emerald: #059669;
+      --accent-emerald-light: #ecfdf5;
+      --accent-amber: #d97706;
+      --accent-purple: #7c3aed;
+      --accent-rose: #e11d48;
+
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -1px rgba(0,0,0,0.04);
+      --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.1);
+      --gradient-brand: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+    }
+
+    [data-theme="dark"] {
+      --bg-primary: #090d16;
+      --bg-surface: #0f1422;
+      --bg-card: #131b2e;
+      --bg-card-subtle: #19233c;
+      --bg-code: #070a12;
+      --text-code: #e2e8f0;
+      --border-color: #222f4c;
+      --border-focus: #60a5fa;
+
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #8292ab;
+
+      --accent-blue: #3b82f6;
+      --accent-blue-light: rgba(59, 130, 246, 0.15);
+      --accent-cyan: #38bdf8;
+      --accent-emerald: #10b981;
+      --accent-emerald-light: rgba(16, 185, 129, 0.15);
+      --accent-amber: #f59e0b;
+      --accent-purple: #a855f7;
+      --accent-rose: #f43f5e;
+
+      --shadow-sm: 0 2px 4px rgba(0,0,0,0.4);
+      --shadow-md: 0 6px 12px rgba(0,0,0,0.5);
+      --shadow-lg: 0 16px 32px rgba(0,0,0,0.6);
+      --gradient-brand: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: 60px;
+    }
+
+    .container {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Header & Hero */
+    header.hero {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-color);
+      padding: 40px 0 32px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    header.hero::after {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: var(--gradient-brand);
+    }
+
+    .hero-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .badge-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-radius: 9999px;
+      background: var(--bg-card-subtle);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+    }
+
+    .badge.highlight {
+      background: var(--accent-blue-light);
+      color: var(--accent-blue);
+      border-color: var(--accent-blue);
+    }
+
+    .theme-toggle-btn {
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 6px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .theme-toggle-btn:hover {
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
+    .hero-title-group h1 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.8px;
+      margin-bottom: 10px;
+      background: var(--gradient-brand);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: inline-block;
+    }
+
+    .hero-lead {
+      font-size: 16px;
+      color: var(--text-secondary);
+      max-width: 980px;
+      line-height: 1.6;
+    }
+
+    /* Key stats bar */
+    .hero-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 28px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px 20px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .stat-card::before {
+      content: "";
+      position: absolute;
+      top: 12px;
+      left: 0;
+      width: 4px;
+      height: calc(100% - 24px);
+      border-radius: 0 4px 4px 0;
+      background: var(--accent-blue);
+    }
+
+    .stat-card.green::before { background: var(--accent-emerald); }
+    .stat-card.purple::before { background: var(--accent-purple); }
+    .stat-card.amber::before { background: var(--accent-amber); }
+
+    .stat-number {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    .stat-number small {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent-emerald);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .stat-sub {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    /* Navigation Anchors */
+    .nav-anchor-bar {
+      display: flex;
+      gap: 8px;
+      margin: 28px 0;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .nav-pill {
+      text-decoration: none;
+      color: var(--text-secondary);
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+
+    .nav-pill:hover {
+      color: var(--accent-blue);
+      border-color: var(--accent-blue);
+      background: var(--bg-card-subtle);
+    }
+
+    /* Sections */
+    .section-block {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 28px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .section-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--accent-blue);
+    }
+
+    .section-header-text h2 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: var(--text-primary);
+    }
+
+    .section-header-text p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: 3px;
+    }
+
+    /* Layout Grids */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .grid-2, .grid-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+    }
+
+    .card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-primary);
+    }
+
+    .card p, .card li {
+      font-size: 13.5px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    .card ul {
+      padding-left: 20px;
+      margin-top: 8px;
+    }
+
+    .card li {
+      margin-bottom: 6px;
+    }
+
+    /* Highlight Boxes */
+    .highlight-box {
+      background: var(--bg-card-subtle);
+      border-left: 3px solid var(--accent-blue);
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      margin: 14px 0;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .highlight-box.green {
+      border-left-color: var(--accent-emerald);
+      background: var(--accent-emerald-light);
+    }
+
+    .highlight-box.amber {
+      border-left-color: var(--accent-amber);
+      background: rgba(245, 158, 11, 0.1);
+    }
+
+    .highlight-box.purple {
+      border-left-color: var(--accent-purple);
+      background: rgba(168, 85, 247, 0.1);
+    }
+
+    /* Pipeline Flow */
+    .flow-wrapper {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      margin: 18px 0;
+    }
+
+    .flow-steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      position: relative;
+    }
+
+    .flow-step-box {
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+      position: relative;
+    }
+
+    .flow-step-box.highlight {
+      border-color: var(--accent-purple);
+      background: rgba(168, 85, 247, 0.1);
+    }
+
+    .flow-step-number {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--accent-cyan);
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .flow-step-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .flow-step-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      line-height: 1.35;
+    }
+
+    /* Code Blocks */
+    pre, code {
+      font-family: "SF Mono", "Fira Code", Menlo, Monaco, Consolas, monospace;
+    }
+
+    pre.code-block {
+      background: var(--bg-code);
+      color: var(--text-code);
+      padding: 14px 18px;
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1.5;
+      overflow-x: auto;
+      border: 1px solid var(--border-color);
+      margin: 12px 0;
+    }
+
+    .code-comment { color: #64748b; }
+    .code-keyword { color: #f43f5e; font-weight: 600; }
+    .code-func { color: #38bdf8; font-weight: 600; }
+    .code-type { color: #a855f7; }
+    .code-str { color: #10b981; }
+
+    /* Print Styles */
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-size: 10pt;
+        padding: 0;
+      }
+      header.hero {
+        background: transparent !important;
+        border-bottom: 2px solid #000;
+        padding: 10px 0 15px;
+      }
+      .theme-toggle-btn, .nav-anchor-bar {
+        display: none !important;
+      }
+      .section-block {
+        border: 1px solid #ccc !important;
+        background: #fff !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+        margin-bottom: 16px;
+        padding: 16px;
+      }
+      .card {
+        border: 1px solid #ddd !important;
+        background: #fafafa !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+      }
+    }
+  
+    /* ==========================================================================
+       Toolchain factsheet additions
+       ========================================================================== */
+    .back-link { color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 600; display: inline-block; margin-bottom: 14px; }
+    .back-link:hover { color: var(--accent-blue); }
+
+    .bar-row { display: grid; grid-template-columns: 230px 1fr 150px; gap: 14px; align-items: center; margin: 10px 0; }
+    .bar-label { font-size: 13.5px; color: var(--text-secondary); }
+    .bar-track { background: var(--bg-card-subtle); border-radius: 6px; height: 26px; overflow: hidden; border: 1px solid var(--border-color); }
+    .bar-fill { height: 100%; border-radius: 5px; }
+    .bar-fill.grey { background: #8a97a8; }
+    .bar-fill.blue { background: var(--accent-blue); }
+    .bar-fill.orange { background: #d9622b; }
+    .bar-value { font-family: "SF Mono", "Fira Code", Menlo, Consolas, monospace; font-size: 13px; color: var(--text-primary); }
+    @media (max-width: 700px) { .bar-row { grid-template-columns: 1fr; gap: 4px; } }
+
+    .layer { border-left: 5px solid var(--accent-blue); background: var(--accent-blue-light); border-radius: 0 8px 8px 0; padding: 10px 14px; margin-bottom: 10px; }
+    .layer.c { border-left-color: #d9622b; background: rgba(217, 98, 43, 0.12); }
+    .layer.sys { border-left-color: #8a97a8; background: rgba(138, 151, 168, 0.14); }
+    .layer strong { display: block; font-size: 14px; color: var(--text-primary); }
+    .layer span { font-size: 12.5px; color: var(--text-secondary); }
+    .legend { font-size: 12.5px; color: var(--text-muted); margin-top: 8px; }
+    .legend .lb { color: var(--accent-blue); font-weight: 700; }
+    .legend .lo { color: #d9622b; font-weight: 700; }
+
+    table.facts { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    table.facts th, table.facts td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border-color); vertical-align: top; }
+    table.facts th { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); background: var(--bg-card-subtle); }
+    table.facts td:first-child { font-weight: 700; white-space: nowrap; color: var(--text-primary); }
+    table.facts td { color: var(--text-secondary); }
+
+    .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .pill { font-size: 12.5px; font-weight: 600; padding: 5px 14px; border-radius: 9999px; border: 1px solid var(--accent-blue); color: var(--accent-blue); background: var(--bg-card-subtle); }
+    .footnote { font-size: 12px; color: var(--text-muted); margin-top: 12px; }
+    .vm-frame { border: 2px solid #d9622b; border-radius: 14px; padding: 16px 18px; background: var(--bg-card); margin: 18px 0; }
+    .vm-frame .vm-tag { font-family: "SF Mono", "Fira Code", Menlo, Consolas, monospace; font-size: 12px; font-weight: 700; color: #d9622b; margin-bottom: 10px; }
+    @media print { .back-link { display: none !important; } }
+  </style>
+</head>
+<body>
+
+  <!-- ==========================================================================
+       HERO HEADER & KEY NUMBERS
+       ========================================================================== -->
+  <header class="hero">
+    <div class="container">
+      <a class="back-link" href="index.html">&larr; All factsheets</a>
+      <div class="hero-top-bar">
+        <div class="badge-group">
+          <span class="badge highlight">Toolchain Factsheet</span>
+          <span class="badge">One VM in C, everything else in Sapl</span>
+          <span class="badge">Self-hosting compiler</span>
+          <span class="badge">Same VM native and in WebAssembly</span>
+        </div>
+        <button class="theme-toggle-btn" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle theme">
+          <span id="themeIcon">☀️</span> <span id="themeLabel">Light Mode</span>
+        </button>
+      </div>
+
+      <div class="hero-title-group">
+        <h1>The Toolchain Is the Program</h1>
+        <p class="hero-lead">
+          Most comparisons between functional language implementations stop at speed. This factsheet looks at a different axis:
+          how easily the language can be used, and how easily its toolchain can be built into an application, a browser page or a notebook.
+          In the JMVM the only C is <strong>one small virtual machine</strong>. The compiler, linker, typechecker and REPL are
+          <strong>bytecode that runs on it</strong>, wherever it runs.
+        </p>
+      </div>
+
+      <div class="hero-stats-grid">
+        <div class="stat-card amber">
+          <div class="stat-number">65 KB <small>gzipped</small></div>
+          <div class="stat-label">The VM as WebAssembly</div>
+          <div class="stat-sub">150 KB uncompressed</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">128 KB <small>gzipped</small></div>
+          <div class="stat-label">The Sapl compiler as bytecode</div>
+          <div class="stat-sub">A Sapl program, compiled by itself</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-number">524 KB <small>gzipped</small></div>
+          <div class="stat-label">The whole REPL</div>
+          <div class="stat-sub">Preprocessor, module compiler and typechecker</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-number">6 ms <small>start</small></div>
+          <div class="stat-label">REPL start-up</div>
+          <div class="stat-sub">About 12 ms to compile a small program</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <nav class="nav-anchor-bar">
+      <a href="#speed" class="nav-pill">1. Speed: the usual comparison</a>
+      <a href="#stacks" class="nav-pill">2. Where the C lives</a>
+      <a href="#numbers" class="nav-pill">3. How big is "everything"?</a>
+      <a href="#runtime" class="nav-pill">4. Compiling is a function call</a>
+      <a href="#notebooks" class="nav-pill">5. Notebooks come free</a>
+      <a href="#wire" class="nav-pill">6. One VM on both sides of the wire</a>
+      <a href="#costs" class="nav-pill">7. What it costs</a>
+    </nav>
+
+    <!-- SECTION 1: SPEED -->
+    <section class="section-block" id="speed">
+      <div class="section-header">
+        <div class="section-icon">⏱️</div>
+        <div class="section-header-text">
+          <h2>1. Judged on speed alone, native Clean wins</h2>
+          <p>A factor of two to three is the price of the JMVM. The question is what it buys.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="bar-row">
+          <div class="bar-label">Clean, native ARM64</div>
+          <div class="bar-track"><div class="bar-fill grey" style="width: 30%"></div></div>
+          <div class="bar-value">107 ms · 1.0×</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">Clean ABC interpreter (abci)</div>
+          <div class="bar-track"><div class="bar-fill blue" style="width: 66%"></div></div>
+          <div class="bar-value">235 ms · 2.2×</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">JMVM, with superinstructions</div>
+          <div class="bar-track"><div class="bar-fill orange" style="width: 100%"></div></div>
+          <div class="bar-value">356 ms · 3.3×</div>
+        </div>
+        <p class="footnote">Geometric mean over 14 programs (12 core benchmarks, eval2, gen1), Apple M4, best of 7 runs. Own measurements, from <code>experiments/clean_vergelijking</code>.</p>
+      </div>
+
+      <div class="grid-2" style="margin-top: 20px;">
+        <div class="card">
+          <h3>Allocation-heavy code</h3>
+          <p>On programs dominated by allocation, such as <code>twice</code>, the gap is small: <strong>1.4×</strong> for the JMVM, and about equal for abci.</p>
+        </div>
+        <div class="card">
+          <h3>Strict integer recursion</h3>
+          <p>On <code>fib</code>, <code>knights</code> and <code>eval</code>, native Clean keeps numbers in registers and is <strong>six to ten times faster</strong> than the JMVM.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: STACKS -->
+    <section class="section-block" id="stacks">
+      <div class="section-header">
+        <div class="section-icon">🧱</div>
+        <div class="section-header-text">
+          <h2>2. Where the C lives</h2>
+          <p>What each toolchain is made of, and in which language each part is written.</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>Clean 5.1</h3>
+          <div class="layer"><strong>Frontend and typechecker</strong><span>Clean · about 77,000 lines</span></div>
+          <div class="layer c"><strong>ABC generator and strictness analysis</strong><span>C · about 47,000 lines</span></div>
+          <div class="layer c"><strong>Native code generator (cg)</strong><span>C · one backend per platform</span></div>
+          <div class="layer c"><strong>Runtime and garbage collector</strong><span>C and assembly · per platform</span></div>
+          <div class="layer sys"><strong>Linker</strong><span>The system's linker</span></div>
+        </div>
+        <div class="card">
+          <h3>JMVM</h3>
+          <div class="layer"><strong>Preprocessor and typechecker</strong><span>Sapl · about 11,000 lines</span></div>
+          <div class="layer"><strong>Compiler (gen1, self-hosting)</strong><span>Sapl · about 11,000 lines</span></div>
+          <div class="layer"><strong>Linker</strong><span>Sapl · 589 lines</span></div>
+          <div class="layer"><strong>REPL and notebook kernel</strong><span>Sapl</span></div>
+          <div class="layer c"><strong>VM</strong><span>C++ · about 12,000 lines · one source, native and wasm</span></div>
+        </div>
+      </div>
+      <p class="legend"><span class="lb">Blue</span>: written in the language itself. <span class="lo">Orange</span>: C, or specific to a platform. Grey: the system's own tools.</p>
+
+      <div class="highlight-box">
+        Clean's frontend has been written in Clean since Clean 2.0, but code generation stayed in C: the ABC generator, and below it a native code generator and runtime for every platform.
+        In the JMVM the only C is the VM. Everything above it is Sapl, compiled by itself.
+      </div>
+    </section>
+
+    <!-- SECTION 3: NUMBERS -->
+    <section class="section-block" id="numbers">
+      <div class="section-header">
+        <div class="section-icon">📏</div>
+        <div class="section-header-text">
+          <h2>3. How big is "everything"?</h2>
+          <p>Sizes of the files in the repository today.</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>65 KB</h3>
+          <p>The VM as WebAssembly, gzipped (150 KB uncompressed).</p>
+        </div>
+        <div class="card">
+          <h3>128 KB</h3>
+          <p>The Sapl compiler as bytecode, gzipped.</p>
+        </div>
+        <div class="card">
+          <h3>524 KB</h3>
+          <p>The whole REPL, gzipped: preprocessor, module compiler and typechecker.</p>
+        </div>
+        <div class="card">
+          <h3>6 ms</h3>
+          <p>To start the REPL; about 12 ms to compile a small program.</p>
+        </div>
+      </div>
+
+      <div class="highlight-box green">
+        The binary <code>.jvb</code> format means that loading is reading words, not parsing text. That is why the REPL starts in milliseconds.
+      </div>
+    </section>
+
+    <!-- SECTION 4: RUNTIME -->
+    <section class="section-block" id="runtime">
+      <div class="section-header">
+        <div class="section-icon">⚙️</div>
+        <div class="section-header-text">
+          <h2>4. Compiling is just a function call</h2>
+          <p>An application embeds the VM and loads the toolchain as ordinary bytecode.</p>
+        </div>
+      </div>
+
+      <div class="vm-frame">
+        <div class="vm-tag">one JMVM process (C)</div>
+        <div class="flow-steps-grid">
+          <div class="flow-step-box">
+            <div class="flow-step-number">Step 1</div>
+            <div class="flow-step-title">Your code</div>
+            <div class="flow-step-desc">A cell, for example <code>cell.spp</code></div>
+          </div>
+          <div class="flow-step-box highlight">
+            <div class="flow-step-number" style="color: var(--accent-purple);">Step 2</div>
+            <div class="flow-step-title">Preprocess + typecheck</div>
+            <div class="flow-step-desc">Sapl, loaded from a <code>.jvb</code> file</div>
+          </div>
+          <div class="flow-step-box highlight">
+            <div class="flow-step-number" style="color: var(--accent-purple);">Step 3</div>
+            <div class="flow-step-title">Compile (gen1)</div>
+            <div class="flow-step-desc">Sapl, loaded from a <code>.jvb</code> file</div>
+          </div>
+          <div class="flow-step-box highlight">
+            <div class="flow-step-number" style="color: var(--accent-purple);">Step 4</div>
+            <div class="flow-step-title">Link</div>
+            <div class="flow-step-desc">Sapl, loaded from a <code>.jvb</code> file</div>
+          </div>
+          <div class="flow-step-box highlight">
+            <div class="flow-step-number" style="color: var(--accent-emerald);">Step 5</div>
+            <div class="flow-step-title">Run</div>
+            <div class="flow-step-desc">The same VM</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>What this means</h3>
+          <ul>
+            <li>Users write code; the application compiles, links and runs it <strong>in the same process</strong>.</li>
+            <li>No C compiler, no system linker, no step that depends on the platform.</li>
+            <li>Every step except the VM itself is a Sapl program loaded from a <code>.jvb</code> file.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>The same holds in a browser tab</h3>
+          <p>WebSapl compiles in a web worker. That is also why the REPL, the notebook and the Workbench need <strong>nothing installed beyond the VM</strong>.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 5: NOTEBOOKS -->
+    <section class="section-block" id="notebooks">
+      <div class="section-header">
+        <div class="section-icon">📓</div>
+        <div class="section-header-text">
+          <h2>5. Notebooks and interactive documents come free</h2>
+          <p>The notebook kernel is the REPL, and the REPL is just a Sapl program.</p>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <h3 style="color: var(--accent-blue);">Cells compile in the page</h3>
+          <p>Each cell goes through the same preprocessor, typechecker and compiler, in a browser worker. No server needed.</p>
+        </div>
+        <div class="card">
+          <h3 style="color: var(--accent-purple);">Live and interactive</h3>
+          <p>Cells that react to input, plots, graphics and CSV data from Sapl libraries. Values survive between sessions.</p>
+        </div>
+        <div class="card">
+          <h3 style="color: var(--accent-emerald);">One notebook, two engines</h3>
+          <p>In WebSapl on wasm, or in the Workbench with a native process and real files. Heavy work can move to a server.</p>
+        </div>
+      </div>
+
+      <div class="highlight-box purple">
+        Nothing in the notebook was built as a separate product. It is the REPL in notebook mode, running the same compiler that builds everything else.
+        Interactive cells, saved values and the server compute process are all Sapl on top of that.
+        See also the <a href="notebooks_factsheet.html" style="color: var(--accent-purple);">notebooks factsheet</a>.
+      </div>
+    </section>
+
+    <!-- SECTION 6: WIRE -->
+    <section class="section-block" id="wire">
+      <div class="section-header">
+        <div class="section-icon">🔌</div>
+        <div class="section-header-text">
+          <h2>6. One VM on both sides of the wire</h2>
+          <p>Moving code and data between a server and a client.</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>Clean: lazy interworking</h3>
+          <p>Native code on the server, the ABC interpreter in the client. Graphs, unevaluated parts included, move between them, and missing code is fetched when needed. Elegant, and rare among languages.</p>
+          <div class="highlight-box amber">The price: two representations, and a bridge between them.</div>
+        </div>
+        <div class="card">
+          <h3>JMVM: nothing to translate</h3>
+          <p>The same VM, bytecode and heap layout on the server (native) and in the client (wasm).</p>
+          <div class="highlight-box green">Already there: <code>.jvb</code> code units, a linker in Sapl, and saving and restoring values.</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 20px;">
+        <h3>Still to build</h3>
+        <div class="pill-row">
+          <span class="pill">send unevaluated thunks</span>
+          <span class="pill">fetch missing code by hash</span>
+          <span class="pill">typed unpacking</span>
+        </div>
+      </div>
+
+      <div class="highlight-box">
+        <strong>Context.</strong> Clean's approach is described in "Lazy interworking of compiled and interpreted code for sandboxing and distributed systems" (Staps, van Groningen, Plasmeijer, IFL 2019).
+        Other languages share code at build time and send only data (JavaScript with Node), need the same module loaded on both ends (Erlang), or only send static closures between identical binaries (Cloud Haskell).
+        Unison comes closest, with code addressed by hash, but it is strict.
+      </div>
+    </section>
+
+    <!-- SECTION 7: COSTS -->
+    <section class="section-block" id="costs">
+      <div class="section-header">
+        <div class="section-icon">⚖️</div>
+        <div class="section-header-text">
+          <h2>7. What it costs</h2>
+          <p>An honest comparison has to name these.</p>
+        </div>
+      </div>
+
+      <div class="card" style="padding: 0; overflow: hidden;">
+        <table class="facts">
+          <tr><th style="width: 18%;">Area</th><th>Where we stand</th></tr>
+          <tr><td>Speed</td><td>Two to three times slower than native Clean, and it will stay that way.</td></tr>
+          <tr><td>Types</td><td>Sapl's typechecker only warns. Haskell lite still has gaps (<code>Foldable</code>, <code>infixl</code>).</td></tr>
+          <tr><td>Ecosystem</td><td>Few libraries, little documentation outside this repository, few users.</td></tr>
+          <tr><td>Pitfalls</td><td>Some mistakes in Sapl still compile silently, such as <code>==</code> on strings.</td></tr>
+        </table>
+      </div>
+
+      <div class="highlight-box amber" style="margin-top: 20px;">
+        Speed matters for heavy computation. For the applications we have in mind, such as command and control, notebooks and teaching,
+        <strong>the time goes into people and the network, not arithmetic.</strong>
+      </div>
+
+      <div class="highlight-box green">
+        <strong>Conclusion: port the VM once, and everything else comes along.</strong>
+        The toolchain, the REPL, the notebooks, and the languages on top: Sapl, Sapl+, Haskell lite, MicroHs, and Clean through ABC.
+        A new platform needs a C++ compiler for the VM, and nothing else. That is the advantage Clean's ABC interpreter aims for too, but there the compiler itself still contains C.
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    function setThemeUI(theme) {
+      var icon = document.getElementById('themeIcon');
+      var label = document.getElementById('themeLabel');
+      if (theme === 'dark') { icon.textContent = '☀️'; label.textContent = 'Light Mode'; }
+      else { icon.textContent = '🌙'; label.textContent = 'Dark Mode'; }
+    }
+    function toggleTheme() {
+      var html = document.documentElement;
+      var next = (html.getAttribute('data-theme') || 'dark') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      setThemeUI(next);
+      try { localStorage.setItem('jmvm-toolchain-factsheet-theme', next); } catch (e) {}
+    }
+    (function () {
+      try {
+        var saved = localStorage.getItem('jmvm-toolchain-factsheet-theme');
+        if (saved) { document.documentElement.setAttribute('data-theme', saved); setThemeUI(saved); }
+      } catch (e) {}
+    })();
+  </script>
+</body>
+</html>

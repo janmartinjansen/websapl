@@ -578,7 +578,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 48892,
+        "size": 48906,
         "isBinary": false
       },
       {
@@ -594,7 +594,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/index.html",
         "type": "file",
         "ext": ".html",
-        "size": 8481,
+        "size": 9199,
         "isBinary": false
       },
       {
@@ -610,7 +610,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/performance_factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 67101,
+        "size": 67180,
         "isBinary": false
       },
       {
@@ -626,7 +626,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/sapl_jmvm_clean_haskell_factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 103810,
+        "size": 104020,
         "isBinary": false
       },
       {
@@ -634,7 +634,23 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/sapl2c_native_factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 19381,
+        "size": 19782,
+        "isBinary": false
+      },
+      {
+        "name": "superseded_experiments_factsheet.html",
+        "path": "factsheets/superseded_experiments_factsheet.html",
+        "type": "file",
+        "ext": ".html",
+        "size": 13108,
+        "isBinary": false
+      },
+      {
+        "name": "toolchain_factsheet.html",
+        "path": "factsheets/toolchain_factsheet.html",
+        "type": "file",
+        "ext": ".html",
+        "size": 32814,
         "isBinary": false
       }
     ],
