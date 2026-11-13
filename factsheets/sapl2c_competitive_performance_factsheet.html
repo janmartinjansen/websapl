@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>How Can a Simple, Small Compiler Compete with Haskell and Clean?</title>
+<meta name="description" content="Analysis of why sapl2c (~1,150 lines of Python / ~1,800 lines of Sapl) matches GHC -O2 (1.02x) and outperforms Clean native (0.87x) across 13 core benchmarks.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script>
+  try {
+    const t = localStorage.getItem("websapl_theme");
+    if (t) document.documentElement.setAttribute("data-theme", t);
+  } catch (_) {}
+</script>
+<style>
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --fg: #1b2230;
+  --muted: #5a6475;
+  --line: #d9dee6;
+  --accent: #1f5f8b;
+  --accent-soft: #e3eef6;
+  --ok: #2c6b45;
+  --ok-soft: #e3f2e8;
+  --warn: #9a5b00;
+  --warn-soft: #fbf0de;
+  --purple: #6d28d9;
+  --purple-soft: #f3e8ff;
+  --f-display: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161d;
+    --surface: #1a2029;
+    --fg: #e4e8ee;
+    --muted: #9aa5b6;
+    --line: #2d3542;
+    --accent: #7db7e0;
+    --accent-soft: #1d3346;
+    --ok: #7fcf9c;
+    --ok-soft: #173025;
+    --warn: #e7b25c;
+    --warn-soft: #3a2c14;
+    --purple: #c084fc;
+    --purple-soft: #2e1d47;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161d;
+  --surface: #1a2029;
+  --fg: #e4e8ee;
+  --muted: #9aa5b6;
+  --line: #2d3542;
+  --accent: #7db7e0;
+  --accent-soft: #1d3346;
+  --ok: #7fcf9c;
+  --ok-soft: #173025;
+  --warn: #e7b25c;
+  --warn-soft: #3a2c14;
+  --purple: #c084fc;
+  --purple-soft: #2e1d47;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15.5px/1.62 var(--f-body);
+}
+.wrap { max-width: 980px; margin: 0 auto; padding: 32px 20px 64px; }
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; font-size: 14px; }
+.topbar a { color: var(--muted); text-decoration: none; }
+.topbar a:hover { color: var(--accent); }
+.theme-btn {
+  background: var(--surface); color: var(--fg); border: 1px solid var(--line);
+  border-radius: 6px; padding: 5px 11px; font: 13px var(--f-body); cursor: pointer;
+}
+header { border-bottom: 2px solid var(--line); padding-bottom: 18px; margin-bottom: 26px; }
+.eyebrow {
+  font: 600 12px/1.2 var(--f-mono); text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--ok); margin-bottom: 8px;
+}
+h1 { font: 700 32px/1.15 var(--f-display); margin: 0 0 10px; letter-spacing: -0.01em; }
+.lead { color: var(--muted); font-size: 16.5px; margin: 0; max-width: 74ch; }
+h2 { font: 700 22px/1.25 var(--f-display); margin: 34px 0 12px; }
+h3 { font: 600 16.5px/1.3 var(--f-display); margin: 0 0 8px; }
+p { margin: 0 0 12px; }
+ul { margin: 6px 0 14px; padding-left: 20px; }
+li { margin: 4px 0; }
+code { font-family: var(--f-mono); font-size: 0.88em; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+a { color: var(--accent); }
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 20px 0 28px; }
+@media (max-width: 760px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.kpi {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px;
+}
+.kpi .val { font: 700 26px/1.1 var(--f-display); color: var(--accent); }
+.kpi .lbl { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 14px 0; }
+@media (max-width: 760px) { .grid-2 { grid-template-columns: 1fr; } }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 18px 20px;
+}
+.card.ok { border-top: 3px solid var(--ok); }
+.card.accent { border-top: 3px solid var(--accent); }
+.card.warn { border-top: 3px solid var(--warn); }
+.card.purple { border-top: 3px solid var(--purple); }
+table {
+  width: 100%; border-collapse: collapse; margin: 16px 0; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 8px; overflow: hidden; font-size: 14px;
+}
+th, td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { background: var(--accent-soft); font-weight: 600; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tr:last-child td { border-bottom: none; }
+.win { color: var(--ok); font-weight: 600; }
+.callout {
+  background: var(--ok-soft); border-left: 3px solid var(--ok);
+  padding: 12px 15px; border-radius: 0 8px 8px 0; margin: 16px 0; font-size: 14.5px;
+}
+footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a href="index.html">&larr; Factsheets</a>
+    <button class="theme-btn" id="themeBtn" type="button">Theme</button>
+  </div>
+
+  <header>
+    <div class="eyebrow">Performance Analysis &bull; sapl2c vs. Clean &amp; GHC</div>
+    <h1>How Can a Simple, Small Compiler Be Competitive with Haskell and Clean?</h1>
+    <p class="lead">
+      <code>sapl2c</code> is 1,146 lines of Python (or 1,809 lines of Sapl) plus an 818-line C runtime header
+      &mdash; orders of magnitude smaller than GHC or Clean&rsquo;s native code generator. Yet on Apple M4
+      it matches GHC <code>-O2</code> (1.02&times;) and beats Clean native (0.87&times;). Here is why.
+    </p>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi">
+      <div class="val">0.87&times;</div>
+      <div class="lbl"><code>sapl2c</code> vs. Clean 3.1 native (12-benchmark geomean)</div>
+    </div>
+    <div class="kpi">
+      <div class="val">1.02&times;</div>
+      <div class="lbl"><code>sapl2c</code> vs. GHC 9.14.1 <code>-O2</code> (13-benchmark geomean)</div>
+    </div>
+    <div class="kpi">
+      <div class="val">248 ms</div>
+      <div class="lbl"><code>gen1</code> self-compilation (vs. GHC 295 ms, Clean untyped 305 ms)</div>
+    </div>
+    <div class="kpi">
+      <div class="val">~1,964 LOC</div>
+      <div class="lbl"><code>sapl_naar_c.py</code> (1,146) + <code>rt.h</code> (818)</div>
+    </div>
+  </div>
+
+  <h2>1. Six Reasons a Small Compiler Keeps Up with Giants</h2>
+  <div class="grid-2">
+    <div class="card ok">
+      <h3>1. Piggybacking on <code>clang -O2</code> at Function Level</h3>
+      <p>
+        GHC and Clean maintain huge, decades-old native backends for register allocation, instruction
+        selection, and branch layout. <code>sapl2c</code> emits structured C <em>one function per Sapl
+        function</em> from <a href="retag_format_factsheet.html">Stage-4 Retag</a>, so <code>clang</code> sees
+        whole functions, named locals, and <code>case</code> switches &mdash; doing the heavy silicon tuning
+        for free.
+      </p>
+    </div>
+
+    <div class="card accent">
+      <h3>2. Two-Register Return &amp; Uniform <code>MUSTTAIL</code> ABI</h3>
+      <p>
+        Every function has the same signature: <code>R f(hp, sp, a0..a5)</code> where <code>R = {v, hp}</code>
+        returns both value and heap pointer in hardware registers. Every tail call compiles to a direct
+        jump (all 1,368 tail calls in <code>gen1</code> verified as jumps), and self-recursion loops via
+        <code>goto top</code>.
+      </p>
+    </div>
+
+    <div class="card purple">
+      <h3>3. Tagged Primitives + Non-Pointer Proofs</h3>
+      <p>
+        2-bit tag bits keep integers, chars, and booleans unboxed without static type annotations.
+        Crucially, <code>sapl2c</code>&rsquo;s flow-sensitive non-pointer analysis (<code>int</code>,
+        <code>non-pointer</code>, <code>any</code>) proves when locals cannot hold heap pointers, eliminating
+        shadow-stack spills on hot numeric loops (zero spills in <code>fib</code>).
+      </p>
+    </div>
+
+    <div class="card warn">
+      <h3>4. L1-Friendly Growing Cheney Nursery</h3>
+      <p>
+        Cheney copying allocation is just <code>hp += N</code>. Starting the heap at 8 MB (and growing 4&times;
+        only when &gt;10% survives GC) keeps the active nursery hot in CPU cache &mdash; unlike a 192 MB fixed
+        arena. That change alone cut <code>sprimes</code> by 45%, <code>match</code>/<code>prolog</code> by
+        21%, and <code>hamming</code> by 18%.
+      </p>
+    </div>
+
+    <div class="card accent">
+      <h3>5. Coalesced Heap Checks &amp; Inline <code>EVALK</code></h3>
+      <p>
+        Straight-line allocations are merged into a single <code>HEAPFULL(N)</code> check, and shadow-stack
+        saves happen only on the slow GC path. Already-evaluated values pass <code>EVALK</code> with a single
+        inline tag test, avoiding function-call overhead.
+      </p>
+    </div>
+
+    <div class="card ok">
+      <h3>6. <code>gen1</code> Already Did the Functional Heavy Lifting</h3>
+      <p>
+        <code>sapl2c</code> does not need its own strictness analyzer or lambda lifter: <code>gen1</code>&rsquo;s
+        Stage-4 Retag already encodes strictness (<code>!</code>), lifted helpers, CAFs (<code>=:</code>), and
+        local cheap-thunk elimination (<code>tagLazyMaybe</code>, #157).
+      </p>
+    </div>
+  </div>
+
+  <h2>2. Where <code>sapl2c</code> Wins &mdash; and Where Clean/GHC Still Lead</h2>
+  <p>
+    Apple M4 measurements in ms (from <a href="sapl2c_native_factsheet.html">Sapl to Native C</a>, 12 Nov 2026):
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th>Benchmark</th>
+        <th class="num"><code>sapl2c</code></th>
+        <th class="num">Clean 3.1</th>
+        <th class="num">GHC <code>-O2</code></th>
+        <th class="num">vs. Clean</th>
+        <th class="num">vs. GHC</th>
+        <th>Why</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>knights</code></td>
+        <td class="num win">11.5</td><td class="num">14</td><td class="num">29</td>
+        <td class="num win">0.82&times;</td><td class="num win">0.40&times;</td>
+        <td>Fast Cheney bump allocation + direct <code>MUSTTAIL</code> calls</td>
+      </tr>
+      <tr>
+        <td><code>hamming</code></td>
+        <td class="num win">77</td><td class="num">133</td><td class="num">105</td>
+        <td class="num win">0.58&times;</td><td class="num win">0.73&times;</td>
+        <td>Cache-hot 8 MB nursery + coalesced thunk/Cons allocation</td>
+      </tr>
+      <tr>
+        <td><code>sprimes</code></td>
+        <td class="num win">134</td><td class="num">234</td><td class="num">170</td>
+        <td class="num win">0.57&times;</td><td class="num win">0.79&times;</td>
+        <td>Growing heap (−45% vs fixed heap) + inline tag checks</td>
+      </tr>
+      <tr>
+        <td><code>queens</code></td>
+        <td class="num win">28</td><td class="num">50</td><td class="num">27</td>
+        <td class="num win">0.56&times;</td><td class="num">1.04&times;</td>
+        <td><code>tagLazyMaybe</code> + unboxed tagged arithmetic</td>
+      </tr>
+      <tr>
+        <td><code>fib</code></td>
+        <td class="num">91</td><td class="num">90</td><td class="num">97</td>
+        <td class="num">1.01&times;</td><td class="num win">0.94&times;</td>
+        <td>Zero shadow-stack spills; only 1 tag test per op (74 ms without)</td>
+      </tr>
+      <tr>
+        <td><code>eval</code></td>
+        <td class="num">62</td><td class="num">47</td><td class="num">72</td>
+        <td class="num">1.32&times;</td><td class="num win">0.86&times;</td>
+        <td>Clean avoids per-step <code>SNil</code>/thunk allocation in <code>evol</code></td>
+      </tr>
+      <tr>
+        <td><code>prolog</code> / <code>match</code></td>
+        <td class="num">52 / 57</td><td class="num">62 / 74</td><td class="num">32 / 44</td>
+        <td class="num win">0.84 / 0.77&times;</td><td class="num">1.62 / 1.30&times;</td>
+        <td>GHC&rsquo;s static-type unboxing &amp; worker/wrapper specialization</td>
+      </tr>
+      <tr>
+        <td><code>twice</code></td>
+        <td class="num">408</td><td class="num">353</td><td class="num">250</td>
+        <td class="num">1.16&times;</td><td class="num">1.63&times;</td>
+        <td>Unknown-function PAP/over-application + deep thunk return predictor</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>3. Apples-to-Apples: Self-Compiling <code>gen1</code></h2>
+  <p>
+    When Clean and GHC run the <em>exact same untyped <code>Val</code> representation</em> as Sapl,
+    <code>sapl2c</code> is the fastest of all three:
+  </p>
+  <table>
+    <thead>
+      <tr><th>Compiler / Port</th><th class="num">Self-compile time (ms)</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Clean native, typed Clean port</td><td class="num">166</td><td>Static types keep numbers unboxed without tag checks</td></tr>
+      <tr><td><strong><code>sapl2c</code> native (Sapl <code>gen1</code>)</strong></td><td class="num win"><strong>248</strong></td><td>Untyped runtime, tagged ints, 2.9 MB C (4.1 s build)</td></tr>
+      <tr><td>GHC <code>-O2</code>, typed Haskell port</td><td class="num">295</td><td>Full GHC optimizing pipeline</td></tr>
+      <tr><td>Clean native, untyped (<code>Val</code>) port</td><td class="num">305</td><td>Same representation as Sapl</td></tr>
+      <tr><td>GHC <code>-O2</code>, untyped port</td><td class="num">346</td><td>Same representation as Sapl</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <strong>The Takeaway:</strong> You do not need a 100,000-line custom code generator to compete with GHC
+    and Clean. A crisp, explicit Stage-4 Retag IR + a cache-friendly Cheney nursery + non-pointer spill
+    elimination + a uniform <code>MUSTTAIL</code> ABI lets <code>clang -O2</code> close the gap in under
+    2,000 lines of code.
+  </div>
+
+  <footer>
+    Part of the JMVM &amp; Sapl factsheet series. Maintained in <code>docs/2026-11-13_sapl2c_competitive_performance_factsheet.html</code>.
+  </footer>
+</div>
+
+<script>
+document.getElementById("themeBtn").addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme") ||
+    (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  const next = cur === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("websapl_theme", next); } catch (_) {}
+});
+</script>
+</body>
+</html>

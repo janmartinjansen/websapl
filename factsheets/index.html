@@ -147,6 +147,15 @@
         <span class="go">Open &rarr;</span>
       </a>
 
+      <a class="card" href="sapl2c_competitive_performance_factsheet.html" style="--card-color: var(--c2);">
+        <h2>How can a simple, small compiler compete with Haskell and Clean?</h2>
+        <p>Why <code>sapl2c</code> (~2,000 LOC) matches GHC <code>-O2</code> (1.02&times;) and beats Clean native
+          (0.87&times;): whole-function C for <code>clang -O2</code>, <code>MUSTTAIL</code> + 2-register ABI,
+          non-pointer spill elimination, cache-hot 8 MB Cheney nursery, and where GHC/Clean still lead.</p>
+        <div class="tags"><span class="tag">sapl2c</span><span class="tag">performance</span><span class="tag">GHC</span><span class="tag">Clean</span></div>
+        <span class="go">Open &rarr;</span>
+      </a>
+
       <a class="card" href="toolchain_factsheet.html" style="--card-color: var(--c1);">
         <h2>The toolchain is the program: one VM, everything else in Sapl</h2>
         <p>Why the JMVM&rsquo;s only C is one small VM, and what that buys: the compiler, linker, typechecker and
