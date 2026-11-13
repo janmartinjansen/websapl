@@ -804,15 +804,16 @@ mkCaseArgsCons v vs2 fields =
 // is a lazy placeholder; a strict binding needs a real value right away).
 genLet prog adts fname args ls b =
   let extendedArgs = append (map letBindingToArg ls) args,
-      allLetNames = map lbNameOf ls,
       paramNames = map argNameOf args,
-      phaseAResult = phaseASort ls allLetNames paramNames,
+      phaseAResult = phaseASort ls (buildNameSet paramNames),
       phaseAOrder = sortResolved phaseAResult,
       residual = sortResidual phaseAResult,
-      availAfterA = append paramNames (map lbNameOf phaseAOrder),
-      phaseBOrder = genLetPhaseB residual allLetNames availAfterA,
+      availSet = buildNameSet (append paramNames (map lbNameOf phaseAOrder)),
+      phaseBSorted = genLetPhaseB residual availSet,
+      phaseBResolved = sortResolved phaseBSorted,
+      phaseBOrder = append phaseBResolved (lvPhaseBLeft (sortResidual phaseBSorted)),
       phaseACode = concatAll (map (genLetBindingCode prog adts extendedArgs) phaseAOrder),
-      phaseBResult = genLetBindingsPatched prog adts extendedArgs availAfterA phaseBOrder,
+      phaseBResult = genLetBindingsPatched prog adts extendedArgs availSet (lvPosIndex phaseBResolved) 0 phaseBOrder,
       phaseBCode = pcInstrs phaseBResult,
       patchCode = concatAll (map (genPatchInstr extendedArgs) (pcPatches phaseBResult)),
       bindingsCode = append phaseACode (append phaseBCode patchCode),
@@ -820,10 +821,10 @@ genLet prog adts fname args ls b =
   Gencode (append (Cons (mkI (append ['updsp '] (itoa (length ls)))) Nil) (append bindingsCode (gcInstrs bodyCode)))
           (gcBlocks bodyCode)
 
-genLetPhaseB residual allLetNames availAfterA =
+genLetPhaseB residual availSet =
   if (anyStrict residual)
     (error "genLet: strict binding cannot be part of a cyclic let group (a dummy is a lazy value, a strict binding needs a real one immediately)")
-    (phaseBSort residual allLetNames availAfterA)
+    (lvKahn residual (map lvMustVars residual) availSet)
 
 // `store`'s slot number comes from `extendedArgs` (declaration order), NOT
 // the position in the sorted order.
@@ -836,75 +837,225 @@ genLetBindingCode prog adts extendedArgs lb =
 sortResolved r = case r (Sortres res resid -> res)
 sortResidual r = case r (Sortres res resid -> resid)
 
-phaseASort lbs allNames avail =
-  case lbs
-    (Nil -> Sortres Nil Nil)
-    (Cons x xs -> phaseASortNonEmpty lbs allNames avail)
+// Phase A: the plain Kahn sort, in LEVELS instead of repeated rounds (13
+// november 2026, docs/2026-11-13_let_codegen_kubisch_plan.md: the rounds with
+// a linear `member` per name made a chain of n bindings O(n^3)). Round r of
+// the old sort took, in source order, every binding whose let-bound free
+// variables were all available after rounds 1..r-1 -- which is exactly the
+// bindings of level r (1 + the highest level among the let names it uses).
+// So the order is: by level, within a level in source order; whatever never
+// gets a level (on or behind a cycle, or a reference to itself) is the
+// residual, in source order. lvKahn computes that in O((n + e) log n).
+// A name that is also a parameter counts as available from the start
+// (`skip`), as it did in the old `avail`.
+phaseASort lbs skip = lvKahn lbs (map lvRhsVars lbs) skip
 
-phaseASortNonEmpty lbs allNames avail =
-  let ready = letReady lbs allNames avail,
-      rest = letNotReady lbs allNames avail in
-  phaseASortBranch lbs ready rest allNames avail
+lvRhsVars lb = letCollectVars (lbRhsOf lb)
 
-phaseASortBranch lbs ready rest allNames avail =
-  case ready
-    (Nil -> Sortres Nil lbs)
-    (Cons r rs -> prependSortres ready (phaseASort rest allNames (append avail (map lbNameOf ready))))
-
-prependSortres newly sr =
-  case sr
-    (Sortres resolved residual -> Sortres (append newly resolved) residual)
-
-// Phase B: same Kahn shape as Phase A, but "ready" means every NON-patchable
-// (nested) reference to a cyclic sibling is already available -- patchable
-// (bare, direct) references never block.
-phaseBSort lbs allNames avail =
-  case lbs
+// Phase B: same shape, but only the non-patchable (nested) references to a
+// cyclic sibling block -- patchable (bare, direct) references never do.
+// Nothing left over means a nested reference cycle -- an error that is the
+// TAIL of the phase B order (lvPhaseBLeft), so that, as before, the bindings
+// of the rounds before the stuck one are generated first and an error in one
+// of those is the one reported.
+lvPhaseBLeft residual =
+  case residual
     (Nil -> Nil)
-    (Cons x xs -> phaseBSortNonEmpty lbs allNames avail)
+    (Cons r rs -> error "genLet: cyclic let has a nested reference cycle, not yet supported (zie parser_ama_cyclic_let_bug.md)")
 
-phaseBSortNonEmpty lbs allNames avail =
-  let ready = phaseBReady lbs allNames avail,
-      rest = phaseBNotReady lbs allNames avail in
-  phaseBSortBranch ready rest allNames avail
+// -- the level sort ------------------------------------------------------
+//
+// Positions 0..n-1 are the places in the binding list. `dvs` are the free
+// variables of each binding (aligned with `lbs`); only names that are
+// binding names of THIS list and not in `skip` are dependencies. A binding
+// with k distinct dependencies is released when the k-th of them has been
+// emitted; a round is the set of bindings released by the previous round,
+// sorted by position. Persistent tries on the position keep every update
+// O(log n) whatever the order (a plain unbalanced tree would degenerate:
+// lifted names and chains come in ascending runs).
 
-phaseBSortBranch ready rest allNames avail =
-  case ready
-    (Nil -> error "genLet: cyclic let has a nested reference cycle, not yet supported (zie parser_ama_cyclic_let_bug.md)")
-    (Cons r rs -> append ready (phaseBSort rest allNames (append avail (map lbNameOf ready))))
+::Lvtrie = LvT0 | LvT !val !zero !one
 
-phaseBReady lbs allNames avail =
-  case lbs
+lvTGet k t =
+  case t
+    (LvT0 -> Nil)
+    (LvT v z o -> if (k == 0) v (if (k % 2 == 0) (lvTGet (k / 2) z) (lvTGet (k / 2) o)))
+
+lvTSet k v t =
+  case t
+    (LvT0 -> lvTNew k v)
+    (LvT w z o -> if (k == 0) (LvT v z o) (if (k % 2 == 0) (LvT w (lvTSet (k / 2) v z) o) (LvT w z (lvTSet (k / 2) v o))))
+
+lvTNew k v =
+  if (k == 0) (LvT v LvT0 LvT0)
+  (if (k % 2 == 0) (LvT Nil (lvTNew (k / 2) v) LvT0) (LvT Nil LvT0 (lvTNew (k / 2) v)))
+
+// bindings by position: a balanced tree over 0..n-1
+::Lvbt = LvBLeaf | LvBNode !p !lb !left !right
+
+lvBtBuild lbs start n = if (n == 0) LvBLeaf (lvBtSplit lbs start n (n / 2))
+
+lvBtSplit lbs start n mid = lvBtNode (take mid lbs) (drop mid lbs) start mid (n - mid - 1)
+
+lvBtNode left fromMid start mid rightCount =
+  case fromMid
+    (Cons lb rest -> LvBNode (start + mid) lb (lvBtBuild left start mid) (lvBtBuild rest (start + mid + 1) rightCount))
+
+lvBtGet p t =
+  case t
+    (LvBLeaf -> error "lvBtGet: unknown position")
+    (LvBNode q lb left right -> if (p == q) lb (if (p < q) (lvBtGet p left) (lvBtGet p right)))
+
+// name -> position (-1 when absent), the static balanced tree of stage 5
+lvEntries names i =
+  case names
     (Nil -> Nil)
-    (Cons lb rest -> phaseBReadyCons lb rest allNames avail)
+    (Cons nm rest -> Cons (LabelEntry nm i) (lvEntries rest (i + 1)))
 
-phaseBReadyCons lb rest allNames avail =
-  if (mustPrecedeSatisfied lb allNames avail)
-    (Cons lb (phaseBReady rest allNames avail))
-    (phaseBReady rest allNames avail)
+lvPosIndex lbs = buildBst (mergeSortEntries (lvEntries (map lbNameOf lbs) 0))
 
-phaseBNotReady lbs allNames avail =
-  case lbs
+lvIdxGet name t =
+  case t
+    (BstLeaf -> 0 - 1)
+    (BstNode n idx left right -> lvIdxAt (charListCompare name n) name idx left right)
+
+lvIdxAt cmp name idx left right =
+  if (cmp == 0) idx (if (cmp < 0) (lvIdxGet name left) (lvIdxGet name right))
+
+lvRange i n = if (i >= n) Nil (Cons i (lvRange (i + 1) n))
+
+lvSortInts xs = lvSortIntsLen xs (length xs)
+
+lvSortIntsLen xs n = if (n <= 1) xs (lvSortIntsSplit xs n (n / 2))
+
+lvSortIntsSplit xs n mid = lvMergeInts (lvSortIntsLen (take mid xs) mid) (lvSortIntsLen (drop mid xs) (n - mid))
+
+lvMergeInts xs ys =
+  case xs
+    (Nil -> ys)
+    (Cons x xr -> lvMergeIntsCons x xr ys)
+
+lvMergeIntsCons x xr ys =
+  case ys
+    (Nil -> Cons x xr)
+    (Cons y yr -> if (x <= y) (Cons x (lvMergeInts xr (Cons y yr))) (Cons y (lvMergeInts (Cons x xr) yr)))
+
+lvDedup xs =
+  case xs
     (Nil -> Nil)
-    (Cons lb rest -> phaseBNotReadyCons lb rest allNames avail)
+    (Cons x rest -> lvDedupCons x rest)
 
-phaseBNotReadyCons lb rest allNames avail =
-  if (mustPrecedeSatisfied lb allNames avail)
-    (phaseBNotReady rest allNames avail)
-    (Cons lb (phaseBNotReady rest allNames avail))
+lvDedupCons x rest =
+  case rest
+    (Nil -> Cons x Nil)
+    (Cons y more -> if (x == y) (lvDedupCons x more) (Cons x (lvDedupCons y more)))
 
-// A strict binding can never be resolved via a dummy -- rejected outright
-// here rather than treated as "ready", so it lands in phaseBSort's own
-// error path instead of silently getting a dummy 666 as its "value".
-mustPrecedeSatisfied lb allNames avail =
-  if (lbStrictOf lb) False (letDepsAvailable (mustPrecedeDeps lb allNames) allNames avail)
+// the positions a binding depends on, sorted, once each
+lvDepsAll dvs idx skip =
+  case dvs
+    (Nil -> Nil)
+    (Cons vs rest -> Cons (lvDedup (lvSortInts (lvPositions vs idx skip))) (lvDepsAll rest idx skip))
+
+lvPositions vs idx skip =
+  case vs
+    (Nil -> Nil)
+    (Cons v rest -> lvPositions1 v rest idx skip (lvIdxGet v idx))
+
+lvPositions1 v rest idx skip p =
+  if (p < 0) (lvPositions rest idx skip)
+  (if (nsMember v skip) (lvPositions rest idx skip) (Cons p (lvPositions rest idx skip)))
+
+// count[i] = number of dependencies; dependents[d] = bindings that wait for d
+lvCounts deps i t =
+  case deps
+    (Nil -> t)
+    (Cons d rest -> lvCounts rest (i + 1) (lvTSet i (Cons (length d) Nil) t))
+
+lvDependents deps i t =
+  case deps
+    (Nil -> t)
+    (Cons d rest -> lvDependents rest (i + 1) (lvAddDependent i d t))
+
+lvAddDependent i ds t =
+  case ds
+    (Nil -> t)
+    (Cons d rest -> lvAddDependent i rest (lvTSet d (Cons i (lvTGet d t)) t))
+
+lvZeros deps i =
+  case deps
+    (Nil -> Nil)
+    (Cons d rest -> if (length d == 0) (Cons i (lvZeros rest (i + 1))) (lvZeros rest (i + 1)))
+
+::Lvrel = Lvrel !cnt !next
+
+// emit the frontier, release what waits on it; the next frontier is sorted
+lvRounds frontier cnt dependents acc =
+  case frontier
+    (Nil -> reverse acc)
+    (Cons f rest -> lvStep (lvRelease frontier Nil cnt dependents Nil) dependents (lvRevOnto frontier acc))
+
+lvStep rel dependents acc =
+  case rel
+    (Lvrel cnt next -> lvRounds (lvSortInts next) cnt dependents acc)
+
+lvRevOnto xs acc =
+  case xs
+    (Nil -> acc)
+    (Cons x rest -> lvRevOnto rest (Cons x acc))
+
+lvRelease fs js cnt dependents next =
+  case js
+    (Cons j rest -> lvDec j rest fs cnt dependents next (lvTGet j cnt))
+    (Nil -> lvReleaseNext fs cnt dependents next)
+
+lvReleaseNext fs cnt dependents next =
+  case fs
+    (Nil -> Lvrel cnt next)
+    (Cons f rest -> lvRelease rest (lvTGet f dependents) cnt dependents next)
+
+lvDec j rest fs cnt dependents next cv =
+  case cv
+    (Cons c more -> if (c == 1) (lvRelease fs rest (lvTSet j (Cons 0 Nil) cnt) dependents (Cons j next))
+                                (lvRelease fs rest (lvTSet j (Cons (c - 1) Nil) cnt) dependents next))
+    (Nil -> error "lvDec: position without a count")
+
+lvMark xs t =
+  case xs
+    (Nil -> t)
+    (Cons x rest -> lvMark rest (lvTSet x (Cons 1 Nil) t))
+
+lvNotMarked set p = lvIsNil (lvTGet p set)
+
+lvIsNil xs = case xs (Nil -> True) (Cons x rest -> False)
+
+lvBindings bt ps =
+  case ps
+    (Nil -> Nil)
+    (Cons p rest -> Cons (lvBtGet p bt) (lvBindings bt rest))
+
+lvKahn lbs dvs skip = lvKahnRun lbs (length lbs) dvs skip
+
+lvKahnRun lbs n dvs skip =
+  let deps = lvDepsAll dvs (lvPosIndex lbs) skip,
+      dependents = lvDependents deps 0 LvT0,
+      order = lvRounds (lvZeros deps 0) (lvCounts deps 0 LvT0) dependents Nil in
+  lvKahnResult (lvBtBuild lbs 0 n) order (lvMark order LvT0) n
+
+lvKahnResult bt order done n =
+  Sortres (lvBindings bt order) (lvBindings bt (filter (lvNotMarked done) (lvRange 0 n)))
+
+// the references that must be satisfied before a binding can be emitted in
+// phase B: all of them except the bare direct arguments of its own
+// construction (those are patched afterwards)
+lvMustVars lb = removeNames (letCollectVars (lbRhsOf lb)) (directPatchableNames (lbRhsOf lb))
+
+// A strict binding can never be resolved via a dummy: rejected in
+// genLetPhaseB (anyStrict) before the phase B sort ever runs.
 
 anyStrict lbs =
   case lbs
     (Nil -> False)
     (Cons lb rest -> if (lbStrictOf lb) True (anyStrict rest))
-
-mustPrecedeDeps lb allNames = removeNames (letCollectVars (lbRhsOf lb)) (directPatchableNames (lbRhsOf lb))
 
 removeNames xs toRemove =
   case xs
@@ -949,40 +1100,6 @@ directVarNamesCons e rest =
     (Var v -> Cons v (directVarNames rest))
     (_ -> directVarNames rest)
 
-letReady lbs allNames avail =
-  case lbs
-    (Nil -> Nil)
-    (Cons lb rest -> letReadyCons lb rest allNames avail)
-
-letReadyCons lb rest allNames avail =
-  if (letDepsAvailable (letCollectVars (lbRhsOf lb)) allNames avail)
-    (Cons lb (letReady rest allNames avail))
-    (letReady rest allNames avail)
-
-letNotReady lbs allNames avail =
-  case lbs
-    (Nil -> Nil)
-    (Cons lb rest -> letNotReadyCons lb rest allNames avail)
-
-letNotReadyCons lb rest allNames avail =
-  if (letDepsAvailable (letCollectVars (lbRhsOf lb)) allNames avail)
-    (letNotReady rest allNames avail)
-    (Cons lb (letNotReady rest allNames avail))
-
-// Only references to OTHER let-bound names count as a dependency (a
-// reference to a function parameter or top-level function never blocks).
-letDepsAvailable refs allNames avail = letDepsAvailableHelper (filterLetNames refs allNames) avail
-
-filterLetNames vs allNames =
-  case vs
-    (Nil -> Nil)
-    (Cons v rest -> if (member allNames v) (Cons v (filterLetNames rest allNames)) (filterLetNames rest allNames))
-
-letDepsAvailableHelper vs avail =
-  case vs
-    (Nil -> True)
-    (Cons v rest -> if (member avail v) (letDepsAvailableHelper rest avail) False)
-
 // -- Phase B codegen: a dummy value now, `update` instructions afterward. --
 
 ::Letpatch = LetPatch !targetSlot !fieldIdx !sourceVar
@@ -998,18 +1115,32 @@ pcPatches pc = case pc (Patchedcode is ps -> ps)
 
 // One Phase-B binding: value code (with dummies where needed) + the
 // patches that follow from it, then the rest of the Phase-B list with a
-// GROWN `avail` (this binding's own name is available to later Phase-B
-// bindings in the same group right after its own store).
-genLetBindingsPatched prog adts args avail lbs =
+// position-aware `avail` (see lvAvailable: this binding's own name is
+// available to later Phase-B bindings in the same group, right after its
+// own store).
+genLetBindingsPatched prog adts args availSet posIndex cur lbs =
   case lbs
     (Nil -> Patchedcode Nil Nil)
-    (Cons lb rest -> genLetBindingsPatchedCons prog adts args avail lb rest)
+    (Cons lb rest -> genLetBindingsPatchedCons prog adts args availSet posIndex cur lb rest)
 
-genLetBindingsPatchedCons prog adts args avail lb rest =
-  let thisResult = genPatchedRhs prog adts args avail (slotOf (lbNameOf lb) args) (lbRhsOf lb),
+// What is available at the binding in position `cur` of the phase B order:
+// everything in availSet (parameters and the phase A names), and the phase B
+// names with a smaller position -- not its own, so a reference to itself is
+// patched. (A growing list of names with a linear `member` made this
+// quadratic; see docs/2026-11-13_let_codegen_kubisch_plan.md.)
+::Lvavail = Lvavail !base !posIndex !cur
+
+lvAvailable av v =
+  case av
+    (Lvavail base posIndex cur -> if (nsMember v base) True (lvBefore (lvIdxGet v posIndex) cur))
+
+lvBefore p cur = if (p < 0) False (p < cur)
+
+genLetBindingsPatchedCons prog adts args availSet posIndex cur lb rest =
+  let thisResult = genPatchedRhs prog adts args (Lvavail availSet posIndex cur) (slotOf (lbNameOf lb) args) (lbRhsOf lb),
       thisInstrs = pcInstrs thisResult,
       thisPatches = pcPatches thisResult,
-      restResult = genLetBindingsPatched prog adts args (append avail (Cons (lbNameOf lb) Nil)) rest,
+      restResult = genLetBindingsPatched prog adts args availSet posIndex (cur + 1) rest,
       restInstrs = pcInstrs restResult,
       restPatches = pcPatches restResult in
   Patchedcode (append thisInstrs (append (Cons (mkI (append ['store '] (itoa (slotOf (lbNameOf lb) args)))) Nil) restInstrs))
@@ -1066,7 +1197,7 @@ ctPatchesCons slot avail p e rest =
     (_ -> ctPatches slot avail (p+1) rest)
 
 ctPatchOne slot avail p v rest =
-  if (member avail v)
+  if (lvAvailable avail v)
     (ctPatches slot avail (p+1) rest)
     (Cons (LetPatch slot p v) (ctPatches slot avail (p+1) rest))
 
@@ -1090,7 +1221,7 @@ createPatchesCons slot avail p e rest =
     (_ -> createPatches slot avail (p+1) rest)
 
 createPatchOne slot avail p v rest =
-  if (member avail v)
+  if (lvAvailable avail v)
     (createPatches slot avail (p+1) rest)
     (Cons (LetPatch slot (p+1) v) (createPatches slot avail (p+1) rest))
 
@@ -1106,7 +1237,7 @@ genOneArgWithDummy prog adts args avail e =
     (_ -> genValue prog adts args e)
 
 genDummyOrLoad prog adts args avail v =
-  if (member avail v) (genValue prog adts args (Var v)) (Cons (mkI ['push 666']) Nil)
+  if (lvAvailable avail v) (genValue prog adts args (Var v)) (Cons (mkI ['push 666']) Nil)
 
 // Executing one patch: `load <target slot>, push <field idx>, load <source
 // slot>, update`.
