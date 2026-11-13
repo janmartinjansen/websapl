@@ -1587,22 +1587,6 @@ python3 experiments/abc2jmvm/abc2retag.py "Clean System Files/primes.opt.abc" -o
           </ul>
         </div>
 
-        <!-- AOT C / Clang Musttail -->
-        <div class="card">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <h3>AOT C Translation (jmvm2c)</h3>
-            <span class="badge badge-blue">Experimental AOT</span>
-          </div>
-          <p>
-            Ahead-of-time compiler converting JMVM bytecode into continuous C functions connected by <code>musttail</code>.
-          </p>
-          <ul>
-            <li><strong>1.7&times;–2.4&times; Speedup:</strong> Delivers significant acceleration over the bytecode interpreter.</li>
-            <li><strong>Clang Optimization:</strong> Clang extracts additional hardware pipeline throughput from structured C continuations.</li>
-            <li><strong>Tradeoff:</strong> Large generated C files (gen1 is ~8.3 MB C) with compilation taking ~41s under <code>-O2</code>.</li>
-          </ul>
-        </div>
-
         <!-- Standalone Wasm (jmvm2wat) -->
         <div class="card">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
