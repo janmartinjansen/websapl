@@ -226,7 +226,53 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     </div>
   </div>
 
-  <h2>2. Where <code>sapl2c</code> Wins &mdash; and Where Clean/GHC Still Lead</h2>
+  <h2>2. Why the Stage-4 Retag Format Is the Decisive Leverage Point</h2>
+  <p>
+    The choice of <a href="retag_format_factsheet.html">Stage-4 Retag</a> as the input IR is not merely
+    convenient &mdash; it is what makes <code>sapl2c</code> both <strong>small</strong> (~1,150 lines of
+    Python / ~1,800 lines of Sapl) and <strong>fast</strong>. Compiling directly from Core Sapl
+    (<code>.cfp</code>) would have forced <code>sapl2c</code> to rebuild strictness inference and lambda
+    lifting; compiling from bytecode (<code>.jmvm</code>) stripped away too much structure.
+  </p>
+
+  <div class="grid-2">
+    <div class="card purple">
+      <h3>Why It Makes Compilation Easy</h3>
+      <ul>
+        <li><strong>Frontend work already done:</strong> <code>gen1</code> already performed strictness
+          inference (<code>!</code>), boolean expansion, lambda lifting, CAFs (<code>=:</code>), and
+          <code>tagLazyMaybe</code> (#157).</li>
+        <li><strong>1-to-1 laziness primitives:</strong> <code>eval</code>, <code>thunk</code>, and
+          <code>closure</code> are explicit AST nodes that map directly to <code>EVALK</code>,
+          <code>mk_thunk</code>, and <code>FnDesc</code>/<code>ap1</code> in <code>rt.h</code>.</li>
+        <li><strong>No stack reconstruction:</strong> Named variables, <code>let</code> bindings, and
+          <code>case</code> trees remain intact, so codegen is a direct recursive tree walk.</li>
+      </ul>
+    </div>
+
+    <div class="card ok">
+      <h3>Why It Makes the Output Fast</h3>
+      <ul>
+        <li><strong>The <code>jmvm2c</code> proof:</strong> Translating <em>bytecode</em> to C
+          (<code>jmvm2c</code>) produced <strong>9.3 MB</strong> of C for <code>gen1</code> (47 s build,
+          442 ms self-compile) because values stayed on the VM stack and <code>clang</code> never saw whole
+          functions. From <strong>Retag</strong>, <code>sapl2c</code> emits <strong>2.9 MB</strong> of C
+          (4.1 s build, <strong>248 ms</strong> self-compile).</li>
+        <li><strong>Path-sensitive proofs &amp; heap coalescing:</strong> Named locals and explicit
+          branches let <code>sapl2c</code> prove non-pointers per path (eliminating shadow-stack spills in
+          <code>fib</code>) and merge straight-line allocations into one <code>HEAPFULL(N)</code> check.</li>
+      </ul>
+    </div>
+  </div>
+
+  <p style="font-size: 14.5px; color: var(--muted);">
+    <strong>Honest nuance:</strong> Retag is untyped, so <code>sapl2c</code> still had to implement its own
+    3-kind non-pointer analysis, runtime tag checks on arithmetic, the uniform <code>MUSTTAIL</code> +
+    <code>{v, hp}</code> ABI, and forcing lazy variables on function return. Stage-4 Retag sits right at the
+    sweet spot between <code>.cfp</code> and <code>.jmvm</code>.
+  </p>
+
+  <h2>3. Where <code>sapl2c</code> Wins &mdash; and Where Clean/GHC Still Lead</h2>
   <p>
     Apple M4 measurements in ms (from <a href="sapl2c_native_factsheet.html">Sapl to Native C</a>, 12 Nov 2026):
   </p>
@@ -294,7 +340,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     </tbody>
   </table>
 
-  <h2>3. Apples-to-Apples: Self-Compiling <code>gen1</code></h2>
+  <h2>4. Apples-to-Apples: Self-Compiling <code>gen1</code></h2>
   <p>
     When Clean and GHC run the <em>exact same untyped <code>Val</code> representation</em> as Sapl,
     <code>sapl2c</code> is the fastest of all three:
