@@ -1,66 +1,63 @@
-readStream lb1 readStream_1 writeStream_lazy writeStream lb3 lb4 str2list_lazy str2list strls_lazy strls lb5 strEqual_lazy strEqual lb7 strEqualAt_lazy strEqualAt lb9 lb11 list2str_lazy list2str fillStr_lazy fillStr lb13 lb14 strcat_lazy strcat toUpperChar_lazy toUpperChar lb15 code_lazy code decode_lazy decode strUpper_lazy strUpper substr_lazy substr itoa_lazy itoa lb18 lb17 itoa_2 length_lazy length lb19 lb20 map_lazy map lb21 lb22 filter_lazy filter lb23 lb24 lb25 foldl_lazy foldl lb27 lb28 foldr_lazy foldr lb29 lb30 append_lazy append lb31 lb32 take_lazy take lb33 lb34 lb35 take_3 drop_lazy drop lb37 lb38 lb39 drop_4 reverse_lazy reverse rev_lazy rev lb41 lb42 deKey_lazy deKey lb43 deValue_lazy deValue lb44 strCompare strCompareAt_lazy strCompareAt lb45 lb47 strCompareEnd1_lazy strCompareEnd1 lb49 strCompareChar strCompareCharCmp_lazy strCompareCharCmp lb51 lb53 dictToList_lazy dictToList dictToListAcc_lazy dictToListAcc lb55 lb56 dictToListAccNode_lazy dictToListAccNode dictToListAccNode_5 buildBalanced_lazy buildBalanced buildBalancedN_lazy buildBalancedN lb57 buildBalancedSplit buildBalancedSplit_6 buildBalancedSplit_7 buildBalancedNode_lazy buildBalancedNode lb59 lb60 buildBalancedNodeFinish_lazy buildBalancedNodeFinish lb61 sortedInsert_lazy sortedInsert lb62 lb63 sortedInsertStep sortedInsertCmp_lazy sortedInsertCmp lb64 lb66 sortedInsertCmp_8 sortedRemove_lazy sortedRemove lb67 lb68 sortedRemoveStep_lazy sortedRemoveStep lb69 dictEmpty dictSize_lazy dictSize lb71 lb72 dictSizeNode_lazy dictSizeNode dictSet_lazy dictSet dictRemove_lazy dictRemove dictHas_lazy dictHas lb73 lb74 dictHasAt_lazy dictHasAt lb75 lb77 dictGet_lazy dictGet lb78 lb79 dictGetAt_lazy dictGetAt lb80 lb82 dictGetOr_lazy dictGetOr lb83 lb84 dictGetOrAt_lazy dictGetOrAt lb85 lb87 dictKeys_lazy dictKeys dictKeysOf_lazy dictKeysOf lb88 lb89 dictValues_lazy dictValues dictValuesOf_lazy dictValuesOf lb90 lb91 mergeSortEntries_lazy mergeSortEntries mergeSortEntriesLen_lazy mergeSortEntriesLen lb92 mergeSortEntriesSplit_lazy mergeSortEntriesSplit mergeEntries_lazy mergeEntries lb94 lb95 mergeEntriesCons_lazy mergeEntriesCons lb96 lb97 mergeEntriesBoth lb98 mergeEntriesBoth_9 mergeEntriesBoth_10 dedupKeepLast_lazy dedupKeepLast lb100 lb101 dedupKeepLastStep_lazy dedupKeepLastStep lb102 lb103 dedupKeepLastCmp_lazy dedupKeepLastCmp lb104 dictFromList_lazy dictFromList geenSleutel basis basis_11 basis_12 basis_13 basis_14 basis_15 basis_16 basis_17 basis_18 gesorteerdeSleutels gesorteerdeSleutels_19 gesorteerdeSleutels_20 gesorteerdeSleutels_21 gesorteerdeSleutels_22 gesorteerdeSleutels_23 sleutelsGesorteerd strictOplopend_lazy strictOplopend lb106 lb107 strictOplopendStep_lazy strictOplopendStep lb108 lb109 lb110 sleutels20 sleutels20_42 sleutels20_41 sleutels20_40 sleutels20_39 sleutels20_38 sleutels20_37 sleutels20_36 sleutels20_35 sleutels20_34 sleutels20_33 sleutels20_32 sleutels20_31 sleutels20_30 sleutels20_29 sleutels20_28 sleutels20_27 sleutels20_26 sleutels20_25 sleutels20_24 bouwOp_lazy bouwOp lb112 lb113 bouwOp_43 controleerAlles_lazy controleerAlles lb114 lb115 controleerEen_lazy controleerEen lb116 grotereDict vanuitLijst vanuitLijst_45 vanuitLijst_44 start start_46  #
-            call 287                                 || start
+readStream_lazy readStream readStream_else writeStream_lazy writeStream writeStream_Nil writeStream_Cons str2list_lazy str2list strls_lazy strls strls_else strEqual_lazy strEqual strEqual_else strEqualAt_lazy strEqualAt strEqualAt_else strEqualAt_else_else list2str_lazy list2str fillStr_lazy fillStr fillStr_Nil fillStr_Cons strcat_lazy strcat toUpperChar_lazy toUpperChar toUpperChar_then_else toUpperChar_else code_lazy code decode_lazy decode strUpper_lazy strUpper strUpperAt_lazy strUpperAt strUpperAt_else substr_lazy substr substrClamp_lazy substrClamp substrClamp_else_else substrClamp_then substrLen_lazy substrLen substrLen_else_else substrLen_then itoa_lazy itoa itoa_else_then itoa_then length_lazy length length_Nil length_Cons map_lazy map map_Nil map_Cons filter_lazy filter filter_Nil filter_Cons filter_Cons_else foldl_lazy foldl foldl_Nil foldl_Cons foldr_lazy foldr foldr_Nil foldr_Cons append_lazy append append_Nil append_Cons take_lazy take take_Nil take_Cons take_Cons_else drop_lazy drop drop_Nil drop_Cons drop_Cons_else reverse_lazy reverse rev_lazy rev rev_Nil rev_Cons deKey_lazy deKey deKey_DictEntry deValue_lazy deValue deValue_DictEntry strCompare_lazy strCompare dictToList_lazy dictToList dictToListAcc_lazy dictToListAcc dictToListAcc_DLeaf dictToListAcc_DNode dictToListAccNode_lazy dictToListAccNode buildBalanced_lazy buildBalanced buildBalancedN_lazy buildBalancedN buildBalancedN_else buildBalancedSplit_lazy buildBalancedSplit buildBalancedNode_lazy buildBalancedNode buildBalancedNode_Nil buildBalancedNode_Cons buildBalancedNodeFinish_lazy buildBalancedNodeFinish buildBalancedNodeFinish_DictEntry sortedInsert_lazy sortedInsert sortedInsert_Nil sortedInsert_Cons sortedInsertStep_lazy sortedInsertStep sortedInsertCmp_lazy sortedInsertCmp sortedInsertCmp_else sortedInsertCmp_else_then sortedRemove_lazy sortedRemove sortedRemove_Nil sortedRemove_Cons sortedRemoveStep_lazy sortedRemoveStep sortedRemoveStep_else dictEmpty_lazy dictEmpty dictSize_lazy dictSize dictSize_DLeaf dictSize_DNode dictSizeNode_lazy dictSizeNode dictSet_lazy dictSet dictRemove_lazy dictRemove dictHas_lazy dictHas dictHas_DLeaf dictHas_DNode dictHasAt_lazy dictHasAt dictHasAt_else dictHasAt_else_then dictGet_lazy dictGet dictGet_DLeaf dictGet_DNode dictGetAt_lazy dictGetAt dictGetAt_else dictGetAt_else_then dictGetOr_lazy dictGetOr dictGetOr_DLeaf dictGetOr_DNode dictGetOrAt_lazy dictGetOrAt dictGetOrAt_else dictGetOrAt_else_then dictKeys_lazy dictKeys dictKeysOf_lazy dictKeysOf dictKeysOf_Nil dictKeysOf_Cons dictValues_lazy dictValues dictValuesOf_lazy dictValuesOf dictValuesOf_Nil dictValuesOf_Cons mergeSortEntries_lazy mergeSortEntries mergeSortEntriesLen_lazy mergeSortEntriesLen mergeSortEntriesLen_else mergeSortEntriesSplit_lazy mergeSortEntriesSplit mergeEntries_lazy mergeEntries mergeEntries_Nil mergeEntries_Cons mergeEntriesCons_lazy mergeEntriesCons mergeEntriesCons_Nil mergeEntriesCons_Cons mergeEntriesBoth_lazy mergeEntriesBoth mergeEntriesBoth_else dedupKeepLast_lazy dedupKeepLast dedupKeepLast_Nil dedupKeepLast_Cons dedupKeepLastStep_lazy dedupKeepLastStep dedupKeepLastStep_Nil dedupKeepLastStep_Cons dedupKeepLastCmp_lazy dedupKeepLastCmp dedupKeepLastCmp_else dictFromList_lazy dictFromList geenSleutel_lazy geenSleutel basis_lazy basis gesorteerdeSleutels_lazy gesorteerdeSleutels sleutelsGesorteerd_lazy sleutelsGesorteerd strictOplopend_lazy strictOplopend strictOplopend_Nil strictOplopend_Cons strictOplopendStep_lazy strictOplopendStep strictOplopendStep_Nil strictOplopendStep_Cons strictOplopendStep_Cons_else sleutels20_lazy sleutels20 bouwOp_lazy bouwOp bouwOp_Nil bouwOp_Cons controleerAlles_lazy controleerAlles controleerAlles_Nil controleerAlles_Cons controleerEen_lazy controleerEen controleerEen_else grotereDict_lazy grotereDict vanuitLijst_lazy vanuitLijst start_lazy start readStream_1_lazy readStream_1 substrClamp_j1_lazy substrClamp_j1 dictToListAccNode_1_lazy dictToListAccNode_1 buildBalancedSplit_1_lazy buildBalancedSplit_1 buildBalancedSplit_2_lazy buildBalancedSplit_2 sortedInsertCmp_1_lazy sortedInsertCmp_1 sleutels20_1_lazy sleutels20_1 sleutels20_2_lazy sleutels20_2 sleutels20_3_lazy sleutels20_3 sleutels20_4_lazy sleutels20_4 sleutels20_5_lazy sleutels20_5 sleutels20_6_lazy sleutels20_6 sleutels20_7_lazy sleutels20_7 sleutels20_8_lazy sleutels20_8 sleutels20_9_lazy sleutels20_9 sleutels20_10_lazy sleutels20_10 sleutels20_11_lazy sleutels20_11 sleutels20_12_lazy sleutels20_12 sleutels20_13_lazy sleutels20_13 sleutels20_14_lazy sleutels20_14 sleutels20_15_lazy sleutels20_15 sleutels20_16_lazy sleutels20_16 sleutels20_17_lazy sleutels20_17 sleutels20_18_lazy sleutels20_18 sleutels20_19_lazy sleutels20_19 bouwOp_1_lazy bouwOp_1 vanuitLijst_1_lazy vanuitLijst_1 vanuitLijst_2_lazy vanuitLijst_2 __ap2_lazy __ap2 __ap3_lazy __ap3 #
+            call 256                                 || start
             print 4
             stop
-0           updsp 1                                  || readStream
+0           jmp 1                                    || readStream || readStream_lazy
+1           updsp 1                                  || readStream
             load 1
-            pushfunc 1 2                             || readStream_1
+            pushfunc 1 258                           || readStream_1
             create 2 3
             dup
             store 0
-            eval
+            force
             push 0
             dec
             sub
-            ifneq 1                                  || lb1
+            ifneq 2                                  || readStream_else
             ccreatet 0 11 5 0
             return 2
-1           load 1                                   || lb1
-            pushfunc 1 0                             || readStream
+2           load 1                                   || readStream_else
+            pushfunc 1 1                             || readStream
             create 2 3
             load 0
-            eval
+            force
             ccreatet 2 11 5 1
             return 2
-2           load 0                                   || readStream_1
-            eval
-            syscall 6
-            return 1
 3           load 1                                   || writeStream_lazy
             eval
             store 1
 4           load 1                                   || writeStream
             jmpt 2 5 6                               || lbs
-5           load 0                                   || lb3
-            eval
+5           load 0                                   || writeStream_Nil
+            force
             syscall 5
             return 2
-6           load 0                                   || lb4
+6           load 0                                   || writeStream_Cons
             load 2
-            eval
+            force
             syscall 7
+            pop
             load 1
-            eval
+            force
             load 2
-            call 4                                   || writeStream
-            return 4
+            tailcall 4 4                             || writeStream
 7           load 0                                   || str2list_lazy
             eval
             store 0
 8           load 0                                   || str2list
             push 0
             tailcall 1 10                            || strls
-9           load 1                                   || strls_lazy
-            eval
-            store 1
-            load 0
+9           load 0                                   || strls_lazy
             eval
             store 0
+            load 1
+            eval
+            store 1
 10          load 1                                   || strls
             strop 2
             load 0
             sub
-            ifle 11                                  || lb5
+            ifle 11                                  || strls_else
             load 1
             loadadd 0 1
             pushfunc 2 10                            || strls
@@ -70,1433 +67,1429 @@ readStream lb1 readStream_1 writeStream_lazy writeStream lb3 lb4 str2list_lazy s
             strop 4
             ccreatet 2 11 5 1
             return 2
-11          ccreatet 0 11 5 0                        || lb5
+11          ccreatet 0 11 5 0                        || strls_else
             return 2
-12          load 1                                   || strEqual_lazy
-            eval
-            store 1
-            load 0
+12          load 0                                   || strEqual_lazy
             eval
             store 0
+            load 1
+            eval
+            store 1
 13          load 0                                   || strEqual
             strop 2
             load 1
             strop 2
             sub
-            ifneq 14                                 || lb7
+            ifneq 14                                 || strEqual_else
             load 1
             load 0
             push 0
-            call 16                                  || strEqualAt
-            ifeq 14                                  || lb7
-            return_const 2 1
-14          return_const 2 0                         || lb7
-15          load 2                                   || strEqualAt_lazy
+            tailcall 2 16                            || strEqualAt
+14          return_const 2 0                         || strEqual_else
+15          load 0                                   || strEqualAt_lazy
             eval
-            store 2
+            store 0
             load 1
             eval
             store 1
-            load 0
+            load 2
             eval
-            store 0
+            store 2
 16          load 0                                   || strEqualAt
             load 1
             strop 2
             sub
-            iflt 17                                  || lb9
+            iflt 17                                  || strEqualAt_else
             return_const 3 1
-17          load 1                                   || lb9
+17          load 1                                   || strEqualAt_else
             load 0
             strop 4
             load 2
             load 0
             strop 4
             sub
-            ifneq 18                                 || lb11
+            ifneq 18                                 || strEqualAt_else_else
+            load 2
+            load 1
             loadadd 0 1
-            store 0
-            jmp 16                                   || strEqualAt
-18          return_const 3 0                         || lb11
+            tailcall 3 16                            || strEqualAt
+18          return_const 3 0                         || strEqualAt_else_else
 19          load 0                                   || list2str_lazy
             eval
             store 0
 20          load 0                                   || list2str
-            call 44                                  || length
+            call 55                                  || length
             array_create_dynamic 1
             load 0
             push 0
             tailcall 1 22                            || fillStr
-21          load 2                                   || fillStr_lazy
+21          load 0                                   || fillStr_lazy
             eval
-            store 2
+            store 0
             load 1
             eval
             store 1
-            load 0
+            load 2
             eval
-            store 0
+            store 2
 22          load 1                                   || fillStr
             jmpt 2 23 24                             || lbs
-23          load 2                                   || lb13
+23          load 2                                   || fillStr_Nil
             return 3
-24          load 4                                   || lb14
+24          load 4                                   || fillStr_Cons
             load 2
             load 0
             strop 3
             load 1
-            eval
+            force
             loadadd 2 1
             tailcall 5 22                            || fillStr
-25          load 1                                   || strcat_lazy
-            eval
-            store 1
-            load 0
+25          load 0                                   || strcat_lazy
             eval
             store 0
+            load 1
+            eval
+            store 1
 26          load 1                                   || strcat
-            pushfunc 1 8                             || str2list
-            create 2 3
             load 0
-            call 8                                   || str2list
-            call 65                                  || append
-            tailcall 2 20                            || list2str
+            strop 0
+            return 2
 27          load 0                                   || toUpperChar_lazy
             eval
             store 0
-28          load 0                                   || toUpperChar
-            push 'a'
-            sub
-            iflt 29                                  || lb15
-            push 'z'
+28          loadadd 0 -97                            || toUpperChar
+            iflt 30                                  || toUpperChar_else
+            push 122
             load 0
             sub
-            iflt 29                                  || lb15
-            load 0
-            push 'a'
-            sub
-            push 'A'
+            iflt 29                                  || toUpperChar_then_else
+            loadadd 0 -97
+            push 65
             add
             return 1
-29          load 0                                   || lb15
+29          load 0                                   || toUpperChar_then_else
             return 1
-30          load 0                                   || code_lazy
+30          load 0                                   || toUpperChar_else
+            return 1
+31          load 0                                   || code_lazy
             eval
             store 0
-31          load 0                                   || code
-            push '0'
-            sub
+32          loadadd 0 -48                            || code
             push 48
             add
             return 1
-32          load 0                                   || decode_lazy
+33          load 0                                   || decode_lazy
             eval
             store 0
-33          push '0'                                 || decode
+34          push 48                                  || decode
             loadadd 0 -48
             add
             return 1
-34          load 0                                   || strUpper_lazy
+35          load 0                                   || strUpper_lazy
             eval
             store 0
-35          load 0                                   || strUpper
-            call 8                                   || str2list
-            pushfunc 1 27                            || toUpperChar_lazy
-            create 1 7
-            call 48                                  || map
-            tailcall 1 20                            || list2str
-36          load 2                                   || substr_lazy
+36          load 0                                   || strUpper
+            strop 2
+            array_create_dynamic 1
+            load 0
+            strop 2
+            push 0
+            load 0
+            tailcall 1 38                            || strUpperAt
+37          load 0                                   || strUpperAt_lazy
             eval
-            store 2
+            store 0
             load 1
             eval
             store 1
-            load 0
-            eval
-            store 0
-37          load 0                                   || substr
-            call 8                                   || str2list
-            load 1
-            call 75                                  || drop
             load 2
-            call 69                                  || take
-            tailcall 3 20                            || list2str
-38          load 0                                   || itoa_lazy
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+38          load 1                                   || strUpperAt
+            load 2
+            sub
+            iflt 39                                  || strUpperAt_else
+            load 3
+            return 4
+39          load 3                                   || strUpperAt_else
+            load 1
+            load 0
+            load 1
+            strop 4
+            call 28                                  || toUpperChar
+            strop 3
+            load 2
+            loadadd 1 1
+            load 0
+            tailcall 4 38                            || strUpperAt
+40          load 0                                   || substr_lazy
             eval
             store 0
-39          ifltlv 0 0 41                            || lb17 || itoa
-                        ifltlv 0 10 40                           || lb18
+            load 1
+            eval
+            store 1
+            load 2
+            eval
+            store 2
+41          load 0                                   || substr
+            strop 2
+            load 2
+            load 1
             load 0
-            pushfunc 1 42                            || itoa_2
-            create 2 3
-            load 0
-            push 10
-            div
-            call 39                                  || itoa
-            tailcall 1 65                            || append
-40          ccreatet 0 11 5 0                        || lb18
-            push '0'
-            load 0
-            add
-            ccreatet 2 11 5 1
-            return 1
-41          push 0                                   || lb17
-            load 0
+            tailcall 3 43                            || substrClamp
+42          load 0                                   || substrClamp_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+            load 2
+            eval
+            store 2
+            load 3
+            eval
+            store 3
+43          ifltlv 1 0 45                            || substrClamp_then || substrClamp
+            load 1
+            load 3
             sub
-            pushfunc 1 39                            || itoa
-            create 2 3
-            push '-'
-            ccreatet 2 11 5 1
-            return 1
-42          ccreatet 0 11 5 0                        || itoa_2
-            push '0'
+            iflt 44                                  || substrClamp_else_else
+            push 0
+            tailcall 4 260                           || substrClamp_j1
+44          load 1                                   || substrClamp_else_else
+            load 3
+            load 1
+            sub
+            load 2
+            call 47                                  || substrLen
+            add
+            load 1
+            load 0
+            strop 1
+            return 4
+45          push 0                                   || substrClamp_then
+            tailcall 4 260                           || substrClamp_j1
+46          load 0                                   || substrLen_lazy
+            eval
+            store 0
+            load 1
+            eval
+            store 1
+47          ifltlv 0 0 49                            || substrLen_then || substrLen
+            load 0
+            load 1
+            sub
+            ifle 48                                  || substrLen_else_else
+            load 1
+            return 2
+48          load 0                                   || substrLen_else_else
+            return 2
+49          load 1                                   || substrLen_then
+            return 2
+50          load 0                                   || itoa_lazy
+            eval
+            store 0
+51          ifltlv 0 0 53                            || itoa_then || itoa
+            ifltlv 0 10 52                           || itoa_else_then
+            ccreatet 0 11 5 0
+            push 48
             load 0
             push 10
             mod
             add
             ccreatet 2 11 5 1
+            load 0
+            push 10
+            div
+            call 51                                  || itoa
+            tailcall 1 76                            || append
+52          ccreatet 0 11 5 0                        || itoa_else_then
+            push 48
+            load 0
+            add
+            ccreatet 2 11 5 1
             return 1
-43          load 0                                   || length_lazy
+53          push 0                                   || itoa_then
+            load 0
+            sub
+            pushfunc 1 51                            || itoa
+            create 2 3
+            pushc 45
+            ccreatet 2 11 5 1
+            return 1
+54          load 0                                   || length_lazy
             eval
             store 0
-44          load 0                                   || length
-            jmpt 2 45 46                             || lbs
-45          return_const 1 0                         || lb19
-46          push 1                                   || lb20
+55          load 0                                   || length
+            jmpt 2 56 57                             || lbs
+56          return_const 1 0                         || length_Nil
+57          push 1                                   || length_Cons
             load 1
-            eval
-            call 44                                  || length
+            force
+            call 55                                  || length
             add
             return 3
-47          load 1                                   || map_lazy
+58          load 1                                   || map_lazy
             eval
             store 1
-48          load 1                                   || map
-            jmpt 2 49 50                             || lbs
-49          ccreatet 0 11 5 0                        || lb21
+59          load 1                                   || map
+            jmpt 2 60 61                             || lbs
+60          ccreatet 0 11 5 0                        || map_Nil
             return 2
-50          load 1                                   || lb22
+61          load 1                                   || map_Cons
             load 2
-            pushfunc 2 47                            || map_lazy
+            pushfunc 2 58                            || map_lazy
             create 3 3
             load 0
             load 2
-            eval
+            evalap 1
             ccreatet 2 11 5 1
             return 4
-51          load 1                                   || filter_lazy
+62          load 1                                   || filter_lazy
             eval
             store 1
-52          load 1                                   || filter
-            jmpt 2 53 54                             || lbs
-53          ccreatet 0 11 5 0                        || lb23
+63          load 1                                   || filter
+            jmpt 2 64 65                             || lbs
+64          ccreatet 0 11 5 0                        || filter_Nil
             return 2
-54          load 0                                   || lb24
+65          load 0                                   || filter_Cons
             load 2
-            eval
-            ifeq 55                                  || lb25
+            evalap 1
+            ifeq 66                                  || filter_Cons_else
             load 1
             load 2
-            pushfunc 2 51                            || filter_lazy
+            pushfunc 2 62                            || filter_lazy
             create 3 3
             load 0
             ccreatet 2 11 5 1
             return 4
-55          load 1                                   || lb25
-            eval
+66          load 1                                   || filter_Cons_else
+            force
             load 2
-            tailcall 4 52                            || filter
-56          load 2                                   || foldl_lazy
+            tailcall 4 63                            || filter
+67          load 2                                   || foldl_lazy
             eval
             store 2
-57          load 2                                   || foldl
-            jmpt 2 58 59                             || lbs
-58          load 1                                   || lb27
+68          load 2                                   || foldl
+            jmpt 2 69 70                             || lbs
+69          load 1                                   || foldl_Nil
             eval
             return 3
-59          load 1                                   || lb28
-            eval
+70          load 1                                   || foldl_Cons
+            force
             load 0
             load 3
             load 2
-            create 3 7
+            pushfunc 3 316                           || __ap3
+            create 4 3
             load 2
-            tailcall 5 57                            || foldl
-60          load 2                                   || foldr_lazy
+            tailcall 5 68                            || foldl
+71          load 2                                   || foldr_lazy
             eval
             store 2
-61          load 2                                   || foldr
-            jmpt 2 62 63                             || lbs
-62          load 1                                   || lb29
+72          load 2                                   || foldr
+            jmpt 2 73 74                             || lbs
+73          load 1                                   || foldr_Nil
             eval
             return 3
-63          load 1                                   || lb30
+74          load 1                                   || foldr_Cons
             load 3
             load 2
-            pushfunc 3 60                            || foldr_lazy
+            pushfunc 3 71                            || foldr_lazy
             create 4 3
             load 0
             load 2
             eval
             return 5
-64          load 0                                   || append_lazy
+75          load 0                                   || append_lazy
             eval
             store 0
-65          load 0                                   || append
-            jmpt 2 66 67                             || lbs
-66          load 1                                   || lb31
+76          load 0                                   || append
+            jmpt 2 77 78                             || lbs
+77          load 1                                   || append_Nil
             eval
             return 2
-67          load 3                                   || lb32
+78          load 3                                   || append_Cons
             load 1
-            pushfunc 2 64                            || append_lazy
+            pushfunc 2 75                            || append_lazy
             create 3 3
             load 0
             ccreatet 2 11 5 1
             return 4
-68          load 1                                   || take_lazy
+79          load 1                                   || take_lazy
             eval
             store 1
-69          load 1                                   || take
-            jmpt 2 70 71                             || lbs
-70          ccreatet 0 11 5 0                        || lb33
+80          load 1                                   || take
+            jmpt 2 81 82                             || lbs
+81          ccreatet 0 11 5 0                        || take_Nil
             return 2
-71          load 2                                   || lb34
-            eval
-            ifneq 72                                 || lb35
+82          load 2                                   || take_Cons
+            force
+            ifneq 83                                 || take_Cons_else
             ccreatet 0 11 5 0
             return 4
-72          load 1                                   || lb35
+83          load 1                                   || take_Cons_else
             load 2
-            pushfunc 1 73                            || take_3
-            create 2 3
-            pushfunc 2 68                            || take_lazy
+            force
+            dec
+            pushfunc 2 79                            || take_lazy
             create 3 3
             load 0
             ccreatet 2 11 5 1
             return 4
-73          load 0                                   || take_3
-            eval
-            push 1
-            sub
-            return 1
-74          load 1                                   || drop_lazy
+84          load 1                                   || drop_lazy
             eval
             store 1
-75          load 1                                   || drop
-            jmpt 2 76 77                             || lbs
-76          ccreatet 0 11 5 0                        || lb37
+85          load 1                                   || drop
+            jmpt 2 86 87                             || lbs
+86          ccreatet 0 11 5 0                        || drop_Nil
             return 2
-77          load 2                                   || lb38
-            eval
-            ifneq 78                                 || lb39
+87          load 2                                   || drop_Cons
+            force
+            ifneq 88                                 || drop_Cons_else
             load 1
             load 0
             ccreatet 2 11 5 1
             return 4
-78          load 1                                   || lb39
-            eval
+88          load 1                                   || drop_Cons_else
+            force
             load 2
-            pushfunc 1 79                            || drop_4
-            create 2 3
-            tailcall 4 75                            || drop
-79          load 0                                   || drop_4
-            eval
-            push 1
-            sub
-            return 1
-80          load 0                                   || reverse_lazy
+            force
+            dec
+            tailcall 4 85                            || drop
+89          load 0                                   || reverse_lazy
             eval
             store 0
-81          ccreatet 0 11 5 0                        || reverse
+90          ccreatet 0 11 5 0                        || reverse
             load 0
-            tailcall 1 83                            || rev
-82          load 0                                   || rev_lazy
+            tailcall 1 92                            || rev
+91          load 0                                   || rev_lazy
             eval
             store 0
-83          load 0                                   || rev
-            jmpt 2 84 85                             || lbs
-84          load 1                                   || lb41
+92          load 0                                   || rev
+            jmpt 2 93 94                             || lbs
+93          load 1                                   || rev_Nil
             eval
             return 2
-85          load 3                                   || lb42
+94          load 3                                   || rev_Cons
             load 0
             ccreatet 2 11 5 1
             load 1
-            eval
-            tailcall 4 83                            || rev
-86          load 0                                   || deKey_lazy
-            eval
-            store 0
-87          load 0                                   || deKey
-            jmpt 1 88                                || lbs
-88          load 0                                   || lb43
-            return 3
-89          load 0                                   || deValue_lazy
+            force
+            tailcall 4 92                            || rev
+95          load 0                                   || deKey_lazy
             eval
             store 0
-90          load 0                                   || deValue
-            jmpt 1 91                                || lbs
-91          load 1                                   || lb44
+96          load 0                                   || deKey
+            jmpt 1 97                                || lbs
+97          load 0                                   || deKey_DictEntry
             return 3
-92          load 1                                   || strCompare
-            load 0
-            load 1
+98          load 0                                   || deValue_lazy
             eval
-            strop 2
-            load 0
+            store 0
+99          load 0                                   || deValue
+            jmpt 1 100                               || lbs
+100         load 1                                   || deValue_DictEntry
+            return 3
+101         load 0                                   || strCompare_lazy
             eval
-            strop 2
-            push 0
-            tailcall 2 94                            || strCompareAt
-93          load 2                                   || strCompareAt_lazy
-            eval
-            store 2
+            store 0
             load 1
             eval
             store 1
-            load 0
-            eval
-            store 0
-94          load 0                                   || strCompareAt
+102         load 0                                   || strCompare
             load 1
-            sub
-            ifneq 95                                 || lb45
-            load 2
-            load 0
-            tailcall 5 98                            || strCompareEnd1
-95          load 0                                   || lb45
-            load 2
-            sub
-            ifneq 96                                 || lb47
-            return_const 5 1
-96          load 4                                   || lb47
-            load 3
-            load 2
-            load 1
-            load 0
-            tailcall 5 100                           || strCompareChar
-97          load 1                                   || strCompareEnd1_lazy
-            eval
-            store 1
-            load 0
-            eval
-            store 0
-98          load 0                                   || strCompareEnd1
-            load 1
-            sub
-            ifneq 99                                 || lb49
-            return_const 2 0
-99          push 0                                   || lb49
-            dec
+            strcmp
             return 2
-100         load 4                                   || strCompareChar
-            load 3
-            load 2
-            load 1
-            load 0
-            load 4
-            eval
-            load 0
-            eval
-            strop 4
-            load 3
-            eval
-            load 0
-            eval
-            strop 4
-            tailcall 5 102                           || strCompareCharCmp
-101         load 1                                   || strCompareCharCmp_lazy
-            eval
-            store 1
-            load 0
+103         load 0                                   || dictToList_lazy
             eval
             store 0
-102         load 0                                   || strCompareCharCmp
-            load 1
-            sub
-            ifneq 103                                || lb51
-            load 6
-            load 5
-            load 4
-            eval
-            load 3
-            eval
-            load 2
-            eval
-            push 1
-            add
-            tailcall 7 94                            || strCompareAt
-103         load 1                                   || lb51
+104         ccreatet 0 11 5 0                        || dictToList
             load 0
-            sub
-            ifle 104                                 || lb53
-            push 0
-            dec
-            return 7
-104         return_const 7 1                         || lb53
-105         load 0                                   || dictToList_lazy
+            tailcall 1 106                           || dictToListAcc
+105         load 0                                   || dictToListAcc_lazy
             eval
             store 0
-106         ccreatet 0 11 5 0                        || dictToList
-            load 0
-            tailcall 1 108                           || dictToListAcc
-107         load 0                                   || dictToListAcc_lazy
-            eval
-            store 0
-108         load 0                                   || dictToListAcc
-            jmpt 2 109 110                           || lbs
-109         load 1                                   || lb55
+106         load 0                                   || dictToListAcc
+            jmpt 2 107 108                           || lbs
+107         load 1                                   || dictToListAcc_DLeaf
             eval
             return 2
-110         load 5                                   || lb56
+108         load 5                                   || dictToListAcc_DNode
             load 3
             load 2
             load 1
             load 0
-            tailcall 6 112                           || dictToListAccNode
-111         load 2                                   || dictToListAccNode_lazy
+            tailcall 6 110                           || dictToListAccNode
+109         load 2                                   || dictToListAccNode_lazy
             eval
             store 2
-112         load 4                                   || dictToListAccNode
+110         load 4                                   || dictToListAccNode
             load 3
             load 1
             load 0
-            pushfunc 4 113                           || dictToListAccNode_5
+            pushfunc 4 262                           || dictToListAccNode_1
             create 5 3
             load 2
-            tailcall 5 108                           || dictToListAcc
-113         load 3                                   || dictToListAccNode_5
-            load 2
-            pushfunc 2 107                           || dictToListAcc_lazy
-            create 3 3
-            load 1
-            eval
-            load 0
-            eval
-            ccreatet 2 11 7 0
-            ccreatet 2 11 5 1
-            return 4
-114         load 0                                   || buildBalanced_lazy
+            tailcall 5 106                           || dictToListAcc
+111         load 0                                   || buildBalanced_lazy
             eval
             store 0
-115         load 0                                   || buildBalanced
-            call 44                                  || length
+112         load 0                                   || buildBalanced
+            call 55                                  || length
             load 0
-            tailcall 1 117                           || buildBalancedN
-116         load 1                                   || buildBalancedN_lazy
+            tailcall 1 114                           || buildBalancedN
+113         load 1                                   || buildBalancedN_lazy
             eval
             store 1
-117         load 1                                   || buildBalancedN
-            ifneq 118                                || lb57
+114         load 1                                   || buildBalancedN
+            ifneq 115                                || buildBalancedN_else
             ccreatet 0 11 6 0
             return 2
-118         load 1                                   || lb57
+115         load 1                                   || buildBalancedN_else
             load 0
-            tailcall 2 119                           || buildBalancedSplit
-119         updsp 3                                  || buildBalancedSplit
+            tailcall 2 117                           || buildBalancedSplit
+116         jmp 117                                  || buildBalancedSplit || buildBalancedSplit_lazy
+117         updsp 3                                  || buildBalancedSplit
             load 4
-            pushfunc 1 120                           || buildBalancedSplit_6
+            pushfunc 1 264                           || buildBalancedSplit_1
             create 2 3
             store 0
             load 3
             load 0
-            pushfunc 2 68                            || take_lazy
+            pushfunc 2 79                            || take_lazy
             create 3 3
             store 1
             load 3
             load 0
-            pushfunc 2 74                            || drop_lazy
+            pushfunc 2 84                            || drop_lazy
             create 3 3
             store 2
             load 0
             load 4
-            pushfunc 2 121                           || buildBalancedSplit_7
+            pushfunc 2 266                           || buildBalancedSplit_2
             create 3 3
             load 2
-            eval
+            force
             load 0
             load 1
-            tailcall 5 123                           || buildBalancedNode
-120         load 0                                   || buildBalancedSplit_6
-            eval
-            push 2
-            div
-            return 1
-121         load 0                                   || buildBalancedSplit_7
-            eval
-            load 1
-            eval
-            sub
-            dec
-            return 2
-122         load 2                                   || buildBalancedNode_lazy
+            tailcall 5 119                           || buildBalancedNode
+118         load 2                                   || buildBalancedNode_lazy
             eval
             store 2
-123         load 2                                   || buildBalancedNode
-            jmpt 2 124 125                           || lbs
-124         debug 1                                  || lb59
+119         load 2                                   || buildBalancedNode
+            jmpt 2 120 121                           || lbs
+120         push "buildBalancedNode_Nil"             || buildBalancedNode_Nil
+            debug 2
             return 4
-125         load 5                                   || lb60
+121         load 5                                   || buildBalancedNode_Cons
             load 1
             load 3
             load 2
             load 0
-            tailcall 6 127                           || buildBalancedNodeFinish
-126         load 0                                   || buildBalancedNodeFinish_lazy
+            tailcall 6 123                           || buildBalancedNodeFinish
+122         load 0                                   || buildBalancedNodeFinish_lazy
             eval
             store 0
-127         load 0                                   || buildBalancedNodeFinish
-            jmpt 1 128                               || lbs
-128         load 6                                   || lb61
-            eval
+123         load 0                                   || buildBalancedNodeFinish
+            jmpt 1 124                               || lbs
+124         load 6                                   || buildBalancedNodeFinish_DictEntry
+            force
             load 5
-            call 117                                 || buildBalancedN
+            call 114                                 || buildBalancedN
             load 4
-            eval
+            force
             load 3
-            call 117                                 || buildBalancedN
+            call 114                                 || buildBalancedN
             load 1
             load 0
             ccreatet 4 11 6 1
             return 7
-129         load 2                                   || sortedInsert_lazy
+125         load 2                                   || sortedInsert_lazy
             eval
             store 2
-130         load 2                                   || sortedInsert
-            jmpt 2 131 132                           || lbs
-131         ccreatet 0 11 5 0                        || lb62
+126         load 2                                   || sortedInsert
+            jmpt 2 127 128                           || lbs
+127         ccreatet 0 11 5 0                        || sortedInsert_Nil
             load 1
-            eval
+            force
             load 0
-            eval
+            force
             ccreatet 2 11 7 0
             ccreatet 2 11 5 1
             return 3
-132         load 1                                   || lb63
+128         load 1                                   || sortedInsert_Cons
             load 0
             load 3
             load 2
-            tailcall 5 133                           || sortedInsertStep
-133         load 3                                   || sortedInsertStep
-            load 2
-            load 1
-            load 0
-            load 2
-            pushfunc 1 86                            || deKey_lazy
-            create 2 3
-            load 0
-            call 92                                  || strCompare
-            tailcall 4 135                           || sortedInsertCmp
-134         load 0                                   || sortedInsertCmp_lazy
+            force
+            tailcall 5 130                           || sortedInsertStep
+129         load 0                                   || sortedInsertStep_lazy
             eval
             store 0
-135         load 0                                   || sortedInsertCmp
-            ifneq 136                                || lb64
-            load 4
             load 2
             eval
+            store 2
+130         load 3                                   || sortedInsertStep
+            load 2
             load 1
+            load 0
+            load 2
+            call 96                                  || deKey
+            load 0
+            call 102                                 || strCompare
+            tailcall 4 132                           || sortedInsertCmp
+131         load 0                                   || sortedInsertCmp_lazy
             eval
+            store 0
+132         load 0                                   || sortedInsertCmp
+            ifneq 133                                || sortedInsertCmp_else
+            load 4
+            load 2
+            force
+            load 1
+            force
             ccreatet 2 11 7 0
             ccreatet 2 11 5 1
             return 5
-136         ifltlv 0 0 137                           || lb66 || lb64
+133         ifltlv 0 0 134                           || sortedInsertCmp_else_then || sortedInsertCmp_else
             load 4
             load 2
             load 1
-            pushfunc 3 129                           || sortedInsert_lazy
+            pushfunc 3 125                           || sortedInsert_lazy
             create 4 3
             load 3
-            eval
+            force
             ccreatet 2 11 5 1
             return 5
-137         load 4                                   || lb66
+134         load 4                                   || sortedInsertCmp_else_then
             load 3
-            pushfunc 2 138                           || sortedInsertCmp_8
+            pushfunc 2 268                           || sortedInsertCmp_1
             create 3 3
             load 2
-            eval
+            force
             load 1
-            eval
+            force
             ccreatet 2 11 7 0
             ccreatet 2 11 5 1
             return 5
-138         load 1                                   || sortedInsertCmp_8
-            load 0
-            eval
-            ccreatet 2 11 5 1
-            return 2
-139         load 1                                   || sortedRemove_lazy
+135         load 1                                   || sortedRemove_lazy
             eval
             store 1
-140         load 1                                   || sortedRemove
-            jmpt 2 141 142                           || lbs
-141         ccreatet 0 11 5 0                        || lb67
+136         load 1                                   || sortedRemove
+            jmpt 2 137 138                           || lbs
+137         ccreatet 0 11 5 0                        || sortedRemove_Nil
             return 2
-142         load 1                                   || lb68
+138         load 1                                   || sortedRemove_Cons
             load 0
             load 2
-            eval
-            tailcall 4 144                           || sortedRemoveStep
-143         load 1                                   || sortedRemoveStep_lazy
-            eval
-            store 1
-            load 0
+            force
+            tailcall 4 140                           || sortedRemoveStep
+139         load 0                                   || sortedRemoveStep_lazy
             eval
             store 0
-144         load 1                                   || sortedRemoveStep
-            call 87                                  || deKey
+            load 1
+            eval
+            store 1
+140         load 1                                   || sortedRemoveStep
+            call 96                                  || deKey
             load 0
             call 13                                  || strEqual
-            ifeq 145                                 || lb69
+            ifeq 141                                 || sortedRemoveStep_else
             load 2
             eval
             return 3
-145         load 2                                   || lb69
+141         load 2                                   || sortedRemoveStep_else
             load 0
-            pushfunc 2 139                           || sortedRemove_lazy
+            pushfunc 2 135                           || sortedRemove_lazy
             create 3 3
             load 1
             ccreatet 2 11 5 1
             return 3
-146         ccreatet 0 11 6 0                        || dictEmpty
+142         jmp 143                                  || dictEmpty || dictEmpty_lazy
+143         ccreatet 0 11 6 0                        || dictEmpty
             return 0
-147         load 0                                   || dictSize_lazy
+144         load 0                                   || dictSize_lazy
             eval
             store 0
-148         load 0                                   || dictSize
-            jmpt 2 149 150                           || lbs
-149         return_const 1 0                         || lb71
-150         load 3                                   || lb72
+145         load 0                                   || dictSize
+            jmpt 2 146 147                           || lbs
+146         return_const 1 0                         || dictSize_DLeaf
+147         load 3                                   || dictSize_DNode
             load 2
-            tailcall 5 152                           || dictSizeNode
-151         load 1                                   || dictSizeNode_lazy
+            tailcall 5 149                           || dictSizeNode
+148         load 0                                   || dictSizeNode_lazy
+            eval
+            store 0
+            load 1
             eval
             store 1
+149         push 1                                   || dictSizeNode
             load 0
-            eval
-            store 0
-152         push 1                                   || dictSizeNode
-            load 0
-            call 148                                 || dictSize
+            call 145                                 || dictSize
             add
             load 1
-            call 148                                 || dictSize
+            call 145                                 || dictSize
             add
             return 2
-153         load 2                                   || dictSet_lazy
+150         load 2                                   || dictSet_lazy
             eval
             store 2
-154         load 2                                   || dictSet
-            call 106                                 || dictToList
+151         load 2                                   || dictSet
+            call 104                                 || dictToList
             load 1
             load 0
-            call 130                                 || sortedInsert
-            tailcall 3 115                           || buildBalanced
-155         load 1                                   || dictRemove_lazy
+            call 126                                 || sortedInsert
+            tailcall 3 112                           || buildBalanced
+152         load 1                                   || dictRemove_lazy
             eval
             store 1
-156         load 1                                   || dictRemove
-            call 106                                 || dictToList
+153         load 1                                   || dictRemove
+            call 104                                 || dictToList
             load 0
-            call 140                                 || sortedRemove
-            tailcall 2 115                           || buildBalanced
-157         load 1                                   || dictHas_lazy
+            call 136                                 || sortedRemove
+            tailcall 2 112                           || buildBalanced
+154         load 1                                   || dictHas_lazy
             eval
             store 1
-158         load 1                                   || dictHas
-            jmpt 2 159 160                           || lbs
-159         return_const 2 0                         || lb73
-160         load 3                                   || lb74
+155         load 1                                   || dictHas
+            jmpt 2 156 157                           || lbs
+156         return_const 2 0                         || dictHas_DLeaf
+157         load 3                                   || dictHas_DNode
             load 2
             load 4
             load 0
             load 4
-            call 92                                  || strCompare
-            tailcall 6 162                           || dictHasAt
-161         load 0                                   || dictHasAt_lazy
+            force
+            call 102                                 || strCompare
+            tailcall 6 159                           || dictHasAt
+158         load 0                                   || dictHasAt_lazy
             eval
             store 0
-162         load 0                                   || dictHasAt
-            ifneq 163                                || lb75
+159         load 0                                   || dictHasAt
+            ifneq 160                                || dictHasAt_else
             return_const 4 1
-163         ifltlv 0 0 164                           || lb77 || lb75
+160         ifltlv 0 0 161                           || dictHasAt_else_then || dictHasAt_else
             load 3
-            eval
+            force
             load 1
-            tailcall 4 158                           || dictHas
-164         load 2                                   || lb77
-            eval
+            tailcall 4 155                           || dictHas
+161         load 2                                   || dictHasAt_else_then
+            force
             load 1
-            tailcall 4 158                           || dictHas
-165         load 1                                   || dictGet_lazy
+            tailcall 4 155                           || dictHas
+162         load 1                                   || dictGet_lazy
             eval
             store 1
-166         load 1                                   || dictGet
-            jmpt 2 167 168                           || lbs
-167         push "dictGet: sleutel niet gevonden"    || lb78
-            syscall 3
-            stop
+163         load 1                                   || dictGet
+            jmpt 2 164 165                           || lbs
+164         push "dictGet: sleutel niet gevonden"    || dictGet_DLeaf
+            syscall 8
             return 2
-168         load 3                                   || lb79
+165         load 3                                   || dictGet_DNode
             load 2
             load 1
             load 4
             load 0
             load 4
-            call 92                                  || strCompare
-            tailcall 6 170                           || dictGetAt
-169         load 0                                   || dictGetAt_lazy
+            force
+            call 102                                 || strCompare
+            tailcall 6 167                           || dictGetAt
+166         load 0                                   || dictGetAt_lazy
             eval
             store 0
-170         load 0                                   || dictGetAt
-            ifneq 171                                || lb80
+167         load 0                                   || dictGetAt
+            ifneq 168                                || dictGetAt_else
             load 2
             eval
             return 5
-171         ifltlv 0 0 172                           || lb82 || lb80
+168         ifltlv 0 0 169                           || dictGetAt_else_then || dictGetAt_else
             load 4
-            eval
+            force
             load 1
-            tailcall 5 166                           || dictGet
-172         load 3                                   || lb82
-            eval
+            tailcall 5 163                           || dictGet
+169         load 3                                   || dictGetAt_else_then
+            force
             load 1
-            tailcall 5 166                           || dictGet
-173         load 2                                   || dictGetOr_lazy
+            tailcall 5 163                           || dictGet
+170         load 2                                   || dictGetOr_lazy
             eval
             store 2
-174         load 2                                   || dictGetOr
-            jmpt 2 175 176                           || lbs
-175         load 1                                   || lb83
+171         load 2                                   || dictGetOr
+            jmpt 2 172 173                           || lbs
+172         load 1                                   || dictGetOr_DLeaf
             eval
             return 3
-176         load 3                                   || lb84
+173         load 3                                   || dictGetOr_DNode
             load 2
             load 1
             load 5
             load 4
             load 0
             load 4
-            call 92                                  || strCompare
-            tailcall 7 178                           || dictGetOrAt
-177         load 0                                   || dictGetOrAt_lazy
+            force
+            call 102                                 || strCompare
+            tailcall 7 175                           || dictGetOrAt
+174         load 0                                   || dictGetOrAt_lazy
             eval
             store 0
-178         load 0                                   || dictGetOrAt
-            ifneq 179                                || lb85
+175         load 0                                   || dictGetOrAt
+            ifneq 176                                || dictGetOrAt_else
             load 3
             eval
             return 6
-179         ifltlv 0 0 180                           || lb87 || lb85
+176         ifltlv 0 0 177                           || dictGetOrAt_else_then || dictGetOrAt_else
             load 5
-            eval
+            force
             load 2
             load 1
-            tailcall 6 174                           || dictGetOr
-180         load 4                                   || lb87
-            eval
+            tailcall 6 171                           || dictGetOr
+177         load 4                                   || dictGetOrAt_else_then
+            force
             load 2
             load 1
-            tailcall 6 174                           || dictGetOr
-181         load 0                                   || dictKeys_lazy
+            tailcall 6 171                           || dictGetOr
+178         load 0                                   || dictKeys_lazy
             eval
             store 0
-182         load 0                                   || dictKeys
-            call 106                                 || dictToList
-            tailcall 1 184                           || dictKeysOf
-183         load 0                                   || dictKeysOf_lazy
+179         load 0                                   || dictKeys
+            call 104                                 || dictToList
+            tailcall 1 181                           || dictKeysOf
+180         load 0                                   || dictKeysOf_lazy
             eval
             store 0
-184         load 0                                   || dictKeysOf
-            jmpt 2 185 186                           || lbs
-185         ccreatet 0 11 5 0                        || lb88
+181         load 0                                   || dictKeysOf
+            jmpt 2 182 183                           || lbs
+182         ccreatet 0 11 5 0                        || dictKeysOf_Nil
             return 1
-186         load 1                                   || lb89
-            pushfunc 1 183                           || dictKeysOf_lazy
+183         load 1                                   || dictKeysOf_Cons
+            pushfunc 1 180                           || dictKeysOf_lazy
             create 2 3
             load 0
-            call 87                                  || deKey
+            call 96                                  || deKey
             ccreatet 2 11 5 1
             return 3
-187         load 0                                   || dictValues_lazy
+184         load 0                                   || dictValues_lazy
             eval
             store 0
-188         load 0                                   || dictValues
-            call 106                                 || dictToList
-            tailcall 1 190                           || dictValuesOf
-189         load 0                                   || dictValuesOf_lazy
+185         load 0                                   || dictValues
+            call 104                                 || dictToList
+            tailcall 1 187                           || dictValuesOf
+186         load 0                                   || dictValuesOf_lazy
             eval
             store 0
-190         load 0                                   || dictValuesOf
-            jmpt 2 191 192                           || lbs
-191         ccreatet 0 11 5 0                        || lb90
+187         load 0                                   || dictValuesOf
+            jmpt 2 188 189                           || lbs
+188         ccreatet 0 11 5 0                        || dictValuesOf_Nil
             return 1
-192         load 1                                   || lb91
-            pushfunc 1 189                           || dictValuesOf_lazy
+189         load 1                                   || dictValuesOf_Cons
+            pushfunc 1 186                           || dictValuesOf_lazy
             create 2 3
             load 0
-            call 90                                  || deValue
+            call 99                                  || deValue
             ccreatet 2 11 5 1
             return 3
-193         load 0                                   || mergeSortEntries_lazy
+190         load 0                                   || mergeSortEntries_lazy
             eval
             store 0
-194         load 0                                   || mergeSortEntries
-            call 44                                  || length
+191         load 0                                   || mergeSortEntries
+            call 55                                  || length
             load 0
-            tailcall 1 196                           || mergeSortEntriesLen
-195         load 1                                   || mergeSortEntriesLen_lazy
+            tailcall 1 193                           || mergeSortEntriesLen
+192         load 1                                   || mergeSortEntriesLen_lazy
             eval
             store 1
-196         push 1                                   || mergeSortEntriesLen
+193         push 1                                   || mergeSortEntriesLen
             load 1
             sub
-            iflt 197                                 || lb92
+            iflt 194                                 || mergeSortEntriesLen_else
             load 0
             eval
             return 2
-197         load 1                                   || lb92
+194         load 1                                   || mergeSortEntriesLen_else
             load 0
-            tailcall 2 199                           || mergeSortEntriesSplit
-198         load 1                                   || mergeSortEntriesSplit_lazy
+            tailcall 2 196                           || mergeSortEntriesSplit
+195         load 1                                   || mergeSortEntriesSplit_lazy
             eval
             store 1
-199         updsp 3                                  || mergeSortEntriesSplit
+196         updsp 3                                  || mergeSortEntriesSplit
             load 4
             push 2
             div
             store 0
             load 3
             load 0
-            pushfunc 2 68                            || take_lazy
+            pushfunc 2 79                            || take_lazy
             create 3 3
             store 1
             load 3
             load 0
-            pushfunc 2 74                            || drop_lazy
+            pushfunc 2 84                            || drop_lazy
             create 3 3
             store 2
             load 4
             load 0
-            eval
+            force
             sub
             load 2
-            call 196                                 || mergeSortEntriesLen
+            call 193                                 || mergeSortEntriesLen
             load 0
-            eval
+            force
             load 1
-            call 196                                 || mergeSortEntriesLen
-            tailcall 5 201                           || mergeEntries
-200         load 1                                   || mergeEntries_lazy
-            eval
-            store 1
-            load 0
+            call 193                                 || mergeSortEntriesLen
+            tailcall 5 198                           || mergeEntries
+197         load 0                                   || mergeEntries_lazy
             eval
             store 0
-201         load 0                                   || mergeEntries
-            jmpt 2 202 203                           || lbs
-202         load 1                                   || lb94
+            load 1
+            eval
+            store 1
+198         load 0                                   || mergeEntries
+            jmpt 2 199 200                           || lbs
+199         load 1                                   || mergeEntries_Nil
             return 2
-203         load 3                                   || lb95
+200         load 3                                   || mergeEntries_Cons
             load 1
             load 0
-            tailcall 4 205                           || mergeEntriesCons
-204         load 2                                   || mergeEntriesCons_lazy
+            tailcall 4 202                           || mergeEntriesCons
+201         load 2                                   || mergeEntriesCons_lazy
             eval
             store 2
-205         load 2                                   || mergeEntriesCons
-            jmpt 2 206 207                           || lbs
-206         load 1                                   || lb96
+202         load 2                                   || mergeEntriesCons
+            jmpt 2 203 204                           || lbs
+203         load 1                                   || mergeEntriesCons_Nil
             load 0
-            eval
+            force
             ccreatet 2 11 5 1
             return 3
-207         load 1                                   || lb97
+204         load 1                                   || mergeEntriesCons_Cons
             load 0
             load 3
             load 2
-            tailcall 5 208                           || mergeEntriesBoth
-208         push 0                                   || mergeEntriesBoth
+            force
+            tailcall 5 206                           || mergeEntriesBoth
+205         load 0                                   || mergeEntriesBoth_lazy
+            eval
+            store 0
             load 2
-            pushfunc 1 86                            || deKey_lazy
-            create 2 3
+            eval
+            store 2
+206         push 0                                   || mergeEntriesBoth
+            load 2
+            call 96                                  || deKey
             load 0
-            pushfunc 1 86                            || deKey_lazy
-            create 2 3
-            call 92                                  || strCompare
+            call 96                                  || deKey
+            call 102                                 || strCompare
             sub
-            iflt 209                                 || lb98
+            iflt 207                                 || mergeEntriesBoth_else
             load 3
             load 2
-            pushfunc 2 210                           || mergeEntriesBoth_9
-            create 3 3
+            ccreatet 2 11 5 1
             load 1
-            pushfunc 2 200                           || mergeEntries_lazy
+            pushfunc 2 197                           || mergeEntries_lazy
             create 3 3
             load 0
-            eval
             ccreatet 2 11 5 1
             return 4
-209         load 3                                   || lb98
+207         load 3                                   || mergeEntriesBoth_else
             load 1
             load 0
-            pushfunc 2 211                           || mergeEntriesBoth_10
-            create 3 3
-            pushfunc 2 200                           || mergeEntries_lazy
+            ccreatet 2 11 5 1
+            pushfunc 2 197                           || mergeEntries_lazy
             create 3 3
             load 2
-            eval
             ccreatet 2 11 5 1
             return 4
-210         load 1                                   || mergeEntriesBoth_9
-            load 0
-            eval
-            ccreatet 2 11 5 1
-            return 2
-211         load 1                                   || mergeEntriesBoth_10
-            load 0
-            eval
-            ccreatet 2 11 5 1
-            return 2
-212         load 0                                   || dedupKeepLast_lazy
+208         load 0                                   || dedupKeepLast_lazy
             eval
             store 0
-213         load 0                                   || dedupKeepLast
-            jmpt 2 214 215                           || lbs
-214         ccreatet 0 11 5 0                        || lb100
+209         load 0                                   || dedupKeepLast
+            jmpt 2 210 211                           || lbs
+210         ccreatet 0 11 5 0                        || dedupKeepLast_Nil
             return 1
-215         load 1                                   || lb101
-            eval
+211         load 1                                   || dedupKeepLast_Cons
+            force
             load 0
-            tailcall 3 217                           || dedupKeepLastStep
-216         load 1                                   || dedupKeepLastStep_lazy
+            tailcall 3 213                           || dedupKeepLastStep
+212         load 1                                   || dedupKeepLastStep_lazy
             eval
             store 1
-217         load 1                                   || dedupKeepLastStep
-            jmpt 2 218 219                           || lbs
-218         ccreatet 0 11 5 0                        || lb102
+213         load 1                                   || dedupKeepLastStep
+            jmpt 2 214 215                           || lbs
+214         ccreatet 0 11 5 0                        || dedupKeepLastStep_Nil
             load 0
-            eval
+            force
             ccreatet 2 11 5 1
             return 2
-219         load 1                                   || lb103
+215         load 1                                   || dedupKeepLastStep_Cons
             load 0
             load 2
-            eval
-            tailcall 4 221                           || dedupKeepLastCmp
-220         load 1                                   || dedupKeepLastCmp_lazy
-            eval
-            store 1
-            load 0
+            force
+            tailcall 4 217                           || dedupKeepLastCmp
+216         load 0                                   || dedupKeepLastCmp_lazy
             eval
             store 0
-221         load 1                                   || dedupKeepLastCmp
-            call 87                                  || deKey
-            load 0
-            call 87                                  || deKey
-            call 13                                  || strEqual
-            ifeq 222                                 || lb104
-            load 2
+            load 1
             eval
+            store 1
+217         load 1                                   || dedupKeepLastCmp
+            call 96                                  || deKey
+            load 0
+            call 96                                  || deKey
+            call 13                                  || strEqual
+            ifeq 218                                 || dedupKeepLastCmp_else
+            load 2
+            force
             load 1
-            tailcall 3 217                           || dedupKeepLastStep
-222         load 2                                   || lb104
+            tailcall 3 213                           || dedupKeepLastStep
+218         load 2                                   || dedupKeepLastCmp_else
             load 1
-            pushfunc 2 216                           || dedupKeepLastStep_lazy
+            pushfunc 2 212                           || dedupKeepLastStep_lazy
             create 3 3
             load 0
             ccreatet 2 11 5 1
             return 3
-223         load 0                                   || dictFromList_lazy
+219         load 0                                   || dictFromList_lazy
             eval
             store 0
-224         load 0                                   || dictFromList
-            call 194                                 || mergeSortEntries
-            call 213                                 || dedupKeepLast
-            tailcall 1 115                           || buildBalanced
-225         push 0                                   || geenSleutel
+220         load 0                                   || dictFromList
+            call 191                                 || mergeSortEntries
+            call 209                                 || dedupKeepLast
+            tailcall 1 112                           || buildBalanced
+221         jmp 222                                  || geenSleutel || geenSleutel_lazy
+222         push 0                                   || geenSleutel
             dec
             return 0
-226         updsp 4                                  || basis
-            pushfunc 0 146                           || dictEmpty
+223         jmp 224                                  || basis || basis_lazy
+224         updsp 4                                  || basis
+            pushfunc 0 143                           || dictEmpty
             create 1 3
             dup
             store 0
             push 8080
-            pushfunc 0 227                           || basis_11
-            create 1 3
-            pushfunc 3 153                           || dictSet_lazy
+            push "poort"
+            pushfunc 3 150                           || dictSet_lazy
             create 4 3
             dup
             store 1
             push 1
-            pushfunc 0 228                           || basis_12
-            create 1 3
-            pushfunc 3 153                           || dictSet_lazy
+            push "omgeving"
+            pushfunc 3 150                           || dictSet_lazy
             create 4 3
             dup
             store 2
             push 9090
-            pushfunc 0 229                           || basis_13
-            create 1 3
-            pushfunc 3 153                           || dictSet_lazy
+            push "poort"
+            pushfunc 3 150                           || dictSet_lazy
             create 4 3
             dup
             store 3
-            eval
-            pushfunc 0 230                           || basis_14
-            create 1 3
-            call 166                                 || dictGet
+            force
+            push "poort"
+            call 163                                 || dictGet
             print 0
             push 32
             push 1
             syscall 7
+            pop
             load 3
-            eval
-            pushfunc 0 225                           || geenSleutel
+            force
+            pushfunc 0 222                           || geenSleutel
             create 1 3
-            pushfunc 0 231                           || basis_15
-            create 1 3
-            call 174                                 || dictGetOr
+            push "ontbreekt"
+            call 171                                 || dictGetOr
             print 0
             push 32
             push 1
             syscall 7
+            pop
             load 3
-            eval
-            pushfunc 0 232                           || basis_16
-            create 1 3
-            call 158                                 || dictHas
+            force
+            push "omgeving"
+            call 155                                 || dictHas
             print 0
             push 32
             push 1
             syscall 7
+            pop
             load 3
-            eval
-            pushfunc 0 233                           || basis_17
-            create 1 3
-            call 158                                 || dictHas
+            force
+            push "weg"
+            call 155                                 || dictHas
             print 0
             push 32
             push 1
             syscall 7
+            pop
             load 3
-            eval
-            call 148                                 || dictSize
+            force
+            call 145                                 || dictSize
             print 0
             push 32
             push 1
             syscall 7
+            pop
             load 3
-            eval
-            pushfunc 0 234                           || basis_18
-            create 1 3
-            call 156                                 || dictRemove
-            call 148                                 || dictSize
+            force
+            push "poort"
+            call 153                                 || dictRemove
+            call 145                                 || dictSize
             print 0
             push 32
             push 1
             syscall 7
             return 4
-227         push "poort"                             || basis_11
-            return 0
-228         push "omgeving"                          || basis_12
-            return 0
-229         push "poort"                             || basis_13
-            return 0
-230         push "poort"                             || basis_14
-            return 0
-231         push "ontbreekt"                         || basis_15
-            return 0
-232         push "omgeving"                          || basis_16
-            return 0
-233         push "weg"                               || basis_17
-            return 0
-234         push "poort"                             || basis_18
-            return 0
-235         call 146                                 || dictEmpty || gesorteerdeSleutels
+225         jmp 226                                  || gesorteerdeSleutels || gesorteerdeSleutels_lazy
+226         call 143                                 || dictEmpty || gesorteerdeSleutels
             push 1
-            pushfunc 0 236                           || gesorteerdeSleutels_19
-            create 1 3
-            call 154                                 || dictSet
+            push "a"
+            call 151                                 || dictSet
             push 2
-            pushfunc 0 237                           || gesorteerdeSleutels_20
-            create 1 3
-            call 154                                 || dictSet
+            push "b"
+            call 151                                 || dictSet
             push 3
-            pushfunc 0 238                           || gesorteerdeSleutels_21
-            create 1 3
-            call 154                                 || dictSet
+            push "c"
+            call 151                                 || dictSet
             push 4
-            pushfunc 0 239                           || gesorteerdeSleutels_22
-            create 1 3
-            call 154                                 || dictSet
+            push "d"
+            call 151                                 || dictSet
             push 5
-            pushfunc 0 240                           || gesorteerdeSleutels_23
-            create 1 3
-            tailcall 0 154                           || dictSet
-236         push "a"                                 || gesorteerdeSleutels_19
-            return 0
-237         push "b"                                 || gesorteerdeSleutels_20
-            return 0
-238         push "c"                                 || gesorteerdeSleutels_21
-            return 0
-239         push "d"                                 || gesorteerdeSleutels_22
-            return 0
-240         push "e"                                 || gesorteerdeSleutels_23
-            return 0
-241         call 235                                 || gesorteerdeSleutels || sleutelsGesorteerd
-            call 182                                 || dictKeys
-            tailcall 0 243                           || strictOplopend
-242         load 0                                   || strictOplopend_lazy
+            push "e"
+            tailcall 0 151                           || dictSet
+227         jmp 228                                  || sleutelsGesorteerd || sleutelsGesorteerd_lazy
+228         call 226                                 || gesorteerdeSleutels || sleutelsGesorteerd
+            call 179                                 || dictKeys
+            tailcall 0 230                           || strictOplopend
+229         load 0                                   || strictOplopend_lazy
             eval
             store 0
-243         load 0                                   || strictOplopend
-            jmpt 2 244 245                           || lbs
-244         return_const 1 1                         || lb106
-245         load 1                                   || lb107
-            eval
+230         load 0                                   || strictOplopend
+            jmpt 2 231 232                           || lbs
+231         return_const 1 1                         || strictOplopend_Nil
+232         load 1                                   || strictOplopend_Cons
+            force
             load 0
-            tailcall 3 247                           || strictOplopendStep
-246         load 1                                   || strictOplopendStep_lazy
+            tailcall 3 234                           || strictOplopendStep
+233         load 1                                   || strictOplopendStep_lazy
             eval
             store 1
-247         load 1                                   || strictOplopendStep
-            jmpt 2 248 249                           || lbs
-248         return_const 2 1                         || lb108
-249         push 0                                   || lb109
+234         load 1                                   || strictOplopendStep
+            jmpt 2 235 236                           || lbs
+235         return_const 2 1                         || strictOplopendStep_Nil
+236         push 0                                   || strictOplopendStep_Cons
             load 0
             load 2
-            call 92                                  || strCompare
+            force
+            call 102                                 || strCompare
             sub
-            ifle 250                                 || lb110
+            ifle 237                                 || strictOplopendStep_Cons_else
             load 1
-            eval
+            force
             load 0
-            tailcall 4 247                           || strictOplopendStep
-250         return_const 4 0                         || lb110
-251         pushfunc 0 270                           || sleutels20_24 || sleutels20
+            tailcall 4 234                           || strictOplopendStep
+237         return_const 4 0                         || strictOplopendStep_Cons_else
+238         jmp 239                                  || sleutels20 || sleutels20_lazy
+239         pushfunc 0 306                           || sleutels20_19 || sleutels20
             create 1 3
             push "k01"
             ccreatet 2 11 5 1
             return 0
-252         ccreatet 0 11 5 0                        || sleutels20_42
-            push "k20"
-            ccreatet 2 11 5 1
-            return 0
-253         pushfunc 0 252                           || sleutels20_42 || sleutels20_41
-            create 1 3
-            push "k19"
-            ccreatet 2 11 5 1
-            return 0
-254         pushfunc 0 253                           || sleutels20_41 || sleutels20_40
-            create 1 3
-            push "k18"
-            ccreatet 2 11 5 1
-            return 0
-255         pushfunc 0 254                           || sleutels20_40 || sleutels20_39
-            create 1 3
-            push "k17"
-            ccreatet 2 11 5 1
-            return 0
-256         pushfunc 0 255                           || sleutels20_39 || sleutels20_38
-            create 1 3
-            push "k16"
-            ccreatet 2 11 5 1
-            return 0
-257         pushfunc 0 256                           || sleutels20_38 || sleutels20_37
-            create 1 3
-            push "k15"
-            ccreatet 2 11 5 1
-            return 0
-258         pushfunc 0 257                           || sleutels20_37 || sleutels20_36
-            create 1 3
-            push "k14"
-            ccreatet 2 11 5 1
-            return 0
-259         pushfunc 0 258                           || sleutels20_36 || sleutels20_35
-            create 1 3
-            push "k13"
-            ccreatet 2 11 5 1
-            return 0
-260         pushfunc 0 259                           || sleutels20_35 || sleutels20_34
-            create 1 3
-            push "k12"
-            ccreatet 2 11 5 1
-            return 0
-261         pushfunc 0 260                           || sleutels20_34 || sleutels20_33
-            create 1 3
-            push "k11"
-            ccreatet 2 11 5 1
-            return 0
-262         pushfunc 0 261                           || sleutels20_33 || sleutels20_32
-            create 1 3
-            push "k10"
-            ccreatet 2 11 5 1
-            return 0
-263         pushfunc 0 262                           || sleutels20_32 || sleutels20_31
-            create 1 3
-            push "k09"
-            ccreatet 2 11 5 1
-            return 0
-264         pushfunc 0 263                           || sleutels20_31 || sleutels20_30
-            create 1 3
-            push "k08"
-            ccreatet 2 11 5 1
-            return 0
-265         pushfunc 0 264                           || sleutels20_30 || sleutels20_29
-            create 1 3
-            push "k07"
-            ccreatet 2 11 5 1
-            return 0
-266         pushfunc 0 265                           || sleutels20_29 || sleutels20_28
-            create 1 3
-            push "k06"
-            ccreatet 2 11 5 1
-            return 0
-267         pushfunc 0 266                           || sleutels20_28 || sleutels20_27
-            create 1 3
-            push "k05"
-            ccreatet 2 11 5 1
-            return 0
-268         pushfunc 0 267                           || sleutels20_27 || sleutels20_26
-            create 1 3
-            push "k04"
-            ccreatet 2 11 5 1
-            return 0
-269         pushfunc 0 268                           || sleutels20_26 || sleutels20_25
-            create 1 3
-            push "k03"
-            ccreatet 2 11 5 1
-            return 0
-270         pushfunc 0 269                           || sleutels20_25 || sleutels20_24
-            create 1 3
-            push "k02"
-            ccreatet 2 11 5 1
-            return 0
-271         load 0                                   || bouwOp_lazy
+240         load 0                                   || bouwOp_lazy
             eval
             store 0
-272         load 0                                   || bouwOp
-            jmpt 2 273 274                           || lbs
-273         load 2                                   || lb112
+241         load 0                                   || bouwOp
+            jmpt 2 242 243                           || lbs
+242         load 2                                   || bouwOp_Nil
             eval
             return 3
-274         load 4                                   || lb113
+243         load 4                                   || bouwOp_Cons
             load 3
             load 0
-            pushfunc 3 153                           || dictSet_lazy
+            pushfunc 3 150                           || dictSet_lazy
             create 4 3
             load 3
-            pushfunc 1 275                           || bouwOp_43
+            pushfunc 1 308                           || bouwOp_1
             create 2 3
             load 1
-            eval
-            tailcall 5 272                           || bouwOp
-275         load 0                                   || bouwOp_43
-            eval
-            push 1
-            add
-            return 1
-276         load 0                                   || controleerAlles_lazy
+            force
+            tailcall 5 241                           || bouwOp
+244         load 0                                   || controleerAlles_lazy
             eval
             store 0
-277         load 0                                   || controleerAlles
-            jmpt 2 278 279                           || lbs
-278         return_const 3 1                         || lb114
-279         load 4                                   || lb115
-            eval
+245         load 0                                   || controleerAlles
+            jmpt 2 246 247                           || lbs
+246         return_const 3 1                         || controleerAlles_Nil
+247         load 4                                   || controleerAlles_Cons
+            force
             load 1
             load 3
-            eval
+            force
             load 0
-            tailcall 5 281                           || controleerEen
-280         load 3                                   || controleerEen_lazy
-            eval
-            store 3
-            load 1
+            tailcall 5 249                           || controleerEen
+248         load 1                                   || controleerEen_lazy
             eval
             store 1
-281         load 3                                   || controleerEen
+            load 3
+            eval
+            store 3
+249         load 3                                   || controleerEen
             load 0
-            call 166                                 || dictGet
+            call 163                                 || dictGet
             load 1
             sub
-            ifneq 282                                || lb116
+            ifneq 250                                || controleerEen_else
             load 3
             loadadd 1 1
             load 2
-            eval
-            tailcall 4 277                           || controleerAlles
-282         return_const 4 0                         || lb116
-283         pushfunc 0 146                           || dictEmpty || grotereDict
+            force
+            tailcall 4 245                           || controleerAlles
+250         return_const 4 0                         || controleerEen_else
+251         jmp 252                                  || grotereDict || grotereDict_lazy
+252         pushfunc 0 143                           || dictEmpty || grotereDict
             create 1 3
             push 1
-            call 251                                 || sleutels20
-            tailcall 0 272                           || bouwOp
-284         pushfunc 0 286                           || vanuitLijst_44 || vanuitLijst
+            call 239                                 || sleutels20
+            tailcall 0 241                           || bouwOp
+253         jmp 254                                  || vanuitLijst || vanuitLijst_lazy
+254         pushfunc 0 312                           || vanuitLijst_2 || vanuitLijst
             create 1 3
             push 1
             push "x"
             ccreatet 2 11 7 0
             ccreatet 2 11 5 1
-            tailcall 0 224                           || dictFromList
-285         ccreatet 0 11 5 0                        || vanuitLijst_45
+            tailcall 0 220                           || dictFromList
+255         jmp 256                                  || start || start_lazy
+256         call 224                                 || basis || start
+            pop
+            call 228                                 || sleutelsGesorteerd
+            print 0
+            push 32
+            push 1
+            syscall 7
+            pop
+            pushfunc 0 252                           || grotereDict
+            create 1 3
+            push 1
+            call 239                                 || sleutels20
+            call 245                                 || controleerAlles
+            print 0
+            push 32
+            push 1
+            syscall 7
+            pop
+            call 252                                 || grotereDict
+            call 145                                 || dictSize
+            print 0
+            push 32
+            push 1
+            syscall 7
+            pop
+            call 254                                 || vanuitLijst
+            push "x"
+            call 163                                 || dictGet
+            print 0
+            push 32
+            push 1
+            syscall 7
+            pop
+            call 254                                 || vanuitLijst
+            call 145                                 || dictSize
+            print 0
+            push 10
+            push 1
+            syscall 7
+            return 0
+257         jmp 258                                  || readStream_1 || readStream_1_lazy
+258         load 0                                   || readStream_1
+            force
+            syscall 6
+            return 1
+259         jmp 260                                  || substrClamp_j1 || substrClamp_j1_lazy
+260         push 0                                   || substrClamp_j1
+            array_create_dynamic 1
+            return 1
+261         jmp 262                                  || dictToListAccNode_1 || dictToListAccNode_1_lazy
+262         load 3                                   || dictToListAccNode_1
+            load 2
+            pushfunc 2 105                           || dictToListAcc_lazy
+            create 3 3
+            load 1
+            force
+            load 0
+            force
+            ccreatet 2 11 7 0
+            ccreatet 2 11 5 1
+            return 4
+263         jmp 264                                  || buildBalancedSplit_1 || buildBalancedSplit_1_lazy
+264         load 0                                   || buildBalancedSplit_1
+            force
+            push 2
+            div
+            return 1
+265         jmp 266                                  || buildBalancedSplit_2 || buildBalancedSplit_2_lazy
+266         load 0                                   || buildBalancedSplit_2
+            force
+            load 1
+            force
+            sub
+            dec
+            return 2
+267         jmp 268                                  || sortedInsertCmp_1 || sortedInsertCmp_1_lazy
+268         load 1                                   || sortedInsertCmp_1
+            load 0
+            force
+            ccreatet 2 11 5 1
+            return 2
+269         jmp 270                                  || sleutels20_1 || sleutels20_1_lazy
+270         ccreatet 0 11 5 0                        || sleutels20_1
+            push "k20"
+            ccreatet 2 11 5 1
+            return 0
+271         jmp 272                                  || sleutels20_2 || sleutels20_2_lazy
+272         pushfunc 0 270                           || sleutels20_1 || sleutels20_2
+            create 1 3
+            push "k19"
+            ccreatet 2 11 5 1
+            return 0
+273         jmp 274                                  || sleutels20_3 || sleutels20_3_lazy
+274         pushfunc 0 272                           || sleutels20_2 || sleutels20_3
+            create 1 3
+            push "k18"
+            ccreatet 2 11 5 1
+            return 0
+275         jmp 276                                  || sleutels20_4 || sleutels20_4_lazy
+276         pushfunc 0 274                           || sleutels20_3 || sleutels20_4
+            create 1 3
+            push "k17"
+            ccreatet 2 11 5 1
+            return 0
+277         jmp 278                                  || sleutels20_5 || sleutels20_5_lazy
+278         pushfunc 0 276                           || sleutels20_4 || sleutels20_5
+            create 1 3
+            push "k16"
+            ccreatet 2 11 5 1
+            return 0
+279         jmp 280                                  || sleutels20_6 || sleutels20_6_lazy
+280         pushfunc 0 278                           || sleutels20_5 || sleutels20_6
+            create 1 3
+            push "k15"
+            ccreatet 2 11 5 1
+            return 0
+281         jmp 282                                  || sleutels20_7 || sleutels20_7_lazy
+282         pushfunc 0 280                           || sleutels20_6 || sleutels20_7
+            create 1 3
+            push "k14"
+            ccreatet 2 11 5 1
+            return 0
+283         jmp 284                                  || sleutels20_8 || sleutels20_8_lazy
+284         pushfunc 0 282                           || sleutels20_7 || sleutels20_8
+            create 1 3
+            push "k13"
+            ccreatet 2 11 5 1
+            return 0
+285         jmp 286                                  || sleutels20_9 || sleutels20_9_lazy
+286         pushfunc 0 284                           || sleutels20_8 || sleutels20_9
+            create 1 3
+            push "k12"
+            ccreatet 2 11 5 1
+            return 0
+287         jmp 288                                  || sleutels20_10 || sleutels20_10_lazy
+288         pushfunc 0 286                           || sleutels20_9 || sleutels20_10
+            create 1 3
+            push "k11"
+            ccreatet 2 11 5 1
+            return 0
+289         jmp 290                                  || sleutels20_11 || sleutels20_11_lazy
+290         pushfunc 0 288                           || sleutels20_10 || sleutels20_11
+            create 1 3
+            push "k10"
+            ccreatet 2 11 5 1
+            return 0
+291         jmp 292                                  || sleutels20_12 || sleutels20_12_lazy
+292         pushfunc 0 290                           || sleutels20_11 || sleutels20_12
+            create 1 3
+            push "k09"
+            ccreatet 2 11 5 1
+            return 0
+293         jmp 294                                  || sleutels20_13 || sleutels20_13_lazy
+294         pushfunc 0 292                           || sleutels20_12 || sleutels20_13
+            create 1 3
+            push "k08"
+            ccreatet 2 11 5 1
+            return 0
+295         jmp 296                                  || sleutels20_14 || sleutels20_14_lazy
+296         pushfunc 0 294                           || sleutels20_13 || sleutels20_14
+            create 1 3
+            push "k07"
+            ccreatet 2 11 5 1
+            return 0
+297         jmp 298                                  || sleutels20_15 || sleutels20_15_lazy
+298         pushfunc 0 296                           || sleutels20_14 || sleutels20_15
+            create 1 3
+            push "k06"
+            ccreatet 2 11 5 1
+            return 0
+299         jmp 300                                  || sleutels20_16 || sleutels20_16_lazy
+300         pushfunc 0 298                           || sleutels20_15 || sleutels20_16
+            create 1 3
+            push "k05"
+            ccreatet 2 11 5 1
+            return 0
+301         jmp 302                                  || sleutels20_17 || sleutels20_17_lazy
+302         pushfunc 0 300                           || sleutels20_16 || sleutels20_17
+            create 1 3
+            push "k04"
+            ccreatet 2 11 5 1
+            return 0
+303         jmp 304                                  || sleutels20_18 || sleutels20_18_lazy
+304         pushfunc 0 302                           || sleutels20_17 || sleutels20_18
+            create 1 3
+            push "k03"
+            ccreatet 2 11 5 1
+            return 0
+305         jmp 306                                  || sleutels20_19 || sleutels20_19_lazy
+306         pushfunc 0 304                           || sleutels20_18 || sleutels20_19
+            create 1 3
+            push "k02"
+            ccreatet 2 11 5 1
+            return 0
+307         jmp 308                                  || bouwOp_1 || bouwOp_1_lazy
+308         load 0                                   || bouwOp_1
+            force
+            inc
+            return 1
+309         jmp 310                                  || vanuitLijst_1 || vanuitLijst_1_lazy
+310         ccreatet 0 11 5 0                        || vanuitLijst_1
             push 99
             push "x"
             ccreatet 2 11 7 0
             ccreatet 2 11 5 1
             return 0
-286         pushfunc 0 285                           || vanuitLijst_45 || vanuitLijst_44
+311         jmp 312                                  || vanuitLijst_2 || vanuitLijst_2_lazy
+312         pushfunc 0 310                           || vanuitLijst_1 || vanuitLijst_2
             create 1 3
             push 2
             push "y"
             ccreatet 2 11 7 0
             ccreatet 2 11 5 1
             return 0
-287         call 226                                 || basis || start
-            call 241                                 || sleutelsGesorteerd
-            print 0
-            push 32
-            push 1
-            syscall 7
-            pushfunc 0 283                           || grotereDict
-            create 1 3
-            push 1
-            call 251                                 || sleutels20
-            call 277                                 || controleerAlles
-            print 0
-            push 32
-            push 1
-            syscall 7
-            call 283                                 || grotereDict
-            call 148                                 || dictSize
-            print 0
-            push 32
-            push 1
-            syscall 7
-            call 284                                 || vanuitLijst
-            pushfunc 0 288                           || start_46
-            create 1 3
-            call 166                                 || dictGet
-            print 0
-            push 32
-            push 1
-            syscall 7
-            call 284                                 || vanuitLijst
-            call 148                                 || dictSize
-            print 0
-            push 10
-            push 1
-            syscall 7
-            return 0
-288         push "x"                                 || start_46
-            return 0
+313         jmp 314                                  || __ap2 || __ap2_lazy
+314         load 1                                   || __ap2
+            load 0
+            eval
+            return 2
+315         jmp 316                                  || __ap3 || __ap3_lazy
+316         load 2                                   || __ap3
+            load 1
+            load 0
+            eval
+            return 3
 
 .metadata
-types 3
+types 4
 type 5 list 2
   constr 0 Nil 0
   constr 1 Cons 2
@@ -1505,7 +1498,10 @@ type 6 Dict 2
   constr 1 DNode 4
 type 7 DictEntry 1
   constr 0 DictEntry 2
-functions 151
+type 8 __Char 1
+  constr 0 __Char 1
+functions 224
+  func 1 readStream 1 00
   func 0 readStream 1 00
   func 4 writeStream 2 010
   func 3 writeStream 2 010
@@ -1525,136 +1521,208 @@ functions 151
   func 25 strcat 2 110
   func 28 toUpperChar 1 10
   func 27 toUpperChar 1 10
+  func 32 code 1 10
   func 31 code 1 10
-  func 30 code 1 10
+  func 34 decode 1 10
   func 33 decode 1 10
-  func 32 decode 1 10
+  func 36 strUpper 1 10
   func 35 strUpper 1 10
-  func 34 strUpper 1 10
-  func 37 substr 3 1110
-  func 36 substr 3 1110
-  func 39 itoa 1 10
-  func 38 itoa 1 10
-  func 44 length 1 10
-  func 43 length 1 10
-  func 48 map 2 010
-  func 47 map 2 010
-  func 52 filter 2 010
-  func 51 filter 2 010
-  func 57 foldl 3 0010
-  func 56 foldl 3 0010
-  func 61 foldr 3 0010
-  func 60 foldr 3 0010
-  func 65 append 2 100
-  func 64 append 2 100
-  func 69 take 2 010
-  func 68 take 2 010
-  func 75 drop 2 010
-  func 74 drop 2 010
-  func 81 reverse 1 10
-  func 80 reverse 1 10
-  func 83 rev 2 100
-  func 82 rev 2 100
-  func 87 deKey 1 10
-  func 86 deKey 1 10
-  func 90 deValue 1 10
-  func 89 deValue 1 10
-  func 92 strCompare 2 000
-  func 94 strCompareAt 5 111000
-  func 93 strCompareAt 5 111000
-  func 98 strCompareEnd1 2 110
-  func 97 strCompareEnd1 2 110
-  func 100 strCompareChar 5 000000
-  func 102 strCompareCharCmp 7 11000000
-  func 101 strCompareCharCmp 7 11000000
-  func 106 dictToList 1 10
-  func 105 dictToList 1 10
-  func 108 dictToListAcc 2 100
-  func 107 dictToListAcc 2 100
-  func 112 dictToListAccNode 5 001000
-  func 111 dictToListAccNode 5 001000
-  func 115 buildBalanced 1 10
-  func 114 buildBalanced 1 10
-  func 117 buildBalancedN 2 010
-  func 116 buildBalancedN 2 010
-  func 119 buildBalancedSplit 2 000
-  func 123 buildBalancedNode 4 00100
-  func 122 buildBalancedNode 4 00100
-  func 127 buildBalancedNodeFinish 5 100000
-  func 126 buildBalancedNodeFinish 5 100000
-  func 130 sortedInsert 3 0010
-  func 129 sortedInsert 3 0010
-  func 133 sortedInsertStep 4 00000
-  func 135 sortedInsertCmp 5 100000
-  func 134 sortedInsertCmp 5 100000
-  func 140 sortedRemove 2 010
-  func 139 sortedRemove 2 010
-  func 144 sortedRemoveStep 3 1100
-  func 143 sortedRemoveStep 3 1100
-  func 146 dictEmpty 0 0
-  func 148 dictSize 1 10
-  func 147 dictSize 1 10
-  func 152 dictSizeNode 2 110
-  func 151 dictSizeNode 2 110
-  func 154 dictSet 3 0010
-  func 153 dictSet 3 0010
-  func 156 dictRemove 2 010
-  func 155 dictRemove 2 010
-  func 158 dictHas 2 010
-  func 157 dictHas 2 010
-  func 162 dictHasAt 4 10000
-  func 161 dictHasAt 4 10000
-  func 166 dictGet 2 010
-  func 165 dictGet 2 010
-  func 170 dictGetAt 5 100000
-  func 169 dictGetAt 5 100000
-  func 174 dictGetOr 3 0010
-  func 173 dictGetOr 3 0010
-  func 178 dictGetOrAt 6 1000000
-  func 177 dictGetOrAt 6 1000000
-  func 182 dictKeys 1 10
-  func 181 dictKeys 1 10
-  func 184 dictKeysOf 1 10
-  func 183 dictKeysOf 1 10
-  func 188 dictValues 1 10
-  func 187 dictValues 1 10
-  func 190 dictValuesOf 1 10
-  func 189 dictValuesOf 1 10
-  func 194 mergeSortEntries 1 10
-  func 193 mergeSortEntries 1 10
-  func 196 mergeSortEntriesLen 2 010
-  func 195 mergeSortEntriesLen 2 010
-  func 199 mergeSortEntriesSplit 2 010
-  func 198 mergeSortEntriesSplit 2 010
-  func 201 mergeEntries 2 110
-  func 200 mergeEntries 2 110
-  func 205 mergeEntriesCons 3 0010
-  func 204 mergeEntriesCons 3 0010
-  func 208 mergeEntriesBoth 4 00000
-  func 213 dedupKeepLast 1 10
-  func 212 dedupKeepLast 1 10
-  func 217 dedupKeepLastStep 2 010
-  func 216 dedupKeepLastStep 2 010
-  func 221 dedupKeepLastCmp 3 1100
-  func 220 dedupKeepLastCmp 3 1100
-  func 224 dictFromList 1 10
-  func 223 dictFromList 1 10
-  func 225 geenSleutel 0 0
-  func 226 basis 0 0
-  func 235 gesorteerdeSleutels 0 0
-  func 241 sleutelsGesorteerd 0 0
-  func 243 strictOplopend 1 10
-  func 242 strictOplopend 1 10
-  func 247 strictOplopendStep 2 010
-  func 246 strictOplopendStep 2 010
-  func 251 sleutels20 0 0
-  func 272 bouwOp 3 1000
-  func 271 bouwOp 3 1000
-  func 277 controleerAlles 3 1000
-  func 276 controleerAlles 3 1000
-  func 281 controleerEen 4 01010
-  func 280 controleerEen 4 01010
-  func 283 grotereDict 0 0
-  func 284 vanuitLijst 0 0
-  func 287 start 0 0
+  func 38 strUpperAt 4 11110
+  func 37 strUpperAt 4 11110
+  func 41 substr 3 1110
+  func 40 substr 3 1110
+  func 43 substrClamp 4 11110
+  func 42 substrClamp 4 11110
+  func 47 substrLen 2 110
+  func 46 substrLen 2 110
+  func 51 itoa 1 10
+  func 50 itoa 1 10
+  func 55 length 1 10
+  func 54 length 1 10
+  func 59 map 2 010
+  func 58 map 2 010
+  func 63 filter 2 010
+  func 62 filter 2 010
+  func 68 foldl 3 0010
+  func 67 foldl 3 0010
+  func 72 foldr 3 0010
+  func 71 foldr 3 0010
+  func 76 append 2 100
+  func 75 append 2 100
+  func 80 take 2 010
+  func 79 take 2 010
+  func 85 drop 2 010
+  func 84 drop 2 010
+  func 90 reverse 1 10
+  func 89 reverse 1 10
+  func 92 rev 2 100
+  func 91 rev 2 100
+  func 96 deKey 1 10
+  func 95 deKey 1 10
+  func 99 deValue 1 10
+  func 98 deValue 1 10
+  func 102 strCompare 2 110
+  func 101 strCompare 2 110
+  func 104 dictToList 1 10
+  func 103 dictToList 1 10
+  func 106 dictToListAcc 2 100
+  func 105 dictToListAcc 2 100
+  func 110 dictToListAccNode 5 001000
+  func 109 dictToListAccNode 5 001000
+  func 112 buildBalanced 1 10
+  func 111 buildBalanced 1 10
+  func 114 buildBalancedN 2 010
+  func 113 buildBalancedN 2 010
+  func 117 buildBalancedSplit 2 000
+  func 116 buildBalancedSplit 2 000
+  func 119 buildBalancedNode 4 00100
+  func 118 buildBalancedNode 4 00100
+  func 123 buildBalancedNodeFinish 5 100000
+  func 122 buildBalancedNodeFinish 5 100000
+  func 126 sortedInsert 3 0010
+  func 125 sortedInsert 3 0010
+  func 130 sortedInsertStep 4 10100
+  func 129 sortedInsertStep 4 10100
+  func 132 sortedInsertCmp 5 100000
+  func 131 sortedInsertCmp 5 100000
+  func 136 sortedRemove 2 010
+  func 135 sortedRemove 2 010
+  func 140 sortedRemoveStep 3 1100
+  func 139 sortedRemoveStep 3 1100
+  func 143 dictEmpty 0 0
+  func 142 dictEmpty 0 0
+  func 145 dictSize 1 10
+  func 144 dictSize 1 10
+  func 149 dictSizeNode 2 110
+  func 148 dictSizeNode 2 110
+  func 151 dictSet 3 0010
+  func 150 dictSet 3 0010
+  func 153 dictRemove 2 010
+  func 152 dictRemove 2 010
+  func 155 dictHas 2 010
+  func 154 dictHas 2 010
+  func 159 dictHasAt 4 10000
+  func 158 dictHasAt 4 10000
+  func 163 dictGet 2 010
+  func 162 dictGet 2 010
+  func 167 dictGetAt 5 100000
+  func 166 dictGetAt 5 100000
+  func 171 dictGetOr 3 0010
+  func 170 dictGetOr 3 0010
+  func 175 dictGetOrAt 6 1000000
+  func 174 dictGetOrAt 6 1000000
+  func 179 dictKeys 1 10
+  func 178 dictKeys 1 10
+  func 181 dictKeysOf 1 10
+  func 180 dictKeysOf 1 10
+  func 185 dictValues 1 10
+  func 184 dictValues 1 10
+  func 187 dictValuesOf 1 10
+  func 186 dictValuesOf 1 10
+  func 191 mergeSortEntries 1 10
+  func 190 mergeSortEntries 1 10
+  func 193 mergeSortEntriesLen 2 010
+  func 192 mergeSortEntriesLen 2 010
+  func 196 mergeSortEntriesSplit 2 010
+  func 195 mergeSortEntriesSplit 2 010
+  func 198 mergeEntries 2 110
+  func 197 mergeEntries 2 110
+  func 202 mergeEntriesCons 3 0010
+  func 201 mergeEntriesCons 3 0010
+  func 206 mergeEntriesBoth 4 10100
+  func 205 mergeEntriesBoth 4 10100
+  func 209 dedupKeepLast 1 10
+  func 208 dedupKeepLast 1 10
+  func 213 dedupKeepLastStep 2 010
+  func 212 dedupKeepLastStep 2 010
+  func 217 dedupKeepLastCmp 3 1100
+  func 216 dedupKeepLastCmp 3 1100
+  func 220 dictFromList 1 10
+  func 219 dictFromList 1 10
+  func 222 geenSleutel 0 0
+  func 221 geenSleutel 0 0
+  func 224 basis 0 0
+  func 223 basis 0 0
+  func 226 gesorteerdeSleutels 0 0
+  func 225 gesorteerdeSleutels 0 0
+  func 228 sleutelsGesorteerd 0 0
+  func 227 sleutelsGesorteerd 0 0
+  func 230 strictOplopend 1 10
+  func 229 strictOplopend 1 10
+  func 234 strictOplopendStep 2 010
+  func 233 strictOplopendStep 2 010
+  func 239 sleutels20 0 0
+  func 238 sleutels20 0 0
+  func 241 bouwOp 3 1000
+  func 240 bouwOp 3 1000
+  func 245 controleerAlles 3 1000
+  func 244 controleerAlles 3 1000
+  func 249 controleerEen 4 01010
+  func 248 controleerEen 4 01010
+  func 252 grotereDict 0 0
+  func 251 grotereDict 0 0
+  func 254 vanuitLijst 0 0
+  func 253 vanuitLijst 0 0
+  func 256 start 0 0
+  func 255 start 0 0
+  func 258 readStream_1 1 00
+  func 257 readStream_1 1 00
+  func 260 substrClamp_j1 1 00
+  func 259 substrClamp_j1 1 00
+  func 262 dictToListAccNode_1 4 00000
+  func 261 dictToListAccNode_1 4 00000
+  func 264 buildBalancedSplit_1 1 00
+  func 263 buildBalancedSplit_1 1 00
+  func 266 buildBalancedSplit_2 2 000
+  func 265 buildBalancedSplit_2 2 000
+  func 268 sortedInsertCmp_1 2 000
+  func 267 sortedInsertCmp_1 2 000
+  func 270 sleutels20_1 0 0
+  func 269 sleutels20_1 0 0
+  func 272 sleutels20_2 0 0
+  func 271 sleutels20_2 0 0
+  func 274 sleutels20_3 0 0
+  func 273 sleutels20_3 0 0
+  func 276 sleutels20_4 0 0
+  func 275 sleutels20_4 0 0
+  func 278 sleutels20_5 0 0
+  func 277 sleutels20_5 0 0
+  func 280 sleutels20_6 0 0
+  func 279 sleutels20_6 0 0
+  func 282 sleutels20_7 0 0
+  func 281 sleutels20_7 0 0
+  func 284 sleutels20_8 0 0
+  func 283 sleutels20_8 0 0
+  func 286 sleutels20_9 0 0
+  func 285 sleutels20_9 0 0
+  func 288 sleutels20_10 0 0
+  func 287 sleutels20_10 0 0
+  func 290 sleutels20_11 0 0
+  func 289 sleutels20_11 0 0
+  func 292 sleutels20_12 0 0
+  func 291 sleutels20_12 0 0
+  func 294 sleutels20_13 0 0
+  func 293 sleutels20_13 0 0
+  func 296 sleutels20_14 0 0
+  func 295 sleutels20_14 0 0
+  func 298 sleutels20_15 0 0
+  func 297 sleutels20_15 0 0
+  func 300 sleutels20_16 0 0
+  func 299 sleutels20_16 0 0
+  func 302 sleutels20_17 0 0
+  func 301 sleutels20_17 0 0
+  func 304 sleutels20_18 0 0
+  func 303 sleutels20_18 0 0
+  func 306 sleutels20_19 0 0
+  func 305 sleutels20_19 0 0
+  func 308 bouwOp_1 1 00
+  func 307 bouwOp_1 1 00
+  func 310 vanuitLijst_1 0 0
+  func 309 vanuitLijst_1 0 0
+  func 312 vanuitLijst_2 0 0
+  func 311 vanuitLijst_2 0 0
+  func 314 __ap2 2 000
+  func 313 __ap2 2 000
+  func 316 __ap3 3 0000
+  func 315 __ap3 3 0000
 .endmetadata

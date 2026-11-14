@@ -42,22 +42,12 @@ deKey e = case e (DictEntry k v -> k)
 deValue e = case e (DictEntry k v -> v)
 
 // == Lexicografische vergelijking op gepakte strings (-1/0/1) ===============
-// Zelfde driewegs-eenpas-aanpak als ast_helpers.cfp's charListCompare,
-// maar voor gepakte strings (strlen/strat) i.p.v. char-lijsten -- dit is
-// een ANDER representatietype, geen duplicaat van die functie.
+// Sinds 14 november 2026 de VM-primitief `strcmp` (_AUX StrCmp, memcmp op de
+// bytes); daarvoor teken voor teken in Sapl (strlen/strat), wat in
+// abc2retag ~75% van de tijd kostte. Zelfde uitkomst: bytes zonder teken,
+// een voorvoegsel eerst.
 
-strCompare s1 s2 = strCompareAt 0 (strlen s1) (strlen s2) s1 s2
-
-strCompareAt i l1 l2 s1 s2 =
-  if (i == l1) (strCompareEnd1 i l2)
-  (if (i == l2) 1 (strCompareChar i l1 l2 s1 s2))
-
-strCompareEnd1 i l2 = if (i == l2) 0 (0 - 1)
-
-strCompareChar i l1 l2 s1 s2 = strCompareCharCmp (strat i s1) (strat i s2) i l1 l2 s1 s2
-
-strCompareCharCmp c1 c2 i l1 l2 s1 s2 =
-  if (c1 == c2) (strCompareAt (i + 1) l1 l2 s1 s2) (if (c1 < c2) (0 - 1) 1)
+strCompare !s1 !s2 = strcmp s1 s2
 
 // == In-order traversal (altijd gesorteerd, boom is altijd gebalanceerd) ===
 
