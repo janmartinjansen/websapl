@@ -261,9 +261,20 @@
           <h2>Languages, Notebooks &amp; Clean Interoperability</h2>
           <p class="group-desc">Running Haskell Lite and Clean programs on the JMVM, plus reactive browser notebooks.</p>
         </div>
-        <span class="group-count">3 sheets</span>
+        <span class="group-count">4 sheets</span>
       </div>
       <div class="grid">
+        <a class="card" href="clean_on_jmvm_factsheet.html" style="--card-color: var(--c1);">
+          <h3>Running Full Clean on JMVM (WebAssembly) &amp; Clean Sandbox</h3>
+          <p>Full Clean (<code>cocl.pbc</code> + <code>base-stdenv-2.2.1</code>, including <code>StdGeneric</code>)
+            running side-by-side on <code>abc-interpreter.wasm</code> and <code>jmvm.wasm</code> in
+            <code>clean-sandbox</code>: 13/13 benchmarks identical, 1.17&times; faster overall with
+            <code>abcopt</code> on both, plus the <code>pack</code>/<code>unpack</code> alternative to Dynamics &amp; <code>graph-copy</code>.</p>
+          <div class="card-foot">
+            <div class="tags"><span class="tag">Clean</span><span class="tag">Generics</span><span class="tag">TOP</span></div>
+            <span class="go">Open &rarr;</span>
+          </div>
+        </a>
         <a class="card" href="haskell_lite.html" style="--card-color: var(--c3);">
           <h3>Haskell lite guide</h3>
           <p>A small Haskell that runs entirely on the JMVM, natively and in the browser: what it

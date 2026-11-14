@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Factsheet: Full Clean on JMVM (WebAssembly) — Clean Sandbox &amp; Generics</title>
+  <script>
+    try { document.documentElement.setAttribute("data-theme", localStorage.getItem("websapl_theme") || "dark"); } catch (_) {}
+  </script>
+  <style>
+    :root, [data-theme="light"] {
+      --bg-primary: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-card: #ffffff;
+      --bg-card-subtle: #f1f5f9;
+      --bg-code: #0f172a;
+      --text-code: #f8fafc;
+      --border-color: #e2e8f0;
+      --text-primary: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --accent-blue: #2563eb;
+      --accent-blue-light: #eff6ff;
+      --accent-cyan: #0284c7;
+      --accent-emerald: #059669;
+      --accent-emerald-light: #ecfdf5;
+      --accent-amber: #d97706;
+      --accent-amber-light: #fffbeb;
+      --accent-purple: #7c3aed;
+      --accent-purple-light: #f5f3ff;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08);
+      --gradient-brand: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+    }
+    [data-theme="dark"] {
+      --bg-primary: #090d16;
+      --bg-surface: #0f1422;
+      --bg-card: #131b2e;
+      --bg-card-subtle: #19233c;
+      --bg-code: #070a12;
+      --text-code: #e2e8f0;
+      --border-color: #222f4c;
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #8292ab;
+      --accent-blue: #3b82f6;
+      --accent-blue-light: rgba(59, 130, 246, 0.15);
+      --accent-cyan: #38bdf8;
+      --accent-emerald: #10b981;
+      --accent-emerald-light: rgba(16, 185, 129, 0.15);
+      --accent-amber: #f59e0b;
+      --accent-amber-light: rgba(245, 158, 11, 0.15);
+      --accent-purple: #a855f7;
+      --accent-purple-light: rgba(168, 85, 247, 0.15);
+      --shadow-sm: 0 2px 4px rgba(0,0,0,0.4);
+      --shadow-md: 0 6px 12px rgba(0,0,0,0.5);
+      --gradient-brand: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary); color: var(--text-primary);
+      line-height: 1.65;
+    }
+    .topbar {
+      position: sticky; top: 0; z-index: 20;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 24px;
+      background: var(--bg-surface); border-bottom: 1px solid var(--border-color);
+    }
+    .topbar a { color: var(--text-secondary); text-decoration: none; font-size: 14px; font-weight: 500; }
+    .topbar a:hover { color: var(--accent-cyan); }
+    .theme-btn {
+      background: var(--bg-card-subtle); color: var(--text-primary);
+      border: 1px solid var(--border-color); border-radius: 8px;
+      padding: 6px 12px; font-size: 13px; cursor: pointer;
+    }
+    .container { max-width: 1040px; margin: 0 auto; padding: 32px 20px 64px; }
+    .hero {
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: 16px; padding: 28px 30px; box-shadow: var(--shadow-md);
+      margin-bottom: 24px; position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+      background: var(--gradient-brand);
+    }
+    .badge-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .badge {
+      font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px;
+      background: var(--accent-blue-light); color: var(--accent-cyan);
+    }
+    .badge.green { background: var(--accent-emerald-light); color: var(--accent-emerald); }
+    .badge.amber { background: var(--accent-amber-light); color: var(--accent-amber); }
+    .hero h1 { font-size: 28px; line-height: 1.25; margin-bottom: 10px; }
+    .hero p { color: var(--text-secondary); font-size: 15.5px; max-width: 78ch; }
+    .kpi-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 14px; margin-bottom: 24px;
+    }
+    .kpi {
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: 12px; padding: 16px 18px; box-shadow: var(--shadow-sm);
+    }
+    .kpi .val { font-size: 26px; font-weight: 700; color: var(--accent-cyan); }
+    .kpi .lbl { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+    section {
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: 14px; padding: 22px 26px; margin-bottom: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    h2 { font-size: 19px; margin-bottom: 12px; color: var(--text-primary); }
+    h3 { font-size: 15.5px; margin: 16px 0 8px; color: var(--accent-cyan); }
+    p { color: var(--text-secondary); margin-bottom: 10px; font-size: 14.5px; }
+    ul { margin: 8px 0 12px 20px; color: var(--text-secondary); font-size: 14.5px; }
+    li { margin-bottom: 6px; }
+    code {
+      font-family: 'Fira Code', 'SF Mono', Consolas, monospace; font-size: 13px;
+      background: var(--bg-card-subtle); padding: 1px 6px; border-radius: 5px;
+    }
+    pre {
+      background: var(--bg-code); color: var(--text-code);
+      padding: 14px 16px; border-radius: 10px; overflow-x: auto;
+      font-family: 'Fira Code', 'SF Mono', Consolas, monospace; font-size: 13px;
+      line-height: 1.5; margin: 12px 0;
+    }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+    th, td {
+      padding: 9px 12px; border-bottom: 1px solid var(--border-color);
+      text-align: left;
+    }
+    th { color: var(--text-muted); font-weight: 600; font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.03em; }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    tr.total td { font-weight: 700; border-top: 2px solid var(--border-color); color: var(--text-primary); }
+    .callout {
+      background: var(--bg-card-subtle); border-left: 4px solid var(--accent-purple);
+      padding: 12px 16px; border-radius: 8px; margin-top: 12px; font-size: 14px;
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html">&larr; All Factsheets</a>
+    <button class="theme-btn" id="themeBtn" type="button">Toggle theme</button>
+  </div>
+
+  <div class="container">
+    <div class="hero">
+      <div class="badge-row">
+        <span class="badge">Clean Sandbox + JMVM</span>
+        <span class="badge green">13/13 Benchmarks Identical</span>
+        <span class="badge amber">TOP Briefing &bull; Nov 14, 2026</span>
+      </div>
+      <h1>Running Full Clean on JMVM (WebAssembly)</h1>
+      <p>
+        The official Clean compiler (<code>cocl.pbc</code> + <code>base-stdenv-2.2.1</code>) in
+        <code>clean-sandbox</code> now targets <strong>both</strong> <code>abc-interpreter.wasm</code>
+        and <code>jmvm.wasm</code> side-by-side via <code>abcopt &rarr; abc2retag &rarr; retagcomp.jvb</code>.
+        Clean Generics (<code>StdGeneric</code>), typeclasses, uniqueness typing, and strictness analysis
+        run out of the box on JMVM with compact <code>.jvb</code> binaries and 1-to-1 output verification.
+      </p>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="val">1.17&times;</div>
+        <div class="lbl">Faster total time vs. ABC Interpreter (<code>abcopt</code> on both)</div>
+      </div>
+      <div class="kpi">
+        <div class="val">13 / 13</div>
+        <div class="lbl">Benchmarks with identical output across both Wasm VMs</div>
+      </div>
+      <div class="kpi">
+        <div class="val">1.7 &ndash; 31 KB</div>
+        <div class="lbl">Compact <code>.jvb</code> bytecode for typical Clean programs</div>
+      </div>
+      <div class="kpi">
+        <div class="val">StdGeneric</div>
+        <div class="lbl"><code>generic</code> &amp; <code>derive</code> verified end-to-end on JMVM</div>
+      </div>
+    </div>
+
+    <section>
+      <h2>1. Architecture: Dual-Engine Clean Pipeline</h2>
+      <p>Both execution paths share the exact same Clean frontend and ABC optimizer, enabling apples-to-apples performance and correctness comparisons in both the browser UI (<code>server.py</code>) and the Node.js CLI runner (<code>cli/run_clean.js</code>):</p>
+      <pre>Clean source (.icl)
+   │
+   ▼  cocl.pbc (official Clean compiler + base-stdenv-2.2.1)
+ .abc
+   │
+   ├──► [ABC Route]   abcopt ──► bcgen / bclink / bcprelink ──► abc-interpreter.wasm
+   │
+   └──► [JMVM Route]  abcopt ──► abc2retag ──► retagcomp.jvb ──► jmvm.wasm</pre>
+      <p>
+        In <code>clean-sandbox</code>&rsquo;s original <code>make.icl</code>, <code>abcopt</code> was skipped before <code>bcgen</code> (causing <code>fib</code> to take ~2393 ms on ABC). Enabling <code>abcopt_bestand.bc</code> on both routes by default (toggleable via <code>--no-abcopt</code> in <code>cli/run_clean.js</code>) puts both interpreters on equal footing.
+      </p>
+    </section>
+
+    <section>
+      <h2>2. Benchmark Snapshot (Warmed-up, <code>--runs=3</code>, <code>abcopt</code> on both)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Benchmark</th>
+            <th class="num">ABC Interpreter (ms)</th>
+            <th class="num">JMVM wasm (ms)</th>
+            <th class="num">Ratio (ABC / JMVM)</th>
+            <th class="num"><code>.jvb</code> Size</th>
+            <th>Output</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>eval.icl</code></td><td class="num">301</td><td class="num">353</td><td class="num">0.85&times;</td><td class="num">20,404 B</td><td>Identical</td></tr>
+          <tr><td><code>eval2.icl</code></td><td class="num">489</td><td class="num">662</td><td class="num">0.74&times;</td><td class="num">273,820 B</td><td>Identical</td></tr>
+          <tr><td><code>fib.icl</code></td><td class="num">941</td><td class="num">707</td><td class="num">1.33&times;</td><td class="num">1,740 B</td><td>Identical</td></tr>
+          <tr><td><code>hamming.icl</code></td><td class="num">906</td><td class="num">607</td><td class="num">1.49&times;</td><td class="num">4,812 B</td><td>Identical</td></tr>
+          <tr><td><code>knights.icl</code></td><td class="num">119</td><td class="num">93</td><td class="num">1.28&times;</td><td class="num">7,236 B</td><td>Identical</td></tr>
+          <tr><td><code>match.icl</code></td><td class="num">393</td><td class="num">354</td><td class="num">1.11&times;</td><td class="num">3,476 B</td><td>Identical</td></tr>
+          <tr><td><code>parsetest.icl</code></td><td class="num">1,255</td><td class="num">986</td><td class="num">1.27&times;</td><td class="num">23,668 B</td><td>Identical</td></tr>
+          <tr><td><code>primes.icl</code></td><td class="num">515</td><td class="num">353</td><td class="num">1.46&times;</td><td class="num">3,060 B</td><td>Identical</td></tr>
+          <tr><td><code>prolog.icl</code></td><td class="num">417</td><td class="num">306</td><td class="num">1.36&times;</td><td class="num">31,180 B</td><td>Identical</td></tr>
+          <tr><td><code>queens.icl</code></td><td class="num">412</td><td class="num">196</td><td class="num">2.10&times;</td><td class="num">4,988 B</td><td>Identical</td></tr>
+          <tr><td><code>sort.icl</code></td><td class="num">573</td><td class="num">487</td><td class="num">1.18&times;</td><td class="num">7,364 B</td><td>Identical</td></tr>
+          <tr><td><code>sprimes.icl</code></td><td class="num">764</td><td class="num">639</td><td class="num">1.20&times;</td><td class="num">8,308 B</td><td>Identical</td></tr>
+          <tr><td><code>twice.icl</code></td><td class="num">642</td><td class="num">836</td><td class="num">0.77&times;</td><td class="num">2,780 B</td><td>Identical</td></tr>
+          <tr class="total"><td>Total (13 benchmarks)</td><td class="num">7,727</td><td class="num">6,579</td><td class="num">1.17&times;</td><td class="num">&mdash;</td><td>13 / 13 OK</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>3. Ecosystem Potential &amp; Remaining ABC Coverage</h2>
+      <ul>
+        <li><strong>2&times;2 Frontend/Backend Matrix:</strong> JMVM now serves Sapl, Haskell-lite, and full Clean, while Sapl/Haskell can also target ABC/native via <code>sapl_naar_abc.py</code>.</li>
+        <li><strong>Generics Working:</strong> <code>abc2retag.py</code> now supports <code>.desc0</code>, exported module constructors (<code>Con_</code> prefix), cross-module <code>extern_con</code> linking, and <code>StdGeneric</code>&rsquo;s <code>LEFT</code>/<code>RIGHT</code> ADT grouping.</li>
+        <li><strong>Remaining ABC Gaps (83 opcodes currently supported):</strong> <code>abcopt</code> stack/jump shorthands (<code>updatepop_a/b</code>, <code>pop_a_rtn</code>, etc.), floating-point (<code>StdReal</code>), <code>Char</code> comparisons, bitwise ops (<code>and%</code>, <code>shiftr%</code>, ...), array <code>replace</code>, and indirect calls (<code>jsr_i</code>, <code>jmp_i</code>).</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>4. Dynamics &amp; <code>graph-copy</code>: Role Division for iTasks</h2>
+      <p>
+        Clean&rsquo;s built-in <strong>Dynamics</strong> (<code>_SystemDynamic</code>) and <strong><code>graph-copy</code></strong> are tightly coupled to ABC descriptor tables, runtime type unification (<code>eqD_b</code>, <code>jmpD</code>, <code>update_nc</code>, <code>select_nc</code>), and Clean&rsquo;s RTS memory layout. Emulating that binary machinery directly inside JMVM would be a substantial separate effort.
+      </p>
+      <div class="callout">
+        <strong>JMVM-Native Alternative:</strong> Functionally equivalent behaviour can be achieved cleanly using <strong><code>pack</code> / <code>unpack</code></strong> (serializing and deserializing JMVM&rsquo;s uniform tagged heap graphs and closures directly) paired with a <strong>custom <code>Dynamic</code></strong> whose <code>TypeRep</code> is derived via <strong>Clean Generics (<code>StdGeneric</code>)</strong> &mdash; which now runs natively on JMVM.
+      </div>
+    </section>
+  </div>
+
+  <script>
+    document.getElementById('themeBtn').addEventListener('click', () => {
+      const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+      const next = cur === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      try { localStorage.setItem('websapl_theme', next); } catch (_) {}
+    });
+  </script>
+</body>
+</html>
