@@ -776,10 +776,10 @@
                 <td>Interpreter vs. native AOT code using unboxed B-stack CPU registers. On the compiler itself the gap depends on how the Clean port is written: 1.8× for a port with one universal type, 3.4× for a typed port.</td>
               </tr>
               <tr>
-                <td><strong>sapl2c: Sapl compiled to C</strong> (12 Nov)</td>
+                <td><strong>sapl2c: Sapl compiled to C</strong> (14 Nov)</td>
                 <td>One C function per Sapl function, JMVM memory model, clang -O2</td>
-                <td><span class="pill-diff win">0.34× the interpreter (gen1: 248 ms)</span></td>
-                <td>Native code on the same heap and GC: faster than Clean native (0.87×) and on par with GHC (1.02×) on the 13 benchmarks; gen1 self-compiles in 248 ms (fixed point). See the <a href="sapl2c_native_factsheet.html">sapl2c factsheet</a>.</td>
+                <td><span class="pill-diff win">0.33× the interpreter (gen1: 244 ms)</span></td>
+                <td>Native code on the same heap and GC (unshifted pointers): faster than Clean native (0.84×) and on par with GHC (0.99×) on the 13 benchmarks; gen1 self-compiles in 244 ms (fixed point). See the <a href="sapl2c_native_factsheet.html">sapl2c factsheet</a>.</td>
               </tr>
               <tr>
                 <td><strong>vs. GHC 9.14.1 Native (-O2)</strong></td>
@@ -943,7 +943,7 @@
             <li><strong>Fixed-Point Stability:</strong> The compiler compiles its own source code to produce byte-for-byte identical bytecode, verified by <code>./check_bootstrap</code> in ~12 seconds.</li>
             <li><strong>Haskell Anchor:</strong> To eliminate circular bootstrapping risks, a toolchain generator maintains a typed Haskell equivalent (<code>saplcomp_typed.hs</code>) which, when built with GHC, emits the exact same bytecode.</li>
             <li><strong>Compiler Velocity:</strong> Thanks to recent VM execution optimizations, gen1 self-compiles its entire codebase in just <strong>598 ms</strong> on an Apple M4 (typed Haskell on GHC <code>-O2</code>: 295 ms).</li>
-            <li><strong>Native Compiler:</strong> Compiled to C with sapl2c, gen1 self-compiles in <strong>248 ms</strong> natively, reaching the same fixed point (12 November 2026).</li>
+            <li><strong>Native Compiler:</strong> Compiled to C with sapl2c, gen1 self-compiles in <strong>244 ms</strong> natively, reaching the same fixed point (14 November 2026).</li>
             <li><strong>The Same Compiler in Clean:</strong> A typed Clean port of gen1 reaches the same fixed point natively (Clean 3.1 ARM64: 166 ms), in Clean's ABC interpreter (438 ms), and on the JMVM itself through the ABC &rarr; retag decompiler (550&ndash;574 ms, the same speed as gen1). See the performance factsheet for every route.</li>
             <li><strong>Integrated Typechecker:</strong> Sinds mid-October 2026, an integrated static typechecker (<code>typecheck.cfp</code>) verifies program consistency during build time.</li>
           </ul>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>How Can a Simple, Small Compiler Compete with Haskell and Clean?</title>
-<meta name="description" content="Analysis of why sapl2c (~1,150 lines of Python / ~1,800 lines of Sapl) matches GHC -O2 (1.02x) and outperforms Clean native (0.87x) across 13 core benchmarks.">
+<meta name="description" content="Analysis of why sapl2c (~1,150 lines of Python / ~1,800 lines of Sapl) matches GHC -O2 (0.99x) and outperforms Clean native (0.84x) across 13 core benchmarks.">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -141,21 +141,21 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     <p class="lead">
       <code>sapl2c</code> is 1,146 lines of Python (or 1,809 lines of Sapl) plus an 818-line C runtime header
       &mdash; orders of magnitude smaller than GHC or Clean&rsquo;s native code generator. Yet on Apple M4
-      it matches GHC <code>-O2</code> (1.02&times;) and beats Clean native (0.87&times;). Here is why.
+      it matches GHC <code>-O2</code> (0.99&times;) and beats Clean native (0.84&times;). Here is why.
     </p>
   </header>
 
   <div class="kpis">
     <div class="kpi">
-      <div class="val">0.87&times;</div>
+      <div class="val">0.84&times;</div>
       <div class="lbl"><code>sapl2c</code> vs. Clean 3.1 native (12-benchmark geomean)</div>
     </div>
     <div class="kpi">
-      <div class="val">1.02&times;</div>
+      <div class="val">0.99&times;</div>
       <div class="lbl"><code>sapl2c</code> vs. GHC 9.14.1 <code>-O2</code> (13-benchmark geomean)</div>
     </div>
     <div class="kpi">
-      <div class="val">248 ms</div>
+      <div class="val">244 ms</div>
       <div class="lbl"><code>gen1</code> self-compilation (vs. GHC 295 ms, Clean untyped 305 ms)</div>
     </div>
     <div class="kpi">
@@ -257,7 +257,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
           (<code>jmvm2c</code>) produced <strong>9.3 MB</strong> of C for <code>gen1</code> (47 s build,
           442 ms self-compile) because values stayed on the VM stack and <code>clang</code> never saw whole
           functions. From <strong>Retag</strong>, <code>sapl2c</code> emits <strong>2.9 MB</strong> of C
-          (4.1 s build, <strong>248 ms</strong> self-compile).</li>
+          (4.1 s build, <strong>244 ms</strong> self-compile).</li>
         <li><strong>Path-sensitive proofs &amp; heap coalescing:</strong> Named locals and explicit
           branches let <code>sapl2c</code> prove non-pointers per path (eliminating shadow-stack spills in
           <code>fib</code>) and merge straight-line allocations into one <code>HEAPFULL(N)</code> check.</li>
@@ -291,50 +291,50 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     <tbody>
       <tr>
         <td><code>knights</code></td>
-        <td class="num win">11.5</td><td class="num">14</td><td class="num">29</td>
-        <td class="num win">0.82&times;</td><td class="num win">0.40&times;</td>
+        <td class="num win">10.7</td><td class="num">14</td><td class="num">29</td>
+        <td class="num win">0.76&times;</td><td class="num win">0.37&times;</td>
         <td>Fast Cheney bump allocation + direct <code>MUSTTAIL</code> calls</td>
       </tr>
       <tr>
         <td><code>hamming</code></td>
-        <td class="num win">77</td><td class="num">133</td><td class="num">105</td>
-        <td class="num win">0.58&times;</td><td class="num win">0.73&times;</td>
+        <td class="num win">73</td><td class="num">133</td><td class="num">105</td>
+        <td class="num win">0.55&times;</td><td class="num win">0.70&times;</td>
         <td>Cache-hot 8 MB nursery + coalesced thunk/Cons allocation</td>
       </tr>
       <tr>
         <td><code>sprimes</code></td>
-        <td class="num win">134</td><td class="num">234</td><td class="num">170</td>
-        <td class="num win">0.57&times;</td><td class="num win">0.79&times;</td>
-        <td>Growing heap (−45% vs fixed heap) + inline tag checks</td>
+        <td class="num win">118</td><td class="num">234</td><td class="num">170</td>
+        <td class="num win">0.50&times;</td><td class="num win">0.69&times;</td>
+        <td>Growing heap + unshifted pointers + inline tag checks</td>
       </tr>
       <tr>
         <td><code>queens</code></td>
-        <td class="num win">28</td><td class="num">50</td><td class="num">27</td>
-        <td class="num win">0.56&times;</td><td class="num">1.04&times;</td>
+        <td class="num win">27</td><td class="num">50</td><td class="num">27</td>
+        <td class="num win">0.54&times;</td><td class="num">1.00&times;</td>
         <td><code>tagLazyMaybe</code> + unboxed tagged arithmetic</td>
       </tr>
       <tr>
         <td><code>fib</code></td>
         <td class="num">91</td><td class="num">90</td><td class="num">97</td>
-        <td class="num">1.01&times;</td><td class="num win">0.94&times;</td>
+        <td class="num">1.02&times;</td><td class="num win">0.94&times;</td>
         <td>Zero shadow-stack spills; only 1 tag test per op (74 ms without)</td>
       </tr>
       <tr>
         <td><code>eval</code></td>
         <td class="num">62</td><td class="num">47</td><td class="num">72</td>
-        <td class="num">1.32&times;</td><td class="num win">0.86&times;</td>
+        <td class="num">1.33&times;</td><td class="num win">0.87&times;</td>
         <td>Clean avoids per-step <code>SNil</code>/thunk allocation in <code>evol</code></td>
       </tr>
       <tr>
         <td><code>prolog</code> / <code>match</code></td>
-        <td class="num">52 / 57</td><td class="num">62 / 74</td><td class="num">32 / 44</td>
-        <td class="num win">0.84 / 0.77&times;</td><td class="num">1.62 / 1.30&times;</td>
+        <td class="num">49 / 56</td><td class="num">62 / 74</td><td class="num">32 / 44</td>
+        <td class="num win">0.79 / 0.76&times;</td><td class="num">1.54 / 1.28&times;</td>
         <td>GHC&rsquo;s static-type unboxing &amp; worker/wrapper specialization</td>
       </tr>
       <tr>
         <td><code>twice</code></td>
-        <td class="num">408</td><td class="num">353</td><td class="num">250</td>
-        <td class="num">1.16&times;</td><td class="num">1.63&times;</td>
+        <td class="num">395</td><td class="num">353</td><td class="num">250</td>
+        <td class="num">1.12&times;</td><td class="num">1.58&times;</td>
         <td>Unknown-function PAP/over-application + deep thunk return predictor</td>
       </tr>
     </tbody>
@@ -351,7 +351,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     </thead>
     <tbody>
       <tr><td>Clean native, typed Clean port</td><td class="num">166</td><td>Static types keep numbers unboxed without tag checks</td></tr>
-      <tr><td><strong><code>sapl2c</code> native (Sapl <code>gen1</code>)</strong></td><td class="num win"><strong>248</strong></td><td>Untyped runtime, tagged ints, 2.9 MB C (4.1 s build)</td></tr>
+      <tr><td><strong><code>sapl2c</code> native (Sapl <code>gen1</code>)</strong></td><td class="num win"><strong>244</strong></td><td>Untyped runtime, tagged ints, 2.9 MB C (4.1 s build)</td></tr>
       <tr><td>GHC <code>-O2</code>, typed Haskell port</td><td class="num">295</td><td>Full GHC optimizing pipeline</td></tr>
       <tr><td>Clean native, untyped (<code>Val</code>) port</td><td class="num">305</td><td>Same representation as Sapl</td></tr>
       <tr><td>GHC <code>-O2</code>, untyped port</td><td class="num">346</td><td>Same representation as Sapl</td></tr>

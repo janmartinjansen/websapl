@@ -718,7 +718,7 @@
             <rect width="180" height="62" rx="6" fill="var(--node-bg)" stroke="#f59e0b" stroke-width="2" filter="url(#card-shadow)" />
             <text x="12" y="20" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#f59e0b">sapl2c (Sapl &rarr; C) ★</text>
             <text x="12" y="36" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">sapl_naar_c.py &rarr; .c + clang -O2</text>
-            <text x="12" y="52" font-family="-apple-system, sans-serif" font-size="9.5" fill="#10b981" font-weight="600">0.34&times; runfast &bull; 248 ms gen1</text>
+            <text x="12" y="52" font-family="-apple-system, sans-serif" font-size="9.5" fill="#10b981" font-weight="600">0.33&times; runfast &bull; 244 ms gen1</text>
           </g>
 
           <!-- Gen1 Codegen -->
@@ -777,7 +777,7 @@
             <rect width="200" height="65" rx="6" fill="var(--node-bg)" stroke="#f59e0b" stroke-width="1.5" filter="url(#card-shadow)" />
             <text x="12" y="22" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#f59e0b">Native Machine Code</text>
             <text x="12" y="38" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">Clean runtime &bull; sapl2c (clang -O2)</text>
-            <text x="12" y="54" font-family="-apple-system, sans-serif" font-size="9.5" fill="#10b981" font-weight="600">5&times;&ndash;7&times; faster &bull; 0.34&times; runfast</text>
+            <text x="12" y="54" font-family="-apple-system, sans-serif" font-size="9.5" fill="#10b981" font-weight="600">5&times;&ndash;7&times; faster &bull; 0.33&times; runfast</text>
           </g>
 
           <!-- Clean ABC Interpreter -->
@@ -1564,8 +1564,8 @@ python3 experiments/abc2jmvm/abc2retag.py "Clean System Files/primes.opt.abc" -o
             Translates gen1&rsquo;s Stage-4 retag form into C, one C function per Sapl function, on the JMVM&rsquo;s own memory model and GC (optionally the VM&rsquo;s own runtime code), compiled with <code>clang -O2</code>.
           </p>
           <ul>
-            <li><strong>Performance:</strong> 0.34&times; the JMVM interpreter&rsquo;s time on the 13 core benchmarks; faster than Clean native (0.87&times;) and on par with GHC <code>-O2</code> (1.02&times;; geometric means, with a growing heap).</li>
-            <li><strong>Self-Hosting Speed:</strong> gen1 compiles itself natively in <strong>248 ms</strong> and reaches the fixed point (interpreter 580 ms; Clean native untyped port 305 ms, typed 166 ms; GHC typed 295 ms).</li>
+            <li><strong>Performance:</strong> 0.33&times; the JMVM interpreter&rsquo;s time on the 13 core benchmarks; faster than Clean native (0.84&times;) and on par with GHC <code>-O2</code> (0.99&times;; geometric means, with a growing heap and unshifted pointers).</li>
+            <li><strong>Self-Hosting Speed:</strong> gen1 compiles itself natively in <strong>244 ms</strong> and reaches the fixed point (interpreter 580 ms; Clean native untyped port 305 ms, typed 166 ms; GHC typed 295 ms).</li>
             <li><strong>Exact:</strong> the same output and allocation count as the VM, also under GC stress. Not for the browser (the C stack is the call stack).</li>
           </ul>
           <p style="margin-top:6px"><a href="sapl2c_native_factsheet.html">sapl2c factsheet &rarr;</a></p>
