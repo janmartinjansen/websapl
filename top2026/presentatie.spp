@@ -18,9 +18,9 @@ import "lib/list.spp" as L
 // <p class="beat dim">A presentation?</p>
 // <p class="beat">Or a program?</p>
 //%%
-sieve xs = case xs (Cons p rest -> Cons p (sieve (L.filter (\x -> x % p != 0) rest)))
+sieve xs = case xs (Cons p rest -> Cons p (sieve [ x | x <- rest, x % p != 0 ]))
 
-primes = sieve (L.from 2)
+primes =: sieve (L.from 2)
 //%%
 n = 12
 //%%
@@ -55,6 +55,21 @@ D.table ["Step, per cell", "Runs where", "Written in"]
     ["Compiler gen1 (to bytecode)", "this tab", "Sapl"],
     ["Linker, loading into the session", "this tab", "Sapl"],
     ["The VM itself", "this tab (WebAssembly)", "C"] ]
+//%% [markdown]
+// ## Where it started: IFL 2016
+//
+// <div class="twocol">
+// <div>
+// <p><em>A Portable VM-based Implementation Platform for Non-strict Functional Programming Languages</em></p>
+// <ul>
+// <li>A small VM for lazy functional languages: the <b>JMVM</b>, about <b>1,500 lines of C</b></li>
+// <li>A small core language, <b>Sapl</b>, with a compiler of about <b>1,000 lines of Amanda</b></li>
+// <li>Runs in the <b>browser</b>, and stays within a <b>factor of 5</b> of Clean and Haskell</li>
+// </ul>
+// <p class="hint">A prototype. The question in July 2026: how far can one person take it, with LLMs?</p>
+// </div>
+// <img src="afscheid/paper_first_page.png" alt="First page of the IFL 2016 paper">
+// </div>
 //%% [markdown]
 // ## How could one person build this?
 //
