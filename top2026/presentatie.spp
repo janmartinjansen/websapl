@@ -182,6 +182,8 @@ D.table ["Step, per cell", "Runs where", "Written in"]
 //
 // <p class="beat">In Clean, ABC code is the hub.<br>Here it is one level higher.</p>
 //
+// <p class="hint">Retag was never designed as an interface: in 2016 it only existed to explain the compiler in the paper.</p>
+//
 // <p class="hint">Same clang, two inputs: C from bytecode was 2.2× slower than Clean native; C from Retag is faster (0.84×).</p>
 //%% [markdown]
 // ## How could one person build this?
