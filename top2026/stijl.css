@@ -28,3 +28,8 @@ body.present.first-slide .md-view h1 { font-size: 64px; }
 body.present .out canvas { width: min(100%, 560px, 46vh); }
 /* Tabelkoppen links, zoals de inhoud. */
 body.present .out th { text-align: left; }
+/* Titeldia en bijschriften. */
+body.present .md-view .subtitle { font-size: 34px; color: var(--accent); margin: 10px 0 0; font-weight: 500; }
+body.present .md-view .byline { font-size: 22px; color: var(--text-2); margin-top: 48px; }
+body.present .md-view .caption { width: min(100%, 560px, 46vh); text-align: center; font-size: 18px;
+  color: var(--text-2); font-style: italic; margin: -6px 0 0; }

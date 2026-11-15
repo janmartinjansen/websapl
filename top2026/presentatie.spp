@@ -1,11 +1,17 @@
 //%% [instellingen] waarden=uit code=verborgen stijl=top2026/stijl.css
-//%% [banner] TOP Software · 26 November 2026 | One VM, the Whole Toolchain | Jan Martin Jansen · {dia} / {n}
+//%% [banner] TOP Software · 26 November 2026 | Building a Complete FP Toolchain | Jan Martin Jansen · {dia} / {n}
+//%% [markdown]
+// # Building a Complete FP Toolchain
+//
+// <p class="subtitle">An Experiment in LLM-Driven Software Development</p>
+//
+// <p class="byline">Jan Martin Jansen · TOP Software · 26 November 2026</p>
+//%%
+import "lib/list.spp" as L
 //%% [markdown]
 // # What are you looking at?
 //
 // <p class="beat">A presentation?</p>
-//%%
-import "lib/list.spp" as L
 //%% [markdown]
 // # What are you looking at?
 //
@@ -25,9 +31,13 @@ L.take n primes
 // An **interactive document** that runs **entirely in your browser**:
 // no server, no installation, and you can **edit it on the fly**.
 //%%
-D.slider 5 60 n
+D.slider 10 200 n
 //%%
-D.lineChart (L.take n primes)
+primesUpTo x = L.length (L.takeWhile (\p -> p <= x) primes)
+//%%
+D.lineChart [ primesUpTo x | x <- L.range 2 n ]
+//%% [markdown]
+// <p class="caption">Number of primes up to <i>n</i></p>
 //%% [markdown]
 // ## What just happened?
 //
