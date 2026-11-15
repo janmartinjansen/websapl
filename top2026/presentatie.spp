@@ -457,6 +457,19 @@ D.table ["Since 17 July 2026", "Count"]
 // - One intermediate form, **Retag**, shared by every route: Sapl, Haskell lite and Clean.
 // - **LLMs** made experiments cheap: five backends were built and *measured*, instead of argued about.
 //%% [markdown]
+// ## Two phases
+//%%
+D.table ["", "17 July – mid September", "Mid September – now"]
+  [ ["Way of working", "Exploring: can it be done at all?", "Goal-directed: plan, branch, regression, measure"],
+    ["Commits", "472", "740"],
+    ["Merged branches", "25", "188"],
+    ["Plan documents", "7", "47"] ]
+//%% [markdown]
+// - The turning point: **self-hosting gave oracles** (the fixpoint, the full regression).
+//   From then on code generation worked much better, and steps could be much larger.
+// - The exploring phase was **necessary**: it is the basis of all research.
+//   Most dead ends on the next slide come from it.
+//%% [markdown]
 // ## Dead ends, and why that was fine
 //%%
 D.table ["Experiment", "What happened", "Replaced by"]
@@ -480,6 +493,30 @@ D.table ["Experiment", "What happened", "Replaced by"]
 //
 // <p class="hint">What went wrong, honestly: an agent reported 38 ms for the compiler compiling itself.
 // It was an aborted run; the fixpoint check caught it.</p>
+//%% [markdown]
+// ## Who knew what?
+//
+// <div class="twocol even">
+// <div>
+//
+// **The model knew what I could never know**
+//
+// - Hardware counters showed the CPU *waiting* on the `jmpt` jump table: one change, the compiler **−25%**.
+// - Retag to C: correct and fast within **days**, using C and Clang knowledge I do not have.
+//
+// </div>
+// <div>
+//
+// **The expert knew where to go**
+//
+// - The starting point: Retag, `eval` and `jmpt`.
+// - Clean's interpreter to wasm: the model chose `musttail`; *switch* is better in the browser (`musttail` measured **1.5× slower**).
+// - When a number is too good, or a path is a dead end.
+//
+// </div>
+// </div>
+//
+// <p class="beat sm">Research with LLMs is a new kind of science.<br>Experience is a huge advantage, but it has to be learned too.</p>
 //%% [markdown]
 // ## What this means for Clean
 //
