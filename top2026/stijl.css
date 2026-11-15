@@ -41,3 +41,6 @@ body.present .md-view .twocol img { max-height: 58vh; max-width: 100%; border-ra
 body.present .md-view .twocol.even { grid-template-columns: 1fr 1fr; gap: 28px; }
 body.present .md-view .twocol pre { font-size: 14px; margin: 6px 0 12px; }
 body.present .md-view .beat br + * { margin: 0; }
+/* Een spoor dat niet is voortgezet: grijs. */
+body.present .md-view .dropped { opacity: 0.5; }
+body.present .md-view .dropped strong { color: inherit; }

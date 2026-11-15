@@ -237,12 +237,28 @@ D.table ["Effect of .jvb", "Before", "After"]
 //%% [markdown]
 // ## Then: more languages and backends, all through Retag
 //
-// - **Haskell lite**: type classes, records and monads, translated to Sapl+.
-// - **MicroHs**, a real Haskell compiler, bootstrapped on the JMVM.
+// - <span class="dropped">**MicroHs**, a real Haskell compiler, bootstrapped on the JMVM: hard going, not continued.</span>
+// - **Haskell lite** in its place: type classes, records and monads, translated to Sapl+, running in the browser.
 // - **Clean**: ABC code from the Clean compiler, decompiled back to Retag (`abc2retag`).
 // - **Native code**: Retag to C (`sapl2c`), on par with GHC `-O2`.
 //
 // <p class="hint">Each new frontend or backend only had to meet Retag, not every other part.</p>
+//%% [markdown]
+// ## How fast is the interpreter?
+//%%
+D.table ["The JMVM interpreter (Apple M4, 9 Nov)", "Result"]
+  [ ["vs. Clean native, 12 benchmarks (total time)", "2.5× slower"],
+    ["vs. GHC -O2, 12 benchmarks (total time)", "3.1× slower"],
+    ["vs. Clean's ABC interpreter, native", "1.25× slower"],
+    ["In the browser (WebAssembly, Chrome) vs. native", "1.47× slower"],
+    ["In the browser vs. Clean's ABC interpreter (stock wasm, Node)", "1.43× faster"],
+    ["The compiler compiling itself: interpreter vs. GHC -O2", "598 vs. 295 ms (2.0×)"] ]
+//%% [markdown]
+// - The 2016 target was **within a factor of 5** of Clean and Haskell. Natively it is now **2.5-3×**.
+// - In the browser it loses **less than 1.5×** against itself natively, and it is faster than the
+//   ABC interpreter that Clean ships for the browser today.
+//
+// <p class="hint">Sources: performance factsheet; experiments/clean_vergelijking/meting_2026-11-09. Clean native in a Linux VM.</p>
 //%% [markdown]
 // ## How could one person build this?
 //
@@ -258,6 +274,18 @@ D.table ["Since 17 July 2026", "Count"]
 // - A **self-hosting compiler** (gen1) that compiles itself, anchored by a typed Haskell version.
 // - One intermediate form, **Retag**, shared by every route: Sapl, Haskell lite and Clean.
 // - **LLMs** made experiments cheap: five backends were built and *measured*, instead of argued about.
+//%% [markdown]
+// ## Dead ends, and why that was fine
+//%%
+D.table ["Experiment", "What happened", "Replaced by"]
+  [ ["Amanda-to-Sapl translator (August)", "Partly worked; a hang in the full bridge was never found", "The compiler written from scratch in Sapl"],
+    ["A JIT to WebAssembly (September)", "Correct, but slower than the warm interpreter", "The plain interpreter in wasm"],
+    ["Bytecode to C, jmvm2c (November)", "2.2× slower than Clean native, 47 s builds", "Retag to C, sapl2c"],
+    ["Whole-program Retag optimiser", "Doubled the compiler, four subtle bugs", "One local rule in gen1"],
+    ["MicroHs on the JMVM (November)", "Bootstrapped, but heavy and server-bound", "Haskell lite, in the browser"] ]
+//%% [markdown]
+// - Starting again **from scratch** usually went better than repairing the first attempt.
+// - With LLMs, **throwing work away is cheap**: you did not spend weeks typing it yourself.
 //%% [markdown]
 // ## The real insight: verification, not speed
 //
