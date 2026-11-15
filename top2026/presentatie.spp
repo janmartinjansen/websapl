@@ -266,6 +266,70 @@ D.table ["The JMVM interpreter (Apple M4, 9 Nov)", "Result"]
 //
 // <p class="hint">Sources: performance factsheet; experiments/clean_vergelijking/meting_2026-11-09. Clean native in a Linux VM.</p>
 //%% [markdown]
+// ## Where the interpreter's speed came from
+//%%
+D.table ["Improvement", "When", "Gain", "Idea"]
+  [ ["Strictness analysis: finds the ! automatically", "August", "without it: fib 6.9×, queens/eval/match 1.6-1.9× slower", "classic (Mycroft)"],
+    ["musttail dispatch: every instruction its own function", "24 Oct", "fib -54%, the compiler -8.6%", "mine"],
+    ["Instruction fusion (superinstructions)", "1 Nov", "-15% native, -13% Chrome, -14% Safari", "mine"],
+    ["case as a real jump instead of a jump table", "2 Nov", "the compiler -25%, knights -38%", "found by measuring"] ]
+//%% [markdown]
+// <p class="hint">Native on the Apple M4. musttail is native only: in the browser V8 runs the switch form faster.</p>
+//%% [markdown]
+// ## The third one: looking inside the processor
+//
+// The question was simply: *"measure very precisely whether there is anything left to gain in the VM."*
+//
+// - **Hardware counters** (the processor's own performance counters) on the compiler compiling itself.
+// - Not branch mispredictions, not cache misses: **93% of the gap** with Clean's interpreter was
+//   the processor **waiting for operands**.
+// - The cause: `case` looked up its branch in a jump table, a chain of **four memory reads** that
+//   every following instruction had to wait for.
+// - The fix: a real, predictable conditional jump for the first two constructors. **A few lines**,
+//   no new instruction, no change to the compiler.
+//
+// <p class="hint">I could not have found this myself, at least not without a deep study of the subject first.</p>
+//%% [markdown]
+// ## The surprise: native code through Retag
+//
+// **sapl2c**: Retag to C, one C function per Sapl function, compiled with `clang -O2`.
+// Built in **three days** (11-13 November): ~1,150 lines of Python (or ~1,800 of Sapl)
+// plus an 818-line C runtime.
+//%%
+D.table ["The compiler compiling itself", "ms"]
+  [ ["Clean native, typed Clean port", "166"],
+    ["sapl2c, the Sapl compiler itself", "244"],
+    ["GHC -O2, typed Haskell port", "295"],
+    ["Clean native, untyped port (same representation as Sapl)", "305"],
+    ["GHC -O2, untyped port", "346"],
+    ["JMVM interpreter", "580"] ]
+//%% [markdown]
+// - Over the 13 benchmarks: **0.33×** the interpreter, **0.84×** Clean native, **0.99×** GHC `-O2`.
+//
+// <p class="beat sm">I really had not expected this.</p>
+//%% [markdown]
+// ## Why it works: Retag, again
+//%%
+D.table ["Same clang, different input", "C for the compiler", "Build", "Self-compile"]
+  [ ["From bytecode (jmvm2c)", "9.3 MB", "47 s", "442 ms"],
+    ["From Retag (sapl2c)", "2.9 MB", "4.1 s", "244 ms"] ]
+//%% [markdown]
+// - From Retag, clang sees **whole functions with named variables** and does the register
+//   allocation that GHC and Clean each maintain their own backend for.
+// - Laziness is already explicit (`eval`, `thunk`), and gen1 already did strictness and lifting.
+// - Plus a few runtime choices: a **cache-friendly growing heap**, values returned in two registers,
+//   and every tail call a real jump.
+//%% [markdown]
+// ## Lessons for Clean
+//
+// 1. **Start from a structured form, not from stack code.** ABC is stack code, like JMVM bytecode.
+//    `abc2retag` shows the structure can be rebuilt: Clean via ABC, Retag and C runs at
+//    **0.95×** Clean native on the 12 benchmarks.
+// 2. **Keep the types.** On the large typed compiler the Retag route takes 223 ms against 163 ms
+//    for Clean native (**1.37×**): that gap is mostly unboxed values, which untyped Retag loses.
+// 3. **C runs everywhere clang runs**, for ~2,000 lines (WebAssembly not yet measured). Watch the
+//    compile time: 4 seconds for the typed compiler.
+//%% [markdown]
 // ## How could one person build this?
 //
 // About **four months** of work, since 17 July 2026:

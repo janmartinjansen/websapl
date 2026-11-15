@@ -46,3 +46,4 @@ body.present .md-view .dropped { opacity: 0.5; }
 body.present .md-view .dropped strong { color: inherit; }
 /* Het grote overzichtsplaatje. */
 body.present .md-view img.overview { display: block; width: 100%; max-height: 68vh; object-fit: contain; margin: 4px auto 0; }
+body.present .md-view .beat.sm { font-size: 38px; margin-top: 16px; }
