@@ -8,6 +8,7 @@
 // <p class="byline">Jan Martin Jansen · TOP Software · 26 November 2026</p>
 //%%
 import "lib/list.spp" as L
+import "lib/text.spp" as T
 //%% [markdown]
 // # What are you looking at?
 //
@@ -30,14 +31,69 @@ L.take n primes
 //
 // An **interactive document** that runs **entirely in your browser**:
 // no server, no installation, and you can **edit it on the fly**.
+// <span class="duo"></span>
 //%%
 D.slider 10 200 n
 //%%
 primesUpTo x = L.length (L.takeWhile (\p -> p <= x) primes)
 //%%
-D.lineChart [ primesUpTo x | x <- L.range 2 n ]
-//%% [markdown]
-// <p class="caption">Number of primes up to <i>n</i></p>
+gridSize = 100
+
+::Dot = Dot !num !factor !seg
+
+smallestFactor k d = if (d * d > k) 0 (if (k % d == 0) d (smallestFactor k (d + 1)))
+
+// One dot per number; `seg` is its piece of an SVG path, computed once and shared by every frame.
+dots =: [ makeDot k | k <- L.range 1 (gridSize * gridSize) ]
+
+makeDot k =
+  let i = k - 1 in
+  Dot k (if (k == 1) 1 (smallestFactor k 2))
+      (T.concat ["M", T.showInt (2 * (i % gridSize) + 1), " ", T.showInt (2 * (i / gridSize) + 1), "h0"])
+
+smallPrimes =: L.filter (\p -> smallestFactor p 2 == 0) (L.range 2 gridSize)
+
+::Sieve = { !stage : Int, !running : Bool }
+
+sieveStart = Sieve 0 True
+
+stages =: L.length smallPrimes + 8
+
+sieveStep ev st = case ev
+  (D.Tick t -> if (running st) (Sieve ((stage st + 1) % (stages + 1)) True) st)
+  (D.Key k -> Sieve (stage st) (if (running st) False True))
+  (D.Click x y -> Sieve 0 True)
+  (_ -> st)
+
+currentPrime st =
+  if (stage st == 0) 1
+    (if (stage st > L.length smallPrimes) (gridSize + 1) (L.nth (stage st - 1) smallPrimes))
+
+// 0 = green (not crossed out), 1 = grey, 2 = light grey (just crossed out), 3 = yellow (the current prime)
+dotState p d = case d
+  (Dot k f seg ->
+     if (k == 1) 1
+       (if (k == p) 3
+         (if (f == 0) 0
+           (if (f == p) 2 (if (f < p) 1 0)))))
+
+dotSeg d = case d (Dot k f seg -> seg)
+
+dotPath p state colour =
+  T.concat ["<path stroke='", colour, "' stroke-width='1.45' stroke-linecap='round' fill='none' d='",
+            T.concat (L.map dotSeg (L.filter (\d -> dotState p d == state) dots)), "'/>"]
+
+sieveView st =
+  let p = currentPrime st, w = T.showInt (2 * gridSize) in
+  D.markdown (T.concat
+    ["<svg class='sieve' viewBox='0 0 ", w, " ", w, "'>",
+     dotPath p 0 "#22c55e", dotPath p 1 "#4b5563", dotPath p 2 "#9ca3af", dotPath p 3 "#facc15",
+     "</svg><p class='figcap'>Sieve of Eratosthenes, 10,000 numbers</p>"])
+//%%
+D.column [D.lineChart [ primesUpTo x | x <- L.range 2 n ],
+          D.markdown "<p class='figcap'>Number of primes up to <i>n</i></p>"]
+//%%
+D.animated 400 sieveStart sieveStep sieveView
 //%% [markdown]
 // ## What just happened?
 //
@@ -211,14 +267,70 @@ D.table ["When (2026)", "Step"]
 //%% [markdown]
 // ## The turning point: "Can we do something useful with it?"
 //
-// Two days at the end of September:
+// - **25 September**: an overview of all REPLs ends with a chapter *Applications*
+//   (teaching, a Jupyter-like kernel, playgrounds in the browser, exploring data).
+// - **That evening**: a plan for *notebooks, libraries and qualified imports*.
+// - **26 September**: the first Sapl notebook, with libraries for statistics, plots and CSV.
 //
-// - **25 September**: an overview of all REPLs ends with a chapter *Applications*: teaching lazy
-//   evaluation, a Jupyter-like kernel, playgrounds in the browser, exploring data.
-// - **The same evening**: a plan for *notebooks, libraries and qualified imports*.
-// - **26 September**: the first Sapl notebook, together with libraries for statistics, plots and CSV.
-//
-// <p class="beat">You are looking at the result.</p>
+// <p class="beat sm">You are looking at the result!</p>
+// <span class="duo"></span>
+//%%
+::Pt3 = Pt3 !x !y !z
+::Edge = Edge !from !to
+
+::Cube = { !angleX : Float, !angleY : Float, !spinning : Bool }
+
+cubeStart = Cube 0.4 0.6 True
+
+cubeCorners =:
+  let r = [0.0 - 0.55, 0.55] in
+  [Pt3 x y z | x <- r, y <- r, z <- r]
+
+cubeEdges =:
+  let r = [0.0 - 0.55, 0.55] in
+  L.concat
+    [[Edge (Pt3 (0.0 - 0.55) a b) (Pt3 0.55 a b) | a <- r, b <- r],
+     [Edge (Pt3 a (0.0 - 0.55) b) (Pt3 a 0.55 b) | a <- r, b <- r],
+     [Edge (Pt3 a b (0.0 - 0.55)) (Pt3 a b 0.55) | a <- r, b <- r]]
+
+rotX phi p = case p (Pt3 x y z -> Pt3 x (cos phi * y - sin phi * z) (sin phi * y + cos phi * z))
+
+rotY phi p = case p (Pt3 x y z -> Pt3 (cos phi * x + sin phi * z) y (cos phi * z - sin phi * x))
+
+project p = case p (Pt3 x y z -> G.Pt (1.6 * x / (z + 2.4)) (1.6 * y / (z + 2.4)))
+
+corner c p = project (rotX (angleX c) (rotY (angleY c) p))
+
+drawEdge c e = case e (Edge p q -> G.GraphPolyLine 11 [corner c p, corner c q])
+
+dot col p = case p (G.Pt x y -> G.GraphDisc col (G.Pt (x - 0.012) (y - 0.012)) (G.Pt (x + 0.012) (y + 0.012)))
+
+cubeStep ev c = case ev
+  (D.Tick t -> if (spinning c) (Cube (angleX c + 0.025) (angleY c + 0.038) True) c)
+  (D.Click x y -> Cube (0.0 - y * 1.5) (x * 1.5) (spinning c))
+  (D.Key k -> Cube (angleX c) (angleY c) (if (spinning c) False True))
+  (_ -> c)
+
+cubeView c = D.picture (L.append (L.map (drawEdge c) cubeEdges) (L.map (\p -> dot 14 (corner c p)) cubeCorners))
+//%%
+::Figure = { !fx : Int, !fy : Int, !phase : Float }
+
+figStart = Figure 3 2 0.0
+
+figStep ev f = case ev
+  (D.Tick t -> Figure (fx f) (fy f) (phase f + 0.04))
+  (D.Click x y -> Figure (fy f) (fx f + 1) (phase f))
+  (_ -> f)
+
+lissajous f =
+  [G.GraphPolyLine 9 [ G.Pt (0.9 * sin (itof (fx f) * t + phase f)) (0.9 * sin (itof (fy f) * t))
+                     | t <- L.map (\k -> itof k * 0.0315) (L.range 0 200) ]]
+
+figView f = D.picture (lissajous f)
+//%%
+D.animated 40 cubeStart cubeStep cubeView
+//%%
+D.animated 40 figStart figStep figView
 //%% [markdown]
 // ## The consequence: tools in Sapl, not in the VM
 //

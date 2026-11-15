@@ -47,3 +47,14 @@ body.present .md-view .dropped strong { color: inherit; }
 /* Het grote overzichtsplaatje. */
 body.present .md-view img.overview { display: block; width: 100%; max-height: 68vh; object-fit: contain; margin: 4px auto 0; }
 body.present .md-view .beat.sm { font-size: 38px; margin-top: 16px; }
+/* Twee plaatjes naast elkaar op een dia met <span class="duo"></span> in de tekst:
+   de cellen met een canvas of svg op die dia worden halve breedte. */
+body.present .md-view .duo { display: none; }
+body.present #cells:has(.cell:not(.off-slide) .duo) .cell:not(.off-slide):has(.out canvas, .out svg) {
+  display: inline-grid; width: calc(50% - 14px); vertical-align: top; margin-right: 10px; }
+body.present #cells:has(.cell:not(.off-slide) .duo) .out canvas { width: min(100%, 33vh); }
+body.present .md-view svg.sieve { display: block; width: min(100%, 36vh); height: auto; background: #0a0f1d; border-radius: 8px; }
+body.present .md-view .figcap { width: min(100%, 36vh); text-align: center; font-size: 17px; color: var(--text-2);
+  font-style: italic; margin: 6px 0 0; }
+/* De Nederlandse voetregel van interactieve cellen ("3 ms per gebeurtenis") niet in deze Engelse presentatie. */
+body.present .nb-interactive-foot { display: none; }
