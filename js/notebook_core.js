@@ -46,14 +46,22 @@
   // de standaard komt in het bestand ("in elke volgorde" is de standaard),
   // zodat bestaande notebooks niet veranderen.
   const SETTINGS_RE = /^\/\/%% \[instellingen\](.*)$/;
+  // De banner onderaan in de presentatiemodus: `//%% [banner] links | midden | rechts`,
+  // met {dia} en {n} voor het dianummer en het aantal dia's.
+  const BANNER_RE = /^\/\/%% \[banner\](.*)$/;
 
   /** { order: "any" | "top", values: true | false, hideCode?: true } (`waarden=uit`: geen
    * waarden bewaren over sessies heen, fase F; `code=verborgen`: alleen
-   * tekst en uitvoer tonen) */
+   * tekst en uitvoer tonen; `stijl=pad.css`: een eigen stylesheet, het pad vanaf
+   * websapl/; een regel `//%% [banner] ...`: de banner in de presentatiemodus) */
   function parseSettings(text) {
     const settings = { order: "any", values: true };
     for (const line of text.replace(/\r\n/g, "\n").split("\n")) {
+      const b = line.match(BANNER_RE);
+      if (b && b[1].trim()) settings.banner = b[1].trim();
       const m = line.match(SETTINGS_RE);
+      const st = m && m[1].match(/\bstijl=(\S+)/);
+      if (st) settings.style = st[1];
       if (m && /\bvolgorde=boven-naar-beneden\b/.test(m[1])) settings.order = "top";
       if (m && /\bwaarden=uit\b/.test(m[1])) settings.values = false;
       if (m && /\bcode=verborgen\b/.test(m[1])) settings.hideCode = true;
@@ -66,7 +74,7 @@
     let cur = { kind: "code", folded: false, lines: [] };
     let sawMarker = false;
     for (const line of text.replace(/\r\n/g, "\n").split("\n")) {
-      if (SETTINGS_RE.test(line)) continue;
+      if (SETTINGS_RE.test(line) || BANNER_RE.test(line)) continue;
       const m = line.match(MARK_RE);
       if (m) {
         if (sawMarker || cur.lines.some((l) => l.trim() !== "")) cells.push(cur);
@@ -118,7 +126,9 @@
     if (settings && settings.order === "top") set.push("volgorde=boven-naar-beneden");
     if (settings && settings.values === false) set.push("waarden=uit");
     if (settings && settings.hideCode) set.push("code=verborgen");
+    if (settings && settings.style) set.push("stijl=" + settings.style);
     if (set.length) out.push("//%% [instellingen] " + set.join(" "));
+    if (settings && settings.banner) out.push("//%% [banner] " + settings.banner);
     for (const c of cells) {
       const tags = [];
       if (c.kind !== "code") tags.push(c.kind);

@@ -1,0 +1,111 @@
+//%% [instellingen] waarden=uit code=verborgen stijl=top2026/stijl.css
+//%% [banner] TOP Software · 26 November 2026 | One VM, the Whole Toolchain | Jan Martin Jansen · {dia} / {n}
+//%% [markdown]
+// # What are you looking at?
+//
+// <p class="beat">A presentation?</p>
+//%%
+import "lib/list.spp" as L
+//%% [markdown]
+// # What are you looking at?
+//
+// <p class="beat dim">A presentation?</p>
+// <p class="beat">Or a program?</p>
+//%%
+sieve xs = case xs (Cons p rest -> Cons p (sieve (L.filter (\x -> x % p != 0) rest)))
+
+primes = sieve (L.from 2)
+//%%
+n = 12
+//%%
+L.take n primes
+//%% [markdown]
+// # Both.
+//
+// An **interactive document** that runs **entirely in your browser**:
+// no server, no installation, and you can **edit it on the fly**.
+//%%
+D.slider 5 60 n
+//%%
+D.lineChart (L.take n primes)
+//%% [markdown]
+// ## What just happened?
+//
+// - Every cell is a small program, **compiled when you change it** and linked
+//   into the running session; only the cells that depend on it run again.
+// - The compiler, the linker and the typechecker are **themselves bytecode**,
+//   running on **one small VM** in WebAssembly, in this browser tab.
+// - The infinite list `primes` is computed **lazily**: only as far as a cell asks.
+//
+// <p class="hint">Press <b>C</b> to show the code, change it, and watch the slide follow.</p>
+//%%
+D.table ["Step, per cell", "Runs where", "Written in"]
+  [ ["Sapl+ preprocessor (records, ZF, patterns)", "this tab", "Sapl"],
+    ["Typechecker", "this tab", "Sapl"],
+    ["Compiler gen1 (to bytecode)", "this tab", "Sapl"],
+    ["Linker, loading into the session", "this tab", "Sapl"],
+    ["The VM itself", "this tab (WebAssembly)", "C"] ]
+//%% [markdown]
+// ## How could one person build this?
+//
+// About **four months** of work, since 17 July 2026:
+//%%
+D.table ["Since 17 July 2026", "Count"]
+  [ ["Commits (plus 215 merges)", "1,213"],
+    ["Lines of Sapl / Sapl+ (compiler, tools, libraries)", "~138,000"],
+    ["Lines of VM (C)", "~21,000"],
+    ["Design documents and reports", "153"] ]
+//%% [markdown]
+// - **One small VM** in C; everything else is a program running on it.
+// - A **self-hosting compiler** (gen1) that compiles itself, anchored by a typed Haskell version.
+// - One intermediate form, **Retag**, shared by every route: Sapl, Haskell lite and Clean.
+// - **LLMs** made experiments cheap: five backends were built and *measured*, instead of argued about.
+//%% [markdown]
+// ## The real insight: verification, not speed
+//
+// LLM-written code became trustworthy through **oracles that check byte for byte**:
+//
+// - the **fixpoint** of gen1: the compiler must reproduce itself exactly;
+// - the **typed Haskell version** as an independent anchor;
+// - **two generators** (Python and Sapl) that must emit the same C;
+// - the **full regression** on every change, and the documents first.
+//
+// <p class="hint">What went wrong, honestly: an agent reported 38 ms for the compiler compiling itself.
+// It was an aborted run; the fixpoint check caught it.</p>
+//%% [markdown]
+// ## What this means for Clean
+//
+// 1. **Lead with the toolchain.** One small VM with everything language-related as
+//    bytecode, on both sides of the wire. That answers "Clean in the browser".
+// 2. **Native code is an add-on.** Via Retag to C, without touching the VM:
+//    faster than Clean native on small programs, ~1.3× slower on large typed code.
+// 3. **The level of the intermediate form matters more than the backend.** Bring
+//    stack code (ABC, JMVM bytecode) back to a structured form, and keep the types.
+//%% [markdown]
+// ## Measured
+//%%
+D.table ["Measurement (Apple M4)", "Result", "Date"]
+  [ ["Sapl via Retag to C vs. Clean native, 12 benchmarks", "0.84×", "14 Nov"],
+    ["Sapl via Retag to C vs. GHC -O2, 13 benchmarks", "0.99×", "14 Nov"],
+    ["Clean via ABC, Retag and C vs. Clean native, 12 benchmarks", "0.95×", "13 Nov"],
+    ["Typed Clean compiler (2,700 functions) compiling itself", "223 vs. 163 ms (1.37×)", "13-14 Nov"],
+    ["  the same, without tag checks", "211 ms (1.30×)", "14 Nov"],
+    ["GHC on the same task, default vs. tuned nursery", "271 vs. 226 ms", "13 Nov"],
+    ["Clean's ABC interpreter, C via Emscripten vs. generated wasm", "0.71× (preliminary, V8)", "14 Nov"] ]
+//%% [markdown]
+// <p class="hint">Lower is faster. Clean native ran in a Linux VM on the same machine.</p>
+//%% [markdown]
+// ## What has not been measured
+//
+// - A real **iTasks** application: speed, and **compile time** (the typed self-compile
+//   is 3.7 MB of C and takes 4.2 s in clang).
+// - **Uniqueness and arrays**, records, `ccall`, dynamics.
+// - The native route in **WebAssembly**, and graph compatibility with the ABC interpreter.
+// - **Firefox and Safari** for the ABC interpreter variants; Windows.
+//%% [markdown]
+// ## A proposal
+//
+// One day together: take **one real iTasks program** through the abc2retag route,
+// and measure speed, compile time and graph compatibility.
+//
+// <p class="beat">Questions?</p>

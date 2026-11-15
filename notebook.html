@@ -155,6 +155,22 @@
     }
     body.present .present-bar:hover { opacity: 1; }
     .present-bar button { padding: 4px 10px; }
+    /* De banner onderaan (15 november 2026): `//%% [banner] links | midden | rechts`
+       in het notebook, {dia} en {n} voor het dianummer; niet op de eerste dia.
+       Een eigen stijl (`stijl=pad.css` in de instellingen) kan hem opmaken via
+       .present-banner en de variabelen --banner-bg / --banner-fg / --banner-line. */
+    .present-banner { display: none; }
+    body.present.has-banner:not(.first-slide) .present-banner {
+      display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px;
+      position: fixed; left: 0; right: 0; bottom: 0; height: 42px; padding: 0 28px; z-index: 9;
+      background: var(--banner-bg, color-mix(in srgb, var(--accent) 12%, var(--bg)));
+      border-top: 2px solid var(--banner-line, var(--accent));
+      color: var(--banner-fg, var(--text-2)); font-size: 15px;
+    }
+    .present-banner span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .present-banner .pb-m { text-align: center; font-weight: 600; }
+    .present-banner .pb-r { text-align: right; font-variant-numeric: tabular-nums; }
+    body.present.has-banner:not(.first-slide) .present-bar { bottom: 54px; }
     .present-bar button.on { border-color: var(--accent); color: var(--accent); }
     .present-bar .count { font-family: var(--font-mono); font-size: 13px; color: var(--text-2); min-width: 54px; text-align: center; }
     .present-bar .pstatus { font-size: 12px; color: var(--muted); max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -177,6 +193,7 @@
         <option value="notebooks/vm_metingen.spp">Metingen aan VM en compiler</option>
         <option value="notebooks/haskell_lite.spp">Haskell lite</option>
         <optgroup label="Presentaties">
+          <option value="top2026/presentatie.spp">TOP Software, 26 November 2026 (English, in progress)</option>
           <option value="notebookdemo/presentatie.spp">Notebooks: the Killer App (English)</option>
           <option value="afscheid/presentatie.spp">From Proof-of-Concept to Applications (English)</option>
           <option value="topdemo/presentatie.spp">TOP Software-demo</option>
@@ -195,6 +212,7 @@
       <span class="status" id="status">engine laden…</span>
     </header>
     <div id="banner" class="banner" hidden></div>
+    <div class="present-banner" id="present-banner"><span class="pb-l"></span><span class="pb-m"></span><span class="pb-r"></span></div>
     <div class="present-bar">
       <span class="pstatus" id="present-status"></span>
       <button id="btn-present-prev" title="Vorige dia (PageUp, ←)">‹</button>
@@ -1311,6 +1329,7 @@
       el("chk-values").checked = settings.values !== false;
       el("chk-hide-code").checked = !!settings.hideCode;
       document.body.classList.toggle("hide-code", !!settings.hideCode);
+      applyStyle();
       fileName = name || "notebook.spp";
       save(); renderAll(); hideBanner();
       loaded = true;
@@ -1349,6 +1368,17 @@
       return r ? Number(r.dataset.index) : 0;
     }
 
+    // Een eigen stylesheet (`stijl=pad.css` in de instellingen, het pad vanaf websapl/)
+    // en de banner (`//%% [banner] ...`); zie NB.parseSettings.
+    function applyStyle() {
+      let link = document.getElementById("nb-style");
+      if (settings.style) {
+        if (!link) { link = document.createElement("link"); link.rel = "stylesheet"; link.id = "nb-style"; document.head.appendChild(link); }
+        if (link.getAttribute("href") !== settings.style) link.setAttribute("href", settings.style);
+      } else if (link) link.remove();
+      document.body.classList.toggle("has-banner", !!settings.banner);
+    }
+
     function applySlides() {
       if (!present) return;
       const st = NB.slideStarts(cells);
@@ -1359,6 +1389,13 @@
         row.classList.toggle("off-slide", i < a || i >= b);
       });
       el("present-count").textContent = `${slide + 1} / ${st.length}`;
+      document.body.classList.toggle("first-slide", slide === 0);
+      if (settings.banner) {
+        const parts = settings.banner.split("|").map((x) => x.trim().replace(/\{dia\}/g, slide + 1).replace(/\{n\}/g, st.length));
+        while (parts.length < 3) parts.push("");
+        const sp = el("present-banner").children;
+        for (let k = 0; k < 3; k++) sp[k].textContent = parts[k];
+      }
       document.body.classList.toggle("hide-code", !presentCode);
       el("btn-present-code").classList.toggle("on", presentCode);
       if (presentCode) document.querySelectorAll("#cells .cell:not(.off-slide) textarea").forEach(autoGrow);

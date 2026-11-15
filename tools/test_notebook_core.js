@@ -101,6 +101,14 @@ check("ingeklapte cellen parse", folded, [
 ]);
 check("ingeklapte cellen heen en terug", nb.parseNotebook(nb.serializeNotebook(folded)), folded);
 check("code=verborgen in de instellingen", [nb.parseSettings("//%% [instellingen] code=verborgen\n").hideCode, nb.serializeNotebook([{ kind: "code", source: "1" }], { order: "any", values: true, hideCode: true }).split("\n")[0]], [true, "//%% [instellingen] code=verborgen"]);
+{
+  const t = "//%% [instellingen] code=verborgen stijl=top2026/stijl.css\n//%% [banner] TOP Software | Jan Martin Jansen | {dia} / {n}\n//%% [markdown]\n// # Titel\n";
+  const st = nb.parseSettings(t);
+  check("stijl en banner lezen", [st.style, st.banner], ["top2026/stijl.css", "TOP Software | Jan Martin Jansen | {dia} / {n}"]);
+  check("bannerregel is geen cel", nb.parseNotebook(t).length, 1);
+  check("stijl en banner heen en terug", nb.serializeNotebook(nb.parseNotebook(t), st).split("\n").slice(0, 2),
+    ["//%% [instellingen] code=verborgen stijl=top2026/stijl.css", "//%% [banner] TOP Software | Jan Martin Jansen | {dia} / {n}"]);
+}
 check("cellSummary", [nb.cellSummary(folded[0]), nb.cellSummary(folded[2])], ["f, g (2 regels)", "f 1"]);
 
 // 7. Afhankelijkheden.

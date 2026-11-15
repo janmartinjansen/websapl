@@ -1,0 +1,30 @@
+/* Stijl voor de TOP-presentatie (26 november 2026), geladen via
+   `stijl=top2026/stijl.css` in de instellingen van presentatie.spp.
+   Alleen de presentatiemodus; de gewone notebookweergave blijft zoals hij is. */
+body.present {
+  --accent: #f5b041;
+  --banner-line: #f5b041;
+  --banner-fg: #c9d1dc;
+  --banner-bg: #0d1626;
+  background: radial-gradient(ellipse at 20% 0%, #1b2a44 0%, #0f1828 55%, #0a111d 100%) fixed;
+}
+[data-theme="light"] body.present {
+  --accent: #b3650b;
+  --banner-line: #b3650b;
+  --banner-fg: #3c4656;
+  --banner-bg: #eef1f6;
+  background: radial-gradient(ellipse at 20% 0%, #ffffff 0%, #f3f5f9 60%, #e8ecf3 100%) fixed;
+}
+body.present .md-view h1, body.present .md-view h2 { letter-spacing: -0.01em; }
+body.present .md-view h2 { border-bottom: 3px solid var(--accent); padding-bottom: 8px; display: inline-block; }
+body.present .md-view strong { color: var(--accent); font-weight: 600; }
+body.present .md-view .beat { font-size: 56px; line-height: 1.2; margin: 34px 0 0; font-weight: 600; }
+body.present .md-view .beat.dim { opacity: 0.45; }
+body.present .md-view .hint { font-size: 18px; color: var(--muted); margin-top: 26px; font-style: italic; }
+/* De eerste dia: groot en gecentreerd, zonder banner (die laat notebook.html weg). */
+body.present.first-slide .md-view { text-align: center; padding-top: 18vh; }
+body.present.first-slide .md-view h1 { font-size: 64px; }
+/* Grafieken passen boven de banner. */
+body.present .out canvas { width: min(100%, 560px, 46vh); }
+/* Tabelkoppen links, zoals de inhoud. */
+body.present .out th { text-align: left; }

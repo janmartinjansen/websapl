@@ -338,7 +338,7 @@
           "path": "dict/dict_basic.jmvm",
           "type": "file",
           "ext": ".jmvm",
-          "size": 62959,
+          "size": 68846,
           "isBinary": false
         }
       ],
@@ -1394,7 +1394,7 @@
           "path": "lib/codehash.spp",
           "type": "file",
           "ext": ".spp",
-          "size": 20544,
+          "size": 20562,
           "isBinary": false
         },
         {
@@ -1410,7 +1410,7 @@
           "path": "lib/dict.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 9131,
+          "size": 8768,
           "isBinary": false
         },
         {
@@ -2535,7 +2535,7 @@
               "path": "repl_sapl/build/mini_repl.jmvm",
               "type": "file",
               "ext": ".jmvm",
-              "size": 8247796,
+              "size": 8254509,
               "isBinary": false
             },
             {
@@ -2543,7 +2543,7 @@
               "path": "repl_sapl/build/mini_repl.jvb",
               "type": "file",
               "ext": ".jvb",
-              "size": 3065352,
+              "size": 3067768,
               "isBinary": true
             }
           ],
@@ -2562,7 +2562,7 @@
           "path": "sapl_compiler/ast_helpers.cfp",
           "type": "file",
           "ext": ".cfp",
-          "size": 24692,
+          "size": 24947,
           "isBinary": false
         },
         {
@@ -3041,6 +3041,30 @@
       "_expanded": false
     },
     {
+      "name": "top2026",
+      "path": "top2026",
+      "type": "directory",
+      "children": [
+        {
+          "name": "presentatie.spp",
+          "path": "top2026/presentatie.spp",
+          "type": "file",
+          "ext": ".spp",
+          "size": 5001,
+          "isBinary": false
+        },
+        {
+          "name": "stijl.css",
+          "path": "top2026/stijl.css",
+          "type": "file",
+          "ext": ".css",
+          "size": 1586,
+          "isBinary": false
+        }
+      ],
+      "_expanded": false
+    },
+    {
       "name": "topdemo",
       "path": "topdemo",
       "type": "directory",
@@ -3173,7 +3197,7 @@
       "path": "notebook.html",
       "type": "file",
       "ext": ".html",
-      "size": 82499,
+      "size": 84953,
       "isBinary": false
     },
     {
