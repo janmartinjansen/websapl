@@ -186,6 +186,64 @@ D.table ["Step, per cell", "Runs where", "Written in"]
 //
 // <p class="hint">Same clang, two inputs: C from bytecode was 2.2× slower than Clean native; C from Retag is faster (0.84×).</p>
 //%% [markdown]
+// ## Four months, step by step
+//%%
+D.table ["When (2026)", "Step"]
+  [ ["17 July", "Start from the 2016 prototype: VM in C, compiler in Amanda"],
+    ["12 August", "The compiler, now written in Sapl, compiles itself: self-hosting"],
+    ["25-26 September", "It becomes the production compiler; the first notebook"],
+    ["7-11 October", "REPL and tools in Sapl, not in the VM; binary .jvb format"],
+    ["14 October", "A typechecker on every compile"],
+    ["23 October", "Notebooks complete: forms, interactive cells, values kept"],
+    ["1-8 November", "Typed Haskell anchor, superinstructions, Haskell lite, Clean via ABC"],
+    ["11-13 November", "Native code: Retag to C"] ]
+//%% [markdown]
+// ## Self-hosting: the compiler compiles itself
+//
+// - From **19 July** the compiler was rewritten **in Sapl itself** (gen1), next to the Amanda original.
+// - **12 August**: the fixpoint. gen1 compiles its own source to exactly the same bytecode.
+// - **25-26 September**: gen1 becomes the production compiler; the code it generates is as fast as or
+//   faster than the old compiler's on every benchmark.
+// - **1 November**: a **typed Haskell version**, generated from gen1, takes over as the independent
+//   anchor. The Amanda compiler is frozen.
+//
+// <p class="hint">From then on, all language work happens in Sapl, on the VM, and can be checked byte for byte.</p>
+//%% [markdown]
+// ## The turning point: "Can we do something useful with it?"
+//
+// Two days at the end of September:
+//
+// - **25 September**: an overview of all REPLs ends with a chapter *Applications*: teaching lazy
+//   evaluation, a Jupyter-like kernel, playgrounds in the browser, exploring data.
+// - **The same evening**: a plan for *notebooks, libraries and qualified imports*.
+// - **26 September**: the first Sapl notebook, together with libraries for statistics, plots and CSV.
+//
+// <p class="beat">You are looking at the result.</p>
+//%% [markdown]
+// ## The consequence: tools in Sapl, not in the VM
+//
+// - **7-8 October**: the REPL becomes **one Sapl program** instead of three hosts in C++, Python and
+//   JavaScript. The VM only offers a few primitives.
+// - **9-11 October**: a **binary load format** (`.jvb`): the VM no longer reads text at all.
+// - The compiler, linker, typechecker and REPL all run as **bytecode**: unchanged in the browser,
+//   natively, and on a server.
+//%%
+D.table ["Effect of .jvb", "Before", "After"]
+  [ ["Start the REPL", "~117 ms", "~6 ms"],
+    ["Compile a small program", "~40 ms", "~12 ms"] ]
+//%% [markdown]
+// <p class="hint">A rule that stuck: extend the VM only for a real, frequent need without alternative;
+// everything else becomes a Sapl module.</p>
+//%% [markdown]
+// ## Then: more languages and backends, all through Retag
+//
+// - **Haskell lite**: type classes, records and monads, translated to Sapl+.
+// - **MicroHs**, a real Haskell compiler, bootstrapped on the JMVM.
+// - **Clean**: ABC code from the Clean compiler, decompiled back to Retag (`abc2retag`).
+// - **Native code**: Retag to C (`sapl2c`), on par with GHC `-O2`.
+//
+// <p class="hint">Each new frontend or backend only had to meet Retag, not every other part.</p>
+//%% [markdown]
 // ## How could one person build this?
 //
 // About **four months** of work, since 17 July 2026:
