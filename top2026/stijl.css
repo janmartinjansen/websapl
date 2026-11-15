@@ -37,3 +37,7 @@ body.present .md-view .caption { width: min(100%, 560px, 46vh); text-align: cent
 body.present .md-view .twocol { display: grid; grid-template-columns: 1.4fr 1fr; gap: 36px; align-items: start; }
 body.present .md-view .twocol img { max-height: 58vh; max-width: 100%; border-radius: 6px;
   border: 1px solid var(--border); box-shadow: 0 6px 22px rgba(0,0,0,.4); justify-self: center; }
+/* Twee gelijke kolommen (code naast code of tekst). */
+body.present .md-view .twocol.even { grid-template-columns: 1fr 1fr; gap: 28px; }
+body.present .md-view .twocol pre { font-size: 14px; margin: 6px 0 12px; }
+body.present .md-view .beat br + * { margin: 0; }

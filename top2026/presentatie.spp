@@ -71,6 +71,119 @@ D.table ["Step, per cell", "Runs where", "Written in"]
 // <img src="afscheid/paper_first_page.png" alt="First page of the IFL 2016 paper">
 // </div>
 //%% [markdown]
+// ## Why was this a good starting point?
+//
+// Two choices in the 2016 prototype turned out to matter far more than we knew at the time:
+//
+// 1. **A structured intermediate form** between the language and the VM: what we now call **Retag**.
+// 2. **Laziness isolated in two instructions**, `eval` and `jmpt`. The rest of the VM is a plain,
+//    eager stack machine.
+//
+// <p class="hint">We only found out later how much of the follow-up work rests on these two choices.</p>
+//%% [markdown]
+// ## 1. Retag: laziness made explicit
+//
+// <div class="twocol even">
+// <div>
+//
+// **Sapl** (the `primes` benchmark)
+//
+// ```
+// filter p xs = case xs (Nil -> Nil)
+//   (Cons a as -> if (p a)
+//      (Cons a (filter p as))
+//      (filter p as))
+//
+// from a = Cons a (from (a+1))
+//
+// sieve xs = case xs nomatch
+//   (Cons a as ->
+//      Cons a (sieve (filter (nmz a) as)))
+//
+// primes = sieve (from 2)
+// ```
+//
+// </div>
+// <div>
+//
+// **Retag** (after strictness analysis and lifting)
+//
+// ```
+// filter p !xs = case xs (Nil -> Nil)
+//   (Cons a as -> if (eval(p a))
+//      (Cons a (thunk (filter p as)))
+//      (filter p (eval(as))))
+//
+// from a = Cons (eval(a))
+//   (thunk (from (thunk (from_1 a))))
+//
+// sieve !xs = case xs (Nil -> nomatch)
+//   (Cons a as -> Cons a (thunk
+//      (sieve (thunk (filter (closure (nmz a)) as)))))
+//
+// primes = sieve (from 2)
+// ```
+//
+// </div>
+// </div>
+//
+// Every decision about laziness is **visible in the code**: `eval` (evaluate now), `thunk` (later),
+// `closure` (partial application), `!` (strict argument). A backend only has to follow it.
+//%% [markdown]
+// ## 2. Laziness isolated: `eval` and `jmpt`
+//
+// <div class="twocol even">
+// <div>
+//
+// - **`eval`**: the *only* place where a thunk is reduced. It loops on the VM's own control
+//   stack, so deep laziness never touches the C stack.
+// - **`jmpt`**: a jump table on the constructor of an evaluated value: `case` in one instruction.
+// - Everything else (arithmetic, comparisons, calls, building nodes) is **eager** and knows
+//   nothing about laziness.
+//
+// <p class="hint">The JMVM code of <code>sieve</code>, just to show it:</p>
+//
+// </div>
+// <div>
+//
+// ```
+// 22  load 0               || sieve_lazy
+//     eval
+//     store 0
+// 23  load 0               || sieve
+//     jmpt 2 24 25
+// 24  push "sieve_Nil"     || sieve_Nil
+//     debug 2
+//     return 1
+// 25  load 1               || sieve_Cons
+//     load 0
+//     pushfunc 2 12        || nmz_lazy
+//     create 2 7
+//     pushfunc 2 15        || filter_lazy
+//     create 3 3
+//     pushfunc 1 22        || sieve_lazy
+//     create 2 3
+//     load 0
+//     ccreatet 2 11 5 1
+//     return 3
+// ```
+//
+// </div>
+// </div>
+//%% [markdown]
+// ## The key turned out to be Retag, not the VM
+//
+// Almost everything built since starts from **Retag**, not from the bytecode:
+//
+// - **Native code**: Retag to C (`sapl2c`), on par with GHC `-O2`.
+// - **Clean on the JMVM**: ABC decompiled back to Retag (`abc2retag`).
+// - **Haskell lite**, Sapl+ and Core Sapl: all lower to the same Retag.
+// - **Linking modules** and the **optimiser** work on Retag.
+//
+// <p class="beat">In Clean, ABC code is the hub.<br>Here it is one level higher.</p>
+//
+// <p class="hint">Same clang, two inputs: C from bytecode was 2.2× slower than Clean native; C from Retag is faster (0.84×).</p>
+//%% [markdown]
 // ## How could one person build this?
 //
 // About **four months** of work, since 17 July 2026:
