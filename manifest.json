@@ -3046,11 +3046,19 @@
       "type": "directory",
       "children": [
         {
+          "name": "ecosystem.svg",
+          "path": "top2026/ecosystem.svg",
+          "type": "file",
+          "ext": ".svg",
+          "size": 21023,
+          "isBinary": false
+        },
+        {
           "name": "presentatie.spp",
           "path": "top2026/presentatie.spp",
           "type": "file",
           "ext": ".spp",
-          "size": 5001,
+          "size": 15044,
           "isBinary": false
         },
         {
@@ -3058,7 +3066,7 @@
           "path": "top2026/stijl.css",
           "type": "file",
           "ext": ".css",
-          "size": 1586,
+          "size": 2933,
           "isBinary": false
         }
       ],

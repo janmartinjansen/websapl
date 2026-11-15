@@ -244,6 +244,12 @@ D.table ["Effect of .jvb", "Before", "After"]
 //
 // <p class="hint">Each new frontend or backend only had to meet Retag, not every other part.</p>
 //%% [markdown]
+// ## The whole picture
+//
+// <img class="overview" src="top2026/ecosystem.svg" alt="Overview of the ecosystem: frontends, Retag, backends and tools">
+//
+// <p class="hint">Not to explain, just to show what is there. Details: the factsheets.</p>
+//%% [markdown]
 // ## How fast is the interpreter?
 //%%
 D.table ["The JMVM interpreter (Apple M4, 9 Nov)", "Result"]
