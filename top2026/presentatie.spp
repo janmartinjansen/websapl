@@ -441,7 +441,7 @@ D.table ["Since 17 July 2026, all written by models", "About"]
   [ ["Commits", "1,200, plus 200 merged branches"],
     ["Sapl / Sapl+ (toolchain 40k, libraries 16k, experiments and tests 34k)", "90,000 lines"],
     ["VM in C/C++, written (plus generated dispatch)", "6,600 lines"],
-    ["Design documents and reports", "150"] ]
+    ["Design documents and reports", "150 documents"] ]
 //%% [markdown]
 // - **A small VM**: 1,500 lines in 2016. New: `pack`/`unpack`, the binary loader, live linking, reflection.
 // - A **self-hosting compiler** (gen1), anchored by a typed Haskell version.
