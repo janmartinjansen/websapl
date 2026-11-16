@@ -377,14 +377,15 @@ D.table ["The JMVM interpreter (Apple M4, 9 Nov)", "Result"]
     ["vs. GHC -O2, 12 benchmarks (total time)", "3.1× slower"],
     ["vs. Clean's ABC interpreter, native", "1.25× slower"],
     ["In the browser (WebAssembly, Chrome) vs. native", "1.47× slower"],
-    ["In the browser vs. Clean's ABC interpreter (wasm)", "[being measured this week]"],
+    ["In the browser vs. Clean's ABC interpreter (wasm, 16 Nov)", "1.3× faster (Chrome), 1.5× (Safari), 1.5× slower (Firefox)"],
     ["The compiler compiling itself: interpreter vs. GHC -O2", "598 vs. 295 ms (2.0×)"] ]
 //%% [markdown]
 // - The 2016 target was **within a factor of 5** of Clean and Haskell. Natively it is now **2.5-3×**.
 // - In the browser it loses **less than 1.5×** against itself natively.
-// - The comparison with Clean's ABC interpreter in the browser: *[stub: being measured this week]*.
+// - Against Clean's ABC interpreter in the browser, on programs compiled by Clean itself:
+//   **faster in Chrome and Safari, slower in Firefox**; and it depends least on the browser.
 //
-// <p class="hint">Sources: performance factsheet; experiments/clean_vergelijking/meting_2026-11-09. Clean native in a Linux VM.</p>
+// <p class="hint">Sources: performance factsheet; experiments/clean_vergelijking/meting_2026-11-09; browsers: experiments/abc_backend/browsers (14 programs compiled by Clean, the JMVM via abc2retag). Clean native in a Linux VM.</p>
 //%% [markdown]
 // ## Where the interpreter's speed came from
 //%%
@@ -526,8 +527,9 @@ D.table ["Experiment", "What happened", "Replaced by"]
 //
 // Questions rather than lessons:
 //
-// 1. **A faster ABC interpreter in the browser** is probably possible.
-//    *[stub: results of this week's measurements]*
+// 1. **A faster ABC interpreter in the browser** is possible by choosing per browser engine:
+//    with locals it is a third faster in Chrome, the same in Safari, but twice as slow in Firefox.
+//    Clean's own C interpreter via Emscripten does slightly worse than locals everywhere.
 // 2. **A somewhat higher-level intermediate form?** ABC is stack code, like JMVM bytecode.
 //    Here the level of the intermediate form mattered more than the backend, and `abc2retag`
 //    shows the structure can be recovered from ABC. It may be worth a look.
@@ -541,7 +543,7 @@ D.table ["Measurement (Apple M4)", "Result"]
   [ ["Sapl via Retag to C vs. Clean native and GHC -O2, benchmarks", "roughly as fast"],
     ["Clean via ABC, Retag and C vs. Clean native, 12 benchmarks", "roughly as fast"],
     ["Typed Clean compiler compiling itself, via Retag to C", "Clean native clearly faster (unboxed values)"],
-    ["Clean's ABC interpreter in the browser, variants", "[stub: being measured this week]"] ]
+    ["Clean's ABC interpreter in the browser: locals / C via Emscripten", "Chrome 0.65× / 0.71×, Safari 1.05× / 1.3×, Firefox 2.1× / 2.4× the time"] ]
 //%% [markdown]
 // <p class="hint">Clean native ran in a Linux VM on the same machine. All numbers will be measured again before any conclusion.</p>
 //%% [markdown]
@@ -550,7 +552,7 @@ D.table ["Measurement (Apple M4)", "Result"]
 // - A real **iTasks** application: speed, and **compile time**.
 // - **Uniqueness and arrays**, records, `ccall`, dynamics.
 // - The native route in **WebAssembly**, and graph compatibility with the ABC interpreter.
-// - **Firefox and Safari** for the ABC interpreter variants; Windows.
+// - A real **iPad**; Windows.
 //%% [markdown]
 // ## A proposal
 //
@@ -560,10 +562,18 @@ D.table ["Measurement (Apple M4)", "Result"]
 // <p class="beat">Questions?</p>
 //%% [markdown]
 // ## Backup: Clean's ABC interpreter in the browser
+//%%
+D.table ["Time relative to the JMVM (16 Nov, warm)", "Chrome 157", "Safari 26.6", "Firefox 160"]
+  [ ["JMVM (via abc2retag)", "1.00", "1.00", "1.00"],
+    ["ABC interpreter (abc-interpreter.wasm)", "1.29", "1.52", "0.67"],
+    ["ABC, globals to locals", "0.85", "1.60", "1.37"],
+    ["ABC, C interpreter via Emscripten", "0.91", "1.97", "1.61"] ]
+//%% [markdown]
+// - Locals help only in V8 (Chrome, 0.65×); in Firefox they cost twice the time (spilling).
+//   The C interpreter via Emscripten behaves like the locals version, slightly worse.
+// - Clean's own wasm interpreter is at its best in Firefox, faster there than the JMVM.
+// - So: **choose the interpreter build per browser engine.** Safari does not release the memory of
+//   old wasm instances within one page.
+// - Still to do: a real iPad, and the JavaScript glue of iTasks (`.pbc`, GC, graph copying).
 //
-// *[stub: this week's measurements]*
-//
-// - Variants: globals to locals in the generated wasm; Clean's own C interpreter via Emscripten
-//   (switch dispatch, 64-bit words in `wasm32`).
-// - Browsers: Chrome, Safari, Firefox.
-// - Still to do: connect it to the JavaScript glue of iTasks (`.pbc`, GC, graph copying).
+// <p class="hint">Apple M4, 13 benchmarks plus the typed compiler compiling itself, compiled by Clean (clm -optabc); the JMVM runs the same ABC via abc2retag. Output checked. Geometric mean of the fastest of 3 rounds. Report for Camil: docs/2026-11-16_abc_interpreter_in_the_browser.md.</p>

@@ -321,6 +321,35 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     assembler/linker tables in Sapl.
   </div>
 
+  <h2>5. In the browser: the JMVM against Clean&rsquo;s ABC interpreter (16 Nov)</h2>
+  <p>
+    14 programs (13 benchmarks plus the typed compiler compiling itself), <strong>compiled by Clean 5.1.1</strong>
+    (<code>clm -optabc</code>). The three ABC interpreters run Clean&rsquo;s bytecode; the JMVM runs the same ABC
+    through <code>abc2retag</code>. Warm, output checked on every run. Time relative to the JMVM, geometric mean
+    of the fastest of 3 rounds (Apple M4); lower is faster.
+  </p>
+  <table>
+    <thead>
+      <tr><th>Interpreter</th><th class="num">Chrome 157</th><th class="num">Safari 26.6</th><th class="num">Firefox 160</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>jmvm.wasm</code> (JMVM, via <code>abc2retag</code>)</td><td class="num">1.00</td><td class="num">1.00</td><td class="num">1.00</td></tr>
+      <tr><td>Clean&rsquo;s <code>abc-interpreter.wasm</code></td><td class="num">1.29</td><td class="num">1.52</td><td class="num">0.67</td></tr>
+      <tr><td>the same, interpreter globals as Wasm locals</td><td class="num">0.85</td><td class="num">1.60</td><td class="num">1.37</td></tr>
+      <tr><td>Clean&rsquo;s C interpreter via Emscripten (<code>wasm32</code>, 64-bit words)</td><td class="num">0.91</td><td class="num">1.97</td><td class="num">1.61</td></tr>
+    </tbody>
+  </table>
+  <div class="callout ok">
+    <strong>No single interpreter wins in every browser.</strong> The JMVM is fastest in Safari and depends least on
+    the browser (Safari 0.98&times;, Firefox 1.45&times; its time in Chrome). In Chrome, Clean&rsquo;s interpreter with
+    locals is fastest (0.65&times; the shipped one); in Firefox the shipped <code>abc-interpreter.wasm</code> is
+    fastest, and locals cost twice the time there (spilling). The Emscripten build behaves like the locals version,
+    slightly worse. So the ABC interpreter build should be chosen per browser engine. On Sapl programs translated to
+    ABC the picture is the same, with the ABC about 15% slower than Clean&rsquo;s own. Safari does not release the
+    memory of old wasm instances within one page. Sources: <code>experiments/abc_backend/browsers/resultaten/samenvatting.md</code>
+    and <code>docs/2026-11-16_abc_interpreter_in_the_browser.md</code> (branch <code>meting/browsers</code>).
+  </div>
+
   <footer>
     Measured on the repository state of 16 November 2026. Sources: <code>docs/2026-11-16_uitsplitsing_regels_code_vm_en_sapl.md</code>,
     <code>vm/instructies.tab</code>, <code>vm/vm.cpp</code>, and <code>docs/performance_bevindingen.md</code>.
