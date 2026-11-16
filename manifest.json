@@ -602,7 +602,15 @@
           "path": "factsheets/index.html",
           "type": "file",
           "ext": ".html",
-          "size": 17829,
+          "size": 19262,
+          "isBinary": false
+        },
+        {
+          "name": "jmvm_interpreter_factsheet.html",
+          "path": "factsheets/jmvm_interpreter_factsheet.html",
+          "type": "file",
+          "ext": ".html",
+          "size": 19368,
           "isBinary": false
         },
         {
@@ -643,6 +651,14 @@
           "type": "file",
           "ext": ".html",
           "size": 104043,
+          "isBinary": false
+        },
+        {
+          "name": "sapl_toolchain_numbers_factsheet.html",
+          "path": "factsheets/sapl_toolchain_numbers_factsheet.html",
+          "type": "file",
+          "ext": ".html",
+          "size": 19590,
           "isBinary": false
         },
         {
@@ -690,7 +706,7 @@
           "path": "factsheets/toolchain_factsheet.html",
           "type": "file",
           "ext": ".html",
-          "size": 32814,
+          "size": 33009,
           "isBinary": false
         },
         {
@@ -3050,7 +3066,7 @@
           "path": "top2026/ecosystem.svg",
           "type": "file",
           "ext": ".svg",
-          "size": 21023,
+          "size": 21012,
           "isBinary": false
         },
         {
@@ -3058,7 +3074,7 @@
           "path": "top2026/presentatie.spp",
           "type": "file",
           "ext": ".spp",
-          "size": 15044,
+          "size": 25155,
           "isBinary": false
         },
         {
@@ -3066,7 +3082,7 @@
           "path": "top2026/stijl.css",
           "type": "file",
           "ext": ".css",
-          "size": 2933,
+          "size": 3945,
           "isBinary": false
         }
       ],

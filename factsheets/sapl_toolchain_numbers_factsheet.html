@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Sapl Codebase &amp; Toolchain in Hard Numbers</title>
+<meta name="description" content="Exact inventory of the 146,008 lines of Sapl and Sapl+ in git: 89,639 unique handwritten source lines (39,950 in the active toolchain), 56,369 copied or flattened lines, and 5 measured codegen backends.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script>
+  try {
+    const t = localStorage.getItem("websapl_theme");
+    if (t) document.documentElement.setAttribute("data-theme", t);
+  } catch (_) {}
+</script>
+<style>
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --fg: #1b2230;
+  --muted: #5a6475;
+  --line: #d9dee6;
+  --accent: #1f5f8b;
+  --accent-soft: #e3eef6;
+  --ok: #2c6b45;
+  --ok-soft: #e3f2e8;
+  --warn: #9a5b00;
+  --warn-soft: #fbf0de;
+  --purple: #6d28d9;
+  --purple-soft: #f3e8ff;
+  --f-display: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161d;
+    --surface: #1a2029;
+    --fg: #e4e8ee;
+    --muted: #9aa5b6;
+    --line: #2d3542;
+    --accent: #7db7e0;
+    --accent-soft: #1d3346;
+    --ok: #7fcf9c;
+    --ok-soft: #173025;
+    --warn: #e7b25c;
+    --warn-soft: #3a2c14;
+    --purple: #c084fc;
+    --purple-soft: #2e1d47;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161d;
+  --surface: #1a2029;
+  --fg: #e4e8ee;
+  --muted: #9aa5b6;
+  --line: #2d3542;
+  --accent: #7db7e0;
+  --accent-soft: #1d3346;
+  --ok: #7fcf9c;
+  --ok-soft: #173025;
+  --warn: #e7b25c;
+  --warn-soft: #3a2c14;
+  --purple: #c084fc;
+  --purple-soft: #2e1d47;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15.5px/1.62 var(--f-body);
+}
+.wrap { max-width: 980px; margin: 0 auto; padding: 32px 20px 64px; }
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; font-size: 14px; }
+.topbar a { color: var(--muted); text-decoration: none; }
+.topbar a:hover { color: var(--accent); }
+.theme-btn {
+  background: var(--surface); color: var(--fg); border: 1px solid var(--line);
+  border-radius: 6px; padding: 5px 11px; font: 13px var(--f-body); cursor: pointer;
+}
+header { border-bottom: 2px solid var(--line); padding-bottom: 18px; margin-bottom: 26px; }
+.eyebrow {
+  font: 600 12px/1.2 var(--f-mono); text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--ok); margin-bottom: 8px;
+}
+h1 { font: 700 32px/1.15 var(--f-display); margin: 0 0 10px; letter-spacing: -0.01em; }
+.lead { color: var(--muted); font-size: 16.5px; margin: 0; max-width: 78ch; }
+h2 { font: 700 22px/1.25 var(--f-display); margin: 34px 0 12px; }
+h3 { font: 600 16.5px/1.3 var(--f-display); margin: 0 0 8px; }
+p { margin: 0 0 12px; }
+ul { margin: 6px 0 14px; padding-left: 20px; }
+li { margin: 4px 0; }
+code { font-family: var(--f-mono); font-size: 0.88em; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+a { color: var(--accent); }
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 20px 0 28px; }
+@media (max-width: 760px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.kpi {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px;
+}
+.kpi .val { font: 700 26px/1.1 var(--f-display); color: var(--accent); }
+.kpi .lbl { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 14px 0; }
+@media (max-width: 760px) { .grid-2 { grid-template-columns: 1fr; } }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 18px 20px;
+}
+.card.ok { border-top: 3px solid var(--ok); }
+.card.accent { border-top: 3px solid var(--accent); }
+.card.warn { border-top: 3px solid var(--warn); }
+.card.purple { border-top: 3px solid var(--purple); }
+table {
+  width: 100%; border-collapse: collapse; margin: 16px 0; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 8px; overflow: hidden; font-size: 14px;
+}
+th, td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { background: var(--accent-soft); font-weight: 600; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tr:last-child td { border-bottom: none; }
+tr.subtotal td { background: var(--accent-soft); font-weight: 600; }
+tr.total td { font-weight: 700; border-top: 2px solid var(--line); }
+.callout {
+  background: var(--ok-soft); border-left: 3px solid var(--ok);
+  padding: 12px 15px; border-radius: 0 8px 8px 0; margin: 16px 0; font-size: 14.5px;
+}
+.callout.accent { background: var(--accent-soft); border-left-color: var(--accent); }
+footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a href="index.html">&larr; Factsheets</a>
+    <button class="theme-btn" id="themeBtn" type="button">Theme</button>
+  </div>
+
+  <header>
+    <div class="eyebrow">Codebase Audit &amp; Verified Metrics &bull; 16 November 2026</div>
+    <h1>The Sapl Codebase &amp; Toolchain in Hard Numbers</h1>
+    <p class="lead">
+      Every compiler stage, preprocessor, typechecker, frontend, linker, REPL and notebook library in this
+      project is written in Sapl or Sapl+. Auditing all 1,197 tracked <code>.cfp</code> and <code>.spp</code>
+      files separates <strong>89,639 unique handwritten source lines</strong> from 56,369 lines of static-site
+      copies and flattened builds.
+    </p>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi"><div class="val">89,639</div><div class="lbl">Unique Sapl / Sapl+ source lines across 901 files (56,212 SLOC excl. comments/blanks)</div></div>
+    <div class="kpi"><div class="val">39,950</div><div class="lbl">Lines in the active language toolchain (117 files: compilers, frontends, REPL, linker)</div></div>
+    <div class="kpi"><div class="val">5</div><div class="lbl">Code-generation backends built &amp; measured around Retag / JMVM bytecode</div></div>
+    <div class="kpi"><div class="val">~1 : 14</div><div class="lbl">VM runtime (~6.6k C/C++) to unique Sapl ecosystem (~89.6k, ~40k core toolchain)</div></div>
+  </div>
+
+  <h2>1. Repository inventory: separating unique source from copies</h2>
+  <p>
+    A raw line count over <code>git ls-files '*.cfp' '*.spp'</code> totals <strong>146,008 lines</strong>
+    across 1,197 files (before the Sapl port of <code>abc2retag</code> on 14 November this stood at ~138,000).
+    Roughly 39% of that total consists of static-site mirrors for WebSapl and flattened/bundled files:
+  </p>
+
+  <table>
+    <thead>
+      <tr><th>Category</th><th class="num">Files</th><th class="num">Total lines</th><th class="num">Code SLOC</th><th>Contents</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>A. Active language toolchain</td>
+        <td class="num">117</td><td class="num">39,950</td><td class="num">25,359</td>
+        <td><code>sapl_compiler/</code>, <code>preprocess/</code>, <code>micro_haskell/hlite/</code>, REPL, linker, VM generator</td>
+      </tr>
+      <tr>
+        <td>B. Standard libraries &amp; graphics</td>
+        <td class="num">38</td><td class="num">9,041</td><td class="num">5,785</td>
+        <td><code>lib/</code> (3,906 across 19 files) &amp; <code>grafisch/</code> (5,135 across 19 files)</td>
+      </tr>
+      <tr>
+        <td>C. Notebooks, prototypes &amp; server</td>
+        <td class="num">50</td><td class="num">6,587</td><td class="num">3,069</td>
+        <td><code>notebooks/</code> (3,864), <code>taalproto/</code> (1,867 non-test), <code>server/</code> (633), <code>funcprog/</code> (172), <code>linter/</code> (51)</td>
+      </tr>
+      <tr>
+        <td>D. Experiments (excl. flattened test inputs)</td>
+        <td class="num">78</td><td class="num">10,593</td><td class="num">6,684</td>
+        <td><code>experiments/</code>: <code>toppyt</code>, parser combinators, Haskell benchmarks, Scott encoding</td>
+      </tr>
+      <tr>
+        <td>E. Early translators &amp; interpreters</td>
+        <td class="num">107</td><td class="num">11,220</td><td class="num">7,416</td>
+        <td><code>amanda/</code> (5,705), <code>Sapl_interpreter/</code> (1,460), <code>lamlift/</code> (1,360), <code>sapl_naar_lc/</code> (1,242), <code>lc_repl/</code> (1,028), <code>reflection/</code> (425)</td>
+      </tr>
+      <tr>
+        <td>F. Regression tests, benchmarks &amp; examples</td>
+        <td class="num">511</td><td class="num">12,248</td><td class="num">7,899</td>
+        <td><code>tests/</code>, module <code>test_*</code> suites, <code>benchmarks*</code>, <code>examples/</code> (excl. flattened), <code>typing/</code>, <code>docs/</code></td>
+      </tr>
+      <tr class="subtotal">
+        <td>Subtotal: unique handwritten Sapl / Sapl+</td>
+        <td class="num">901</td><td class="num">89,639</td><td class="num">56,212</td>
+        <td>61.4% of tracked lines</td>
+      </tr>
+      <tr>
+        <td>G. Copies &amp; flattened/bundled files</td>
+        <td class="num">296</td><td class="num">56,369</td><td class="num">35,324</td>
+        <td><code>websapl/</code> (28,334), <code>experiments/abc2jmvm/testinvoer/</code> (16,257), bundled <code>micro_haskell</code> <code>*_main.cfp</code> &amp; <code>mhsrt.cfp</code>/tests (4,184), <code>examples/saplcomp_flattened.cfp</code> (3,256), <code>archive/</code> (3,039), <code>repl_sapl/build/</code> (1,299)</td>
+      </tr>
+      <tr class="total">
+        <td>Total tracked <code>.cfp</code> + <code>.spp</code></td>
+        <td class="num">1,197</td><td class="num">146,008</td><td class="num">91,536</td>
+        <td>All files tracked in git on 16 November 2026</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>2. Anatomy of the active language toolchain (39,950 lines)</h2>
+  <div class="grid-2">
+    <div class="card ok">
+      <h3>1. Compiler &amp; Backends (<code>sapl_compiler/</code> &mdash; 18,988 lines, 35 files)</h3>
+      <ul>
+        <li><strong>Core compiler <code>gen1</code> (8,260 lines, 21 files):</strong>
+          <code>stage5_codegen.cfp</code> (1,802), <code>parser.cfp</code> (1,430), <code>stage3_lift.cfp</code> (701),
+          <code>ast_helpers.cfp</code> (628), <code>stage1_bool.cfp</code> (502), <code>jvb_asm.cfp</code> (471),
+          <code>driver.cfp</code> (463), <code>stage_dump.cfp</code> (425), <code>lexer2.cfp</code> (303),
+          <code>stage2_lazytag.cfp</code> (295), <code>strictness.cfp</code> (272), <code>stage4_retag.cfp</code> (243),
+          plus 9 entry/chunk/helper modules (725).</li>
+        <li><strong><code>abc2retag</code> in pure Sapl (5,916 lines, 8 files):</strong>
+          <code>abc_sim.cfp</code> (1,444), <code>abc_opt.cfp</code> (1,391), <code>abc_meta.cfp</code> (1,099),
+          <code>abc_linker.cfp</code> (659), <code>abc_desugar.cfp</code> (569), <code>abc_lift_opt.cfp</code> (405),
+          <code>abc_ast.cfp</code> (310), <code>abc2retag.cfp</code> (39).</li>
+        <li><strong>Native C backend <code>sapl2c</code> (1,810 lines):</strong>
+          <code>sapl2c.cfp</code> (1,810) &mdash; compiles Stage-4 Retag directly to C.</li>
+        <li><strong>Retag tooling (3,002 lines, 5 files):</strong>
+          <code>retag_opt.cfp</code> (1,919), <code>retag_parse.cfp</code> (842), <code>retaglink.cfp</code> (193),
+          <code>retagcomp.cfp</code> (26), <code>retagopt.cfp</code> (22).</li>
+      </ul>
+    </div>
+    <div class="card accent">
+      <h3>2. Preprocessor, Frontends &amp; Runtime Tools (20,962 lines, 82 files)</h3>
+      <ul>
+        <li><strong>Sapl+ preprocessor &amp; typechecker (<code>preprocess/</code> &mdash; 11,256 lines, 17 files):</strong>
+          Parser/lexer/AST (4,235: <code>parser.cfp</code> 3,387, <code>lexer.cfp</code> 569, <code>ast.cfp</code> 279);
+          Hindley-Milner typechecker <code>typecheck.cfp</code> (2,472);
+          modules, pattern compilation, list comprehensions, records &amp; desugaring across 13 files (4,549, incl. <code>modules.cfp</code> 881, <code>patcompile.cfp</code> 520, <code>zfdesugar.cfp</code> 483).</li>
+        <li><strong>Haskell lite frontend (<code>micro_haskell/hlite/</code> &mdash; 5,499 lines, 52 files):</strong>
+          Typechecker &amp; typeclass specialization (<code>typen.spp</code> 1,139, <code>typgebruik.spp</code> 732),
+          prelude, parser, desugaring &amp; Sapl+ emitter (<code>hprelude.spp</code> 546, <code>parser.spp</code> 532,
+          <code>naarspp.spp</code> 518, <code>ontsuiker.spp</code> 404, <code>lexer.spp</code> 370), plus 45 smaller modules (1,258).</li>
+        <li><strong>REPL, binary linker &amp; VM generator (4,207 lines, 13 files):</strong>
+          <code>repl_sapl/</code> excl. <code>build/</code> (2,228: <code>mini_repl.spp</code> 2,131 + spikes 97),
+          <code>laadformaat/</code> (891, incl. <code>link.cfp</code> 590),
+          <code>vm/genereer.cfp</code> (599), and <code>repl/</code> (489).</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>3. Libraries, notebooks, experiments &amp; early work (49,689 lines)</h2>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Libraries, Graphics &amp; Notebooks (15,628 lines)</h3>
+      <ul>
+        <li><strong><code>lib/</code> (3,906 lines, 19 files):</strong> <code>notebook_glue.cfp</code> (542), <code>codehash.spp</code> (446), <code>containers.cfp</code> (346), <code>shape.spp</code> (315), <code>c2sketch.spp</code> (260), plus <code>list</code>, <code>text</code>, <code>plot</code>, <code>display</code>, <code>csv</code>, <code>stats</code>, <code>waarden</code>, <code>dict</code>, <code>stdlib</code>.</li>
+        <li><strong><code>grafisch/</code> (5,135 lines, 19 files):</strong> hardware simulator <code>hwdes</code> (1,620 across core/lib/tests), <code>grafiek_paint.spp</code> (794) + tests, 2D/3D vector &amp; curve libraries.</li>
+        <li><strong><code>notebooks/</code> &amp; <code>taalproto/</code> (6,587 lines, 50 files):</strong> interactive browser notebooks (3,864), <code>:lang</code> parser-generator &amp; toy languages <code>ml</code>/<code>tiny</code>/<code>while</code>/<code>calc</code> (1,867 non-test), server compute worker (633), <code>funcprog/</code> (172), <code>linter/</code> (51).</li>
+      </ul>
+    </div>
+    <div class="card purple">
+      <h3>Experiments, Early Routes &amp; Tests (34,061 lines)</h3>
+      <ul>
+        <li><strong><code>experiments/</code> (10,593 non-flattened lines, 78 files):</strong> iTasks-style task exploration (<code>toppyt</code>), parser combinators, Haskell benchmark ports, Scott-encoding comparisons.</li>
+        <li><strong>Early translators &amp; interpreters (11,220 non-test lines, 107 files):</strong> original Amanda compiler port (<code>amanda/</code> 5,705), Sapl interpreter (1,460), lambda lifter (1,360), lambda-calculus route (1,242), LC REPL (1,028), reflection prototypes (425).</li>
+        <li><strong>Tests, benchmarks &amp; examples (12,248 lines, 511 files):</strong> automated regressions checking byte-for-byte output equivalence and compiler fixed points.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>4. Five measured code-generation backends (plus the Clean bridge)</h2>
+  <p>
+    Because the toolchain is decoupled at Stage-4 Retag (or JMVM bytecode), five code-generation backends were
+    built and benchmarked against Clean native, Clean&rsquo;s ABC interpreter and GHC <code>-O2</code>:
+  </p>
+  <table>
+    <thead>
+      <tr><th>Target / Backend</th><th>Input IR</th><th>Implementation</th><th>Status &amp; key finding</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>1. JMVM bytecode (<code>.jmvm</code> / <code>.jvb</code>)</strong></td>
+        <td>Stage-4 Retag</td>
+        <td><code>stage5_codegen.cfp</code> + <code>jvb_asm.cfp</code> (Sapl)</td>
+        <td><strong>Production.</strong> Runs natively (<code>musttail</code>) and in WebAssembly (<code>switch</code>, 150 KB uncompressed / 65 KB gzip).</td>
+      </tr>
+      <tr>
+        <td><strong>2. Standalone WebAssembly (<code>jmvm2wat</code> / <code>wasm_jit</code>)</strong></td>
+        <td>JMVM bytecode</td>
+        <td><code>jmvm2wat.py</code> / <code>wasm_jit.cpp</code></td>
+        <td><strong>Parked.</strong> 1.5&times; faster than the cold interpreter, but overtaken by warm V8 JIT on <code>jmvm.wasm</code>.</td>
+      </tr>
+      <tr>
+        <td><strong>3. C from bytecode (<code>jmvm2c</code>)</strong></td>
+        <td>JMVM bytecode</td>
+        <td><code>jmvm2c.py</code></td>
+        <td><strong>Superseded.</strong> Basic blocks as <code>musttail</code> C functions; kept temporaries on the VM stack (9.3 MB C, 47 s build, 442 ms <code>gen1</code>).</td>
+      </tr>
+      <tr>
+        <td><strong>4. Clean ABC (<code>sapl_naar_abc</code>)</strong></td>
+        <td>Stage-4 Retag</td>
+        <td><code>sapl_naar_abc.py</code></td>
+        <td><strong>Measured oracle.</strong> Runs all benchmarks and <code>gen1</code> fixed point on Clean&rsquo;s native <code>cg</code> and ABC interpreter.</td>
+      </tr>
+      <tr>
+        <td><strong>5. C from Retag (<code>sapl2c</code>)</strong></td>
+        <td>Stage-4 Retag</td>
+        <td><code>sapl2c.cfp</code> &amp; <code>sapl_naar_c.py</code></td>
+        <td><strong>Active prototype.</strong> Whole functions with named variables for <code>clang -O2</code> (2.9 MB C, 4.1 s build, 244 ms <code>gen1</code>).</td>
+      </tr>
+      <tr class="subtotal">
+        <td>Reverse bridge: <code>abc2retag</code></td>
+        <td>Clean <code>.abc</code></td>
+        <td><code>abc2retag.cfp</code> (5,916 lines Sapl) &amp; Python</td>
+        <td>Decompiles Clean stack code back into Stage-4 Retag, letting Clean use JMVM and <code>sapl2c</code>.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <strong>Why the Retag split kept the toolchain small:</strong> Roughly 40,000 lines of Sapl build three frontends
+    (Core Sapl, Sapl+, Haskell lite), a Hindley-Milner typechecker, an incremental module linker, a live REPL/notebook
+    kernel, a Clean ABC decompiler and two active code generators &mdash; all running as bytecode on a single
+    <strong>5,244-line</strong> active C/C++ VM runtime.
+  </div>
+
+  <footer>
+    Measured on repository state of 16 November 2026 (<code>docs/presentatie-top-26nov</code>).
+    Companion sheet: <a href="jmvm_interpreter_factsheet.html">The JMVM Interpreter: Anatomy, Line Counts &amp; Execution Model</a>.
+    Source data: <code>docs/2026-11-16_uitsplitsing_regels_code_vm_en_sapl.md</code>.
+  </footer>
+</div>
+
+<script>
+document.getElementById("themeBtn").addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme") ||
+    (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  const next = cur === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("websapl_theme", next); } catch (_) {}
+});
+</script>
+</body>
+</html>

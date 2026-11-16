@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The JMVM Interpreter: Anatomy, Line Counts &amp; Execution Model</title>
+<meta name="description" content="Exact code breakdown of the JMVM bytecode interpreter in vm/: 5,244 active C/C++ runtime lines (6,620 handwritten total), generated dispatch loops, and what grew beyond the 1,500-line 2016 prototype.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script>
+  try {
+    const t = localStorage.getItem("websapl_theme");
+    if (t) document.documentElement.setAttribute("data-theme", t);
+  } catch (_) {}
+</script>
+<style>
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --fg: #1b2230;
+  --muted: #5a6475;
+  --line: #d9dee6;
+  --accent: #1f5f8b;
+  --accent-soft: #e3eef6;
+  --ok: #2c6b45;
+  --ok-soft: #e3f2e8;
+  --warn: #9a5b00;
+  --warn-soft: #fbf0de;
+  --purple: #6d28d9;
+  --purple-soft: #f3e8ff;
+  --f-display: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161d;
+    --surface: #1a2029;
+    --fg: #e4e8ee;
+    --muted: #9aa5b6;
+    --line: #2d3542;
+    --accent: #7db7e0;
+    --accent-soft: #1d3346;
+    --ok: #7fcf9c;
+    --ok-soft: #173025;
+    --warn: #e7b25c;
+    --warn-soft: #3a2c14;
+    --purple: #c084fc;
+    --purple-soft: #2e1d47;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161d;
+  --surface: #1a2029;
+  --fg: #e4e8ee;
+  --muted: #9aa5b6;
+  --line: #2d3542;
+  --accent: #7db7e0;
+  --accent-soft: #1d3346;
+  --ok: #7fcf9c;
+  --ok-soft: #173025;
+  --warn: #e7b25c;
+  --warn-soft: #3a2c14;
+  --purple: #c084fc;
+  --purple-soft: #2e1d47;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15.5px/1.62 var(--f-body);
+}
+.wrap { max-width: 980px; margin: 0 auto; padding: 32px 20px 64px; }
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; font-size: 14px; }
+.topbar a { color: var(--muted); text-decoration: none; }
+.topbar a:hover { color: var(--accent); }
+.theme-btn {
+  background: var(--surface); color: var(--fg); border: 1px solid var(--line);
+  border-radius: 6px; padding: 5px 11px; font: 13px var(--f-body); cursor: pointer;
+}
+header { border-bottom: 2px solid var(--line); padding-bottom: 18px; margin-bottom: 26px; }
+.eyebrow {
+  font: 600 12px/1.2 var(--f-mono); text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--accent); margin-bottom: 8px;
+}
+h1 { font: 700 32px/1.15 var(--f-display); margin: 0 0 10px; letter-spacing: -0.01em; }
+.lead { color: var(--muted); font-size: 16.5px; margin: 0; max-width: 78ch; }
+h2 { font: 700 22px/1.25 var(--f-display); margin: 34px 0 12px; }
+h3 { font: 600 16.5px/1.3 var(--f-display); margin: 0 0 8px; }
+p { margin: 0 0 12px; }
+ul { margin: 6px 0 14px; padding-left: 20px; }
+li { margin: 4px 0; }
+code { font-family: var(--f-mono); font-size: 0.88em; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+a { color: var(--accent); }
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 20px 0 28px; }
+@media (max-width: 760px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.kpi {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px;
+}
+.kpi .val { font: 700 26px/1.1 var(--f-display); color: var(--accent); }
+.kpi .lbl { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 14px 0; }
+@media (max-width: 760px) { .grid-2 { grid-template-columns: 1fr; } }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 18px 20px;
+}
+.card.ok { border-top: 3px solid var(--ok); }
+.card.accent { border-top: 3px solid var(--accent); }
+.card.warn { border-top: 3px solid var(--warn); }
+.card.purple { border-top: 3px solid var(--purple); }
+table {
+  width: 100%; border-collapse: collapse; margin: 16px 0; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 8px; overflow: hidden; font-size: 14px;
+}
+th, td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { background: var(--accent-soft); font-weight: 600; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tr:last-child td { border-bottom: none; }
+tr.subtotal td { background: var(--accent-soft); font-weight: 600; }
+tr.total td { font-weight: 700; border-top: 2px solid var(--line); }
+.callout {
+  background: var(--accent-soft); border-left: 3px solid var(--accent);
+  padding: 12px 15px; border-radius: 0 8px 8px 0; margin: 16px 0; font-size: 14.5px;
+}
+.callout.ok { background: var(--ok-soft); border-left-color: var(--ok); }
+.callout.warn { background: var(--warn-soft); border-left-color: var(--warn); }
+footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a href="index.html">&larr; Factsheets</a>
+    <button class="theme-btn" id="themeBtn" type="button">Theme</button>
+  </div>
+
+  <header>
+    <div class="eyebrow">Interpreter Architecture &amp; Verified Metrics &bull; 16 November 2026</div>
+    <h1>The JMVM Interpreter: Anatomy, Line Counts &amp; Execution Model</h1>
+    <p class="lead">
+      The JMVM is the only C/C++ component in the entire Sapl ecosystem. While a raw directory count of
+      <code>vm/</code> reports 21,939 lines, over two-thirds of that is generated dispatch code, compiled
+      bytecode and binaries. The actual browser VM runtime is <strong>5,244 lines</strong> of handwritten
+      C/C++ (6,620 lines including the legacy text loader).
+    </p>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi"><div class="val">5,244</div><div class="lbl">Active runtime lines in C/C++ for <code>jmvm.wasm</code> (6,620 total incl. text parser)</div></div>
+    <div class="kpi"><div class="val">65 KB</div><div class="lbl"><code>jmvm.wasm</code> gzipped (150,755 B uncompressed, ~147 KB)</div></div>
+    <div class="kpi"><div class="val">45 + 39 + 7</div><div class="lbl">Active regular opcodes, <code>_AUX</code> primitives &amp; superinstructions in <code>instructies.tab</code></div></div>
+    <div class="kpi"><div class="val">3 loops</div><div class="lbl"><code>musttail</code>, <code>switch</code>, and computed <code>goto</code> emitted by one 599-line Sapl generator</div></div>
+  </div>
+
+  <h2>1. Where the 21,939 lines in <code>vm/</code> actually go</h2>
+  <p>
+    Running a naive <code>wc -l vm/* vm/*/*</code> yields 21,939 lines (sum of individual file line counts:
+    21,941). Separating handwritten source from generated C and compiled artefacts reveals the true size of
+    the interpreter:
+  </p>
+
+  <table>
+    <thead>
+      <tr><th>Category in <code>vm/</code></th><th class="num">Files</th><th class="num">Lines</th><th class="num">Share</th><th>What is inside</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1. Handwritten C/C++ runtime &amp; variants (<code>vm/*.cpp</code>, <code>vm/*.h</code>, <code>vm/variant/*.h</code>)</td>
+        <td class="num">36</td><td class="num">4,839</td><td class="num">22.1%</td>
+        <td>GC, heap, <code>.jvb</code> loader, <code>pack</code>/<code>unpack</code>, dispatch harnesses (3,628 non-blank/comment SLOC)</td>
+      </tr>
+      <tr>
+        <td>2. Handwritten instruction bodies (<code>vm/instr/*.c</code>)</td>
+        <td class="num">21</td><td class="num">1,781</td><td class="num">8.1%</td>
+        <td>C implementations of all opcodes and <code>_AUX</code> primitives (1,277 SLOC)</td>
+      </tr>
+      <tr>
+        <td>3. Declarative opcode table (<code>instructies.tab</code> + <code>volgorde.txt</code>)</td>
+        <td class="num">2</td><td class="num">166</td><td class="num">0.8%</td>
+        <td>Numbers, flags, operand schemas and source ordering</td>
+      </tr>
+      <tr class="subtotal">
+        <td>Subtotal: handwritten VM source</td>
+        <td class="num">59</td><td class="num">6,786</td><td class="num">30.9%</td>
+        <td>6,620 lines C/C++ + 166 lines table (4,905 pure code SLOC excl. comments/blanks)</td>
+      </tr>
+      <tr>
+        <td>4. Generated C dispatch includes (<code>vm/gen/*</code>)</td>
+        <td class="num">11</td><td class="num">5,750</td><td class="num">26.2%</td>
+        <td>Emitted by <code>genereer.cfp</code>: <code>musttail</code> (1,862), <code>switch</code> (1,700), <code>goto</code> (1,696) &amp; tables (492)</td>
+      </tr>
+      <tr>
+        <td>5. Compiled bytecode &amp; binaries in <code>vm/</code></td>
+        <td class="num">3</td><td class="num">7,974</td><td class="num">36.3%</td>
+        <td><code>genereer.jmvm</code> (6,894 lines bytecode) plus raw line counts of binaries <code>tools/genvm</code> (812) and <code>genereer.jvb</code> (268)</td>
+      </tr>
+      <tr>
+        <td>6. Sapl generator &amp; tooling</td>
+        <td class="num">8</td><td class="num">1,429</td><td class="num">6.5%</td>
+        <td><code>genereer.cfp</code> (599 lines Sapl), Python/shell verification tools (587), docs (227), <code>toets_namen.cpp</code> (25)</td>
+      </tr>
+      <tr class="total">
+        <td>Total across <code>vm/</code></td>
+        <td class="num">81</td><td class="num">21,941</td><td class="num">100.0%</td>
+        <td>21,939 reported by globbing <code>vm/* vm/*/*</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>2. Subsystem breakdown of the 6,620 handwritten C/C++ lines</h2>
+  <div class="grid-2">
+    <div class="card accent">
+      <h3>Core Runtime &amp; Loaders (4,839 lines)</h3>
+      <ul>
+        <li><strong>Legacy text loader &amp; debug (1,376 lines &mdash; <em>not in <code>jmvm.wasm</code></em>):</strong>
+          <code>parser_tekst.cpp</code> (1,119, only for <code>jmvm2jvb</code>), <code>parser_omzetten.cpp</code> (132), <code>printdebug.cpp</code> (125).</li>
+        <li><strong>Heap, Cheney GC, cells &amp; arrays (965):</strong>
+          <code>heap.h</code> (332), <code>arrays.h</code> (212), <code>simtypes.h</code> (153), <code>waarden.h</code> (140), <code>toestand.h</code> (84), <code>fouten.h</code> (44).</li>
+        <li><strong>Value serialization (776):</strong>
+          <code>dynamics.h</code> (776) &mdash; non-allocating graph traversal for <code>pack</code>, <code>packMax</code>, <code>unpack</code> and <code>sprint</code>.</li>
+        <li><strong>Binary <code>.jvb</code> loader &amp; <code>makeCode</code> (711):</strong>
+          <code>parser.cpp</code> (399), <code>laden.h</code> (131), <code>makecode.h</code> (88), <code>parser.h</code> (78), <code>parser_geen_tekst.cpp</code> (15).</li>
+        <li><strong>Dispatch harness &amp; <code>runLoop</code> (572):</strong>
+          <code>lus_hulp.h</code> (127), <code>lus.h</code> (122), <code>dispatch_musttail.h</code> (109), <code>variant/*.h</code> (128 across 10 builds), <code>dispatch_*.h</code> (41), <code>vm.cpp</code> (45).</li>
+        <li><strong>Metadata, REPL entry &amp; <code>main</code> (439):</strong>
+          <code>meta.h</code> (203), <code>rs_ingang.h</code> (102), <code>main_run.cpp</code> (72), <code>main_rsdriver.cpp</code> (62).</li>
+      </ul>
+    </div>
+    <div class="card ok">
+      <h3>Instruction Bodies in <code>vm/instr/*.c</code> (1,781 lines)</h3>
+      <p><strong>Core lazy stack machine, floats &amp; superinstructions (743 lines; 500 without floats &amp; fusion):</strong></p>
+      <ul>
+        <li><code>float.c</code> (138), <code>super.c</code> (105, 7 fused instructions), <code>eval.c</code> (99), <code>force.c</code> (78), <code>sprong.c</code> (67).</li>
+        <li><code>stack_diversen.c</code> (53), <code>frame.c</code> (48), <code>rekenen.c</code> (47), <code>sprong_aanroep.c</code> (38), <code>arrays.c</code> (36), <code>stack.c</code> (14), <code>heap.c</code> (11), <code>stop.c</code> (9).</li>
+      </ul>
+      <p><strong><code>_AUX</code> ecosystem primitives (1,038 lines across 39 subcodes):</strong></p>
+      <ul>
+        <li><code>aux_meta.c</code> (327) &mdash; dynamic chunk loading and linking inside a live REPL/notebook session.</li>
+        <li><code>aux_reflectie.c</code> (226) &mdash; constructor/function inspection and dynamic application.</li>
+        <li><code>aux_syscall.c</code> (189) &mdash; file I/O, clock and process arguments.</li>
+        <li><code>aux_constr.c</code> (86), <code>aux_marray.c</code> (64, mutable arrays), <code>aux_basis.c</code> (57), <code>aux_try.c</code> (54), <code>aux_arrays.c</code> (35, incl. <code>strcmp</code>).</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>3. From ~1,500 lines (2016) to 5,244 active lines (2026)</h2>
+  <p>
+    The original IFL 2016 prototype was a bare batch interpreter of ~1,500 lines of C. The extra
+    <strong>~3,744 lines</strong> in the active runtime are not complexity in the lazy evaluation core &mdash;
+    they are the specific primitives required to host an entire interactive toolchain as bytecode:
+  </p>
+  <table>
+    <thead>
+      <tr><th>Addition since July 2026</th><th class="num">Lines</th><th>What it enables</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Value graph serialization (<code>dynamics.h</code>)</td><td class="num">776</td><td><code>pack</code> / <code>unpack</code> of any value, including closures and unevaluated thunks</td></tr>
+      <tr><td>Binary <code>.jvb</code> loader, metadata &amp; linker support (<code>parser.cpp</code>, <code>meta.h</code>, <code>laden.h</code>, <code>rs_ingang.h</code>)</td><td class="num">937</td><td>6 ms REPL start-up, word-aligned loading without text parsing, incremental linking</td></tr>
+      <tr><td><code>_AUX</code> dynamic loading, reflection &amp; syscalls (<code>aux_meta.c</code>, <code>aux_reflectie.c</code>, <code>aux_syscall.c</code>, etc.)</td><td class="num">1,038</td><td>In-session code installation for notebooks/REPL, type-guided display, file I/O</td></tr>
+      <tr><td>32-bit tagged floats, packed/mutable arrays, catchable faults, superinstructions</td><td class="num">~500</td><td>Full notebook graphics, <code>try</code>/<code>catch</code> cell isolation, fused hot instruction pairs</td></tr>
+    </tbody>
+  </table>
+
+  <h2>4. Execution model and why it is fast</h2>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Memory layout &amp; tagging (<code>waarden.h</code>, <code>heap.h</code>)</h3>
+      <ul>
+        <li><strong>2-bit LSB tags:</strong> <code>00</code> = 62-bit signed integer (direct arithmetic without shifting), <code>01</code> = heap pointer, <code>10</code> = 32-bit float (shifted by 2), <code>11</code> = character.</li>
+        <li><strong>Two-space Cheney copying GC:</strong> linear bump-pointer allocation; overflow and stack guards sit in separate <code>noinline, cold</code> functions so the dispatch loop keeps its hot registers.</li>
+        <li><strong>Catchable VM faults:</strong> <code>try</code>/<code>catch</code> around <code>runLoop</code> (never inside it; placing C++ <code>try</code> inside the loop cost 18% on <code>queens</code> due to register spills).</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Laziness isolated in two instructions</h3>
+      <ul>
+        <li><strong><code>eval</code> (<code>eval.c</code>):</strong> the only place a thunk is reduced. It loops on the VM&rsquo;s own control stack (<code>csp</code>), so arbitrary lazy chains never overflow the C stack.</li>
+        <li><strong><code>jmpt</code> (<code>sprong_aanroep.c</code>):</strong> constructor jump table updating <code>hv = mark = sp</code>; handles <code>case</code> in a single instruction.</li>
+        <li><strong>Everything else is eager:</strong> arithmetic, jumps, calls and node construction know nothing about thunks or partial applications.</li>
+      </ul>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Breakthrough (July &ndash; November 2026)</th><th class="num">Measured impact</th><th>Mechanism</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Automatic strictness analysis (<code>strictness.cfp</code>)</td>
+        <td class="num"><code>fib</code> 6.9&times;, <code>queens</code>/<code>eval</code> 1.6&ndash;1.9&times;</td>
+        <td>Moves strict arguments from heap thunks to unboxed stack/register evaluation.</td>
+      </tr>
+      <tr>
+        <td><code>musttail</code> dispatch (24 Oct, native default)</td>
+        <td class="num"><code>fib</code> &minus;54%, <code>gen1</code> &minus;8.6%</td>
+        <td>Each opcode is a small C function tail-calling the next, improving register allocation vs. computed <code>goto</code>. <em>(Browser builds stay on <code>switch</code>, because V8 keeps <code>switch</code> state in Wasm locals.)</em></td>
+      </tr>
+      <tr>
+        <td>7 load-time superinstructions (1 Nov, <code>super.c</code>)</td>
+        <td class="num">&minus;15% native, &minus;13% Chrome, &minus;14% Safari</td>
+        <td><code>makeCode</code> fuses hot patterns like <code>load k; eval; store k</code> (<code>eval_local</code>) without changing the bytecode format.</td>
+      </tr>
+      <tr>
+        <td><code>jmpt</code> real conditional jump (2 Nov, <code>CASE_SPRONG</code>)</td>
+        <td class="num"><code>gen1</code> &minus;25% (&minus;27% cycles), <code>knights</code> &minus;38%</td>
+        <td>Hardware counters showed 93% of the gap vs. Clean&rsquo;s ABC interpreter was CPU operand stalls on <code>pc += pc[nr + 2]</code>. Branching explicitly on tags 0 and 1 lets the branch predictor resolve <code>pc</code> immediately.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout ok">
+    <strong>Single source of truth for three engines:</strong> All 45 active regular opcodes, 7 superinstructions,
+    1 deprecated ABI slot (<code>FDIV</code>) and 39 <code>_AUX</code> primitives live in <code>vm/instructies.tab</code>
+    (142 lines). A 599-line Sapl program (<code>vm/genereer.cfp</code>) compiles those bodies together with
+    <code>vm/instr/*.c</code> into all three dispatch loops in <code>vm/gen/</code>, plus the matching
+    assembler/linker tables in Sapl.
+  </div>
+
+  <footer>
+    Measured on the repository state of 16 November 2026. Sources: <code>docs/2026-11-16_uitsplitsing_regels_code_vm_en_sapl.md</code>,
+    <code>vm/instructies.tab</code>, <code>vm/vm.cpp</code>, and <code>docs/performance_bevindingen.md</code>.
+  </footer>
+</div>
+
+<script>
+document.getElementById("themeBtn").addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme") ||
+    (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  const next = cur === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("websapl_theme", next); } catch (_) {}
+});
+</script>
+</body>
+</html>

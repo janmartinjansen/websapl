@@ -119,9 +119,9 @@
     </p>
 
     <nav class="jump-nav" aria-label="Factsheet categories">
-      <a href="#architecture">Architecture &amp; Ecosystem (4)</a>
+      <a href="#architecture">Architecture &amp; Ecosystem (7)</a>
       <a href="#native-performance">Native C (<code>sapl2c</code>) &amp; Performance (5)</a>
-      <a href="#languages-notebooks">Languages, Notebooks &amp; Clean (3)</a>
+      <a href="#languages-notebooks">Languages, Notebooks &amp; Clean (4)</a>
       <a href="#retrospective">Retrospective (1)</a>
     </nav>
 
@@ -131,7 +131,7 @@
           <h2>Architecture &amp; Ecosystem</h2>
           <p class="group-desc">The big picture: the VM, the self-hosted toolchain, and the Stage-4 Retag pivot connecting frontends and backends.</p>
         </div>
-        <span class="group-count">4 sheets</span>
+        <span class="group-count">7 sheets</span>
       </div>
       <div class="grid">
         <a class="card" href="sapl_jmvm_clean_haskell_factsheet.html" style="--card-color: var(--c1);">
@@ -184,6 +184,28 @@
             stages, the main performance breakthroughs and the tooling around them.</p>
           <div class="card-foot">
             <div class="tags"><span class="tag">VM</span><span class="tag">compiler</span></div>
+            <span class="go">Open &rarr;</span>
+          </div>
+        </a>
+
+        <a class="card" href="jmvm_interpreter_factsheet.html" style="--card-color: var(--c1);">
+          <h3>The JMVM interpreter: anatomy, line counts &amp; execution model</h3>
+          <p>Exact code audit of <code>vm/</code>: 5,244 active C/C++ runtime lines in <code>jmvm.wasm</code>
+            (6,620 handwritten total), 45 regular opcodes + 39 <code>_AUX</code> + 7 superinstructions,
+            3 generated dispatch loops, and what grew beyond the 1,500-line 2016 prototype.</p>
+          <div class="card-foot">
+            <div class="tags"><span class="tag">interpreter</span><span class="tag">C/C++</span><span class="tag">metrics</span></div>
+            <span class="go">Open &rarr;</span>
+          </div>
+        </a>
+
+        <a class="card" href="sapl_toolchain_numbers_factsheet.html" style="--card-color: var(--c2);">
+          <h3>The Sapl codebase &amp; toolchain in hard numbers</h3>
+          <p>Verified inventory of all 146,008 Sapl/Sapl+ lines in git: 89,639 unique handwritten source
+            lines (39,950 in the active toolchain), 56,369 copied or flattened lines separated out,
+            and the 5 measured codegen backends built on Retag.</p>
+          <div class="card-foot">
+            <div class="tags"><span class="tag">toolchain</span><span class="tag">metrics</span><span class="tag">backends</span></div>
             <span class="go">Open &rarr;</span>
           </div>
         </a>

@@ -241,6 +241,8 @@ const ENTRIES = [
   { src: "docs/2026-11-13_sapl2c_secret_factsheet.html", dst: "factsheets/sapl2c_secret_factsheet.html" },
   { src: "docs/2026-11-13_top_advice_factsheet.html", dst: "factsheets/top_advice_factsheet.html" },
   { src: "docs/2026-11-14_clean_on_jmvm_factsheet.html", dst: "factsheets/clean_on_jmvm_factsheet.html" },
+  { src: "docs/2026-11-16_jmvm_interpreter_factsheet.html", dst: "factsheets/jmvm_interpreter_factsheet.html" },
+  { src: "docs/2026-11-16_sapl_toolchain_numbers_factsheet.html", dst: "factsheets/sapl_toolchain_numbers_factsheet.html" },
   // De gids van Haskell lite als webpagina; tot 8 november 2026 stond hij als
   // websapl/haskell_lite.html (nu een doorverwijzing, voor oude links).
   { src: "docs/haskell_lite_guide.html", dst: "factsheets/haskell_lite.html" },
