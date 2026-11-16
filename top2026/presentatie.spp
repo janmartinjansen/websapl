@@ -110,7 +110,7 @@ D.table ["Step, per cell", "Runs where", "Written in"]
     ["Typechecker", "this tab", "Sapl"],
     ["Compiler gen1 (to bytecode)", "this tab", "Sapl"],
     ["Linker, loading into the session", "this tab", "Sapl"],
-    ["The VM itself", "this tab (WebAssembly)", "C"] ]
+    ["The VM itself", "this tab (WebAssembly)", "C/C++"] ]
 //%% [markdown]
 // ## Where it started: IFL 2016
 //
@@ -126,6 +126,14 @@ D.table ["Step, per cell", "Runs where", "Written in"]
 // </div>
 // <img src="afscheid/paper_first_page.png" alt="First page of the IFL 2016 paper">
 // </div>
+//%% [markdown]
+// ## The wild part of the experiment
+//
+// - **All code since July was written by language models.** I only wrote prompts.
+// - The models: **Claude Opus** and **Claude Sonnet**, and at times **Gemini Flash**, **Hydrogen** and **Argon**.
+// - My part: the direction, the questions, and deciding what to keep.
+//
+// <p class="hint">First what is there and how fast it is; the last part of this talk is about how it was built with LLMs.</p>
 //%% [markdown]
 // ## Why was this a good starting point?
 //
@@ -231,7 +239,7 @@ D.table ["Step, per cell", "Runs where", "Written in"]
 //
 // Almost everything built since starts from **Retag**, not from the bytecode:
 //
-// - **Native code**: Retag to C (`sapl2c`), on par with GHC `-O2`.
+// - **Native code**: Retag to C (`sapl2c`), roughly as fast as GHC `-O2`.
 // - **Clean on the JMVM**: ABC decompiled back to Retag (`abc2retag`).
 // - **Haskell lite**, Sapl+ and Core Sapl: all lower to the same Retag.
 // - **Linking modules** and the **optimiser** work on Retag.
@@ -240,7 +248,7 @@ D.table ["Step, per cell", "Runs where", "Written in"]
 //
 // <p class="hint">Retag was never designed as an interface: in 2016 it only existed to explain the compiler in the paper.</p>
 //
-// <p class="hint">Same clang, two inputs: C from bytecode was 2.2× slower than Clean native; C from Retag is faster (0.84×).</p>
+// <p class="hint">Same clang, two inputs: C from bytecode stayed well behind Clean native; C from Retag is roughly as fast.</p>
 //%% [markdown]
 // ## Four months, step by step
 //%%
@@ -352,7 +360,7 @@ D.table ["Effect of .jvb", "Before", "After"]
 // - <span class="dropped">**MicroHs**, a real Haskell compiler, bootstrapped on the JMVM: hard going, not continued.</span>
 // - **Haskell lite** in its place: type classes, records and monads, translated to Sapl+, running in the browser.
 // - **Clean**: ABC code from the Clean compiler, decompiled back to Retag (`abc2retag`).
-// - **Native code**: Retag to C (`sapl2c`), on par with GHC `-O2`.
+// - **Native code**: Retag to C (`sapl2c`), a first prototype.
 //
 // <p class="hint">Each new frontend or backend only had to meet Retag, not every other part.</p>
 //%% [markdown]
@@ -369,28 +377,29 @@ D.table ["The JMVM interpreter (Apple M4, 9 Nov)", "Result"]
     ["vs. GHC -O2, 12 benchmarks (total time)", "3.1× slower"],
     ["vs. Clean's ABC interpreter, native", "1.25× slower"],
     ["In the browser (WebAssembly, Chrome) vs. native", "1.47× slower"],
-    ["In the browser vs. Clean's ABC interpreter (stock wasm, Node)", "1.43× faster"],
+    ["In the browser vs. Clean's ABC interpreter (wasm)", "[being measured this week]"],
     ["The compiler compiling itself: interpreter vs. GHC -O2", "598 vs. 295 ms (2.0×)"] ]
 //%% [markdown]
 // - The 2016 target was **within a factor of 5** of Clean and Haskell. Natively it is now **2.5-3×**.
-// - In the browser it loses **less than 1.5×** against itself natively, and it is faster than the
-//   ABC interpreter that Clean ships for the browser today.
+// - In the browser it loses **less than 1.5×** against itself natively.
+// - The comparison with Clean's ABC interpreter in the browser: *[stub: being measured this week]*.
 //
 // <p class="hint">Sources: performance factsheet; experiments/clean_vergelijking/meting_2026-11-09. Clean native in a Linux VM.</p>
 //%% [markdown]
 // ## Where the interpreter's speed came from
 //%%
-D.table ["Improvement", "When", "Gain", "Idea"]
+D.table ["Improvement", "When", "Gain", "Whose idea"]
   [ ["Strictness analysis: finds the ! automatically", "August", "without it: fib 6.9×, queens/eval/match 1.6-1.9× slower", "classic (Mycroft)"],
-    ["musttail dispatch: every instruction its own function", "24 Oct", "fib -54%, the compiler -8.6%", "mine"],
-    ["Instruction fusion (superinstructions)", "1 Nov", "-15% native, -13% Chrome, -14% Safari", "mine"],
-    ["case as a real jump instead of a jump table", "2 Nov", "the compiler -25%, knights -38%", "found by measuring"] ]
+    ["musttail dispatch: every instruction its own function", "24 Oct", "fib -54%, the compiler -8.6%", "my question: do tail calls beat computed goto?"],
+    ["Instruction fusion (superinstructions)", "1 Nov", "-15% native, -13% Chrome, -14% Safari", "my question: does fusion pay off?"],
+    ["case as a real jump instead of a jump table", "2 Nov", "the compiler -25%, knights -38%", "the model, from hardware counters"] ]
 //%% [markdown]
 // <p class="hint">Native on the Apple M4. musttail is native only: in the browser V8 runs the switch form faster.</p>
 //%% [markdown]
-// ## The third one: looking inside the processor
+// ## Looking inside the processor: why `case` stalled
 //
-// The question was simply: *"measure very precisely whether there is anything left to gain in the VM."*
+// My question was simply: *"measure very precisely whether there is anything left to gain in the VM."*
+// I had no idea in which direction; the model came with the approach and the fix.
 //
 // - **Hardware counters** (the processor's own performance counters) on the compiler compiling itself.
 // - Not branch mispredictions, not cache misses: **93% of the gap** with Clean's interpreter was
@@ -407,75 +416,58 @@ D.table ["Improvement", "When", "Gain", "Idea"]
 // **sapl2c**: Retag to C, one C function per Sapl function, compiled with `clang -O2`.
 // Built in **three days** (11-13 November): ~1,150 lines of Python (or ~1,800 of Sapl)
 // plus an 818-line C runtime.
-//%%
-D.table ["The compiler compiling itself", "ms"]
-  [ ["Clean native, typed Clean port", "166"],
-    ["sapl2c, the Sapl compiler itself", "244"],
-    ["GHC -O2, typed Haskell port", "295"],
-    ["Clean native, untyped port (same representation as Sapl)", "305"],
-    ["GHC -O2, untyped port", "346"],
-    ["JMVM interpreter", "580"] ]
-//%% [markdown]
-// - Over the 13 benchmarks: **0.33×** the interpreter, **0.84×** Clean native, **0.99×** GHC `-O2`.
+//
+// - A **first prototype**, very experimental and hardly tried on real programs yet.
+// - Even so: on the benchmarks and on the compiler compiling itself, **roughly as fast as
+//   Clean native and GHC `-O2`**, and about **3× faster** than the interpreter.
 //
 // <p class="beat sm">I really had not expected this.</p>
 //%% [markdown]
 // ## Why it works: Retag, again
-//%%
-D.table ["Same clang, different input", "C for the compiler", "Build", "Self-compile"]
-  [ ["From bytecode (jmvm2c)", "9.3 MB", "47 s", "442 ms"],
-    ["From Retag (sapl2c)", "2.9 MB", "4.1 s", "244 ms"] ]
-//%% [markdown]
-// - From Retag, clang sees **whole functions with named variables** and does the register
-//   allocation that GHC and Clean each maintain their own backend for.
+//
+// - The same clang on two inputs: C **from bytecode** (`jmvm2c`) and C **from Retag** (`sapl2c`).
+//   From Retag the C is much smaller and builds about **10× faster**, and the code is much faster.
+// - From Retag, clang sees **whole functions with named variables**: a classic C compiler turns out
+//   to be a good code generator for a lazy functional language.
 // - Laziness is already explicit (`eval`, `thunk`), and gen1 already did strictness and lifting.
 // - Plus a few runtime choices: a **cache-friendly growing heap**, values returned in two registers,
 //   and every tail call a real jump.
 //%% [markdown]
-// ## Lessons for Clean
-//
-// 1. **Start from a structured form, not from stack code.** ABC is stack code, like JMVM bytecode.
-//    `abc2retag` shows the structure can be rebuilt: Clean via ABC, Retag and C runs at
-//    **0.95×** Clean native on the 12 benchmarks.
-// 2. **Keep the types.** On the large typed compiler the Retag route takes 223 ms against 163 ms
-//    for Clean native (**1.37×**): that gap is mostly unboxed values, which untyped Retag loses.
-// 3. **C runs everywhere clang runs**, for ~2,000 lines (WebAssembly not yet measured). Watch the
-//    compile time: 4 seconds for the typed compiler.
-//%% [markdown]
 // ## How could one person build this?
 //
-// About **four months** of work, since 17 July 2026:
 //%%
-D.table ["Since 17 July 2026", "Count"]
-  [ ["Commits (plus 215 merges)", "1,213"],
-    ["Lines of Sapl / Sapl+ (compiler, tools, libraries)", "~138,000"],
-    ["Lines of VM (C)", "~21,000"],
-    ["Design documents and reports", "153"] ]
+D.table ["Since 17 July 2026, all written by models", "About"]
+  [ ["Commits", "1,200, plus 200 merged branches"],
+    ["Sapl / Sapl+ (toolchain 40k, libraries 16k, experiments and tests 34k)", "90,000 lines"],
+    ["VM in C/C++, written (plus generated dispatch)", "6,600 lines"],
+    ["Design documents and reports", "150"] ]
 //%% [markdown]
-// - **One small VM** in C; everything else is a program running on it.
-// - A **self-hosting compiler** (gen1) that compiles itself, anchored by a typed Haskell version.
+// - **A small VM**: 1,500 lines in 2016. New: `pack`/`unpack`, the binary loader, live linking, reflection.
+// - A **self-hosting compiler** (gen1), anchored by a typed Haskell version.
 // - One intermediate form, **Retag**, shared by every route: Sapl, Haskell lite and Clean.
-// - **LLMs** made experiments cheap: five backends were built and *measured*, instead of argued about.
+// - **LLMs** made experiments cheap: five backends were built and *measured*, instead of argued about
+//   (JMVM bytecode, bytecode-to-Wasm, bytecode-to-C, Retag-to-ABC, and Retag-to-C).
 //%% [markdown]
 // ## Two phases
 //%%
 D.table ["", "17 July – mid September", "Mid September – now"]
   [ ["Way of working", "Exploring: can it be done at all?", "Goal-directed: plan, branch, regression, measure"],
-    ["Commits", "472", "740"],
-    ["Merged branches", "25", "188"],
-    ["Plan documents", "7", "47"] ]
+    ["Commits", "about 500", "about 700"],
+    ["Merged branches", "a few dozen", "about 200"],
+    ["Plan documents", "a handful", "about 50"] ]
 //%% [markdown]
 // - The turning point: **self-hosting gave oracles** (the fixpoint, the full regression).
 //   From then on code generation worked much better, and steps could be much larger.
-// - The exploring phase was **necessary**: it is the basis of all research.
-//   Most dead ends on the next slide come from it.
+// - It was also the point where I had **learned to work with the models**: that took about two months.
+// - The exploring phase was **necessary**: that is how research works, and without it the oracles
+//   would not have existed. Most dead ends on the next slide come from it.
 //%% [markdown]
 // ## Dead ends, and why that was fine
 //%%
 D.table ["Experiment", "What happened", "Replaced by"]
   [ ["Amanda-to-Sapl translator (August)", "Partly worked; a hang in the full bridge was never found", "The compiler written from scratch in Sapl"],
     ["A JIT to WebAssembly (September)", "Correct, but slower than the warm interpreter", "The plain interpreter in wasm"],
-    ["Bytecode to C, jmvm2c (November)", "2.2× slower than Clean native, 47 s builds", "Retag to C, sapl2c"],
+    ["Bytecode to C, jmvm2c (November)", "Well behind Clean native, very long builds", "Retag to C, sapl2c"],
     ["Whole-program Retag optimiser", "Doubled the compiler, four subtle bugs", "One local rule in gen1"],
     ["MicroHs on the JMVM (November)", "Bootstrapped, but heavy and server-bound", "Haskell lite, in the browser"] ]
 //%% [markdown]
@@ -502,6 +494,7 @@ D.table ["Experiment", "What happened", "Replaced by"]
 // **The model knew what I could never know**
 //
 // - Hardware counters showed the CPU *waiting* on the `jmpt` jump table: one change, the compiler **−25%**.
+//   I had only asked to look.
 // - Retag to C: correct and fast within **days**, using C and Clang knowledge I do not have.
 //
 // </div>
@@ -510,40 +503,51 @@ D.table ["Experiment", "What happened", "Replaced by"]
 // **The expert knew where to go**
 //
 // - The starting point: Retag, `eval` and `jmpt`.
-// - Clean's interpreter to wasm: the model chose `musttail`; *switch* is better in the browser (`musttail` measured **1.5× slower**).
+// - The questions: would instruction fusion and tail calls beat computed goto? Both paid off.
+// - Clean's interpreter to wasm: the model chose `musttail`; I asked for *switch*, which is better in the browser.
 // - When a number is too good, or a path is a dead end.
 //
 // </div>
 // </div>
 //
-// <p class="beat sm">Research with LLMs is a new kind of science.<br>Experience is a huge advantage, but it has to be learned too.</p>
+// <p class="beat sm">Research with LLMs is a new kind of science.<br>Experience is a huge advantage; working with LLMs has to be learned too.</p>
 //%% [markdown]
-// ## What this means for Clean
+// ## The models
 //
-// 1. **Lead with the toolchain.** One small VM with everything language-related as
-//    bytecode, on both sides of the wire. That answers "Clean in the browser".
-// 2. **Native code is an add-on.** Via Retag to C, without touching the VM:
-//    faster than Clean native on small programs, ~1.3× slower on large typed code.
-// 3. **The level of the intermediate form matters more than the backend.** Bring
-//    stack code (ABC, JMVM bytecode) back to a structured form, and keep the types.
+// - **Claude Opus** gave by far the best results.
+// - I let the models **check each other's work**: one builds, another reviews
+//   (these slides were reviewed by Argon and by Claude).
+// - The Gemini models (Google) regularly **missed the point completely**.
+//   The aborted 38 ms run came from one of them.
+//
+// <p class="hint">Which model writes matters less than what checks it: the oracles of the previous slides.</p>
 //%% [markdown]
-// ## Measured
+// ## What could this mean for Clean?
+//
+// Questions rather than lessons:
+//
+// 1. **A faster ABC interpreter in the browser** is probably possible.
+//    *[stub: results of this week's measurements]*
+// 2. **A somewhat higher-level intermediate form?** ABC is stack code, like JMVM bytecode.
+//    Here the level of the intermediate form mattered more than the backend, and `abc2retag`
+//    shows the structure can be recovered from ABC. It may be worth a look.
+// 3. **A classic C compiler as code generator?** Via Retag it worked surprisingly well,
+//    also for Clean code via ABC. But `sapl2c` is a very early prototype, and types are lost on the way.
+// 4. **Developing with LLMs**: the oracles and the way of working carry over to any compiler project.
+//%% [markdown]
+// ## Measured so far (first prototypes)
 //%%
-D.table ["Measurement (Apple M4)", "Result", "Date"]
-  [ ["Sapl via Retag to C vs. Clean native, 12 benchmarks", "0.84×", "14 Nov"],
-    ["Sapl via Retag to C vs. GHC -O2, 13 benchmarks", "0.99×", "14 Nov"],
-    ["Clean via ABC, Retag and C vs. Clean native, 12 benchmarks", "0.95×", "13 Nov"],
-    ["Typed Clean compiler (2,700 functions) compiling itself", "223 vs. 163 ms (1.37×)", "13-14 Nov"],
-    ["  the same, without tag checks", "211 ms (1.30×)", "14 Nov"],
-    ["GHC on the same task, default vs. tuned nursery", "271 vs. 226 ms", "13 Nov"],
-    ["Clean's ABC interpreter, C via Emscripten vs. generated wasm", "0.71× (preliminary, V8)", "14 Nov"] ]
+D.table ["Measurement (Apple M4)", "Result"]
+  [ ["Sapl via Retag to C vs. Clean native and GHC -O2, benchmarks", "roughly as fast"],
+    ["Clean via ABC, Retag and C vs. Clean native, 12 benchmarks", "roughly as fast"],
+    ["Typed Clean compiler compiling itself, via Retag to C", "Clean native clearly faster (unboxed values)"],
+    ["Clean's ABC interpreter in the browser, variants", "[stub: being measured this week]"] ]
 //%% [markdown]
-// <p class="hint">Lower is faster. Clean native ran in a Linux VM on the same machine.</p>
+// <p class="hint">Clean native ran in a Linux VM on the same machine. All numbers will be measured again before any conclusion.</p>
 //%% [markdown]
 // ## What has not been measured
 //
-// - A real **iTasks** application: speed, and **compile time** (the typed self-compile
-//   is 3.7 MB of C and takes 4.2 s in clang).
+// - A real **iTasks** application: speed, and **compile time**.
 // - **Uniqueness and arrays**, records, `ccall`, dynamics.
 // - The native route in **WebAssembly**, and graph compatibility with the ABC interpreter.
 // - **Firefox and Safari** for the ABC interpreter variants; Windows.
@@ -554,3 +558,12 @@ D.table ["Measurement (Apple M4)", "Result", "Date"]
 // and measure speed, compile time and graph compatibility.
 //
 // <p class="beat">Questions?</p>
+//%% [markdown]
+// ## Backup: Clean's ABC interpreter in the browser
+//
+// *[stub: this week's measurements]*
+//
+// - Variants: globals to locals in the generated wasm; Clean's own C interpreter via Emscripten
+//   (switch dispatch, 64-bit words in `wasm32`).
+// - Browsers: Chrome, Safari, Firefox.
+// - Still to do: connect it to the JavaScript glue of iTasks (`.pbc`, GC, graph copying).
