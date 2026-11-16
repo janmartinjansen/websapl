@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Building a Complete FP Toolchain in 4 Months &mdash; TOP Software Talk Overview (26 Nov 2026)</title>
+<meta name="description" content="Companion overview to the 26 November 2026 talk at TOP Software: the core architecture, Stage-4 Retag, interpreter &amp; native code findings without heavy benchmark tables, LLM-driven engineering with byte-for-byte oracles, open questions for Clean, and links to all deep-dive factsheets.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script>
+  try {
+    const t = localStorage.getItem("websapl_theme");
+    if (t) document.documentElement.setAttribute("data-theme", t);
+  } catch (_) {}
+</script>
+<style>
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --fg: #1b2230;
+  --muted: #5a6475;
+  --line: #d9dee6;
+  --accent: #1f5f8b;
+  --accent-soft: #e3eef6;
+  --ok: #2c6b45;
+  --ok-soft: #e3f2e8;
+  --warn: #9a5b00;
+  --warn-soft: #fbf0de;
+  --purple: #6d28d9;
+  --purple-soft: #f3e8ff;
+  --f-display: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161d;
+    --surface: #1a2029;
+    --fg: #e4e8ee;
+    --muted: #9aa5b6;
+    --line: #2d3542;
+    --accent: #7db7e0;
+    --accent-soft: #1d3346;
+    --ok: #7fcf9c;
+    --ok-soft: #173025;
+    --warn: #e7b25c;
+    --warn-soft: #3a2c14;
+    --purple: #c084fc;
+    --purple-soft: #2e1d47;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161d;
+  --surface: #1a2029;
+  --fg: #e4e8ee;
+  --muted: #9aa5b6;
+  --line: #2d3542;
+  --accent: #7db7e0;
+  --accent-soft: #1d3346;
+  --ok: #7fcf9c;
+  --ok-soft: #173025;
+  --warn: #e7b25c;
+  --warn-soft: #3a2c14;
+  --purple: #c084fc;
+  --purple-soft: #2e1d47;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15.5px/1.62 var(--f-body);
+}
+.wrap { max-width: 980px; margin: 0 auto; padding: 32px 20px 64px; }
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; font-size: 14px; }
+.topbar a { color: var(--muted); text-decoration: none; }
+.topbar a:hover { color: var(--accent); }
+.theme-btn {
+  background: var(--surface); color: var(--fg); border: 1px solid var(--line);
+  border-radius: 6px; padding: 5px 11px; font: 13px var(--f-body); cursor: pointer;
+}
+header { border-bottom: 2px solid var(--line); padding-bottom: 20px; margin-bottom: 26px; }
+.eyebrow {
+  font: 600 12px/1.2 var(--f-mono); text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--warn); margin-bottom: 8px;
+}
+h1 { font: 700 32px/1.15 var(--f-display); margin: 0 0 10px; letter-spacing: -0.01em; }
+.lead { color: var(--muted); font-size: 16.5px; margin: 0 0 18px; max-width: 78ch; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--accent); color: #ffffff; text-decoration: none;
+  padding: 9px 16px; border-radius: 8px; font-weight: 600; font-size: 14px;
+}
+:root[data-theme="dark"] .btn-primary { color: #0c141d; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .btn-primary { color: #0c141d; }
+}
+.btn-primary:hover { opacity: 0.9; }
+.btn-secondary {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--surface); color: var(--fg); border: 1px solid var(--line);
+  text-decoration: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 14px;
+}
+.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+h2 { font: 700 22px/1.25 var(--f-display); margin: 36px 0 12px; }
+h3 { font: 600 16.5px/1.3 var(--f-display); margin: 0 0 8px; }
+p { margin: 0 0 12px; }
+ul { margin: 6px 0 14px; padding-left: 20px; }
+li { margin: 5px 0; }
+code { font-family: var(--f-mono); font-size: 0.88em; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+a { color: var(--accent); }
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 20px 0 28px; }
+@media (max-width: 760px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.kpi {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px;
+}
+.kpi .val { font: 700 26px/1.1 var(--f-display); color: var(--accent); }
+.kpi .lbl { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 14px 0; }
+@media (max-width: 760px) { .grid-2 { grid-template-columns: 1fr; } }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 18px 20px;
+}
+.card.ok { border-top: 3px solid var(--ok); }
+.card.accent { border-top: 3px solid var(--accent); }
+.card.warn { border-top: 3px solid var(--warn); }
+.card.purple { border-top: 3px solid var(--purple); }
+.callout {
+  background: var(--ok-soft); border-left: 3px solid var(--ok);
+  padding: 12px 15px; border-radius: 0 8px 8px 0; margin: 16px 0; font-size: 14.5px;
+}
+.callout.accent { background: var(--accent-soft); border-left-color: var(--accent); }
+.callout.warn { background: var(--warn-soft); border-left-color: var(--warn); }
+.links-row {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  margin: 14px 0 6px; padding: 10px 14px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  font-size: 13.5px;
+}
+.links-row .lbl {
+  font: 600 11.5px/1.2 var(--f-mono); text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--muted); margin-right: 4px;
+}
+.links-row a {
+  text-decoration: none; background: var(--accent-soft); padding: 3px 10px;
+  border-radius: 999px; font-weight: 600; font-size: 13px;
+}
+.links-row a:hover { text-decoration: underline; }
+.svg-box {
+  background: #0f1422; border: 1px solid var(--line); border-radius: 10px;
+  padding: 12px; margin: 16px 0; text-align: center;
+}
+.svg-box img { width: 100%; height: auto; display: block; border-radius: 6px; }
+.svg-cap { font-size: 13px; color: var(--muted); margin-top: 6px; font-style: italic; }
+.toc {
+  display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 26px;
+}
+.toc a {
+  text-decoration: none; font-size: 13px; font-weight: 600; color: var(--muted);
+  background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px;
+}
+.toc a:hover { color: var(--accent); border-color: var(--accent); }
+footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a href="index.html">&larr; All Factsheets</a>
+    <button class="theme-btn" id="themeBtn" type="button">Theme</button>
+  </div>
+
+  <header>
+    <div class="eyebrow">Companion Page &bull; TOP Software Talk &bull; 26 November 2026</div>
+    <h1>Building a Complete FP Toolchain in 4 Months</h1>
+    <p class="lead">
+      An overview of the JMVM / Sapl project and how all the pieces fit together &mdash; written as a readable
+      guide alongside the 26 November talk at TOP Software. Each section summarizes the main idea without
+      getting lost in benchmark tables, and links directly to the specialized factsheets for deeper technical detail.
+    </p>
+    <div class="hero-actions">
+      <a class="btn-primary" href="../notebook.html?nb=top2026/presentatie.spp&presenteer=1">Open live presentation (interactive slides) &rarr;</a>
+      <a class="btn-secondary" href="../notebook.html?nb=top2026/presentatie.spp">Open presentation as notebook</a>
+      <a class="btn-secondary" href="index.html">Browse all 18 factsheets</a>
+    </div>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi"><div class="val">4 months</div><div class="lbl">17 July &ndash; Nov 2026; all code since July written by LLMs from expert prompts</div></div>
+    <div class="kpi"><div class="val">~6,600</div><div class="lbl">Lines of handwritten C/C++ for one small VM (5,244 active lines in <code>jmvm.wasm</code>, 65 KB gzipped)</div></div>
+    <div class="kpi"><div class="val">~90,000</div><div class="lbl">Unique Sapl / Sapl+ lines (~40k toolchain, ~16k libraries &amp; notebooks, ~34k experiments &amp; tests)</div></div>
+    <div class="kpi"><div class="val">1 pivot</div><div class="lbl">Stage-4 Retag connecting 4 frontends and 5 measured codegen backends</div></div>
+  </div>
+
+  <nav class="toc" aria-label="Sections">
+    <a href="#s1">1. One VM, everything else in Sapl</a>
+    <a href="#s2">2. Why Stage-4 Retag worked</a>
+    <a href="#s3">3. Interpreter &amp; native speed</a>
+    <a href="#s4">4. Building with LLMs &amp; oracles</a>
+    <a href="#s5">5. Questions &amp; proposal for Clean</a>
+  </nav>
+
+  <h2 id="s1">1. The starting point &amp; the core idea: one small VM, everything else in Sapl</h2>
+  <p>
+    The starting point in July 2026 was a small IFL 2016 prototype: a ~1,500-line C bytecode interpreter
+    (the <strong>JMVM</strong>) paired with a ~1,000-line Amanda compiler for Core Sapl. Four months later,
+    the entire compiler, preprocessor, Hindley-Milner typechecker, module linker, REPL and interactive
+    notebook environment are written in Sapl itself and run as bytecode on the same small VM &mdash; natively
+    and inside a browser tab with no server or installation.
+  </p>
+  <div class="grid-2">
+    <div class="card ok">
+      <h3>What lives in the VM (C/C++)</h3>
+      <p>
+        Only what must touch hardware or memory directly: 2-bit tagged values, a two-space Cheney copying GC,
+        a binary word loader (<code>.jvb</code>, giving ~6 ms REPL start-up), <code>pack</code>/<code>unpack</code>
+        value serialization, live chunk linking and three generated dispatch loops (<code>musttail</code>,
+        <code>switch</code>, <code>goto</code>) &mdash; <strong>5,244 active lines</strong> in the browser build.
+      </p>
+    </div>
+    <div class="card accent">
+      <h3>What runs as bytecode (Sapl / Sapl+)</h3>
+      <p>
+        Everything language-related: the Sapl+ preprocessor, typechecker, self-hosting compiler <code>gen1</code>,
+        incremental linker, REPL, Haskell lite frontend and Clean ABC decompiler. In the browser, each notebook
+        cell compiles on change and links into the running session while keeping previously computed values intact.
+      </p>
+    </div>
+  </div>
+  <div class="links-row">
+    <span class="lbl">Deep dives</span>
+    <a href="toolchain_factsheet.html">The toolchain is the program</a>
+    <a href="notebooks_factsheet.html">Reactive lazy notebooks</a>
+    <a href="jmvm_interpreter_factsheet.html">JMVM interpreter &amp; C/C++ line counts</a>
+    <a href="sapl_toolchain_numbers_factsheet.html">Sapl codebase in hard numbers</a>
+  </div>
+
+  <h2 id="s2">2. Why it worked: Stage-4 Retag &amp; isolated laziness</h2>
+  <p>
+    Two design choices from 2016 mattered far more than anticipated. First, laziness in the VM is isolated to
+    just two instructions &mdash; <code>eval</code> (which reduces thunks on the VM&rsquo;s own control stack)
+    and <code>jmpt</code> (constructor case jump) &mdash; leaving the rest of the VM a plain eager stack machine.
+    Second, between the source language and bytecode sits <strong>Stage-4 Retag</strong>: a clean intermediate
+    form where every decision about laziness (<code>eval</code>, <code>thunk</code>, <code>closure</code>,
+    <code>!</code> strictness) is explicit in the expression tree.
+  </p>
+  <div class="callout accent">
+    <strong>In Clean, ABC code is the hub. Here, the hub sits one level higher.</strong><br>
+    Originally created only to explain the compiler in the 2016 paper, Retag became the hourglass pivot of the
+    whole ecosystem: Sapl, Sapl+, Haskell lite and Clean (via <code>abc2retag</code>) all meet at Retag, and
+    every backend only has to consume it.
+  </div>
+  <div class="svg-box">
+    <img src="../top2026/ecosystem.svg" alt="Overview of the ecosystem: frontends, Retag IR, codegen/bridges and execution targets">
+    <div class="svg-cap">Architecture overview: 4 frontends, the Stage-4 Retag pivot, Clean ABC bridges and execution targets.</div>
+  </div>
+  <div class="links-row">
+    <span class="lbl">Deep dives</span>
+    <a href="retag_format_factsheet.html">Stage-4 Retag format</a>
+    <a href="sapl_jmvm_clean_haskell_factsheet.html">Full ecosystem &amp; pipelines</a>
+    <a href="haskell_lite.html">Haskell lite guide</a>
+    <a href="clean_abc_to_jmvm_retag_factsheet.html">Clean via ABC &rarr; Retag &rarr; JMVM</a>
+    <a href="clean_on_jmvm_factsheet.html">Full Clean (cocl) on JMVM &amp; Clean Sandbox</a>
+  </div>
+
+  <h2 id="s3">3. Speed without a custom native backend: interpreter &amp; Retag-to-C</h2>
+  <p>
+    You do not need to read every benchmark table to take away the main performance lessons from the project:
+  </p>
+  <ul>
+    <li><strong>The interpreter:</strong> The 2016 goal was staying within a factor of 5 of Clean and Haskell. Natively, the JMVM now runs at ~2.5&ndash;3&times; of Clean/GHC, and in WebAssembly it loses less than 1.5&times; against itself natively &mdash; driven by automatic strictness analysis, native <code>musttail</code> dispatch (vs. <code>switch</code> in V8/Wasm), 7 load-time superinstructions, and replacing <code>jmpt</code>&rsquo;s jump-table lookup with a predictable conditional branch after CPU hardware counters showed 93% of the gap vs. Clean&rsquo;s interpreter was operand stalls.</li>
+    <li><strong>Native code through C (<code>sapl2c</code>):</strong> A three-day prototype compiling Stage-4 Retag directly to C (one C function per Sapl function) turned out to be roughly as fast as Clean native and GHC <code>-O2</code> on benchmarks and self-compilation, and ~3&times; faster than the interpreter.</li>
+    <li><strong>The crucial contrast &mdash; Retag vs. stack bytecode:</strong> Feeding the exact same <code>clang -O2</code> compiler from JMVM bytecode (<code>jmvm2c</code>) left the program well behind Clean native and took roughly 10&times; longer to compile. From Retag, Clang sees whole functions with named variables and performs register allocation cleanly. On large typed Clean code (like the 2,700-function Clean compiler compiling itself via <code>abc2retag</code>), Clean&rsquo;s native <code>cg</code> remains clearly ahead because Retag currently erases unboxed types.</li>
+  </ul>
+  <div class="links-row">
+    <span class="lbl">Benchmark details</span>
+    <a href="performance_factsheet.html">JMVM interpreter performance</a>
+    <a href="sapl2c_native_factsheet.html">sapl2c native overview</a>
+    <a href="sapl2c_secret_factsheet.html">Secret behind sapl2c</a>
+    <a href="sapl2c_translation_factsheet.html">How sapl2c translates Retag to C</a>
+    <a href="sapl2c_competitive_performance_factsheet.html">Competing with GHC &amp; Clean</a>
+  </div>
+
+  <h2 id="s4">4. How one person built this with LLMs: oracles, not speed</h2>
+  <p>
+    All code since July was generated by language models (primarily Claude Opus and Claude Sonnet, with
+    supplementary runs on Gemini models), steered strictly by prompts, architectural choices and review.
+    The project naturally split into two phases: an <em>exploring phase</em> (July to mid-September) to find
+    out what was possible, followed by a <em>goal-directed phase</em> once the compiler became self-hosting.
+  </p>
+  <div class="grid-2">
+    <div class="card warn">
+      <h3>Cheap to try, cheap to discard</h3>
+      <p>
+        Five backends were built and measured rather than argued over in theory (JMVM bytecode, bytecode-to-Wasm,
+        bytecode-to-C, Retag-to-ABC and Retag-to-C), alongside dead ends like a whole-program Retag optimizer
+        and bootstrapping MicroHs. Because writing code took hours instead of weeks, discarding dead ends and
+        starting fresh was painless.
+      </p>
+    </div>
+    <div class="card purple">
+      <h3>Trust came from byte-for-byte oracles</h3>
+      <p>
+        Speed alone produces brittle code. LLM output became dependable only through strict automated oracles:
+        the compiler reproducing its own bytecode bit-for-bit (fixpoint), a typed Haskell port as an
+        independent anchor, dual C generators in Python and Sapl that must emit identical C, and full regression
+        suites on every branch &mdash; catching subtle errors (and even an aborted 38 ms benchmark run).
+      </p>
+    </div>
+  </div>
+  <div class="links-row">
+    <span class="lbl">Deep dives</span>
+    <a href="superseded_experiments_factsheet.html">Superseded &amp; parked experiments</a>
+    <a href="sapl_toolchain_numbers_factsheet.html">Backends &amp; repository breakdown</a>
+  </div>
+
+  <h2 id="s5">5. Open questions &amp; proposal for Clean / TOP Software</h2>
+  <p>
+    Rather than prescribing conclusions, the talk ends with four concrete questions for the Clean and iTasks
+    community &mdash; plus an honest list of what has <em>not</em> yet been measured (real iTasks applications,
+    compile time at scale, uniqueness &amp; arrays, records, <code>ccall</code>, dynamics, Wasm native compilation,
+    graph compatibility, and Firefox/Safari/Windows coverage):
+  </p>
+  <div class="grid-2">
+    <div class="card accent">
+      <h3>Four questions for Clean</h3>
+      <ol style="margin: 6px 0 0; padding-left: 20px;">
+        <li>Can Clean&rsquo;s <strong>ABC interpreter in WebAssembly</strong> run significantly faster (e.g. globals-to-locals or Emscripten switch dispatch)?</li>
+        <li>Is a <strong>higher-level structured IR</strong> above ABC worthwhile, given <code>abc2retag</code> recovers it cleanly?</li>
+        <li>How far can a <strong>classic C compiler backend</strong> go if types are preserved alongside Retag?</li>
+        <li>Can <strong>LLM + strict compiler oracles</strong> accelerate Clean tooling work the same way?</li>
+      </ol>
+    </div>
+    <div class="card ok">
+      <h3>Concrete proposal</h3>
+      <p>
+        Spend <strong>one day together</strong> taking a single real <strong>iTasks program</strong> through the
+        <code>abc2retag</code> route to measure runtime speed, C compile time and graph compatibility directly &mdash;
+        turning early observations into hard evidence on TOP&rsquo;s own workloads.
+      </p>
+    </div>
+  </div>
+  <div class="links-row">
+    <span class="lbl">Deep dives</span>
+    <a href="top_advice_factsheet.html">Advice &amp; open gaps for TOP Software</a>
+    <a href="clean_on_jmvm_factsheet.html">Full Clean on JMVM &amp; Clean Sandbox</a>
+    <a href="clean_abc_to_jmvm_retag_factsheet.html">ABC &rarr; Retag &rarr; JMVM guide</a>
+  </div>
+
+  <footer>
+    Companion overview for the TOP Software presentation on 26 November 2026.
+    Live slides: <a href="../notebook.html?nb=top2026/presentatie.spp&presenteer=1">top2026/presentatie.spp</a> &bull;
+    Full index: <a href="index.html">Factsheets</a>.
+  </footer>
+</div>
+
+<script>
+document.getElementById("themeBtn").addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme") ||
+    (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  const next = cur === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("websapl_theme", next); } catch (_) {}
+});
+</script>
+</body>
+</html>

@@ -602,7 +602,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/index.html",
         "type": "file",
         "ext": ".html",
-        "size": 19262,
+        "size": 20142,
         "isBinary": false
       },
       {
@@ -715,6 +715,14 @@ window.WEBSAPL_TREE = [
         "type": "file",
         "ext": ".html",
         "size": 11137,
+        "isBinary": false
+      },
+      {
+        "name": "top_talk_overview_factsheet.html",
+        "path": "factsheets/top_talk_overview_factsheet.html",
+        "type": "file",
+        "ext": ".html",
+        "size": 19848,
         "isBinary": false
       }
     ],
