@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Notebook Wire Protocol</title>
+<meta name="description" content="How a WebSapl notebook page talks to the Sapl interpreter: the postMessage messages, the @@ text protocol of the REPL's notebook mode, real traffic for the sieve of Eratosthenes, and how the session decides what to recompile and relink.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script>
+  try {
+    const t = localStorage.getItem("websapl_theme");
+    if (t) document.documentElement.setAttribute("data-theme", t);
+  } catch (_) {}
+</script>
+<style>
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --fg: #1b2230;
+  --muted: #5a6475;
+  --line: #d9dee6;
+  --accent: #1f5f8b;
+  --accent-soft: #e3eef6;
+  --ok: #2c6b45;
+  --ok-soft: #e3f2e8;
+  --warn: #9a5b00;
+  --warn-soft: #fbf0de;
+  --purple: #6d28d9;
+  --purple-soft: #f3e8ff;
+  --pre-bg: #f0f3f7;
+  --f-display: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161d;
+    --surface: #1a2029;
+    --fg: #e4e8ee;
+    --muted: #9aa5b6;
+    --line: #2d3542;
+    --accent: #7db7e0;
+    --accent-soft: #1d3346;
+    --ok: #7fcf9c;
+    --ok-soft: #173025;
+    --warn: #e7b25c;
+    --warn-soft: #3a2c14;
+    --purple: #c084fc;
+    --purple-soft: #2e1d47;
+    --pre-bg: #141a22;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161d;
+  --surface: #1a2029;
+  --fg: #e4e8ee;
+  --muted: #9aa5b6;
+  --line: #2d3542;
+  --accent: #7db7e0;
+  --accent-soft: #1d3346;
+  --ok: #7fcf9c;
+  --ok-soft: #173025;
+  --warn: #e7b25c;
+  --warn-soft: #3a2c14;
+  --purple: #c084fc;
+  --purple-soft: #2e1d47;
+  --pre-bg: #141a22;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15.5px/1.62 var(--f-body);
+}
+.wrap { max-width: 1020px; margin: 0 auto; padding: 32px 16px 64px; }
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; font-size: 14px; }
+.topbar a { color: var(--muted); text-decoration: none; }
+.topbar a:hover { color: var(--accent); }
+.theme-btn {
+  background: var(--surface); color: var(--fg); border: 1px solid var(--line);
+  border-radius: 6px; padding: 5px 11px; font: 13px var(--f-body); cursor: pointer;
+}
+header { border-bottom: 2px solid var(--line); padding-bottom: 18px; margin-bottom: 26px; }
+.eyebrow {
+  font: 600 12px/1.2 var(--f-mono); text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--accent); margin-bottom: 8px;
+}
+h1 { font: 700 32px/1.15 var(--f-display); margin: 0 0 10px; letter-spacing: -0.01em; }
+.lead { color: var(--muted); font-size: 16.5px; margin: 0; max-width: 80ch; }
+h2 { font: 700 22px/1.25 var(--f-display); margin: 38px 0 12px; }
+h3 { font: 600 16.5px/1.3 var(--f-display); margin: 18px 0 8px; }
+p { margin: 0 0 12px; }
+ul, ol { margin: 6px 0 14px; padding-left: 22px; }
+li { margin: 4px 0; }
+code { font-family: var(--f-mono); font-size: 0.88em; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+a { color: var(--accent); }
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 20px 0 28px; }
+@media (max-width: 760px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+.kpi .val { font: 700 24px/1.1 var(--f-display); color: var(--accent); }
+.kpi .lbl { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 12px 0; }
+.grid-2 > * { min-width: 0; }
+@media (max-width: 760px) { .grid-2 { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; min-width: 0; }
+.card.ok { border-top: 3px solid var(--ok); }
+.card.accent { border-top: 3px solid var(--accent); }
+.card.warn { border-top: 3px solid var(--warn); }
+.card.purple { border-top: 3px solid var(--purple); }
+.card h3 { margin-top: 0; }
+.tablewrap { overflow-x: auto; margin: 16px 0; }
+table {
+  width: 100%; border-collapse: collapse; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 8px; overflow: hidden; font-size: 14px;
+}
+th, td { padding: 8px 11px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { background: var(--accent-soft); font-weight: 600; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tr:last-child td { border-bottom: none; }
+tr.key td { background: var(--ok-soft); }
+@media (min-width: 761px) { td code, th code { white-space: nowrap; } }
+@media (max-width: 760px) {
+  td code { overflow-wrap: anywhere; }
+  .card table td { display: block; border-bottom: none; padding: 4px 10px; }
+  .card table tr { display: block; border-bottom: 1px solid var(--line); padding: 4px 0; }
+}
+.callout {
+  background: var(--accent-soft); border-left: 3px solid var(--accent);
+  padding: 12px 15px; border-radius: 0 8px 8px 0; margin: 16px 0; font-size: 14.5px;
+}
+.callout.ok { background: var(--ok-soft); border-left-color: var(--ok); }
+.callout.warn { background: var(--warn-soft); border-left-color: var(--warn); }
+pre {
+  font: 12.8px/1.5 var(--f-mono); background: var(--pre-bg); color: var(--fg);
+  border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin: 6px 0 10px;
+  overflow-x: auto; white-space: pre;
+}
+.lbl-pre { font: 600 11.5px/1.2 var(--f-mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-top: 6px; }
+.lbl-pre .dir { color: var(--accent); }
+.m { color: var(--purple); font-weight: 500; }      /* @@ marker */
+.same { color: var(--muted); }
+.new { color: var(--ok); font-weight: 500; }
+.err { color: var(--warn); font-weight: 500; }
+.step {
+  display: inline-block; font: 700 13px/1 var(--f-mono); color: var(--surface); background: var(--accent);
+  border-radius: 5px; padding: 4px 7px; margin-right: 6px; vertical-align: 2px;
+}
+figure { margin: 18px 0; }
+figure svg { width: 100%; height: auto; display: block; }
+figcaption { font-size: 13px; color: var(--muted); margin-top: 6px; }
+.svg-box { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+.svg-box.acc { stroke: var(--accent); }
+.svg-box.pur { stroke: var(--purple); }
+.svg-box.ok { stroke: var(--ok); }
+.svg-t { fill: var(--fg); font: 600 14px var(--f-display); }
+.svg-s { fill: var(--muted); font: 11px var(--f-mono); }
+.svg-a { stroke: var(--accent); stroke-width: 1.6; fill: none; }
+.svg-a2 { stroke: var(--purple); stroke-width: 1.6; fill: none; }
+.svg-l { fill: var(--accent); font: 11px var(--f-mono); }
+.svg-l2 { fill: var(--purple); font: 11px var(--f-mono); }
+footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a href="index.html">&larr; Factsheets</a>
+    <button class="theme-btn" id="themeBtn" type="button">Theme</button>
+  </div>
+
+  <header>
+    <div class="eyebrow">WebSapl notebook &middot; client &harr; interpreter</div>
+    <h1>The Notebook Wire Protocol</h1>
+    <p class="lead">
+      How the notebook page (JavaScript) talks to the Sapl interpreter: two kinds of request, one plain-text
+      protocol of <code>@@</code> lines, and a session that decides for itself which cells it must recompile and
+      relink. Every example below is real traffic, captured from the production worker running the sieve of
+      Eratosthenes.
+    </p>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi"><div class="val">2</div><div class="lbl">request types that matter: <code>NB_RUN</code> (the notebook) and <code>NB_MSG</code> (an event)</div></div>
+    <div class="kpi"><div class="val">Plain text</div><div class="lbl">both ways: the whole notebook goes in, <code>@@</code>-tagged lines come out</div></div>
+    <div class="kpi"><div class="val">Text = identity</div><div class="lbl">a cell is reused when its exact text and everything it uses are unchanged</div></div>
+    <div class="kpi"><div class="val">124 &rarr; 7 ms</div><div class="lbl">first run (incl. engine start) vs. editing <code>n</code> in the sieve example<sup>*</sup></div></div>
+  </div>
+
+  <!-- ================================================================== -->
+  <h2>1. Three hops, one interpreter</h2>
+  <p>
+    The page never compiles anything itself. It sends the <em>whole notebook</em> as text to a Web Worker. The worker
+    owns a WebAssembly instance of the JMVM in which one Sapl program runs: the <strong>REPL in Sapl</strong>
+    (<code>repl_sapl/build/mini_repl</code>), which contains the preprocessor, the compiler, the typechecker and the
+    linker as modules. That program sits paused at <code>readLine</code> between requests, so its heap &mdash; the
+    session, with all compiled cells and evaluated values &mdash; survives from one run to the next.
+  </p>
+
+  <figure>
+    <svg viewBox="0 0 1000 270" role="img" aria-label="Page, worker and REPL in Sapl with the messages between them">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/>
+        </marker>
+        <marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--purple)"/>
+        </marker>
+      </defs>
+      <!-- page -->
+      <rect class="svg-box acc" x="10" y="40" width="270" height="190" rx="10"/>
+      <text class="svg-t" x="26" y="68">Notebook page</text>
+      <text class="svg-s" x="26" y="90">notebook.html</text>
+      <text class="svg-s" x="26" y="108">js/notebook_core.js</text>
+      <text class="svg-s" x="26" y="138">parseNotebook: //%% cells</text>
+      <text class="svg-s" x="26" y="156">dependents(): which exprs</text>
+      <text class="svg-s" x="26" y="174">generateNbInput</text>
+      <text class="svg-s" x="26" y="192">parseNbOutput, render blocks</text>
+      <text class="svg-s" x="26" y="210">widgets: timers, clicks, keys</text>
+      <!-- worker -->
+      <rect class="svg-box acc" x="415" y="40" width="225" height="190" rx="10"/>
+      <text class="svg-t" x="431" y="68">Web Worker</text>
+      <text class="svg-s" x="431" y="90">engine/worker.js</text>
+      <text class="svg-s" x="431" y="120">nbRun / nbMsg (queued)</text>
+      <text class="svg-s" x="431" y="138">writes notebook_in.txt</text>
+      <text class="svg-s" x="431" y="156">fetches imports, data</text>
+      <text class="svg-s" x="431" y="174">collects stdout bytes</text>
+      <text class="svg-s" x="431" y="192">keeps saved values</text>
+      <text class="svg-s" x="431" y="210">restarts after a trap</text>
+      <!-- repl -->
+      <rect class="svg-box pur" x="775" y="40" width="215" height="190" rx="10"/>
+      <text class="svg-t" x="791" y="68">REPL in Sapl (wasm)</text>
+      <text class="svg-s" x="791" y="90">jmvm.wasm + mini_repl.jvb</text>
+      <text class="svg-s" x="791" y="120">:nb  &rarr; doNb / nbGo</text>
+      <text class="svg-s" x="791" y="138">preprocess, typecheck</text>
+      <text class="svg-s" x="791" y="156">compile (gen1), link</text>
+      <text class="svg-s" x="791" y="174">session: entries + Img</text>
+      <text class="svg-s" x="791" y="192">glue: notebook_glue</text>
+      <text class="svg-s" x="791" y="210">:nbmsg &rarr; cell stepper</text>
+      <!-- arrows page<->worker -->
+      <line class="svg-a" x1="284" y1="105" x2="411" y2="105" marker-end="url(#ah)"/>
+      <text class="svg-l" x="347" y="96" text-anchor="middle">NB_RUN / NB_MSG</text>
+      <line class="svg-a" x1="411" y1="165" x2="284" y2="165" marker-end="url(#ah)"/>
+      <text class="svg-l" x="347" y="156" text-anchor="middle">PROGRESS/RESULT</text>
+      <text class="svg-s" x="347" y="186" text-anchor="middle">postMessage</text>
+      <!-- arrows worker<->repl -->
+      <line class="svg-a2" x1="644" y1="105" x2="771" y2="105" marker-end="url(#ah2)"/>
+      <text class="svg-l2" x="707" y="96" text-anchor="middle">":nb …" line</text>
+      <line class="svg-a2" x1="771" y1="165" x2="644" y2="165" marker-end="url(#ah2)"/>
+      <text class="svg-l2" x="707" y="156" text-anchor="middle">@@ lines</text>
+      <text class="svg-s" x="707" y="186" text-anchor="middle">jmvm_rs_feed</text>
+      <text class="svg-s" x="10" y="258">Workbench: the same text protocol, with a native ./rs-driver behind /api/notebook/nb and /api/notebook/nbmsg instead of the worker.</text>
+    </svg>
+    <figcaption>The page speaks JavaScript objects to the worker; the worker speaks lines of text to the REPL. Everything the REPL prints goes to stdout, and the worker collects it up to the next <code>repl&gt;</code> prompt.</figcaption>
+  </figure>
+
+  <div class="grid-2">
+    <div class="card accent">
+      <h3>Hop 1 &mdash; page &harr; worker</h3>
+      <p>Structured-clone messages with an <code>id</code>. Runs and events go through one queue
+        (<code>nbQueued</code>), so an event never lands in the middle of a run.</p>
+    </div>
+    <div class="card purple">
+      <h3>Hop 2 &mdash; worker &harr; REPL</h3>
+      <p>The worker writes the notebook to <code>repl_sapl/gen/notebook_in.txt</code> in the instance&rsquo;s
+        file system and feeds one line, <code>:nb repl_sapl/gen/notebook_in.txt</code>, with
+        <code>jmvm_rs_feed</code>. An event is a single line <code>:nbmsg &lt;token&gt; &lt;event&gt;</code>.</p>
+    </div>
+  </div>
+
+  <!-- ================================================================== -->
+  <h2>2. The messages between page and worker</h2>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Message</th><th>Direction</th><th>Fields</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>NB_WARM</code></td><td>page &rarr; worker</td><td>&ndash;</td><td>Sent when the page loads. The worker starts the REPL and runs an empty notebook (<code>@@mode any</code>), so the output layer with <code>D</code> and <code>G</code> is already compiled before the first real run. No reply.</td></tr>
+      <tr><td><code>NB_RUN</code></td><td>page &rarr; worker</td><td><code>input</code>, optional <code>values</code></td><td>The whole notebook in the <code>:nb</code> format (section 3). <code>values</code>: saved values from IndexedDB, sent once per worker.</td></tr>
+      <tr><td><code>NOTEBOOK_PROGRESS</code></td><td>worker &rarr; page</td><td><code>text</code></td><td>Streamed output, sent each time an <code>@@begin</code> or <code>@@end</code> line is complete. The page shows finished cells while later ones are still computing.</td></tr>
+      <tr><td><code>NB_RESULT</code></td><td>worker &rarr; page</td><td><code>output</code>, <code>trapped</code>, <code>restarted</code>, <code>saved</code></td><td>All output of the run. <code>restarted</code>: this run started a fresh engine (first run, or after a trap). <code>trapped</code>: the wasm instance died during the run.</td></tr>
+      <tr><td><code>NB_MSG</code></td><td>page &rarr; worker</td><td><code>tok</code>, <code>event</code></td><td>An event for an interactive cell: a click, key, tick or form input.</td></tr>
+      <tr><td><code>NB_MSG_RESULT</code></td><td>worker &rarr; page</td><td><code>output</code>, <code>trapped</code>, <code>saved</code></td><td>The cell redrawn, or <code>@@stale &lt;tok&gt;</code>.</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>A real progress stream (from the value-saving run in section 6) looks like this:</p>
+<pre>{"type":"NOTEBOOK_PROGRESS","id":1,"text":"@@begin 1\n"}
+{"type":"NOTEBOOK_PROGRESS","id":1,"text":"@@value\n17393\n@@end 1\n"}</pre>
+
+  <!-- ================================================================== -->
+  <h2>3. The <code>:nb</code> text protocol</h2>
+  <p>
+    A notebook file is an ordinary Sapl+ file with <code>//%%</code> cell markers. <code>notebook_core.js</code>
+    classifies each code cell as either <strong>definitions</strong> (a <code>=</code> at the top level, <code>::</code>,
+    <code>import</code>, &hellip;) or <strong>one expression</strong>, and writes a block per cell. Cell numbers are
+    positions in the notebook, starting at 0. Markdown cells are never sent.
+  </p>
+  <div class="grid-2">
+    <div class="card accent">
+      <h3>Input (page &rarr; REPL)</h3>
+      <div class="tablewrap" style="margin:6px 0">
+      <table>
+        <tbody>
+          <tr><td><code>@@mode any|top</code></td><td>One letrec in any order, or top-to-bottom (a cell sees only earlier cells).</td></tr>
+          <tr><td><code>@@values &lt;dir&gt;</code></td><td>Save evaluated <code>=:</code> values in this directory.</td></tr>
+          <tr><td><code>@@defsall</code></td><td>Report the definitions panel for every cell, not just the recompiled ones.</td></tr>
+          <tr><td><code>@@def &lt;cell&gt;</code></td><td>A definition cell; its text follows. <strong>Always sent, for every definition cell.</strong></td></tr>
+          <tr><td><code>@@expr &lt;cell&gt; &lt;n&gt;</code></td><td>An expression cell to evaluate as number <code>n</code>. Only the cells that must run.</td></tr>
+          <tr><td><code>@@type &lt;cell&gt;</code></td><td>A type cell: one expression per line.</td></tr>
+          <tr><td><code>@@restore &lt;name&gt; &lt;hash&gt; &lt;path&gt;</code></td><td>Appended by the worker: a saved value that may be put back.</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+    <div class="card purple">
+      <h3>Output (REPL &rarr; page)</h3>
+      <div class="tablewrap" style="margin:6px 0">
+      <table>
+        <tbody>
+          <tr><td><code>@@begin n</code> &hellip; <code>@@end n</code></td><td>The result of expression <code>n</code>. No <code>@@end</code> means the cell failed, and the text in between is the message.</td></tr>
+          <tr><td><code>@@value</code>, <code>@@text</code>, <code>@@table</code>, <code>@@graphics</code>, <code>@@markdown</code>, <code>@@form</code>, <code>@@interactive</code></td><td>The kind of the block that follows, inside a cell.</td></tr>
+          <tr><td><code>@@def &lt;cell&gt; &lt;name&gt; :: &lt;type&gt;</code></td><td>A definition of a <em>recompiled</em> cell, with its inferred type.</td></tr>
+          <tr><td><code>@@defsame &lt;cell&gt;</code></td><td>This cell was <em>not</em> recompiled; keep the panel it had.</td></tr>
+          <tr><td><code>@@deferror &lt;cell&gt; &lt;msg&gt;</code></td><td>A definition cell that does not compile, or that uses one that does not.</td></tr>
+          <tr><td><code>@@typewarn</code>, <code>@@typeok</code>, <code>@@typeerr</code></td><td>Type warnings and the results of type cells.</td></tr>
+          <tr><td><code>@@saved</code>, <code>@@restored</code>, <code>@@stale</code>, <code>@@error</code></td><td>Value saving, a stale event token, an error outside the cells.</td></tr>
+          <tr><td><code>@@nbdone</code></td><td>The run is complete.</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+  <p>
+    Inside a cell, the output layer <code>lib/notebook_glue.cfp</code> prints the blocks. It shows a value by its
+    <em>type</em>, which the typechecker supplies for each expression cell. Anything the cell prints itself becomes a
+    plain-text block.
+  </p>
+
+  <!-- ================================================================== -->
+  <h2>4. Walkthrough: the sieve, as it really goes over the wire</h2>
+  <p>A seven-cell notebook based on the TOP presentation. Cells 0, 1, 2 and 5 are definition cells; cells 3, 4 and 6 are expressions.</p>
+<pre>//%%
+import "lib/list.spp" as L
+import "lib/text.spp" as T
+//%%
+sieve (p : rest) = p : sieve [ x | x &lt;- rest, x % p != 0 ]
+
+primes =: sieve (L.from 2)              // =: a CAF: computed once, shared
+//%%
+n = 12
+//%%
+L.take n primes
+//%%
+D.table ["k", "k-th prime"] [ [k + 1, p] | (k, p) &lt;- L.take 4 (L.indexed primes) ]
+//%%
+crossOut k xs = if (k == 0) xs (case xs (Cons p rest -&gt; Cons p (crossOut (k - 1) [ x | x &lt;- rest, x % p != 0 ])) (Nil -&gt; Nil))
+
+tick ev k = case ev (D.Tick t -&gt; k + 1) (_ -&gt; k)
+//%%
+D.animated 500 0 tick (\k -&gt; D.text (T.unwords (L.map T.showInt (crossOut k (L.range 2 30)))))</pre>
+
+  <h3><span class="step">A</span>Run all (first run on the page)</h3>
+  <div class="grid-2">
+    <div>
+      <div class="lbl-pre"><span class="dir">NB_RUN.input</span> &rarr;</div>
+<pre><span class="m">@@mode any</span>
+<span class="m">@@defsall</span>
+<span class="m">@@def 0</span>
+import "lib/list.spp" as L
+import "lib/text.spp" as T
+<span class="m">@@def 1</span>
+sieve (p : rest) = p : sieve [ x | x &lt;- rest, x % p != 0 ]
+
+primes =: sieve (L.from 2)
+<span class="m">@@def 2</span>
+n = 12
+<span class="m">@@expr 3 1</span>
+L.take n primes
+<span class="m">@@expr 4 2</span>
+D.table ["k", "k-th prime"] [ [k + 1, p] | (k, p) &lt;- L.take 4 (L.indexed primes) ]
+<span class="m">@@def 5</span>
+crossOut k xs = if (k == 0) xs (case xs ...)
+
+tick ev k = case ev (D.Tick t -&gt; k + 1) (_ -&gt; k)
+<span class="m">@@expr 6 3</span>
+D.animated 500 0 tick (\k -&gt; D.text (...))</pre>
+    </div>
+    <div>
+      <div class="lbl-pre">&larr; <span class="dir">NB_RESULT.output</span> &nbsp;(restarted = true)</div>
+<pre><span class="m">@@begin 1</span>
+<span class="m">@@value</span>
+[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37]
+<span class="m">@@end 1</span>
+<span class="m">@@begin 2</span>
+<span class="m">@@table</span>
+k	k-th prime
+1	2
+2	3
+3	5
+4	7
+<span class="m">@@end 2</span>
+<span class="m">@@begin 3</span>
+<span class="m">@@interactive</span>
+8_3 500
+<span class="m">@@text</span>
+2 3 4 5 6 7 8 9 10 11 ... 28 29 30
+<span class="m">@@end 3</span>
+<span class="new">@@def 1 sieve :: ([Num] -&gt; [Num])</span>
+<span class="new">@@def 1 primes :: [Num]</span>
+<span class="new">@@def 2 n :: Num</span>
+<span class="new">@@def 5 crossOut :: (Num -&gt; ([Num] -&gt; [Num]))</span>
+<span class="new">@@def 5 tick :: (D.Event -&gt; (Num -&gt; Num))</span>
+<span class="m">@@nbdone</span></pre>
+    </div>
+  </div>
+  <p>
+    Expression numbers (<code>@@expr 3 1</code>) are separate from cell numbers: the output refers to
+    <code>@@begin 1</code>, and the page maps <code>1</code> back to cell 3. Table rows are tab-separated. The
+    interactive cell announces its <strong>token</strong> <code>8_3</code> and its tick interval of 500&nbsp;ms. The
+    token is a session counter (the chunk number when the expressions were compiled; the imports, the output layer and the
+    cells had already advanced it) followed by the expression number, so it is unique in the session. In this capture, the two long lines in the input (marked <code>...</code>)
+    were sent in full.
+  </p>
+
+  <h3><span class="step">B</span>Edit <code>n = 12</code> &rarr; <code>n = 20</code>, run that cell</h3>
+  <p>The page computes <code>dependents(cells, 2) = {2, 3}</code>. All definition cells still go along, but only expression cell 3 is included (cells 4 and 6 do not mention <code>n</code>):</p>
+  <div class="grid-2">
+    <div>
+      <div class="lbl-pre"><span class="dir">NB_RUN.input</span> &rarr;</div>
+<pre><span class="m">@@mode any</span>
+<span class="m">@@def 0</span>
+import "lib/list.spp" as L
+import "lib/text.spp" as T
+<span class="m">@@def 1</span>
+sieve (p : rest) = ...
+
+primes =: sieve (L.from 2)
+<span class="m">@@def 2</span>
+n = 20
+<span class="m">@@expr 3 1</span>
+L.take n primes
+<span class="m">@@def 5</span>
+crossOut k xs = ...
+
+tick ev k = ...</pre>
+    </div>
+    <div>
+      <div class="lbl-pre">&larr; <span class="dir">NB_RESULT.output</span> &nbsp;(7 ms<sup>*</sup>)</div>
+<pre><span class="m">@@begin 1</span>
+<span class="m">@@value</span>
+[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71]
+<span class="m">@@end 1</span>
+<span class="same">@@defsame 1</span>
+<span class="new">@@def 2 n :: Num</span>
+<span class="same">@@defsame 5</span>
+<span class="m">@@nbdone</span></pre>
+    </div>
+  </div>
+  <div class="callout ok">
+    <strong>This is the point of the whole design.</strong> <code>@@defsame 1</code> says the sieve cell was neither
+    recompiled nor reloaded. So the CAF <code>primes</code> is the <em>same heap object</em> as in run A: its
+    first 12 primes are already computed, and only primes 13&ndash;20 are new. Only the cell for <code>n</code> and
+    the expression were compiled.
+  </div>
+
+  <h3><span class="step">C</span>Run cell 3 again, nothing changed</h3>
+  <p>Output (5&nbsp;ms<sup>*</sup>): the same <code>@@begin 1</code> &hellip; <code>@@end 1</code>, then <code>@@defsame 1</code>, <code>@@defsame 2</code>, <code>@@defsame 5</code>. No definition was recompiled; only the expression was.</p>
+
+  <h3><span class="step">D</span>Edit the sieve (<code>!= 0</code> &rarr; <code>&gt; 0</code>), run that cell</h3>
+  <p><code>dependents(cells, 1) = {1, 3, 4}</code>, so expressions 3 and 4 are sent. The REPL reports:</p>
+<pre><span class="m">@@begin 1</span> ... <span class="m">@@end 1</span>                       (20 primes)
+<span class="m">@@begin 2</span> ... <span class="m">@@end 2</span>                       (the table)
+<span class="new">@@def 1 sieve :: ([Num] -&gt; [Num])</span>     <span class="same">&larr; recompiled: its text changed</span>
+<span class="new">@@def 1 primes :: [Num]</span>               <span class="same">&larr; same cell, so a fresh CAF, computed again</span>
+<span class="same">@@defsame 2</span>                           <span class="same">&larr; n does not use sieve or primes</span>
+<span class="same">@@defsame 5</span>                           <span class="same">&larr; crossOut and tick do not either</span>
+<span class="m">@@nbdone</span></pre>
+
+  <h3><span class="step">F</span>A definition that does not compile: <code>n = m + 1</code></h3>
+<pre><span class="err">@@deferror 2 saplcomp: onbekende naam m in functie n (geen parameter, lokale naam, functie of constructor)</span>
+<span class="m">@@begin 1</span>
+niet uitgevoerd: gebruikt n, uit een cel met een fout
+<span class="same">@@defsame 1</span>
+<span class="same">@@defsame 5</span>
+<span class="m">@@nbdone</span></pre>
+  <p>
+    The messages are verbatim, from the Dutch-language toolchain. The first says &ldquo;unknown name <code>m</code> in function
+    <code>n</code>&rdquo;. The second, in expression 1 without an <code>@@end</code>, says &ldquo;not run: uses <code>n</code>,
+    from a cell with an error&rdquo;. The failed cell does not enter the session, and the error <em>cascades by name</em>
+    to everything that uses it. Unrelated cells stay as they were.
+  </p>
+
+  <h3><span class="step">G</span>A run-time error in an expression: <code>L.nth 3 (L.take 2 primes)</code></h3>
+<pre><span class="m">@@begin 1</span>
+List.nth: index te groot                 <span class="same">(&ldquo;index too large&rdquo;; no @@end, so the cell failed)</span>
+<span class="same">@@defsame 1</span>
+<span class="new">@@def 2 n :: Num</span>                         <span class="same">&larr; n = 20 again, after F: recompiled</span>
+<span class="same">@@defsame 5</span>
+<span class="m">@@nbdone</span></pre>
+  <p>Each expression runs inside its own <code>try</code>, so one failing cell does not stop the others or the session.</p>
+
+  <h3><span class="step">E</span>The interactive cell: events with <code>NB_MSG</code></h3>
+  <p>
+    This step ran between D and F in the capture. Running cell 6 on its own (counter now 14, expression 1) returns <code>@@interactive</code> /
+    <code>14_1 500</code>. The page then starts a timer and, after each frame is drawn, sends a tick. An event is
+    a tab-separated line (<code>eventLine</code>); the worker passes it on as
+    <code>:nbmsg 14_1 tick&#9;500</code>:
+  </p>
+  <div class="grid-2">
+    <div>
+      <div class="lbl-pre"><span class="dir">NB_MSG</span> {tok: "14_1", event: "tick\t500"}</div>
+<pre><span class="m">@@begin 1</span>
+<span class="m">@@interactive</span>
+14_1 500
+<span class="m">@@text</span>
+2 3 5 7 9 11 13 15 17 19 21 23 25 27 29
+<span class="m">@@end 1</span></pre>
+    </div>
+    <div>
+      <div class="lbl-pre"><span class="dir">NB_MSG</span> {tok: "14_1", event: "tick\t1000"}</div>
+<pre><span class="m">@@begin 1</span>
+<span class="m">@@interactive</span>
+14_1 500
+<span class="m">@@text</span>
+2 3 5 7 11 13 17 19 23 25 29
+<span class="m">@@end 1</span></pre>
+    </div>
+  </div>
+  <p>
+    The <strong>model</strong> (here, the number of sieving steps) is never sent to the page. It lives in the session
+    as a <em>stepper</em>: a function value that holds <code>update</code>, <code>view</code> and the current model.
+    Each event applies it once, prints the new view and stores the next stepper under the token. Rerunning the cell dropped the stepper of its old token, so a late tick for <code>8_3</code> from run A is
+    answered with <code>@@stale 8_3</code> (captured), and the page stops that widget. Each run of a cell
+    gives it a new token and starts again at <code>model0</code>.
+  </p>
+
+  <!-- ================================================================== -->
+  <h2>5. How the session knows what to recompile and relink</h2>
+  <p>
+    Two separate decisions are made, in two places. The page decides <em>which expressions to evaluate</em>.
+    The REPL decides <em>which definition cells to recompile and link</em>. Neither trusts the other, and both
+    over-approximate: when in doubt, more is redone, never less.
+  </p>
+
+  <div class="grid-2">
+    <div class="card accent">
+      <h3>Decision 1 &mdash; the page: which expressions run</h3>
+      <p><code>dependents(cells, i)</code> in <code>notebook_core.js</code>, a transitive closure by name:</p>
+      <ul>
+        <li>a definition cell <em>provides</em> its top-level names, the constructors of its <code>::</code> types,
+          record getters and setters, and its import aliases (<code>L</code>, <code>T</code>);</li>
+        <li>a cell <em>depends on</em> it if any identifier in its text (strings and comments removed) is one of
+          those names; <code>L.take</code> counts as using <code>L</code>;</li>
+        <li>a <code>#import</code> (textual, contents unknown) makes every cell depend on it;</li>
+        <li>&ldquo;Run all&rdquo; simply selects everything.</li>
+      </ul>
+      <p>Expressions outside the set keep the output they showed. Every definition cell is <strong>always</strong>
+        sent, because the REPL needs the whole notebook to know what changed.</p>
+    </div>
+    <div class="card purple">
+      <h3>Decision 2 &mdash; the REPL: what is recompiled and relinked</h3>
+      <p><code>nbGo</code> in <code>repl_sapl/mini_repl.spp</code>:</p>
+      <ol>
+        <li><strong>Units.</strong> Definition cells that use each other form one unit (a strongly connected
+          component, since &ldquo;any order&rdquo; is one letrec). The units are ordered so that every unit
+          comes after the units it uses. In top-to-bottom mode, each cell is its own unit.</li>
+        <li><strong>Identity is the exact text.</strong> The session stores each unit as an entry whose identity
+          is its source text. A unit whose text is found in the session is a candidate for reuse.</li>
+        <li><strong>Data files count.</strong> For each string literal that names an existing file
+          (<code>C.read "data/fruit.csv"</code>), a line <code>// data: &lt;path&gt; &lt;length&gt; &lt;hash&gt;</code>
+          is added to the cell&rsquo;s text. If the file changes, the text changes.</li>
+        <li><strong>Changes propagate.</strong> A changed set collects the names of every unit that is recompiled
+          (or that failed) in this run, plus the names of cells that disappeared. A unit is reused <em>only</em> if
+          its text is known <em>and</em> none of its identifiers is in that set <em>and</em> it uses no import alias
+          that was re-imported.</li>
+        <li><strong>Compile, then link immediately.</strong> A unit that is not reused is compiled to a chunk
+          (<code>.jvb</code> bytes) and linked into the session image right away. A cell that the linker rejects
+          is an error at that cell, and stays out of the session.</li>
+        <li><strong>Expressions are always new.</strong> All selected expressions are compiled together as one
+          chunk per run, linked against the image and run, but never added to it.</li>
+      </ol>
+    </div>
+  </div>
+
+  <h3>Why changes must propagate: one consequence of linking names to addresses</h3>
+  <p>
+    The linker (<code>laadformaat/link.cfp</code>, written in Sapl) combines a chunk with the session image
+    (<code>Img</code>, the table of names, addresses, CAF slots and types) in <code>LK.lkLink</code>. The result
+    is code with <em>absolute addresses</em> and no open labels. The VM installs it with
+    <code>lookup "@install:&hellip;"</code>, appending it behind the existing code, and <code>LK.lkSeal</code>
+    gives the new image. So a reused cell keeps pointing at the <em>old</em> code of everything it called. That is
+    why a cell must be recompiled and relinked as soon as anything it uses was, even if its own text did not
+    change. The ordering in step 1 guarantees that its dependencies are already in the new image when that happens.
+  </p>
+
+  <div class="tablewrap">
+  <table>
+    <thead>
+      <tr><th>Run</th><th>Edit</th><th>Expressions sent (page)</th><th>Definition cells recompiled (REPL)</th><th><code>primes</code> CAF</th><th class="num">ms<sup>*</sup></th></tr>
+    </thead>
+    <tbody>
+      <tr><td>A</td><td>first run</td><td>3, 4, 6</td><td>1, 2, 5 (cell 0 defines no names: its imports are loaded as import entries; the output layer is loaded prebuilt)</td><td>new</td><td class="num">124</td></tr>
+      <tr class="key"><td>B</td><td><code>n = 20</code></td><td>3</td><td>2</td><td><strong>kept</strong> (12 primes already computed)</td><td class="num">7</td></tr>
+      <tr><td>C</td><td>none</td><td>3</td><td>&ndash;</td><td>kept</td><td class="num">5</td></tr>
+      <tr><td>D</td><td><code>sieve</code> body</td><td>3, 4</td><td>1</td><td>new (same cell as <code>sieve</code>)</td><td class="num">12</td></tr>
+      <tr><td>F</td><td><code>n = m + 1</code></td><td>3</td><td>2 (fails: <code>@@deferror</code>)</td><td>kept</td><td class="num">2</td></tr>
+      <tr><td>G</td><td><code>n = 20</code>, cell 3 &rarr; <code>L.nth</code></td><td>3</td><td>2</td><td>kept</td><td class="num">7</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>
+    The &ldquo;recompiled&rdquo; column is read straight from the output: <code>@@def</code> means recompiled,
+    <code>@@defsame</code> means reused. Run A also starts the wasm engine, because the harness sent no
+    <code>NB_WARM</code> beforehand (<code>restarted = true</code>). The output layer
+    (<code>lib/notebook_glue.cfp</code>, cell &minus;1) is an ordinary unit too. It is compiled once per session,
+    or taken from a prebuilt <code>.jvb</code> when one matches the source.
+  </p>
+
+  <div class="callout">
+    <strong>Consequences you can see in a notebook.</strong> Put an expensive <code>=:</code> value in a cell of its
+    own, and editing a cell that it does not depend on will not recompute it. Changing a helper in the same cell
+    (as in D), or a cell it depends on, starts it again from scratch. A CAF is a value, not a cached function call:
+    after B, <code>primes</code> is the same lazily growing list.
+  </div>
+
+  <!-- ================================================================== -->
+  <h2>6. Values across sessions (captured separately)</h2>
+  <p>
+    A fresh engine has an empty heap: after a page reload or a trap, every cell is compiled again. With
+    <code>@@values &lt;dir&gt;</code>, the REPL writes each evaluated <code>=:</code> value with the pack
+    primitive, and puts it back the next time if nothing it depends on changed. A one-cell variant with
+    <code>big =: L.nth 2000 primes</code>:
+  </p>
+  <div class="grid-2">
+    <div>
+      <div class="lbl-pre">Run 1 &larr; output (end)</div>
+<pre><span class="new">@@def 1 big :: Num</span>
+<span class="m">@@saved</span> primes 1628192743-239 repl_sapl/gen/values/demo/primes.1628192743-239.val
+<span class="m">@@saved</span> big 1628192743-239 repl_sapl/gen/values/demo/big.1628192743-239.val
+<span class="m">@@nbdone</span></pre>
+      <p style="font-size:14px">The worker keeps the bytes (<code>NB_RESULT.saved</code>: 129,302 bytes for the
+        <em>evaluated prefix</em> of the infinite list <code>primes</code>, 37 for <code>big</code>). The page stores them in IndexedDB.</p>
+    </div>
+    <div>
+      <div class="lbl-pre">Run 2, fresh engine: the worker appends &rarr;</div>
+<pre><span class="m">@@restore</span> primes 1628192743-239 repl_sapl/gen/values/demo/primes.1628192743-239.val
+<span class="m">@@restore</span> big 1628192743-239 repl_sapl/gen/values/demo/big.1628192743-239.val</pre>
+      <div class="lbl-pre">&larr; output</div>
+<pre><span class="m">@@restored</span> primes
+<span class="m">@@restored</span> big
+<span class="m">@@begin 1</span>
+<span class="m">@@value</span>
+17393
+<span class="m">@@end 1</span>
+...</pre>
+    </div>
+  </div>
+  <p>
+    The hash (<code>&lt;hash&gt;-&lt;length&gt;</code>) covers the cell&rsquo;s source, the hashes of the cells it
+    depends on, and the libraries: the compiler and REPL code, the output layer and every imported module. The same
+    &ldquo;did anything I use change?&rdquo; question from section 5 is thus asked across sessions. A value is put back
+    only if its hash matches; otherwise the cell simply computes it again. The <code>@@restore</code> lines in
+    run 2 are what the worker appends (<code>nbWithRestores</code>); the output is captured.
+  </p>
+
+  <!-- ================================================================== -->
+  <h2>7. When things go wrong</h2>
+  <div class="grid-2">
+    <div class="card warn">
+      <h3>Errors stay inside cells</h3>
+      <ul>
+        <li>Compile or link errors in a definition cell: <code>@@deferror</code>. Cells that use its names are not
+          run either (F).</li>
+        <li>Run-time errors (<code>error</code>, and VM faults that can be caught): the cell&rsquo;s <code>try</code>
+          ends it without <code>@@end</code> (G).</li>
+        <li>An interactive step that fails: <code>@@error</code>, and the cell keeps its previous stepper.</li>
+      </ul>
+    </div>
+    <div class="card warn">
+      <h3>A dying engine is replaced</h3>
+      <ul>
+        <li>A wasm trap (for example <code>1 / 0</code>) kills the instance. The run returns the output so far with
+          <code>trapped = true</code>, and the next run starts a fresh instance (<code>restarted = true</code>). The
+          notebook itself is the log, so nothing needs to be replayed.</li>
+        <li>On <code>restarted</code> or <code>trapped</code>, the page stops all interactive widgets: their
+          tokens belong to the old session.</li>
+        <li>A run that does not finish in time: the page keeps the cells that already reached <code>@@end</code>
+          (from the progress stream) and marks the first unfinished cell.</li>
+      </ul>
+    </div>
+  </div>
+
+  <footer>
+    <p>
+      <sup>*</sup> Timings are wall-clock times for the real <code>engine/worker.js</code> and <code>jmvm.wasm</code>, driven from
+      Node through <code>websapl/tools/worker_harness.js</code> on an Apple-silicon Mac, 17 November 2026. They are not
+      browser measurements; they show the relative cost of a first run and an incremental one. All
+      <code>@@</code> traffic on this page was captured from that harness with <code>NB.generateNbInput</code> /
+      <code>NB_RUN</code> / <code>NB_MSG</code>; some long lines are shortened with &ldquo;...&rdquo;.
+    </p>
+    <p>
+      Sources: <code>websapl/notebook.html</code>, <code>websapl/js/notebook_core.js</code>
+      (<code>generateNbInput</code>, <code>parseNbOutput</code>, <code>dependents</code>),
+      <code>websapl/engine/worker.js</code> (<code>nbRun</code>, <code>nbMsg</code>, <code>nbWithRestores</code>),
+      <code>repl_sapl/mini_repl.spp</code> (<code>nbGo</code>, <code>nbUnitOne</code>, <code>doNbMsg</code>),
+      <code>lib/notebook_glue.cfp</code>, <code>laadformaat/link.cfp</code>. Design history:
+      <code>docs/2026-10-08_notebook_in_sapl_plan.md</code>, <code>docs/2026-10-15_notebook_integraal_plan.md</code>,
+      <code>docs/2026-10-23_waarden_bewaren_plan.md</code>.
+    </p>
+  </footer>
+</div>
+
+<script>
+document.getElementById("themeBtn").addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme") ||
+    (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  const next = cur === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("websapl_theme", next); } catch (_) {}
+});
+</script>
+</body>
+</html>
