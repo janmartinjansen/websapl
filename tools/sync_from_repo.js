@@ -245,6 +245,7 @@ const ENTRIES = [
   { src: "docs/2026-11-16_sapl_toolchain_numbers_factsheet.html", dst: "factsheets/sapl_toolchain_numbers_factsheet.html" },
   { src: "docs/2026-11-16_top_talk_overview_factsheet.html", dst: "factsheets/top_talk_overview_factsheet.html" },
   { src: "docs/2026-11-17_notebook_protocol_factsheet.html", dst: "factsheets/notebook_protocol_factsheet.html" },
+  { src: "docs/2026-11-17_repl_compile_link_run_factsheet.html", dst: "factsheets/repl_compile_link_run_factsheet.html" },
   // De gids van Haskell lite als webpagina; tot 8 november 2026 stond hij als
   // websapl/haskell_lite.html (nu een doorverwijzing, voor oude links).
   { src: "docs/haskell_lite_guide.html", dst: "factsheets/haskell_lite.html" },

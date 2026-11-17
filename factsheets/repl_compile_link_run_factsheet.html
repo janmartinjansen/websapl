@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Inside the REPL</title>
+<meta name="description" content="How the Sapl REPL compiles each line to a chunk, links it against the session in Sapl, installs it behind the running code and runs it; how redefinition, undo, types, CAFs and imports work; and why notebooks depend on it.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script>
+  try {
+    const t = localStorage.getItem("websapl_theme");
+    if (t) document.documentElement.setAttribute("data-theme", t);
+  } catch (_) {}
+</script>
+<style>
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --fg: #1b2230;
+  --muted: #5a6475;
+  --line: #d9dee6;
+  --accent: #1f5f8b;
+  --accent-soft: #e3eef6;
+  --ok: #2c6b45;
+  --ok-soft: #e3f2e8;
+  --warn: #9a5b00;
+  --warn-soft: #fbf0de;
+  --purple: #6d28d9;
+  --purple-soft: #f3e8ff;
+  --pre-bg: #f0f3f7;
+  --f-display: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161d;
+    --surface: #1a2029;
+    --fg: #e4e8ee;
+    --muted: #9aa5b6;
+    --line: #2d3542;
+    --accent: #7db7e0;
+    --accent-soft: #1d3346;
+    --ok: #7fcf9c;
+    --ok-soft: #173025;
+    --warn: #e7b25c;
+    --warn-soft: #3a2c14;
+    --purple: #c084fc;
+    --purple-soft: #2e1d47;
+    --pre-bg: #141a22;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161d;
+  --surface: #1a2029;
+  --fg: #e4e8ee;
+  --muted: #9aa5b6;
+  --line: #2d3542;
+  --accent: #7db7e0;
+  --accent-soft: #1d3346;
+  --ok: #7fcf9c;
+  --ok-soft: #173025;
+  --warn: #e7b25c;
+  --warn-soft: #3a2c14;
+  --purple: #c084fc;
+  --purple-soft: #2e1d47;
+  --pre-bg: #141a22;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15.5px/1.62 var(--f-body);
+}
+.wrap { max-width: 1020px; margin: 0 auto; padding: 32px 16px 64px; }
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; font-size: 14px; }
+.topbar a { color: var(--muted); text-decoration: none; }
+.topbar a:hover { color: var(--accent); }
+.theme-btn {
+  background: var(--surface); color: var(--fg); border: 1px solid var(--line);
+  border-radius: 6px; padding: 5px 11px; font: 13px var(--f-body); cursor: pointer;
+}
+header { border-bottom: 2px solid var(--line); padding-bottom: 18px; margin-bottom: 26px; }
+.eyebrow {
+  font: 600 12px/1.2 var(--f-mono); text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--accent); margin-bottom: 8px;
+}
+h1 { font: 700 32px/1.15 var(--f-display); margin: 0 0 10px; letter-spacing: -0.01em; }
+.lead { color: var(--muted); font-size: 16.5px; margin: 0; max-width: 80ch; }
+h2 { font: 700 22px/1.25 var(--f-display); margin: 38px 0 12px; }
+h3 { font: 600 16.5px/1.3 var(--f-display); margin: 18px 0 8px; }
+p { margin: 0 0 12px; }
+ul, ol { margin: 6px 0 14px; padding-left: 22px; }
+li { margin: 4px 0; }
+code { font-family: var(--f-mono); font-size: 0.88em; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+a { color: var(--accent); }
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 20px 0 28px; }
+@media (max-width: 760px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+.kpi .val { font: 700 24px/1.1 var(--f-display); color: var(--accent); }
+.kpi .lbl { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 12px 0; }
+.grid-2 > * { min-width: 0; }
+@media (max-width: 760px) { .grid-2 { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; min-width: 0; }
+.card.ok { border-top: 3px solid var(--ok); }
+.card.accent { border-top: 3px solid var(--accent); }
+.card.warn { border-top: 3px solid var(--warn); }
+.card.purple { border-top: 3px solid var(--purple); }
+.card h3 { margin-top: 0; }
+.tablewrap { overflow-x: auto; margin: 16px 0; }
+table {
+  width: 100%; border-collapse: collapse; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 8px; overflow: hidden; font-size: 14px;
+}
+th, td { padding: 8px 11px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { background: var(--accent-soft); font-weight: 600; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tr:last-child td { border-bottom: none; }
+tr.key td { background: var(--ok-soft); }
+@media (min-width: 761px) { td code, th code { white-space: nowrap; } }
+@media (max-width: 760px) {
+  td code { overflow-wrap: anywhere; }
+  .card table td { display: block; border-bottom: none; padding: 4px 10px; }
+  .card table tr { display: block; border-bottom: 1px solid var(--line); padding: 4px 0; }
+}
+.callout {
+  background: var(--accent-soft); border-left: 3px solid var(--accent);
+  padding: 12px 15px; border-radius: 0 8px 8px 0; margin: 16px 0; font-size: 14.5px;
+}
+.callout.ok { background: var(--ok-soft); border-left-color: var(--ok); }
+.callout.warn { background: var(--warn-soft); border-left-color: var(--warn); }
+pre {
+  font: 12.8px/1.5 var(--f-mono); background: var(--pre-bg); color: var(--fg);
+  border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin: 6px 0 10px;
+  overflow-x: auto; white-space: pre;
+}
+.lbl-pre { font: 600 11.5px/1.2 var(--f-mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-top: 6px; }
+.lbl-pre .dir { color: var(--accent); }
+.m { color: var(--purple); font-weight: 500; }      /* @@ marker */
+.same { color: var(--muted); }
+.new { color: var(--ok); font-weight: 500; }
+.err { color: var(--warn); font-weight: 500; }
+.step {
+  display: inline-block; font: 700 13px/1 var(--f-mono); color: var(--surface); background: var(--accent);
+  border-radius: 5px; padding: 4px 7px; margin-right: 6px; vertical-align: 2px;
+}
+figure { margin: 18px 0; }
+figure svg { width: 100%; height: auto; display: block; }
+figcaption { font-size: 13px; color: var(--muted); margin-top: 6px; }
+.svg-box { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+.svg-box.acc { stroke: var(--accent); }
+.svg-box.pur { stroke: var(--purple); }
+.svg-box.ok { stroke: var(--ok); }
+.svg-t { fill: var(--fg); font: 600 14px var(--f-display); }
+.svg-s { fill: var(--muted); font: 11px var(--f-mono); }
+.svg-a { stroke: var(--accent); stroke-width: 1.6; fill: none; }
+.svg-a2 { stroke: var(--purple); stroke-width: 1.6; fill: none; }
+.svg-l { fill: var(--accent); font: 11px var(--f-mono); }
+.svg-l2 { fill: var(--purple); font: 11px var(--f-mono); }
+footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a href="index.html">&larr; Factsheets</a>
+    <button class="theme-btn" id="themeBtn" type="button">Theme</button>
+  </div>
+
+  <header>
+    <div class="eyebrow">REPL in Sapl &middot; dynamic compilation</div>
+    <h1>Inside the REPL: Compile, Link, Run</h1>
+    <p class="lead">
+      The Sapl REPL is one running Sapl program that contains its own compiler and linker. Every line you type becomes
+      a small piece of bytecode. The REPL links that piece against the session in Sapl, places it behind the code that is
+      already running, and jumps into it. Nothing is restarted and nothing is recompiled that did not change. Every listing
+      below comes from a real session.
+    </p>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi"><div class="val">1 program</div><div class="lbl">preprocessor, compiler (gen1), typechecker and linker as modules of the REPL itself</div></div>
+    <div class="kpi"><div class="val">~1&ndash;4 ms</div><div class="lbl">per line after the first: compile, link, install and run<sup>*</sup></div></div>
+    <div class="kpi"><div class="val">Append-only</div><div class="lbl">new code always goes behind the old; old code is never changed or freed</div></div>
+    <div class="kpi"><div class="val">5 calls into C</div><div class="lbl">four <code>@meta:</code> queries and one <code>@install:</code>; all linking policy is Sapl</div></div>
+  </div>
+
+  <!-- ================================================================== -->
+  <h2>1. A program that compiles into itself</h2>
+  <p>
+    The REPL is <code>repl_sapl/mini_repl.spp</code>, built into <code>repl_sapl/build/mini_repl.jvb</code>. It imports
+    the preprocessor (<code>PP</code>), the module compiler from gen1 (<code>SM</code>), the typechecker (<code>TC</code>) and
+    the linker <code>laadformaat/link.cfp</code> (<code>LK</code>) as ordinary Sapl modules. It also contains a small
+    <em>prelude</em> (showing values, strings, lists) that every compiled line may call.
+  </p>
+  <p>
+    The same <code>.jvb</code> runs everywhere: in a terminal with <code>./rs-driver</code>, behind the REPL tab of the
+    Workbench, and inside the WebSapl Web Worker on the wasm VM. Between lines the program waits in
+    <code>readLine</code>. In the browser the VM saves its registers there and returns to JavaScript. The next line resumes
+    it at exactly that point. The heap, with the session and all values computed so far, stays where it is.
+  </p>
+
+  <figure>
+    <svg viewBox="0 0 1000 330" role="img" aria-label="The REPL program with its modules on top of the VM, and the pipeline from line to running code">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/>
+        </marker>
+        <marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--purple)"/>
+        </marker>
+      </defs>
+      <!-- REPL program -->
+      <rect class="svg-box acc" x="10" y="10" width="980" height="170" rx="10"/>
+      <text class="svg-t" x="26" y="36">mini_repl &mdash; one Sapl program (bytecode in the VM)</text>
+      <!-- pipeline boxes -->
+      <rect class="svg-box" x="26" y="56" width="130" height="64" rx="8"/>
+      <text class="svg-t" x="91" y="82" text-anchor="middle">wrap</text>
+      <text class="svg-s" x="91" y="102" text-anchor="middle">resN =: line</text>
+      <rect class="svg-box" x="186" y="56" width="130" height="64" rx="8"/>
+      <text class="svg-t" x="251" y="82" text-anchor="middle">PP</text>
+      <text class="svg-s" x="251" y="102" text-anchor="middle">Sapl+ &rarr; Sapl</text>
+      <rect class="svg-box" x="346" y="56" width="130" height="64" rx="8"/>
+      <text class="svg-t" x="411" y="82" text-anchor="middle">TC</text>
+      <text class="svg-s" x="411" y="102" text-anchor="middle">type for display</text>
+      <rect class="svg-box" x="506" y="56" width="130" height="64" rx="8"/>
+      <text class="svg-t" x="571" y="82" text-anchor="middle">SM (gen1)</text>
+      <text class="svg-s" x="571" y="102" text-anchor="middle">chunk, open names</text>
+      <rect class="svg-box pur" x="666" y="56" width="130" height="64" rx="8"/>
+      <text class="svg-t" x="731" y="82" text-anchor="middle">LK link</text>
+      <text class="svg-s" x="731" y="102" text-anchor="middle">absolute chunk</text>
+      <rect class="svg-box" x="826" y="56" width="150" height="64" rx="8"/>
+      <text class="svg-t" x="901" y="82" text-anchor="middle">run, seal</text>
+      <text class="svg-s" x="901" y="102" text-anchor="middle">print, new Img</text>
+      <path class="svg-a" d="M156,88 L184,88" marker-end="url(#ah)"/>
+      <path class="svg-a" d="M316,88 L344,88" marker-end="url(#ah)"/>
+      <path class="svg-a" d="M476,88 L504,88" marker-end="url(#ah)"/>
+      <path class="svg-a" d="M636,88 L664,88" marker-end="url(#ah)"/>
+      <path class="svg-a" d="M796,88 L824,88" marker-end="url(#ah)"/>
+      <text class="svg-s" x="26" y="152">session state St: entries (text + chunk per definition)  &middot;  LkImg: name &rarr; addresses, types, CAF slots</text>
+      <!-- VM -->
+      <rect class="svg-box ok" x="10" y="240" width="980" height="80" rx="10"/>
+      <text class="svg-t" x="26" y="266">JMVM (C, or wasm in the browser)</text>
+      <text class="svg-s" x="26" y="290">code array  [ REPL program | chunk 0 | chunk 1 | ... ]   CAF table   type table   strings   heap</text>
+      <text class="svg-s" x="26" y="308">installLinked: check, copy behind g_progEnd, makeCode, return entry</text>
+      <!-- arrows LK <-> VM -->
+      <path class="svg-a2" d="M700,122 L700,238" marker-end="url(#ah2)"/>
+      <text class="svg-l2" x="560" y="214" text-anchor="middle">lookup "@meta:codeend" ...</text>
+      <path class="svg-a2" d="M770,122 L770,238" marker-end="url(#ah2)"/>
+      <text class="svg-l2" x="782" y="214">lookup "@install:&lt;bytes&gt;"</text>
+      <path class="svg-a" d="M920,238 L920,122" marker-end="url(#ah)"/>
+      <text class="svg-l" x="930" y="200">entry</text>
+    </svg>
+    <figcaption>Everything above the green box is Sapl. The VM only answers four questions about itself and copies an already linked chunk into its code array.</figcaption>
+  </figure>
+
+  <!-- ================================================================== -->
+  <h2>2. The life of one line</h2>
+  <p>
+    Take the line <code>cube 3</code>, typed after <code>:def sq x = x * x</code> and <code>:def cube x = x * sq x</code>.
+    It is the session's second expression, so it becomes <code>res1</code>. Its unit number is 3, because every line
+    gets a fresh number and the numbers never go back. These are the stages, with the real intermediate files from
+    the session's working directory (<code>mr_u3.*</code>).
+  </p>
+
+  <h3><span class="step">1</span>Wrap the line as a unit</h3>
+  <p>
+    An expression becomes a CAF <code>resN =: line</code>, so its value is computed once and stays in the session. A
+    function <code>__goN</code> shows it. The REPL calls the typechecker on the line first and writes the type it finds
+    (<code>"Num"</code>) into the call, so lists, booleans and records are shown correctly. <code>it</code> is replaced
+    by the previous <code>resN</code> as text: <code>it * 10</code> became <code>res5 =: res4 * 10</code>.
+  </p>
+  <div class="lbl-pre">mr_u3.cfp &mdash; the unit</div>
+<pre>res1 =: cube 3
+start = __go3
+__go3 nbTbl nbCur = printValX nbTbl nbCur "Num" res1</pre>
+  <p>
+    A <code>:def</code> becomes the definition plus <code>start = 0</code>. A line that uses an imported alias also gets
+    an <code>import extern</code> line, which tells the preprocessor the module's names without including its code again:
+  </p>
+  <div class="lbl-pre">mr_u9.cfp &mdash; after <code>:import "lib/list.spp" as L</code></div>
+<pre>import extern "lib/list.spp" as L
+res3 =: L.sum (L.map cube [1, 2, 3])
+start = __go9
+__go9 nbTbl nbCur = printValX nbTbl nbCur "Num" res3</pre>
+
+  <h3><span class="step">2</span>Preprocess (Sapl+ &rarr; Sapl)</h3>
+  <p>
+    The preprocessor resolves <code>L.</code> to the module's real names. It also turns list literals into
+    constructors and renames parameters with a tag computed from the unit's text. The tag comes from the text, not the
+    unit number, so the same definition has the same helper names in every session. That matters when saved values
+    are restored later.
+  </p>
+  <div class="lbl-pre">mr_u9.pp.cfp</div>
+<pre>res3 =: list__sum (list__map cube (Cons 1 (Cons 2 (Cons 3 Nil))))
+start = __go9
+__go9 __pat_r1077639575_0 __pat_r1077639575_1 = printValX __pat_r1077639575_0 ...</pre>
+
+  <h3><span class="step">3</span>Compile against the session's interface</h3>
+  <p>
+    gen1's module compiler (<code>smCompile</code>) compiles the unit by itself. It does not see the code of the rest
+    of the session, only an <em>interface</em>: for each function the name, arity and strictness (the
+    <code>.defs.txt</code> lines), and the ADT declarations. To keep this cheap, the REPL passes only the external names
+    that the unit actually mentions. Here that is <code>cube 1 1</code> and <code>printValX 4 0000</code>, not the whole
+    prelude or every function of every import.
+  </p>
+  <p>
+    The result is a <em>chunk</em>: bytes in the <code>.jvb</code> format, kept as a value in memory. Below is the text form
+    of the same chunk (from <code>saplcomp_module</code>, stage <code>jmvm</code>). The first line is the label table.
+    Labels 6&ndash;9 (<code>printValX</code>, <code>cube</code>) are not defined in the chunk; they are <strong>open
+    names</strong>. In the bytes they are negative label numbers.
+  </p>
+  <div class="lbl-pre">the chunk for <code>cube 3</code>, before linking (text form)</div>
+<pre>res1_lazy res1 start_lazy start __go3_lazy __go3 <span class="err">printValX printValX_lazy cube cube_lazy</span> #
+            pushfunc 0 1                             || res1
+            create 1 3
+            setcaf 0                                 <span class="same">CAF number 0 <em>of this chunk</em></span>
+            call 3                                   || start
+            print 4
+            stop
+0           jmp 1                                    || res1 || res1_lazy
+1           push 3                                   || res1
+            tailcall 0 <span class="err">8</span>                             || cube      <span class="same">open name</span>
+2           jmp 3                                    || start || start_lazy
+3           pushfunc 2 5                             || __go3 || start
+            create 1 7
+            return 0
+4           jmp 5                                    || __go3 || __go3_lazy
+5           pushcaf 0                                || __go3
+            push "Num"
+            load 1
+            load 0
+            tailcall 2 <span class="err">6</span>                             || printValX  <span class="same">open name</span></pre>
+
+  <h3><span class="step">4</span>Link, in Sapl</h3>
+  <p>
+    <code>LK.lkLink img bytes</code> takes the session image (<code>LkImg</code>, a Sapl value) and the chunk. It asks the
+    VM four things: where the code ends (<code>@meta:codeend</code>), how many strings, CAFs and type-ids are in use
+    (<code>@meta:nstrings</code>, <code>@meta:ncafs</code>, <code>@meta:nexttid</code>). Then it rewrites every operand by
+    its kind, which it takes from the instruction table (<code>vm/instructies.tab</code>):
+  </p>
+  <ul>
+    <li><strong>own code address</strong>: plus the base (the chunk goes right behind the current code);</li>
+    <li><strong>open name</strong>: the address of the <em>latest version</em> of that name in <code>LkImg</code>
+      (strict or lazy entry, by the <code>_lazy</code> suffix); an unknown name is an error;</li>
+    <li><strong>string</strong>: a new global string number;</li>
+    <li><strong>type-id</strong>: the session's id for that ADT. A type with the same name and the same constructors
+      keeps its id; anything else gets a new one;</li>
+    <li><strong>CAF</strong>: a slot in the VM's CAF table. The chunk's own CAFs get fresh slots, and a CAF of an earlier
+      entry gets the slot it already has.</li>
+  </ul>
+  <p>
+    The linker appends a new entry point: the CAF set-up of the chunk (now with its real slots), then
+    <code>tailcall start</code>. It writes the result as a <code>.jvb</code> with a <code>LINK</code> section (base, entry,
+    number of strings before it), and computes the new <code>LkImg</code>.
+  </p>
+  <div class="lbl-pre">the same chunk after linking: the words the VM received (load dump, base 342781)</div>
+<pre><span class="new">26 0 342797</span>  25 1 3  <span class="new">50 27 99</span>  12 342804  18 4  24       <span class="same">old prologue (kept, not used)</span>
+35 2  0 3  <span class="new">36 0 342765</span>                               <span class="same">res1:  push 3; tailcall cube -&gt; 342765</span>
+35 2  26 2 342814  25 1 7  13 0                     <span class="same">start: pushfunc __go3; create; return</span>
+35 2  <span class="new">50 24 99</span>  <span class="new">38 1 4913</span>  19 1  19 0  <span class="new">36 2 2338</span>     <span class="same">__go3: pushcaf 99; push "Num" (string 4913); ...; tailcall printValX</span>
+<span class="new">26 0 342797  25 1 3  50 27 99  36 0 342804</span>          <span class="same">new entry 342827: CAF res1 into slot 99, tailcall start</span></pre>
+  <p>
+    <code>cube</code> resolved to 342765, the strict entry of the chunk loaded just before. <code>printValX</code> resolved
+    to 2338, inside the REPL program itself, because the prelude is part of it. CAF 0 of the chunk became slot 99.
+  </p>
+
+  <h3><span class="step">5</span>Install, in C</h3>
+  <p>
+    <code>lookup "@install:&lt;bytes&gt;"</code> runs <code>installLinked</code> (<code>vm/laden.h</code>). It decides
+    nothing. It checks that the base is the current end of the code and that the string count matches (otherwise the
+    session is stale). It checks that every call target lies inside the code and that no type-id is taken by another
+    type. Then it copies the words behind the code, adds the strings, functions and types to the VM's tables (for showing
+    values and for diagnosis), runs <code>makeCode</code> on the new part only (opcodes to dispatch addresses,
+    superinstructions), and returns the entry address as a function value.
+  </p>
+
+  <h3><span class="step">6</span>Run, then seal</h3>
+  <p>
+    <code>applyDynamic</code> calls the entry. It fills CAF slot 99 with a thunk for <code>cube 3</code> and tail-calls
+    <code>start</code>, which returns <code>__go3</code>. The REPL applies that to two tables for the display (import
+    aliases and current names), and <code>__go3</code> forces <code>res1</code> and prints <code>27</code>. Only after a
+    successful run does the REPL make the new <code>LkImg</code> the session's image (<code>lkSeal</code>) and add a
+    <code>res1</code> entry to the session.
+  </p>
+
+  <div class="callout">
+    <strong>The whole step in code</strong> (<code>runChunkI</code> in <code>mini_repl.spp</code>):<br>
+    <code>let !r = LK.lkLink img bytes in applyDynamic (lookup ("@install:" ++ LK.lkLinked r)) Nil &lt;#&gt; LK.lkSeal (LK.lkNewImg r)</code>
+  </div>
+
+  <!-- ================================================================== -->
+  <h2>3. What the session remembers</h2>
+  <div class="grid-2">
+    <div class="card accent">
+      <h3>The entries (<code>St</code>)</h3>
+      <p>A list, in session order. Each entry has its name, its source text, its kind, the bytes of its chunk, its
+        interface (<code>.defs</code>, ADT lines) and, for imports, the parsed modules for the preprocessor and the typechecker.</p>
+      <table>
+        <tr><td>0 / 1</td><td>function / CAF (<code>:def</code>)</td></tr>
+        <tr><td>2</td><td>ADT (<code>:def ::Shape = ...</code>)</td></tr>
+        <tr><td>3</td><td><code>resN</code> (an expression line)</td></tr>
+        <tr><td>4 / 8</td><td>module code (hidden) / import alias</td></tr>
+        <tr><td>5</td><td>notebook cell group (<code>:nb</code>)</td></tr>
+      </table>
+      <p>It also keeps a counter for unit numbers, the next <code>resN</code>, the previous state (for <code>:undo</code>), the
+        type schemes, and the interactive notebook cells.</p>
+    </div>
+    <div class="card purple">
+      <h3>The image (<code>LkImg</code>)</h3>
+      <p>What the linker needs, as a Sapl value:</p>
+      <ul>
+        <li><strong>funcs</strong>: name &rarr; every address ever loaded for it, oldest first (two per version: strict, lazy);</li>
+        <li><strong>types</strong>: every loaded ADT with its id and constructors;</li>
+        <li><strong>cafs</strong>: name &rarr; CAF slot;</li>
+        <li><strong>nextTid</strong>, <strong>nextCaf</strong>.</li>
+      </ul>
+      <p>At start-up it is built from the prelude's interface, with addresses from <code>@meta:faddrs:&lt;name&gt;</code>
+        (about 70 names, not the thousands of functions in the REPL itself).</p>
+    </div>
+  </div>
+
+  <!-- ================================================================== -->
+  <h2>4. Redefining a function: who must be recompiled?</h2>
+  <p>
+    Linking turns names into absolute addresses. So a chunk that is already in the code calls the version of a name
+    that was current <em>when it was linked</em>, and keeps calling it. That makes redefinition explicit: when
+    <code>sq</code> changes, every entry that uses <code>sq</code>, directly or through other entries, must be compiled
+    and linked again so that it points to the new code.
+  </p>
+  <p>
+    <code>dependentsOf</code> finds those entries. It starts from the changed name and repeatedly adds every function
+    or CAF entry whose <em>source text</em> mentions a name already in the set. For an ADT the constructors count too, both
+    the old and the new ones: whoever uses <code>Rect</code> depends on <code>::Shape</code>. The REPL first compiles all
+    of them and only then links them, in session order. If one fails, nothing is loaded. Expression results
+    (<code>resN</code>) are not recompiled: they are snapshots.
+  </p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>Line</th><th class="num">Chunk at</th><th>What was loaded</th><th>Calls</th><th>Prints</th></tr>
+    <tr><td><code>:def sq x = x * x</code></td><td class="num">342731</td><td><code>sq</code> (strict entry 342741)</td><td>&mdash;</td><td></td></tr>
+    <tr><td><code>:def cube x = x * sq x</code></td><td class="num">342755</td><td><code>cube</code> (342765)</td><td><code>call 342741</code> (sq)</td><td></td></tr>
+    <tr><td><code>cube 3</code></td><td class="num">342781</td><td><code>res1</code></td><td><code>tailcall 342765</code></td><td>27</td></tr>
+    <tr class="key"><td><code>:def sq x = x + x</code></td><td class="num">342839<br>342863</td><td>new <code>sq</code> (342849)<br><span class="new">and a recompiled <code>cube</code> (342873)</span></td><td>&mdash;<br><code>call 342849</code></td><td></td></tr>
+    <tr><td><code>cube 3</code></td><td class="num">342889</td><td><code>res2</code></td><td><code>tailcall 342873</code></td><td>18</td></tr>
+    <tr><td><code>:undo</code>, <code>:undo</code></td><td class="num">&mdash;</td><td><em>nothing</em></td><td></td><td></td></tr>
+    <tr><td><code>cube 3</code></td><td class="num">342947</td><td><code>res2</code> again</td><td><code>tailcall 342765</code> (the first cube)</td><td>27</td></tr>
+  </table>
+  </div>
+  <p>
+    The <code>:def</code> of the new <code>sq</code> loaded two chunks in one step. The text of <code>cube</code> did not change.
+    Only its link did.
+  </p>
+
+  <div class="callout ok">
+    <strong><code>:undo</code> reloads nothing.</strong> Every version of every chunk is still in the code array.
+    <code>:undo</code> puts back the previous session state, including the previous <code>LkImg</code>. From then on, names
+    resolve to the old addresses again. The first <code>:undo</code> removed <code>res2</code> and the second removed the
+    new <code>sq</code>, so the next <code>cube 3</code> linked to the original <code>cube</code> at 342765, which still calls the
+    original <code>sq</code>.
+  </div>
+
+  <!-- ================================================================== -->
+  <h2>5. Types, CAFs, strings and imports</h2>
+  <div class="grid-2">
+    <div class="card">
+      <h3>ADTs</h3>
+      <p><code>:def ::Shape = Circle r | Rect w h</code> gave <code>Shape</code> the new type-id 284 when its chunk was linked.
+        A later chunk that mentions <code>Shape</code> maps its own local type-id to 284. Redefine <code>Shape</code> with other
+        constructors and the linker gives it a <em>new</em> id. Old values keep the old one, and the definitions that use
+        the constructors are recompiled (section 4).</p>
+    </div>
+    <div class="card">
+      <h3>CAFs and results</h3>
+      <p>Each <code>resN</code> is a CAF with its own slot: <code>res0</code> got 98, <code>res1</code> 99, <code>res2</code> 100.
+        After <code>:undo</code> the new <code>res2</code> got slot 101, a fresh one, so the old value was untouched. A CAF is
+        evaluated at most once. Later lines that use it read the same slot.</p>
+    </div>
+    <div class="card">
+      <h3>Strings</h3>
+      <p>Each chunk brings its own string literals. The <code>"Num"</code> of four consecutive expressions became strings
+        4912, 4913, 4914 and 4915. Nothing is shared between chunks, which keeps linking simple.</p>
+    </div>
+    <div class="card">
+      <h3>Imports</h3>
+      <p><code>:import "lib/list.spp" as L</code> loads the module's code once per path, as a hidden entry, plus an alias entry.
+        For the standard libraries the chunk is prebuilt: <code>repl_sapl/build/modules/index.txt</code> lists each with the
+        length and a hash of its source. If they match, the REPL links the prebuilt <code>.jvb</code> (here 2,410 words);
+        otherwise it compiles the module on the spot. Either way the chunk goes through the same <code>lkLink</code>.</p>
+    </div>
+  </div>
+
+  <!-- ================================================================== -->
+  <h2>6. When a line fails</h2>
+  <div class="grid-2">
+    <div class="card warn">
+      <h3>Compile error</h3>
+<pre>repl&gt; :def bad x = x + y
+fout: saplcomp: onbekende naam y in functie bad ...</pre>
+      <p>The compiler raises the error inside a <code>try</code>. No chunk is linked and nothing is loaded. The session is
+        exactly as before; only the unit counter moved on.</p>
+    </div>
+    <div class="card warn">
+      <h3>Runtime error</h3>
+<pre>repl&gt; L.nth 5 [1, 2]
+fout: List.nth: index te groot</pre>
+      <p>This chunk <em>was</em> linked and installed (load 15, base 345699, CAF slot 105), and then the run threw. Because
+        <code>lkSeal</code> comes after the run, the session keeps its old <code>LkImg</code> and the <code>resN</code> counter
+        does not move. The code array and the VM's counters did move. That is why <code>lkLink</code> always takes the
+        maximum of its own counters and the VM's <code>@meta:</code> values.</p>
+    </div>
+  </div>
+  <p>
+    <code>error</code> and VM faults inside a line are catchable in the same way
+    (<code>syscall 8</code>, <code>vmFault</code>), so the REPL prints <code>fout:</code> and waits for the next line.
+  </p>
+
+  <!-- ================================================================== -->
+  <h2>7. What is Sapl and what is C</h2>
+  <div class="tablewrap">
+  <table>
+    <tr><th>Concern</th><th>Where</th></tr>
+    <tr><td>Parsing, preprocessing, type inference, code generation</td><td>Sapl (PP, TC, SM)</td></tr>
+    <tr><td>Which entries to recompile; order of loading; <code>:undo</code></td><td>Sapl (<code>mini_repl.spp</code>)</td></tr>
+    <tr><td>Name &rarr; address (latest version), relocation, type-ids by name + constructors, CAF slots, string numbers, entry point</td><td>Sapl (<code>link.cfp</code>, ~590 lines)</td></tr>
+    <tr><td>End of code, string/CAF/type counts, prelude addresses</td><td>C: <code>lookup "@meta:..."</code></td></tr>
+    <tr><td>Sanity checks, copy, <code>makeCode</code>, return the entry</td><td>C: <code>lookup "@install:..."</code> (<code>installLinked</code>, ~80 lines)</td></tr>
+  </table>
+  </div>
+  <p>
+    This split keeps the VM small: the same <code>installLinked</code> serves the native VM and the wasm VM. Changing how
+    linking works is a change to a Sapl module, rebuilt with the REPL. Until 11 October 2026 the linking policy lived in
+    C. It was moved to Sapl and the C loader was deleted.
+  </p>
+  <div class="callout warn">
+    <strong>The price of append-only.</strong> Code, strings and type-ids are never freed, not even by <code>:reset</code>
+    (which only empties the session and the image). The code array has room for the program plus 4,000,000 words. An
+    expression costs about 58 words and a small definition about 24, so a session can load tens of thousands of lines;
+    when the array is full, <code>@install</code> stops with the error <code>code-array vol</code>.
+  </div>
+
+  <!-- ================================================================== -->
+  <h2>8. Timings</h2>
+  <p>The whole session above, line by line.<sup>*</sup></p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>Line</th><th class="num">native (rs-driver)</th><th class="num">wasm (WebSapl worker)</th><th>Output</th></tr>
+    <tr><td><code>1 + 2</code> (first line)</td><td class="num">28 ms</td><td class="num">58 ms</td><td>3</td></tr>
+    <tr><td><code>:def sq x = x * x</code></td><td class="num">1 ms</td><td class="num">1 ms</td><td>gedefinieerd: sq</td></tr>
+    <tr><td><code>:def cube x = x * sq x</code></td><td class="num">1 ms</td><td class="num">1 ms</td><td>gedefinieerd: cube</td></tr>
+    <tr><td><code>:def sq x = x + x</code> (+ recompile <code>cube</code>)</td><td class="num">1 ms</td><td class="num">1 ms</td><td>gedefinieerd: sq</td></tr>
+    <tr><td><code>:undo</code></td><td class="num">0 ms</td><td class="num">0 ms</td><td>ongedaan gemaakt</td></tr>
+    <tr><td><code>:import "lib/list.spp" as L</code></td><td class="num">2 ms</td><td class="num">4 ms</td><td>ge&iuml;mporteerd: L</td></tr>
+    <tr><td><code>L.sum (L.map cube [1, 2, 3])</code></td><td class="num">3 ms</td><td class="num">4 ms</td><td>36</td></tr>
+    <tr><td><code>area (Rect 2 5)</code></td><td class="num">2 ms</td><td class="num">2 ms</td><td>10</td></tr>
+    <tr><td><code>L.nth 5 [1, 2]</code></td><td class="num">1 ms</td><td class="num">1 ms</td><td>fout: List.nth: index te groot</td></tr>
+  </table>
+  </div>
+  <p>
+    The first line is slower because it forces the REPL's lazy start-up values: the initial image and the prelude's
+    type schemes, read from prebuilt files. After that, a line costs a few milliseconds from typing to output. The
+    typechecker's result is lazy too, so a <code>:def</code> does not always pay for typing in that same line.
+  </p>
+
+  <!-- ================================================================== -->
+  <h2>9. How notebooks use this, and why they need it</h2>
+  <p>
+    The notebook is not a separate system. It is one more REPL command, <code>:nb &lt;file&gt;</code>, in the same running
+    program (see <a href="notebook_protocol_factsheet.html">The Notebook Wire Protocol</a> for the messages).
+  </p>
+  <ul>
+    <li>Definition cells are grouped into units (cells that use each other form one unit). Each unit goes through exactly
+      the steps above, <code>compileUnitB</code> then <code>runChunkI</code>, and becomes an entry of kind 5.</li>
+    <li>A unit whose text is unchanged, and that uses nothing that changed, is not compiled or linked again. A changed name
+      propagates to the units that mention it, just like <code>dependentsOf</code> for <code>:def</code>.</li>
+    <li>The expression cells of one run are compiled together as one chunk and run with <code>runChunkV</code>. It is linked
+      against the image but not added to it: the expressions are output, not definitions.</li>
+  </ul>
+  <div class="callout ok">
+    <strong>Why this is essential for the notebook.</strong>
+    <ul>
+      <li><strong>Speed.</strong> Editing one cell compiles and links one small chunk instead of the whole notebook. In the
+        sieve example, a first run takes 124 ms and editing <code>n</code> afterwards takes 7 ms.</li>
+      <li><strong>Values survive.</strong> The VM never restarts, so evaluated CAFs stay in the heap. The sieve's
+        <code>primes</code> keeps every prime it has already found. A whole-program recompile would restart the program
+        and compute them all again.</li>
+      <li><strong>Live cells keep working.</strong> An interactive cell is a function value, a stepper, held in the session.
+        Because code is append-only, the addresses inside that value stay valid while other cells are recompiled, so its
+        token keeps answering events.</li>
+      <li><strong>It all runs in the browser.</strong> Compiler, typechecker and linker are Sapl bytecode in the same wasm VM.
+        There is no server and no native toolchain, and the VM itself only needs the small <code>@install</code> primitive.</li>
+    </ul>
+  </div>
+
+  <footer>
+    <p>
+      <sup>*</sup> The session on this page was run on 17 November 2026 on an Apple-silicon Mac, with
+      <code>./rs-driver repl_sapl/build/mini_repl.jmvm</code> (native, input over a pipe) and with the WebSapl worker
+      (<code>engine/worker.js</code> + <code>jmvm.wasm</code>) driven from Node through <code>websapl/tools/worker_harness.js</code>
+      (<code>RSAPL_EVAL</code>). They are wall-clock times per line, not browser measurements. The linked words come from
+      <code>JMVM_LOAD_DUMP</code>, and the unit files from the session's working directory
+      (<code>repl_sapl/gen/sessie_*</code>). The text form of the chunk was produced with <code>saplcomp_module</code>, stage
+      <code>jmvm</code>, from the same <code>mr_u3.pp.cfp</code>; the REPL itself produces the bytes directly
+      (<code>chunkJvbBytes</code>). The REPL's messages are in Dutch (<code>gedefinieerd</code> = defined, <code>fout</code> =
+      error, <code>ongedaan gemaakt</code> = undone).
+    </p>
+    <p>
+      Sources: <code>repl_sapl/mini_repl.spp</code> (<code>compileUnitB</code>, <code>smCompile</code>, <code>runChunkI</code>,
+      <code>runChunkV</code>, <code>doExpr</code>, <code>defTurnOk</code>, <code>dependentsOf</code>, <code>doUndo</code>),
+      <code>laadformaat/link.cfp</code> (<code>lkInitial</code>, <code>lkLink</code>, <code>lkPatch</code>, <code>lkWriteLinked</code>),
+      <code>vm/laden.h</code> (<code>installLinked</code>), <code>sapl_compiler/chunk_jvb.cfp</code>, <code>vm/instructies.tab</code>.
+      Design history: <code>docs/2026-10-07_repl_in_sapl_plan.md</code>, <code>docs/2026-10-10_samenvoegen_in_sapl_plan.md</code>,
+      <code>docs/repl_ontwerp.md</code>.
+    </p>
+  </footer>
+</div>
+
+<script>
+document.getElementById("themeBtn").addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme") ||
+    (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  const next = cur === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("websapl_theme", next); } catch (_) {}
+});
+</script>
+</body>
+</html>
