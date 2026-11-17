@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en" class="h-100">
+<head>
+	<meta charset="utf-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<title>Clean Sandbox</title>
+
+	<!-- Bootstrap -->
+	<link rel="stylesheet" href="vendor/bootstrap/dist/css/bootstrap.min.css">
+	<script src="vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+	<!-- JavaScript dependencies -->
+	<script src="vendor/text-encoding/lib/encoding.js"></script>
+	<script src="vendor/pako/dist/pako.min.js"></script>
+	<script src="vendor/js-untar/build/dist/untar.js"></script>
+
+	<!-- Sandbox JavaScript -->
+	<script type="text/javascript" src="js/chapters.js"></script>
+	<script type="text/javascript" src="js/sandbox.js"></script>
+
+	<!-- Monaco editor -->
+	<link rel="stylesheet" data-name="vs/editor/editor.main" href="vendor/monaco-editor/min/vs/editor/editor.main.css"/>
+	<script src="vendor/monaco-editor/min/vs/loader.js"></script>
+	<script>
+		const monaco_promise=new Promise (resolve => {
+			require.config ({paths: {'vs': 'vendor/monaco-editor/min/vs'}});
+			require (['vs/editor/editor.main'], resolve);
+		});
+	</script>
+
+	<!-- Font awesome -->
+	<link rel="stylesheet" href="vendor/@fortawesome/fontawesome-free/css/fontawesome.min.css">
+	<link rel="stylesheet" href="vendor/@fortawesome/fontawesome-free/css/solid.min.css">
+
+	<link rel="stylesheet" href="css/sandbox.css"/>
+</head>
+<body class="h-100 overflow-hidden">
+	<div class="container-fluid h-100 px-0 d-flex flex-column">
+		<header>
+			<nav id="navbar" class="navbar">
+				<div class="container-fluid d-flex justify-content-between">
+					<ul class="nav me-auto">
+						<li class="nav-item">
+							<a href="https://clean-lang.org">
+								<img id="logo" src="logo.svg" alt="The Clean programming language logo" />
+							</a>
+						</li>
+						<li class="nav-item">
+							<a id="btn-chapters" class="nav-link link-light" href="#" data-bs-toggle="modal" data-bs-target="#modal-chapters">
+								<i class="fa-solid fa-fw fa-book-open"></i>
+								Tour
+							</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link link-light" href="#" data-bs-toggle="modal" data-bs-target="#modal-about">
+								<i class="fa-solid fa-fw fa-circle-info"></i>
+								About
+							</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link link-light" href="#" data-bs-toggle="modal" data-bs-target="#modal-settings">
+								<i class="fa-solid fa-fw fa-gear"></i>
+								Settings
+							</a>
+						</li>
+					</ul>
+				</div>
+			</nav>
+		</header>
+		<div id="workspace" class="row flex-grow-1 gx-0">
+			<div id="col-editor" class="col-lg-8 d-flex flex-column">
+				<div id="chapter-heading" class="chapter-control px-3 py-2 border-bottom">
+					<div class="d-flex align-items-start justify-content-between gap-3">
+						<div>
+							<div id="chapter-number" class="small text-uppercase text-muted"></div>
+							<h1 id="chapter-title" class="h5 mb-1"></h1>
+							<p id="chapter-description" class="small text-muted mb-0"></p>
+						</div>
+						<button type="button" class="btn btn-sm btn-outline-secondary text-nowrap" data-bs-toggle="modal" data-bs-target="#modal-chapters">
+							<i class="fa-solid fa-list fa-fw"></i> Overview
+						</button>
+					</div>
+				</div>
+				<div id="editor" class="flex-grow-1"></div>
+				<div id="chapter-navigation" class="chapter-control d-flex align-items-center justify-content-between px-2 py-2 border-top">
+					<button id="chapter-previous" type="button" class="btn btn-sm btn-outline-secondary" aria-label="Previous chapter">
+						<i class="fa-solid fa-arrow-left"></i> <span class="d-none d-sm-inline">Previous</span>
+					</button>
+					<button id="chapters-hide" type="button" class="btn btn-sm btn-link text-secondary">Hide tour</button>
+					<button id="chapter-next" type="button" class="btn btn-sm btn-outline-secondary" aria-label="Next chapter">
+						<span class="d-none d-sm-inline">Next</span> <i class="fa-solid fa-arrow-right"></i>
+					</button>
+				</div>
+			</div>
+			<div id="col-tools" class="col d-flex flex-column">
+				<ul class="nav nav-tabs px-2 pt-1 bg-light border-bottom" role="tablist">
+					<li class="nav-item" role="presentation">
+						<button class="nav-link active py-1 px-2 small" id="tab-output-btn" data-bs-toggle="tab" data-bs-target="#tab-output" type="button" role="tab">Output</button>
+					</li>
+					<li class="nav-item" role="presentation">
+						<button class="nav-link py-1 px-2 small" id="tab-abc-btn" data-bs-toggle="tab" data-bs-target="#tab-abc" type="button" role="tab">ABC</button>
+					</li>
+					<li class="nav-item" role="presentation">
+						<button class="nav-link py-1 px-2 small" id="tab-retag-btn" data-bs-toggle="tab" data-bs-target="#tab-retag" type="button" role="tab">Retag AST</button>
+					</li>
+				</ul>
+				<div class="tab-content flex-grow-1 d-flex flex-column overflow-hidden">
+					<div class="tab-pane fade show active flex-grow-1 d-flex flex-column h-100" id="tab-output" role="tabpanel">
+						<section id="sec-abc-result" class="tool-output flex-grow-1 d-flex flex-column border-bottom">
+							<div class="output-heading px-2 d-flex flex-wrap justify-content-between align-items-baseline column-gap-3">
+								<span>ABC Result</span>
+								<span id="abc-timing" class="text-muted small"></span>
+							</div>
+							<div class="flex-grow-1 position-relative overflow-auto">
+								<pre id="output" class="position-absolute m-0 p-2"></pre>
+							</div>
+						</section>
+						<section id="sec-abc-stdout" class="leeg tool-output flex-grow-1 d-flex flex-column border-bottom">
+							<div class="output-heading px-2"><span>ABC Output</span></div>
+							<div class="flex-grow-1 position-relative overflow-auto">
+								<pre id="program-output" class="position-absolute w-100 m-0 p-2"></pre>
+							</div>
+						</section>
+						<section id="sec-jmvm-result" class="tool-output flex-grow-1 d-flex flex-column">
+							<div class="output-heading px-2 d-flex flex-wrap justify-content-between align-items-baseline column-gap-3">
+								<span>JMVM Result</span>
+								<span id="jmvm-timing" class="text-muted small"></span>
+							</div>
+							<div class="flex-grow-1 position-relative overflow-auto">
+								<pre id="jmvm-output" class="position-absolute w-100 m-0 p-2"></pre>
+							</div>
+						</section>
+					</div>
+					<div class="tab-pane fade flex-grow-1 position-relative h-100 overflow-auto" id="tab-abc" role="tabpanel">
+						<pre id="abc-view" class="position-absolute w-100 m-0 p-2 small"></pre>
+					</div>
+					<div class="tab-pane fade flex-grow-1 position-relative h-100 overflow-auto" id="tab-retag" role="tabpanel">
+						<pre id="retag-view" class="position-absolute w-100 m-0 p-2 small"></pre>
+					</div>
+				</div>
+				<div class="row border-top">
+					<div class="col m-2 d-flex align-items-center gap-2 flex-wrap">
+						<select id="lang-select" class="form-select form-select-sm w-auto" title="Taal van het programma">
+							<option value="clean" selected>Clean</option>
+							<option value="sapl">Sapl</option>
+						</select>
+						<select id="engine-select" class="form-select form-select-sm w-auto" title="Kies execution engine">
+							<option value="abc">ABC Interpreter</option>
+							<option value="jmvm">JMVM (abc2retag)</option>
+							<option value="both" selected>Vergelijk (ABC + JMVM)</option>
+						</select>
+						<button id="btn-compile-run" type="button" class="btn btn-sm btn-primary" disabled title="Compile and run the program">Compile &amp; run <i id="compile-busy" class="fa-solid fa-compact-disc fa-spin"></i></button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="modal-about" class="modal fade" tabindex="-1">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">
+						<i class="fa-solid fa-fw fa-circle-info"></i>
+						About
+					</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<p>
+						This is a sandbox for the <a href="https://clean-lang.org" target="_blank">Clean</a> language.
+						It allows you to experiment with the language and the libraries in the package registry.
+						The whole sandbox, including compiler, code generator, and linkers, runs entirely in the browser in WebAssembly.
+						For the implementation, see <a href="https://gitlab.com/camilstaps/clean-sandbox" target="_blank">GitLab</a>.
+					</p>
+					<p>
+						This is experimental software.
+						Please report any bugs (ideally including browser version and console logs).
+					</p>
+					<p>
+						This sandbox is created by <a href="https://camilstaps.nl" target="_blank">Camil Staps</a> and maintained by <a href="https://www.top-software.nl" target="_blank">TOP Software Technology</a>.
+					</p>
+					<p>
+						<strong>This is a modified copy, part of <a href="../index.html">WebSapl</a></strong> and not maintained by TOP:
+						it adds the JMVM as a second backend (Clean via <code>abc2retag</code>, Sapl via the self-hosted Sapl compiler gen1),
+						Sapl as a second language (also on the ABC interpreter, via <code>sapl2abc</code>), and the 13 benchmarks in the tour.
+						Please report problems with this copy to the WebSapl author, not to TOP.
+						The original is at <a href="https://gitlab.com/clean-and-itasks/clean-sandbox" target="_blank">gitlab.com/clean-and-itasks/clean-sandbox</a>.
+					</p>
+					<p>
+						License: <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank">AGPL-3.0-only</a>, as the original.
+						The source of this copy is the files on this site: the JavaScript in <code>js/</code> as is,
+						the Clean sources of the sandbox (<code>sandbox.icl</code>, <code>make.icl</code>), and the original repository above for the compiler and code generator.
+						The JMVM tools in <code>engine/</code> (<code>jmvm.wasm</code> and the <code>.jvb</code> programs) belong to WebSapl.
+					</p>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="modal-settings" class="modal fade" tabindex="-1">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">
+						<i class="fa-solid fa-fw fa-gear"></i>
+						Settings
+					</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body border-bottom">
+					<h6 class="fw-bold">Selected packages</h6>
+					<ul id="packages-selection" class="mb-0">
+						<li>base-stdenv 1.0</li>
+					</ul>
+				</div>
+				<div class="modal-body">
+					<h6 class="fw-bold">Add package</h6>
+					<form>
+						<div class="mb-2">
+							<select id="packages-add-name" class="form-select"></select>
+						</div>
+						<div class="mb-2">
+							<select id="packages-add-version" class="form-select"></select>
+						</div>
+						<div class="text-end">
+							<button id="packages-add-button" type="button" class="btn btn-primary">Add</button>
+						</div>
+					</form>
+				</div>
+				<div class="modal-footer">
+					<button class="btn btn-light" data-bs-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="modal-chapters" class="modal fade" tabindex="-1" aria-labelledby="chapters-modal-title">
+		<div class="modal-dialog modal-dialog-scrollable">
+			<div class="modal-content">
+				<div class="modal-header">
+					<div>
+						<h5 id="chapters-modal-title" class="modal-title">Chapters</h5>
+					</div>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div id="chapters-overview" class="modal-body list-group list-group-flush p-0"></div>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		window.onresize=() => {
+			/* Prevent the body from growing past the viewport height */
+			if (typeof sandbox.editor=='undefined')
+				return;
+			sandbox.editor.layout ({height: 0});
+			sandbox.editor.layout();
+		};
+
+		/* Workaround for Firefox, see https://stackoverflow.com/q/71659876 */
+		const btn_compile_run=document.getElementById ('btn-compile-run');
+		btn_compile_run.disabled=true;
+
+		sandbox.init ({
+			btn_compile_run: btn_compile_run,
+			btn_chapters: document.getElementById ('btn-chapters'),
+			chapter_description: document.getElementById ('chapter-description'),
+			chapter_heading: document.getElementById ('chapter-heading'),
+			chapter_navigation: document.getElementById ('chapter-navigation'),
+			chapter_next: document.getElementById ('chapter-next'),
+			chapter_number: document.getElementById ('chapter-number'),
+			chapter_previous: document.getElementById ('chapter-previous'),
+			chapter_title: document.getElementById ('chapter-title'),
+			chapters_hide: document.getElementById ('chapters-hide'),
+			chapters_modal: document.getElementById ('modal-chapters'),
+			chapters_overview: document.getElementById ('chapters-overview'),
+			compile_indicator: document.getElementById ('compile-busy'),
+			editor: document.getElementById ('editor'),
+			engine_select: document.getElementById ('engine-select'),
+			lang_select: document.getElementById ('lang-select'),
+			output: document.getElementById ('output'),
+			program_output: document.getElementById ('program-output'),
+			jmvm_output: document.getElementById ('jmvm-output'),
+			abc_timing: document.getElementById ('abc-timing'),
+			jmvm_timing: document.getElementById ('jmvm-timing'),
+			sec_abc_result: document.getElementById ('sec-abc-result'),
+			sec_abc_stdout: document.getElementById ('sec-abc-stdout'),
+			sec_jmvm_result: document.getElementById ('sec-jmvm-result'),
+			abc_view: document.getElementById ('abc-view'),
+			retag_view: document.getElementById ('retag-view'),
+			packages_selection: document.getElementById ('packages-selection'),
+			packages_add_name: document.getElementById ('packages-add-name'),
+			packages_add_version: document.getElementById ('packages-add-version'),
+			packages_add_button: document.getElementById ('packages-add-button'),
+		}).then (() => {
+			sandbox.stdout ('Sandbox initialized. Click "Compile & run" to run the program.\n');
+			btn_compile_run.disabled=false;
+		}).catch (e => {
+			console.error (e);
+			window.alert ('Failed to set up the sandbox. The application may not work.\n' + e);
+		});
+	</script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+#navbar {
+	background-color: #3f87af;
+}
+
+#logo {
+	height: 40px;
+	margin-right: 10px;
+}
+
+#output, #program-output, #jmvm-output {
+	font-size: 0.85em; /* about the size of the editor's text */
+	white-space: pre-wrap;
+}
+
+#jmvm-output .err {
+	color: red;
+}
+
+.tab-pane:not(.active) {
+	display: none !important;
+}
+
+#workspace {
+	min-height: 0;
+}
+
+.tool-output {
+	flex-basis: 0;
+	min-height: 0;
+}
+
+.output-heading {
+	font-weight: 600;
+	font-size: 0.85em;
+	padding-top: 0.25rem;
+	padding-bottom: 0.25rem;
+	background: #f8f9fa;
+	border-bottom: 1px solid #dee2e6;
+}
+
+/* the ABC program's stdout only when it wrote something */
+#sec-abc-stdout.leeg {
+	display: none !important;
+}
+
+#output.compiling {
+	color: #6c757d;
+}
+
+#output .err {
+	color: red;
+}
+
+#compile-busy {
+	display: none;
+}
+
+#col-editor {
+	height: 75%;
+}
+
+#editor {
+	min-height: 0;
+}
+
+.chapter-control {
+	background: #f8f9fa;
+	flex: 0 0 auto;
+}
+
+#chapters-overview .list-group-item.active {
+	background-color: #eef6fa;
+	color: inherit;
+}
+
+#col-tools {
+	height: 25%;
+	padding-top: 10px;
+}
+
+@media (min-width: 992px) {
+	#col-editor, #col-tools {
+		height: 100%;
+	}
+}
+
+/* the timing on one line, under the heading when there is no room;
+ * min-width 0 so a long heading never pushes the tools column under the editor */
+.output-heading > span {
+	white-space: nowrap;
+}
+
+#col-tools {
+	min-width: 0;
+}

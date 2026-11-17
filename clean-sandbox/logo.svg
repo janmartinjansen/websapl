@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="280.88889" height="141.78586" version="1.1" id="svg14" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+  <defs id="defs14"/>
+  <path d="M 2.222222e-7,0 H 280.88889 V 141.78586 H 2.222222e-7 Z M 14.222222,26.666667 H 266.66666 V 115.11919 H 14.222222 Z" stroke="none" fill="#3f87af" fill-rule="evenodd" id="path1"/>
+  <path d="M 14.222222,104.45253 H 266.66666 v 10.66666 H 14.222222 Z" stroke="none" fill="#8c96a0" id="path2"/>
+  <path d="M 14.222222,26.666667 H 266.66666 V 37.333334 H 14.222222 Z" stroke="none" fill="#8c96a0" id="path3"/>
+  <path d="M 14.222222,37.333334 H 266.66666 V 104.45253 H 14.222222 Z" stroke="none" fill="#ffffff" id="path4"/>
+  <path d="M 49.340192,130.22085 C 43.493407,125.97291 38.306671,120.88402 33.948158,115.11919 H 60.312182 Z" stroke="none" fill="#8c96a0" id="path5"/>
+  <path d="M 49.340192,11.565016 C 43.493407,15.812954 38.306671,20.901839 33.948158,26.666667 H 60.312182 Z" stroke="none" fill="#8c96a0" id="path6"/>
+  <path d="m 77.190872,93.225917 c -17.58783,-12.778305 -17.58783,-38.998781 0,-51.777087 L 67.002592,27.425869 c -27.114568,19.699888 -27.114568,60.123121 0,79.823011 z" stroke="none" fill="#8c96a0" id="path7"/>
+  <path d="m 63.867742,111.56364 c -30.045878,-21.82961 -30.045878,-66.622923 0,-88.452529 L 52.895752,8.0094608 c -40.305446,29.2836172 -40.305446,89.3722062 0,118.6558292 z" stroke="none" fill="#8c96a0" id="path8"/>
+  <path d="m 73.635312,96.781477 c -17.58783,-12.77831 -17.58783,-38.998786 0,-51.777092 L 63.447042,30.981424 c -27.114574,19.699888 -27.114574,60.123122 0,79.823016 z" stroke="none" fill="#3f87af" id="path9"/>
+  <path d="m 60.312182,115.11919 c -30.045873,-21.829603 -30.045873,-66.622917 0,-88.452523 H 33.948158 c -19.782729,26.165815 -19.782729,62.286709 0,88.452523" stroke="none" fill="#3f87af" id="path10"/>
+  <text font-family="Helvetica" font-weight="bold" font-size="56.8889px" x="95.999992" y="95.781815" fill="#8c96a0" id="text10">Clean</text>
+  <text font-family="Helvetica" font-weight="bold" font-size="56.8889px" x="95.111107" y="94.892929" fill="#8c96a0" id="text11">Clean</text>
+  <text font-family="Helvetica" font-weight="bold" font-size="56.8889px" x="94.222221" y="94.004051" fill="#8c96a0" id="text12">Clean</text>
+  <text font-family="Helvetica" font-weight="bold" font-size="56.8889px" x="93.333336" y="93.11515" fill="#8c96a0" id="text13">Clean</text>
+  <text font-family="Helvetica" font-weight="bold" font-size="56.8889px" x="92.44445" y="92.226265" fill="#3f87af" id="text14">Clean</text>
+</svg>
