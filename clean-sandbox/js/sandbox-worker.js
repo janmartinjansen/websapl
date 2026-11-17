@@ -734,6 +734,33 @@ async function runAbcTextProbe (abcText,name,heapMB)
 	}
 }
 
+/* When the compiler has to compile the whole standard environment in one
+ * session (the first compile after the library was installed), it sometimes
+ * reports a parse error in a library .dcl it has already read once in that
+ * session, e.g. the last line of _SystemDynamic.dcl while compiling StdEnum.
+ * The file is read correctly, and the error moves between runs; the original
+ * sandbox has the same problem. A second compile, which only compiles what is
+ * still out of date, succeeds. So: on a parse error in a library .dcl, compile
+ * once more (the page clears the output of the first attempt). */
+function compileWithRetry (paths,done,attempt=1)
+{
+	let log='';
+	const out=c_compiler.clean_stdout, err=c_compiler.clean_stderr;
+	c_compiler.clean_stdout=s => { log+=s; out (s); };
+	c_compiler.clean_stderr=s => { log+=s; err (s); };
+	sandbox.compile (paths,'Sandbox',ok => {
+		c_compiler.clean_stdout=out;
+		c_compiler.clean_stderr=err;
+		if (!ok && attempt<3 && /Parse error \[(?!Sandbox\.)[^,\]]+\.dcl,/.test (log)){
+			console.warn ('compile: parse error in a library module, compiling again');
+			postMessage ({compile_retry: {attempt: attempt+1}});
+			/* not from inside this callback, which may run within the interpreter */
+			setTimeout (() => compileWithRetry (paths,done,attempt+1),0);
+		} else
+			done (ok);
+	});
+}
+
 onmessage=function (e) {
 	e=e.data;
 	if ('abc_probe' in e)
@@ -751,7 +778,7 @@ onmessage=function (e) {
 	if ('compile' in e)
 		c_compiler.FS.syncfs (true,() => {
 			c_compiler.FS.writeFile ('/clean/src/Sandbox.icl',e.compile.module);
-			sandbox.compile (e.compile.paths,'Sandbox',ok => {
+			compileWithRetry (e.compile.paths,ok => {
 				let sandboxAbc=null;
 				if (ok){
 					try {

@@ -338,6 +338,13 @@ primes =:
 			}
 			if ('add_package_done' in e)
 				sandbox.add_package_callback (e.add_package_done);
+			if ('compile_retry' in e){
+				/* the worker compiles again after a spurious parse error in a library module */
+				window.clearTimeout (sandbox.output_timer);
+				sandbox.output_timer=null;
+				sandbox.output_buffer='';
+				sandbox.output.innerHTML='';
+			}
 			if ('compile_done' in e){
 				sandbox.flush_output();
 				if (e.compile_done.abc)
