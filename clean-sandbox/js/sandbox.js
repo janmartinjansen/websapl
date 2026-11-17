@@ -319,7 +319,10 @@ primes =:
 				sandbox.stdout (e.stdout);
 			if ('result' in e)
 				sandbox.stdout (e.result);
-			if ('stderr' in e)
+			/* bcgen/bclink warn about the file I/O instructions of StdFile that the
+			 * interpreter in the browser does not support; harmless unless a
+			 * program opens files, so not shown */
+			if ('stderr' in e && !/^Warning: (some instructions require file I\/O|instruction \w+ is not supported by the interpreter)/.test (e.stderr))
 				sandbox.stderr (e.stderr);
 			if ('program_stdout' in e)
 				sandbox.program_stdout (e.program_stdout);

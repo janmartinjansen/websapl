@@ -555,7 +555,11 @@ function call_backend_main (M,args)
 	M.HEAPU32[(argv>>2)+args.length]=0;
 	let rc;
 	try {
-		rc=M.clean_call_main (args.length,argv);
+		/* clean_call_main itself, not M.clean_call_main: for c_bcgen that is
+		 * bcgen_call_main_with_abcopt, which would run abcopt over every
+		 * runtime module (~10 s the first time) and a second time over the
+		 * program, which the Sapl route has already optimised itself */
+		rc=clean_call_main.call (M,args.length,argv);
 	} finally {
 		ptrs.forEach (p => M._free (p));
 		M._free (argv);
