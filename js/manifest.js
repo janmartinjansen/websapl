@@ -1921,7 +1921,7 @@ window.WEBSAPL_TREE = [
         "path": "clean-sandbox/sapl-jmvm-logo.svg",
         "type": "file",
         "ext": ".svg",
-        "size": 2743,
+        "size": 2671,
         "isBinary": false
       }
     ],
@@ -4777,7 +4777,7 @@ window.WEBSAPL_TREE = [
         "path": "top2026/presentatie.spp",
         "type": "file",
         "ext": ".spp",
-        "size": 26630,
+        "size": 26530,
         "isBinary": false
       },
       {
@@ -4817,7 +4817,7 @@ window.WEBSAPL_TREE = [
         "path": "top2026/stijl.css",
         "type": "file",
         "ext": ".css",
-        "size": 5052,
+        "size": 4972,
         "isBinary": false
       }
     ],

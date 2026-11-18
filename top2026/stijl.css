@@ -26,20 +26,17 @@ body.present.first-slide .md-view { text-align: center; padding-top: 12vh; }
 body.present.first-slide .md-view h1 { font-size: 64px; }
 /* Titel-logo (werkt zowel in gewone notebookweergave als in presentatiemodus). */
 .title-logo { margin-bottom: 18px; }
-.title-logo img { height: 56px; width: auto; }
-.title-logo .logo-light { display: none; }
-.title-logo .logo-dark { display: inline-block; }
-[data-theme="light"] .title-logo .logo-dark { display: none; }
-[data-theme="light"] .title-logo .logo-light { display: inline-block; }
+.title-logo img { height: 56px; width: auto; aspect-ratio: 390 / 66; display: inline-block; }
+html:not([data-theme="light"]) .title-logo img { content: url("sapl-jmvm-banner-dark.svg"); }
 body.present .title-logo { margin-bottom: 28px; }
-body.present .title-logo img { height: 74px; }
-/* Compact Sapl → JMVM merkje links in de onderste banner. */
+body.present .title-logo img { height: 64px; }
+/* Heel klein Sapl → JMVM merkje links in de onderste banner op iedere dia. */
 body.present.has-banner:not(.first-slide) .present-banner .pb-l {
-  display: inline-flex; align-items: center; gap: 12px; min-width: 0;
+  display: inline-flex; align-items: center; gap: 10px; min-width: 0;
 }
 body.present.has-banner:not(.first-slide) .present-banner .pb-l::before {
   content: ""; display: inline-block; flex: 0 0 auto;
-  height: 24px; aspect-ratio: 330 / 56;
+  width: 118px; height: 20px;
   background: url("sapl-jmvm-banner-compact-dark.svg") no-repeat center / contain;
 }
 [data-theme="light"] body.present.has-banner:not(.first-slide) .present-banner .pb-l::before {
