@@ -17,7 +17,7 @@
 
 	<!-- Sandbox JavaScript -->
 	<script type="text/javascript" src="js/chapters.js"></script>
-	<script type="text/javascript" src="js/sandbox.js?v=2"></script>
+	<script type="text/javascript" src="js/sandbox.js?v=3"></script>
 
 	<!-- Monaco editor -->
 	<link rel="stylesheet" data-name="vs/editor/editor.main" href="vendor/monaco-editor/min/vs/editor/editor.main.css"/>
@@ -33,7 +33,7 @@
 	<link rel="stylesheet" href="vendor/@fortawesome/fontawesome-free/css/fontawesome.min.css">
 	<link rel="stylesheet" href="vendor/@fortawesome/fontawesome-free/css/solid.min.css">
 
-	<link rel="stylesheet" href="css/sandbox.css?v=3"/>
+	<link rel="stylesheet" href="css/sandbox.css?v=4"/>
 </head>
 <body class="h-100 overflow-hidden">
 	<div class="container-fluid h-100 px-0 d-flex flex-column">
@@ -113,7 +113,7 @@
 						<button class="nav-link py-1 px-2 small" id="tab-jmvm-btn" data-bs-toggle="tab" data-bs-target="#tab-jmvm" type="button" role="tab">JMVM</button>
 					</li>
 					<li class="nav-item ms-auto d-flex align-items-center pb-1">
-						<button id="btn-tools-fullscreen" type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" title="Volledig scherm (Esc)" aria-label="Volledig scherm" aria-pressed="false">
+						<button id="btn-tools-fullscreen" type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" title="Full screen (Esc)" aria-label="Full screen" aria-pressed="false">
 							<i class="fa-solid fa-expand"></i>
 						</button>
 					</li>
@@ -149,7 +149,7 @@
 						<pre id="abc-view" class="position-absolute w-100 m-0 p-2 small"></pre>
 					</div>
 					<div class="tab-pane fade flex-grow-1 position-relative h-100 overflow-hidden" id="tab-retag" role="tabpanel">
-						<button id="btn-retag-fullscreen" type="button" class="btn btn-sm btn-outline-secondary" title="Volledig scherm (Esc)" aria-label="Volledig scherm" aria-pressed="false">
+						<button id="btn-retag-fullscreen" type="button" class="btn btn-sm btn-outline-secondary" title="Full screen (Esc)" aria-label="Full screen" aria-pressed="false">
 							<i class="fa-solid fa-expand"></i>
 						</button>
 						<div class="h-100 w-100 position-relative overflow-auto">
@@ -157,7 +157,7 @@
 						</div>
 					</div>
 					<div class="tab-pane fade flex-grow-1 position-relative h-100 overflow-hidden" id="tab-jmvm" role="tabpanel">
-						<button id="btn-jmvm-fullscreen" type="button" class="btn btn-sm btn-outline-secondary" title="Volledig scherm (Esc)" aria-label="Volledig scherm" aria-pressed="false">
+						<button id="btn-jmvm-fullscreen" type="button" class="btn btn-sm btn-outline-secondary" title="Full screen (Esc)" aria-label="Full screen" aria-pressed="false">
 							<i class="fa-solid fa-expand"></i>
 						</button>
 						<div class="h-100 w-100 position-relative overflow-auto">
@@ -167,14 +167,14 @@
 				</div>
 				<div class="row border-top">
 					<div class="col m-2 d-flex align-items-center gap-2 flex-wrap">
-						<select id="lang-select" class="form-select form-select-sm w-auto" title="Taal van het programma">
+						<select id="lang-select" class="form-select form-select-sm w-auto" title="Program language">
 							<option value="clean" selected>Clean</option>
 							<option value="sapl">Sapl</option>
 						</select>
-						<select id="engine-select" class="form-select form-select-sm w-auto" title="Kies execution engine">
+						<select id="engine-select" class="form-select form-select-sm w-auto" title="Select execution engine">
 							<option value="abc">ABC Interpreter</option>
 							<option value="jmvm">JMVM (abc2retag)</option>
-							<option value="both" selected>Vergelijk (ABC + JMVM)</option>
+							<option value="both" selected>Compare (ABC + JMVM)</option>
 						</select>
 						<button id="btn-compile-run" type="button" class="btn btn-sm btn-primary" disabled title="Compile and run the program">Compile &amp; run <i id="compile-busy" class="fa-solid fa-compact-disc fa-spin"></i></button>
 					</div>
@@ -298,8 +298,8 @@
 			col_tools.style.paddingTop=full ? '0' : '';
 			for (const btn of [btn_tools_fs, btn_retag_fs, btn_jmvm_fs]){
 				btn.setAttribute ('aria-pressed', String (full));
-				btn.title=full ? 'Verklein paneel (Esc)' : 'Volledig scherm (Esc)';
-				btn.setAttribute ('aria-label', full ? 'Verklein paneel' : 'Volledig scherm');
+				btn.title=full ? 'Exit full screen (Esc)' : 'Full screen (Esc)';
+				btn.setAttribute ('aria-label', full ? 'Exit full screen' : 'Full screen');
 				const icon=btn.querySelector ('i');
 				icon.classList.toggle ('fa-expand', !full);
 				icon.classList.toggle ('fa-compress', full);

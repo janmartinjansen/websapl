@@ -307,7 +307,7 @@ async function jvbToJmvmText (progJvb)
 		status=(e && typeof e.status==='number') ? e.status : 1;
 	}
 	if (status!==0 || !tool.FS.analyzePath ('/out.jmvm').exists)
-		throw new Error (log.join ('\n') || 'jvb2jmvm mislukt');
+		throw new Error (log.join ('\n') || 'jvb2jmvm failed');
 	return tool.FS.readFile ('/out.jmvm',{encoding: 'utf8'});
 }
 
@@ -320,13 +320,13 @@ async function ensureJmvmLoaded ()
 	if (!abc2retagJvb){
 		const res=await fetch ('/engine/abc2retag.jvb');
 		if (!res.ok)
-			throw new Error ('Kon /engine/abc2retag.jvb niet laden ('+res.status+')');
+			throw new Error ('Failed to load /engine/abc2retag.jvb ('+res.status+')');
 		abc2retagJvb=new Uint8Array (await res.arrayBuffer());
 	}
 	if (!retagcompJvb){
 		const res=await fetch ('/engine/retagcomp.jvb');
 		if (!res.ok)
-			throw new Error ('Kon /engine/retagcomp.jvb niet laden ('+res.status+')');
+			throw new Error ('Failed to load /engine/retagcomp.jvb ('+res.status+')');
 		retagcompJvb=new Uint8Array (await res.arrayBuffer());
 	}
 	if (!jmvmModule)
@@ -340,7 +340,7 @@ async function ensureSaplcompLoaded ()
 	if (!saplcompJvb){
 		const res=await fetch ('/engine/saplcomp.jvb');
 		if (!res.ok)
-			throw new Error ('Kon /engine/saplcomp.jvb niet laden ('+res.status+')');
+			throw new Error ('Failed to load /engine/saplcomp.jvb ('+res.status+')');
 		saplcompJvb=new Uint8Array (await res.arrayBuffer());
 	}
 }
@@ -388,7 +388,8 @@ function collectAbcFiles (fs, dir, out)
  * (shared by the Clean route via abc2retag and the Sapl route via gen1). */
 async function runJvbOnJmvm (progJvb,tTotal,extra={})
 {
-		postMessage ({jmvm_status: 'jmvm.wasm starten...'});
+		const {retagSource,...doneExtra}=extra;
+		postMessage ({jmvm_status: 'Starting jmvm.wasm...'});
 
 		const outBuf=[];
 		const errBuf=[];
@@ -398,7 +399,7 @@ async function runJvbOnJmvm (progJvb,tTotal,extra={})
 			stderr: (c) => errBuf.push (String.fromCharCode (c))
 		});
 		runInst.FS.writeFile ('/tmp/Sandbox.jvb',progJvb);
-		postMessage ({jmvm_status: 'Uitvoeren op jmvm.wasm...'});
+		postMessage ({jmvm_status: 'Running on jmvm.wasm...'});
 
 		const tExec=performance.now();
 		try {
@@ -417,6 +418,19 @@ async function runJvbOnJmvm (progJvb,tTotal,extra={})
 			console.warn ('jvb2jmvm:',e);
 		}
 
+		if (retagSource){
+			try {
+				const r=await runJvbTool (saplcompJvb,'/tmp/in.cfp\n/tmp/prog.retag\nretag\n',
+					{'/tmp/in.cfp': stripSaplComments (retagSource)});
+				if (r.fs.analyzePath ('/tmp/prog.retag').exists){
+					const retag=new TextDecoder().decode (r.fs.readFile ('/tmp/prog.retag'));
+					postMessage ({retag_ready: {retag}});
+				}
+			} catch (e) {
+				console.warn ('gen1 retag:',e);
+			}
+		}
+
 		postMessage ({
 			jmvm_done: {
 				ok: true,
@@ -425,7 +439,7 @@ async function runJvbOnJmvm (progJvb,tTotal,extra={})
 				execMs,
 				totalMs,
 				jvbSize: progJvb.length,
-				...extra
+				...doneExtra
 			}
 		});
 }
@@ -439,9 +453,9 @@ async function runJmvmPipeline ()
 		const abcFiles={};
 		collectAbcFiles (c_compiler.FS,'/clean',abcFiles);
 		if (!abcFiles['Sandbox.abc'])
-			throw new Error ('Sandbox.abc niet gevonden in virtueel bestandssysteem.');
+			throw new Error ('Sandbox.abc not found in virtual file system.');
 
-		postMessage ({jmvm_status: 'abc2retag.jvb uitvoeren...'});
+		postMessage ({jmvm_status: 'Running abc2retag.jvb...'});
 		const abcStdin='/tmp/Sandbox.cfp_retag\n/tmp/abc/Sandbox.abc\n/tmp/abc\n';
 		let abcStdinIdx=0;
 		const abcLog=[];
@@ -460,13 +474,13 @@ async function runJmvmPipeline ()
 		} catch (e) {}
 
 		if (!abcInst.FS.analyzePath ('/tmp/Sandbox.cfp_retag').exists)
-			throw new Error ('abc2retag mislukt:\n'+abcLog.join (''));
+			throw new Error ('abc2retag failed:\n'+abcLog.join (''));
 
 		const retagText=new TextDecoder().decode (abcInst.FS.readFile ('/tmp/Sandbox.cfp_retag'));
 		abcInst=null; /* each jmvm.wasm instance holds ~690 MB: let the GC take it before the next one */
 
 		postMessage ({retag_ready: {abc: abcFiles['Sandbox.abc'], retag: retagText}});
-		postMessage ({jmvm_status: 'retagcomp.jvb uitvoeren...'});
+		postMessage ({jmvm_status: 'Running retagcomp.jvb...'});
 
 		const stdinText='/tmp/Sandbox.cfp_retag\n/tmp/Sandbox.jvb\n';
 		let stdinIdx=0;
@@ -483,7 +497,7 @@ async function runJmvmPipeline ()
 		} catch (e) {}
 
 		if (!compInst.FS.analyzePath ('/tmp/Sandbox.jvb').exists)
-			throw new Error ('retagcomp mislukt:\n'+compLog.join (''));
+			throw new Error ('retagcomp failed:\n'+compLog.join (''));
 
 		const progJvb=compInst.FS.readFile ('/tmp/Sandbox.jvb');
 		compInst=null;
@@ -525,14 +539,14 @@ function stripSaplComments (source)
 	}).join ('\n');
 }
 
-async function runSaplPipeline (source)
+async function runSaplPipeline (source,emitRetag=false)
 {
 	const tTotal=performance.now();
 	try {
 		if (/^\s*#import\s/m.test (source))
-			throw new Error ('#import wordt hier niet ondersteund: zet alles in één bestand.');
+			throw new Error ('#import is not supported here: put everything in a single file.');
 		await ensureSaplcompLoaded();
-		postMessage ({jmvm_status: 'gen1 (saplcomp.jvb) compileert...'});
+		postMessage ({jmvm_status: 'Compiling with gen1 (saplcomp.jvb)...'});
 		const stdinText='/tmp/in.cfp\n/tmp/Sandbox.jvb\njvb\n';
 		let stdinIdx=0;
 		const compLog=[];
@@ -551,11 +565,11 @@ async function runSaplPipeline (source)
 		if (!compInst.FS.analyzePath ('/tmp/Sandbox.jvb').exists){
 			/* Only the compiler's own messages, not the VM's start/stop lines */
 			const msg=compLog.join ('').split ('\n').filter (l => !/^(VM starting|Reading file|execution started|res: |stop$|Elapsed time|nr gc|calls:|creates:|\d+ instr read)/.test (l)).join ('\n').trim();
-			throw new Error ('gen1: compileren mislukt\n'+msg);
+			throw new Error ('gen1: compilation failed\n'+msg);
 		}
 		const progJvb=compInst.FS.readFile ('/tmp/Sandbox.jvb');
 		compInst=null;
-		await runJvbOnJmvm (progJvb,tTotal,{compileMs});
+		await runJvbOnJmvm (progJvb,tTotal,emitRetag ? {compileMs, retagSource: source} : {compileMs});
 	} catch (e) {
 		postMessage ({
 			jmvm_done: {
@@ -616,7 +630,7 @@ function bcgen_file (abcPath,bcPath)
 	try { c_bcgen.FS.unlink (bcPath); } catch (e) {}
 	const rc=call_backend_main (c_bcgen,['/bcgen',abcPath,'-o',bcPath]);
 	if (!c_bcgen.FS.analyzePath (bcPath).exists)
-		throw new Error ('bcgen mislukt voor '+abcPath+' (rc '+rc+')');
+		throw new Error ('bcgen failed for '+abcPath+' (rc '+rc+')');
 	return c_bcgen.FS.readFile (bcPath);
 }
 
@@ -631,12 +645,12 @@ async function ensureSaplRt ()
 	for (const m of ['_system',...SAPL_RT_MODULES]){
 		const res=await fetch ('/engine/abc_rt/'+m+'.abc');
 		if (!res.ok)
-			throw new Error ('Kon /engine/abc_rt/'+m+'.abc niet laden');
+			throw new Error ('Failed to load /engine/abc_rt/'+m+'.abc');
 		c_bcgen.FS.writeFile ('/sapl/rt/'+m+'.abc',new Uint8Array (await res.arrayBuffer()));
 		rt[m]=bcgen_file ('/sapl/rt/'+m+'.abc','/sapl/rt/'+m+'.bc');
 	}
 	saplRtBc=rt;
-	console.log ('sapl runtime-modules gebouwd: '+Math.round (performance.now()-t0)+' ms');
+	console.log ('sapl runtime modules built: '+Math.round (performance.now()-t0)+' ms');
 }
 
 /* ABC text -> {pbc: path in c_bcprelink.FS, ms} */
@@ -665,14 +679,14 @@ async function saplAbcToPbc (abcText,name)
 	try { c_bclink.FS.unlink (lnk); } catch (e) {}
 	const rc1=call_backend_main (c_bclink,['/bclink',...inputs,'-o',lnk]);
 	if (!c_bclink.FS.analyzePath (lnk).exists)
-		throw new Error ('bclink mislukt (rc '+rc1+')');
+		throw new Error ('bclink failed (rc '+rc1+')');
 	const tLink=performance.now();
 	c_bcprelink.FS.writeFile (lnk,c_bclink.FS.readFile (lnk));
 	const pbc='/sapl/'+name+'.pbc';
 	try { c_bcprelink.FS.unlink (pbc); } catch (e) {}
 	const rc2=call_backend_main (c_bcprelink,['/bcprelink',lnk,'-o',pbc]);
 	if (!c_bcprelink.FS.analyzePath (pbc).exists)
-		throw new Error ('bcprelink mislukt (rc '+rc2+')');
+		throw new Error ('bcprelink failed (rc '+rc2+')');
 	const r=Math.round;
 	const now=performance.now();
 	console.log ('sapl abc: runtime '+r (tRt-t0)+' ms, bcgen '+r (tGen-tRt)+' ms, bclink '+r (tLink-tGen)+' ms, bcprelink '+r (now-tLink)+' ms');
@@ -715,12 +729,12 @@ async function runSaplAbcPipeline (source)
 	const t0=performance.now();
 	try {
 		if (/^\s*#import\s/m.test (source))
-			throw new Error ('#import wordt hier niet ondersteund: zet alles in één bestand.');
+			throw new Error ('#import is not supported here: put everything in a single file.');
 		await ensureSaplcompLoaded();
 		if (!sapl2abcJvb){
 			const res=await fetch ('/engine/sapl2abc.jvb');
 			if (!res.ok)
-				throw new Error ('Kon /engine/sapl2abc.jvb niet laden ('+res.status+')');
+				throw new Error ('Failed to load /engine/sapl2abc.jvb ('+res.status+')');
 			sapl2abcJvb=new Uint8Array (await res.arrayBuffer());
 		}
 		if (abcopt===null)
@@ -731,7 +745,7 @@ async function runSaplAbcPipeline (source)
 		let r=await runJvbTool (saplcompJvb,'/tmp/in.cfp\n/tmp/prog.retag\nretag\n',
 			{'/tmp/in.cfp': stripSaplComments (source)});
 		if (!r.fs.analyzePath ('/tmp/prog.retag').exists)
-			throw new Error ('gen1: compileren mislukt\n'+toolMessages (r.log));
+			throw new Error ('gen1: compilation failed\n'+toolMessages (r.log));
 		const retag=new TextDecoder().decode (r.fs.readFile ('/tmp/prog.retag'));
 		r=null;
 		const gen1Ms=Math.round (performance.now()-t);
@@ -741,7 +755,7 @@ async function runSaplAbcPipeline (source)
 		r=await runJvbTool (sapl2abcJvb,'/tmp/prog.retag\n/tmp/prog.abc\n'+SAPL_ABC_MODULE+'\n'+SAPL_ABC_OPT+'\n',
 			{'/tmp/prog.retag': retag});
 		if (!r.fs.analyzePath ('/tmp/prog.abc').exists)
-			throw new Error ('sapl2abc mislukt\n'+toolMessages (r.log));
+			throw new Error ('sapl2abc failed\n'+toolMessages (r.log));
 		const abcRaw=r.fs.readFile ('/tmp/prog.abc');
 		r=null;
 		const s2aMs=Math.round (performance.now()-t);
@@ -831,11 +845,11 @@ onmessage=function (e) {
 	if ('sapl_run' in e){
 		const engine=e.sapl_run.engine || 'jmvm';
 		if (engine==='jmvm')
-			runSaplPipeline (e.sapl_run.source);
+			runSaplPipeline (e.sapl_run.source,true);
 		else if (engine==='abc')
 			runSaplAbcPipeline (e.sapl_run.source);
 		else if (engine==='both')
-			runSaplAbcPipeline (e.sapl_run.source).then (() => runSaplPipeline (e.sapl_run.source));
+			runSaplAbcPipeline (e.sapl_run.source).then (() => runSaplPipeline (e.sapl_run.source,false));
 	}
 	if ('run' in e){
 		const engine=e.run.engine || 'abc';

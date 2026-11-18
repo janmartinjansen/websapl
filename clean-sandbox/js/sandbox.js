@@ -315,7 +315,7 @@ primes =:
 			init_resolve=resolve;
 			init_reject=reject;
 		});
-		sandbox.worker=new Worker ('js/sandbox-worker.js?v=2');
+		sandbox.worker=new Worker ('js/sandbox-worker.js?v=3');
 			sandbox.worker.onmessage=function (e) {
 			e=e.data;
 			if ('stdout' in e)
@@ -367,7 +367,7 @@ primes =:
 				sandbox.abc_timing.innerText=e.abc_status;
 			if ('abc_build' in e){
 				const b=e.abc_build;
-				sandbox.abc_build_text='vertalen '+b.totalMs+' ms';
+				sandbox.abc_build_text='compile '+b.totalMs+' ms';
 				sandbox.abc_timing.title='gen1 '+b.gen1Ms+' ms, sapl2abc '+b.s2aMs+' ms, abcopt '+b.optMs+' ms, bcgen/bclink/bcprelink '+b.linkMs+' ms';
 				sandbox.abc_timing.innerText=sandbox.abc_build_text;
 				sandbox.flush_output();
@@ -375,7 +375,7 @@ primes =:
 			}
 			if ('abc_done' in e){
 				if (e.abc_done.ok===false && e.abc_done.error){
-					sandbox.abc_timing.innerText='fout';
+					sandbox.abc_timing.innerText='error';
 					sandbox.stderr (e.abc_done.error+'\n');
 					sandbox.flush_output();
 				} else
@@ -386,6 +386,10 @@ primes =:
 				}
 				sandbox.abc_build_text=null;
 				if (sandbox.engine_select.value==='abc'){
+					if (sandbox.jmvm_view && !sandbox.jmvm_view.innerText.trim())
+						sandbox.jmvm_view.innerText='(not generated when running on the ABC interpreter only — select JMVM or Compare)';
+					if (!sandbox.retag_view.innerText.trim())
+						sandbox.retag_view.innerText='(not generated when running Clean on the ABC interpreter only — select JMVM or Compare)';
 					sandbox.btn_compile_run.disabled=false;
 					sandbox.compile_indicator.style.display='none';
 				}
@@ -405,7 +409,7 @@ primes =:
 				sandbox.btn_compile_run.disabled=false;
 				sandbox.compile_indicator.style.display='none';
 				if (e.jmvm_done.ok){
-					sandbox.jmvm_timing.innerText=(e.jmvm_done.compileMs!==undefined ? 'gen1 '+e.jmvm_done.compileMs+' ms, ' : 'vertalen '+(e.jmvm_done.totalMs-e.jmvm_done.execMs)+' ms, ')+'exec '+e.jmvm_done.execMs+' ms';
+					sandbox.jmvm_timing.innerText=(e.jmvm_done.compileMs!==undefined ? 'gen1 '+e.jmvm_done.compileMs+' ms, ' : 'compile '+(e.jmvm_done.totalMs-e.jmvm_done.execMs)+' ms, ')+'exec '+e.jmvm_done.execMs+' ms';
 					/* Only the program's own output: the VM's start/stop lines and
 					 * statistics go to the tooltip of the timing; "res: v" becomes v,
 					 * except for a Clean Start that returns the World (the ABC
@@ -443,15 +447,21 @@ primes =:
 						} else
 							lines.push (l);
 					});
-					sandbox.jmvm_timing.title=['totaal '+e.jmvm_done.totalMs+' ms, '+e.jmvm_done.jvbSize+' bytes bytecode (.jvb)',...stats].join ('\n');
+					sandbox.jmvm_timing.title=['total '+e.jmvm_done.totalMs+' ms, '+e.jmvm_done.jvbSize+' bytes bytecode (.jvb)',...stats].join ('\n');
 					sandbox.jmvm_output.innerText=lines.join ('\n').replace (/^\n+/,'').replace (/\n+$/,'\n');
 				} else {
-					sandbox.jmvm_timing.innerText='fout ('+e.jmvm_done.totalMs+' ms)';
+					sandbox.jmvm_timing.innerText='error ('+e.jmvm_done.totalMs+' ms)';
 					const errSpan=document.createElement ('span');
 					errSpan.className='err';
-					errSpan.innerText=e.jmvm_done.error || 'Onbekende fout';
+					errSpan.innerText=e.jmvm_done.error || 'Unknown error';
 					sandbox.jmvm_output.innerHTML='';
 					sandbox.jmvm_output.appendChild (errSpan);
+				}
+				if (sandbox.engine_select.value==='jmvm'){
+					if (!sandbox.abc_view.innerText.trim())
+						sandbox.abc_view.innerText='(not generated for Sapl via gen1 — select ABC Interpreter or Compare)';
+					if (!sandbox.retag_view.innerText.trim())
+						sandbox.retag_view.innerText='(not available)';
 				}
 			}
 		};
