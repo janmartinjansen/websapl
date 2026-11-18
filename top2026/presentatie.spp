@@ -352,17 +352,19 @@ D.animated 40 figStart figStep figView
 // - **Hidden mutable state**: a result depends on the order in which cells happened to run.
 // - Change something early on: **Restart & Run All**.
 // - Large or infinite data is computed **up front**, whether you look at it or not.
-// - A **kernel on a server** or in a container.
+// - Widgets: **callbacks that change global state**.
+// - A **kernel on a server** or in a container; a restart loses every result.
 //
 // </div>
 // <div>
 //
 // **Sapl notebooks**
 //
-// - **Pure**: a cell is a function of its inputs; after a change only the cells that depend on it run again.
-// - **Lazy**: a definition costs nothing until a cell needs it; infinite lists are normal.
-// - **Shared**: a value computed once (`=:`) is reused by every later cell.
-// - **In the tab**: compile, link and install a cell in **6–8&nbsp;ms**; no server, works offline.
+// - **Pure**: a cell is a function of its inputs; a change reruns only the cells that depend on it.
+// - **Lazy**: a definition costs nothing until needed; infinite lists are normal.
+// - **Shared**: a `=:` value is computed once, for every cell.
+// - **Interactive cells: the Elm architecture**: a model, a pure `update`, a `view`.
+// - **In the tab**: a cell in **6–8&nbsp;ms**, no server, offline; values survive a reload.
 //
 // </div>
 // </div>
