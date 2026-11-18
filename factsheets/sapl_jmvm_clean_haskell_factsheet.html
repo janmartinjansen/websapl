@@ -596,7 +596,7 @@
         The system unites pure lazy functional programming languages across four tiers: 
         <strong>Frontends</strong> (Haskell Lite, MicroHs, Sapl+, Core Sapl, and Clean), 
         <strong>Intermediate Representations</strong> (Sapl+ AST, Core Sapl, Stage 4 Retag IR, and Clean ABC code), 
-        <strong>Universal Two-Way Bridges</strong> (<code>sapl_naar_abc.py</code> and the newly validated <code>abc2retag.py</code> symbolic decompiler), 
+        <strong>Universal Two-Way Bridges</strong> (<code>sapl2abc</code> and the newly validated <code>abc2retag</code> symbolic decompiler), 
         <strong>Virtual & Native Backends</strong> (JMVM Native, WebSapl WebAssembly, Clean <code>cg</code>, Clean ABC-Interpreter, and LLVM), 
         and <strong>Interactive Environments</strong> (WebSapl Browser Notebooks, Desktop Workbench, and REPLs).
       </p>
@@ -717,7 +717,7 @@
           <g transform="translate(545, 65)">
             <rect width="180" height="62" rx="6" fill="var(--node-bg)" stroke="#f59e0b" stroke-width="2" filter="url(#card-shadow)" />
             <text x="12" y="20" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#f59e0b">sapl2c (Sapl &rarr; C) ★</text>
-            <text x="12" y="36" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">sapl_naar_c.py &rarr; .c + clang -O2</text>
+            <text x="12" y="36" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">sapl2c.cfp (Sapl) &rarr; .c + clang -O2</text>
             <text x="12" y="52" font-family="-apple-system, sans-serif" font-size="9.5" fill="#10b981" font-weight="600">0.33&times; runfast &bull; 244 ms gen1</text>
           </g>
 
@@ -733,7 +733,7 @@
           <g transform="translate(545, 260)">
             <rect width="180" height="55" rx="6" fill="var(--node-bg)" stroke="#f59e0b" stroke-width="1.5" filter="url(#card-shadow)" />
             <text x="12" y="20" font-family="-apple-system, sans-serif" font-size="11.5" font-weight="700" fill="#f59e0b">Retag &rarr; ABC</text>
-            <text x="12" y="36" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">sapl_naar_abc.py</text>
+            <text x="12" y="36" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">sapl2abc (in Sapl)</text>
             <text x="12" y="48" font-family="-apple-system, sans-serif" font-size="9.5" fill="var(--text-secondary)">Emits Clean .abc</text>
           </g>
 
@@ -741,7 +741,7 @@
           <g transform="translate(545, 335)">
             <rect width="180" height="65" rx="6" fill="var(--node-bg)" stroke="#3b82f6" stroke-width="2" filter="url(#card-shadow)" />
             <text x="12" y="20" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#3b82f6">ABC &rarr; Retag Decompiler ★</text>
-            <text x="12" y="36" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">abc2retag.py (Symbolic)</text>
+            <text x="12" y="36" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">abc2retag (Sapl, symbolic)</text>
             <text x="12" y="50" font-family="-apple-system, sans-serif" font-size="9.5" fill="#10b981" font-weight="600">Evaporates A/B Stacks (-95% ops)</text>
             <text x="12" y="62" font-family="-apple-system, sans-serif" font-size="9" fill="var(--text-secondary)">Compiles via compile-retag</text>
           </g>
@@ -854,7 +854,7 @@
         <strong>The Bidirectional Highway:</strong> The system supports seamless translation in <em>both directions</em>:
         <ul style="margin-top: 6px;">
           <li><strong>Sapl &rarr; Clean ABC:</strong> Compile Sapl/Haskell Lite to Clean ABC to leverage Clean's native assembly generator <code>cg</code> (5×–7× faster than bytecode).</li>
-          <li><strong>Clean ABC &rarr; Retag &rarr; JMVM:</strong> Clean programs can be compiled by Clean's compiler to <code>.opt.abc</code>, symbolically decompiled by <code>abc2retag.py</code> to Stage-4 Retag AST, and executed on the JMVM and inside browser WebSapl with zero server overhead!</li>
+          <li><strong>Clean ABC &rarr; Retag &rarr; JMVM:</strong> Clean programs can be compiled by Clean's compiler to <code>.opt.abc</code>, symbolically decompiled by <code>abc2retag</code> to Stage-4 Retag AST, and executed on the JMVM and inside browser WebSapl with zero server overhead!</li>
         </ul>
       </div>
     </section>
@@ -1184,7 +1184,7 @@ bash websapl/tools/build_wasm.sh
             <div class="flow-step-box highlight-amber">
               <div class="flow-step-num">Step 3</div>
               <div class="flow-step-name">Retag-to-ABC</div>
-              <div class="flow-step-tool">sapl_naar_abc.py</div>
+              <div class="flow-step-tool">sapl2abc</div>
             </div>
             <div class="flow-arrow">&rarr;</div>
             <div class="flow-step-box">
@@ -1211,7 +1211,8 @@ bash websapl/tools/build_wasm.sh
           </div>
           <pre class="code-block"><span class="code-comment"># Generate Clean ABC from Sapl program via retag:</span>
 ./compile program.cfp --emit=retag
-python3 experiments/abc_backend/sapl_naar_abc.py program.retag.txt program > program.abc
+./compile sapl_compiler/sapl2abc.cfp      <span class="code-comment"># once: builds sapl2abc.jmvm</span>
+printf 'program.retag.txt\nprogram.abc\nprogram\nint,case,scrut,velden,bool,repl,lits\n' | ./runfast sapl_compiler/sapl2abc.jmvm
 
 <span class="code-comment"># Compile to native binary via Clean's cg and link with Clean runtime:</span>
 cg program.abc -o program.o
@@ -1228,7 +1229,7 @@ bcgen program.abc && bclink program.abc.o -o program.bc && abci program.bc</pre>
           <h3>Pipeline E: Clean ABC &rarr; Stage-4 Retag &rarr; JMVM Bytecode ★</h3>
           <p>
             The newly completed reverse bridge! Compiles genuine Clean programs into Clean ABC bytecode, 
-            then uses the symbolic decompiler <code>abc2retag.py</code> to <strong>completely evaporate ABC stack shuffling</strong> 
+            then uses the symbolic decompiler <code>abc2retag</code> to <strong>completely evaporate ABC stack shuffling</strong> 
             and reconstruct clean Stage-4 Core AST (<code>.cfp_retag</code>) for execution on the JMVM and inside browser WebSapl!
           </p>
           <div class="flow-steps">
@@ -1247,7 +1248,7 @@ bcgen program.abc && bclink program.abc.o -o program.bc && abci program.bc</pre>
             <div class="flow-step-box highlight-blue">
               <div class="flow-step-num">Step 3</div>
               <div class="flow-step-name">Symbolic Decompiler</div>
-              <div class="flow-step-tool">abc2retag.py</div>
+              <div class="flow-step-tool">abc2retag</div>
             </div>
             <div class="flow-arrow">&rarr;</div>
             <div class="flow-step-box highlight-purple">
@@ -1272,17 +1273,17 @@ bcgen program.abc && bclink program.abc.o -o program.bc && abci program.bc</pre>
           <div class="highlight-box emerald">
             <strong>Why abc2retag beats direct stack emulation (abc2jmvm.py):</strong>
             <ul style="margin-top: 6px;">
-              <li><strong>Total Stack Evaporation:</strong> ABC basic blocks are saturated with stack shufflers (<code>swap_a</code>, <code>dup_a</code>, <code>updatepop_a</code>, <code>push_b2</code>). <code>abc2retag.py</code> tracks symbolic values through abstract interpretation, eliminating all stack operations at compile time and reconstructing clean functional <code>let</code>-expressions.</li>
+              <li><strong>Total Stack Evaporation:</strong> ABC basic blocks are saturated with stack shufflers (<code>swap_a</code>, <code>dup_a</code>, <code>updatepop_a</code>, <code>push_b2</code>). <code>abc2retag</code> tracks symbolic values through abstract interpretation, eliminating all stack operations at compile time and reconstructing clean functional <code>let</code>-expressions.</li>
               <li><strong>Huge Instruction Reduction:</strong> On <code>sort</code>, instructions dropped by <strong>-96.6%</strong> (from 9,670M to 333.4M instructions), cutting runtime from 6.49s to 0.27s (<strong>24× faster</strong>)!</li>
               <li><strong>Faster than handwritten Sapl on <code>eval</code>:</strong> 0.20s vs 0.31s (250M vs 305M instructions); partly because the Clean port carries different strictness annotations than <code>benchmarks/eval.cfp</code>. Clean's interprocedural strictness optimizations carry directly into Retag, reducing GC cycles from 3 to 1!</li>
-              <li><strong>Fixed point:</strong> the typed Clean port of <code>gen1</code> (<code>gen1_naar_clean_getypeerd.py</code>) compiles itself via <code>abc2retag.py</code> on the JMVM byte-for-byte into <code>saplcomp.jmvm</code> (0.55&ndash;0.57 s, the same as gen1 itself at 0.56 s).</li>
+              <li><strong>Fixed point:</strong> the typed Clean port of <code>gen1</code> (<code>gen1_naar_clean_getypeerd.py</code>) compiles itself via <code>abc2retag</code> on the JMVM byte-for-byte into <code>saplcomp.jmvm</code> (0.55&ndash;0.57 s, the same as gen1 itself at 0.56 s).</li>
             </ul>
           </div>
           <pre class="code-block"><span class="code-comment"># 1. Compile Clean to optimized ABC assembly:</span>
 clm -nt -optabc -bytecode primes -o primes
 
 <span class="code-comment"># 2. Decompile Clean ABC assembly into Stage-4 Retag AST:</span>
-python3 experiments/abc2jmvm/abc2retag.py "Clean System Files/primes.opt.abc" -o primes.cfp_retag
+printf 'primes.cfp_retag\nClean System Files/primes.opt.abc\n' | ./runfast sapl_compiler/abc2retag.jmvm
 
 <span class="code-comment"># 3. Compile Stage-4 Retag AST to native JMVM bytecode (.jmvm and .jvb):</span>
 ./compile-retag primes.cfp_retag primes_retag.jmvm
@@ -1464,9 +1465,9 @@ python3 experiments/abc2jmvm/abc2retag.py "Clean System Files/primes.opt.abc" -o
         </table>
       </div>
 
-      <!-- Deep Dive on the Decompiler (abc2retag.py) -->
+      <!-- Deep Dive on the Decompiler (abc2retag) -->
       <div style="margin-top: 24px;">
-        <h3 style="font-size: 16px; margin-bottom: 12px; color: var(--text-primary);">Decompilation Mechanics: How <code>abc2retag.py</code> Translates ABC to Retag</h3>
+        <h3 style="font-size: 16px; margin-bottom: 12px; color: var(--text-primary);">Decompilation Mechanics: How <code>abc2retag</code> Translates ABC to Retag</h3>
         <div class="grid-3">
           <div class="card">
             <h4 style="font-size: 14px; color: var(--accent-blue); margin-bottom: 6px;">1. Symbolic Stack State</h4>
@@ -1652,22 +1653,22 @@ python3 experiments/abc2jmvm/abc2retag.py "Clean System Files/primes.opt.abc" -o
               <td><code>./compile-retag file.cfp_retag file.jmvm</code></td>
             </tr>
             <tr>
-              <td><code>abc2retag.py</code></td>
+              <td><code>abc2retag</code> (Sapl)</td>
               <td><span class="badge badge-emerald">Bridge ★</span></td>
               <td><strong>Symbolic decompiler:</strong> Converts Clean ABC assembly (<code>.opt.abc</code>) into Stage-4 Retag AST (<code>.cfp_retag</code>), evaporating stack ops.</td>
-              <td><code>python3 experiments/abc2jmvm/abc2retag.py file.opt.abc -o file.cfp_retag</code></td>
+              <td><code>printf 'file.cfp_retag\nfile.opt.abc\n' | ./runfast sapl_compiler/abc2retag.jmvm</code></td>
             </tr>
             <tr>
               <td><code>abc2jmvm.py</code></td>
               <td><span class="badge badge-rose">Prototype</span></td>
-              <td>Historic direct stack emulator for ABC (instruction-heavy; superseded by <code>abc2retag.py</code>).</td>
+              <td>Historic direct stack emulator for ABC (instruction-heavy; superseded by <code>abc2retag</code>).</td>
               <td><code>python3 experiments/abc2jmvm/abc2jmvm.py file.opt.abc > file.jmvm</code></td>
             </tr>
             <tr>
-              <td><code>sapl_naar_abc.py</code></td>
+              <td><code>sapl2abc</code> (Sapl)</td>
               <td><span class="badge badge-amber">Bridge</span></td>
               <td>Translates Sapl Stage-4 Retag IR into Clean ABC assembly (<code>.abc</code>) for native Clean compilation.</td>
-              <td><code>python3 experiments/abc_backend/sapl_naar_abc.py file.retag.txt mod > file.abc</code></td>
+              <td><code>printf 'file.retag.txt\nfile.abc\nmod\nint,case,scrut,velden,bool,repl,lits\n' | ./runfast sapl_compiler/sapl2abc.jmvm</code></td>
             </tr>
             <tr>
               <td><code>./compile-hs</code></td>
@@ -1767,7 +1768,7 @@ python3 experiments/abc2jmvm/abc2retag.py "Clean System Files/primes.opt.abc" -o
       <h3 style="font-size: 16px; margin-bottom: 10px; color: var(--text-primary);">Clean ABC &rarr; Retag &rarr; JMVM Benchmark Results (13 Benchmarks)</h3>
       <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">
         Measured on Apple Silicon macOS host. Compares Clean's official <code>abci</code> interpreter, the direct stack emulator (<code>abc2jmvm.py</code>), 
-        the symbolic decompiler (<code>abc2retag.py</code> running on JMVM <code>./runfast</code>), and standard handwritten native Sapl.
+        the symbolic decompiler (<code>abc2retag</code>, its output running on JMVM <code>./runfast</code>), and standard handwritten native Sapl.
         abc2retag and Sapl: state of 8 November 2026 (after the second optimisation round), <code>./runfast</code> best of 5, instructions from <code>./run</code>.
         The abci and direct-stack columns are from 7 November; abci is wall-clock including startup, so not like-for-like. GC cycles were not re-measured.
       </p>
@@ -2027,7 +2028,7 @@ python3 experiments/abc2jmvm/abc2retag.py "Clean System Files/primes.opt.abc" -o
           developers gain the ergonomic clarity and educational appeal of standard Haskell in frictionless, zero-server browser notebooks (via WebSapl), 
           the modular simplicity of a lightweight stack machine (JMVM), 
           an immediate route to near-C native execution speed by targeting Clean's <code>cg</code> compiler via Retag &rarr; ABC, 
-          and <strong>the ability to decompile Clean ABC programs into Retag AST</strong> via <code>abc2retag.py</code>, enabling Clean programs to run directly on the JMVM and inside browser notebooks!
+          and <strong>the ability to decompile Clean ABC programs into Retag AST</strong> via <code>abc2retag</code>, enabling Clean programs to run directly on the JMVM and inside browser notebooks!
         </p>
       </div>
     </section>

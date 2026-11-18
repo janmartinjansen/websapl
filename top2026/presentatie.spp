@@ -549,6 +549,16 @@ D.table ["Measurement (Apple M4)", "Result"]
 //%% [markdown]
 // <p class="hint">Clean native ran in a Linux VM on the same machine. All numbers will be measured again before any conclusion.</p>
 //%% [markdown]
+// ## Demo: the Clean sandbox, extended
+//
+// <img class="overview" src="top2026/sandbox.svg" alt="Clean and Sapl, ABC code and Retag, the ABC interpreter and the JMVM, connected by abc2retag and retag2abc">
+//
+// - TOP's **Clean sandbox**, with a second language (**Sapl**) and a second interpreter (the **JMVM**).
+// - `abc2retag` and `retag2abc` connect ABC code and Retag **in both directions**: every language reaches every interpreter.
+// - All 13 benchmarks in both languages give the **same output on both interpreters**.
+//
+// <p class="hint">janmartinjansen.github.io/websapl/clean-sandbox · retag2abc is sapl2abc.cfp in the code, itself written in Sapl.</p>
+//%% [markdown]
 // ## In the browser: which combination is fastest?
 //
 // <table class="speed">
@@ -565,16 +575,6 @@ D.table ["Measurement (Apple M4)", "Result"]
 //
 // <p class="hint">Chrome with the shipped abc-interpreter.wasm = 1.00. Apple M4, warm; the 14 programs compiled by Clean (clm -optabc), the JMVM runs the same ABC via abc2retag; geometric mean.</p>
 //%% [markdown]
-// ## Demo: the Clean sandbox, extended
-//
-// <img class="overview" src="top2026/sandbox.svg" alt="Clean and Sapl, ABC code and Retag, the ABC interpreter and the JMVM, connected by abc2retag and retag2abc">
-//
-// - TOP's **Clean sandbox**, with a second language (**Sapl**) and a second interpreter (the **JMVM**).
-// - `abc2retag` and `retag2abc` connect ABC code and Retag **in both directions**: every language reaches every interpreter.
-// - All 13 benchmarks in both languages give the **same output on both interpreters**.
-//
-// <p class="hint">janmartinjansen.github.io/websapl/clean-sandbox · retag2abc is sapl2abc.cfp in the code, itself written in Sapl.</p>
-//%% [markdown]
 // ## What has not been measured
 //
 // - A real **iTasks** application: speed, and **compile time**.
@@ -588,20 +588,3 @@ D.table ["Measurement (Apple M4)", "Result"]
 // and measure speed, compile time and graph compatibility.
 //
 // <p class="beat">Questions?</p>
-//%% [markdown]
-// ## Backup: Clean's ABC interpreter in the browser
-//%%
-D.table ["Time relative to the JMVM (16 Nov, warm)", "Chrome 157", "Safari 26.6", "Firefox 160"]
-  [ ["JMVM (via abc2retag)", "1.00", "1.00", "1.00"],
-    ["ABC interpreter (abc-interpreter.wasm)", "1.29", "1.52", "0.67"],
-    ["ABC, globals to locals", "0.85", "1.60", "1.37"],
-    ["ABC, C interpreter via Emscripten", "0.91", "1.97", "1.61"] ]
-//%% [markdown]
-// - Locals help only in V8 (Chrome, 0.65×); in Firefox they cost twice the time (spilling).
-//   The C interpreter via Emscripten behaves like the locals version, slightly worse.
-// - Clean's own wasm interpreter is at its best in Firefox, faster there than the JMVM.
-// - So: **choose the interpreter build per browser engine.** Safari does not release the memory of
-//   old wasm instances within one page.
-// - Still to do: a real iPad, and the JavaScript glue of iTasks (`.pbc`, GC, graph copying).
-//
-// <p class="hint">Apple M4, 13 benchmarks plus the typed compiler compiling itself, compiled by Clean (clm -optabc); the JMVM runs the same ABC via abc2retag. Output checked. Geometric mean of the fastest of 3 rounds. Report for Camil: docs/2026-11-16_abc_interpreter_in_the_browser.md.</p>

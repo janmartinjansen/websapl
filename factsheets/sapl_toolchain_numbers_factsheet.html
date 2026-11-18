@@ -305,9 +305,9 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
         <td><strong>Superseded.</strong> Basic blocks as <code>musttail</code> C functions; kept temporaries on the VM stack (9.3 MB C, 47 s build, 442 ms <code>gen1</code>).</td>
       </tr>
       <tr>
-        <td><strong>4. Clean ABC (<code>sapl_naar_abc</code>)</strong></td>
+        <td><strong>4. Clean ABC (<code>sapl2abc</code>)</strong></td>
         <td>Stage-4 Retag</td>
-        <td><code>sapl_naar_abc.py</code></td>
+        <td><code>sapl2abc.cfp</code> (1,839 lines Sapl) &amp; Python original</td>
         <td><strong>Measured oracle.</strong> Runs all benchmarks and <code>gen1</code> fixed point on Clean&rsquo;s native <code>cg</code> and ABC interpreter.</td>
       </tr>
       <tr>
@@ -319,7 +319,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
       <tr class="subtotal">
         <td>Reverse bridge: <code>abc2retag</code></td>
         <td>Clean <code>.abc</code></td>
-        <td><code>abc2retag.cfp</code> (5,916 lines Sapl) &amp; Python</td>
+        <td><code>abc2retag.cfp</code> (5,916 lines Sapl) &amp; Python original</td>
         <td>Decompiles Clean stack code back into Stage-4 Retag, letting Clean use JMVM and <code>sapl2c</code>.</td>
       </tr>
     </tbody>

@@ -600,7 +600,7 @@
       <h3 style="font-size: 15px; margin-bottom: 8px; color: var(--text-primary);">Table 1a: The same Sapl programs on both interpreters (Execution Time in Milliseconds) &mdash; the client-side web is the primary deployment platform</h3>
       <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">
         What Sapl actually runs is Sapl code. Here both interpreters execute <em>the same program from the same front end</em> (gen1 stages 1&ndash;4;
-        JMVM: stage 5 &rarr; <code>.jvb</code>; ABC: <code>sapl_naar_abc.py</code> with all its optimizations (<code>ABC_OPT=int,case,scrut,velden,bool,repl,lits</code>)
+        JMVM: stage 5 &rarr; <code>.jvb</code>; ABC: <code>sapl2abc</code> with all its optimizations (<code>ABC_OPT=int,case,scrut,velden,bool,repl,lits</code>)
         &rarr; <code>abcopt</code> &rarr; <code>.pbc</code>, <code>experiments/abc_backend/</code>). ABC gets every optimization it has, which is the best case for it.
         Web: warm, Node 26, <code>jmvm.wasm</code> against Clean's <code>abc-interpreter.wasm</code>, stock and with the globals&rarr;locals fix.
         Ratios are ABC time / JMVM time, so above 1 the JMVM is faster and below 1 the ABC interpreter is.

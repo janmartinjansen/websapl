@@ -200,7 +200,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
         <rect width="235" height="66" rx="8" fill="var(--bg)" stroke="#f59e0b" stroke-width="1.6" />
         <text x="14" y="24" font-family="IBM Plex Sans, sans-serif" font-size="13.5" font-weight="700" fill="var(--fg)">Clean (.icl &rarr; .opt.abc)</text>
         <text x="14" y="42" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--muted)">Symbolic stack decompilation</text>
-        <text x="14" y="57" font-family="IBM Plex Mono, monospace" font-size="10" fill="#f59e0b">abc2retag.py</text>
+        <text x="14" y="57" font-family="IBM Plex Mono, monospace" font-size="10" fill="#f59e0b">abc2retag (Sapl)</text>
       </g>
 
       <!-- CENTRAL RETAG HUB -->
@@ -228,14 +228,14 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
         <rect width="270" height="66" rx="8" fill="var(--bg)" stroke="#f59e0b" stroke-width="1.8" />
         <text x="14" y="24" font-family="IBM Plex Sans, sans-serif" font-size="13.5" font-weight="700" fill="var(--fg)">sapl2c Native C Backend</text>
         <text x="14" y="42" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--muted)">0.34&times; runfast &bull; 248 ms gen1</text>
-        <text x="14" y="57" font-family="IBM Plex Mono, monospace" font-size="10" fill="#f59e0b">sapl_naar_c.py &rarr; .c + clang -O2</text>
+        <text x="14" y="57" font-family="IBM Plex Mono, monospace" font-size="10" fill="#f59e0b">sapl2c.cfp &rarr; .c + clang -O2</text>
       </g>
 
       <g transform="translate(650, 210)">
         <rect width="270" height="66" rx="8" fill="var(--bg)" stroke="#f59e0b" stroke-width="1.4" />
         <text x="14" y="24" font-family="IBM Plex Sans, sans-serif" font-size="13.5" font-weight="700" fill="var(--fg)">Clean ABC Backend</text>
         <text x="14" y="42" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--muted)">Clean cg (native) &bull; abci (interpreter)</text>
-        <text x="14" y="57" font-family="IBM Plex Mono, monospace" font-size="10" fill="#f59e0b">sapl_naar_abc.py &rarr; .abc</text>
+        <text x="14" y="57" font-family="IBM Plex Mono, monospace" font-size="10" fill="#f59e0b">sapl2abc (Sapl) &rarr; .abc</text>
       </g>
 
       <g transform="translate(650, 292)">
@@ -289,8 +289,8 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     <div class="card accent-blue">
       <h3>3. Bidirectional Bridge with Clean ABC</h3>
       <p>
-        Retag is high-level enough to lower cleanly to Clean&rsquo;s 3-stack ABC machine (<code>sapl_naar_abc.py</code>)
-        and structured enough that <code>abc2retag.py</code> can symbolically decompile <code>.opt.abc</code> back
+        Retag is high-level enough to lower cleanly to Clean&rsquo;s 3-stack ABC machine (<code>sapl2abc</code>)
+        and structured enough that <code>abc2retag</code> can symbolically decompile <code>.opt.abc</code> back
         into Retag &mdash; evaporating ~95% of ABC stack pushes/pops so Clean programs run on the JMVM at
         0.78&times;&ndash;1.31&times; of handwritten Sapl.
       </p>
