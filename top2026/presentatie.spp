@@ -1,4 +1,4 @@
-//%% [instellingen] waarden=uit code=verborgen stijl=top2026/stijl.css?v=2
+//%% [instellingen] waarden=uit code=verborgen stijl=top2026/stijl.css?v=3
 //%% [banner] TOP Software · 26 November 2026 | A Complete FP Toolchain in 4 Months | Jan Martin Jansen · {dia} / {n}
 //%% [markdown]
 // <div class="title-logo"><img src="top2026/sapl-jmvm-banner-light.svg" alt="Sapl &amp; JMVM"></div>
@@ -548,6 +548,32 @@ D.table ["Measurement (Apple M4)", "Result"]
     ["Clean's ABC interpreter in the browser: locals / C via Emscripten", "Chrome 0.65× / 0.71×, Safari 1.05× / 1.3×, Firefox 2.1× / 2.4× the time"] ]
 //%% [markdown]
 // <p class="hint">Clean native ran in a Linux VM on the same machine. All numbers will be measured again before any conclusion.</p>
+//%% [markdown]
+// ## In the browser: which combination is fastest?
+//
+// <table class="speed">
+// <tr><th>Time (lower is faster)</th><th>Chrome<br><span>V8</span></th><th>Safari<br><span>JavaScriptCore</span></th><th>Firefox<br><span>SpiderMonkey</span></th></tr>
+// <tr><td>ABC interpreter (as shipped)</td><td>1.00</td><td>1.15</td><td class="best">0.75</td></tr>
+// <tr><td>ABC, globals to locals</td><td class="best">0.65</td><td>1.20</td><td>1.52</td></tr>
+// <tr><td>ABC, C interpreter via Emscripten</td><td>0.71</td><td>1.51</td><td>1.82</td></tr>
+// <tr><td>JMVM (via abc2retag)</td><td>0.78</td><td class="best">0.76</td><td>1.12</td></tr>
+// </table>
+//
+// - **The best build differs per engine**: locals in Chrome, the shipped interpreter in Firefox, the JMVM in Safari (and so on every iPad).
+// - Locals and Emscripten only pay off in **V8**; in SpiderMonkey they **double** the time.
+// - The JMVM depends least on the browser: **0.76–1.12**, against 0.65–1.82 for the ABC builds.
+//
+// <p class="hint">Chrome with the shipped abc-interpreter.wasm = 1.00. Apple M4, warm; the 14 programs compiled by Clean (clm -optabc), the JMVM runs the same ABC via abc2retag; geometric mean.</p>
+//%% [markdown]
+// ## Demo: the Clean sandbox, extended
+//
+// <img class="overview" src="top2026/sandbox.svg" alt="Clean and Sapl, ABC code and Retag, the ABC interpreter and the JMVM, connected by abc2retag and retag2abc">
+//
+// - TOP's **Clean sandbox**, with a second language (**Sapl**) and a second interpreter (the **JMVM**).
+// - `abc2retag` and `retag2abc` connect ABC code and Retag **in both directions**: every language reaches every interpreter.
+// - All 13 benchmarks in both languages give the **same output on both interpreters**.
+//
+// <p class="hint">janmartinjansen.github.io/websapl/clean-sandbox · retag2abc is sapl2abc.cfp in the code, itself written in Sapl.</p>
 //%% [markdown]
 // ## What has not been measured
 //

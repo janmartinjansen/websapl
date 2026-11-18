@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- De clean-sandbox (websapl/clean-sandbox) voor de TOP-presentatie: twee talen, twee
+     interpreters, en abc2retag / retag2abc (in de code: sapl_compiler/sapl2abc.cfp) die
+     ABC en Retag in beide richtingen verbinden. Zelfde donkere stijl als ecosystem.svg. -->
+<svg viewBox="0 0 1000 470" width="1000" height="470" xmlns="http://www.w3.org/2000/svg"
+     font-family="-apple-system, 'Segoe UI', sans-serif">
+  <defs>
+    <marker id="a-grey" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#94a3b8"/>
+    </marker>
+    <marker id="a-amber" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#f59e0b"/>
+    </marker>
+  </defs>
+
+  <!-- de browser -->
+  <rect x="10" y="10" width="980" height="420" rx="14" fill="#0f172a" stroke="#2b3b60" stroke-width="1.5" stroke-dasharray="7 6"/>
+  <text x="30" y="38" font-size="13" font-weight="700" fill="#8292ab" letter-spacing="1">ONE BROWSER TAB · EVERYTHING IN WEBASSEMBLY</text>
+
+  <!-- kolomkoppen -->
+  <text x="140" y="78" font-size="13" font-weight="700" fill="#8292ab" text-anchor="middle" letter-spacing="1">SOURCE</text>
+  <text x="500" y="78" font-size="13" font-weight="700" fill="#8292ab" text-anchor="middle" letter-spacing="1">INTERMEDIATE FORM</text>
+  <text x="860" y="78" font-size="13" font-weight="700" fill="#8292ab" text-anchor="middle" letter-spacing="1">INTERPRETER</text>
+
+  <!-- bronnen -->
+  <rect x="50" y="100" width="180" height="76" rx="10" fill="#131c31" stroke="#3b82f6" stroke-width="2"/>
+  <text x="140" y="134" font-size="22" font-weight="700" fill="#f8fafc" text-anchor="middle">Clean</text>
+  <text x="140" y="158" font-size="14" fill="#cbd5e1" text-anchor="middle">.icl</text>
+
+  <rect x="50" y="290" width="180" height="76" rx="10" fill="#131c31" stroke="#10b981" stroke-width="2"/>
+  <text x="140" y="324" font-size="22" font-weight="700" fill="#f8fafc" text-anchor="middle">Sapl</text>
+  <text x="140" y="348" font-size="14" fill="#cbd5e1" text-anchor="middle">.cfp</text>
+
+  <!-- tussenvormen -->
+  <rect x="410" y="100" width="180" height="76" rx="10" fill="#131c31" stroke="#2b3b60" stroke-width="2"/>
+  <text x="500" y="134" font-size="22" font-weight="700" fill="#f8fafc" text-anchor="middle">ABC code</text>
+  <text x="500" y="158" font-size="14" fill="#cbd5e1" text-anchor="middle">Clean's stack code</text>
+
+  <rect x="410" y="290" width="180" height="76" rx="10" fill="#131c31" stroke="#2b3b60" stroke-width="2"/>
+  <text x="500" y="324" font-size="22" font-weight="700" fill="#f8fafc" text-anchor="middle">Retag</text>
+  <text x="500" y="348" font-size="14" fill="#cbd5e1" text-anchor="middle">laziness made explicit</text>
+
+  <!-- interpreters -->
+  <rect x="770" y="100" width="180" height="76" rx="10" fill="#131c31" stroke="#3b82f6" stroke-width="2"/>
+  <text x="860" y="134" font-size="20" font-weight="700" fill="#f8fafc" text-anchor="middle">ABC interpreter</text>
+  <text x="860" y="158" font-size="14" fill="#cbd5e1" text-anchor="middle">Clean's, as shipped</text>
+
+  <rect x="770" y="290" width="180" height="76" rx="10" fill="#131c31" stroke="#10b981" stroke-width="2"/>
+  <text x="860" y="324" font-size="22" font-weight="700" fill="#f8fafc" text-anchor="middle">JMVM</text>
+  <text x="860" y="348" font-size="14" fill="#cbd5e1" text-anchor="middle">bytecode VM</text>
+
+  <!-- de gewone wegen -->
+  <line x1="232" y1="138" x2="404" y2="138" stroke="#94a3b8" stroke-width="2" marker-end="url(#a-grey)"/>
+  <text x="318" y="128" font-size="15" fill="#cbd5e1" text-anchor="middle">Clean compiler</text>
+
+  <line x1="232" y1="328" x2="404" y2="328" stroke="#94a3b8" stroke-width="2" marker-end="url(#a-grey)"/>
+  <text x="318" y="318" font-size="15" fill="#cbd5e1" text-anchor="middle">gen1</text>
+
+  <line x1="592" y1="138" x2="764" y2="138" stroke="#94a3b8" stroke-width="2" marker-end="url(#a-grey)"/>
+  <text x="678" y="128" font-size="15" fill="#cbd5e1" text-anchor="middle">bcgen · bclink</text>
+
+  <line x1="592" y1="328" x2="764" y2="328" stroke="#94a3b8" stroke-width="2" marker-end="url(#a-grey)"/>
+  <text x="678" y="318" font-size="15" fill="#cbd5e1" text-anchor="middle">code generator</text>
+
+  <!-- de brug in twee richtingen -->
+  <line x1="470" y1="180" x2="470" y2="284" stroke="#f59e0b" stroke-width="3.5" marker-end="url(#a-amber)"/>
+  <text x="458" y="238" font-size="18" font-weight="700" fill="#f59e0b" text-anchor="end">abc2retag</text>
+
+  <line x1="530" y1="286" x2="530" y2="182" stroke="#f59e0b" stroke-width="3.5" marker-end="url(#a-amber)"/>
+  <text x="542" y="238" font-size="18" font-weight="700" fill="#f59e0b">retag2abc</text>
+
+  <!-- onderschrift -->
+  <text x="500" y="408" font-size="16" fill="#cbd5e1" text-anchor="middle">2 languages × 2 interpreters = 4 combinations, all compiled and run in the browser</text>
+</svg>

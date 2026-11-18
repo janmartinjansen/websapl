@@ -74,5 +74,15 @@ body.present #cells:has(.cell:not(.off-slide) .duo) .out canvas { width: min(100
 body.present .md-view svg.sieve { display: block; width: min(100%, 36vh); height: auto; background: #0a0f1d; border-radius: 8px; }
 body.present .md-view .figcap { width: min(100%, 36vh); text-align: center; font-size: 17px; color: var(--text-2);
   font-style: italic; margin: 6px 0 0; }
+/* De snelheidstabel (welke combinatie is het snelst?): beste per browser gemarkeerd. */
+body.present .md-view table.speed { border-collapse: collapse; font-size: 24px; margin: 6px 0 18px; }
+body.present .md-view table.speed th, body.present .md-view table.speed td {
+  border-bottom: 1px solid var(--border); padding: 8px 22px; text-align: right; }
+body.present .md-view table.speed th:first-child, body.present .md-view table.speed td:first-child { text-align: left; padding-left: 0; }
+body.present .md-view table.speed th { font-weight: 600; color: var(--text-2); vertical-align: bottom; }
+body.present .md-view table.speed th span { font-size: 15px; font-weight: 400; color: var(--muted); }
+body.present .md-view table.speed td { font-variant-numeric: tabular-nums; }
+body.present .md-view table.speed td.best { color: var(--accent); font-weight: 700; }
+body.present .md-view img.overview[src$="sandbox.svg"] { width: auto; max-width: 100%; max-height: 48vh; margin-bottom: -6px; }
 /* De Nederlandse voetregel van interactieve cellen ("3 ms per gebeurtenis") niet in deze Engelse presentatie. */
 body.present .nb-interactive-foot { display: none; }
