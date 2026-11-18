@@ -17,7 +17,7 @@
 
 	<!-- Sandbox JavaScript -->
 	<script type="text/javascript" src="js/chapters.js"></script>
-	<script type="text/javascript" src="js/sandbox.js"></script>
+	<script type="text/javascript" src="js/sandbox.js?v=2"></script>
 
 	<!-- Monaco editor -->
 	<link rel="stylesheet" data-name="vs/editor/editor.main" href="vendor/monaco-editor/min/vs/editor/editor.main.css"/>
@@ -33,7 +33,7 @@
 	<link rel="stylesheet" href="vendor/@fortawesome/fontawesome-free/css/fontawesome.min.css">
 	<link rel="stylesheet" href="vendor/@fortawesome/fontawesome-free/css/solid.min.css">
 
-	<link rel="stylesheet" href="css/sandbox.css?v=2"/>
+	<link rel="stylesheet" href="css/sandbox.css?v=3"/>
 </head>
 <body class="h-100 overflow-hidden">
 	<div class="container-fluid h-100 px-0 d-flex flex-column">
@@ -109,6 +109,9 @@
 					<li class="nav-item" role="presentation">
 						<button class="nav-link py-1 px-2 small" id="tab-retag-btn" data-bs-toggle="tab" data-bs-target="#tab-retag" type="button" role="tab">Retag AST</button>
 					</li>
+					<li class="nav-item" role="presentation">
+						<button class="nav-link py-1 px-2 small" id="tab-jmvm-btn" data-bs-toggle="tab" data-bs-target="#tab-jmvm" type="button" role="tab">JMVM</button>
+					</li>
 					<li class="nav-item ms-auto d-flex align-items-center pb-1">
 						<button id="btn-tools-fullscreen" type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" title="Volledig scherm (Esc)" aria-label="Volledig scherm" aria-pressed="false">
 							<i class="fa-solid fa-expand"></i>
@@ -151,6 +154,14 @@
 						</button>
 						<div class="h-100 w-100 position-relative overflow-auto">
 							<pre id="retag-view" class="position-absolute w-100 m-0 p-2 pe-5 small"></pre>
+						</div>
+					</div>
+					<div class="tab-pane fade flex-grow-1 position-relative h-100 overflow-hidden" id="tab-jmvm" role="tabpanel">
+						<button id="btn-jmvm-fullscreen" type="button" class="btn btn-sm btn-outline-secondary" title="Volledig scherm (Esc)" aria-label="Volledig scherm" aria-pressed="false">
+							<i class="fa-solid fa-expand"></i>
+						</button>
+						<div class="h-100 w-100 position-relative overflow-auto">
+							<pre id="jmvm-view" class="position-absolute w-100 m-0 p-2 pe-5 small"></pre>
 						</div>
 					</div>
 				</div>
@@ -279,12 +290,13 @@
 		const col_tools=document.getElementById ('col-tools');
 		const btn_tools_fs=document.getElementById ('btn-tools-fullscreen');
 		const btn_retag_fs=document.getElementById ('btn-retag-fullscreen');
+		const btn_jmvm_fs=document.getElementById ('btn-jmvm-fullscreen');
 		const set_tools_fullscreen=(full) => {
 			workspace_el.classList.toggle ('tools-fullscreen', full);
 			col_editor.classList.toggle ('d-none', full);
 			col_tools.style.height=full ? '100%' : '';
 			col_tools.style.paddingTop=full ? '0' : '';
-			for (const btn of [btn_tools_fs, btn_retag_fs]){
+			for (const btn of [btn_tools_fs, btn_retag_fs, btn_jmvm_fs]){
 				btn.setAttribute ('aria-pressed', String (full));
 				btn.title=full ? 'Verklein paneel (Esc)' : 'Volledig scherm (Esc)';
 				btn.setAttribute ('aria-label', full ? 'Verklein paneel' : 'Volledig scherm');
@@ -298,6 +310,7 @@
 		const toggle_tools_fullscreen=() => set_tools_fullscreen (!workspace_el.classList.contains ('tools-fullscreen'));
 		btn_tools_fs.addEventListener ('click', toggle_tools_fullscreen);
 		btn_retag_fs.addEventListener ('click', toggle_tools_fullscreen);
+		btn_jmvm_fs.addEventListener ('click', toggle_tools_fullscreen);
 		document.addEventListener ('keydown', (e) => {
 			if (e.key==='Escape' && workspace_el.classList.contains ('tools-fullscreen') && !document.querySelector ('.modal.show'))
 				set_tools_fullscreen (false);
@@ -334,6 +347,7 @@
 			sec_jmvm_result: document.getElementById ('sec-jmvm-result'),
 			abc_view: document.getElementById ('abc-view'),
 			retag_view: document.getElementById ('retag-view'),
+			jmvm_view: document.getElementById ('jmvm-view'),
 			packages_selection: document.getElementById ('packages-selection'),
 			packages_add_name: document.getElementById ('packages-add-name'),
 			packages_add_version: document.getElementById ('packages-add-version'),

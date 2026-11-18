@@ -109,7 +109,8 @@
 	line-height: 1.2;
 }
 
-#btn-retag-fullscreen {
+#btn-retag-fullscreen,
+#btn-jmvm-fullscreen {
 	position: absolute;
 	top: 8px;
 	right: 20px;
@@ -118,7 +119,8 @@
 	opacity: 0.9;
 }
 
-#btn-retag-fullscreen:hover {
+#btn-retag-fullscreen:hover,
+#btn-jmvm-fullscreen:hover {
 	background-color: #6c757d;
 	color: #fff;
 	opacity: 1;

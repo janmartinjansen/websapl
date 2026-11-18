@@ -150,6 +150,7 @@ const sandbox={
 		sandbox.sec_jmvm_result=opts.sec_jmvm_result;
 		sandbox.abc_view=opts.abc_view;
 		sandbox.retag_view=opts.retag_view;
+		sandbox.jmvm_view=opts.jmvm_view;
 
 		const update_engine_sections=() => {
 			const eng=sandbox.engine_select.value;
@@ -222,6 +223,8 @@ primes =:
 			sandbox.abc_timing.innerText='';
 			sandbox.jmvm_timing.innerText='';
 			sandbox.retag_view.innerText='';
+			if (sandbox.jmvm_view)
+				sandbox.jmvm_view.innerText='';
 
 			if (sandbox.lang_select.value==='sapl'){
 				sandbox.abc_view.innerText='';
@@ -312,7 +315,7 @@ primes =:
 			init_resolve=resolve;
 			init_reject=reject;
 		});
-		sandbox.worker=new Worker ('js/sandbox-worker.js');
+		sandbox.worker=new Worker ('js/sandbox-worker.js?v=2');
 			sandbox.worker.onmessage=function (e) {
 			e=e.data;
 			if ('stdout' in e)
@@ -395,6 +398,8 @@ primes =:
 					sandbox.abc_view.innerText=e.retag_ready.abc;
 				if (e.retag_ready.retag)
 					sandbox.retag_view.innerText=e.retag_ready.retag;
+				if (e.retag_ready.jmvm && sandbox.jmvm_view)
+					sandbox.jmvm_view.innerText=e.retag_ready.jmvm;
 			}
 			if ('jmvm_done' in e){
 				sandbox.btn_compile_run.disabled=false;

@@ -278,6 +278,38 @@ let jmvmLoaded=false;
 let jmvmModule=null;
 let abc2retagJvb=null;
 let retagcompJvb=null;
+let jvbToolLoaded=false;
+let jvbToolModule=null;
+
+async function jvbToJmvmText (progJvb)
+{
+	if (!jvbToolLoaded){
+		importScripts ('../engine/jvbtool.js');
+		jvbToolLoaded=true;
+	}
+	if (!jvbToolModule)
+		jvbToolModule=await WebAssembly.compile (await (await fetch ('/engine/jvbtool.wasm')).arrayBuffer());
+
+	const log=[];
+	const tool=await createJvbTool ({
+		instantiateWasm: (imports,cb) => {
+			WebAssembly.instantiate (jvbToolModule,imports).then (inst => cb (inst,jvbToolModule));
+			return {};
+		},
+		print: (t) => log.push (t),
+		printErr: (t) => log.push (t),
+	});
+	tool.FS.writeFile ('/in.jvb',progJvb);
+	let status=0;
+	try {
+		status=tool.callMain (['jvb2jmvm','/in.jvb','/out.jmvm']);
+	} catch (e) {
+		status=(e && typeof e.status==='number') ? e.status : 1;
+	}
+	if (status!==0 || !tool.FS.analyzePath ('/out.jmvm').exists)
+		throw new Error (log.join ('\n') || 'jvb2jmvm mislukt');
+	return tool.FS.readFile ('/out.jmvm',{encoding: 'utf8'});
+}
 
 async function ensureJmvmLoaded ()
 {
@@ -377,6 +409,13 @@ async function runJvbOnJmvm (progJvb,tTotal,extra={})
 		}
 		const execMs=Math.round (performance.now()-tExec);
 		const totalMs=Math.round (performance.now()-tTotal);
+
+		try {
+			const jmvmText=await jvbToJmvmText (progJvb);
+			postMessage ({retag_ready: {jmvm: jmvmText}});
+		} catch (e) {
+			console.warn ('jvb2jmvm:',e);
+		}
 
 		postMessage ({
 			jmvm_done: {
