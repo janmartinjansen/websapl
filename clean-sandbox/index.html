@@ -109,6 +109,11 @@
 					<li class="nav-item" role="presentation">
 						<button class="nav-link py-1 px-2 small" id="tab-retag-btn" data-bs-toggle="tab" data-bs-target="#tab-retag" type="button" role="tab">Retag AST</button>
 					</li>
+					<li class="nav-item ms-auto d-flex align-items-center pb-1">
+						<button id="btn-tools-fullscreen" type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" title="Volledig scherm (Esc)" aria-label="Volledig scherm" aria-pressed="false">
+							<i class="fa-solid fa-expand"></i>
+						</button>
+					</li>
 				</ul>
 				<div class="tab-content flex-grow-1 d-flex flex-column overflow-hidden">
 					<div class="tab-pane fade show active flex-grow-1 d-flex flex-column h-100" id="tab-output" role="tabpanel">
@@ -140,8 +145,13 @@
 					<div class="tab-pane fade flex-grow-1 position-relative h-100 overflow-auto" id="tab-abc" role="tabpanel">
 						<pre id="abc-view" class="position-absolute w-100 m-0 p-2 small"></pre>
 					</div>
-					<div class="tab-pane fade flex-grow-1 position-relative h-100 overflow-auto" id="tab-retag" role="tabpanel">
-						<pre id="retag-view" class="position-absolute w-100 m-0 p-2 small"></pre>
+					<div class="tab-pane fade flex-grow-1 position-relative h-100 overflow-hidden" id="tab-retag" role="tabpanel">
+						<button id="btn-retag-fullscreen" type="button" class="btn btn-sm btn-outline-secondary" title="Volledig scherm (Esc)" aria-label="Volledig scherm" aria-pressed="false">
+							<i class="fa-solid fa-expand"></i>
+						</button>
+						<div class="h-100 w-100 position-relative overflow-auto">
+							<pre id="retag-view" class="position-absolute w-100 m-0 p-2 pe-5 small"></pre>
+						</div>
 					</div>
 				</div>
 				<div class="row border-top">
@@ -263,6 +273,30 @@
 			sandbox.editor.layout ({height: 0});
 			sandbox.editor.layout();
 		};
+
+		const workspace_el=document.getElementById ('workspace');
+		const btn_tools_fs=document.getElementById ('btn-tools-fullscreen');
+		const btn_retag_fs=document.getElementById ('btn-retag-fullscreen');
+		const set_tools_fullscreen=(full) => {
+			workspace_el.classList.toggle ('tools-fullscreen', full);
+			for (const btn of [btn_tools_fs, btn_retag_fs]){
+				btn.setAttribute ('aria-pressed', String (full));
+				btn.title=full ? 'Verklein paneel (Esc)' : 'Volledig scherm (Esc)';
+				btn.setAttribute ('aria-label', full ? 'Verklein paneel' : 'Volledig scherm');
+				const icon=btn.querySelector ('i');
+				icon.classList.toggle ('fa-expand', !full);
+				icon.classList.toggle ('fa-compress', full);
+			}
+			if (!full && typeof window.onresize==='function')
+				window.onresize();
+		};
+		const toggle_tools_fullscreen=() => set_tools_fullscreen (!workspace_el.classList.contains ('tools-fullscreen'));
+		btn_tools_fs.addEventListener ('click', toggle_tools_fullscreen);
+		btn_retag_fs.addEventListener ('click', toggle_tools_fullscreen);
+		document.addEventListener ('keydown', (e) => {
+			if (e.key==='Escape' && workspace_el.classList.contains ('tools-fullscreen') && !document.querySelector ('.modal.show'))
+				set_tools_fullscreen (false);
+		});
 
 		/* Workaround for Firefox, see https://stackoverflow.com/q/71659876 */
 		const btn_compile_run=document.getElementById ('btn-compile-run');

@@ -1865,7 +1865,7 @@
           "path": "clean-sandbox/index.html",
           "type": "file",
           "ext": ".html",
-          "size": 14476,
+          "size": 16370,
           "isBinary": false
         },
         {
@@ -2249,7 +2249,7 @@
           "path": "factsheets/clean_abc_to_jmvm_retag_factsheet.html",
           "type": "file",
           "ext": ".html",
-          "size": 29280,
+          "size": 29509,
           "isBinary": false
         },
         {
@@ -2257,7 +2257,7 @@
           "path": "factsheets/clean_on_jmvm_factsheet.html",
           "type": "file",
           "ext": ".html",
-          "size": 14655,
+          "size": 14644,
           "isBinary": false
         },
         {
@@ -2313,7 +2313,7 @@
           "path": "factsheets/performance_factsheet.html",
           "type": "file",
           "ext": ".html",
-          "size": 67200,
+          "size": 67192,
           "isBinary": false
         },
         {
@@ -2329,7 +2329,7 @@
           "path": "factsheets/retag_format_factsheet.html",
           "type": "file",
           "ext": ".html",
-          "size": 20440,
+          "size": 20428,
           "isBinary": false
         },
         {
@@ -2345,7 +2345,7 @@
           "path": "factsheets/sapl_jmvm_clean_haskell_factsheet.html",
           "type": "file",
           "ext": ".html",
-          "size": 104043,
+          "size": 104216,
           "isBinary": false
         },
         {
@@ -2353,7 +2353,7 @@
           "path": "factsheets/sapl_toolchain_numbers_factsheet.html",
           "type": "file",
           "ext": ".html",
-          "size": 19590,
+          "size": 19631,
           "isBinary": false
         },
         {
@@ -2369,7 +2369,7 @@
           "path": "factsheets/sapl2c_native_factsheet.html",
           "type": "file",
           "ext": ".html",
-          "size": 19818,
+          "size": 19817,
           "isBinary": false
         },
         {
@@ -4769,7 +4769,7 @@
           "path": "top2026/ecosystem.svg",
           "type": "file",
           "ext": ".svg",
-          "size": 21012,
+          "size": 21084,
           "isBinary": false
         },
         {
@@ -4777,7 +4777,15 @@
           "path": "top2026/presentatie.spp",
           "type": "file",
           "ext": ".spp",
-          "size": 26530,
+          "size": 29013,
+          "isBinary": false
+        },
+        {
+          "name": "sandbox.svg",
+          "path": "top2026/sandbox.svg",
+          "type": "file",
+          "ext": ".svg",
+          "size": 4997,
           "isBinary": false
         },
         {
@@ -4817,7 +4825,7 @@
           "path": "top2026/stijl.css",
           "type": "file",
           "ext": ".css",
-          "size": 4972,
+          "size": 5958,
           "isBinary": false
         }
       ],
