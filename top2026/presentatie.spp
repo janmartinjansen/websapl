@@ -342,6 +342,33 @@ D.animated 40 cubeStart cubeStep cubeView
 //%%
 D.animated 40 figStart figStep figView
 //%% [markdown]
+// ## Why notebooks suit Sapl so well
+//
+// <div class="twocol even">
+// <div>
+//
+// **Classic notebooks (Jupyter, Python)**
+//
+// - **Hidden mutable state**: a result depends on the order in which cells happened to run.
+// - Change something early on: **Restart & Run All**.
+// - Large or infinite data is computed **up front**, whether you look at it or not.
+// - A **kernel on a server** or in a container.
+//
+// </div>
+// <div>
+//
+// **Sapl notebooks**
+//
+// - **Pure**: a cell is a function of its inputs; after a change only the cells that depend on it run again.
+// - **Lazy**: a definition costs nothing until a cell needs it; infinite lists are normal.
+// - **Shared**: a value computed once (`=:`) is reused by every later cell.
+// - **In the tab**: compile, link and install a cell in **6–8&nbsp;ms**; no server, works offline.
+//
+// </div>
+// </div>
+//
+// <p class="hint">The VM runs in a Web Worker, so a long computation never freezes the page. Details: the notebooks factsheet.</p>
+//%% [markdown]
 // ## The consequence: tools in Sapl, not in the VM
 //
 // - **7-8 October**: the REPL becomes **one Sapl program** instead of three hosts in C++, Python and
@@ -374,20 +401,18 @@ D.table ["Effect of .jvb", "Before", "After"]
 //%% [markdown]
 // ## How fast is the interpreter?
 //%%
-D.table ["The JMVM interpreter (Apple M4, 9 Nov)", "Result"]
-  [ ["vs. Clean native, 12 benchmarks (total time)", "2.5× slower"],
-    ["vs. GHC -O2, 12 benchmarks (total time)", "3.1× slower"],
-    ["vs. Clean's ABC interpreter, native", "1.25× slower"],
-    ["In the browser (WebAssembly, Chrome) vs. native", "1.47× slower"],
-    ["In the browser vs. Clean's ABC interpreter (wasm, 16 Nov)", "1.3× faster (Chrome), 1.5× (Safari), 1.5× slower (Firefox)"],
-    ["The compiler compiling itself: interpreter vs. GHC -O2", "598 vs. 295 ms (2.0×)"] ]
+D.table ["JMVM interpreter vs. (Apple M4, 9 Nov)", "Mean", "Per program"]
+  [ ["Clean native", "2.7× slower", "1.8–4.6×"],
+    ["GHC -O2", "3.1× slower", "1.9–6.2×"],
+    ["Clean's ABC interpreter, native", "1.25× slower", "0.7–1.7×"],
+    ["Itself, in the browser (WebAssembly, Chrome)", "1.47× slower", ""],
+    ["The compiler compiling itself: GHC -O2", "2.0× slower", "598 vs. 295 ms"] ]
 //%% [markdown]
-// - The 2016 target was **within a factor of 5** of Clean and Haskell. Natively it is now **2.5-3×**.
+// - The 2016 target was **within a factor of 5** of Clean and Haskell. Natively it is now about **3×** on average,
+//   but it depends a lot on the program: from under 2× to 6×.
 // - In the browser it loses **less than 1.5×** against itself natively.
-// - Against Clean's ABC interpreter in the browser, on programs compiled by Clean itself:
-//   **faster in Chrome and Safari, slower in Firefox**; and it depends least on the browser.
 //
-// <p class="hint">Sources: performance factsheet; experiments/clean_vergelijking/meting_2026-11-09; browsers: experiments/abc_backend/browsers (14 programs compiled by Clean, the JMVM via abc2retag). Clean native in a Linux VM.</p>
+// <p class="hint">Geometric means over the same 12 benchmarks (sort left out: Clean 3.1 native ARM64 gives a wrong result); best of 15 runs. Clean native in a Linux VM on the same machine. Source: experiments/clean_vergelijking/meting_2026-11-09.</p>
 //%% [markdown]
 // ## Where the interpreter's speed came from
 //%%
