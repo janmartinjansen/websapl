@@ -1865,7 +1865,7 @@ window.WEBSAPL_TREE = [
         "path": "clean-sandbox/index.html",
         "type": "file",
         "ext": ".html",
-        "size": 16632,
+        "size": 16636,
         "isBinary": false
       },
       {
@@ -1921,7 +1921,7 @@ window.WEBSAPL_TREE = [
         "path": "clean-sandbox/sapl-jmvm-logo.svg",
         "type": "file",
         "ext": ".svg",
-        "size": 2671,
+        "size": 2721,
         "isBinary": false
       }
     ],
