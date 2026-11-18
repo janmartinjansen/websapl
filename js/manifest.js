@@ -249,6 +249,1685 @@ window.WEBSAPL_TREE = [
     "_expanded": false
   },
   {
+    "name": "clean-sandbox",
+    "path": "clean-sandbox",
+    "type": "directory",
+    "children": [
+      {
+        "name": "data",
+        "path": "clean-sandbox/data",
+        "type": "directory",
+        "children": [
+          {
+            "name": "packages",
+            "path": "clean-sandbox/data/packages",
+            "type": "directory",
+            "children": [
+              {
+                "name": "base-lib-2.17.0.tar.gz",
+                "path": "clean-sandbox/data/packages/base-lib-2.17.0.tar.gz",
+                "type": "file",
+                "ext": ".gz",
+                "size": 28957,
+                "isBinary": false
+              },
+              {
+                "name": "base-lib-2.17.1.tar.gz",
+                "path": "clean-sandbox/data/packages/base-lib-2.17.1.tar.gz",
+                "type": "file",
+                "ext": ".gz",
+                "size": 28959,
+                "isBinary": false
+              },
+              {
+                "name": "base-stdenv-1.0.0.tar.gz",
+                "path": "clean-sandbox/data/packages/base-stdenv-1.0.0.tar.gz",
+                "type": "file",
+                "ext": ".gz",
+                "size": 54182,
+                "isBinary": false
+              },
+              {
+                "name": "base-stdenv-1.0.1.tar.gz",
+                "path": "clean-sandbox/data/packages/base-stdenv-1.0.1.tar.gz",
+                "type": "file",
+                "ext": ".gz",
+                "size": 54192,
+                "isBinary": false
+              },
+              {
+                "name": "base-stdenv-2.0.0.tar.gz",
+                "path": "clean-sandbox/data/packages/base-stdenv-2.0.0.tar.gz",
+                "type": "file",
+                "ext": ".gz",
+                "size": 54249,
+                "isBinary": false
+              },
+              {
+                "name": "base-stdenv-2.1.0.tar.gz",
+                "path": "clean-sandbox/data/packages/base-stdenv-2.1.0.tar.gz",
+                "type": "file",
+                "ext": ".gz",
+                "size": 54465,
+                "isBinary": false
+              },
+              {
+                "name": "base-stdenv-2.1.1.tar.gz",
+                "path": "clean-sandbox/data/packages/base-stdenv-2.1.1.tar.gz",
+                "type": "file",
+                "ext": ".gz",
+                "size": 54468,
+                "isBinary": false
+              },
+              {
+                "name": "base-stdenv-2.1.2.tar.gz",
+                "path": "clean-sandbox/data/packages/base-stdenv-2.1.2.tar.gz",
+                "type": "file",
+                "ext": ".gz",
+                "size": 54223,
+                "isBinary": false
+              },
+              {
+                "name": "base-stdenv-2.1.3.tar.gz",
+                "path": "clean-sandbox/data/packages/base-stdenv-2.1.3.tar.gz",
+                "type": "file",
+                "ext": ".gz",
+                "size": 54217,
+                "isBinary": false
+              },
+              {
+                "name": "base-stdenv-2.2.0.tar.gz",
+                "path": "clean-sandbox/data/packages/base-stdenv-2.2.0.tar.gz",
+                "type": "file",
+                "ext": ".gz",
+                "size": 55158,
+                "isBinary": false
+              },
+              {
+                "name": "base-stdenv-2.2.1.tar.gz",
+                "path": "clean-sandbox/data/packages/base-stdenv-2.2.1.tar.gz",
+                "type": "file",
+                "ext": ".gz",
+                "size": 55160,
+                "isBinary": false
+              }
+            ],
+            "_expanded": false
+          },
+          {
+            "name": "cocl.pbc",
+            "path": "clean-sandbox/data/cocl.pbc",
+            "type": "file",
+            "ext": ".pbc",
+            "size": 2024420,
+            "isBinary": false
+          },
+          {
+            "name": "packages.json",
+            "path": "clean-sandbox/data/packages.json",
+            "type": "file",
+            "ext": ".json",
+            "size": 3127,
+            "isBinary": false
+          },
+          {
+            "name": "sandbox.pbc",
+            "path": "clean-sandbox/data/sandbox.pbc",
+            "type": "file",
+            "ext": ".pbc",
+            "size": 35188,
+            "isBinary": false
+          }
+        ],
+        "_expanded": false
+      },
+      {
+        "name": "vendor",
+        "path": "clean-sandbox/vendor",
+        "type": "directory",
+        "children": [
+          {
+            "name": "@fortawesome",
+            "path": "clean-sandbox/vendor/@fortawesome",
+            "type": "directory",
+            "children": [
+              {
+                "name": "fontawesome-free",
+                "path": "clean-sandbox/vendor/@fortawesome/fontawesome-free",
+                "type": "directory",
+                "children": [
+                  {
+                    "name": "webfonts",
+                    "path": "clean-sandbox/vendor/@fortawesome/fontawesome-free/webfonts",
+                    "type": "directory",
+                    "children": [
+                      {
+                        "name": "fa-brands-400.ttf",
+                        "path": "clean-sandbox/vendor/@fortawesome/fontawesome-free/webfonts/fa-brands-400.ttf",
+                        "type": "file",
+                        "ext": ".ttf",
+                        "size": 181852,
+                        "isBinary": false
+                      },
+                      {
+                        "name": "fa-brands-400.woff2",
+                        "path": "clean-sandbox/vendor/@fortawesome/fontawesome-free/webfonts/fa-brands-400.woff2",
+                        "type": "file",
+                        "ext": ".woff2",
+                        "size": 105536,
+                        "isBinary": false
+                      },
+                      {
+                        "name": "fa-regular-400.ttf",
+                        "path": "clean-sandbox/vendor/@fortawesome/fontawesome-free/webfonts/fa-regular-400.ttf",
+                        "type": "file",
+                        "ext": ".ttf",
+                        "size": 60520,
+                        "isBinary": false
+                      },
+                      {
+                        "name": "fa-regular-400.woff2",
+                        "path": "clean-sandbox/vendor/@fortawesome/fontawesome-free/webfonts/fa-regular-400.woff2",
+                        "type": "file",
+                        "ext": ".woff2",
+                        "size": 23940,
+                        "isBinary": false
+                      },
+                      {
+                        "name": "fa-solid-900.ttf",
+                        "path": "clean-sandbox/vendor/@fortawesome/fontawesome-free/webfonts/fa-solid-900.ttf",
+                        "type": "file",
+                        "ext": ".ttf",
+                        "size": 388460,
+                        "isBinary": false
+                      },
+                      {
+                        "name": "fa-solid-900.woff2",
+                        "path": "clean-sandbox/vendor/@fortawesome/fontawesome-free/webfonts/fa-solid-900.woff2",
+                        "type": "file",
+                        "ext": ".woff2",
+                        "size": 154228,
+                        "isBinary": false
+                      },
+                      {
+                        "name": "fa-v4compatibility.ttf",
+                        "path": "clean-sandbox/vendor/@fortawesome/fontawesome-free/webfonts/fa-v4compatibility.ttf",
+                        "type": "file",
+                        "ext": ".ttf",
+                        "size": 10556,
+                        "isBinary": false
+                      },
+                      {
+                        "name": "fa-v4compatibility.woff2",
+                        "path": "clean-sandbox/vendor/@fortawesome/fontawesome-free/webfonts/fa-v4compatibility.woff2",
+                        "type": "file",
+                        "ext": ".woff2",
+                        "size": 4960,
+                        "isBinary": false
+                      }
+                    ],
+                    "_expanded": false
+                  },
+                  {
+                    "name": "LICENSE.txt",
+                    "path": "clean-sandbox/vendor/@fortawesome/fontawesome-free/LICENSE.txt",
+                    "type": "file",
+                    "ext": ".txt",
+                    "size": 7427,
+                    "isBinary": false
+                  }
+                ],
+                "_expanded": false
+              }
+            ],
+            "_expanded": false
+          },
+          {
+            "name": "bootstrap",
+            "path": "clean-sandbox/vendor/bootstrap",
+            "type": "directory",
+            "children": [
+              {
+                "name": "dist",
+                "path": "clean-sandbox/vendor/bootstrap/dist",
+                "type": "directory",
+                "children": [],
+                "_expanded": false
+              },
+              {
+                "name": "LICENSE",
+                "path": "clean-sandbox/vendor/bootstrap/LICENSE",
+                "type": "file",
+                "ext": "",
+                "size": 1131,
+                "isBinary": false
+              }
+            ],
+            "_expanded": false
+          },
+          {
+            "name": "js-untar",
+            "path": "clean-sandbox/vendor/js-untar",
+            "type": "directory",
+            "children": [
+              {
+                "name": "build",
+                "path": "clean-sandbox/vendor/js-untar/build",
+                "type": "directory",
+                "children": [
+                  {
+                    "name": "dist",
+                    "path": "clean-sandbox/vendor/js-untar/build/dist",
+                    "type": "directory",
+                    "children": [
+                      {
+                        "name": "untar.js",
+                        "path": "clean-sandbox/vendor/js-untar/build/dist/untar.js",
+                        "type": "file",
+                        "ext": ".js",
+                        "size": 6416,
+                        "isBinary": false
+                      }
+                    ],
+                    "_expanded": false
+                  }
+                ],
+                "_expanded": false
+              },
+              {
+                "name": "LICENSE.txt",
+                "path": "clean-sandbox/vendor/js-untar/LICENSE.txt",
+                "type": "file",
+                "ext": ".txt",
+                "size": 1087,
+                "isBinary": false
+              }
+            ],
+            "_expanded": false
+          },
+          {
+            "name": "monaco-editor",
+            "path": "clean-sandbox/vendor/monaco-editor",
+            "type": "directory",
+            "children": [
+              {
+                "name": "min",
+                "path": "clean-sandbox/vendor/monaco-editor/min",
+                "type": "directory",
+                "children": [
+                  {
+                    "name": "vs",
+                    "path": "clean-sandbox/vendor/monaco-editor/min/vs",
+                    "type": "directory",
+                    "children": [
+                      {
+                        "name": "base",
+                        "path": "clean-sandbox/vendor/monaco-editor/min/vs/base",
+                        "type": "directory",
+                        "children": [
+                          {
+                            "name": "browser",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/base/browser",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "ui",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/base/browser/ui",
+                                "type": "directory",
+                                "children": [
+                                  {
+                                    "name": "codiconLabel",
+                                    "path": "clean-sandbox/vendor/monaco-editor/min/vs/base/browser/ui/codiconLabel",
+                                    "type": "directory",
+                                    "children": [
+                                      {
+                                        "name": "codicon",
+                                        "path": "clean-sandbox/vendor/monaco-editor/min/vs/base/browser/ui/codiconLabel/codicon",
+                                        "type": "directory",
+                                        "children": [
+                                          {
+                                            "name": "codicon.ttf",
+                                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/base/browser/ui/codiconLabel/codicon/codicon.ttf",
+                                            "type": "file",
+                                            "ext": ".ttf",
+                                            "size": 56484,
+                                            "isBinary": false
+                                          }
+                                        ],
+                                        "_expanded": false
+                                      }
+                                    ],
+                                    "_expanded": false
+                                  }
+                                ],
+                                "_expanded": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "worker",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/base/worker",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "workerMain.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/base/worker/workerMain.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 170203,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          }
+                        ],
+                        "_expanded": false
+                      },
+                      {
+                        "name": "basic-languages",
+                        "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages",
+                        "type": "directory",
+                        "children": [
+                          {
+                            "name": "abap",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/abap",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "abap.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/abap/abap.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 5686,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "apex",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/apex",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "apex.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/apex/apex.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 4356,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "azcli",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/azcli",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "azcli.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/azcli/azcli.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 1235,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "bat",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/bat",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "bat.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/bat/bat.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 2228,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "cameligo",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/cameligo",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "cameligo.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/cameligo/cameligo.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 2430,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "clojure",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/clojure",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "clojure.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/clojure/clojure.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 10034,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "coffee",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/coffee",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "coffee.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/coffee/coffee.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 3979,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "cpp",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/cpp",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "cpp.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/cpp/cpp.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 5505,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "csharp",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/csharp",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "csharp.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/csharp/csharp.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 4924,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "csp",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/csp",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "csp.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/csp/csp.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 1802,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "dockerfile",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/dockerfile",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "dockerfile.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/dockerfile/dockerfile.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 2233,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "fsharp",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/fsharp",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "fsharp.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/fsharp/fsharp.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 3372,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "go",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/go",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "go.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/go/go.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 3038,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "graphql",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/graphql",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "graphql.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/graphql/graphql.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 2651,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "handlebars",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/handlebars",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "handlebars.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/handlebars/handlebars.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 6563,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "html",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/html",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "html.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/html/html.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 4935,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "ini",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/ini",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "ini.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/ini/ini.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 1484,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "java",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/java",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "java.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/java/java.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 3354,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "javascript",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/javascript",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "javascript.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/javascript/javascript.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 6469,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "kotlin",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/kotlin",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "kotlin.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/kotlin/kotlin.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 3828,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "less",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/less",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "less.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/less/less.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 4281,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "lua",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/lua",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "lua.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/lua/lua.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 2506,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "markdown",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/markdown",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "markdown.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/markdown/markdown.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 4192,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "mips",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/mips",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "mips.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/mips/mips.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 2964,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "msdax",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/msdax",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "msdax.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/msdax/msdax.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 5299,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "mysql",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/mysql",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "mysql.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/mysql/mysql.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 14885,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "objective-c",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/objective-c",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "objective-c.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/objective-c/objective-c.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 2801,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "pascal",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/pascal",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "pascal.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/pascal/pascal.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 3375,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "pascaligo",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/pascaligo",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "pascaligo.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/pascaligo/pascaligo.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 2395,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "perl",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/perl",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "perl.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/perl/perl.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 8640,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "pgsql",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/pgsql",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "pgsql.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/pgsql/pgsql.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 18017,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "php",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/php",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "php.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/php/php.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 8410,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "postiats",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/postiats",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "postiats.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/postiats/postiats.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 8249,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "powerquery",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/powerquery",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "powerquery.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/powerquery/powerquery.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 17336,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "powershell",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/powershell",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "powershell.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/powershell/powershell.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 3666,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "pug",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/pug",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "pug.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/pug/pug.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 5211,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "python",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/python",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "python.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/python/python.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 3633,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "r",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/r",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "r.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/r/r.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 3214,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "razor",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/razor",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "razor.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/razor/razor.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 8841,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "redis",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/redis",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "redis.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/redis/redis.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 3943,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "redshift",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/redshift",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "redshift.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/redshift/redshift.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 12175,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "restructuredtext",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/restructuredtext",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "restructuredtext.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/restructuredtext/restructuredtext.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 4360,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "ruby",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/ruby",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "ruby.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/ruby/ruby.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 8888,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "rust",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/rust",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "rust.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/rust/rust.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 4307,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "sb",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/sb",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "sb.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/sb/sb.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 2210,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "scheme",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/scheme",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "scheme.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/scheme/scheme.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 2156,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "scss",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/scss",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "scss.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/scss/scss.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 6794,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "shell",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/shell",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "shell.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/shell/shell.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 3313,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "solidity",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/solidity",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "solidity.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/solidity/solidity.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 18990,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "sophia",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/sophia",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "sophia.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/sophia/sophia.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 3153,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "sql",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/sql",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "sql.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/sql/sql.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 18622,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "st",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/st",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "st.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/st/st.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 7767,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "swift",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/swift",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "swift.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/swift/swift.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 4709,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "tcl",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/tcl",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "tcl.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/tcl/tcl.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 3954,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "twig",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/twig",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "twig.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/twig/twig.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 6363,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "typescript",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/typescript",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "typescript.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/typescript/typescript.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 5469,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "vb",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/vb",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "vb.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/vb/vb.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 6198,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "xml",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/xml",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "xml.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/xml/xml.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 2122,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "yaml",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/yaml",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "yaml.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/basic-languages/yaml/yaml.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 3927,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          }
+                        ],
+                        "_expanded": false
+                      },
+                      {
+                        "name": "editor",
+                        "path": "clean-sandbox/vendor/monaco-editor/min/vs/editor",
+                        "type": "directory",
+                        "children": [
+                          {
+                            "name": "editor.main.css",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/editor/editor.main.css",
+                            "type": "file",
+                            "ext": ".css",
+                            "size": 91048,
+                            "isBinary": false
+                          },
+                          {
+                            "name": "editor.main.js",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/editor/editor.main.js",
+                            "type": "file",
+                            "ext": ".js",
+                            "size": 2344786,
+                            "isBinary": false
+                          },
+                          {
+                            "name": "editor.main.nls.de.js",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/editor/editor.main.nls.de.js",
+                            "type": "file",
+                            "ext": ".js",
+                            "size": 57255,
+                            "isBinary": false
+                          },
+                          {
+                            "name": "editor.main.nls.es.js",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/editor/editor.main.nls.es.js",
+                            "type": "file",
+                            "ext": ".js",
+                            "size": 58399,
+                            "isBinary": false
+                          },
+                          {
+                            "name": "editor.main.nls.fr.js",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/editor/editor.main.nls.fr.js",
+                            "type": "file",
+                            "ext": ".js",
+                            "size": 61458,
+                            "isBinary": false
+                          },
+                          {
+                            "name": "editor.main.nls.it.js",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/editor/editor.main.nls.it.js",
+                            "type": "file",
+                            "ext": ".js",
+                            "size": 60682,
+                            "isBinary": false
+                          },
+                          {
+                            "name": "editor.main.nls.ja.js",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/editor/editor.main.nls.ja.js",
+                            "type": "file",
+                            "ext": ".js",
+                            "size": 65695,
+                            "isBinary": false
+                          },
+                          {
+                            "name": "editor.main.nls.js",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/editor/editor.main.nls.js",
+                            "type": "file",
+                            "ext": ".js",
+                            "size": 47926,
+                            "isBinary": false
+                          },
+                          {
+                            "name": "editor.main.nls.ko.js",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/editor/editor.main.nls.ko.js",
+                            "type": "file",
+                            "ext": ".js",
+                            "size": 57625,
+                            "isBinary": false
+                          },
+                          {
+                            "name": "editor.main.nls.ru.js",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/editor/editor.main.nls.ru.js",
+                            "type": "file",
+                            "ext": ".js",
+                            "size": 95819,
+                            "isBinary": false
+                          },
+                          {
+                            "name": "editor.main.nls.zh-cn.js",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/editor/editor.main.nls.zh-cn.js",
+                            "type": "file",
+                            "ext": ".js",
+                            "size": 43945,
+                            "isBinary": false
+                          },
+                          {
+                            "name": "editor.main.nls.zh-tw.js",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/editor/editor.main.nls.zh-tw.js",
+                            "type": "file",
+                            "ext": ".js",
+                            "size": 44804,
+                            "isBinary": false
+                          }
+                        ],
+                        "_expanded": false
+                      },
+                      {
+                        "name": "language",
+                        "path": "clean-sandbox/vendor/monaco-editor/min/vs/language",
+                        "type": "directory",
+                        "children": [
+                          {
+                            "name": "html",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/language/html",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "htmlMode.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/language/html/htmlMode.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 446112,
+                                "isBinary": false
+                              },
+                              {
+                                "name": "htmlWorker.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/language/html/htmlWorker.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 435299,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "json",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/language/json",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "jsonMode.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/language/json/jsonMode.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 143875,
+                                "isBinary": false
+                              },
+                              {
+                                "name": "jsonWorker.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/language/json/jsonWorker.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 132040,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          },
+                          {
+                            "name": "typescript",
+                            "path": "clean-sandbox/vendor/monaco-editor/min/vs/language/typescript",
+                            "type": "directory",
+                            "children": [
+                              {
+                                "name": "tsMode.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/language/typescript/tsMode.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 24517,
+                                "isBinary": false
+                              },
+                              {
+                                "name": "tsWorker.js",
+                                "path": "clean-sandbox/vendor/monaco-editor/min/vs/language/typescript/tsWorker.js",
+                                "type": "file",
+                                "ext": ".js",
+                                "size": 3491704,
+                                "isBinary": false
+                              }
+                            ],
+                            "_expanded": false
+                          }
+                        ],
+                        "_expanded": false
+                      },
+                      {
+                        "name": "loader.js",
+                        "path": "clean-sandbox/vendor/monaco-editor/min/vs/loader.js",
+                        "type": "file",
+                        "ext": ".js",
+                        "size": 30170,
+                        "isBinary": false
+                      }
+                    ],
+                    "_expanded": false
+                  }
+                ],
+                "_expanded": false
+              },
+              {
+                "name": "LICENSE",
+                "path": "clean-sandbox/vendor/monaco-editor/LICENSE",
+                "type": "file",
+                "ext": "",
+                "size": 1119,
+                "isBinary": false
+              }
+            ],
+            "_expanded": false
+          },
+          {
+            "name": "pako",
+            "path": "clean-sandbox/vendor/pako",
+            "type": "directory",
+            "children": [
+              {
+                "name": "dist",
+                "path": "clean-sandbox/vendor/pako/dist",
+                "type": "directory",
+                "children": [
+                  {
+                    "name": "pako.min.js",
+                    "path": "clean-sandbox/vendor/pako/dist/pako.min.js",
+                    "type": "file",
+                    "ext": ".js",
+                    "size": 44260,
+                    "isBinary": false
+                  }
+                ],
+                "_expanded": false
+              },
+              {
+                "name": "LICENSE",
+                "path": "clean-sandbox/vendor/pako/LICENSE",
+                "type": "file",
+                "ext": "",
+                "size": 1104,
+                "isBinary": false
+              }
+            ],
+            "_expanded": false
+          },
+          {
+            "name": "text-encoding",
+            "path": "clean-sandbox/vendor/text-encoding",
+            "type": "directory",
+            "children": [
+              {
+                "name": "lib",
+                "path": "clean-sandbox/vendor/text-encoding/lib",
+                "type": "directory",
+                "children": [
+                  {
+                    "name": "encoding-indexes.js",
+                    "path": "clean-sandbox/vendor/text-encoding/lib/encoding-indexes.js",
+                    "type": "file",
+                    "ext": ".js",
+                    "size": 530093,
+                    "isBinary": false
+                  },
+                  {
+                    "name": "encoding.js",
+                    "path": "clean-sandbox/vendor/text-encoding/lib/encoding.js",
+                    "type": "file",
+                    "ext": ".js",
+                    "size": 101503,
+                    "isBinary": false
+                  }
+                ],
+                "_expanded": false
+              },
+              {
+                "name": "LICENSE.md",
+                "path": "clean-sandbox/vendor/text-encoding/LICENSE.md",
+                "type": "file",
+                "ext": ".md",
+                "size": 12897,
+                "isBinary": false
+              }
+            ],
+            "_expanded": false
+          }
+        ],
+        "_expanded": false
+      },
+      {
+        "name": "index.html",
+        "path": "clean-sandbox/index.html",
+        "type": "file",
+        "ext": ".html",
+        "size": 14476,
+        "isBinary": false
+      },
+      {
+        "name": "logo.svg",
+        "path": "clean-sandbox/logo.svg",
+        "type": "file",
+        "ext": ".svg",
+        "size": 2610,
+        "isBinary": false
+      },
+      {
+        "name": "make.dcl",
+        "path": "clean-sandbox/make.dcl",
+        "type": "file",
+        "ext": ".dcl",
+        "size": 1259,
+        "isBinary": false
+      },
+      {
+        "name": "make.icl",
+        "path": "clean-sandbox/make.icl",
+        "type": "file",
+        "ext": ".icl",
+        "size": 6940,
+        "isBinary": false
+      },
+      {
+        "name": "package.json",
+        "path": "clean-sandbox/package.json",
+        "type": "file",
+        "ext": ".json",
+        "size": 457,
+        "isBinary": false
+      },
+      {
+        "name": "README.md",
+        "path": "clean-sandbox/README.md",
+        "type": "file",
+        "ext": ".md",
+        "size": 941,
+        "isBinary": false
+      },
+      {
+        "name": "sandbox.icl",
+        "path": "clean-sandbox/sandbox.icl",
+        "type": "file",
+        "ext": ".icl",
+        "size": 3088,
+        "isBinary": false
+      },
+      {
+        "name": "sapl-jmvm-logo.svg",
+        "path": "clean-sandbox/sapl-jmvm-logo.svg",
+        "type": "file",
+        "ext": ".svg",
+        "size": 2743,
+        "isBinary": false
+      }
+    ],
+    "_expanded": false
+  },
+  {
     "name": "contracts",
     "path": "contracts",
     "type": "directory",
@@ -602,7 +2281,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/index.html",
         "type": "file",
         "ext": ".html",
-        "size": 20142,
+        "size": 21521,
         "isBinary": false
       },
       {
@@ -610,7 +2289,15 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/jmvm_interpreter_factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 19368,
+        "size": 21674,
+        "isBinary": false
+      },
+      {
+        "name": "notebook_protocol_factsheet.html",
+        "path": "factsheets/notebook_protocol_factsheet.html",
+        "type": "file",
+        "ext": ".html",
+        "size": 41639,
         "isBinary": false
       },
       {
@@ -627,6 +2314,14 @@ window.WEBSAPL_TREE = [
         "type": "file",
         "ext": ".html",
         "size": 67200,
+        "isBinary": false
+      },
+      {
+        "name": "repl_compile_link_run_factsheet.html",
+        "path": "factsheets/repl_compile_link_run_factsheet.html",
+        "type": "file",
+        "ext": ".html",
+        "size": 39032,
         "isBinary": false
       },
       {
@@ -3082,7 +4777,39 @@ window.WEBSAPL_TREE = [
         "path": "top2026/presentatie.spp",
         "type": "file",
         "ext": ".spp",
-        "size": 25155,
+        "size": 26630,
+        "isBinary": false
+      },
+      {
+        "name": "sapl-jmvm-banner-compact-dark.svg",
+        "path": "top2026/sapl-jmvm-banner-compact-dark.svg",
+        "type": "file",
+        "ext": ".svg",
+        "size": 2455,
+        "isBinary": false
+      },
+      {
+        "name": "sapl-jmvm-banner-compact-light.svg",
+        "path": "top2026/sapl-jmvm-banner-compact-light.svg",
+        "type": "file",
+        "ext": ".svg",
+        "size": 2455,
+        "isBinary": false
+      },
+      {
+        "name": "sapl-jmvm-banner-dark.svg",
+        "path": "top2026/sapl-jmvm-banner-dark.svg",
+        "type": "file",
+        "ext": ".svg",
+        "size": 2729,
+        "isBinary": false
+      },
+      {
+        "name": "sapl-jmvm-banner-light.svg",
+        "path": "top2026/sapl-jmvm-banner-light.svg",
+        "type": "file",
+        "ext": ".svg",
+        "size": 2729,
         "isBinary": false
       },
       {
@@ -3090,7 +4817,7 @@ window.WEBSAPL_TREE = [
         "path": "top2026/stijl.css",
         "type": "file",
         "ext": ".css",
-        "size": 3945,
+        "size": 5052,
         "isBinary": false
       }
     ],

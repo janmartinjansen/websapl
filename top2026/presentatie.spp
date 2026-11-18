@@ -1,6 +1,8 @@
 //%% [instellingen] waarden=uit code=verborgen stijl=top2026/stijl.css
 //%% [banner] TOP Software · 26 November 2026 | A Complete FP Toolchain in 4 Months | Jan Martin Jansen · {dia} / {n}
 //%% [markdown]
+// <div class="title-logo"><img class="logo-dark" src="top2026/sapl-jmvm-banner-dark.svg" alt="Sapl &amp; JMVM"><img class="logo-light" src="top2026/sapl-jmvm-banner-light.svg" alt="Sapl &amp; JMVM"></div>
+//
 // # Building a Complete FP Toolchain in 4 Months
 //
 // <p class="subtitle">An Experiment in LLM-Driven Software Development</p>
