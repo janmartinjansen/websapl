@@ -555,27 +555,13 @@ D.table ["Experiment", "What happened", "Replaced by"]
 //
 // <p class="hint">Which model writes matters less than what checks it: the oracles of the previous slides.</p>
 //%% [markdown]
-// ## What could this mean for Clean?
-//
-// Questions rather than lessons:
-//
-// 1. **A faster ABC interpreter in the browser** is possible by choosing per browser engine:
-//    with locals it is a third faster in Chrome, the same in Safari, but twice as slow in Firefox.
-//    Clean's own C interpreter via Emscripten does slightly worse than locals everywhere.
-// 2. **A somewhat higher-level intermediate form?** ABC is stack code, like JMVM bytecode.
-//    Here the level of the intermediate form mattered more than the backend, and `abc2retag`
-//    shows the structure can be recovered from ABC. It may be worth a look.
-// 3. **A classic C compiler as code generator?** Via Retag it worked surprisingly well,
-//    also for Clean code via ABC. But `sapl2c` is a very early prototype, and types are lost on the way.
-// 4. **Developing with LLMs**: the oracles and the way of working carry over to any compiler project.
-//%% [markdown]
 // ## Measured so far (first prototypes)
 //%%
 D.table ["Apple M4, native", "Mean", "Per program"]
-  [ ["JMVM interpreter and compiler now vs. 17 July", "1.4× faster", "0.47–1.00"],
-    ["Sapl via Retag to C (sapl2c) vs. Clean native", "1.2× faster", "0.50–1.33"],
-    ["Sapl via Retag to C vs. GHC -O2", "as fast", "0.64–1.65"],
-    ["Clean via ABC, Retag and C vs. Clean native", "as fast", "0.58–1.75"],
+  [ ["JMVM interpreter and compiler now vs. 17 July", "1.4× faster", "0.47–1.00×"],
+    ["Sapl via Retag to C (sapl2c) vs. Clean native", "1.2× faster", "0.50–1.33×"],
+    ["Sapl via Retag to C vs. GHC -O2", "as fast", "0.64–1.65×"],
+    ["Clean via ABC, Retag and C vs. Clean native", "as fast", "0.58–1.75×"],
     ["gen1 ported to Clean, compiling itself, via C vs. Clean native", "1.43× slower", "234 vs. 163 ms"] ]
 //%% [markdown]
 // - **Small benchmarks**: C from Retag keeps up with Clean's `cg` and with GHC; it wins where much is allocated.
@@ -591,7 +577,7 @@ D.table ["Apple M4, native", "Mean", "Per program"]
 // - `abc2retag` and `retag2abc` connect ABC code and Retag **in both directions**: every language reaches every interpreter.
 // - All 13 benchmarks in both languages give the **same output on both interpreters**.
 //
-// <p class="hint">janmartinjansen.github.io/websapl/clean-sandbox · retag2abc is sapl2abc.cfp in the code, itself written in Sapl.</p>
+// <p class="hint"><a href="clean-sandbox/" target="_blank">janmartinjansen.github.io/websapl/clean-sandbox</a> · retag2abc is sapl2abc.cfp in the code, itself written in Sapl.</p>
 //%% [markdown]
 // ## In the browser: which combination is fastest?
 //
@@ -608,6 +594,20 @@ D.table ["Apple M4, native", "Mean", "Per program"]
 // - The JMVM depends least on the browser: **0.76–1.12**, against 0.65–1.82 for the ABC builds.
 //
 // <p class="hint">Chrome with the shipped abc-interpreter.wasm = 1.00. Apple M4, warm; the 14 programs compiled by Clean (clm -optabc), the JMVM runs the same ABC via abc2retag; geometric mean.</p>
+//%% [markdown]
+// ## What could this mean for Clean?
+//
+// Questions rather than lessons:
+//
+// 1. **A faster ABC interpreter in the browser** is possible by choosing per browser engine:
+//    with locals it is a third faster in Chrome, the same in Safari, but twice as slow in Firefox.
+//    Clean's own C interpreter via Emscripten does slightly worse than locals everywhere.
+// 2. **A somewhat higher-level intermediate form?** ABC is stack code, like JMVM bytecode.
+//    Here the level of the intermediate form mattered more than the backend, and `abc2retag`
+//    shows the structure can be recovered from ABC. It may be worth a look.
+// 3. **A classic C compiler as code generator?** Via Retag it worked surprisingly well,
+//    also for Clean code via ABC. But `sapl2c` is a very early prototype, and types are lost on the way.
+// 4. **Developing with LLMs**: the oracles and the way of working carry over to any compiler project.
 //%% [markdown]
 // ## What has not been measured
 //

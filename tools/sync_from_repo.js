@@ -175,6 +175,7 @@ const ENTRIES = [
   { src: "notebooks/top2026/presentatie.spp", dst: "top2026/presentatie.spp" },
   { src: "notebooks/top2026/stijl.css", dst: "top2026/stijl.css" },
   { src: "notebooks/top2026/ecosystem.svg", dst: "top2026/ecosystem.svg" },
+  { src: "notebooks/top2026/sandbox.svg", dst: "top2026/sandbox.svg" },
   { src: "logo/sapl-jmvm-banner-dark.svg", dst: "top2026/sapl-jmvm-banner-dark.svg" },
   { src: "logo/sapl-jmvm-banner-light.svg", dst: "top2026/sapl-jmvm-banner-light.svg" },
   { src: "logo/sapl-jmvm-banner-compact-dark.svg", dst: "top2026/sapl-jmvm-banner-compact-dark.svg" },
