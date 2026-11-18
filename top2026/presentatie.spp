@@ -417,15 +417,15 @@ D.table ["JMVM interpreter vs. (Apple M4)", "Mean", "Per program"]
 // ## Where the interpreter's speed came from
 //%%
 D.table ["Improvement", "When", "Gain", "Whose idea"]
-  [ ["Strictness analysis: finds the ! automatically", "August", "without it: fib 6.9×, queens/eval/match 1.6-1.9× slower", "classic (Mycroft)"],
-    ["musttail dispatch: every instruction its own function", "24 Oct", "fib -54%, the compiler -8.6%", "my question: do tail calls beat computed goto?"],
-    ["Instruction fusion (superinstructions)", "1 Nov", "-15% native, -13% Chrome, -14% Safari", "my question: does fusion pay off?"],
+  [ ["Strictness analysis: finds the ! automatically", "August", "without it slower: fib 6.9×, rest ≤1.9×", "classic (Mycroft)"],
+    ["musttail dispatch: every instruction its own function", "24 Oct", "the compiler -8.6%, fib -54% (*)", "mine: tail calls vs. goto?"],
+    ["Instruction fusion (superinstructions)", "1 Nov", "-15% native, -13% Chrome, -14% Safari", "mine: does fusion pay off?"],
     ["case as a real jump instead of a jump table", "2 Nov", "the compiler -25%, knights -38%", "the model, from hardware counters"] ]
 //%% [markdown]
-// - **Net, against the VM and compiler of 17 July**: **1.4× faster** on average, from **1.0×** (fib, primes) to **2.1×** (sprimes).
-//   Each gain above was measured against the VM of that moment, not against July.
+// - **Net, against VM and compiler of 17 July**: **1.4× faster** on average, from **1.0×** (fib) to **2.1×** (sprimes).
+// - (*) **Not a straight climb**: the growing VM slowed its goto loop (fib 0.24 s in July, 0.55 s in October); musttail mainly won that back.
 //
-// <p class="hint">Native on the Apple M4. musttail is native only: in the browser V8 runs the switch form faster. Against 17 July: 11 of the 13 benchmarks (twice changed, eval2 is new), same output; then the Amanda compiler with hand-written !, now gen1 with inference.</p>
+// <p class="hint">Each gain measured against the VM of that moment. Apple M4, native (V8 prefers the switch form). Goto today: fib 583 ms, musttail 253 ms. July: 11 of 13 benchmarks (twice changed, eval2 new), same output.</p>
 //%% [markdown]
 // ## Looking inside the processor: why `case` stalled
 //
