@@ -33,7 +33,7 @@
 	<link rel="stylesheet" href="vendor/@fortawesome/fontawesome-free/css/fontawesome.min.css">
 	<link rel="stylesheet" href="vendor/@fortawesome/fontawesome-free/css/solid.min.css">
 
-	<link rel="stylesheet" href="css/sandbox.css"/>
+	<link rel="stylesheet" href="css/sandbox.css?v=2"/>
 </head>
 <body class="h-100 overflow-hidden">
 	<div class="container-fluid h-100 px-0 d-flex flex-column">
@@ -275,10 +275,15 @@
 		};
 
 		const workspace_el=document.getElementById ('workspace');
+		const col_editor=document.getElementById ('col-editor');
+		const col_tools=document.getElementById ('col-tools');
 		const btn_tools_fs=document.getElementById ('btn-tools-fullscreen');
 		const btn_retag_fs=document.getElementById ('btn-retag-fullscreen');
 		const set_tools_fullscreen=(full) => {
 			workspace_el.classList.toggle ('tools-fullscreen', full);
+			col_editor.classList.toggle ('d-none', full);
+			col_tools.style.height=full ? '100%' : '';
+			col_tools.style.paddingTop=full ? '0' : '';
 			for (const btn of [btn_tools_fs, btn_retag_fs]){
 				btn.setAttribute ('aria-pressed', String (full));
 				btn.title=full ? 'Verklein paneel (Esc)' : 'Volledig scherm (Esc)';

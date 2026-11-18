@@ -1865,7 +1865,7 @@ window.WEBSAPL_TREE = [
         "path": "clean-sandbox/index.html",
         "type": "file",
         "ext": ".html",
-        "size": 16370,
+        "size": 16632,
         "isBinary": false
       },
       {
