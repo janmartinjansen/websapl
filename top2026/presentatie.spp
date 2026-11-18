@@ -401,18 +401,18 @@ D.table ["Effect of .jvb", "Before", "After"]
 //%% [markdown]
 // ## How fast is the interpreter?
 //%%
-D.table ["JMVM interpreter vs. (Apple M4, 9 Nov)", "Mean", "Per program"]
+D.table ["JMVM interpreter vs. (Apple M4)", "Mean", "Per program"]
   [ ["Clean native", "2.7× slower", "1.8–4.6×"],
-    ["GHC -O2", "3.1× slower", "1.9–6.2×"],
+    ["GHC -O2 (without full laziness)", "3.2× slower", "1.5–5.1×"],
     ["Clean's ABC interpreter, native", "1.25× slower", "0.7–1.7×"],
     ["Itself, in the browser (WebAssembly, Chrome)", "1.47× slower", ""],
     ["The compiler compiling itself: GHC -O2", "2.0× slower", "598 vs. 295 ms"] ]
 //%% [markdown]
 // - The 2016 target was **within a factor of 5** of Clean and Haskell. Natively it is now about **3×** on average,
-//   but it depends a lot on the program: from under 2× to 6×.
+//   but it depends a lot on the program: from 1.5× to 5×.
 // - In the browser it loses **less than 1.5×** against itself natively.
 //
-// <p class="hint">Geometric means over the same 12 benchmarks (sort left out: Clean 3.1 native ARM64 gives a wrong result); best of 15 runs. Clean native in a Linux VM on the same machine. Source: experiments/clean_vergelijking/meting_2026-11-09.</p>
+// <p class="hint">Geometric means over the same 12 benchmarks (sort left out: Clean 3.1 native ARM64 gives a wrong result); best of 15 runs. Clean native in a Linux VM on the same machine (9 Nov). GHC (18 Nov): literal ports of the Sapl programs, and -fno-full-laziness, because otherwise GHC lifts the work the benchmark repeats out of its loop (parsetest: 12× less work). Sources: experiments/clean_vergelijking/meting_2026-11-09 and meting_2026-11-18.</p>
 //%% [markdown]
 // ## Where the interpreter's speed came from
 //%%
@@ -422,7 +422,10 @@ D.table ["Improvement", "When", "Gain", "Whose idea"]
     ["Instruction fusion (superinstructions)", "1 Nov", "-15% native, -13% Chrome, -14% Safari", "my question: does fusion pay off?"],
     ["case as a real jump instead of a jump table", "2 Nov", "the compiler -25%, knights -38%", "the model, from hardware counters"] ]
 //%% [markdown]
-// <p class="hint">Native on the Apple M4. musttail is native only: in the browser V8 runs the switch form faster.</p>
+// - **Net, against the VM and compiler of 17 July**: **1.4× faster** on average, from **1.0×** (fib, primes) to **2.1×** (sprimes).
+//   Each gain above was measured against the VM of that moment, not against July.
+//
+// <p class="hint">Native on the Apple M4. musttail is native only: in the browser V8 runs the switch form faster. Against 17 July: 11 of the 13 benchmarks (twice changed, eval2 is new), same output; then the Amanda compiler with hand-written !, now gen1 with inference.</p>
 //%% [markdown]
 // ## Looking inside the processor: why `case` stalled
 //
