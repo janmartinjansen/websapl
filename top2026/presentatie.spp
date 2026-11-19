@@ -376,8 +376,10 @@ D.animated 40 figStart figStep figView
 // - **7-8 October**: the REPL becomes **one Sapl program** instead of three hosts in C++, Python and
 //   JavaScript. The VM only offers a few primitives.
 // - **9-11 October**: a **binary load format** (`.jvb`): the VM no longer reads text at all.
-// - The compiler, linker, typechecker and REPL all run as **bytecode**: unchanged in the browser,
-//   natively, and on a server.
+// - **Compiler, linker, typechecker, preprocessor and REPL** are all written in Sapl — even though
+//   the models repeatedly tried to put them in the C++ interpreter.
+// - **Result**: one small VM in WebAssembly gives you the **entire ecosystem in the browser** for
+//   free — which is what makes the notebooks possible, without a server.
 //%%
 D.table ["Effect of .jvb", "Before", "After"]
   [ ["Start the REPL", "~117 ms", "~6 ms"],
@@ -507,6 +509,22 @@ D.table ["Experiment", "What happened", "Replaced by"]
 // - Starting again **from scratch** usually went better than repairing the first attempt.
 // - With LLMs, **throwing work away is cheap**: you did not spend weeks typing it yourself.
 //%% [markdown]
+// ## Why some translations came almost for free
+//
+// - **Amanda to Sapl (August)** got stuck on subtle syntax and semantics: two surface languages,
+//   little training data, and no full regression yet.
+// - **`abc2retag`, `sapl2abc` and `sapl2c` (November)** each had a working version within hours
+//   to a day — and stayed manageable after that.
+// - **Why?**
+//   1. **Retag is the sweet spot**: lambda-lifted, no sugar, laziness explicit — a clean tree,
+//      not flat bytecode.
+//   2. **The target was familiar**: C and stack machines sit deep in the models' training data;
+//      Amanda does not.
+//   3. **The oracles were ready**: 12 benchmarks and the VM as reference caught every mistake at
+//      once.
+//
+// <p class="beat sm">Once the right intermediate form and oracles are in place, new backends become cheap.</p>
+//%% [markdown]
 // ## The real insight: verification, not speed
 //
 // LLM-written code became trustworthy through **oracles that check byte for byte**:
@@ -538,12 +556,27 @@ D.table ["Experiment", "What happened", "Replaced by"]
 // - The starting point: Retag, `eval` and `jmpt`.
 // - The questions: would instruction fusion and tail calls beat computed goto? Both paid off.
 // - Clean's interpreter to wasm: the model chose `musttail`; I asked for *switch*, which is better in the browser.
+// - **Keeping the boundary clean**: pushing compiler, linker and REPL into Sapl when the models wanted to add them to C++.
 // - When a number is too good, or a path is a dead end.
 //
 // </div>
 // </div>
 //
 // <p class="beat sm">Research with LLMs is a new kind of science.<br>Experience is a huge advantage; working with LLMs has to be learned too.</p>
+//%% [markdown]
+// ## "Models only write run-of-the-mill code"
+//
+// A common objection — and true, **if you ask in a vacuum** ("build me a notebook app").
+//
+// - **What is not standard here** came from the design: `Retag`, tools in Sapl, pure execution,
+//   no server. A model does not invent that on its own.
+// - **How the notebooks actually happened**: I asked for a **REPL**, and together we took it
+//   from recompiling everything to **incremental compiling, live linking and running**. Then *the
+//   model* suggested turning those pieces into notebooks — because they fit together so cleanly.
+// - **The model amplifies the design**: once a sharp core is in place, it recognises strong
+//   patterns (Elm, Web Workers, `clang -O2`) and takes real initiative *within* it.
+//
+// <p class="beat sm">You do not get cookie-cutter software if the architecture is not cookie-cutter.</p>
 //%% [markdown]
 // ## The models
 //
@@ -552,6 +585,9 @@ D.table ["Experiment", "What happened", "Replaced by"]
 //   (these slides were reviewed by Argon and by Claude).
 // - The Gemini models (Google) regularly **missed the point completely**.
 //   The aborted 38 ms run came from one of them.
+// - Even though **Sapl+** exists (lambdas, pattern matching, comprehensions), the models almost
+//   always wrote **Core Sapl** for real toolchain code: humans want syntactic sugar, models prefer
+//   the explicit, bare language.
 //
 // <p class="hint">Which model writes matters less than what checks it: the oracles of the previous slides.</p>
 //%% [markdown]
