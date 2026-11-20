@@ -750,15 +750,16 @@ D.table ["Programs that stop (of 14, Sapl)", "Main thread", "Web Worker"]
 //%% [markdown]
 // ## What could this mean for Clean and iTasks?
 //
-// - **Speed in the client**: code that now runs in the ABC interpreter could run close to native speed
-//   (3–8× faster), start without warm-up and use less memory; more of an iTasks application could run in the browser.
-// - **One route for every target**: server and browser from the same C; a new platform is a C or wasm target,
-//   not a new `cg` plus a run-time system in assembly.
-// - **The hard parts**:
-//   - **Graph exchange**: iTasks copies graphs between server and client because the ABC interpreter uses Clean's node layout; sapl2c uses the JMVM's.
+// - **Speed in the client**: 3–8× faster than the ABC interpreter, no warm-up, less memory.
+// - **One route for every target**: server and browser from the same C, not a `cg` plus run-time system per platform.
+// - **Already there**: graph exchange by name, not by layout (`pack`/`unpack`: thunks, sharing and cycles included);
+//   both ends just need the same build. Uniqueness is checked by the front end; arrays are updated in place.
+// - **The work**:
+//   - **iTasks itself**: its graph copying becomes `pack`/`unpack`, plus its `ccall`s; `pack` in sapl2c.
 //   - **Code loading**: the ABC interpreter receives code per function, on demand; wasm works in modules.
 //   - **JavaScript interop**, as the ABC interpreter offers it to iTasks.
-//   - Uniqueness, arrays and dynamics through abc2retag: not tested yet.
+//   - **Numbers**: `Real` is 32 bits here (Clean: 64), `Int` 62 bits, no bit operations yet.
+//   - Boxed arrays through abc2retag, and dynamics: not done yet.
 //%% [markdown]
 // ## Compiling in the client, without clang?
 //
