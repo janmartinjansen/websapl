@@ -648,12 +648,12 @@ D.table ["Apple M4, native", "Mean", "Per program"]
 //%%
 D.table ["When", "Route", "Against the JMVM in wasm"]
   [ ["Jul–Sep", "Bytecode to wasm, runtime in JS", "Slower: paused"],
-    ["29 Sep", "Bytecode to wasm, own stack", "~1.5× faster: not used"],
+    ["29 Sep", "Bytecode to wasm, own stack", "~1.5× faster: too little"],
     ["20 Nov", "Retag to C to wasm", "4× faster"],
     ["20 Nov", "Retag straight to wasm", "3.3× faster, no clang"] ]
 //%% [markdown]
-// - What changed was **the starting point**: from bytecode the wasm still plays stack machine,
-//   from Retag variables become wasm locals. The same lesson as with C.
+// - A compiler is only worth it at **~3×** over the interpreter. From bytecode we got 1.5× (wasm) and 1.3× (`jmvm2c`),
+//   from Retag 3–4×: there variables become locals, from bytecode the code still plays stack machine.
 // - The **stack** is back: September solved it with an own stack, the new routes still have to.
 //
 // <p class="beat sm">This is research: two attempts that did not pay off, then suddenly it works.</p>
