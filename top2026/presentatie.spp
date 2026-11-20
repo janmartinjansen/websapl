@@ -651,7 +651,7 @@ D.table ["Apple M4, native", "Mean", "Per program"]
 //
 // - A real **iTasks** application: speed, and **compile time**.
 // - **Uniqueness and arrays**, records, `ccall`, dynamics.
-// - The native route in **WebAssembly**, and graph compatibility with the ABC interpreter.
+// - The native route in **real browsers** (so far only V8, via Node: see the extra slides), and graph compatibility with the ABC interpreter.
 // - A real **iPad**; Windows.
 //%% [markdown]
 // ## A proposal
@@ -660,3 +660,91 @@ D.table ["Apple M4, native", "Mean", "Per program"]
 // and measure speed, compile time and graph compatibility.
 //
 // <p class="beat">Questions?</p>
+//%% [markdown]
+// # Extra: native code in the browser
+//
+// <p class="beat sm">For the specialists: a first experiment, 20 November.</p>
+//
+// <p class="hint">The same C that sapl2c writes, compiled to WebAssembly. Measured in V8 (Node), not yet in the browsers themselves.</p>
+//%% [markdown]
+// ## The same C, in WebAssembly
+//
+// The C of `--native`, unchanged, through **Emscripten**: the same output as the JMVM, also for the compiler.
+//%%
+D.table ["V8, warm, ms", "sapl2c native", "sapl2c in wasm", "JMVM in wasm"]
+  [ ["fib", "90", "133", "711"],
+    ["parsetest", "207", "345", "763"],
+    ["eval2", "155", "167", "624"],
+    ["gen1, compiling itself", "209", "266", "849"],
+    ["Mean over 14", "1.00", "1.35×", "5.2×"] ]
+//%% [markdown]
+// - About **4× faster than our interpreter** in wasm, only **1.35×** slower than native; roughly **5×** faster than Clean's ABC interpreter in Chrome (an indication: other programs).
+//
+// <p class="hint">Node 26 (V8), Apple M4; best of 9, alternating, a fresh instance per run after warm-up. Mean: geometric, relative to sapl2c native. Source: experiments/sapl2c/wasm/README.md.</p>
+//%% [markdown]
+// ## What it took
+//
+// - **Tail calls** (`-mtail-call`): every `musttail` becomes a wasm `return_call`.
+// - **Two return values** (multivalue): natively the result and the heap pointer come back in two registers;
+//   without multivalue wasm returns them **through memory**.
+//%%
+D.table ["Effect of multivalue", "Before", "After"]
+  [ ["fib", "262 ms", "133 ms"],
+    ["prolog", "108 ms", "81 ms"],
+    ["the compiler compiling itself", "313 ms", "266 ms"],
+    ["Mean, against the JMVM in wasm", "0.32×", "0.26×"] ]
+//%% [markdown]
+// - Sizes: 15–150 KB of wasm per benchmark, **886 KB** for the compiler (the JMVM: 151 KB plus the program as bytecode).
+//%% [markdown]
+// ## The obstacle: the stack
+//
+// - Every call that is not a tail call (above all evaluating a thunk) uses the **engine's stack**; natively a 4 GB thread stack.
+// - In the browser the **browser** sets that limit (V8: about 1 MB); a page cannot raise it.
+//%%
+D.table ["Stack limit", "Programs that stop"]
+  [ ["Default (V8, ~1 MB)", "6 of 14"],
+    ["16 MB", "2: twice, the compiler"],
+    ["64 MB", "1: the compiler"],
+    ["2 GB (the measurement)", "none"] ]
+//%% [markdown]
+// - The interpreters (JMVM, ABC) **do not have this problem**: their stack lives in their own memory.
+//
+// <p class="beat sm">Not a show-stopper, but it has to be solved first.</p>
+//
+// <p class="hint">At the default: primes, sort, twice, eval, prolog and the compiler. Large programs recurse deeply: Clean native runs the typed compiler with -s 100M.</p>
+//%% [markdown]
+// ## Ways out (not tried yet)
+//
+// 1. **An own stack in linear memory**: calls that are not tail calls become continuations.
+//    This is how the interpreters and GHC's wasm backend do it; our September experiment worked this way too.
+//    **Costs speed**: less stays in registers.
+// 2. **A hybrid**: the engine stack as now, and only the source of the depth (chains of `eval` on thunks) on an own stack.
+//    Only those places pay.
+// 3. **Stack switching in wasm** (JSPI, the stack-switching proposal): run on a separate stack.
+//    Not yet in every browser.
+//
+// <p class="hint">Also to check: in September return_call was about 3× slower than a driver loop in Safari (JavaScriptCore), the reverse of V8. sapl2c relies on return_call everywhere.</p>
+//%% [markdown]
+// ## What could this mean for Clean and iTasks?
+//
+// - **Speed in the client**: code that now runs in the ABC interpreter could run close to native speed;
+//   more of an iTasks application could run in the browser.
+// - **One route for every target**: server and browser from the same C; a new platform is a C or wasm target,
+//   not a new `cg` plus a run-time system in assembly.
+// - **The hard parts**:
+//   - **Graph exchange**: iTasks copies graphs between server and client because the ABC interpreter uses Clean's node layout; sapl2c uses the JMVM's.
+//   - **Code loading**: the ABC interpreter receives code per function, on demand; wasm works in modules.
+//   - **JavaScript interop**, as the ABC interpreter offers it to iTasks.
+//   - Uniqueness, arrays and dynamics through abc2retag: not tested yet.
+//%% [markdown]
+// ## Next measurements
+//
+// - **In the browsers themselves** (Chrome, Safari, Firefox, iPad), next to the four interpreters measured on 16 November,
+//   and **Clean programs via abc2retag**, against the ABC interpreter on the same ABC code.
+// - **Compiling in the client, without clang?** clang in the browser is tens of MB. A Retag-to-wasm generator in Sapl would be small,
+//   but how much of the speed comes from clang `-O2`? Measure: `-O0`/`-O1`, and Binaryen (`wasm-opt`, also available in the browser).
+// - Then: the **stack**, with the numbers per browser in hand.
+//
+// <p class="beat sm">Questions for you: which matters most for iTasks?</p>
+//
+// <p class="hint">Plan: docs/2026-11-20_sapl2c_wasm_vervolg_plan.md (branch proef/sapl2c-wasm).</p>
