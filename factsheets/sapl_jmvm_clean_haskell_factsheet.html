@@ -718,7 +718,7 @@
             <rect width="180" height="62" rx="6" fill="var(--node-bg)" stroke="#f59e0b" stroke-width="2" filter="url(#card-shadow)" />
             <text x="12" y="20" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#f59e0b">sapl2c (Sapl &rarr; C) ★</text>
             <text x="12" y="36" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">sapl2c.cfp (Sapl) &rarr; .c + clang -O2</text>
-            <text x="12" y="52" font-family="-apple-system, sans-serif" font-size="9.5" fill="#10b981" font-weight="600">0.33&times; runfast &bull; 244 ms gen1</text>
+            <text x="12" y="52" font-family="-apple-system, sans-serif" font-size="9.5" fill="#10b981" font-weight="600">0.32&times; runfast &bull; 203 ms gen1</text>
           </g>
 
           <!-- Gen1 Codegen -->
@@ -777,7 +777,7 @@
             <rect width="200" height="65" rx="6" fill="var(--node-bg)" stroke="#f59e0b" stroke-width="1.5" filter="url(#card-shadow)" />
             <text x="12" y="22" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#f59e0b">Native Machine Code</text>
             <text x="12" y="38" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">Clean runtime &bull; sapl2c (clang -O2)</text>
-            <text x="12" y="54" font-family="-apple-system, sans-serif" font-size="9.5" fill="#10b981" font-weight="600">5&times;&ndash;7&times; faster &bull; 0.33&times; runfast</text>
+            <text x="12" y="54" font-family="-apple-system, sans-serif" font-size="9.5" fill="#10b981" font-weight="600">5&times;&ndash;7&times; faster &bull; 0.32&times; runfast</text>
           </g>
 
           <!-- Clean ABC Interpreter -->
@@ -1550,7 +1550,7 @@ printf 'primes.cfp_retag\nClean System Files/primes.opt.abc\n' | ./runfast sapl_
           <ul>
             <li><strong>Peak Performance:</strong> 5&times; to 7&times; faster than interpreted bytecode; nearly matches hand-written C.</li>
             <li><strong>Dedicated ABC Stacks:</strong> Direct machine register allocation for A, B, and C stack pointers.</li>
-            <li><strong>Self-Hosting Speed:</strong> gen1 compiles itself via Clean ABC in just 0.63 seconds native (Sapl &rarr; ABC &rarr; <code>cg</code> route, earlier measurement). The typed Clean port of gen1 takes <strong>166 ms</strong> natively on ARM64 (Clean 3.1), against 557 ms for gen1 on the JMVM and 278 ms for typed Haskell on GHC.</li>
+            <li><strong>Self-Hosting Speed:</strong> gen1 compiles itself via Clean ABC in just 0.63 seconds native (Sapl &rarr; ABC &rarr; <code>cg</code> route, earlier measurement). The typed Clean port of gen1 takes <strong>164 ms</strong> natively on ARM64 (Clean 3.1), against 536 ms for gen1 on the JMVM and 278 ms for typed Haskell on GHC (20 November 2026).</li>
             <li><strong>Proven Runtime:</strong> Decades of mature GC, memory management, and uniqueness typing optimizations.</li>
           </ul>
         </div>
@@ -1565,8 +1565,8 @@ printf 'primes.cfp_retag\nClean System Files/primes.opt.abc\n' | ./runfast sapl_
             Translates gen1&rsquo;s Stage-4 retag form into C, one C function per Sapl function, on the JMVM&rsquo;s own memory model and GC (optionally the VM&rsquo;s own runtime code), compiled with <code>clang -O2</code>.
           </p>
           <ul>
-            <li><strong>Performance:</strong> 0.33&times; the JMVM interpreter&rsquo;s time on the 13 core benchmarks; faster than Clean native (0.84&times;) and on par with GHC <code>-O2</code> (0.99&times;; geometric means, with a growing heap and unshifted pointers).</li>
-            <li><strong>Self-Hosting Speed:</strong> gen1 compiles itself natively in <strong>244 ms</strong> and reaches the fixed point (interpreter 580 ms; Clean native untyped port 305 ms, typed 166 ms; GHC typed 295 ms).</li>
+            <li><strong>Performance:</strong> 0.32&times; the JMVM interpreter&rsquo;s time on the 13 core benchmarks; faster than Clean native (0.84&times;) and a little faster than GHC <code>-O2</code> (0.93&times;, without full laziness; geometric means, with a growing heap, unshifted pointers and a GC that skips evaluated thunks; 20 November 2026).</li>
+            <li><strong>Self-Hosting Speed:</strong> gen1 compiles itself natively in <strong>203 ms</strong> and reaches the fixed point (interpreter 536 ms; Clean native untyped port 290 ms, typed 164 ms; GHC typed 278 ms; same input, 20 November 2026).</li>
             <li><strong>Exact:</strong> the same output and allocation count as the VM, also under GC stress. Not for the browser (the C stack is the call stack).</li>
           </ul>
           <p style="margin-top:6px"><a href="sapl2c_native_factsheet.html">sapl2c factsheet &rarr;</a></p>

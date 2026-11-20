@@ -291,6 +291,10 @@ td.note { color: var(--muted); font-size: 12.5px; }
     <span><strong>Status:</strong> <span class="pill ok">Phases 1&ndash;3 done</span> <span class="pill info">next: optimisations, ./compile --native</span></span>
   </div>
 </header>
+<div class="update-20nov" style="margin:16px auto;max-width:1100px;padding:12px 16px;border-left:4px solid #10b981;background:rgba(16,185,129,0.08);border-radius:6px;font-size:14px;line-height:1.5">
+  <strong>Update 20 November 2026.</strong> Re-measured after the GC skips evaluated thunks (indirections), constructors without fields (<code>Nil</code>, &hellip;) are shared instead of allocated, and two chars are compared directly. <code>sapl2c</code> now runs the 13 benchmarks in <strong>0.32&times;</strong> the interpreter&rsquo;s time, <strong>0.84&times;</strong> Clean native (Table-2 basis; 0.88&times; on 18 November) and <strong>0.93&times;</strong> GHC <code>-O2 -fno-full-laziness</code> (GHC re-measured; 1.01&times; on 18 November); gen1 compiles itself natively in <strong>203&nbsp;ms</strong> (interpreter 536&nbsp;ms, typed GHC port 278&nbsp;ms, typed Clean port 164&nbsp;ms; same input). Largest gains since 18 November: eval2 &minus;17%, prolog &minus;15%, gen1 &minus;13%. The figures below are the measurements of the date of this factsheet. Sources: <code>experiments/clean_vergelijking/meting_2026-11-20</code>, <code>docs/2026-11-19_sapl2c_tegen_clean_profiel.md</code> &sect;8&ndash;12.
+</div>
+
 <main>
 <div class="metrics">
   <div class="metric-card hl"><div class="metric-val">0.33&times;</div><div class="metric-label">time of the JMVM interpreter (<code>runfast</code>), geometric mean of 13</div></div>

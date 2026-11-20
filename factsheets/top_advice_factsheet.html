@@ -143,6 +143,10 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
       (Apple M4, one machine). The strongest argument is not speed.
     </p>
   </header>
+<div class="update-20nov" style="margin:16px auto;max-width:1100px;padding:12px 16px;border-left:4px solid #10b981;background:rgba(16,185,129,0.08);border-radius:6px;font-size:14px;line-height:1.5">
+  <strong>Update 20 November 2026.</strong> Re-measured after the GC skips evaluated thunks (indirections), constructors without fields (<code>Nil</code>, &hellip;) are shared instead of allocated, and two chars are compared directly. Clean via Retag to C is now <strong>0.87&times;</strong> Clean native on the 12 small benchmarks (was 0.95&times;), and the large typed program (gen1t, 2,700 functions) is <strong>1.21&times;</strong> slower than Clean native (197 vs. 163&nbsp;ms, measured in one session; was 1.35&ndash;1.43&times;). The compiler-like benchmarks remain the slowest via Retag (parsetest 1.51&times;, eval 1.24&times;). Much of the gap on the large program turned out to be memory management, not the missing types. The advice itself stands: lead with the toolchain; the native route is closer than it looked on 13 November. The figures below are the measurements of the date of this factsheet. Sources: <code>experiments/clean_vergelijking/meting_2026-11-20</code>, <code>docs/2026-11-19_sapl2c_tegen_clean_profiel.md</code> &sect;8&ndash;12.
+</div>
+
 
   <div class="kpis">
     <div class="kpi"><div class="val">~6 ms</div><div class="lbl">REPL start-up from a loaded <code>.jvb</code>; one small VM, the whole toolchain as bytecode</div></div>

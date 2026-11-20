@@ -410,13 +410,13 @@ D.table ["JMVM interpreter vs. (Apple M4)", "Mean", "Per program"]
     ["GHC -O2 (without full laziness)", "3.2× slower", "1.5–5.1×"],
     ["Clean's ABC interpreter, native", "1.25× slower", "0.7–1.7×"],
     ["Itself, in the browser (WebAssembly, Chrome)", "1.47× slower", ""],
-    ["The compiler compiling itself: GHC -O2", "2.0× slower", "598 vs. 295 ms"] ]
+    ["The compiler compiling itself: GHC -O2", "1.9× slower", "536 vs. 278 ms"] ]
 //%% [markdown]
 // - The 2016 target was **within a factor of 5** of Clean and Haskell. Natively it is now about **3×** on average,
 //   but it depends a lot on the program: from 1.5× to 5×.
 // - In the browser it loses **less than 1.5×** against itself natively.
 //
-// <p class="hint">Geometric means over the same 12 benchmarks (sort left out: Clean 3.1 native ARM64 gives a wrong result); best of 15 runs. Clean native in a Linux VM on the same machine (9 Nov). GHC (18 Nov): literal ports of the Sapl programs, and -fno-full-laziness, because otherwise GHC lifts the work the benchmark repeats out of its loop (parsetest: 12× less work). Sources: experiments/clean_vergelijking/meting_2026-11-09 and meting_2026-11-18.</p>
+// <p class="hint">Geometric means over the same 12 benchmarks (sort left out: Clean 3.1 native ARM64 gives a wrong result); best of 15 runs. Clean native in a Linux VM on the same machine (9 Nov). GHC (18 Nov): literal ports of the Sapl programs, and -fno-full-laziness, because otherwise GHC lifts the work the benchmark repeats out of its loop (parsetest: 12× less work). The compiler compiling itself: 20 Nov, the same input for both. Sources: experiments/clean_vergelijking/meting_2026-11-09, meting_2026-11-18 and meting_2026-11-20.</p>
 //%% [markdown]
 // ## Where the interpreter's speed came from
 //%%
@@ -453,8 +453,8 @@ D.table ["Improvement", "When", "Gain", "Whose idea"]
 // plus an 818-line C runtime.
 //
 // - A **first prototype**, very experimental and hardly tried on real programs yet.
-// - Even so: on the benchmarks and on the compiler compiling itself, **roughly as fast as
-//   Clean native and GHC `-O2`**, and about **3× faster** than the interpreter.
+// - Even so: on the benchmarks on average **a little faster than Clean native and GHC `-O2`**,
+//   and about **3× faster** than the interpreter, also on the compiler compiling itself.
 //
 // <p class="beat sm">I really had not expected this.</p>
 //%% [markdown]
@@ -465,8 +465,8 @@ D.table ["Improvement", "When", "Gain", "Whose idea"]
 // - From Retag, clang sees **whole functions with named variables**: a classic C compiler turns out
 //   to be a good code generator for a lazy functional language.
 // - Laziness is already explicit (`eval`, `thunk`), and gen1 already did strictness and lifting.
-// - Plus a few runtime choices: a **cache-friendly growing heap**, values returned in two registers,
-//   and every tail call a real jump.
+// - Plus a few runtime choices: a **cache-friendly growing heap**, a GC that **skips evaluated thunks**,
+//   values returned in two registers, and every tail call a real jump.
 //%% [markdown]
 // ## How could one person build this?
 //
@@ -595,15 +595,17 @@ D.table ["Experiment", "What happened", "Replaced by"]
 //%%
 D.table ["Apple M4, native", "Mean", "Per program"]
   [ ["JMVM interpreter and compiler now vs. 17 July", "1.4× faster", "0.47–1.00×"],
-    ["Sapl via Retag to C (sapl2c) vs. Clean native", "1.2× faster", "0.50–1.33×"],
-    ["Sapl via Retag to C vs. GHC -O2", "as fast", "0.64–1.65×"],
-    ["Clean via ABC, Retag and C vs. Clean native", "as fast", "0.58–1.75×"],
-    ["gen1 ported to Clean, compiling itself, via C vs. Clean native", "1.43× slower", "234 vs. 163 ms"] ]
+    ["Sapl via Retag to C (sapl2c) vs. Clean native", "1.2× faster", "0.52–1.28×"],
+    ["Sapl via Retag to C vs. GHC -O2", "1.1× faster", "0.60–1.57×"],
+    ["Clean via ABC, Retag and C vs. Clean native", "1.15× faster", "0.45–1.51×"],
+    ["gen1 ported to Clean, compiling itself, via C vs. Clean native", "1.21× slower", "197 vs. 163 ms"] ]
 //%% [markdown]
-// - **Small benchmarks**: C from Retag keeps up with Clean's `cg` and with GHC; it wins where much is allocated.
-// - **A large typed program**: `cg` wins, probably because Retag is untyped and boxes values that Clean keeps unboxed.
+// - **Small benchmarks**: C from Retag is on average a little faster than Clean's `cg` and GHC; it wins where much is allocated.
+// - **A large typed program**: `cg` still wins, but the gap shrank from **1.43× to 1.21×** in two days, once the GC
+//   stopped copying evaluated thunks and `Nil` was shared: much of it was **memory management, not types**.
+//   The rest is probably boxing: Retag is untyped.
 //
-// <p class="hint">Geometric means over 12 benchmarks; per program: time ratio, lower is faster. gen1 is the Sapl compiler. Clean native in a Linux VM (noise up to 15–20%); GHC without full laziness. Source: experiments/clean_vergelijking/meting_2026-11-18.</p>
+// <p class="hint">Geometric means over 12 benchmarks; per program: time ratio, lower is faster. gen1 is the Sapl compiler. Clean native in a Linux VM (noise up to 15–20%); GHC without full laziness. Measured 20 Nov, after the GC improvements of 19–20 Nov. Source: experiments/clean_vergelijking/meting_2026-11-20.</p>
 //%% [markdown]
 // ## Demo: the Clean sandbox, extended
 //
