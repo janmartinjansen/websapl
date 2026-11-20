@@ -798,6 +798,14 @@ D.table ["Same C, clang level", "Time vs. -O2"]
 // - The **generator**: the Python version of Retag-to-wasm works; next is the same in Sapl, so it can run in the browser.
 // - Not measured yet: compiling the module in the browser, an **iPad**, a real iTasks client.
 //
-// <p class="beat sm">Questions for you: which matters most for iTasks?</p>
-//
 // <p class="hint">Plan and results: docs/2026-11-20_sapl2c_wasm_vervolg_plan.md and experiments/sapl2c/wasm/README.md (branch proef/sapl2c-wasm).</p>
+//%% [markdown]
+// ## Questions for you
+//
+// - **Which devices?** Desktop only, or iPads too? On iOS every browser is WebKit, so then Safari has to work.
+// - **One prescribed browser?** If customers can be told "use Chrome" (or Firefox), JSPI becomes an option
+//   for the stack, and we tune for one engine. Note: Chrome is not the best on the stack, Safari is.
+// - **A desktop app?** In a Chromium app (Electron) we set V8's stack limit ourselves: the stack problem is gone.
+// - **Where is an interpreter not enough?** For most clients it probably is. Which parts of iTasks need the compiler?
+//
+// <p class="beat sm">The answers decide which way out for the stack we build first.</p>
