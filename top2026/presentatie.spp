@@ -639,10 +639,10 @@ D.table ["Apple M4, native", "Mean", "Per program"]
 //
 // - **4× faster than the JMVM** in wasm, **3–8× faster than the best ABC interpreter**: in Chrome, Firefox and Safari.
 // - Within **1.35×** of native; starts without warm-up, uses less memory.
-// - **The catch**: deep recursion uses the browser's stack, which is small. **3–6 of 14 programs stop**, the compiler among them.
-//   Next: an own stack for chains of `eval`.
+// - **The catch**: deep recursion uses the browser's stack, which is small: **3–5 of 14 programs stop**, the compiler among them.
+//   Two remedies are built: with an **own stack** all 14 run, in Chrome on average no slower; in Safari we fall back to the JMVM.
 //
-// <p class="hint">A first experiment, 20 November; warm, on the programs that ran. More in the extra slides at the end.</p>
+// <p class="hint">Experiments of 20 November; warm. More in the extra slides at the end.</p>
 //%% [markdown]
 // ## Four tries at WebAssembly
 //%%
@@ -654,7 +654,7 @@ D.table ["When", "Route", "Against the JMVM in wasm"]
 //%% [markdown]
 // - A compiler is only worth it at **~3×** over the interpreter. From bytecode we got 1.5× (wasm) and 1.3× (`jmvm2c`),
 //   from Retag 3–4×: there variables become locals, from bytecode the code still plays stack machine.
-// - The **stack** is back: September solved it with an own stack, the new routes still have to.
+// - The **stack** came back. September solved it with an own stack; the same evening the Retag route did too.
 //
 // <p class="beat sm">This is research: two attempts that did not pay off, then suddenly it works.</p>
 //%% [markdown]
@@ -676,7 +676,7 @@ D.table ["When", "Route", "Against the JMVM in wasm"]
 //
 // - A real **iTasks** application: speed, and **compile time**.
 // - **Uniqueness and arrays**, records, `ccall`, dynamics.
-// - The C route in wasm with **all** programs (the stack), and graph compatibility with the ABC interpreter.
+// - Compiled wasm in a **real page**, with the stack fallback, and graph compatibility with the ABC interpreter.
 // - A real **iPad**; Windows.
 //%% [markdown]
 // ## A proposal
@@ -688,9 +688,9 @@ D.table ["When", "Route", "Against the JMVM in wasm"]
 //%% [markdown]
 // # Extra: native code in the browser
 //
-// <p class="beat sm">For the specialists: a first experiment, 20 November.</p>
+// <p class="beat sm">For the specialists: experiments of 20 November.</p>
 //
-// <p class="hint">The same C that sapl2c writes, compiled to WebAssembly. Measured in Node (V8) and in Chrome, Firefox and Safari; not yet on an iPad.</p>
+// <p class="hint">The C that sapl2c writes, compiled to WebAssembly; then Retag straight to wasm, and the stack. Measured in Node (V8), Chrome, Firefox and Safari; not yet on an iPad.</p>
 //%% [markdown]
 // ## The same C, in WebAssembly
 //
@@ -736,31 +736,80 @@ D.table ["Effect of multivalue", "Before", "After"]
 //%% [markdown]
 // - Sizes: 15–150 KB of wasm per benchmark, **886 KB** for the compiler (the JMVM: 151 KB plus the program as bytecode).
 //%% [markdown]
+// ## Compiling in the client, without clang?
+//
+// clang in the browser is tens of MB. How much of the speed comes from clang's optimiser?
+//%%
+D.table ["Same C, clang level", "Time vs. -O2"]
+  [ ["-O2", "1.00"],
+    ["-O1", "0.95"],
+    ["-O0", "4.49"],
+    ["-O0, then Binaryen wasm-opt -O3", "4.43"] ]
+//%% [markdown]
+// - What counts is what `-O1` does: **every variable in a wasm local**, the result pair as two values. Inlining and the rest add nothing (without inlining: 1.01).
+// - `wasm-opt` cannot recover `-O0`: it does not move memory into locals.
+// - So a **small Retag-to-wasm generator**, one local per Retag variable, should come close to clang: next slide.
+//
+// <p class="hint">Node (V8), 13 benchmarks and the compiler, warm, best of 5, geometric mean. Source: experiments/sapl2c/wasm/README.md, part B.</p>
+//%% [markdown]
+// ## Retag straight to wasm (r2w)
+//
+// A generator that writes **binary wasm** from Retag: no C, no clang. In Python and in **Sapl** (~1,000 lines), byte for byte the same.
+//%%
+D.table ["Time against native sapl2c", "Emscripten -O2", "r2w", "r2w vs. JMVM in wasm", "Runs"]
+  [ ["Chrome 157", "1.41", "1.61", "0.30", "9 of 14"],
+    ["Firefox 160", "1.76", "2.17", "0.30", "9 of 14"],
+    ["Safari 26.6", "1.25", "1.64", "0.31", "11 of 14"] ]
+//%% [markdown]
+// - About **1.15×** of the Emscripten route, and **3–4× faster than the JMVM**. All programs correct.
+// - **The whole chain runs in wasm**: gen1 and the generator on the JMVM-wasm, then the browser compiles the module.
+//   The compiler itself: 0.4 s to Retag, 1 s to wasm, 1.2 MB; recompiled this way it reproduces itself byte for byte.
+//
+// <p class="hint">Apple M4, warm, best of 5, run time; geometric mean over the programs that fit on the browser stack. Source: experiments/sapl2c/wasm/r2w/report_en.html (branch proef/retag2wasm).</p>
+//%% [markdown]
 // ## The obstacle: the stack
 //
-// - Every call that is not a tail call (above all evaluating a thunk) uses the **engine's stack**; natively a 4 GB thread stack.
-// - In the browser the **browser** sets that limit (V8: about 1 MB); a page cannot raise it.
+// Every non-tail call (above all evaluating a thunk) uses the **engine's stack**. Natively that is a 4 GB thread stack;
+// in the browser about **1 MB**, also in a Worker, and a page cannot raise it.
 //%%
-D.table ["Programs that stop (of 14, Sapl)", "Main thread", "Web Worker"]
-  [ ["Chrome", "6", "9"],
-    ["Firefox", "6", "6"],
-    ["Safari", "3", "11"] ]
+D.table ["Stack needed", "Programs"]
+  [ ["< 1 MB", "fib, queens, knights, hamming, match, sprimes, parsetest, eval2"],
+    ["2–8 MB", "primes, eval, prolog"],
+    ["8–48 MB", "sort, twice"],
+    ["112–128 MB", "the compiler compiling itself"] ]
 //%% [markdown]
-// - A **worker does not help**. The interpreters (JMVM, ABC) **do not have this problem**: their stack lives in their own memory.
-//
-// <p class="beat sm">Not a show-stopper, but it has to be solved first.</p>
-//
-// <p class="hint">Clean programs: the same picture. In Node with 64 MB only the compiler stops (Clean native: -s 100M).</p>
+// - A factor **10–100** too little: smaller frames or more strictness save the middle group, not the rest.
+// - An overflow is a trap: it can be caught, but the program cannot **continue** where it stopped.
+// - The interpreters (JMVM, ABC) **do not have this problem**: their stack lives in their own memory.
 //%% [markdown]
-// ## Ways out (not tried yet)
+// ## Two ways out, built and measured
 //
-// 1. **An own stack in linear memory**: calls that are not tail calls become continuations.
-//    This is how the interpreters and GHC's wasm backend do it; our September experiment worked this way too.
-//    **Costs speed**: less stays in registers.
-// 2. **A hybrid**: the engine stack as now, with a **depth counter**; past a limit, `eval` chains continue on an own stack.
-//    Fast in the common case: most programs stay well below the limit. **The most promising start.**
-// 3. **Stack switching in wasm** (JSPI, the stack-switching proposal): run on a separate stack.
-//    Not yet in every browser.
+// - **JSPI stack segments** (no Safari): all 14 run, but the depth counter costs **~23% on every program**.
+// - **An own stack**: a non-tail call saves its live values and a continuation in memory. All 14 run, **in every browser**.
+//%%
+D.table ["Time against native sapl2c", "Browser stack", "Own stack"]
+  [ ["Chrome 157", "1.61 (9 of 14)", "1.61 (14 of 14)"],
+    ["Firefox 160", "2.17 (9 of 14)", "4.11 (14 of 14)"],
+    ["Safari 26.6", "1.64 (11 of 14)", "6.59 (14 of 14)"] ]
+//%% [markdown]
+// - In **V8 the own stack is nearly free** (~12% on the programs that already ran; deep ones even get faster).
+// - In **Safari** it is slower than the JMVM. Suspect: `return_call_indirect` with eight arguments.
+//
+// <p class="hint">Geometric means over the programs that run. Source: experiments/sapl2c/wasm/r2w/report_en.html.</p>
+//%% [markdown]
+// ## Proposal: run in tiers
+//%%
+D.table ["", "Chrome", "Firefox", "Safari"]
+  [ ["Tier 0: direct, browser stack", "1.61", "2.17", "1.64"],
+    ["Tier 1, on overflow", "own stack", "own stack", "the JMVM"],
+    ["Hybrid, all 14 (estimate)", "≈ 1.50", "≈ 2.56", "≈ 1.87"] ]
+//%% [markdown]
+// - Shallow programs, the normal case in a notebook, pay **nothing**. Overflows come early (gen1 after 155 ms).
+// - **Restarting is only safe before anything irreversible**: fine for a notebook cell,
+//   not for an iTasks client that already talked to the DOM or the server. There the own stack (Chrome) needs no restart.
+// - Within **2× native** in Chrome and Safari, with every program running.
+//
+// <p class="hint">Time against native sapl2c; estimates combine the measured factors, without the time lost before the overflow.</p>
 //%% [markdown]
 // ## What could this mean for Clean and iTasks?
 //
@@ -775,37 +824,21 @@ D.table ["Programs that stop (of 14, Sapl)", "Main thread", "Web Worker"]
 //   - **Numbers**: `Real` is 32 bits here (Clean: 64), `Int` 62 bits, no bit operations yet.
 //   - Boxed arrays through abc2retag, and dynamics: not done yet.
 //%% [markdown]
-// ## Compiling in the client, without clang?
-//
-// clang in the browser is tens of MB. How much of the speed comes from clang's optimiser?
-//%%
-D.table ["Same C, clang level", "Time vs. -O2"]
-  [ ["-O2", "1.00"],
-    ["-O1", "0.95"],
-    ["-O0", "4.49"],
-    ["-O0, then Binaryen wasm-opt -O3", "4.43"] ]
-//%% [markdown]
-// - What counts is what `-O1` does: **every variable in a wasm local**, the result pair as two values. Inlining and the rest add nothing (without inlining: 1.01).
-// - `wasm-opt` cannot recover `-O0`: it does not move memory into locals.
-// - So a **small Retag-to-wasm generator**, one local per Retag variable, should come close to clang.
-//   **Tried the same day**: **1.18×** of `-O2`, all programs correct.
-//
-// <p class="hint">Node (V8), 13 benchmarks and the compiler, warm, best of 5, geometric mean. Source: experiments/sapl2c/wasm/README.md, part B.</p>
-//%% [markdown]
 // ## Next steps
 //
-// - The **stack**: a depth counter with a fallback to an own stack; then all 14 programs in every browser.
-// - The **generator**: the Python version of Retag-to-wasm works; next is the same in Sapl, so it can run in the browser.
-// - Not measured yet: compiling the module in the browser, an **iPad**, a real iTasks client.
+// - **Build the hybrid**: catch the overflow, restart on the right tier, buffer output until then.
+// - **The own stack in the Sapl generator** (now only in Python), then a wasm stage in WebSapl's worker.
+// - **Safari**: a cheaper encoding of the continuations (a driver loop?).
+// - Measure: how often does a real notebook or REPL program overflow at all? An **iPad**; a real iTasks client.
 //
-// <p class="hint">Plan and results: docs/2026-11-20_sapl2c_wasm_vervolg_plan.md and experiments/sapl2c/wasm/README.md (branch proef/sapl2c-wasm).</p>
+// <p class="hint">Branch proef/retag2wasm: experiments/sapl2c/wasm/r2w/README.md and report_en.html; docs/2026-11-20_sapl2c_wasm_stack_verslag.md.</p>
 //%% [markdown]
 // ## Questions for you
 //
 // - **Which devices?** Desktop only, or iPads too? On iOS every browser is WebKit, so then Safari has to work.
-// - **One prescribed browser?** If customers can be told "use Chrome" (or Firefox), JSPI becomes an option
-//   for the stack, and we tune for one engine. Note: Chrome is not the best on the stack, Safari is.
+// - **One prescribed browser?** If customers can be told "use Chrome", the stack is solved:
+//   the own stack costs nothing there, every program runs, no restart needed.
 // - **A desktop app?** In a Chromium app (Electron) we set V8's stack limit ourselves: the stack problem is gone.
 // - **Where is an interpreter not enough?** For most clients it probably is. Which parts of iTasks need the compiler?
 //
-// <p class="beat sm">The answers decide which way out for the stack we build first.</p>
+// <p class="beat sm">The answers decide which tiers we build first.</p>
