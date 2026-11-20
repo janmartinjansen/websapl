@@ -644,6 +644,20 @@ D.table ["Apple M4, native", "Mean", "Per program"]
 //
 // <p class="hint">A first experiment, 20 November; warm, on the programs that ran. More in the extra slides at the end.</p>
 //%% [markdown]
+// ## Four tries at WebAssembly
+//%%
+D.table ["When", "Route", "Against the JMVM in wasm"]
+  [ ["Jul–Sep", "Bytecode to wasm, runtime in JS", "Slower: paused"],
+    ["29 Sep", "Bytecode to wasm, own stack", "~1.5× faster: not used"],
+    ["20 Nov", "Retag to C to wasm", "4× faster"],
+    ["20 Nov", "Retag straight to wasm", "3.3× faster, no clang"] ]
+//%% [markdown]
+// - What changed was **the starting point**: from bytecode the wasm still plays stack machine,
+//   from Retag variables become wasm locals. The same lesson as with C.
+// - The **stack** is back: September solved it with an own stack, the new routes still have to.
+//
+// <p class="beat sm">This is research: two attempts that did not pay off, then suddenly it works.</p>
+//%% [markdown]
 // ## What could this mean for Clean?
 //
 // Questions rather than lessons:
@@ -773,14 +787,15 @@ D.table ["Same C, clang level", "Time vs. -O2"]
 //%% [markdown]
 // - What counts is what `-O1` does: **every variable in a wasm local**, the result pair as two values. Inlining and the rest add nothing (without inlining: 1.01).
 // - `wasm-opt` cannot recover `-O0`: it does not move memory into locals.
-// - So a **small Retag-to-wasm generator in Sapl**, one local per Retag variable, should come close to clang, with no clang or Binaryen in the client.
+// - So a **small Retag-to-wasm generator**, one local per Retag variable, should come close to clang.
+//   **Tried the same day**: **1.18×** of `-O2`, all programs correct.
 //
 // <p class="hint">Node (V8), 13 benchmarks and the compiler, warm, best of 5, geometric mean. Source: experiments/sapl2c/wasm/README.md, part B.</p>
 //%% [markdown]
 // ## Next steps
 //
 // - The **stack**: a depth counter with a fallback to an own stack; then all 14 programs in every browser.
-// - The **generator**: Retag straight to wasm in Sapl, next to sapl2c, with the C as its specification.
+// - The **generator**: the Python version of Retag-to-wasm works; next is the same in Sapl, so it can run in the browser.
 // - Not measured yet: compiling the module in the browser, an **iPad**, a real iTasks client.
 //
 // <p class="beat sm">Questions for you: which matters most for iTasks?</p>
