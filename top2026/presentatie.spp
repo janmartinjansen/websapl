@@ -754,7 +754,7 @@ D.table ["Same C, clang level", "Time vs. -O2"]
 //%% [markdown]
 // ## Retag straight to wasm (r2w)
 //
-// A generator that writes **binary wasm** from Retag: no C, no clang. In Python and in **Sapl** (~1,000 lines), byte for byte the same.
+// From Retag to **binary wasm**, in Python and in **Sapl** (~1,000 lines), byte-identical.
 //%%
 D.table ["Time against native sapl2c", "Emscripten -O2", "r2w", "r2w vs. JMVM in wasm", "Runs"]
   [ ["Chrome 157", "1.41", "1.61", "0.30", "9 of 14"],
@@ -762,10 +762,11 @@ D.table ["Time against native sapl2c", "Emscripten -O2", "r2w", "r2w vs. JMVM in
     ["Safari 26.6", "1.25", "1.64", "0.31", "11 of 14"] ]
 //%% [markdown]
 // - About **1.15×** of the Emscripten route, and **3–4× faster than the JMVM**. All programs correct.
-// - **The whole chain runs in wasm**: gen1 and the generator on the JMVM-wasm, then the browser compiles the module.
-//   The compiler itself: 0.4 s to Retag, 1 s to wasm, 1.2 MB; recompiled this way it reproduces itself byte for byte.
+// - **No C compiler anywhere in the chain**: only the 60 KB runtime is built once. Compiling can happen in the browser itself.
+// - **The whole chain runs in wasm**: gen1 and the generator on the JMVM-wasm. The compiler itself:
+//   0.4 s to Retag, 1 s to wasm, 1.2 MB; recompiled this way it reproduces itself byte for byte.
 //
-// <p class="hint">Apple M4, warm, best of 5, run time; geometric mean over the programs that fit on the browser stack. Source: experiments/sapl2c/wasm/r2w/report_en.html (branch proef/retag2wasm).</p>
+// <p class="hint">Apple M4, warm, best of 5; mean over the programs that fit on the stack. Source: experiments/sapl2c/wasm/r2w/report_en.html.</p>
 //%% [markdown]
 // ## The obstacle: the stack
 //
