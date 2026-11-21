@@ -164,7 +164,7 @@
           <h3>Stage-4 Retag format: the universal pivot</h3>
           <p>The hourglass intermediate representation at the center of the toolchain: why explicit
             <code>eval</code>, <code>thunk</code>, and <code>closure</code> annotations at expression level
-            decouple four frontends from four backends (JMVM, WebSapl, <code>sapl2c</code>, Clean ABC).</p>
+            decouple four frontends from five backends (JMVM, WebSapl, <code>sapl2c</code>, <code>retag2wasm</code>, Clean ABC).</p>
           <div class="card-foot">
             <div class="tags"><span class="tag">Retag IR</span><span class="tag">architecture</span><span class="tag">hub</span></div>
             <span class="go">Open &rarr;</span>
@@ -229,12 +229,22 @@
     <section class="group" id="native-performance">
       <div class="group-head">
         <div>
-          <h2>Native C (<code>sapl2c</code>) &amp; Performance</h2>
-          <p class="group-desc">Compiling Stage-4 Retag to native C, how <code>sapl2c</code> works under the hood, and benchmarks against Clean and GHC.</p>
+          <h2>Native C (<code>sapl2c</code>), WebAssembly &amp; Performance</h2>
+          <p class="group-desc">Compiling Stage-4 Retag to native C and WebAssembly, how <code>sapl2c</code> and <code>retag2wasm</code> work, and benchmarks against Clean and GHC.</p>
         </div>
-        <span class="group-count">5 sheets</span>
+        <span class="group-count">6 sheets</span>
       </div>
       <div class="grid">
+        <a class="card" href="wasm_backends_factsheet.html" style="--card-color: var(--c3);">
+          <h3>Compiled WebAssembly backends: Emscripten, <code>retag2wasm</code> &amp; limitations</h3>
+          <p>How Stage-4 Retag lowers to compiled WebAssembly via <code>sapl2c</code> + Emscripten (~4&times; JMVM-wasm)
+            and directly via <code>sapl2wasm.cfp</code> (1.13&times; <code>emcc -O2</code>, zero Clang, runs in Wasm),
+            Chrome/Firefox/Safari benchmarks, the ~1&nbsp;MB stack limit, and JSPI vs. own-stack solutions.</p>
+          <div class="card-foot">
+            <div class="tags"><span class="tag">WebAssembly</span><span class="tag">retag2wasm</span><span class="tag">stack</span></div>
+            <span class="go">Open &rarr;</span>
+          </div>
+        </a>
         <a class="card" href="sapl2c_native_factsheet.html" style="--card-color: var(--c4);">
           <h3>Sapl to native code via C: one C function per Sapl function</h3>
           <p>gen1&rsquo;s retag form translated to C on the JMVM&rsquo;s own memory model and GC (optionally the VM&rsquo;s own runtime code).

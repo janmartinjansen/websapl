@@ -597,13 +597,13 @@
         <strong>Frontends</strong> (Haskell Lite, MicroHs, Sapl+, Core Sapl, and Clean), 
         <strong>Intermediate Representations</strong> (Sapl+ AST, Core Sapl, Stage 4 Retag IR, and Clean ABC code), 
         <strong>Universal Two-Way Bridges</strong> (<code>sapl2abc</code> and the newly validated <code>abc2retag</code> symbolic decompiler), 
-        <strong>Virtual & Native Backends</strong> (JMVM Native, WebSapl WebAssembly, Clean <code>cg</code>, Clean ABC-Interpreter, and LLVM), 
+        <strong>Virtual &amp; Native Backends</strong> (JMVM Native, WebSapl JMVM-Wasm, <code>sapl2c</code> native C &amp; Emscripten Wasm, <code>retag2wasm</code> direct binary Wasm, Clean <code>cg</code>, Clean ABC-Interpreter, and LLVM), 
         and <strong>Interactive Environments</strong> (WebSapl Browser Notebooks, Desktop Workbench, and REPLs).
       </p>
 
       <!-- SVG Architectural Diagram -->
       <div class="svg-container">
-        <svg class="ecosystem-svg" viewBox="0 0 1020 560" width="1020" height="560" xmlns="http://www.w3.org/2000/svg">
+        <svg class="ecosystem-svg" viewBox="0 0 1020 570" width="1020" height="570" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
               <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#64748b" />
@@ -626,17 +626,17 @@
           </defs>
 
           <!-- TIER BACKGROUND REGIONS -->
-          <rect x="20" y="20" width="220" height="515" rx="10" fill="var(--bg-card)" stroke="var(--border-color)" stroke-width="1.5" />
-          <text x="35" y="45" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="var(--text-muted)" letter-spacing="1">1. FRONTENDS</text>
+          <rect x="20" y="20" width="220" height="535" rx="10" fill="var(--bg-card)" stroke="var(--border-color)" stroke-width="1.5" />
+          <text x="35" y="42" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="var(--text-muted)" letter-spacing="1">1. FRONTENDS</text>
 
-          <rect x="270" y="20" width="230" height="515" rx="10" fill="var(--bg-card)" stroke="var(--border-color)" stroke-width="1.5" />
-          <text x="285" y="45" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="var(--text-muted)" letter-spacing="1">2. INTERMEDIATE LAYERS</text>
+          <rect x="270" y="20" width="230" height="535" rx="10" fill="var(--bg-card)" stroke="var(--border-color)" stroke-width="1.5" />
+          <text x="285" y="42" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="var(--text-muted)" letter-spacing="1">2. INTERMEDIATE LAYERS</text>
 
-          <rect x="530" y="20" width="210" height="515" rx="10" fill="var(--bg-card)" stroke="var(--border-color)" stroke-width="1.5" />
-          <text x="545" y="45" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="var(--text-muted)" letter-spacing="1">3. CODEGEN / BRIDGES</text>
+          <rect x="530" y="20" width="210" height="535" rx="10" fill="var(--bg-card)" stroke="var(--border-color)" stroke-width="1.5" />
+          <text x="545" y="42" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="var(--text-muted)" letter-spacing="1">3. CODEGEN / BRIDGES</text>
 
-          <rect x="770" y="20" width="230" height="515" rx="10" fill="var(--bg-card)" stroke="var(--border-color)" stroke-width="1.5" />
-          <text x="785" y="45" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="var(--text-muted)" letter-spacing="1">4. EXECUTION TARGETS</text>
+          <rect x="770" y="20" width="230" height="535" rx="10" fill="var(--bg-card)" stroke="var(--border-color)" stroke-width="1.5" />
+          <text x="785" y="42" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="var(--text-muted)" letter-spacing="1">4. EXECUTION TARGETS</text>
 
           <!-- FRONTEND NODES -->
           <!-- Haskell Lite -->
@@ -713,41 +713,51 @@
           </g>
 
           <!-- CODEGEN / EMIT STAGES & BRIDGES -->
-          <!-- sapl2c: Sapl to C -->
-          <g transform="translate(545, 65)">
-            <rect width="180" height="62" rx="6" fill="var(--node-bg)" stroke="#f59e0b" stroke-width="2" filter="url(#card-shadow)" />
-            <text x="12" y="20" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#f59e0b">sapl2c (Sapl &rarr; C) ★</text>
-            <text x="12" y="36" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">sapl2c.cfp (Sapl) &rarr; .c + clang -O2</text>
-            <text x="12" y="52" font-family="-apple-system, sans-serif" font-size="9.5" fill="#10b981" font-weight="600">0.32&times; runfast &bull; 203 ms gen1</text>
+          <!-- Gen1 Codegen -->
+          <g transform="translate(545, 55)">
+            <rect width="180" height="62" rx="6" fill="var(--node-bg)" stroke="#10b981" stroke-width="1.5" filter="url(#card-shadow)" />
+            <text x="12" y="20" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#10b981">Gen1 Codegen</text>
+            <text x="12" y="37" font-family="-apple-system, sans-serif" font-size="10.5" fill="var(--text-primary)">.jmvm (Text Bytecode)</text>
+            <text x="12" y="53" font-family="-apple-system, sans-serif" font-size="10.5" fill="#10b981" font-weight="700">.jvb (Binary Bytecode)</text>
           </g>
 
-          <!-- Gen1 Codegen -->
-          <g transform="translate(545, 140)">
-            <rect width="180" height="70" rx="6" fill="var(--node-bg)" stroke="#10b981" stroke-width="1.5" filter="url(#card-shadow)" />
-            <text x="12" y="22" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#10b981">Gen1 Codegen</text>
-            <text x="12" y="40" font-family="-apple-system, sans-serif" font-size="10.5" fill="var(--text-primary)">.jmvm (Text Bytecode)</text>
-            <text x="12" y="58" font-family="-apple-system, sans-serif" font-size="10.5" fill="#10b981" font-weight="700">.jvb (Binary Bytecode)</text>
+          <!-- retag2wasm: Direct Binary Wasm -->
+          <g transform="translate(545, 127)">
+            <rect width="180" height="62" rx="6" fill="var(--node-bg)" stroke="#a855f7" stroke-width="2" filter="url(#card-shadow)" />
+            <text x="12" y="19" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#a855f7">retag2wasm (Wasm) &#x2605;</text>
+            <text x="12" y="34" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">sapl2wasm.cfp (Sapl) &rarr; .wasm</text>
+            <text x="12" y="47" font-family="-apple-system, sans-serif" font-size="9.5" fill="#10b981" font-weight="600">No C/Clang &bull; 1.13&times; emcc -O2</text>
+            <text x="12" y="58" font-family="-apple-system, sans-serif" font-size="9" fill="var(--text-secondary)">CPS / JSPI stack modes</text>
+          </g>
+
+          <!-- sapl2c: Retag to C / Emscripten Wasm -->
+          <g transform="translate(545, 199)">
+            <rect width="180" height="62" rx="6" fill="var(--node-bg)" stroke="#f59e0b" stroke-width="2" filter="url(#card-shadow)" />
+            <text x="12" y="19" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#f59e0b">sapl2c (C &amp; Wasm) &#x2605;</text>
+            <text x="12" y="34" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">sapl2c.cfp &rarr; .c + clang / emcc</text>
+            <text x="12" y="47" font-family="-apple-system, sans-serif" font-size="9.5" fill="#10b981" font-weight="600">0.32&times; runfast &bull; 203 ms gen1</text>
+            <text x="12" y="58" font-family="-apple-system, sans-serif" font-size="9" fill="var(--text-secondary)">emcc: ~4&times; JMVM-wasm</text>
           </g>
 
           <!-- Retag to ABC Bridge -->
-          <g transform="translate(545, 260)">
+          <g transform="translate(545, 271)">
             <rect width="180" height="55" rx="6" fill="var(--node-bg)" stroke="#f59e0b" stroke-width="1.5" filter="url(#card-shadow)" />
             <text x="12" y="20" font-family="-apple-system, sans-serif" font-size="11.5" font-weight="700" fill="#f59e0b">Retag &rarr; ABC</text>
             <text x="12" y="36" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">sapl2abc (in Sapl)</text>
             <text x="12" y="48" font-family="-apple-system, sans-serif" font-size="9.5" fill="var(--text-secondary)">Emits Clean .abc</text>
           </g>
 
-          <!-- ABC to Retag Bridge (NEW & PROVEN) -->
-          <g transform="translate(545, 335)">
+          <!-- ABC to Retag Bridge -->
+          <g transform="translate(545, 343)">
             <rect width="180" height="65" rx="6" fill="var(--node-bg)" stroke="#3b82f6" stroke-width="2" filter="url(#card-shadow)" />
-            <text x="12" y="20" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#3b82f6">ABC &rarr; Retag Decompiler ★</text>
+            <text x="12" y="20" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#3b82f6">ABC &rarr; Retag Decompiler &#x2605;</text>
             <text x="12" y="36" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">abc2retag (Sapl, symbolic)</text>
             <text x="12" y="50" font-family="-apple-system, sans-serif" font-size="9.5" fill="#10b981" font-weight="600">Evaporates A/B Stacks (-95% ops)</text>
             <text x="12" y="62" font-family="-apple-system, sans-serif" font-size="9" fill="var(--text-secondary)">Compiles via compile-retag</text>
           </g>
 
           <!-- Clean Native cg -->
-          <g transform="translate(545, 435)">
+          <g transform="translate(545, 445)">
             <rect width="180" height="55" rx="6" fill="var(--node-bg)" stroke="var(--node-border)" stroke-width="1" filter="url(#card-shadow)" />
             <text x="12" y="22" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="var(--text-primary)">Clean Code Generator (cg)</text>
             <text x="12" y="40" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">x86 / x86-64 / ARM Assembly</text>
@@ -755,25 +765,35 @@
 
           <!-- EXECUTION TARGETS -->
           <!-- JMVM Native -->
-          <g transform="translate(785, 75)">
-            <rect width="200" height="75" rx="6" fill="var(--node-bg)" stroke="#3b82f6" stroke-width="2" filter="url(#card-shadow)" />
-            <text x="12" y="22" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#3b82f6">JMVM Native Engine</text>
-            <text x="12" y="40" font-family="-apple-system, sans-serif" font-size="10.5" fill="var(--text-primary)">./runfast • ./run</text>
-            <text x="12" y="56" font-family="-apple-system, sans-serif" font-size="9.5" fill="var(--text-muted)">musttail direct-threading</text>
-            <text x="12" y="68" font-family="-apple-system, sans-serif" font-size="9.5" fill="var(--text-muted)">2.5B instrs/s • Superinstr. fusion</text>
+          <g transform="translate(785, 55)">
+            <rect width="200" height="72" rx="6" fill="var(--node-bg)" stroke="#3b82f6" stroke-width="2" filter="url(#card-shadow)" />
+            <text x="12" y="20" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#3b82f6">JMVM Native Engine</text>
+            <text x="12" y="37" font-family="-apple-system, sans-serif" font-size="10.5" fill="var(--text-primary)">./runfast &bull; ./run</text>
+            <text x="12" y="52" font-family="-apple-system, sans-serif" font-size="9.5" fill="var(--text-muted)">musttail direct-threading</text>
+            <text x="12" y="64" font-family="-apple-system, sans-serif" font-size="9.5" fill="var(--text-muted)">2.5B instrs/s &bull; Superinstr. fusion</text>
           </g>
 
-          <!-- WebSapl Browser Wasm -->
-          <g transform="translate(785, 175)">
-            <rect width="200" height="75" rx="6" fill="var(--node-bg)" stroke="#10b981" stroke-width="2" filter="url(#card-shadow)" />
-            <text x="12" y="22" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#10b981">WebSapl (Browser Wasm)</text>
-            <text x="12" y="40" font-family="-apple-system, sans-serif" font-size="10.5" fill="var(--text-primary)">run.wasm (151 KB)</text>
-            <text x="12" y="56" font-family="-apple-system, sans-serif" font-size="9.5" fill="var(--text-muted)">Zero-Server • 100% Client-Side</text>
-            <text x="12" y="68" font-family="-apple-system, sans-serif" font-size="9.5" fill="var(--text-muted)">Reactive Notebooks • Graphics</text>
+          <!-- WebSapl Browser Wasm (JMVM) -->
+          <g transform="translate(785, 139)">
+            <rect width="200" height="72" rx="6" fill="var(--node-bg)" stroke="#10b981" stroke-width="2" filter="url(#card-shadow)" />
+            <text x="12" y="20" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#10b981">WebSapl (JMVM Wasm)</text>
+            <text x="12" y="37" font-family="-apple-system, sans-serif" font-size="10.5" fill="var(--text-primary)">jmvm.wasm (151 KB)</text>
+            <text x="12" y="52" font-family="-apple-system, sans-serif" font-size="9.5" fill="var(--text-muted)">Zero-Server &bull; 100% Client-Side</text>
+            <text x="12" y="64" font-family="-apple-system, sans-serif" font-size="9.5" fill="var(--text-muted)">Reactive Notebooks &bull; Graphics</text>
           </g>
 
-          <!-- Clean Native Executable -->
-          <g transform="translate(785, 275)">
+          <!-- Compiled Wasm (r2w / emcc) -->
+          <g transform="translate(785, 223)">
+            <rect width="200" height="78" rx="6" fill="var(--node-bg)" stroke="#a855f7" stroke-width="2" filter="url(#card-shadow)" />
+            <text x="12" y="20" font-family="-apple-system, sans-serif" font-size="12.5" font-weight="700" fill="#a855f7">Compiled Wasm (r2w / emcc) &#x2605;</text>
+            <text x="12" y="36" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-primary)">rt.wasm (60 KB) + .wasm</text>
+            <text x="12" y="50" font-family="-apple-system, sans-serif" font-size="9.5" fill="#10b981" font-weight="600">3&ndash;4&times; faster than JMVM-wasm</text>
+            <text x="12" y="63" font-family="-apple-system, sans-serif" font-size="9.5" fill="var(--text-muted)">Chrome &bull; Firefox &bull; Safari</text>
+            <text x="12" y="74" font-family="-apple-system, sans-serif" font-size="9" fill="var(--text-secondary)">CPS / JSPI for deep stacks</text>
+          </g>
+
+          <!-- Clean / sapl2c Native Executable -->
+          <g transform="translate(785, 313)">
             <rect width="200" height="65" rx="6" fill="var(--node-bg)" stroke="#f59e0b" stroke-width="1.5" filter="url(#card-shadow)" />
             <text x="12" y="22" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#f59e0b">Native Machine Code</text>
             <text x="12" y="38" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">Clean runtime &bull; sapl2c (clang -O2)</text>
@@ -781,16 +801,16 @@
           </g>
 
           <!-- Clean ABC Interpreter -->
-          <g transform="translate(785, 360)">
+          <g transform="translate(785, 390)">
             <rect width="200" height="65" rx="6" fill="var(--node-bg)" stroke="var(--node-border)" stroke-width="1" filter="url(#card-shadow)" />
             <text x="12" y="22" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="var(--text-primary)">Clean ABC Interpreter</text>
             <text x="12" y="38" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">abci (Native) / Wasm (Browser)</text>
-            <text x="12" y="54" font-family="-apple-system, sans-serif" font-size="9.5" fill="var(--text-muted)">Dynamic code sharing & sandboxing</text>
+            <text x="12" y="54" font-family="-apple-system, sans-serif" font-size="9.5" fill="var(--text-muted)">Dynamic code sharing &amp; sandboxing</text>
           </g>
 
           <!-- Clean LLVM -->
-          <g transform="translate(785, 450)">
-            <rect width="200" height="45" rx="6" fill="var(--node-bg)" stroke="var(--node-border)" stroke-width="1" filter="url(#card-shadow)" />
+          <g transform="translate(785, 467)">
+            <rect width="200" height="48" rx="6" fill="var(--node-bg)" stroke="var(--node-border)" stroke-width="1" filter="url(#card-shadow)" />
             <text x="12" y="20" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="var(--text-muted)">clean-llvm (abc2bc)</text>
             <text x="12" y="36" font-family="-apple-system, sans-serif" font-size="10" fill="var(--text-muted)">LLVM IR backend for Clean</text>
           </g>
@@ -809,44 +829,47 @@
           <!-- Analysis -> Retag IR -->
           <path d="M 385 230 L 385 258" fill="none" stroke="#a855f7" stroke-width="2" marker-end="url(#arrow-purple)" />
 
-          <!-- Retag IR -> sapl2c -->
-          <path d="M 485 268 L 503 268 L 503 95 L 543 95" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
           <!-- Retag IR -> Gen1 Codegen -->
-          <path d="M 485 275 L 515 275 L 515 175 L 543 175" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#arrow-emerald)" />
+          <path d="M 485 268 L 500 268 L 500 86 L 543 86" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#arrow-emerald)" />
+          <!-- Retag IR -> retag2wasm -->
+          <path d="M 485 278 L 510 278 L 510 158 L 543 158" fill="none" stroke="#a855f7" stroke-width="2" marker-end="url(#arrow-purple)" />
+          <!-- Retag IR -> sapl2c -->
+          <path d="M 485 288 L 520 288 L 520 230 L 543 230" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
           <!-- Retag IR -> Retag to ABC -->
-          <path d="M 485 300 L 543 300" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
+          <path d="M 485 298 L 543 298" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
           <!-- Retag to ABC -> Clean ABC (emits .abc) -->
-          <path d="M 565 315 L 565 326 L 500 326 L 500 372 L 460 372 L 460 383" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3" marker-end="url(#arrow-amber)" />
+          <path d="M 545 314 L 500 314 L 500 370 L 455 370 L 455 383" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3" marker-end="url(#arrow-amber)" />
 
           <!-- Clean (.icl) -> Clean ABC -->
           <path d="M 225 402 L 283 417" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
 
           <!-- Clean ABC -> ABC to Retag (NEW HIGHWAY) -->
-          <path d="M 485 405 L 520 405 L 520 368 L 543 368" fill="none" stroke="#3b82f6" stroke-width="2.5" marker-end="url(#arrow-blue)" />
-          <!-- ABC to Retag -> Gen1 Codegen (direct compile-retag), via the lane right of column 3 -->
-          <path d="M 725 345 L 741 345 L 741 225 L 690 225 L 690 212" fill="none" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrow-blue)" />
+          <path d="M 485 402 L 526 402 L 526 375 L 543 375" fill="none" stroke="#3b82f6" stroke-width="2.5" marker-end="url(#arrow-blue)" />
           <!-- ABC to Retag -> Retag IR (loop back into Stage 4) -->
-          <path d="M 741 239 L 435 239 L 435 258" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="4" marker-end="url(#arrow-blue)" />
+          <path d="M 545 356 L 516 356 L 516 330 L 487 330" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="4" marker-end="url(#arrow-blue)" />
 
           <!-- Clean ABC -> cg -->
-          <path d="M 485 440 L 520 440 L 520 455 L 543 455" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
+          <path d="M 485 445 L 520 445 L 520 472 L 543 472" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
           <!-- Clean ABC -> ABC interpreter (through the gap between the decompiler and cg) -->
-          <path d="M 485 418 L 783 418" fill="none" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arrow-amber)" />
-
-          <!-- sapl2c -> native machine code -->
-          <path d="M 725 95 L 763 95 L 763 280 L 783 280" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
-          <!-- Retag to ABC -> native machine code -->
-          <path d="M 725 287 L 756 287 L 756 300 L 783 300" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
-          <!-- cg -> native machine code -->
-          <path d="M 725 462 L 771 462 L 771 325 L 783 325" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
+          <path d="M 485 426 L 783 426" fill="none" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arrow-amber)" />
 
           <!-- Gen1 Codegen -> JMVM Native -->
-          <path d="M 725 160 L 755 160 L 755 112 L 783 112" fill="none" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow-blue)" />
+          <path d="M 725 80 L 783 80" fill="none" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow-blue)" />
           <!-- Gen1 Codegen -> WebSapl Wasm -->
-          <path d="M 725 185 L 755 185 L 755 212 L 783 212" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#arrow-emerald)" />
+          <path d="M 725 102 L 774 102 L 774 175 L 783 175" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#arrow-emerald)" />
+          <!-- retag2wasm -> Compiled Wasm -->
+          <path d="M 725 158 L 766 158 L 766 246 L 783 246" fill="none" stroke="#a855f7" stroke-width="2.2" marker-end="url(#arrow-purple)" />
+          <!-- sapl2c -> Compiled Wasm (via emcc) -->
+          <path d="M 725 230 L 756 230 L 756 276 L 783 276" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
+          <!-- sapl2c -> native machine code (via clang -O2) -->
+          <path d="M 725 250 L 746 250 L 746 328 L 783 328" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
+          <!-- Retag to ABC -> native machine code -->
+          <path d="M 725 300 L 736 300 L 736 348 L 783 348" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
+          <!-- cg -> native machine code -->
+          <path d="M 725 472 L 768 472 L 768 366 L 783 366" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-amber)" />
 
           <!-- Clean ABC -> Clean LLVM (below column 3) -->
-          <path d="M 420 460 L 420 512 L 885 512 L 885 497" fill="none" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4" marker-end="url(#arrow)" />
+          <path d="M 420 460 L 420 540 L 885 540 L 885 517" fill="none" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4" marker-end="url(#arrow)" />
         </svg>
       </div>
 
@@ -1558,16 +1581,16 @@ printf 'primes.cfp_retag\nClean System Files/primes.opt.abc\n' | ./runfast sapl_
         <!-- sapl2c: Sapl naar C (12 november 2026) -->
         <div class="card">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <h3>sapl2c: Sapl to C</h3>
-            <span class="badge badge-amber">AOT via clang</span>
+            <h3>sapl2c: Sapl to C &amp; Emscripten Wasm</h3>
+            <span class="badge badge-amber">AOT via clang / emcc</span>
           </div>
           <p>
-            Translates gen1&rsquo;s Stage-4 retag form into C, one C function per Sapl function, on the JMVM&rsquo;s own memory model and GC (optionally the VM&rsquo;s own runtime code), compiled with <code>clang -O2</code>.
+            Translates gen1&rsquo;s Stage-4 retag form into C, one C function per Sapl function, on the JMVM&rsquo;s own memory model and GC (optionally the VM&rsquo;s own runtime code), compiled with <code>clang -O2</code> natively or Emscripten (<code>-mtail-call</code>, <code>-mmultivalue</code>) for WebAssembly.
           </p>
           <ul>
-            <li><strong>Performance:</strong> 0.32&times; the JMVM interpreter&rsquo;s time on the 13 core benchmarks; faster than Clean native (0.84&times;) and a little faster than GHC <code>-O2</code> (0.93&times;, without full laziness; geometric means, with a growing heap, unshifted pointers and a GC that skips evaluated thunks; 20 November 2026).</li>
+            <li><strong>Native Performance:</strong> 0.32&times; the JMVM interpreter&rsquo;s time on the 13 core benchmarks; faster than Clean native (0.84&times;) and a little faster than GHC <code>-O2</code> (0.93&times;, without full laziness; geometric means, with a growing heap, unshifted pointers and a GC that skips evaluated thunks; 20 November 2026).</li>
             <li><strong>Self-Hosting Speed:</strong> gen1 compiles itself natively in <strong>203 ms</strong> and reaches the fixed point (interpreter 536 ms; Clean native untyped port 290 ms, typed 164 ms; GHC typed 278 ms; same input, 20 November 2026).</li>
-            <li><strong>Exact:</strong> the same output and allocation count as the VM, also under GC stress. Not for the browser (the C stack is the call stack).</li>
+            <li><strong>Emscripten Wasm:</strong> ~4&times; faster than JMVM-wasm across Chrome, Firefox, and Safari (0.22&ndash;0.26&times; time; 1.35&times; native in Node/V8); Clean programs via <code>abc2retag</code> show the same ~4&times; speedup. Shallow programs fit the ~1 MB browser stack; deep recursion (3&ndash;6 of 14 benchmarks, including gen1) hits the engine stack limit unless compiled with JSPI or an explicit stack.</li>
           </ul>
           <p style="margin-top:6px"><a href="sapl2c_native_factsheet.html">sapl2c factsheet &rarr;</a></p>
         </div>
@@ -1588,18 +1611,19 @@ printf 'primes.cfp_retag\nClean System Files/primes.opt.abc\n' | ./runfast sapl_
           </ul>
         </div>
 
-        <!-- Standalone Wasm (jmvm2wat) -->
+        <!-- Direct Binary Wasm (retag2wasm) -->
         <div class="card">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <h3>Direct Wasm (jmvm2wat)</h3>
-            <span class="badge badge-emerald">Experimental AOT</span>
+            <h3>retag2wasm: Direct Binary Wasm &#x2605;</h3>
+            <span class="badge badge-emerald">In-Sapl AOT &bull; Zero Clang</span>
           </div>
           <p>
-            Directly translates bytecode to standalone WebAssembly modules using <code>return_call</code> continuations.
+            Supersedes the bytecode-level <code>jmvm2wat</code> prototype: <code>sapl2wasm.cfp</code> (~1,000 lines inside <code>sapl2c.cfp</code>) compiles Stage-4 Retag directly into binary <code>.wasm</code> against a shared 60 KB <code>rt.wasm</code> runtime &mdash; without C, Clang, WAT, or Binaryen.
           </p>
           <ul>
-            <li><strong>1.5&times; Speedup in Chrome:</strong> Runs faster than the cold Wasm interpreter.</li>
-            <li><strong>Eliminates VM Dispatch:</strong> Bytecode instructions turn directly into Wasm instructions with linear memory stacks.</li>
+            <li><strong>Full In-Wasm Chain:</strong> <code>gen1</code> and <code>sapl2wasm</code> run inside WebSapl&rsquo;s <code>jmvm.wasm</code>, emitting byte-identical <code>.wasm</code> (even self-compiling gen1) straight into <code>WebAssembly.compile</code>.</li>
+            <li><strong>Near-Emscripten Speed:</strong> <strong>1.13&times;</strong> <code>emcc -O2</code> in Node/V8 (~3.2&times; faster than JMVM-wasm in Chrome, Firefox, and Safari) via Wasm locals, <code>return_call</code>, multivalue <code>(val, hp)</code>, and inline fast paths (<code>EVALK</code>, <code>ap1</code>/<code>apply_n</code>, <code>eq</code>/<code>cmp</code>, strings).</li>
+            <li><strong>Deep Stack Solutions Tested:</strong> JSPI segments (<code>R2W_SEG</code>: all 14 run on ~1 MB stack in Chrome/Firefox, 0.38&times; JMVM, ~23% counter overhead) and an explicit continuation stack (<code>R2W_CPS</code>: all 14 run on default stack across Node 1.00&times;, Chrome 0.34&times; JMVM, Firefox 0.59&times;, Safari 1.38&times;).</li>
           </ul>
         </div>
       </div>
@@ -1651,6 +1675,24 @@ printf 'primes.cfp_retag\nClean System Files/primes.opt.abc\n' | ./runfast sapl_
               <td><span class="badge badge-purple">Tool</span></td>
               <td>Compiles Stage-4 Retag IR (<code>.cfp_retag</code>) directly to JMVM bytecode using <code>retagcomp.jmvm</code>.</td>
               <td><code>./compile-retag file.cfp_retag file.jmvm</code></td>
+            </tr>
+            <tr>
+              <td><code>sapl2c / sapl2wasm</code></td>
+              <td><span class="badge badge-amber">Backend &#x2605;</span></td>
+              <td>Translates Stage-4 Retag into C (for <code>clang -O2</code> or Emscripten) or directly into binary <code>.wasm</code> (<code>sapl2wasm.cfp</code>) when output ends in <code>.wasm</code>.</td>
+              <td><code>printf 'f.retag.txt\nf.wasm\nf.json\n' | ./runfast sapl_compiler/sapl2c.jmvm</code></td>
+            </tr>
+            <tr>
+              <td><code>sapl2c-wasm</code></td>
+              <td><span class="badge badge-emerald">Wasm Build</span></td>
+              <td>Compiles <code>sapl2c</code> C output (for Sapl or Clean via <code>abc2retag</code>) to WebAssembly via Emscripten with tail calls and multivalue.</td>
+              <td><code>bash experiments/sapl2c/wasm/bouw.sh UITMAP</code></td>
+            </tr>
+            <tr>
+              <td><code>retag2wasm</code> (in-Wasm)</td>
+              <td><span class="badge badge-emerald">Wasm Chain &#x2605;</span></td>
+              <td>Runs <code>gen1</code> + <code>sapl2wasm</code> inside <code>jmvm.wasm</code>, compiles the emitted binary <code>.wasm</code> via <code>WebAssembly.compile</code>, and executes against <code>rt.wasm</code>.</td>
+              <td><code>node experiments/sapl2c/wasm/r2w/keten_wasm.js RT8 RT16</code></td>
             </tr>
             <tr>
               <td><code>abc2retag</code> (Sapl)</td>

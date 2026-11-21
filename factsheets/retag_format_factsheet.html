@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>Stage-4 Retag Format — The Universal Pivot</title>
-<meta name="description" content="Why the Stage-4 Retag intermediate representation sits at the center of the Sapl, Haskell Lite, Clean ABC, JMVM, and sapl2c toolchain.">
+<meta name="description" content="Why the Stage-4 Retag intermediate representation sits at the center of the Sapl, Haskell Lite, Clean ABC, JMVM, sapl2c, and retag2wasm WebAssembly toolchain.">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -139,7 +139,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     <div class="eyebrow">Intermediate Representation &bull; The Central Hub</div>
     <h1>Stage-4 Retag Format: The Universal Pivot</h1>
     <p class="lead">
-      Between four functional frontends and four execution backends sits one compact, human-readable
+      Between four functional frontends and five execution &amp; tooling backends sits one compact, human-readable
       intermediate representation: <strong>Stage-4 Retag</strong>. Every frontend lowers into it, and every
       code generator consumes it &mdash; turning an M&times;N compiler problem into M + N.
     </p>
@@ -149,11 +149,11 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
   <p>
     Retag sits at the narrow waist of an hourglass architecture. Frontends resolve syntax, type classes,
     lambda lifting, and strictness analysis down to Retag; backends translate Retag directly into bytecode,
-    C, or Clean ABC without duplicating any frontend logic.
+    C (native &amp; Emscripten Wasm), direct binary WebAssembly (<code>retag2wasm</code>), or Clean ABC without duplicating any frontend logic.
   </p>
 
   <div class="diagram-box">
-    <svg viewBox="0 0 940 410" width="940" height="410" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 940 475" width="940" height="475" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <marker id="arr-blue" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
           <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#3b82f6" />
@@ -175,28 +175,28 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
       <text x="650" y="24" font-family="IBM Plex Mono, monospace" font-size="11.5" font-weight="600" fill="var(--muted)">BACKENDS &amp; TARGETS (N)</text>
 
       <!-- FRONTENDS -->
-      <g transform="translate(20, 46)">
+      <g transform="translate(20, 56)">
         <rect width="235" height="66" rx="8" fill="var(--bg)" stroke="#3b82f6" stroke-width="1.6" />
         <text x="14" y="24" font-family="IBM Plex Sans, sans-serif" font-size="13.5" font-weight="700" fill="var(--fg)">Haskell Lite (.hs)</text>
         <text x="14" y="42" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--muted)">Type classes &bull; specialization</text>
         <text x="14" y="57" font-family="IBM Plex Mono, monospace" font-size="10" fill="#3b82f6">hl_pre &rarr; gen1 stages 1&ndash;4</text>
       </g>
 
-      <g transform="translate(20, 128)">
+      <g transform="translate(20, 140)">
         <rect width="235" height="66" rx="8" fill="var(--bg)" stroke="#a855f7" stroke-width="1.6" />
         <text x="14" y="24" font-family="IBM Plex Sans, sans-serif" font-size="13.5" font-weight="700" fill="var(--fg)">Sapl+ (.spp)</text>
         <text x="14" y="42" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--muted)">Records, guards, modules</text>
         <text x="14" y="57" font-family="IBM Plex Mono, monospace" font-size="10" fill="#a855f7">driver &rarr; gen1 stages 1&ndash;4</text>
       </g>
 
-      <g transform="translate(20, 210)">
+      <g transform="translate(20, 224)">
         <rect width="235" height="66" rx="8" fill="var(--bg)" stroke="#10b981" stroke-width="1.6" />
         <text x="14" y="24" font-family="IBM Plex Sans, sans-serif" font-size="13.5" font-weight="700" fill="var(--fg)">Core Sapl (.cfp)</text>
         <text x="14" y="42" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--muted)">Strictness !, CAFs =:, lazytag</text>
         <text x="14" y="57" font-family="IBM Plex Mono, monospace" font-size="10" fill="#10b981">gen1 --emit=retag</text>
       </g>
 
-      <g transform="translate(20, 292)">
+      <g transform="translate(20, 308)">
         <rect width="235" height="66" rx="8" fill="var(--bg)" stroke="#f59e0b" stroke-width="1.6" />
         <text x="14" y="24" font-family="IBM Plex Sans, sans-serif" font-size="13.5" font-weight="700" fill="var(--fg)">Clean (.icl &rarr; .opt.abc)</text>
         <text x="14" y="42" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--muted)">Symbolic stack decompilation</text>
@@ -204,8 +204,8 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
       </g>
 
       <!-- CENTRAL RETAG HUB -->
-      <g transform="translate(345, 110)">
-        <rect width="225" height="190" rx="12" fill="var(--purple-soft)" stroke="#a855f7" stroke-width="2.5" />
+      <g transform="translate(345, 130)">
+        <rect width="225" height="195" rx="12" fill="var(--purple-soft)" stroke="#a855f7" stroke-width="2.5" />
         <text x="18" y="34" font-family="Bricolage Grotesque, sans-serif" font-size="17" font-weight="700" fill="var(--purple)">Stage-4 Retag IR</text>
         <text x="18" y="54" font-family="IBM Plex Mono, monospace" font-size="11.5" fill="var(--fg)">.retag.txt / .cfp_retag</text>
         <line x1="18" y1="68" x2="207" y2="68" stroke="var(--line)" stroke-width="1" />
@@ -213,32 +213,39 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
         <text x="18" y="110" font-family="IBM Plex Mono, monospace" font-size="11.5" fill="var(--fg)">thunk (f a)   <tspan fill="var(--muted)">defer work</tspan></text>
         <text x="18" y="130" font-family="IBM Plex Mono, monospace" font-size="11.5" fill="var(--fg)">closure (f a) <tspan fill="var(--muted)">PAP node</tspan></text>
         <text x="18" y="150" font-family="IBM Plex Mono, monospace" font-size="11.5" fill="var(--fg)">!arg  /  =:   <tspan fill="var(--muted)">strict / CAF</tspan></text>
-        <text x="18" y="174" font-family="IBM Plex Sans, sans-serif" font-size="10.5" font-weight="600" fill="var(--purple)">No hidden laziness &bull; Whole functions</text>
+        <text x="18" y="176" font-family="IBM Plex Sans, sans-serif" font-size="10.5" font-weight="600" fill="var(--purple)">No hidden laziness &bull; Whole functions</text>
       </g>
 
       <!-- BACKENDS -->
       <g transform="translate(650, 46)">
         <rect width="270" height="66" rx="8" fill="var(--bg)" stroke="#10b981" stroke-width="1.6" />
         <text x="14" y="24" font-family="IBM Plex Sans, sans-serif" font-size="13.5" font-weight="700" fill="var(--fg)">JMVM Native &amp; WebSapl</text>
-        <text x="14" y="42" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--muted)">./runfast &bull; run.wasm (151 KB)</text>
+        <text x="14" y="42" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--muted)">./runfast &bull; jmvm.wasm (151 KB)</text>
         <text x="14" y="57" font-family="IBM Plex Mono, monospace" font-size="10" fill="#10b981">retagcomp / gen1 &rarr; .jmvm / .jvb</text>
       </g>
 
-      <g transform="translate(650, 128)">
+      <g transform="translate(650, 126)">
         <rect width="270" height="66" rx="8" fill="var(--bg)" stroke="#f59e0b" stroke-width="1.8" />
-        <text x="14" y="24" font-family="IBM Plex Sans, sans-serif" font-size="13.5" font-weight="700" fill="var(--fg)">sapl2c Native C Backend</text>
-        <text x="14" y="42" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--muted)">0.34&times; runfast &bull; 248 ms gen1</text>
-        <text x="14" y="57" font-family="IBM Plex Mono, monospace" font-size="10" fill="#f59e0b">sapl2c.cfp &rarr; .c + clang -O2</text>
+        <text x="14" y="24" font-family="IBM Plex Sans, sans-serif" font-size="13.5" font-weight="700" fill="var(--fg)">sapl2c (Native C &amp; Emscripten Wasm)</text>
+        <text x="14" y="42" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--muted)">0.32&times; runfast (203 ms gen1) &bull; ~4&times; JMVM-wasm</text>
+        <text x="14" y="57" font-family="IBM Plex Mono, monospace" font-size="10" fill="#f59e0b">sapl2c.cfp &rarr; .c + clang -O2 / emcc</text>
       </g>
 
-      <g transform="translate(650, 210)">
+      <g transform="translate(650, 206)">
+        <rect width="270" height="66" rx="8" fill="var(--bg)" stroke="#a855f7" stroke-width="2" />
+        <text x="14" y="24" font-family="IBM Plex Sans, sans-serif" font-size="13.5" font-weight="700" fill="var(--fg)">retag2wasm Direct Binary Wasm &#x2605;</text>
+        <text x="14" y="42" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--muted)">1.13&times; emcc -O2 &bull; ~3.2&times; JMVM-wasm &bull; CPS/JSPI</text>
+        <text x="14" y="57" font-family="IBM Plex Mono, monospace" font-size="10" fill="#a855f7">sapl2wasm.cfp (Sapl) &rarr; .wasm (zero Clang)</text>
+      </g>
+
+      <g transform="translate(650, 286)">
         <rect width="270" height="66" rx="8" fill="var(--bg)" stroke="#f59e0b" stroke-width="1.4" />
         <text x="14" y="24" font-family="IBM Plex Sans, sans-serif" font-size="13.5" font-weight="700" fill="var(--fg)">Clean ABC Backend</text>
         <text x="14" y="42" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--muted)">Clean cg (native) &bull; abci (interpreter)</text>
         <text x="14" y="57" font-family="IBM Plex Mono, monospace" font-size="10" fill="#f59e0b">sapl2abc (Sapl) &rarr; .abc</text>
       </g>
 
-      <g transform="translate(650, 292)">
+      <g transform="translate(650, 366)">
         <rect width="270" height="66" rx="8" fill="var(--bg)" stroke="#3b82f6" stroke-width="1.4" />
         <text x="14" y="24" font-family="IBM Plex Sans, sans-serif" font-size="13.5" font-weight="700" fill="var(--fg)">Modular Linking &amp; Tools</text>
         <text x="14" y="42" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--muted)">Per-module compile &bull; inspection</text>
@@ -246,19 +253,20 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
       </g>
 
       <!-- ARROWS: Frontends -> Retag -->
-      <path d="M 255 79 L 300 79 L 300 148 L 342 148" fill="none" stroke="#3b82f6" stroke-width="2" marker-end="url(#arr-blue)" />
-      <path d="M 255 161 L 286 161 L 286 180 L 342 180" fill="none" stroke="#a855f7" stroke-width="2" marker-end="url(#arr-purple)" />
-      <path d="M 255 243 L 286 243 L 286 220 L 342 220" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#arr-emerald)" />
-      <path d="M 255 325 L 300 325 L 300 262 L 342 262" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arr-amber)" />
+      <path d="M 255 89 L 300 89 L 300 170 L 342 170" fill="none" stroke="#3b82f6" stroke-width="2" marker-end="url(#arr-blue)" />
+      <path d="M 255 173 L 286 173 L 286 205 L 342 205" fill="none" stroke="#a855f7" stroke-width="2" marker-end="url(#arr-purple)" />
+      <path d="M 255 257 L 286 257 L 286 245 L 342 245" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#arr-emerald)" />
+      <path d="M 255 341 L 300 341 L 300 280 L 342 280" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arr-amber)" />
 
       <!-- ARROWS: Retag -> Backends -->
-      <path d="M 570 148 L 610 148 L 610 79 L 647 79" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#arr-emerald)" />
-      <path d="M 570 180 L 624 180 L 624 161 L 647 161" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arr-amber)" />
-      <path d="M 570 220 L 624 220 L 624 243 L 647 243" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arr-amber)" />
-      <path d="M 570 262 L 610 262 L 610 325 L 647 325" fill="none" stroke="#3b82f6" stroke-width="2" marker-end="url(#arr-blue)" />
+      <path d="M 570 165 L 605 165 L 605 79 L 647 79" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#arr-emerald)" />
+      <path d="M 570 200 L 622 200 L 622 159 L 647 159" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arr-amber)" />
+      <path d="M 570 239 L 647 239" fill="none" stroke="#a855f7" stroke-width="2.2" marker-end="url(#arr-purple)" />
+      <path d="M 570 275 L 622 275 L 622 319 L 647 319" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arr-amber)" />
+      <path d="M 570 305 L 605 305 L 605 399 L 647 399" fill="none" stroke="#3b82f6" stroke-width="2" marker-end="url(#arr-blue)" />
 
       <!-- Caption -->
-      <text x="470" y="392" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-size="12" fill="var(--muted)">
+      <text x="470" y="456" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-size="12" fill="var(--muted)">
         Every frontend lowers to Stage-4 Retag once; every backend reads Stage-4 Retag directly.
       </text>
     </svg>
@@ -280,9 +288,11 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
       <p>
         Bytecode (<code>.jmvm</code>) and Clean&rsquo;s <code>.abc</code> flatten functions into stack operations.
         Retag keeps <strong>named variables, whole functions, and structured <code>case</code> trees</strong>.
-        That is why <code>sapl2c</code> (Retag &rarr; C) generates 2.9 MB of C and compiles <code>gen1</code> in
-        4.1 s (<strong>248 ms</strong> self-compile, <strong>0.34&times;</strong> <code>runfast</code>), whereas
-        <code>jmvm2c</code> (bytecode &rarr; C) produced 9.3 MB of C (47 s build, 442 ms).
+        That is why <code>sapl2c</code> (Retag &rarr; C) compiles <code>gen1</code> in <strong>203 ms</strong>
+        self-compile (<strong>0.32&times;</strong> <code>runfast</code>) and via Emscripten reaches ~4&times; JMVM-wasm,
+        while the same named-variable structure lets <code>sapl2wasm.cfp</code> (~1,000 lines of Sapl) emit binary
+        WebAssembly directly at <strong>1.13&times; <code>emcc -O2</code></strong> (~3.2&times; faster than JMVM-wasm)
+        with zero C, Clang, or Binaryen &mdash; running the full compiler chain inside WebAssembly.
       </p>
     </div>
 
@@ -336,24 +346,24 @@ sieve xs = case (eval(xs)) (Cons a as -&gt;
       <tr>
         <th>Construct</th>
         <th>Meaning</th>
-        <th>Backend Lowering (JMVM / <code>sapl2c</code> / ABC)</th>
+        <th>Backend Lowering (JMVM / <code>sapl2c</code> / <code>retag2wasm</code> / ABC)</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td><code>eval(x)</code></td>
         <td>Demand Weak Head Normal Form of variable <code>x</code></td>
-        <td>Tag check + thunk entry if unevaluated; skipped for <code>!</code> strict args</td>
+        <td>Tag check + thunk entry if unevaluated (inline fast path in Wasm; <code>return_call</code> / CPS on deep chains); skipped for <code>!</code> strict args</td>
       </tr>
       <tr>
         <td><code>eval(f x)</code></td>
         <td>Apply an unknown function / closure expression</td>
-        <td><code>evalap</code> in JMVM; closure arity dispatch in C; <code>jsr_ap</code> in ABC</td>
+        <td><code>evalap</code> in JMVM; closure arity dispatch in C &amp; Wasm (<code>ap1</code>/<code>apply_n</code> inline); <code>jsr_ap</code> in ABC</td>
       </tr>
       <tr>
         <td><code>thunk (f a b)</code></td>
         <td>Allocate a deferred, updatable heap computation</td>
-        <td><code>CLOSURE</code> node updated in-place on first evaluation</td>
+        <td><code>CLOSURE</code> node updated in-place on first evaluation; tail calls lower to <code>musttail</code> (C) or <code>return_call</code> (Wasm)</td>
       </tr>
       <tr>
         <td><code>closure (f a)</code></td>
@@ -363,7 +373,7 @@ sieve xs = case (eval(xs)) (Cons a as -&gt;
       <tr>
         <td><code>C a b</code> / <code>case</code></td>
         <td>Strict constructor allocation and pattern match</td>
-        <td>Constructor node + direct tag switch (hardware branch for tags 0/1)</td>
+        <td>Constructor node + direct tag switch (Wasm locals + multivalue <code>(val, hp)</code> return; hardware branch for tags 0/1)</td>
       </tr>
       <tr>
         <td><code>f =: expr</code></td>
@@ -375,8 +385,8 @@ sieve xs = case (eval(xs)) (Cons a as -&gt;
 
   <div class="callout">
     <strong>Try it yourself:</strong> run <code>./compile --emit=retag examples/primes.cfp</code> to inspect
-    the exact Stage-4 Retag output, and <code>./compile-retag examples/primes.retag.txt</code> to compile it
-    back to JMVM bytecode.
+    the exact Stage-4 Retag output, <code>./compile-retag examples/primes.retag.txt</code> to compile it back
+    to JMVM bytecode, or pipe it into <code>./runfast sapl_compiler/sapl2c.jmvm</code> to emit C or binary <code>.wasm</code>.
   </div>
 
   <footer>

@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>WebAssembly Backends — Emscripten, Direct retag2wasm &amp; Limitations</title>
+<meta name="description" content="Technical factsheet comparing Sapl and Clean WebAssembly backends: sapl2c via Emscripten, direct binary retag2wasm (sapl2wasm.cfp), jmvm.wasm baseline, browser benchmarks, and stack/platform limitations.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script>
+  try {
+    const t = localStorage.getItem("websapl_theme");
+    if (t) document.documentElement.setAttribute("data-theme", t);
+  } catch (_) {}
+</script>
+<style>
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --fg: #1b2230;
+  --muted: #5a6475;
+  --line: #d9dee6;
+  --accent: #1f5f8b;
+  --accent-soft: #e3eef6;
+  --purple: #6d28d9;
+  --purple-soft: #f3e8ff;
+  --emerald: #047857;
+  --emerald-soft: #d1fae5;
+  --amber: #b45309;
+  --amber-soft: #fef3c7;
+  --rose: #be123c;
+  --rose-soft: #ffe4e6;
+  --f-display: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161d;
+    --surface: #1a2029;
+    --fg: #e4e8ee;
+    --muted: #9aa5b6;
+    --line: #2d3542;
+    --accent: #7db7e0;
+    --accent-soft: #1d3346;
+    --purple: #c084fc;
+    --purple-soft: #2e1d47;
+    --emerald: #34d399;
+    --emerald-soft: #133529;
+    --amber: #f59e0b;
+    --amber-soft: #3a2910;
+    --rose: #fb7185;
+    --rose-soft: #3b121e;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161d;
+  --surface: #1a2029;
+  --fg: #e4e8ee;
+  --muted: #9aa5b6;
+  --line: #2d3542;
+  --accent: #7db7e0;
+  --accent-soft: #1d3346;
+  --purple: #c084fc;
+  --purple-soft: #2e1d47;
+  --emerald: #34d399;
+  --emerald-soft: #133529;
+  --amber: #f59e0b;
+  --amber-soft: #3a2910;
+  --rose: #fb7185;
+  --rose-soft: #3b121e;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15.5px/1.62 var(--f-body);
+}
+.wrap { max-width: 980px; margin: 0 auto; padding: 32px 20px 64px; }
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; font-size: 14px; }
+.topbar a { color: var(--muted); text-decoration: none; }
+.topbar a:hover { color: var(--accent); }
+.theme-btn {
+  background: var(--surface); color: var(--fg); border: 1px solid var(--line);
+  border-radius: 6px; padding: 5px 11px; font: 13px var(--f-body); cursor: pointer;
+}
+header { border-bottom: 2px solid var(--line); padding-bottom: 20px; margin-bottom: 28px; }
+.eyebrow {
+  font: 600 12px/1.2 var(--f-mono); text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--purple); margin-bottom: 8px;
+}
+h1 { font: 700 32px/1.15 var(--f-display); margin: 0 0 10px; letter-spacing: -0.01em; }
+.lead { color: var(--muted); font-size: 16.5px; margin: 0; max-width: 76ch; }
+.stats-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 20px 0 0; }
+@media (max-width: 820px) { .stats-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .stats-4 { grid-template-columns: 1fr; } }
+.stat {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 14px 16px;
+}
+.stat .num { font: 700 22px/1.15 var(--f-display); color: var(--fg); margin-bottom: 4px; }
+.stat.purple .num { color: var(--purple); }
+.stat.emerald .num { color: var(--emerald); }
+.stat.amber .num { color: var(--amber); }
+.stat.rose .num { color: var(--rose); }
+.stat .lbl { font-size: 12.5px; color: var(--muted); line-height: 1.35; }
+h2 { font: 700 22px/1.25 var(--f-display); margin: 36px 0 12px; }
+h3 { font: 600 16.5px/1.3 var(--f-display); margin: 0 0 8px; }
+p { margin: 0 0 12px; }
+ul { margin: 6px 0 14px; padding-left: 20px; }
+li { margin: 4px 0; }
+code { font-family: var(--f-mono); font-size: 0.9em; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+a { color: var(--accent); }
+.diagram-box {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  padding: 18px; margin: 18px 0 26px; overflow-x: auto;
+}
+.diagram-box svg { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 14px 0; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 14px 0; }
+@media (max-width: 760px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 18px 20px;
+}
+.card.accent-purple { border-top: 3px solid var(--purple); }
+.card.accent-emerald { border-top: 3px solid var(--emerald); }
+.card.accent-amber { border-top: 3px solid var(--amber); }
+.card.accent-blue { border-top: 3px solid var(--accent); }
+.card.accent-rose { border-top: 3px solid var(--rose); }
+.tag-pill {
+  display: inline-block; font: 600 11px/1 var(--f-mono); text-transform: uppercase;
+  letter-spacing: 0.05em; padding: 4px 8px; border-radius: 999px; margin-bottom: 8px;
+}
+.tag-pill.purple { background: var(--purple-soft); color: var(--purple); }
+.tag-pill.emerald { background: var(--emerald-soft); color: var(--emerald); }
+.tag-pill.amber { background: var(--amber-soft); color: var(--amber); }
+.tag-pill.rose { background: var(--rose-soft); color: var(--rose); }
+.table-wrap { overflow-x: auto; margin: 14px 0; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table {
+  width: 100%; border-collapse: collapse; font-size: 13.8px; font-variant-numeric: tabular-nums;
+}
+th, td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { background: var(--accent-soft); font-weight: 600; white-space: nowrap; }
+tr:last-child td { border-bottom: none; }
+td.num, th.num { text-align: right; white-space: nowrap; }
+td.good { color: var(--emerald); font-weight: 600; }
+td.warn { color: var(--amber); font-weight: 600; }
+td.bad { color: var(--rose); font-weight: 600; }
+.callout {
+  background: var(--purple-soft); border-left: 3px solid var(--purple);
+  padding: 13px 16px; border-radius: 0 8px 8px 0; margin: 18px 0; font-size: 14.5px;
+}
+.callout.amber {
+  background: var(--amber-soft); border-left-color: var(--amber);
+}
+.caption { font-size: 13px; color: var(--muted); margin-top: 6px; }
+footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a href="index.html">&larr; Factsheets</a>
+    <button class="theme-btn" id="themeBtn" type="button">Theme</button>
+  </div>
+
+  <header>
+    <div class="eyebrow">WebAssembly Backends &bull; Sapl &amp; Clean via Stage-4 Retag</div>
+    <h1>Compiled WebAssembly Backends: Emscripten, Direct <code>retag2wasm</code> &amp; Limitations</h1>
+    <p class="lead">
+      Alongside the <code>jmvm.wasm</code> bytecode interpreter used in WebSapl, Stage-4 Retag now lowers
+      directly to compiled WebAssembly via two routes: <strong><code>sapl2c</code> + Emscripten</strong> (AOT via C)
+      and <strong><code>retag2wasm</code> (<code>sapl2wasm.cfp</code>)</strong>, an in-Sapl compiler emitting binary
+      <code>.wasm</code> without C or Clang. Both achieve near-native speeds on shallow code, while exposing the
+      fixed browser call stack as the primary architectural constraint.
+    </p>
+
+    <div class="stats-4">
+      <div class="stat emerald">
+        <div class="num">~4&times;</div>
+        <div class="lbl">Faster than <code>jmvm.wasm</code> with <code>sapl2c</code> + <code>emcc -O2</code> (0.22&ndash;0.26&times; time across Chrome, Firefox, Safari)</div>
+      </div>
+      <div class="stat purple">
+        <div class="num">1.13&times;</div>
+        <div class="lbl"><code>retag2wasm</code> vs. <code>emcc -O2</code> in Node/V8 (~3.2&times; faster than JMVM-wasm, zero Clang)</div>
+      </div>
+      <div class="stat amber">
+        <div class="num">~1,000 LOC</div>
+        <div class="lbl"><code>sapl2wasm.cfp</code> in Sapl: byte-identical to Python+<code>wat2wasm</code>; full chain runs inside Wasm</div>
+      </div>
+      <div class="stat rose">
+        <div class="num">~1 MB</div>
+        <div class="lbl">Fixed browser call stack (3&ndash;6 of 14 benchmarks overflow without JSPI or an explicit stack)</div>
+      </div>
+    </div>
+  </header>
+
+  <h2>1. Two Compiled WebAssembly Routes (vs. Interpreter Baseline)</h2>
+  <p>
+    Both compiled backends share the same Stage-4 Retag lowering &mdash; supporting Sapl, Haskell Lite, and
+    Clean programs via <code>abc2retag</code> &mdash; and use WebAssembly <strong>tail calls</strong>
+    (<code>return_call</code> / <code>return_call_indirect</code>) and <strong>multivalue</strong> returns
+    <code>(i64 val, i32 hp)</code> so the heap pointer stays in Wasm registers instead of memory.
+  </p>
+
+  <div class="diagram-box">
+    <svg viewBox="0 0 940 315" width="940" height="315" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arr-amber" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#f59e0b" />
+        </marker>
+        <marker id="arr-purple" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#a855f7" />
+        </marker>
+        <marker id="arr-emerald" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#10b981" />
+        </marker>
+      </defs>
+
+      <!-- Left: Stage-4 Retag Hub -->
+      <g transform="translate(20, 75)">
+        <rect width="210" height="160" rx="10" fill="var(--purple-soft)" stroke="#a855f7" stroke-width="2" />
+        <text x="16" y="30" font-family="Bricolage Grotesque, sans-serif" font-size="16" font-weight="700" fill="var(--purple)">Stage-4 Retag IR</text>
+        <text x="16" y="50" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--fg)">.retag.txt / .cfp_retag</text>
+        <line x1="16" y1="62" x2="194" y2="62" stroke="var(--line)" stroke-width="1" />
+        <text x="16" y="84" font-family="IBM Plex Sans, sans-serif" font-size="11.5" fill="var(--fg)">&bull; Sapl &amp; Haskell Lite</text>
+        <text x="16" y="104" font-family="IBM Plex Sans, sans-serif" font-size="11.5" fill="var(--fg)">&bull; Clean (.opt.abc &rarr; abc2retag)</text>
+        <text x="16" y="128" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--muted)">Named locals &bull; explicit eval</text>
+        <text x="16" y="145" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--muted)">Liveness &amp; shadow-stack GC</text>
+      </g>
+
+      <!-- Middle: Codegen Routes -->
+      <g transform="translate(305, 24)">
+        <rect width="285" height="76" rx="8" fill="var(--bg)" stroke="#f59e0b" stroke-width="1.8" />
+        <text x="14" y="22" font-family="IBM Plex Sans, sans-serif" font-size="13" font-weight="700" fill="var(--fg)">Route 1: sapl2c + Emscripten</text>
+        <text x="14" y="42" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#f59e0b">sapl2c.cfp &rarr; .c + rt.h &rarr; emcc -O2</text>
+        <text x="14" y="61" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--muted)">-mtail-call &bull; -mmultivalue (AOT via Clang)</text>
+      </g>
+
+      <g transform="translate(305, 117)">
+        <rect width="285" height="76" rx="8" fill="var(--bg)" stroke="#a855f7" stroke-width="2" />
+        <text x="14" y="22" font-family="IBM Plex Sans, sans-serif" font-size="13" font-weight="700" fill="var(--fg)">Route 2: retag2wasm (Direct) &#x2605;</text>
+        <text x="14" y="42" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#a855f7">sapl2wasm.cfp (~1k LOC) &rarr; .wasm</text>
+        <text x="14" y="61" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--muted)">No C / Clang / Binaryen &bull; runs inside Wasm</text>
+      </g>
+
+      <g transform="translate(305, 210)">
+        <rect width="285" height="76" rx="8" fill="var(--bg)" stroke="#10b981" stroke-width="1.6" />
+        <text x="14" y="22" font-family="IBM Plex Sans, sans-serif" font-size="13" font-weight="700" fill="var(--fg)">Baseline: JMVM Bytecode VM</text>
+        <text x="14" y="42" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#10b981">gen1 / retagcomp &rarr; .jvb &rarr; jmvm.wasm</text>
+        <text x="14" y="61" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--muted)">151 KB VM (65 KB gz) &bull; also runs gen1/sapl2wasm</text>
+      </g>
+
+      <!-- Right: Outputs & Stack Model -->
+      <g transform="translate(655, 24)">
+        <rect width="265" height="76" rx="8" fill="var(--bg)" stroke="#f59e0b" stroke-width="1.6" />
+        <text x="14" y="22" font-family="IBM Plex Sans, sans-serif" font-size="13" font-weight="700" fill="var(--fg)">Monolithic .wasm (15&ndash;886 KB)</text>
+        <text x="14" y="42" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--muted)">~4&times; JMVM-wasm &bull; 1.35&times; native (Node)</text>
+        <text x="14" y="61" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--amber)">Fixed ~1 MB browser stack (no CPS/JSPI)</text>
+      </g>
+
+      <g transform="translate(655, 117)">
+        <rect width="265" height="76" rx="8" fill="var(--bg)" stroke="#a855f7" stroke-width="2" />
+        <text x="14" y="22" font-family="IBM Plex Sans, sans-serif" font-size="13" font-weight="700" fill="var(--fg)">Program .wasm + rt.wasm (60 KB)</text>
+        <text x="14" y="42" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--muted)">1.13&times; emcc -O2 &bull; ~3.2&times; JMVM-wasm</text>
+        <text x="14" y="61" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--purple)">Direct + CPS / JSPI / JMVM tiered fallback</text>
+      </g>
+
+      <g transform="translate(655, 210)">
+        <rect width="265" height="76" rx="8" fill="var(--bg)" stroke="#10b981" stroke-width="1.6" />
+        <text x="14" y="22" font-family="IBM Plex Sans, sans-serif" font-size="13" font-weight="700" fill="var(--fg)">WebSapl Interpreter Execution</text>
+        <text x="14" y="42" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--muted)">14/14 benchmarks run (0 stack overflows)</text>
+        <text x="14" y="61" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="var(--emerald)">Own call stack in linear memory (20M cells)</text>
+      </g>
+
+      <!-- Arrows Left -> Middle -->
+      <path d="M 230 115 L 268 115 L 268 62 L 302 62" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arr-amber)" />
+      <path d="M 230 155 L 302 155" fill="none" stroke="#a855f7" stroke-width="2.2" marker-end="url(#arr-purple)" />
+      <path d="M 230 195 L 268 195 L 268 248 L 302 248" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#arr-emerald)" />
+
+      <!-- Arrows Middle -> Right -->
+      <path d="M 590 62 L 652 62" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arr-amber)" />
+      <path d="M 590 155 L 652 155" fill="none" stroke="#a855f7" stroke-width="2.2" marker-end="url(#arr-purple)" />
+      <path d="M 590 248 L 652 248" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#arr-emerald)" />
+
+      <text x="470" y="305" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-size="12" fill="var(--muted)">
+        Route 1 requires Emscripten/Clang AOT; Route 2 compiles directly inside the browser via jmvm.wasm + WebAssembly.compile.
+      </text>
+    </svg>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Property</th>
+          <th>Route 1: <code>sapl2c</code> + Emscripten</th>
+          <th>Route 2: <code>retag2wasm</code> (<code>sapl2wasm.cfp</code>)</th>
+          <th>Baseline: <code>jmvm.wasm</code></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Toolchain required</strong></td>
+          <td><code>sapl2c</code> + <code>emcc</code> (Clang + Binaryen)</td>
+          <td><code>sapl2wasm.cfp</code> (in Sapl) + shared <code>rt.wasm</code></td>
+          <td><code>gen1</code> / <code>retagcomp</code> + <code>jmvm.wasm</code></td>
+        </tr>
+        <tr>
+          <td><strong>In-browser compile</strong></td>
+          <td>No (requires C compiler AOT)</td>
+          <td><strong>Yes</strong> (runs inside <code>jmvm.wasm</code> &rarr; <code>WebAssembly.compile</code>)</td>
+          <td><strong>Yes</strong> (~6&ndash;12 ms to <code>.jvb</code>)</td>
+        </tr>
+        <tr>
+          <td><strong>Warm speed (Node/V8)</strong></td>
+          <td><strong>1.35&times; native</strong> (0.26&times; JMVM-wasm, 2 GB stack)</td>
+          <td><strong>1.13&times; <code>emcc -O2</code></strong> (1.61&times; native afternoon build)</td>
+          <td>~1.5&times; native JMVM (3.8&times; slower than emcc)</td>
+        </tr>
+        <tr>
+          <td><strong>Warm speed (Browsers)</strong></td>
+          <td><strong>0.22&ndash;0.26&times; JMVM-wasm</strong> (~4&times; faster, shallow set)</td>
+          <td><strong>~0.30&ndash;0.31&times; JMVM-wasm</strong> (direct); CPS/JSPI for 14/14</td>
+          <td>1.00&times; baseline (14/14 run)</td>
+        </tr>
+        <tr>
+          <td><strong>Clean support</strong></td>
+          <td>Verified via <code>abc2retag</code> (0.23&ndash;0.26&times; JMVM)</td>
+          <td>Same Retag input (not yet separately benchmarked on Clean)</td>
+          <td>Verified via <code>abc2retag</code> (13/13 + <code>gen1t</code>)</td>
+        </tr>
+        <tr>
+          <td><strong>Artifact size</strong></td>
+          <td>15&ndash;150 KB per benchmark; <code>gen1</code> 886 KB</td>
+          <td>1&ndash;183 KB per benchmark; <code>gen1</code> 1.16 MB + 60 KB <code>rt.wasm</code></td>
+          <td>151 KB VM + compact <code>.jvb</code> bytecode</td>
+        </tr>
+        <tr>
+          <td><strong>Calling convention</strong></td>
+          <td><code>(hp, sp, a0..a5) &rarr; {val, hp}</code> via <code>-mmultivalue</code></td>
+          <td><code>(i32 hp, i32 sp, i64 a0..a5) &rarr; (i64, i32)</code> multivalue</td>
+          <td>Bytecode loop; VM registers in linear memory</td>
+        </tr>
+        <tr>
+          <td><strong>Deep recursion</strong></td>
+          <td>Overflows ~1 MB browser stack (3&ndash;6 of 14 fail)</td>
+          <td>Solved via <code>R2W_CPS</code> (all browsers) or <code>R2W_SEG</code> (JSPI)</td>
+          <td>Never overflows (call stack in linear memory)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout">
+    <strong>Why a 1,000-line direct generator achieves ~88% of <code>clang -O2</code>:</strong>
+    Experiment B (<code>proef_b.sh</code>) showed that <code>emcc -O1</code> (<code>0.95&times;</code>) matches <code>-O2</code>, and
+    <code>-O2 -fno-inline</code> matches it too (<code>1.01&times;</code>), whereas <code>-O0</code> is <strong>4.49&times; slower</strong>
+    and <code>wasm-opt -O3</code> cannot recover that loss (<code>4.43&times;</code>). Clang&rsquo;s main win is keeping
+    named variables in Wasm locals (<code>mem2reg</code>/SROA) instead of linear memory. Because Stage-4 Retag
+    already has whole functions and named locals, <code>retag2wasm</code> writes Wasm locals, <code>return_call</code>,
+    multivalue <code>(val, hp)</code>, and inline fast paths (<code>EVALK</code>, heap checks, allocation,
+    <code>ap1</code>/<code>apply_n</code>, <code>eq</code>/<code>cmp</code>, <code>strlen</code>/<code>strat</code>/<code>mkstr</code>)
+    directly &mdash; leaving GC, floats, and error cold paths in <code>rt.wasm</code> (60 KB).
+  </div>
+
+  <h3>In-Wasm Self-Compilation Chain (<code>keten_wasm.js</code>)</h3>
+  <p>
+    Both the Python reference (<code>sapl_naar_wasm.py</code>) and the Sapl compiler backend
+    (<code>sapl_compiler/sapl2wasm.cfp</code>) produce <strong>byte-identical</strong> <code>.wasm</code> modules for
+    all 13 standard benchmarks and for <code>gen1</code> itself. Running the entire compilation chain inside WebAssembly
+    on Node 26 (Apple M4, <code>jmvm.wasm</code>) yields identical outputs to <code>./runfast</code>:
+  </p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Workload (in <code>jmvm.wasm</code>)</th>
+          <th class="num"><code>gen1</code> &rarr; Retag</th>
+          <th class="num"><code>sapl2wasm</code> &rarr; <code>.wasm</code></th>
+          <th class="num">Module size</th>
+          <th class="num">Wasm run time (Node)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Typical benchmark (e.g. <code>fib</code>..<code>parsetest</code>)</td><td class="num">1&ndash;30 ms</td><td class="num">3&ndash;53 ms</td><td class="num">1&ndash;76 KB</td><td class="num">19&ndash;529 ms</td></tr>
+        <tr><td><code>eval2</code></td><td class="num">54 ms</td><td class="num">174 ms</td><td class="num">183 KB</td><td class="num">251 ms</td></tr>
+        <tr><td><code>gen1</code> (self-compiling byte-for-byte)</td><td class="num">376 ms</td><td class="num">1,012 ms</td><td class="num">1,156 KB</td><td class="num">374 ms</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="caption">
+    <code>WebAssembly.compile</code> takes ~1 ms (V8 compiles lazily per function on first call, so compilation cost is amortized into the run).
+  </p>
+
+  <h2>2. Browser Benchmarks (Chrome, Firefox &amp; Safari)</h2>
+  <p>
+    Measured on Apple M4 (warm runs, best of 5; Chrome 157 and Firefox 160 headless; Safari 26.6 with screen open).
+    On shallow programs, both compiled routes outperform <code>jmvm.wasm</code> by <strong>3&ndash;4&times;</strong>
+    and the Clean ABC interpreters by <strong>3&ndash;8&times;</strong>. Notably, Safari 26.6 no longer penalizes direct
+    <code>return_call</code> instructions (<code>0.24&times;</code> JMVM for <code>sapl2c</code>, matching Chrome).
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Variant</th>
+          <th class="num">Node 26 (V8)</th>
+          <th class="num">Chrome 157 (V8)</th>
+          <th class="num">Firefox 160 (SM)</th>
+          <th class="num">Safari 26.6 (JSC)</th>
+          <th>Coverage (14 programs)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong><code>sapl2c</code> + <code>emcc -O2</code></strong> (vs. native)</td>
+          <td class="num">1.35&times; (0.26&times; JMVM)</td>
+          <td class="num">1.41&times; (0.24&times; JMVM)</td>
+          <td class="num">1.76&times; (0.22&times; JMVM)</td>
+          <td class="num">1.25&times; (0.24&times; JMVM)</td>
+          <td>8/14 Chrome &amp; Firefox; 11/14 Safari (14/14 Node 2 GB)</td>
+        </tr>
+        <tr>
+          <td><strong><code>retag2wasm</code> direct</strong> (vs. native)</td>
+          <td class="num">1.61&times;* (1.13&times; emcc)</td>
+          <td class="num">1.61&times; (~0.30&times; JMVM)</td>
+          <td class="num">2.17&times; (~0.30&times; JMVM)</td>
+          <td class="num">1.64&times;* (~0.31&times; JMVM)</td>
+          <td>9/14 Chrome &amp; Firefox; 11/14 Safari (14/14 Node 2 GB)</td>
+        </tr>
+        <tr>
+          <td><strong><code>retag2wasm</code> JSPI (<code>R2W_SEG</code>)</strong></td>
+          <td class="num">1.38&times; emcc (+23%)</td>
+          <td class="num">0.38&times; JMVM</td>
+          <td class="num bad">0.38&times; JMVM (<code>gen1</code> 4.7 s)</td>
+          <td class="num bad">Unsupported</td>
+          <td>14/14 Node, Chrome, Firefox (not in Safari)</td>
+        </tr>
+        <tr>
+          <td><strong><code>retag2wasm</code> own stack (<code>R2W_CPS</code>)</strong></td>
+          <td class="num good">1.12&times; emcc (1.00&times; direct)</td>
+          <td class="num good">1.61&times; nat. (0.34&times; JMVM)</td>
+          <td class="num warn">4.11&times; nat. (0.59&times; JMVM)</td>
+          <td class="num bad">6.59&times; nat. (1.38&times; JMVM)</td>
+          <td><strong>14/14</strong> in Node, Chrome, Firefox &amp; Safari</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="caption">
+    *Note: <code>r2w / native</code> in Node (1.61&times;) and Safari (1.64&times;) was measured before moving <code>ap1_slow</code>/<code>apply_n</code> and string helpers into the program module (which improved Node <code>r2w / emcc</code> from 1.18&times; to 1.13&times;).
+  </p>
+
+  <h2>3. Primary Limitation: The Browser Call Stack &amp; Tested Solutions</h2>
+  <p>
+    Tail calls compile to <code>return_call</code> and consume zero stack, but every <strong>non-tail call</strong>
+    &mdash; especially <code>EVALK</code> forcing a chain of thunks, strict argument evaluation, and over-saturated
+    calls &mdash; pushes a frame onto the host WebAssembly engine&rsquo;s call stack. Natively, <code>sapl2c</code> runs
+    on a 4 GB thread stack; <code>jmvm.wasm</code> keeps its call stack in linear memory. In browsers, the Wasm
+    stack is capped around <strong>~1 MB</strong> and cannot be enlarged from web pages (nor via Web Workers, which
+    actually have smaller stacks in Chrome and Safari: 9/14 fail in Chrome workers vs. 6/14 on main thread;
+    11/14 fail in Safari workers vs. 3/14 on main thread).
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Minimum Stack Required (<code>emcc -O2</code>)</th>
+          <th>Benchmarks</th>
+          <th>Browser Impact (Default Stack)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>&lt; 1 MB</strong></td>
+          <td><code>fib</code>, <code>queens</code>, <code>knights</code>, <code>hamming</code>, <code>match</code>, <code>sprimes</code>, <code>parsetest</code>, <code>eval2</code></td>
+          <td class="good">Run everywhere (<code>primes</code>/<code>eval2</code> border varies by frame size)</td>
+        </tr>
+        <tr>
+          <td><strong>2&ndash;8 MB</strong></td>
+          <td><code>primes</code>, <code>eval</code>, <code>prolog</code></td>
+          <td class="warn">Pass in Safari; most overflow in Chrome &amp; Firefox</td>
+        </tr>
+        <tr>
+          <td><strong>8&ndash;48 MB</strong></td>
+          <td><code>sort</code> (8&ndash;32 MB), <code>twice</code> (32&ndash;48 MB)</td>
+          <td class="bad">Overflow in all three browsers</td>
+        </tr>
+        <tr>
+          <td><strong>112&ndash;128 MB</strong></td>
+          <td><code>gen1</code> compiling itself (0.7&ndash;1.3M nested calls)</td>
+          <td class="bad">Overflow in all three browsers</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid-3">
+    <div class="card accent-amber">
+      <span class="tag-pill amber">Option A &bull; R2W_SEG</span>
+      <h3>JSPI Stack Segments</h3>
+      <p>
+        Checks a global depth counter on non-tail calls; past depth 2,000, suspends via
+        <code>WebAssembly.Suspending</code> onto a fresh <code>WebAssembly.promising</code> stack.
+      </p>
+      <ul>
+        <li><strong>Pros:</strong> Keeps normal functions intact; runs all 14 in Chrome &amp; Firefox.</li>
+        <li><strong>Cons:</strong> Counter adds <strong>~23%</strong> overhead to every program; segment switches cost ~0.3 ms in Firefox (<code>gen1</code> slows to 4.7 s); <strong>absent in Safari 26.6</strong>.</li>
+      </ul>
+    </div>
+
+    <div class="card accent-purple">
+      <span class="tag-pill purple">Option B &bull; R2W_CPS</span>
+      <h3>Own Stack (Continuation Form)</h3>
+      <p>
+        Saves live variables and a continuation index onto the shadow stack (<code>sp</code>) in linear memory and
+        jumps with <code>return_call</code> / <code>return_call_indirect</code>.
+      </p>
+      <ul>
+        <li><strong>Pros:</strong> Works in <strong>all browsers</strong> (no JSPI needed); in Node/Chrome averages 1.00&ndash;1.12&times; direct (<code>twice</code> &amp; <code>primes</code> get faster!).</li>
+        <li><strong>Cons:</strong> ~2&times; slower in Firefox; <strong>4&ndash;13&times; slower in Safari</strong> (1.38&times; slower than JMVM) due to 8-arg <code>return_call_indirect</code> in JSC.</li>
+      </ul>
+    </div>
+
+    <div class="card accent-emerald">
+      <span class="tag-pill emerald">Recommended &bull; Hybrid</span>
+      <h3>Tiered Execution</h3>
+      <p>
+        Run <strong>Tier 0</strong> (fast direct Wasm, zero counter) by default; catch overflow traps early
+        (<code>twice</code> 0.5 ms, <code>sort</code> ~50 ms, <code>gen1</code> ~155 ms) and restart on <strong>Tier 1</strong>:
+      </p>
+      <ul>
+        <li><strong>Chrome &amp; Firefox:</strong> restart on <code>R2W_CPS</code> (~1.50&times; / ~2.56&times; native est. across all 14).</li>
+        <li><strong>Safari:</strong> restart on <code>jmvm.wasm</code> (~1.87&times; native est. across all 14).</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>4. Other Limitations &amp; Open Engineering Items</h2>
+  <div class="grid-2">
+    <div class="card accent-rose">
+      <h3>Language &amp; Compiler Gaps in <code>retag2wasm</code></h3>
+      <ul>
+        <li><strong>Not yet implemented:</strong> <code>try</code>/<code>catch</code> (<code>setjmp</code>) halts with an error in both <code>sapl_naar_wasm.py</code> and <code>sapl2wasm.cfp</code>; float literals are not yet parsed to IEEE-754 bits in <code>sapl2wasm.cfp</code>.</li>
+        <li><strong>CPS/JSPI variants in Python only:</strong> <code>R2W_CPS</code> and <code>R2W_SEG</code> currently live behind flags in <code>sapl_naar_wasm.py</code> and are not yet ported to <code>sapl2wasm.cfp</code>.</li>
+        <li><strong>Generator throughput:</strong> running inside <code>jmvm.wasm</code>, <code>sapl2wasm</code> currently takes ~2.7&times; as long as <code>gen1</code> itself (1,012 ms vs. 376 ms for <code>gen1</code>) because it re-parses C-expression strings and builds bytes via <code>append</code>.</li>
+        <li><strong>WebSapl worker integration:</strong> the end-to-end Wasm chain runs via <code>keten_wasm.js</code> in Node, but is not yet wired into WebSapl&rsquo;s browser notebook worker UI.</li>
+      </ul>
+    </div>
+
+    <div class="card accent-blue">
+      <h3>Browser &amp; Deployment Constraints</h3>
+      <ul>
+        <li><strong>Restartability requirement:</strong> Tier-0 &rarr; Tier-1 fallback requires buffering stdout/DOM effects until completion; programs consuming interactive input mid-run cannot transparently restart after an overflow trap.</li>
+        <li><strong>Asyncify ruled out:</strong> Binaryen&rsquo;s <code>wasm-opt --asyncify</code> inflates <code>fib</code> by <strong>3.4&times;</strong> (18.8 KB &rarr; 63 KB) and instruments every call path.</li>
+        <li><strong>No page-level stack control:</strong> Only Node/V8 (<code>--stack-size</code>) or a self-managed desktop Chromium/Electron shell (<code>--js-flags</code>) can raise the engine stack directly.</li>
+        <li><strong>32-bit Wasm &amp; threads:</strong> <code>wasm32</code> memory limits apply (tighter on mobile/iOS Safari), and <code>SharedArrayBuffer</code> threads require <code>COOP</code>/<code>COEP</code> HTTP headers.</li>
+      </ul>
+    </div>
+  </div>
+
+  <footer>
+    Sources: <code>experiments/sapl2c/wasm/README.md</code>, <code>experiments/sapl2c/wasm/r2w/README.md</code>,
+    <code>experiments/sapl2c/wasm/r2w/report_en.html</code>, and <code>docs/2026-11-20_sapl2c_wasm_stack_verslag.md</code>.
+    Maintained in <code>docs/2026-11-21_wasm_backends_factsheet.html</code>.
+  </footer>
+</div>
+
+<script>
+document.getElementById("themeBtn").addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme") ||
+    (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  const next = cur === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("websapl_theme", next); } catch (_) {}
+});
+</script>
+</body>
+</html>
