@@ -185,7 +185,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     <div class="hero-actions">
       <a class="btn-primary" href="../notebook.html?nb=top2026/presentatie.spp&presenteer=1">Open live presentation (interactive slides) &rarr;</a>
       <a class="btn-secondary" href="../notebook.html?nb=top2026/presentatie.spp">Open presentation as notebook</a>
-      <a class="btn-secondary" href="index.html">Browse all 18 factsheets</a>
+      <a class="btn-secondary" href="index.html">Browse all 22 factsheets</a>
     </div>
   </header>
 
@@ -199,7 +199,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
   <nav class="toc" aria-label="Sections">
     <a href="#s1">1. One VM, everything else in Sapl</a>
     <a href="#s2">2. Why Stage-4 Retag worked</a>
-    <a href="#s3">3. Interpreter &amp; native speed</a>
+    <a href="#s3">3. Interpreter, native &amp; WebAssembly</a>
     <a href="#s4">4. Building with LLMs &amp; oracles</a>
     <a href="#s5">5. Questions &amp; proposal for Clean</a>
   </nav>
@@ -267,7 +267,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     <a href="clean_on_jmvm_factsheet.html">Full Clean (cocl) on JMVM &amp; Clean Sandbox</a>
   </div>
 
-  <h2 id="s3">3. Speed without a custom native backend: interpreter &amp; Retag-to-C</h2>
+  <h2 id="s3">3. Speed without a custom native backend: interpreter, Retag-to-C &amp; WebAssembly</h2>
   <p>
     You do not need to read every benchmark table to take away the main performance lessons from the project:
   </p>
@@ -275,6 +275,9 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     <li><strong>The interpreter:</strong> The 2016 goal was staying within a factor of 5 of Clean and Haskell. Natively, the JMVM now runs at ~2.5&ndash;3&times; of Clean/GHC, and in WebAssembly it loses less than 1.5&times; against itself natively &mdash; driven by automatic strictness analysis, native <code>musttail</code> dispatch (vs. <code>switch</code> in V8/Wasm), 7 load-time superinstructions, and replacing <code>jmpt</code>&rsquo;s jump-table lookup with a predictable conditional branch after CPU hardware counters showed 93% of the gap vs. Clean&rsquo;s interpreter was operand stalls.</li>
     <li><strong>Native code through C (<code>sapl2c</code>):</strong> A three-day prototype compiling Stage-4 Retag directly to C (one C function per Sapl function) turned out to be roughly as fast as Clean native and GHC <code>-O2</code> on benchmarks and self-compilation, and ~3&times; faster than the interpreter.</li>
     <li><strong>The crucial contrast &mdash; Retag vs. stack bytecode:</strong> Feeding the exact same <code>clang -O2</code> compiler from JMVM bytecode (<code>jmvm2c</code>) left the program well behind Clean native and took roughly 10&times; longer to compile. From Retag, Clang sees whole functions with named variables and performs register allocation cleanly. On large typed Clean code (like the 2,700-function Clean compiler compiling itself via <code>abc2retag</code>), Clean&rsquo;s native <code>cg</code> remains clearly ahead because Retag currently erases unboxed types.</li>
+
+    <li><strong>WebAssembly without an interpreter (20&ndash;21 November):</strong> Compiled code in the browser took several attempts. A JIT from bytecode (July&ndash;September) was slower than the warm interpreter, and a continuation-based bytecode compiler (29 September) gained only ~1.5&times;; both bytecode routes stayed under the ~3&times; a compiler needs over an interpreter to be worth it (<code>jmvm2c</code> reached 1.3&times;). From Retag it worked twice: the C of <code>sapl2c</code> through Emscripten is ~4&times; faster than the JMVM in wasm and 1.35&times; native, and <strong>r2w</strong> (<code>sapl2wasm.cfp</code>, ~1,000 lines of Sapl) writes binary wasm <em>without C or clang</em> at 1.13&ndash;1.18&times; the Emscripten result, with the whole chain running inside wasm. In Chrome, Firefox and Safari both are 3&ndash;4&times; faster than the JMVM and 3&ndash;8&times; faster than the best ABC interpreter.</li>
+    <li><strong>The obstacle is the stack:</strong> every non-tail call uses the engine&rsquo;s stack (~1&nbsp;MB in browsers, which a page cannot raise); 3&ndash;6 of 14 programs overflow, the compiler itself among them. Two remedies were built and measured: JSPI stack segments (Chrome and Firefox; a depth counter costs ~23%) and an explicit stack in linear memory (all browsers; ~1.1&times; in Chrome, ~2&times; in Firefox, 4&ndash;13&times; in Safari). The proposal is tiered execution: run direct, and restart on the explicit stack (or on the JMVM in Safari) after an overflow. Restarting is only safe before anything irreversible has happened; node and a Chromium desktop app can set the stack limit directly.</li>
   </ul>
   <div class="links-row">
     <span class="lbl">Benchmark details</span>
@@ -283,6 +286,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     <a href="sapl2c_secret_factsheet.html">Secret behind sapl2c</a>
     <a href="sapl2c_translation_factsheet.html">How sapl2c translates Retag to C</a>
     <a href="sapl2c_competitive_performance_factsheet.html">Competing with GHC &amp; Clean</a>
+    <a href="wasm_backends_factsheet.html">WebAssembly backends &amp; the stack</a>
   </div>
 
   <h2 id="s4">4. How one person built this with LLMs: oracles, not speed</h2>
@@ -322,8 +326,8 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
   <p>
     Rather than prescribing conclusions, the talk ends with four concrete questions for the Clean and iTasks
     community &mdash; plus an honest list of what has <em>not</em> yet been measured (real iTasks applications,
-    compile time at scale, uniqueness &amp; arrays, records, <code>ccall</code>, dynamics, Wasm native compilation,
-    graph compatibility, and Firefox/Safari/Windows coverage):
+    compile time at scale, uniqueness &amp; arrays, records, <code>ccall</code>, dynamics,
+    compiled wasm in a real page with the stack fallback, graph compatibility, an iPad, and Windows):
   </p>
   <div class="grid-2">
     <div class="card accent">
@@ -333,6 +337,15 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
         <li>Is a <strong>higher-level structured IR</strong> above ABC worthwhile, given <code>abc2retag</code> recovers it cleanly?</li>
         <li>How far can a <strong>classic C compiler backend</strong> go if types are preserved alongside Retag?</li>
         <li>Can <strong>LLM + strict compiler oracles</strong> accelerate Clean tooling work the same way?</li>
+      </ol>
+    </div>
+    <div class="card accent">
+      <h3>Questions for TOP &amp; iTasks</h3>
+      <ol style="margin: 6px 0 0; padding-left: 20px;">
+        <li><strong>Which devices?</strong> Desktop only, or iPads too? On iOS every browser is WebKit, so Safari has to work.</li>
+        <li><strong>One prescribed browser?</strong> With Chrome the explicit stack costs nothing and every program runs.</li>
+        <li><strong>A desktop app?</strong> In a Chromium app the stack limit can be set directly.</li>
+        <li><strong>Where is an interpreter not enough?</strong> For most clients it probably is.</li>
       </ol>
     </div>
     <div class="card ok">

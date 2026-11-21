@@ -641,7 +641,7 @@ D.table ["Apple M4, native", "Mean", "Time ratio (lower = faster)"]
 //
 // - **4× faster than the JMVM** in wasm, **3–8× faster than the best ABC interpreter**: in Chrome, Firefox and Safari.
 // - Within **1.35×** of native; starts without warm-up, uses less memory.
-// - **The catch**: deep recursion uses the browser's stack, which is small: **3–5 of 14 programs stop**, the compiler among them.
+// - **The catch**: deep recursion uses the browser's stack, which is small: **3–6 of 14 programs stop**, the compiler among them.
 //   Two remedies are built: with an **explicit stack** all 14 run, in Chrome on average no slower; in Safari we fall back to the JMVM.
 //
 // <p class="hint">Experiments of 20 November; warm. More in the extra slides and the <a href="factsheets/wasm_backends_factsheet.html" target="_blank">WebAssembly factsheet</a>.</p>
