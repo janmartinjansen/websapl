@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Building a Toolchain with a Model</title>
+<meta name="description" content="A meta-analysis of how the JMVM/Sapl toolchain was built together with language models: what was built in 18 weeks, which three ingredients seem to matter (oracles, readable intermediate stages, human choice of decomposition), the evidence from the bug history and the WebAssembly attempts, and what we cannot claim.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script>
+  try {
+    const t = localStorage.getItem("websapl_theme");
+    if (t) document.documentElement.setAttribute("data-theme", t);
+  } catch (_) {}
+</script>
+<style>
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --fg: #1b2230;
+  --muted: #5a6475;
+  --line: #d9dee6;
+  --accent: #1f5f8b;
+  --accent-soft: #e3eef6;
+  --ok: #2c6b45;
+  --ok-soft: #e3f2e8;
+  --warn: #9a5b00;
+  --warn-soft: #fbf0de;
+  --purple: #6d28d9;
+  --purple-soft: #f3e8ff;
+  --f-display: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161d;
+    --surface: #1a2029;
+    --fg: #e4e8ee;
+    --muted: #9aa5b6;
+    --line: #2d3542;
+    --accent: #7db7e0;
+    --accent-soft: #1d3346;
+    --ok: #7fcf9c;
+    --ok-soft: #173025;
+    --warn: #e7b25c;
+    --warn-soft: #3a2c14;
+    --purple: #c084fc;
+    --purple-soft: #2e1d47;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161d;
+  --surface: #1a2029;
+  --fg: #e4e8ee;
+  --muted: #9aa5b6;
+  --line: #2d3542;
+  --accent: #7db7e0;
+  --accent-soft: #1d3346;
+  --ok: #7fcf9c;
+  --ok-soft: #173025;
+  --warn: #e7b25c;
+  --warn-soft: #3a2c14;
+  --purple: #c084fc;
+  --purple-soft: #2e1d47;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15.5px/1.62 var(--f-body); }
+.wrap { max-width: 980px; margin: 0 auto; padding: 32px 20px 64px; }
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; font-size: 14px; }
+.topbar a { color: var(--muted); text-decoration: none; }
+.topbar a:hover { color: var(--accent); }
+.theme-btn { background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 5px 11px; font: 13px var(--f-body); cursor: pointer; }
+header { border-bottom: 2px solid var(--line); padding-bottom: 18px; margin-bottom: 26px; }
+.eyebrow { font: 600 12px/1.2 var(--f-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--ok); margin-bottom: 8px; }
+h1 { font: 700 32px/1.15 var(--f-display); margin: 0 0 10px; letter-spacing: -0.01em; }
+.lead { color: var(--muted); font-size: 16.5px; margin: 0; max-width: 74ch; }
+h2 { font: 700 22px/1.25 var(--f-display); margin: 34px 0 12px; }
+h3 { font: 600 16.5px/1.3 var(--f-display); margin: 0 0 8px; }
+p { margin: 0 0 12px; }
+ul, ol { margin: 6px 0 14px; padding-left: 20px; }
+li { margin: 4px 0; }
+code { font-family: var(--f-mono); font-size: 0.88em; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+a { color: var(--accent); }
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 20px 0 28px; }
+@media (max-width: 760px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+.kpi .val { font: 700 26px/1.1 var(--f-display); color: var(--accent); }
+.kpi .lbl { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 14px 0; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 14px 0; }
+@media (max-width: 760px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; }
+.card.ok { border-top: 3px solid var(--ok); }
+.card.accent { border-top: 3px solid var(--accent); }
+.card.warn { border-top: 3px solid var(--warn); }
+.card.purple { border-top: 3px solid var(--purple); }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; font-size: 14px; }
+th, td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { background: var(--accent-soft); font-weight: 600; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tr:last-child td { border-bottom: none; }
+.callout { background: var(--ok-soft); border-left: 3px solid var(--ok); padding: 12px 15px; border-radius: 0 8px 8px 0; margin: 16px 0; font-size: 14.5px; }
+.caution { background: var(--warn-soft); border-left: 3px solid var(--warn); padding: 12px 15px; border-radius: 0 8px 8px 0; margin: 16px 0; font-size: 14.5px; }
+.tag { font: 600 11px/1 var(--f-mono); padding: 2px 6px; border-radius: 4px; background: var(--purple-soft); color: var(--purple); white-space: nowrap; }
+.small { font-size: 13px; color: var(--muted); }
+footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a href="index.html">&larr; Factsheets</a>
+    <button class="theme-btn" id="themeBtn" type="button">Theme</button>
+  </div>
+
+  <header>
+    <div class="eyebrow">Meta-analysis &bull; How the work was done, not what was built</div>
+    <h1>Building a Toolchain with a Model</h1>
+    <p class="lead">
+      In 18 weeks a lazy functional language got a self-hosting compiler, an optimiser, a typechecker, a REPL,
+      and backends to bytecode, native code, WebAssembly, and Clean&rsquo;s ABC. The generators at the end of
+      the chain are small. This sheet asks why, based on the repository&rsquo;s own history. Its answer is
+      deliberately modest: three ingredients seem to matter together, and we cannot yet say which one matters most.
+    </p>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi"><div class="val">1,569</div><div class="lbl">commits in 128 days (17 Jul &ndash; 21 Nov 2026); commits on 115 of those days</div></div>
+    <div class="kpi"><div class="val">~3.7k</div><div class="lbl">lines of Sapl for the whole front end, text to Retag (7 phases)</div></div>
+    <div class="kpi"><div class="val">1.0&ndash;1.8k</div><div class="lbl">lines of Sapl per code generator (bytecode, C, WebAssembly)</div></div>
+    <div class="kpi"><div class="val">69%</div><div class="lbl">of commits carry a model co-author line (1,078); a trace of use, not a measure of contribution</div></div>
+  </div>
+
+  <div class="caution">
+    <strong>Status of the evidence.</strong> Everything below comes from this repository (git history, the bug
+    reports in <code>docs/</code>, the measurements in the other factsheets) and from the author&rsquo;s account of
+    what was tried. It is a single project with a single human, so it generates hypotheses; it does not test
+    them. Interpretation is marked as such. This page was itself drafted by a model, which is a conflict of
+    interest worth stating.
+  </div>
+
+  <h2>1. What Was Built, and How Big the Parts Are</h2>
+  <table>
+    <tr><th>Part</th><th>File(s)</th><th class="num">Lines</th></tr>
+    <tr><td>Lexer</td><td><code>lexer2.cfp</code></td><td class="num">303</td></tr>
+    <tr><td>Parser</td><td><code>parser.cfp</code></td><td class="num">1,430</td></tr>
+    <tr><td>Bool / if desugaring</td><td><code>stage1_bool.cfp</code></td><td class="num">502</td></tr>
+    <tr><td>Lazy tagging</td><td><code>stage2_lazytag.cfp</code></td><td class="num">295</td></tr>
+    <tr><td>Lambda lifting</td><td><code>stage3_lift.cfp</code></td><td class="num">701</td></tr>
+    <tr><td>Retag (the central intermediate form)</td><td><code>stage4_retag.cfp</code></td><td class="num">243</td></tr>
+    <tr><td>Strictness inference</td><td><code>strictness.cfp</code></td><td class="num">272</td></tr>
+    <tr><td><strong>Front end, text to Retag</strong></td><td></td><td class="num"><strong>3,746</strong></td></tr>
+    <tr><td>Backend: bytecode</td><td><code>stage5_codegen.cfp</code> + <code>jvb_asm.cfp</code></td><td class="num">1,802 + 471</td></tr>
+    <tr><td>Backend: native (via C)</td><td><code>sapl2c.cfp</code></td><td class="num">1,854</td></tr>
+    <tr><td>Backend: WebAssembly, direct</td><td><code>sapl2wasm.cfp</code></td><td class="num">1,030</td></tr>
+    <tr><td>Typechecker (not needed to generate code)</td><td><code>preprocess/typecheck.cfp</code></td><td class="num">2,472</td></tr>
+    <tr><td>Retag optimiser (separate pass)</td><td><code>retag_opt.cfp</code></td><td class="num">1,919</td></tr>
+    <tr><td>The VM itself (C/C++)</td><td><code>vm/*.h</code>, <code>vm/*.cpp</code>, <code>vm/instr/*.c</code></td><td class="num">~6,500</td></tr>
+  </table>
+  <p class="small">
+    Counted with <code>wc -l</code> on 21 November 2026; generated files and tools excluded. All of
+    <code>sapl_compiler/*.cfp</code> is 23,259 lines in 60 files, but most of that is later extension
+    (ABC backend, simulator, optimisers, tests), not the core. The two Python reference generators used as
+    cross-checks are 1,208 (<code>sapl_naar_c.py</code>) and 1,294 (<code>sapl_naar_wasm.py</code>) lines.
+  </p>
+  <div class="callout">
+    <strong>Why the generators are small:</strong> by the time Retag is reached, the program is first-order,
+    lambda-lifted, has explicit strictness and one uniform value representation. A backend only has to map a
+    small, regular language. The brevity is mostly a property of the stages before it. See
+    <a href="2026-11-13_sapl2c_secret_factsheet.html">the sapl2c factsheet</a> for the performance side of the same argument.
+  </div>
+
+  <h2>2. Pace</h2>
+  <table>
+    <tr><th>Month</th><th class="num">Commits</th><th>Main outcome</th></tr>
+    <tr><td>Jul (from 17th)</td><td class="num">61</td><td>VM consolidated; first Sapl compiler in Amanda; first wasm attempts</td></tr>
+    <tr><td>Aug</td><td class="num">309</td><td>Catch-all case, try/catch, tagging, reflection; gen1 (compiler in Sapl) ported stage by stage</td></tr>
+    <tr><td>Sep</td><td class="num">225</td><td>gen1 becomes the production compiler (25&ndash;26 Sep); typechecker; notebooks</td></tr>
+    <tr><td>Oct</td><td class="num">505</td><td>Explicit CAFs, <code>.jvb</code> format, VM rebuilt from a table, REPL in Sapl, musttail dispatch</td></tr>
+    <tr><td>Nov (to 21st)</td><td class="num">469</td><td>GHC anchor for gen1, Clean ABC route, <code>sapl2c</code>, Retag optimiser, WebAssembly</td></tr>
+  </table>
+  <p class="small">
+    Busiest days: 9 Nov (50 commits), 8 Nov (39), 16 Nov (38). The co-author trailers name several model
+    generations over the period (Sonnet 5: 336 commits, Opus 5.5: 691, Sonnet 5.5: 50), so the &ldquo;model&rdquo;
+    was not one fixed thing. 491 commits have no model trailer. 125 commits have a model as git author (cloud
+    sessions).
+  </p>
+
+  <h2>3. The Hypothesis: Three Ingredients</h2>
+  <div class="grid-3">
+    <div class="card accent">
+      <h3>A. An oracle</h3>
+      <p>Something that says <em>that</em> a change is wrong: the gen1 fixpoint (<code>check_bootstrap</code>),
+        byte-identical output between two generators, 13 benchmarks with known <code>res:</code> values, differential
+        tests against GHC.</p>
+    </div>
+    <div class="card ok">
+      <h3>B. Readable intermediate stages</h3>
+      <p>Something that says <em>what</em> is wrong: <code>--emit=retag</code>, the <code>.jmvm</code> text, stage dumps,
+        the decompiler, <code>difftrace.py</code>, a trace viewer. Every stage has a form one can read and diff.</p>
+    </div>
+    <div class="card purple">
+      <h3>C. A human-chosen decomposition</h3>
+      <p>The order of stages, the choice to keep each one minimal, and the decision to change the problem when
+        an approach stalls. Supplied by the author, not by the model.</p>
+    </div>
+  </div>
+  <p>
+    The ingredients play different roles in the evidence below: A governs how fast bugs <em>surface</em>, B how fast they
+    are <em>diagnosed</em>, C whether hard steps become tractable at all. We could not separate their effects; there is no
+    run without any of them.
+  </p>
+
+  <h2>4. Evidence A: the Bug History</h2>
+  <p>
+    Nine documented bugs and bug classes, with how long they were latent and how they were found. Dates are commit
+    dates; they say nothing about hours of effort.
+  </p>
+  <table>
+    <tr><th>Bug</th><th>Latent for</th><th>Surfaced through</th><th>Fixed</th></tr>
+    <tr><td>Recursion deadlock in <code>readprog</code> (<a href="2026-08-04_recursie_deadlock_en_reflectie_fixes.md">report</a>)</td><td>1 day (3&rarr;4 Aug), though <strong>8 commits</strong></td><td>a recursive program happened to be compiled</td><td>same day</td></tr>
+    <tr><td><code>jmpt</code> did not set <code>mark</code> (<a href="2026-09-27_case_veld_pap_overapplicatie_bug.md">report</a>)</td><td>&ge;10 weeks (the VM design is older)</td><td>a new program storing functions in data fields (<code>lc_min</code>)</td><td>same day, 1 line; the report&rsquo;s hypothesis from reading Retag and bytecode was right</td></tr>
+    <tr><td>Allocators left the admin word unset</td><td>months</td><td>a resident process reusing its heap (<code>repl-host</code>)</td><td>same day</td></tr>
+    <tr><td><code>a &lt;#&gt; b</code> left a value on the stack</td><td>~8 weeks (gen1 codegen existed from 10 Aug)</td><td>the REPL written in Sapl</td><td>same day (7 Oct)</td></tr>
+    <tr><td><code>pushcaf; eval</code> instead of <code>force</code></td><td>29 days (5 Oct &rarr; 3 Nov)</td><td>the MicroHs backend (every class dictionary is such a CAF)</td><td>same day</td></tr>
+    <tr><td>gen1 lacked checks that <code>parser.ama</code> had</td><td>~2 weeks as production compiler</td><td>systematic comparison with <code>parser.ama</code> on 289 programs</td><td>8 Oct</td></tr>
+    <tr><td>Three semantic errors in <code>retag_opt</code></td><td>&lt;1 day (8&rarr;9 Nov)</td><td>tests against unoptimised output</td><td>9 Nov</td></tr>
+    <tr><td>Fixed-size limits (<code>Func.offset</code>, <code>Admin.size</code>, <code>tokenstring</code>, label tables)</td><td>until a program grew past the limit</td><td>immediately on growth; <code>tokenstring</code> needed AddressSanitizer on wasm</td><td>same day</td></tr>
+    <tr><td><code>Char</code> parsing in Clean&rsquo;s ABC optimiser (upstream code)</td><td>since Dec 2020</td><td>re-reading the optimiser&rsquo;s own text output</td><td>same day; <a href="2026-11-16_abcopt_char_parse_bugrapport.md">reported upstream</a></td></tr>
+  </table>
+  <div class="grid-2">
+    <div class="card ok">
+      <h3>What it supports</h3>
+      <ul>
+        <li><strong>Fix latency was short; detection latency was not.</strong> Wherever the date is known, the fix came the day the bug was found. Latent periods ranged from hours to years and depended on whether some program exercised the construct.</li>
+        <li><strong>Each new consumer found bugs.</strong> A lambda-calculus program, a resident REPL host, a REPL in Sapl, a Haskell front end, an ABC optimiser: each hit a construct the benchmarks never used. Breadth of use acted as the strongest debugger, as the author put it.</li>
+        <li><strong>Readable stages shortened diagnosis</strong> (the <code>jmpt</code> report) and let the ABC bug be seen at all.</li>
+      </ul>
+    </div>
+    <div class="card warn">
+      <h3>What it does not support</h3>
+      <ul>
+        <li>That readability <em>finds</em> bugs. Boundary bugs were found by growth and by AddressSanitizer, not by reading stages.</li>
+        <li>The dramatic reading of the 4 Aug case. Eight commits sounds like months of silent damage; it was one day. The lesson about tests that never recurse still stands.</li>
+        <li>Any causal claim. Nine hand-picked, documented bugs are a sample of the memorable ones; silently disappeared bugs are missing.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>5. Evidence B: Four Tries at WebAssembly</h2>
+  <p>
+    The clearest contrast in the history, and the main support for ingredient C. From the TOP presentation and
+    <a href="2026-11-21_wasm_backends_factsheet.html">the WebAssembly factsheet</a>:
+  </p>
+  <table>
+    <tr><th>When</th><th>Route</th><th>Against the JMVM in wasm</th></tr>
+    <tr><td>Jul &ndash; Sep</td><td>Bytecode to wasm, runtime in JS</td><td>slower; paused</td></tr>
+    <tr><td>29 Sep</td><td>Bytecode to wasm, own stack</td><td>~1.5&times; faster; not adopted</td></tr>
+    <tr><td>20 Nov</td><td>Retag &rarr; C &rarr; wasm (Emscripten)</td><td>~4&times; faster</td></tr>
+    <tr><td>20 Nov</td><td>Retag &rarr; wasm directly, in Sapl</td><td>~3.2&ndash;3.3&times; faster, no clang</td></tr>
+  </table>
+  <p>
+    The sequence on 20 November, from commit times: <code>sapl2c</code> to wasm at 10:05; browser measurements and an
+    experiment on which clang level matters (11:00&ndash;13:30); the first direct Retag-to-wasm generator, in Python, at
+    14:19 and measured at 1.18&times; of <code>emcc -O2</code> nine minutes later; the same generator in Sapl,
+    byte-for-byte identical to the Python one, at 18:07.
+  </p>
+  <div class="grid-2">
+    <div class="card accent">
+      <h3>What the C route did</h3>
+      <ol>
+        <li><strong>A working baseline</strong> that every later wasm module could be compared with.</li>
+        <li><strong>An instrument.</strong> Varying clang&rsquo;s level showed that <code>-O1</code> (variables in wasm locals) already matches <code>-O2</code>, and that <code>wasm-opt</code> cannot recover <code>-O0</code>. That named the mechanism the direct generator had to reproduce.</li>
+        <li><strong>A specification.</strong> &ldquo;The C as its specification&rdquo;: the direct generators were checked byte-for-byte against each other and against Emscripten&rsquo;s result.</li>
+      </ol>
+    </div>
+    <div class="card purple">
+      <h3>What actually changed</h3>
+      <p>The starting point. From bytecode the wasm still plays stack machine; from Retag every variable becomes a
+        wasm local. The earlier attempts were not wasted code but a different, harder problem. The same lesson had
+        already appeared with <code>jmvm2c</code> (bytecode to C: 442&nbsp;ms) against <code>sapl2c</code> (Retag to C: 244&nbsp;ms).</p>
+    </div>
+  </div>
+  <div class="caution">
+    <strong>Two things the log does not show.</strong> (1) The author recalls that the direct generator then took
+    about half an hour; the log shows the first working commit 4 hours after the C route, with the experiments in
+    between, and cannot tell how long the writing itself took. (2) The tokens spent on the earlier attempts are
+    not recorded. Both would strengthen or weaken the argument and should be filled in by the author. Also note
+    that the direct route is not finished: 3&ndash;6 of 14 benchmarks overflow the fixed browser call stack unless
+    JSPI or an own stack is used.
+  </div>
+
+  <h2>6. Who Supplied What</h2>
+  <p class="small">From the author&rsquo;s account and from instructions recorded in the repo (<code>CLAUDE.md</code>, working notes); not independently measured.</p>
+  <table>
+    <tr><th>Mostly human</th><th>Mostly model, within a step</th></tr>
+    <tr><td>The architecture: a lazy graph-reduction VM, a small first-order intermediate form, minimal stages (from the 2016 paper, except strictness)</td><td>Implementing a stage once its input, output and test were fixed</td></tr>
+    <tr><td>Choosing the order of intermediate steps so that each yields something readable and checkable (C before wasm)</td><td>Writing test programs, measurement harnesses, A/B scripts</td></tr>
+    <tr><td>Stopping rules: after two failed tries or ~15 minutes, stop and report; replace a complex mechanism by the simplest correct one; keep the VM small</td><td>Bisecting, minimal reproductions, diagnosis from traces and dumps</td></tr>
+    <tr><td>Requiring the full regression (<code>allrun</code> etc.) after every change to a shared file, because a passing new test proves nothing about the rest</td><td>Documentation, factsheets, plans, cross-checks between a Python and a Sapl generator</td></tr>
+    <tr><td>Keeping things small: a language core without classes, VM extensions in C only for a frequent use case, everything else as a Sapl module</td><td>Ports between representations (Amanda to Sapl, Sapl to typed Haskell, Retag to C and wasm)</td></tr>
+  </table>
+
+  <h2>7. A Test We Have Not Run</h2>
+  <p>
+    The strong form of the question: could a model, given a fixed oracle and a constraint such as &ldquo;a Haskell
+    implementation in under 10,000 lines&rdquo;, produce something comparable with little steering and a lot of
+    compute? We think the correctness part is plausible, because oracles exist (the Haskell report tests,
+    differential testing against GHC). We doubt that the line limit alone yields an elegant design: it can be met with
+    dense code or one large phase, and elegance is hard to score. A fair experiment would fix:
+  </p>
+  <ul>
+    <li>the oracle: report tests, differential output against GHC, the 12 benchmarks with known results;</li>
+    <li>a structural requirement: each phase must emit a readable intermediate form, with a line budget <em>per phase</em>, not only in total;</li>
+    <li>a measurement of speed against the existing toolchain;</li>
+    <li>and then record <strong>which decomposition the model chooses</strong>. If it finds a small first-order intermediate form by itself, much of what we attribute to ingredient C was less specific to us than we think. If it builds a large monolithic compiler that is correct, the human contribution was in the design.</li>
+  </ul>
+
+  <h2>8. Limits of This Analysis</h2>
+  <ul>
+    <li><strong>One project, one human, one domain.</strong> A compiler has unusually good oracles; many tasks do not.</li>
+    <li><strong>No counterfactual.</strong> We cannot say how long the same work would have taken with opaque formats, no fixpoint, or without a model.</li>
+    <li><strong>Selection.</strong> The documented bugs are the ones that were interesting; the sample size is nine.</li>
+    <li><strong>Dates are not effort.</strong> &ldquo;Same day&rdquo; means a commit the same day.</li>
+    <li><strong>Co-author lines are not contribution.</strong> They show that a model was in the loop on 69% of commits, nothing more.</li>
+    <li><strong>The models changed</strong> during the project, and some results (and the capabilities behind them) will not transfer to other models or to later ones.</li>
+    <li><strong>Language is small by design</strong> (no type classes in the core). Part of the brevity is the language, not the method.</li>
+  </ul>
+
+  <h2>9. Conclusion</h2>
+  <div class="callout">
+    Looking back over the bugs we hit and the one backend we failed to build directly, two things stand out.
+    First, an <strong>oracle</strong>: a fixpoint test, byte-identical output between two generators, a fixed set of
+    benchmarks with known results. Wherever such an oracle existed, errors surfaced quickly and were fixed the same
+    day; the long-lived bugs sat in code paths that no program had yet exercised, and each new consumer of the
+    compiler (a REPL, a Haskell front end, an ABC optimiser) found some. Readable intermediate formats made
+    diagnosis fast, but it was the oracle that told us something was wrong. Second, a <strong>decomposition</strong>
+    chosen by a human. Our direct attempts at a WebAssembly generator, starting from bytecode, stalled; the
+    approach worked after the problem was split into a C generator from Retag, a compilation of that C with
+    Emscripten, and then a direct generator checked against that result. Within each step the model did the work
+    well; choosing the steps, so that each one produced something readable and checkable, was the part we supplied.
+    We do not know whether a model, given enough compute and no guidance, would find such a decomposition itself,
+    and we have not tested it. For now the useful form of human steering seems to be less about writing code and
+    more about building oracles and choosing the order of intermediate stages. That balance may well shift.
+  </div>
+
+  <h3>Open items for the author</h3>
+  <ul>
+    <li>Time taken by the direct wasm generator, and the cost (tokens, sessions) of the earlier wasm attempts.</li>
+    <li>Whether the 29 Sep result (~1.5&times; faster, not adopted) was dropped for speed or for the stack problem.</li>
+    <li>A second case beside wasm where a change of decomposition unblocked work (the ABC route? the typed GHC port?).</li>
+  </ul>
+
+  <footer>
+    Part of the JMVM &amp; Sapl factsheet series. Related:
+    <a href="2026-11-13_sapl2c_secret_factsheet.html">The sapl2c performance secret</a>,
+    <a href="2026-11-21_wasm_backends_factsheet.html">WebAssembly backends</a>,
+    <a href="2026-11-13_retag_format_factsheet.html">The Retag format</a>,
+    <a href="self_hosting.md">Self-hosting (gen1, the fixpoint)</a>.
+    Figures from the repository on 21 November 2026. Maintained in
+    <code>docs/2026-11-21_building_with_a_model_meta_analysis_factsheet.html</code>.
+  </footer>
+</div>
+
+<script>
+document.getElementById("themeBtn").addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme") ||
+    (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  const next = cur === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("websapl_theme", next); } catch (_) {}
+});
+</script>
+</body>
+</html>
