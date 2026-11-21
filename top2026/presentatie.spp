@@ -369,7 +369,7 @@ D.animated 40 figStart figStep figView
 // </div>
 // </div>
 //
-// <p class="hint">The VM runs in a Web Worker, so a long computation never freezes the page. Details: the notebooks factsheet.</p>
+// <p class="hint">The VM runs in a Web Worker, so a long computation never freezes the page. Details: <a href="factsheets/notebooks_factsheet.html" target="_blank">the notebooks factsheet</a>.</p>
 //%% [markdown]
 // ## The consequence: tools in Sapl, not in the VM
 //
@@ -401,7 +401,7 @@ D.table ["Effect of .jvb", "Before", "After"]
 //
 // <img class="overview" src="top2026/ecosystem.svg" alt="Overview of the ecosystem: frontends, Retag, backends and tools">
 //
-// <p class="hint">Not to explain, just to show what is there. Details: the factsheets.</p>
+// <p class="hint">Not to explain, just to show what is there. Details: <a href="factsheets/top_talk_overview_factsheet.html" target="_blank">overview of this talk</a> · <a href="factsheets/index.html" target="_blank">all factsheets</a>.</p>
 //%% [markdown]
 // ## How fast is the interpreter?
 //%%
@@ -457,6 +457,8 @@ D.table ["Improvement", "When", "Gain", "Whose idea"]
 //   and about **3× faster** than the interpreter, also on the compiler compiling itself.
 //
 // <p class="beat sm">I really had not expected this.</p>
+//
+// <p class="hint"><a href="factsheets/sapl2c_native_factsheet.html" target="_blank">Sapl to native C</a> · <a href="factsheets/sapl2c_secret_factsheet.html" target="_blank">the secret behind sapl2c</a>.</p>
 //%% [markdown]
 // ## Why it works: Retag, again
 //
@@ -500,15 +502,14 @@ D.table ["", "17 July – mid September", "Mid September – now"]
 // ## Dead ends, and why that was fine
 //%%
 D.table ["Experiment", "What happened", "Replaced by"]
-  [ ["Amanda-to-Sapl translator (August)", "Partly worked; a hang in the full bridge was never found", "The compiler written from scratch in Sapl"],
+  [ ["Amanda-to-Sapl translator (August)", "Partly worked; a hang was never found", "The compiler written from scratch in Sapl"],
     ["A JIT to WebAssembly (September)", "Correct, but slower than the warm interpreter", "The plain interpreter in wasm"],
-    ["Bytecode to C, jmvm2c (November)", "Well behind Clean native, very long builds", "Retag to C, sapl2c"],
-    ["Whole-program Retag optimiser", "Doubled the compiler, four subtle bugs", "One local rule in gen1"],
-    ["MicroHs on the JMVM (November)", "Bootstrapped, but heavy and server-bound", "Haskell lite, in the browser"] ]
+    ["Bytecode to C, jmvm2c (November)", "Far behind Clean, very long builds", "Retag to C, sapl2c"],
+    ["Whole-program Retag optimiser", "Doubled the compiler, subtle bugs", "One local rule in gen1"],
+    ["MicroHs on the JMVM (November)", "Heavy and server-bound", "Haskell lite, in the browser"] ]
 //%% [markdown]
-// - **Fast WebAssembly** was a goal from day one — even with LLMs, it took two failed attempts (July and September) before the right intermediate form finally unlocked it in November.
-// - Starting again **from scratch** usually went better than repairing the first attempt.
-// - With LLMs, **throwing work away is cheap**: you did not spend weeks typing it yourself.
+// - **Fast wasm** failed twice (July, September); Retag unlocked it in November.
+// - Starting **from scratch** usually beat repairing, and with LLMs **throwing work away is cheap**. More: <a href="factsheets/superseded_experiments_factsheet.html" target="_blank">superseded experiments</a>.
 //%% [markdown]
 // ## Why some translations came almost for free
 //
@@ -616,7 +617,7 @@ D.table ["Apple M4, native", "Mean", "Time ratio (lower = faster)"]
 // - `abc2retag` and `retag2abc` connect ABC code and Retag **in both directions**: every language reaches every interpreter.
 // - All 13 benchmarks in both languages give the **same output on both interpreters**.
 //
-// <p class="hint"><a href="clean-sandbox/" target="_blank">janmartinjansen.github.io/websapl/clean-sandbox</a> · retag2abc is sapl2abc.cfp in the code, itself written in Sapl.</p>
+// <p class="hint"><a href="clean-sandbox/" target="_blank">janmartinjansen.github.io/websapl/clean-sandbox</a> · retag2abc is sapl2abc.cfp in the code, itself written in Sapl · <a href="factsheets/clean_on_jmvm_factsheet.html" target="_blank">factsheet</a>.</p>
 //%% [markdown]
 // ## In the browser: which combination is fastest?
 //
@@ -643,7 +644,7 @@ D.table ["Apple M4, native", "Mean", "Time ratio (lower = faster)"]
 // - **The catch**: deep recursion uses the browser's stack, which is small: **3–5 of 14 programs stop**, the compiler among them.
 //   Two remedies are built: with an **explicit stack** all 14 run, in Chrome on average no slower; in Safari we fall back to the JMVM.
 //
-// <p class="hint">Experiments of 20 November; warm. More in the extra slides at the end.</p>
+// <p class="hint">Experiments of 20 November; warm. More in the extra slides and the <a href="factsheets/wasm_backends_factsheet.html" target="_blank">WebAssembly factsheet</a>.</p>
 //%% [markdown]
 // ## What could this mean for Clean?
 //
@@ -833,7 +834,7 @@ D.table ["", "Chrome", "Firefox", "Safari"]
 // - **Safari**: a cheaper encoding of the continuations (a driver loop?).
 // - Measure: how often does a real notebook or REPL program overflow at all? An **iPad**; a real iTasks client.
 //
-// <p class="hint">Branch proef/retag2wasm: experiments/sapl2c/wasm/r2w/README.md and report_en.html; docs/2026-11-20_sapl2c_wasm_stack_verslag.md.</p>
+// <p class="hint">Details and open items: the <a href="factsheets/wasm_backends_factsheet.html" target="_blank">WebAssembly backends factsheet</a>.</p>
 //%% [markdown]
 // ## Questions for you
 //
@@ -844,3 +845,5 @@ D.table ["", "Chrome", "Firefox", "Safari"]
 // - **Where is an interpreter not enough?** For most clients it probably is. Which parts of iTasks need the compiler?
 //
 // <p class="beat sm">The answers decide which tiers we build first.</p>
+//
+// <p class="hint">Background: <a href="factsheets/top_advice_factsheet.html" target="_blank">Advice for TOP Software</a>.</p>
