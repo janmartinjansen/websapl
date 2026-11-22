@@ -13,11 +13,10 @@
 
 ---
 
-### Running, Typechecking & Strictness
+### Running & Strictness
 
 - **Compile & Run** (<kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>Enter</kbd> or <kbd>F5</kbd>): Compiles your program to `.jmvm` bytecode (preprocessing `.spp` → `.cfp` automatically) and executes it on WebAssembly JMVM. Result, execution time, instruction count, heap creates, calls, and GC count appear in the bottom panel.
 - **Run**: Executes cached bytecode (compiling first if needed), optionally passing input from **Stdin >**.
-- **Typecheck**: Runs Hindley–Milner typechecking on `.cfp` or `.spp` source code.
 - **Strictness**: Toggles automatic strictness analysis on or off. Toggling immediately refreshes any open compiler stage view so you can compare strict (`!`) vs. lazy (`thunk` / `eval`) transformations directly.
 - **Save** (<kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>S</kbd>): Persists your changes to browser storage.
 
@@ -25,9 +24,9 @@
 
 ### Inspecting Compiler Stages
 
-Use the **View** button bar above the editor to inspect one compiler representation at a time inside the same pane:
+Use the **View** button bar above the editor to inspect inferred types or one compiler representation at a time inside the same pane:
 
-`Source` → `cfp` *(Sapl+ `.spp` files only)* → `parse` → `strictness` → `bool` → `lazytag` → `lift` → `retag` → `jmvm`
+`Source` → `types` *(Hindley–Milner inferred types)* → `cfp` *(Sapl+ `.spp` files only)* → `parse` → `strictness` → `bool` → `lazytag` → `lift` → `retag` → `jmvm`
 
 Stage views are read-only snapshots of the current source. Click **Source** or **Edit Source** at any time to resume editing.
 

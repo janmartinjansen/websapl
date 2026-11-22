@@ -48,9 +48,6 @@
       <button class="btn" id="btn-run" type="button">
         <span aria-hidden="true">▶</span> Run
       </button>
-      <button class="btn" id="btn-typecheck" type="button">
-        <span aria-hidden="true">🧪</span> Typecheck
-      </button>
       <label class="strictness-toggle" for="chk-strictness">
         <input type="checkbox" id="chk-strictness" switch checked />
         <span>Strictness</span>
@@ -121,6 +118,7 @@
           <div class="stage-buttons">
             <span class="stage-bar-label">View</span>
             <button type="button" class="stage-btn" data-stage="source" aria-pressed="true">Source</button>
+            <button type="button" class="stage-btn" data-stage="types" aria-pressed="false">types</button>
             <button type="button" class="stage-btn hidden" data-stage="cfp" aria-pressed="false" id="btn-stage-cfp">cfp</button>
             <button type="button" class="stage-btn" data-stage="parse" aria-pressed="false">parse</button>
             <button type="button" class="stage-btn" data-stage="strictness" aria-pressed="false">strictness</button>

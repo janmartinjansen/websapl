@@ -6,17 +6,16 @@
   const OVERRIDES_KEY = "websapl_workbench_overrides";
   const THEME_KEY = "websapl_theme";
   const GUIDE_PATH = "WORKBENCH_README.md";
-  const ALL_STAGES = ["cfp", "parse", "strictness", "bool", "lazytag", "lift", "retag", "jmvm"];
+  const ALL_STAGES = ["types", "cfp", "parse", "strictness", "bool", "lazytag", "lift", "retag", "jmvm"];
 
   const FALLBACK_GUIDE_MD = [
     "## Sapl Workbench — Quick Guide",
     "",
     "**Sapl Workbench** is a 100% client-side WebAssembly environment for **Core Sapl** (`.cfp`) and **Sapl+** (`.spp`), executing compiled bytecode on **JMVM** (Jansen's Minimal Virtual Machine).",
     "",
-    "### Files (Left Sidebar)",
+    "### Files & Stages",
     "- **My Files**: Click **+ New** to create `.spp` or `.cfp` programs saved in your browser (`localStorage`).",
-    "- **Sapl Benchmarks (`.cfp`)**: Standard Core Sapl benchmarks.",
-    "- **Sapl+ Benchmarks (`.spp`)**: Standard Sapl+ benchmarks (guards, lambdas, comprehensions, imports).",
+    "- **View Bar**: Inspect inferred `types` or compiler stages (`cfp`, `parse`, `strictness`, `bool`, `lazytag`, `lift`, `retag`, `jmvm`) one at a time.",
     "",
     "### Quick Examples to Try",
     "- [benchmarks_sapl/fib.cfp](?file=benchmarks_sapl/fib.cfp)",
@@ -101,7 +100,6 @@
     btnSave: document.getElementById("btn-save"),
     btnCompileRun: document.getElementById("btn-compile-run"),
     btnRun: document.getElementById("btn-run"),
-    btnTypecheck: document.getElementById("btn-typecheck"),
     chkStrictness: document.getElementById("chk-strictness"),
 
     btnToggleSidebar: document.getElementById("btn-toggle-sidebar"),
@@ -648,7 +646,6 @@
     el.btnSave.disabled = codeDisabled;
     el.btnCompileRun.disabled = codeDisabled;
     el.btnRun.disabled = codeDisabled;
-    el.btnTypecheck.disabled = codeDisabled;
 
     if (isGuide) {
       el.stageBar.style.display = "none";
@@ -775,7 +772,11 @@
       el.stageStatus.style.display = "none";
     } else {
       el.stageStatus.style.display = "inline-flex";
-      const label = active === "cfp" ? "Core Sapl (.cfp)" : active;
+      const label = active === "cfp"
+        ? "Core Sapl (.cfp)"
+        : active === "types"
+          ? "Inferred types (Hindley-Milner)"
+          : active;
       el.stageReadonlyLabel.textContent = `Read-only: ${label}`;
     }
   }
@@ -792,7 +793,7 @@
   }
 
   function cacheKey(stage, strictness) {
-    return stage === "cfp" ? "cfp" : `${strictness ? "strict" : "nostrict"}|${stage}`;
+    return (stage === "cfp" || stage === "types") ? stage : `${strictness ? "strict" : "nostrict"}|${stage}`;
   }
 
   async function ensureStageGenerated(tab, stage, strictness) {
@@ -807,6 +808,24 @@
     }
 
     const sourceSnapshot = tab.content;
+    if (stage === "types") {
+      const tcRes = await callWorker({
+        type: "TYPECHECK",
+        source: sourceSnapshot,
+        path: tab.path
+      });
+      if (!tcRes.success) {
+        return {
+          success: false,
+          error: tcRes.error || "Typecheck failed."
+        };
+      }
+      const report = (tcRes.report || "").trim();
+      const outText = report || "// (no top-level definitions found)";
+      tab.stageCache.set(key, { sourceSnapshot, text: outText });
+      return { success: true, text: outText };
+    }
+
     let cfpSource = sourceSnapshot;
     let cfpPath = tab.path;
 
@@ -1099,38 +1118,6 @@
     });
   }
 
-  async function runTypecheckActive() {
-    const tab = getActiveTab();
-    if (!tab || tab.isGuide || !state.workerReady || state.isBusy) return;
-
-    if (tab.activeStage === "source") {
-      tab.content = state.editor.getValue();
-    }
-
-    state.isBusy = true;
-    setStatus("busy", "Typechecking...");
-    logTerminal(`\n=== Typecheck: ${tab.path} ===\n`, "info");
-
-    const res = await callWorker({
-      type: "TYPECHECK",
-      source: tab.content,
-      path: tab.path
-    });
-
-    state.isBusy = false;
-    if (!res.success) {
-      setStatus("error", "Typecheck failed");
-      logTerminal(`✗ Typecheck failed: ${res.error || "unknown error"}\n`, "error");
-      return;
-    }
-
-    const report = (res.report || "").trim();
-    logTerminal((report || "(no output)") + "\n", "normal");
-    const hasWarn = /FOUT:|LET OP:/.test(report);
-    logTerminal(`✓ Typecheck completed in ${res.durationMs} ms\n`, hasWarn ? "warning" : "success");
-    setStatus("ready", `Typecheck ready (${res.durationMs} ms)`);
-  }
-
   // --- PANEL & DIALOG BINDINGS ---
   function toggleSidebar(force) {
     const hide = force !== undefined ? !force : !el.sidebar.classList.contains("hidden");
@@ -1176,7 +1163,6 @@
     el.btnResetBenchmark.addEventListener("click", restoreActiveBenchmark);
     el.btnCompileRun.addEventListener("click", () => compileAndRunActive(true));
     el.btnRun.addEventListener("click", () => compileAndRunActive(false));
-    el.btnTypecheck.addEventListener("click", runTypecheckActive);
 
     el.btnBackToSource.addEventListener("click", () => showStage("source"));
 
@@ -1190,7 +1176,7 @@
     el.chkStrictness.addEventListener("change", () => {
       const tab = getActiveTab();
       if (!tab || tab.isGuide) return;
-      if (tab.activeStage !== "source" && tab.activeStage !== "cfp") {
+      if (tab.activeStage !== "source" && tab.activeStage !== "cfp" && tab.activeStage !== "types") {
         showStage(tab.activeStage);
       }
     });

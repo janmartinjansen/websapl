@@ -264,6 +264,7 @@
   <script>
   (function () {
     const NB = window.SaplNotebook;
+    const IS_EN = new URLSearchParams(location.search).get("lang") === "en";
     // ?engine=server: in de Workbench (workbench/server.js serveert deze
     // pagina onder /websapl/). Dan draaien de notebookmodus (een eigen
     // ./rs-driver-proces) en lc_repl native via /api/notebook/*, met de
@@ -272,6 +273,70 @@
     const STORE_KEY = SERVER ? "workbench_notebook" : "websapl_notebook";
     const TIMEOUT_MS = 30000;
     const el = (id) => document.getElementById(id);
+
+    function applyEnglishMode() {
+      if (!IS_EN) return;
+      document.documentElement.lang = "en";
+      document.title = "Sapl Notebook";
+      const setLabelText = (lbl, txt) => {
+        if (!lbl) return;
+        for (const n of lbl.childNodes) {
+          if (n.nodeType === 3) { n.textContent = txt; return; }
+        }
+      };
+      el("btn-run").textContent = "▶ Run all";
+      const sel = el("sel-example");
+      sel.title = "Open notebook";
+      sel.innerHTML = [
+        '<option value="">Notebooks\u2026</option>',
+        '<option value="top2026/presentatie.spp">TOP Software 2026 Presentation</option>',
+        '<option value="notebookdemo/presentatie.spp">Notebooks: the Killer App</option>'
+      ].join("");
+      const fileLbl = el("file-open") && el("file-open").closest("label");
+      if (fileLbl) { fileLbl.title = "Open a .spp notebook"; setLabelText(fileLbl, "Open"); }
+      el("btn-save").textContent = "Save";
+      el("btn-save").title = "Save as .spp";
+      const order = el("sel-order");
+      order.title = "May a cell use a definition from a later cell? (saved in the notebook)";
+      if (order.options[0]) order.options[0].textContent = "any order";
+      if (order.options[1]) order.options[1].textContent = "top to bottom";
+      const valLbl = el("chk-values") && el("chk-values").closest("label");
+      if (valLbl) {
+        valLbl.title = "Save evaluated =: values and interactive cell state in the browser";
+        setLabelText(valLbl, " save values");
+      }
+      const helpLink = document.querySelector(".help-link");
+      if (helpLink) helpLink.style.display = "none";
+      const hideLbl = el("chk-hide-code") && el("chk-hide-code").closest("label");
+      if (hideLbl) {
+        hideLbl.title = "Hide all code cells so only text, forms and output remain visible";
+        setLabelText(hideLbl, " hide code");
+      }
+      const presBtn = el("btn-present");
+      presBtn.textContent = "Present";
+      presBtn.title = "Present mode: one slide per screen (press P; Esc to return)";
+      el("btn-add-md").textContent = "+ Markdown";
+      el("btn-present-prev").title = "Previous slide (PageUp, \u2190)";
+      el("btn-present-next").title = "Next slide (PageDown, space, \u2192)";
+      el("btn-present-code").title = "Toggle code on this slide (C)";
+      el("btn-present-run").title = "Run all (Ctrl/\u2318+Enter)";
+      el("btn-present-theme").title = "Light or dark theme (T)";
+      el("btn-present-full").title = "Full screen (F)";
+      el("btn-present-exit").title = "Return to notebook view (Esc)";
+      const help = document.querySelector("p.help");
+      if (help) {
+        help.innerHTML = [
+          'A code cell contains definitions or a single expression. Available without import: ',
+          'stdlib, <code>showVal</code>, <code>D</code> (<code>lib/display.spp</code>: ',
+          '<code>D.table</code>, <code>D.bar</code>, <code>D.lineChart</code>, <code>D.picture</code>, ',
+          '<code>D.text</code>, <code>D.markdown</code>) and <code>G</code> (<code>grafisch/graphics.cfp</code>). ',
+          'Press Shift+Enter to run a cell (and dependents), Ctrl/\u2318+Enter to run all. ',
+          'See the <a href="factsheets/haskell_lite.html" target="_blank">Haskell lite guide</a> for Haskell cells. ',
+          '<b>Present</b> (or key P) switches to slide mode (C toggles code, Esc exits).'
+        ].join("");
+      }
+    }
+    applyEnglishMode();
     // Servermodus: elk tabblad heeft in de Workbench een eigen REPL-proces
     // (anders maakt een run in het ene tabblad de interactieve cellen van het
     // andere ongeldig). Een nieuwe sleutel per keer dat de pagina laadt; bij
@@ -324,7 +389,7 @@
           // daarachter in de rij); de eerste run doet dan alleen de cellen.
           worker.postMessage({ type: "NB_WARM" });
           // Na een tijdslimiet blijft zichtbaar dat de vorige run gestopt is.
-          setStatus(el("status").textContent === "gestopt" ? "gestopt (engine opnieuw klaar)" : "klaar");
+          setStatus((el("status").textContent === "gestopt" || el("status").textContent === "stopped") ? "gestopt (engine opnieuw klaar)" : "klaar");
           // ?run=1: na het laden één keer alles uitvoeren (demo-links,
           // tests). Niet opnieuw na een herstart van de worker door de
           // tijdslimiet: dan zou dezelfde oneindige cel eindeloos herstarten.
@@ -1545,7 +1610,35 @@
       } catch (_) {}
     }
 
-    function setStatus(t) { el("status").textContent = t; el("present-status").textContent = t; }
+    function translateStatus(t) {
+      if (!IS_EN) return t;
+      if (t === "engine laden…") return "loading engine…";
+      if (t === "uitvoeren…") return "running…";
+      if (t === "klaar") return "ready";
+      if (t === "klaar (lokale tools)") return "ready (local tools)";
+      if (t === "gestopt") return "stopped";
+      if (t === "gestopt (engine opnieuw klaar)") return "stopped (engine ready)";
+      if (t === "volgorde gewijzigd: voer opnieuw uit") return "order changed: run again";
+      if (t === "opslaan mislukt") return "save failed";
+      if (t.startsWith("opgeslagen: ")) return "saved: " + t.slice("opgeslagen: ".length);
+      const cellM = t.match(/^cel \[(\d+)\] bezig…$/);
+      if (cellM) return `running cell [${cellM[1]}]…`;
+      const doneM = t.match(/^klaar \(([^,]+), (alles|(\d+) cellen?)(.*)\)$/);
+      if (doneM) {
+        const scope = doneM[2] === "alles" ? "all" : `${doneM[3]} ${doneM[3] === "1" ? "cell" : "cells"}`;
+        const extra = doneM[4]
+          .replace(/waarden teruggezet/, "values restored")
+          .replace(/waarde teruggezet/, "value restored");
+        return `ready (${doneM[1]}, ${scope}${extra})`;
+      }
+      return t;
+    }
+
+    function setStatus(t) {
+      const s = translateStatus(t);
+      el("status").textContent = s;
+      el("present-status").textContent = s;
+    }
     function showBanner(t) { el("banner").textContent = t; el("banner").hidden = false; }
     function hideBanner() { el("banner").hidden = true; }
 
@@ -1599,6 +1692,7 @@
     // ?nb=pad: dat notebook openen (bv. notebook.html?nb=notebooks/kennismaking.spp).
     const nbParam = new URLSearchParams(location.search).get("nb");
     if (nbParam) loadExample(nbParam);
+    else if (IS_EN) loadExample("notebookdemo/presentatie.spp");
     else if (stored && stored.text) load(stored.text, stored.fileName);
     else loadExample("notebooks/kennismaking.spp");
     startWorker();
