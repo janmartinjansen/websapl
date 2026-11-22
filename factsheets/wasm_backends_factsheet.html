@@ -207,6 +207,31 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     <code>(i64 val, i32 hp)</code> so the heap pointer stays in Wasm registers instead of memory.
   </p>
 
+  <h3>Four Tries at WebAssembly (Why Retag Was the Turning Point)</h3>
+  <p>
+    A compiler over a fast interpreter only pays off around <strong>~3&times;</strong>. Both earlier bytecode-level
+    attempts stayed well below that threshold (<code>1.5&times;</code> in wasm, <code>1.3&times;</code> in
+    <code>jmvm2c</code>) because bytecode still acts like a stack machine; starting from Stage-4 Retag lets
+    variables become Wasm locals and unlocked <strong>3&ndash;4&times;</strong>:
+  </p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>When</th>
+          <th>Route</th>
+          <th>Speed vs. <code>jmvm.wasm</code></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Jul&ndash;Sep 2026</td><td>Bytecode to Wasm, runtime in JS</td><td class="bad">Slower than interpreter (paused)</td></tr>
+        <tr><td>29 Sep 2026</td><td>Bytecode to Wasm, explicit stack (<code>jmvm2wat</code>)</td><td class="warn">~1.5&times; faster (too little)</td></tr>
+        <tr><td>20 Nov 2026</td><td>Retag to C to Wasm (<code>sapl2c</code> + Emscripten)</td><td class="good">~4&times; faster</td></tr>
+        <tr><td>20 Nov 2026</td><td>Retag straight to binary Wasm (<code>retag2wasm</code>)</td><td class="good">~3.3&times; faster, zero Clang</td></tr>
+      </tbody>
+    </table>
+  </div>
+
   <div class="diagram-box">
     <svg viewBox="0 0 940 315" width="940" height="315" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -457,6 +482,39 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     *Note: <code>r2w / native</code> in Node (1.61&times;) and Safari (1.64&times;) was measured before moving <code>ap1_slow</code>/<code>apply_n</code> and string helpers into the program module (which improved Node <code>r2w / emcc</code> from 1.18&times; to 1.13&times;).
   </p>
 
+  <h3>Multivalue Return, Cold Start &amp; Memory Footprint</h3>
+  <p>
+    Returning <code>{val, hp}</code> as two Wasm values (<code>-mmultivalue</code>) instead of writing through memory
+    accounts for a large share of the speedup, while running compiled modules eliminates interpreter warm-up and cuts
+    browser memory footprint:
+  </p>
+  <div class="grid-2">
+    <div class="table-wrap" style="margin: 0;">
+      <table>
+        <thead>
+          <tr>
+            <th>Effect of multivalue (Node 26, V8)</th>
+            <th class="num">Without</th>
+            <th class="num">With multivalue</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>fib</code></td><td class="num">262 ms</td><td class="num good">133 ms</td></tr>
+          <tr><td><code>prolog</code></td><td class="num">108 ms</td><td class="num good">81 ms</td></tr>
+          <tr><td><code>gen1</code> (self-compiling)</td><td class="num">313 ms</td><td class="num good">266 ms</td></tr>
+          <tr><td><strong>Mean vs. <code>jmvm.wasm</code></strong></td><td class="num">0.32&times; (1.62&times; nat.)</td><td class="num good">0.26&times; (1.35&times; nat.)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card accent-emerald">
+      <h3>Cold Start &amp; Browser Memory</h3>
+      <ul>
+        <li><strong>Cold first run (module already compiled):</strong> <code>fib</code> finishes in <strong>150&ndash;220 ms</strong> in Chrome/Firefox/Safari, vs. <strong>~1.3 s</strong> for <code>jmvm.wasm</code> and <strong>1.3&ndash;2.9 s</strong> for ABC interpreters (no interpreter loop to warm up).</li>
+        <li><strong>Memory footprint:</strong> <code>sapl2c-wasm</code> uses <strong>73&ndash;134 MB</strong> (<code>gen1</code> 307 MB), vs. <strong>~690 MB</strong> for <code>jmvm.wasm</code> and <strong>320 MB</strong> for ABC.</li>
+      </ul>
+    </div>
+  </div>
+
   <h2>3. Primary Limitation: The Browser Call Stack &amp; Tested Solutions</h2>
   <p>
     Tail calls compile to <code>return_call</code> and consume zero stack, but every <strong>non-tail call</strong>
@@ -562,6 +620,28 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
         <li><strong>Asyncify ruled out:</strong> Binaryen&rsquo;s <code>wasm-opt --asyncify</code> inflates <code>fib</code> by <strong>3.4&times;</strong> (18.8 KB &rarr; 63 KB) and instruments every call path.</li>
         <li><strong>No page-level stack control:</strong> Only Node/V8 (<code>--stack-size</code>) or a self-managed desktop Chromium/Electron shell (<code>--js-flags</code>) can raise the engine stack directly.</li>
         <li><strong>32-bit Wasm &amp; threads:</strong> <code>wasm32</code> memory limits apply (tighter on mobile/iOS Safari), and <code>SharedArrayBuffer</code> threads require <code>COOP</code>/<code>COEP</code> HTTP headers.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>5. What This Means for Clean, iTasks &amp; Deployment Choices</h2>
+  <div class="grid-2">
+    <div class="card accent-purple">
+      <h3>Implications for Clean &amp; iTasks</h3>
+      <ul>
+        <li><strong>Client speed &amp; one portable target:</strong> 3&ndash;8&times; faster than the ABC interpreter with no warm-up and less memory; server and browser share the same Retag pipeline instead of per-platform <code>cg</code> + assembly runtimes.</li>
+        <li><strong>Graph exchange without binary compatibility:</strong> <code>pack</code>/<code>unpack</code> serializes thunks, closures, sharing, and cycles <em>by name</em> (not address layout), and uniqueness is already checked by the Clean front end so arrays update in place.</li>
+        <li><strong>Work needed for real iTasks apps:</strong> add <code>pack</code>/<code>unpack</code> and <code>ccall</code> support in <code>sapl2c</code>; module-based code shipping (ABC streams functions on demand, Wasm loads modules); JS interop (<code>JSVal</code>, callbacks); 64-bit <code>Real</code>, 62/64-bit <code>Int</code> + bit ops; and boxed arrays / dynamics via <code>abc2retag</code>.</li>
+      </ul>
+    </div>
+
+    <div class="card accent-amber">
+      <h3>Deployment Questions (Which Tiers to Build First)</h3>
+      <ul>
+        <li><strong>1. Which devices?</strong> Desktop only, or iPads too? On iOS every browser runs WebKit, so Safari performance and stack fallback matter immediately.</li>
+        <li><strong>2. One prescribed browser?</strong> If clients can require Chrome/V8, the explicit stack (<code>R2W_CPS</code>) has near-zero average overhead, runs every program, and avoids Tier-0 &rarr; Tier-1 restarts.</li>
+        <li><strong>3. A desktop app?</strong> Inside a self-managed Chromium shell (Electron), V8&rsquo;s stack limit can be raised directly via <code>--js-flags</code>, eliminating the stack obstacle altogether.</li>
+        <li><strong>4. Where is an interpreter not enough?</strong> Most iTasks clients are likely fast enough on <code>jmvm.wasm</code> / ABC; compiled Wasm targets compute-heavy client paths.</li>
       </ul>
     </div>
   </div>

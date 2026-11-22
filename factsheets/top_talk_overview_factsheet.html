@@ -351,10 +351,14 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     <div class="card ok">
       <h3>Concrete proposal</h3>
       <p>
-        Spend <strong>one day together</strong> taking a single real <strong>iTasks program</strong> through the
-        <code>abc2retag</code> route to measure runtime speed, C compile time and graph compatibility directly &mdash;
-        turning early observations into hard evidence on TOP&rsquo;s own workloads.
+        Develop the <strong>Clean &rarr; Retag</strong> route further &mdash; for <strong>JMVM (browser)</strong>
+        and <strong>native C (<code>sapl2c</code>)</strong> &mdash; until real <strong>iTasks</strong> programs run on it:
       </p>
+      <ol style="margin: 6px 0 0; padding-left: 20px;">
+        <li><strong>First step (1&ndash;2 days):</strong> run <code>abc2retag</code> over one real iTasks program to map missing ABC instructions, <code>ccall</code>s, floats, bit ops and dynamics.</li>
+        <li><strong>Core work (weeks):</strong> 64-bit <code>Real</code> and bit ops, boxed arrays, <code>ccall</code>, <code>pack</code>/<code>unpack</code> in <code>sapl2c</code>, and per-module compilation.</li>
+        <li><strong>iTasks client:</strong> add the JS interop (<code>JSVal</code>, callbacks) on <code>jmvm.wasm</code> first &mdash; then compiled wasm where speed matters.</li>
+      </ol>
     </div>
   </div>
   <div class="links-row">
