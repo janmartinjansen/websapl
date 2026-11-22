@@ -193,7 +193,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     <div class="kpi"><div class="val">4 months</div><div class="lbl">17 July &ndash; Nov 2026; all code since July written by LLMs from expert prompts</div></div>
     <div class="kpi"><div class="val">~6,600</div><div class="lbl">Lines of handwritten C/C++ for one small VM (5,244 active lines in <code>jmvm.wasm</code>, 65 KB gzipped)</div></div>
     <div class="kpi"><div class="val">~90,000</div><div class="lbl">Unique Sapl / Sapl+ lines (~40k toolchain, ~16k libraries &amp; notebooks, ~34k experiments &amp; tests)</div></div>
-    <div class="kpi"><div class="val">1 pivot</div><div class="lbl">Stage-4 Retag connecting 4 frontends and 5 measured codegen backends</div></div>
+    <div class="kpi"><div class="val">1 pivot</div><div class="lbl">Stage-4 Retag connecting 4 frontends and 6 measured codegen backends</div></div>
   </div>
 
   <nav class="toc" aria-label="Sections">
@@ -226,7 +226,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
       <h3>What runs as bytecode (Sapl / Sapl+)</h3>
       <p>
         Everything language-related: the Sapl+ preprocessor, typechecker, self-hosting compiler <code>gen1</code>,
-        incremental linker, REPL, Haskell lite frontend and Clean ABC decompiler. In the browser, each notebook
+        incremental linker, REPL, Haskell lite frontend, Clean ABC decompiler, and the <code>sapl2c</code> / <code>sapl2wasm</code> generators. In the browser, each notebook
         cell compiles on change and links into the running session while keeping previously computed values intact.
       </p>
     </div>
@@ -300,8 +300,8 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     <div class="card warn">
       <h3>Cheap to try, cheap to discard</h3>
       <p>
-        Five backends were built and measured rather than argued over in theory (JMVM bytecode, bytecode-to-Wasm,
-        bytecode-to-C, Retag-to-ABC and Retag-to-C), alongside dead ends like a whole-program Retag optimizer
+        Six backends were built and measured rather than argued over in theory (JMVM bytecode, bytecode-to-Wasm,
+        bytecode-to-C, Retag-to-ABC, Retag-to-C and Retag-to-Wasm), alongside dead ends like direct ABC-to-JMVM, a whole-program Retag optimizer
         and bootstrapping MicroHs. Because writing code took hours instead of weeks, discarding dead ends and
         starting fresh was painless.
       </p>
@@ -311,7 +311,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
       <p>
         Speed alone produces brittle code. LLM output became dependable only through strict automated oracles:
         the compiler reproducing its own bytecode bit-for-bit (fixpoint), a typed Haskell port as an
-        independent anchor, dual C generators in Python and Sapl that must emit identical C, and full regression
+        independent anchor, dual generators in Python and Sapl that must emit identical C and binary Wasm, and full regression
         suites on every branch &mdash; catching subtle errors (and even an aborted 38 ms benchmark run).
       </p>
     </div>

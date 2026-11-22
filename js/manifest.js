@@ -2245,6 +2245,14 @@ window.WEBSAPL_TREE = [
     "type": "directory",
     "children": [
       {
+        "name": "building_with_a_model_meta_analysis_factsheet.html",
+        "path": "factsheets/building_with_a_model_meta_analysis_factsheet.html",
+        "type": "file",
+        "ext": ".html",
+        "size": 26345,
+        "isBinary": false
+      },
+      {
         "name": "clean_abc_to_jmvm_retag_factsheet.html",
         "path": "factsheets/clean_abc_to_jmvm_retag_factsheet.html",
         "type": "file",
@@ -2265,7 +2273,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 48927,
+        "size": 48996,
         "isBinary": false
       },
       {
@@ -2281,7 +2289,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/index.html",
         "type": "file",
         "ext": ".html",
-        "size": 21521,
+        "size": 23154,
         "isBinary": false
       },
       {
@@ -2313,7 +2321,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/performance_factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 67192,
+        "size": 68084,
         "isBinary": false
       },
       {
@@ -2329,7 +2337,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/retag_format_factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 20428,
+        "size": 22005,
         "isBinary": false
       },
       {
@@ -2345,7 +2353,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/sapl_jmvm_clean_haskell_factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 104216,
+        "size": 109628,
         "isBinary": false
       },
       {
@@ -2361,7 +2369,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/sapl2c_competitive_performance_factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 17590,
+        "size": 18885,
         "isBinary": false
       },
       {
@@ -2369,7 +2377,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/sapl2c_native_factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 19817,
+        "size": 21039,
         "isBinary": false
       },
       {
@@ -2377,7 +2385,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/sapl2c_secret_factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 12462,
+        "size": 13902,
         "isBinary": false
       },
       {
@@ -2385,7 +2393,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/sapl2c_translation_factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 15487,
+        "size": 15505,
         "isBinary": false
       },
       {
@@ -2409,7 +2417,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/top_advice_factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 11137,
+        "size": 12406,
         "isBinary": false
       },
       {
@@ -2417,7 +2425,15 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/top_talk_overview_factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 19848,
+        "size": 22946,
+        "isBinary": false
+      },
+      {
+        "name": "wasm_backends_factsheet.html",
+        "path": "factsheets/wasm_backends_factsheet.html",
+        "type": "file",
+        "ext": ".html",
+        "size": 37916,
         "isBinary": false
       }
     ],
@@ -4769,7 +4785,7 @@ window.WEBSAPL_TREE = [
         "path": "top2026/ecosystem.svg",
         "type": "file",
         "ext": ".svg",
-        "size": 21084,
+        "size": 23631,
         "isBinary": false
       },
       {
@@ -4777,7 +4793,7 @@ window.WEBSAPL_TREE = [
         "path": "top2026/presentatie.spp",
         "type": "file",
         "ext": ".spp",
-        "size": 29066,
+        "size": 34464,
         "isBinary": false
       },
       {

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="nl" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WebSapl — luie functionele programmeertaal in de browser</title>
+  <script>
+    // Zelfde thema-keuze als de IDE (ide.html/js/app.js), vóór de eerste paint
+    try { document.documentElement.setAttribute("data-theme", localStorage.getItem("websapl_theme") || "dark"); } catch (_) {}
+  </script>
+  <style>
+    :root {
+      --bg: #12151c; --bg-card: #1a1e27; --bg-hover: #232834;
+      --border: #2e3546; --text: #e6edf3; --text-2: #9aa4b2; --muted: #647083;
+      --accent: #38bdf8; --purple: #c084fc;
+      --c-ide: #38bdf8; --c-repl: #34d399; --c-gfx: #3b82f6;
+      --c-course: #10b981; --c-self: #d97735; --c-lc: #e99642; --c-studio: #a855f7;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'Fira Code', 'SF Mono', Consolas, Monaco, monospace;
+    }
+    [data-theme="light"] {
+      --bg: #f8fafc; --bg-card: #ffffff; --bg-hover: #f1f5f9;
+      --border: #e2e8f0; --text: #0f172a; --text-2: #475569; --muted: #94a3b8;
+      --accent: #0284c7; --purple: #7e22ce;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font-family: var(--font-sans); font-size: 15px; line-height: 1.55;
+    }
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 40px 20px 64px; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .brand-icon {
+      width: 48px; height: 48px; border-radius: 10px; flex: none;
+      background: linear-gradient(135deg, var(--accent), var(--purple));
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-mono); font-size: 26px; font-weight: 700;
+    }
+    h1 { margin: 0; font-size: 28px; letter-spacing: -0.01em; }
+    .tagline { margin: 2px 0 0; color: var(--text-2); }
+    .theme-btn {
+      background: var(--bg-card); color: var(--text); border: 1px solid var(--border);
+      border-radius: 6px; padding: 6px 12px; font: inherit; font-size: 13px; cursor: pointer;
+    }
+    .intro { margin: 28px 0 8px; color: var(--text-2); max-width: 760px; }
+    .intro code, .card code { font-family: var(--font-mono); font-size: 0.9em; color: var(--text); }
+    h2 {
+      margin: 40px 0 4px; font-size: 13px; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--muted);
+    }
+    .section-note { margin: 0 0 14px; color: var(--text-2); font-size: 14px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; }
+    .card {
+      display: flex; flex-direction: column; gap: 6px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-top: 3px solid var(--card-color, var(--accent));
+      border-radius: 10px; padding: 16px 18px;
+      color: inherit; text-decoration: none;
+      transition: background 0.15s, transform 0.15s;
+    }
+    a.card:hover { background: var(--bg-hover); transform: translateY(-1px); }
+    .card-title { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; }
+    .card-icon { font-size: 20px; width: 24px; text-align: center; }
+    .card p { margin: 0; color: var(--text-2); font-size: 14px; }
+    .card .go { margin-top: auto; padding-top: 6px; font-size: 13px; font-weight: 600; color: var(--card-color, var(--accent)); }
+    .card.featured { grid-column: 1 / -1; }
+    .try { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .try a {
+      font-size: 13px; text-decoration: none; color: var(--text);
+      background: var(--bg-hover); border: 1px solid var(--border);
+      border-radius: 999px; padding: 3px 12px;
+    }
+    .try a:hover { border-color: var(--c-ide); }
+    .try a code { color: var(--text-2); }
+    footer { margin-top: 48px; color: var(--muted); font-size: 13px; }
+    footer a { color: var(--text-2); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="brand-icon">λ</div>
+        <div>
+          <h1>WebSapl</h1>
+          <p class="tagline">Sapl, een luie functionele programmeertaal, en de JMVM, volledig in je browser</p>
+        </div>
+      </div>
+      <button class="theme-btn" id="theme-btn"></button>
+    </header>
+
+    <p class="intro">
+      Alles hieronder draait lokaal in WebAssembly: de Sapl-compiler (zelf in Sapl
+      geschreven), de preprocessors en de virtuele machine. Er is geen server nodig
+      en je code verlaat je browser niet. Weet je niet waar je moet beginnen? Open
+      de <strong>Workbench</strong> en probeer een van de voorbeelden.
+    </p>
+
+    <h2>Programmeren</h2>
+    <p class="section-note">Zelf code schrijven, compileren en draaien.</p>
+    <div class="grid">
+      <div class="card featured" style="--card-color: var(--c-ide);">
+        <a href="ide.html" class="card-title" style="color: inherit; text-decoration: none;">
+          <span class="card-icon">💻</span> Sapl Workbench <span style="font-weight: 400; color: var(--muted); font-size: 13px;">(web-IDE)</span>
+        </a>
+        <p>
+          Een editor met bestandsverkenner, compiler en profiler. Schrijf Sapl (<code>.cfp</code>),
+          Sapl+ (<code>.spp</code>, met guards, lambda's en lijstcomprehensies) of <code>.lfp</code>
+          (Sapl met vrije lambda's) en klik op <em>Compileer &amp; Run</em>. Na elke run zie je
+          het resultaat, de tijd, het aantal instructies, heapallocaties en garbage collections.
+          Onder <em>Instellingen</em> kun je de tussenstappen van de compiler zichtbaar maken.
+        </p>
+        <div class="try">
+          <a href="ide.html?file=paper_examples/01_fac.cfp">Probeer: faculteit <code>.cfp</code></a>
+          <a href="ide.html?file=paper_examples/05_sieve.cfp">Zeef van Eratosthenes <code>.cfp</code></a>
+          <a href="ide.html?file=sapl_plus_demo/sapl_plus_showcase.spp">Sapl+ in vogelvlucht <code>.spp</code></a>
+          <a href="ide.html?file=lamlift/factorial.lfp">Lambda's <code>.lfp</code></a>
+          <a href="ide.html?file=docs/sapl_taalgids.md">Taalgids</a>
+        </div>
+        <a href="ide.html" class="go">Open de Workbench →</a>
+      </div>
+
+      <a class="card" href="ide.html#repl" style="--card-color: var(--c-repl);">
+        <span class="card-title"><span class="card-icon">⌨️</span> Sapl+ REPL</span>
+        <p>Typ een expressie en zie meteen het resultaat. Je kunt ook eigen functies en
+          datatypen definiëren, bestanden laden en je sessie opslaan. Er is geen
+          compileerstap nodig.</p>
+        <span class="go">Open de REPL →</span>
+      </a>
+
+      <a class="card" href="notebook.html" style="--card-color: var(--purple);">
+        <span class="card-title"><span class="card-icon">📓</span> Notebook</span>
+        <p>Cellen met definities en expressies, zoals Jupyter. Een cel toont haar waarde,
+          of een tabel, grafiek of plaatje. Oneindige lijsten zijn gewone data. Uitgerekende
+          waarden blijven bewaard voor een volgende keer.</p>
+        <span class="go">Open de notebook →</span>
+      </a>
+
+      <a class="card" href="taallab.html" style="--card-color: var(--c-lc);">
+        <span class="card-title"><span class="card-icon">🧪</span> Taallab</span>
+        <p>Maak je eigen programmeertaal: een grammatica als data en een vertaling naar
+          een kleine kerntaal, allebei in Sapl+. Vier voorbeeldtalen om mee te beginnen
+          (tiny, calc, while, MiniML), met een handleiding.</p>
+        <span class="go">Open het taallab →</span>
+      </a>
+
+      <a class="card" href="graphics.html" style="--card-color: var(--c-gfx);">
+        <span class="card-title"><span class="card-icon">🎨</span> Graphics Studio</span>
+        <p>Sapl-programma's die tekenen: bomen, B-splines, convexe omhullingen, grafieken
+          en interactieve demo's op een canvas.</p>
+        <span class="go">Open Graphics Studio →</span>
+      </a>
+
+      <a class="card" href="clean-sandbox/index.html" style="--card-color: var(--c-ide);">
+        <span class="card-title"><span class="card-icon">⚖️</span> Clean en Sapl, ABC en JMVM</span>
+        <p>De Clean-sandbox van TOP met de JMVM als tweede backend en Sapl als tweede taal:
+          vier combinaties, alles in de browser. Met <em>Vergelijk</em> draait een programma op
+          Clean's ABC-interpreter en op de JMVM naast elkaar; de rondleiding heeft de 13
+          benchmarks in Clean en in Sapl.</p>
+        <span class="go">Open de sandbox →</span>
+      </a>
+    </div>
+
+    <h2>Leren en verkennen</h2>
+    <p class="section-note">Uitleg met live voorbeelden, en kijkjes onder de motorkap.</p>
+    <div class="grid">
+      <a class="card" href="funcprog/" style="--card-color: var(--c-course);">
+        <span class="card-title"><span class="card-icon">📚</span> Cursus: Implementing Functional Languages</span>
+        <p>Hogere-orde functies, strict versus lazy, tie-the-knot en oneindige
+          datastructuren. Elk hoofdstuk heeft een ingebouwde speeltuin waarin je de
+          code direct uitvoert.</p>
+        <span class="go">Naar de cursus →</span>
+      </a>
+
+      <a class="card" href="selfinter/" style="--card-color: var(--c-self);">
+        <span class="card-title"><span class="card-icon">🪞</span> Self-interpreter &amp; reflectie</span>
+        <p>Een Sapl-interpreter die in Sapl zelf geschreven is, met reflectie. Blader door
+          de voorbeelden en voer ze uit, elk met broncode en toelichting.</p>
+        <span class="go">Open de werkbank →</span>
+      </a>
+
+      <a class="card" href="factsheets/" style="--card-color: var(--c-ide);">
+        <span class="card-title"><span class="card-icon">📄</span> Factsheets (English)</span>
+        <p>Technische overzichten van de JMVM, de Sapl-talen, Haskell lite, de notebooks,
+          de prestaties en de route om Clean-programma's op de JMVM te draaien, met uitleg
+          hoe je die gebruikt.</p>
+        <span class="go">Naar de factsheets →</span>
+      </a>
+
+      <a class="card" href="lc_repl/" style="--card-color: var(--c-lc);">
+        <span class="card-title"><span class="card-icon">λ</span> Lambda-calculus REPL</span>
+        <p>Pure lambda-calculus, geëvalueerd door een Scott-gecodeerde self-interpreter.
+          Hier zie je hoe weinig een taal eigenlijk nodig heeft.</p>
+        <span class="go">Open de LC REPL →</span>
+      </a>
+    </div>
+
+    <h2>Voor docenten en auteurs</h2>
+    <div class="grid">
+      <a class="card" href="studio.html" style="--card-color: var(--c-studio);">
+        <span class="card-title"><span class="card-icon">✍️</span> Course Studio</span>
+        <p>Een omgeving om cursusmateriaal te schrijven en te beheren. Hiervoor moet je
+          eerst ontgrendelen.</p>
+        <span class="go">Open Course Studio →</span>
+      </a>
+    </div>
+
+    <footer>
+      Meer achtergrond: <a href="ide.html?file=README.md">gebruikshandleiding van de Workbench</a> ·
+      <a href="ide.html?file=docs/veelgemaakte_fouten.md">veelgemaakte fouten</a> ·
+      <a href="ide.html?file=docs/waarden_bewaren.md">waarden bewaren</a>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      const btn = document.getElementById("theme-btn");
+      const label = () => { btn.textContent = document.documentElement.getAttribute("data-theme") === "dark" ? "☀️ Light" : "🌙 Dark"; };
+      btn.onclick = () => {
+        const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+        document.documentElement.setAttribute("data-theme", next);
+        try { localStorage.setItem("websapl_theme", next); } catch (_) {}
+        label();
+      };
+      label();
+    })();
+  </script>
+</body>
+</html>

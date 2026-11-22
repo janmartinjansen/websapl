@@ -1,79 +1,205 @@
 <!DOCTYPE html>
-<html lang="nl" data-theme="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WebSapl — luie functionele programmeertaal in de browser</title>
+  <meta name="color-scheme" content="light dark" />
   <script>
-    // Zelfde thema-keuze als de IDE (ide.html/js/app.js), vóór de eerste paint
-    try { document.documentElement.setAttribute("data-theme", localStorage.getItem("websapl_theme") || "dark"); } catch (_) {}
+    try {
+      const saved = localStorage.getItem("websapl_theme");
+      if (saved === "light" || saved === "dark") {
+        document.querySelector('meta[name="color-scheme"]').content = saved;
+      }
+    } catch (_) {}
   </script>
+  <title>WebSapl — Lazy Functional Programming &amp; JMVM in WebAssembly</title>
   <style>
     :root {
-      --bg: #12151c; --bg-card: #1a1e27; --bg-hover: #232834;
-      --border: #2e3546; --text: #e6edf3; --text-2: #9aa4b2; --muted: #647083;
-      --accent: #38bdf8; --purple: #c084fc;
-      --c-ide: #38bdf8; --c-repl: #34d399; --c-gfx: #3b82f6;
-      --c-course: #10b981; --c-self: #d97735; --c-lc: #e99642; --c-studio: #a855f7;
-      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      --font-mono: 'Fira Code', 'SF Mono', Consolas, Monaco, monospace;
+      color-scheme: light dark;
+      --bg: light-dark(#f8fafc, #12151c);
+      --bg-card: light-dark(#ffffff, #1a1e27);
+      --bg-hover: light-dark(#f1f5f9, #232834);
+      --border: light-dark(#e2e8f0, #2e3546);
+      --text: light-dark(#0f172a, #e6edf3);
+      --text-2: light-dark(#475569, #9aa4b2);
+      --muted: light-dark(#64748b, #7b889c);
+      --accent: light-dark(#0284c7, #38bdf8);
+      --purple: light-dark(#7e22ce, #c084fc);
+      --emerald: light-dark(#059669, #34d399);
+      --amber: light-dark(#b45309, #fbbf24);
+      --focus: light-dark(#0369a1, #7dd3fc);
+      --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: "Fira Code", "SF Mono", Consolas, Monaco, monospace;
     }
-    [data-theme="light"] {
-      --bg: #f8fafc; --bg-card: #ffffff; --bg-hover: #f1f5f9;
-      --border: #e2e8f0; --text: #0f172a; --text-2: #475569; --muted: #94a3b8;
-      --accent: #0284c7; --purple: #7e22ce;
+    :root:has(> head > meta[name="color-scheme"][content="dark"]) {
+      color-scheme: dark;
+    }
+    :root:has(> head > meta[name="color-scheme"][content="light"]) {
+      color-scheme: light;
     }
     * { box-sizing: border-box; }
     body {
-      margin: 0; background: var(--bg); color: var(--text);
-      font-family: var(--font-sans); font-size: 15px; line-height: 1.55;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 15.5px;
+      line-height: 1.58;
     }
     .wrap { max-width: 1040px; margin: 0 auto; padding: 40px 20px 64px; }
-    header { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
     .brand { display: flex; align-items: center; gap: 14px; }
     .brand-icon {
-      width: 48px; height: 48px; border-radius: 10px; flex: none;
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      flex: none;
       background: linear-gradient(135deg, var(--accent), var(--purple));
-      color: #fff; display: flex; align-items: center; justify-content: center;
-      font-family: var(--font-mono); font-size: 26px; font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 26px;
+      font-weight: 700;
     }
-    h1 { margin: 0; font-size: 28px; letter-spacing: -0.01em; }
-    .tagline { margin: 2px 0 0; color: var(--text-2); }
+    h1 { margin: 0; font-size: 28px; letter-spacing: -0.01em; line-height: 1.15; }
+    .tagline { margin: 3px 0 0; color: var(--text-2); font-size: 14.5px; }
     .theme-btn {
-      background: var(--bg-card); color: var(--text); border: 1px solid var(--border);
-      border-radius: 6px; padding: 6px 12px; font: inherit; font-size: 13px; cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-block-size: 36px;
+      background: var(--bg-card);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
     }
-    .intro { margin: 28px 0 8px; color: var(--text-2); max-width: 760px; }
+    .theme-btn:hover { background: var(--bg-hover); }
+    /* Show only the option matching the opposite of the currently rendered theme */
+    .theme-opt-light, .theme-opt-dark { display: none; }
+    @media (prefers-color-scheme: dark) {
+      :root:has(> head > meta[name="color-scheme"][content="light dark"]) .theme-opt-light { display: inline-flex; align-items: center; gap: 6px; }
+    }
+    @media (prefers-color-scheme: light) {
+      :root:has(> head > meta[name="color-scheme"][content="light dark"]) .theme-opt-dark { display: inline-flex; align-items: center; gap: 6px; }
+    }
+    :root:has(> head > meta[name="color-scheme"][content="dark"]) .theme-opt-light { display: inline-flex; align-items: center; gap: 6px; }
+    :root:has(> head > meta[name="color-scheme"][content="light"]) .theme-opt-dark { display: inline-flex; align-items: center; gap: 6px; }
+
+    .visually-hidden:where(:not(:focus-within, :active)) {
+      position: absolute !important;
+      clip-path: inset(50%) !important;
+      overflow: hidden !important;
+      width: 1px !important;
+      height: 1px !important;
+      margin: -1px !important;
+      padding: 0 !important;
+      border: 0 !important;
+      white-space: nowrap !important;
+    }
+    :where(a:any-link, button):focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
+    }
+
+    .intro { margin: 24px 0 8px; color: var(--text-2); max-width: 74ch; }
     .intro code, .card code { font-family: var(--font-mono); font-size: 0.9em; color: var(--text); }
     h2 {
-      margin: 40px 0 4px; font-size: 13px; text-transform: uppercase;
-      letter-spacing: 0.08em; color: var(--muted);
+      margin: 34px 0 12px;
+      font-size: 12.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
     }
-    .section-note { margin: 0 0 14px; color: var(--text-2); font-size: 14px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
     .card {
-      display: flex; flex-direction: column; gap: 6px;
-      background: var(--bg-card); border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
       border-top: 3px solid var(--card-color, var(--accent));
-      border-radius: 10px; padding: 16px 18px;
-      color: inherit; text-decoration: none;
-      transition: background 0.15s, transform 0.15s;
+      border-radius: 10px;
+      padding: 18px 20px;
+      transition: background 0.15s, border-color 0.15s;
     }
-    a.card:hover { background: var(--bg-hover); transform: translateY(-1px); }
-    .card-title { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; }
-    .card-icon { font-size: 20px; width: 24px; text-align: center; }
-    .card p { margin: 0; color: var(--text-2); font-size: 14px; }
-    .card .go { margin-top: auto; padding-top: 6px; font-size: 13px; font-weight: 600; color: var(--card-color, var(--accent)); }
+    .card:hover { background: var(--bg-hover); }
     .card.featured { grid-column: 1 / -1; }
-    .try { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-    .try a {
-      font-size: 13px; text-decoration: none; color: var(--text);
-      background: var(--bg-hover); border: 1px solid var(--border);
-      border-radius: 999px; padding: 3px 12px;
+    .card h3 {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 17px;
+      line-height: 1.3;
     }
-    .try a:hover { border-color: var(--c-ide); }
-    .try a code { color: var(--text-2); }
-    footer { margin-top: 48px; color: var(--muted); font-size: 13px; }
+    .card h3 a { color: inherit; text-decoration: none; }
+    .card h3 a:hover { text-decoration: underline; }
+    .card-icon { font-size: 19px; width: 24px; text-align: center; flex: none; }
+    .card p { margin: 0; color: var(--text-2); font-size: 14.5px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+    .chips a {
+      display: inline-flex;
+      align-items: center;
+      min-block-size: 28px;
+      font-size: 13px;
+      text-decoration: none;
+      color: var(--text);
+      background: var(--bg-hover);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 3px 12px;
+    }
+    .chips a:hover { border-color: var(--card-color, var(--accent)); }
+    .chips a code { color: var(--text-2); margin-left: 4px; }
+    .card-actions {
+      margin-top: auto;
+      padding-top: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+    }
+    .go {
+      display: inline-flex;
+      align-items: center;
+      min-block-size: 26px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--card-color, var(--accent));
+      text-decoration: none;
+    }
+    .go:hover { text-decoration: underline; }
+    .go-sec {
+      display: inline-flex;
+      align-items: center;
+      min-block-size: 26px;
+      font-size: 13.5px;
+      color: var(--text-2);
+      text-decoration: none;
+    }
+    .go-sec:hover { color: var(--text); text-decoration: underline; }
+    footer {
+      margin-top: 48px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 13px;
+    }
     footer a { color: var(--text-2); }
   </style>
 </head>
@@ -81,149 +207,153 @@
   <div class="wrap">
     <header>
       <div class="brand">
-        <div class="brand-icon">λ</div>
+        <div class="brand-icon" aria-hidden="true">λ</div>
         <div>
           <h1>WebSapl</h1>
-          <p class="tagline">Sapl, een luie functionele programmeertaal, en de JMVM, volledig in je browser</p>
+          <p class="tagline">Lazy functional programming on the JMVM, compiled &amp; executed in WebAssembly</p>
         </div>
       </div>
-      <button class="theme-btn" id="theme-btn"></button>
+      <button class="theme-btn" id="theme-btn" type="button">
+        <span class="theme-opt-light"><span aria-hidden="true">☀️</span><span>Light</span><span class="visually-hidden"> (switch to light theme)</span></span>
+        <span class="theme-opt-dark"><span aria-hidden="true">🌙</span><span>Dark</span><span class="visually-hidden"> (switch to dark theme)</span></span>
+      </button>
     </header>
 
-    <p class="intro">
-      Alles hieronder draait lokaal in WebAssembly: de Sapl-compiler (zelf in Sapl
-      geschreven), de preprocessors en de virtuele machine. Er is geen server nodig
-      en je code verlaat je browser niet. Weet je niet waar je moet beginnen? Open
-      de <strong>Workbench</strong> en probeer een van de voorbeelden.
-    </p>
+    <main>
+      <p class="intro">
+        Everything here runs entirely client-side inside your browser tab in WebAssembly: the self-hosted Sapl
+        compiler, the Sapl+ preprocessor, the Hindley-Milner typechecker, the Clean ABC decompiler, and the JMVM
+        virtual machine. No server or installation is required.
+      </p>
 
-    <h2>Programmeren</h2>
-    <p class="section-note">Zelf code schrijven, compileren en draaien.</p>
-    <div class="grid">
-      <div class="card featured" style="--card-color: var(--c-ide);">
-        <a href="ide.html" class="card-title" style="color: inherit; text-decoration: none;">
-          <span class="card-icon">💻</span> Sapl Workbench <span style="font-weight: 400; color: var(--muted); font-size: 13px;">(web-IDE)</span>
-        </a>
-        <p>
-          Een editor met bestandsverkenner, compiler en profiler. Schrijf Sapl (<code>.cfp</code>),
-          Sapl+ (<code>.spp</code>, met guards, lambda's en lijstcomprehensies) of <code>.lfp</code>
-          (Sapl met vrije lambda's) en klik op <em>Compileer &amp; Run</em>. Na elke run zie je
-          het resultaat, de tijd, het aantal instructies, heapallocaties en garbage collections.
-          Onder <em>Instellingen</em> kun je de tussenstappen van de compiler zichtbaar maken.
-        </p>
-        <div class="try">
-          <a href="ide.html?file=paper_examples/01_fac.cfp">Probeer: faculteit <code>.cfp</code></a>
-          <a href="ide.html?file=paper_examples/05_sieve.cfp">Zeef van Eratosthenes <code>.cfp</code></a>
-          <a href="ide.html?file=sapl_plus_demo/sapl_plus_showcase.spp">Sapl+ in vogelvlucht <code>.spp</code></a>
-          <a href="ide.html?file=lamlift/factorial.lfp">Lambda's <code>.lfp</code></a>
-          <a href="ide.html?file=docs/sapl_taalgids.md">Taalgids</a>
-        </div>
-        <a href="ide.html" class="go">Open de Workbench →</a>
+      <h2>Explore &amp; Run</h2>
+      <div class="grid">
+        <article class="card featured" style="--card-color: var(--accent);">
+          <h3>
+            <span class="card-icon" aria-hidden="true">💻</span>
+            <a href="workbench.html">Sapl Workbench</a>
+          </h3>
+          <p>
+            A streamlined browser IDE for Core Sapl (<code>.cfp</code>) and Sapl+ (<code>.spp</code>). Browse the
+            standard benchmarks or create and save your own programs in browser storage, toggle strictness analysis,
+            run the Hindley-Milner typechecker, and inspect every compiler intermediate representation one stage at a
+            time (<code>cfp</code>, <code>parse</code>, <code>strictness</code>, <code>bool</code>,
+            <code>lazytag</code>, <code>lift</code>, <code>retag</code>, and <code>jmvm</code>).
+          </p>
+          <div class="chips" aria-label="Example benchmarks">
+            <a href="workbench.html?file=benchmarks_sapl/fib.cfp">fib <code>.cfp</code></a>
+            <a href="workbench.html?file=benchmarks_sapl/primes.cfp">primes <code>.cfp</code></a>
+            <a href="workbench.html?file=benchmarks_saplplus/queens.spp">queens <code>.spp</code></a>
+            <a href="workbench.html?file=benchmarks_saplplus/eval.spp">eval <code>.spp</code></a>
+          </div>
+          <div class="card-actions">
+            <a class="go" href="workbench.html">Open Sapl Workbench &rarr;</a>
+          </div>
+        </article>
+
+        <article class="card" style="--card-color: var(--amber);">
+          <h3>
+            <span class="card-icon" aria-hidden="true">🎤</span>
+            <a href="notebook.html?nb=top2026/presentatie.spp&presenteer=1">TOP Software 2026 Presentation</a>
+          </h3>
+          <p>
+            Interactive 38-slide live notebook talk: <em>Building a Complete FP Toolchain in 4 Months</em>.
+            Every live code cell, chart, and animation runs on the JMVM in this browser tab.
+          </p>
+          <div class="card-actions">
+            <a class="go" href="notebook.html?nb=top2026/presentatie.spp&presenteer=1">Start slides &rarr;</a>
+            <a class="go-sec" href="notebook.html?nb=top2026/presentatie.spp">Open as notebook</a>
+          </div>
+        </article>
+
+        <article class="card" style="--card-color: var(--purple);">
+          <h3>
+            <span class="card-icon" aria-hidden="true">📓</span>
+            <a href="notebook.html">Reactive Lazy Notebooks</a>
+          </h3>
+          <p>
+            Pure, lazy browser notebooks with incremental compilation, live chunk linking, tables, SVG charts,
+            interactive Elm-architecture animations, and <strong>Haskell lite</strong> cells.
+          </p>
+          <div class="card-actions">
+            <a class="go" href="notebook.html">Open Notebooks &rarr;</a>
+            <a class="go-sec" href="notebook.html?nb=notebooks/haskell_lite.spp">Haskell lite notebook</a>
+          </div>
+        </article>
+
+        <article class="card" style="--card-color: var(--emerald);">
+          <h3>
+            <span class="card-icon" aria-hidden="true">⚖️</span>
+            <a href="clean-sandbox/index.html">Clean &amp; Sapl Sandbox</a>
+          </h3>
+          <p>
+            TOP&rsquo;s Clean Sandbox extended with Sapl as a second language and the JMVM as a second WebAssembly
+            backend via <code>abc2retag</code> and <code>retag2abc</code>. Compare Clean&rsquo;s ABC interpreter and
+            the JMVM side by side across all 13 benchmarks.
+          </p>
+          <div class="card-actions">
+            <a class="go" href="clean-sandbox/index.html">Open Clean &amp; Sapl Sandbox &rarr;</a>
+          </div>
+        </article>
+
+        <article class="card" style="--card-color: var(--accent);">
+          <h3>
+            <span class="card-icon" aria-hidden="true">📄</span>
+            <a href="factsheets/index.html">Technical Factsheets</a>
+          </h3>
+          <p>
+            Architecture notes and measured benchmarks covering the JMVM interpreter, Stage-4 Retag,
+            <code>sapl2c</code> native C, compiled WebAssembly (Emscripten &amp; direct <code>retag2wasm</code>),
+            Clean interoperability, and how the project was built with LLMs.
+          </p>
+          <div class="card-actions">
+            <a class="go" href="factsheets/index.html">Browse all factsheets &rarr;</a>
+            <a class="go-sec" href="factsheets/top_talk_overview_factsheet.html">Talk overview</a>
+            <a class="go-sec" href="factsheets/wasm_backends_factsheet.html">WebAssembly backends</a>
+          </div>
+        </article>
       </div>
-
-      <a class="card" href="ide.html#repl" style="--card-color: var(--c-repl);">
-        <span class="card-title"><span class="card-icon">⌨️</span> Sapl+ REPL</span>
-        <p>Typ een expressie en zie meteen het resultaat. Je kunt ook eigen functies en
-          datatypen definiëren, bestanden laden en je sessie opslaan. Er is geen
-          compileerstap nodig.</p>
-        <span class="go">Open de REPL →</span>
-      </a>
-
-      <a class="card" href="notebook.html" style="--card-color: var(--purple);">
-        <span class="card-title"><span class="card-icon">📓</span> Notebook</span>
-        <p>Cellen met definities en expressies, zoals Jupyter. Een cel toont haar waarde,
-          of een tabel, grafiek of plaatje. Oneindige lijsten zijn gewone data. Uitgerekende
-          waarden blijven bewaard voor een volgende keer.</p>
-        <span class="go">Open de notebook →</span>
-      </a>
-
-      <a class="card" href="taallab.html" style="--card-color: var(--c-lc);">
-        <span class="card-title"><span class="card-icon">🧪</span> Taallab</span>
-        <p>Maak je eigen programmeertaal: een grammatica als data en een vertaling naar
-          een kleine kerntaal, allebei in Sapl+. Vier voorbeeldtalen om mee te beginnen
-          (tiny, calc, while, MiniML), met een handleiding.</p>
-        <span class="go">Open het taallab →</span>
-      </a>
-
-      <a class="card" href="graphics.html" style="--card-color: var(--c-gfx);">
-        <span class="card-title"><span class="card-icon">🎨</span> Graphics Studio</span>
-        <p>Sapl-programma's die tekenen: bomen, B-splines, convexe omhullingen, grafieken
-          en interactieve demo's op een canvas.</p>
-        <span class="go">Open Graphics Studio →</span>
-      </a>
-
-      <a class="card" href="clean-sandbox/index.html" style="--card-color: var(--c-ide);">
-        <span class="card-title"><span class="card-icon">⚖️</span> Clean en Sapl, ABC en JMVM</span>
-        <p>De Clean-sandbox van TOP met de JMVM als tweede backend en Sapl als tweede taal:
-          vier combinaties, alles in de browser. Met <em>Vergelijk</em> draait een programma op
-          Clean's ABC-interpreter en op de JMVM naast elkaar; de rondleiding heeft de 13
-          benchmarks in Clean en in Sapl.</p>
-        <span class="go">Open de sandbox →</span>
-      </a>
-    </div>
-
-    <h2>Leren en verkennen</h2>
-    <p class="section-note">Uitleg met live voorbeelden, en kijkjes onder de motorkap.</p>
-    <div class="grid">
-      <a class="card" href="funcprog/" style="--card-color: var(--c-course);">
-        <span class="card-title"><span class="card-icon">📚</span> Cursus: Implementing Functional Languages</span>
-        <p>Hogere-orde functies, strict versus lazy, tie-the-knot en oneindige
-          datastructuren. Elk hoofdstuk heeft een ingebouwde speeltuin waarin je de
-          code direct uitvoert.</p>
-        <span class="go">Naar de cursus →</span>
-      </a>
-
-      <a class="card" href="selfinter/" style="--card-color: var(--c-self);">
-        <span class="card-title"><span class="card-icon">🪞</span> Self-interpreter &amp; reflectie</span>
-        <p>Een Sapl-interpreter die in Sapl zelf geschreven is, met reflectie. Blader door
-          de voorbeelden en voer ze uit, elk met broncode en toelichting.</p>
-        <span class="go">Open de werkbank →</span>
-      </a>
-
-      <a class="card" href="factsheets/" style="--card-color: var(--c-ide);">
-        <span class="card-title"><span class="card-icon">📄</span> Factsheets (English)</span>
-        <p>Technische overzichten van de JMVM, de Sapl-talen, Haskell lite, de notebooks,
-          de prestaties en de route om Clean-programma's op de JMVM te draaien, met uitleg
-          hoe je die gebruikt.</p>
-        <span class="go">Naar de factsheets →</span>
-      </a>
-
-      <a class="card" href="lc_repl/" style="--card-color: var(--c-lc);">
-        <span class="card-title"><span class="card-icon">λ</span> Lambda-calculus REPL</span>
-        <p>Pure lambda-calculus, geëvalueerd door een Scott-gecodeerde self-interpreter.
-          Hier zie je hoe weinig een taal eigenlijk nodig heeft.</p>
-        <span class="go">Open de LC REPL →</span>
-      </a>
-    </div>
-
-    <h2>Voor docenten en auteurs</h2>
-    <div class="grid">
-      <a class="card" href="studio.html" style="--card-color: var(--c-studio);">
-        <span class="card-title"><span class="card-icon">✍️</span> Course Studio</span>
-        <p>Een omgeving om cursusmateriaal te schrijven en te beheren. Hiervoor moet je
-          eerst ontgrendelen.</p>
-        <span class="go">Open Course Studio →</span>
-      </a>
-    </div>
+    </main>
 
     <footer>
-      Meer achtergrond: <a href="ide.html?file=README.md">gebruikshandleiding van de Workbench</a> ·
-      <a href="ide.html?file=docs/veelgemaakte_fouten.md">veelgemaakte fouten</a> ·
-      <a href="ide.html?file=docs/waarden_bewaren.md">waarden bewaren</a>
+      Sapl &amp; JMVM &mdash; 100% client-side WebAssembly toolchain. Source and technical notes in the
+      <a href="factsheets/index.html">factsheets archive</a>.
     </footer>
   </div>
 
   <script>
     (function () {
+      const meta = document.querySelector('meta[name="color-scheme"]');
       const btn = document.getElementById("theme-btn");
-      const label = () => { btn.textContent = document.documentElement.getAttribute("data-theme") === "dark" ? "☀️ Light" : "🌙 Dark"; };
-      btn.onclick = () => {
-        const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
-        document.documentElement.setAttribute("data-theme", next);
-        try { localStorage.setItem("websapl_theme", next); } catch (_) {}
-        label();
-      };
-      label();
+      const mql = window.matchMedia("(prefers-color-scheme: dark)");
+
+      function osTheme() {
+        return mql.matches ? "dark" : "light";
+      }
+
+      function renderedTheme() {
+        const c = meta.content;
+        return (c === "light" || c === "dark") ? c : osTheme();
+      }
+
+      function applyStored(val) {
+        meta.content = (val === "light" || val === "dark") ? val : "light dark";
+      }
+
+      btn.addEventListener("click", () => {
+        const target = renderedTheme() === "dark" ? "light" : "dark";
+        if (target === osTheme()) {
+          try { localStorage.removeItem("websapl_theme"); } catch (_) {}
+          applyStored(null);
+        } else {
+          try { localStorage.setItem("websapl_theme", target); } catch (_) {}
+          applyStored(target);
+        }
+      });
+
+      window.addEventListener("storage", (e) => {
+        if (e.key === "websapl_theme") applyStored(e.newValue);
+      });
     })();
   </script>
 </body>

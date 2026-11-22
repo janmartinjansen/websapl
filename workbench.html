@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light dark" />
+  <script>
+    try {
+      const saved = localStorage.getItem("websapl_theme");
+      if (saved === "light" || saved === "dark") {
+        document.querySelector('meta[name="color-scheme"]').content = saved;
+        document.documentElement.setAttribute("data-theme", saved);
+      } else {
+        const sys = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", sys);
+      }
+    } catch (_) {
+      document.documentElement.setAttribute("data-theme", "dark");
+    }
+  </script>
+  <title>Sapl Workbench — Benchmarks, Editor &amp; Compiler Stages</title>
+  <link rel="stylesheet" href="css/codemirror.min.css" />
+  <link rel="stylesheet" href="css/workbench.css" />
+  <link rel="stylesheet" href="css/workbench_lite.css" />
+</head>
+<body>
+
+  <!-- Top App Header -->
+  <header class="app-header">
+    <div class="brand">
+      <a href="index.html" class="btn" id="btn-home" style="text-decoration: none;">&larr; Home</a>
+      <div class="brand-icon" aria-hidden="true">λ</div>
+      <h1>Sapl Workbench</h1>
+      <span class="brand-badge">WASM</span>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="header-actions">
+      <button class="btn" id="btn-new-file" type="button" command="show-modal" commandfor="new-file-dialog">
+        <span aria-hidden="true">＋</span> New
+      </button>
+      <button class="btn" id="btn-save" type="button">
+        <span aria-hidden="true">💾</span> Save
+      </button>
+      <button class="btn btn-success" id="btn-compile-run" type="button">
+        <span aria-hidden="true">⚡</span> Compile &amp; Run
+      </button>
+      <button class="btn" id="btn-run" type="button">
+        <span aria-hidden="true">▶</span> Run
+      </button>
+      <button class="btn" id="btn-typecheck" type="button">
+        <span aria-hidden="true">🧪</span> Typecheck
+      </button>
+      <label class="strictness-toggle" for="chk-strictness">
+        <input type="checkbox" id="chk-strictness" switch checked />
+        <span>Strictness</span>
+      </label>
+    </div>
+
+    <!-- Panel View Toggles & Status -->
+    <div class="header-actions">
+      <button class="btn-toggle-panel" id="btn-open-guide" type="button">
+        <span aria-hidden="true">📖</span><span class="btn-label">Guide</span>
+      </button>
+      <button class="btn-toggle-panel active" id="btn-toggle-sidebar" type="button" aria-pressed="true">
+        <span aria-hidden="true">◧</span><span class="btn-label">Files</span>
+      </button>
+      <button class="btn-toggle-panel active" id="btn-toggle-terminal" type="button" aria-pressed="true">
+        <span aria-hidden="true">⬓</span><span class="btn-label">Output</span>
+      </button>
+      <div class="status-pill" role="status" aria-live="polite">
+        <span class="status-dot ready" id="status-dot" aria-hidden="true"></span>
+        <span id="status-text">Initializing...</span>
+      </div>
+      <button class="btn" id="btn-theme-toggle" type="button">
+        <span class="theme-opt-light"><span aria-hidden="true">☀️</span><span>Light</span><span class="visually-hidden"> (switch to light theme)</span></span>
+        <span class="theme-opt-dark"><span aria-hidden="true">🌙</span><span>Dark</span><span class="visually-hidden"> (switch to dark theme)</span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main App Layout -->
+  <div class="app-layout">
+
+    <!-- Left Sidebar: File Explorer (Benchmarks & User Files only) -->
+    <aside class="app-sidebar" id="app-sidebar" aria-label="Files">
+      <div class="sidebar-header">
+        <div class="sidebar-title-row">
+          <span>Files</span>
+          <div style="display: flex; gap: 4px;">
+            <button class="btn" id="btn-sidebar-new" type="button" command="show-modal" commandfor="new-file-dialog" style="padding: 2px 7px; font-size: 11px;">
+              + New
+            </button>
+            <button class="panel-close-btn" id="btn-close-sidebar" type="button" aria-label="Collapse files sidebar">
+              ◀
+            </button>
+          </div>
+        </div>
+        <label for="tree-search" class="visually-hidden">Filter files</label>
+        <input type="search" id="tree-search" class="sidebar-search" placeholder="Filter files..." />
+      </div>
+      <div class="file-tree" id="file-tree"></div>
+    </aside>
+
+    <!-- Center Workspace -->
+    <main class="workspace-center">
+
+      <!-- File Tabs & Breadcrumb -->
+      <div class="editor-header-bar">
+        <div class="tabs-bar" id="tabs-bar" role="region" aria-label="Open files"></div>
+        <div class="editor-toolbar">
+          <span class="file-breadcrumb" id="file-breadcrumb">No file opened</span>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <button class="btn btn-compact" id="btn-reset-benchmark" type="button" style="display: none;">
+              Restore original
+            </button>
+          </div>
+        </div>
+        <!-- Stage Selector Bar: Inspect one representation at a time -->
+        <div class="stage-bar" id="stage-bar" role="toolbar" aria-label="Compiler representation">
+          <div class="stage-buttons">
+            <span class="stage-bar-label">View</span>
+            <button type="button" class="stage-btn" data-stage="source" aria-pressed="true">Source</button>
+            <button type="button" class="stage-btn hidden" data-stage="cfp" aria-pressed="false" id="btn-stage-cfp">cfp</button>
+            <button type="button" class="stage-btn" data-stage="parse" aria-pressed="false">parse</button>
+            <button type="button" class="stage-btn" data-stage="strictness" aria-pressed="false">strictness</button>
+            <button type="button" class="stage-btn" data-stage="bool" aria-pressed="false">bool</button>
+            <button type="button" class="stage-btn" data-stage="lazytag" aria-pressed="false">lazytag</button>
+            <button type="button" class="stage-btn" data-stage="lift" aria-pressed="false">lift</button>
+            <button type="button" class="stage-btn" data-stage="retag" aria-pressed="false">retag</button>
+            <button type="button" class="stage-btn" data-stage="jmvm" aria-pressed="false">jmvm</button>
+          </div>
+          <div class="stage-status" id="stage-status" style="display: none;">
+            <span class="stage-readonly-badge" id="stage-readonly-label">Read-only</span>
+            <button type="button" class="btn btn-compact" id="btn-back-to-source">Edit Source</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Editor Area -->
+      <div class="editor-and-settings">
+        <div class="editor-container">
+          <div id="editor-container" style="flex: 1; height: 100%;"></div>
+          <article id="guide-preview" class="markdown-preview guide-preview" aria-label="Workbench user guide" style="display: none;"></article>
+        </div>
+      </div>
+
+      <!-- Bottom Panel: Metrics & Output -->
+      <section class="bottom-panel" id="bottom-panel" aria-label="Program output and metrics">
+        <div class="bottom-header">
+          <div class="metrics-bar">
+            <div class="metric-tag">
+              <span class="metric-label">Result:</span>
+              <span class="metric-value res" id="metric-res">-</span>
+            </div>
+            <div class="metric-tag">
+              <span class="metric-label">Time:</span>
+              <span class="metric-value" id="metric-time">-</span>
+            </div>
+            <div class="metric-tag">
+              <span class="metric-label">Instructions:</span>
+              <span class="metric-value" id="metric-instr">-</span>
+            </div>
+            <div class="metric-tag">
+              <span class="metric-label">Creates:</span>
+              <span class="metric-value" id="metric-creates">-</span>
+            </div>
+            <div class="metric-tag">
+              <span class="metric-label">Calls:</span>
+              <span class="metric-value" id="metric-calls">-</span>
+            </div>
+            <div class="metric-tag">
+              <span class="metric-label">GC:</span>
+              <span class="metric-value" id="metric-gc">-</span>
+            </div>
+          </div>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <button class="btn btn-compact" id="btn-clear-terminal" type="button">Clear</button>
+            <button class="panel-close-btn" id="btn-close-terminal" type="button" aria-label="Collapse output panel">
+              ▼
+            </button>
+          </div>
+        </div>
+        <div class="terminal-content" id="terminal-content"></div>
+
+        <div class="terminal-prompt-bar">
+          <label class="terminal-prompt-label" for="terminal-input">Stdin &gt;</label>
+          <input type="text" id="terminal-input" class="terminal-input" placeholder="Optional program input and press Enter..." />
+          <button class="btn btn-primary btn-compact" id="btn-terminal-send" type="button">Run with stdin</button>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- New File Modal -->
+  <dialog id="new-file-dialog" class="wb-dialog" aria-labelledby="new-file-title" closedby="any">
+    <form method="dialog" id="new-file-form" class="wb-dialog-body">
+      <h2 id="new-file-title">Create New File</h2>
+      <div class="wb-field">
+        <label for="new-file-name">File name</label>
+        <input id="new-file-name" type="text" placeholder="e.g. my_program.spp" required autofocus />
+      </div>
+      <div class="wb-field">
+        <label for="new-file-lang">Language</label>
+        <select id="new-file-lang">
+          <option value=".spp">Sapl+ (.spp) &mdash; guards, lambdas, comprehensions</option>
+          <option value=".cfp">Core Sapl (.cfp) &mdash; explicit lazy functional core</option>
+        </select>
+      </div>
+      <label class="wb-checkbox-row" for="new-file-starter">
+        <input id="new-file-starter" type="checkbox" checked />
+        <span>Include starter example</span>
+      </label>
+      <div class="wb-dialog-error" id="new-file-error" role="alert"></div>
+      <div class="wb-dialog-actions">
+        <button type="submit" class="btn" value="cancel" formnovalidate>Cancel</button>
+        <button type="submit" class="btn btn-primary" value="create">Create</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Delete File Confirmation Modal -->
+  <dialog id="delete-file-dialog" class="wb-dialog" aria-labelledby="delete-file-title" closedby="any">
+    <form method="dialog" id="delete-file-form" class="wb-dialog-body">
+      <h2 id="delete-file-title">Delete file?</h2>
+      <p id="delete-file-desc" style="margin: 0; font-size: 13px; color: var(--text-secondary);">
+        This will permanently remove the file from browser storage.
+      </p>
+      <div class="wb-dialog-actions">
+        <button type="submit" class="btn" value="cancel" autofocus>Cancel</button>
+        <button type="submit" class="btn btn-danger" value="delete">Delete</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Scripts -->
+  <script src="js/codemirror.min.js"></script>
+  <script src="js/matchbrackets.min.js"></script>
+  <script src="js/closebrackets.min.js"></script>
+  <script src="js/sapl_mode.js"></script>
+  <script src="js/stdlib_data.js"></script>
+  <script src="js/manifest.js"></script>
+  <script src="js/marked.min.js"></script>
+  <script src="js/workbench_lite.js"></script>
+</body>
+</html>
