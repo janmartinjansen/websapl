@@ -241,7 +241,7 @@ D.table ["Step, per cell", "Runs where", "Written in"]
 //
 // Almost everything built since starts from **Retag**, not from the bytecode:
 //
-// - **Native code**: Retag to C (`sapl2c`), roughly as fast as GHC `-O2`.
+// - **Native code & wasm**: Retag to C (`sapl2c`), roughly as fast as GHC `-O2`; and Retag straight to wasm (`retag2wasm`).
 // - **Clean on the JMVM**: ABC decompiled back to Retag (`abc2retag`).
 // - **Haskell lite**, Sapl+ and Core Sapl: all lower to the same Retag.
 // - **Linking modules** and the **optimiser** work on Retag.
@@ -262,7 +262,8 @@ D.table ["When (2026)", "Step"]
     ["14 October", "A typechecker on every compile"],
     ["23 October", "Notebooks complete: forms, interactive cells, values kept"],
     ["1-8 November", "Typed Haskell anchor, superinstructions, Haskell lite, Clean via ABC"],
-    ["11-13 November", "Native code: Retag to C"] ]
+    ["11-13 November", "Native code: Retag to C"],
+    ["20 November", "Retag to wasm"] ]
 //%% [markdown]
 // ## Self-hosting: the compiler compiles itself
 //
@@ -392,10 +393,10 @@ D.table ["Effect of .jvb", "Before", "After"]
 //
 // - <span class="dropped">**MicroHs**, a real Haskell compiler, bootstrapped on the JMVM: hard going, not continued.</span>
 // - **Haskell lite** in its place: type classes, records and monads, translated to Sapl+, running in the browser.
-// - **Clean**: ABC code from the Clean compiler, decompiled back to Retag (`abc2retag`).
-// - **Native code**: Retag to C (`sapl2c`), a first prototype.
+// - **Clean**: direct `ABC → JMVM` stalled and ran slowly; decompiling ABC up to Retag (`abc2retag`, 7 Nov) was the breakthrough.
+// - **Native code & wasm**: that same lesson inspired Retag to C (`sapl2c`, 11 Nov) and Retag straight to wasm (`retag2wasm`, 20 Nov).
 //
-// <p class="hint">Each new frontend or backend only had to meet Retag, not every other part.</p>
+// <p class="hint">Each new frontend or backend only had to meet Retag, not stack bytecode or every other part.</p>
 //%% [markdown]
 // ## The whole picture
 //
@@ -462,8 +463,8 @@ D.table ["Improvement", "When", "Gain", "Whose idea"]
 //%% [markdown]
 // ## Why it works: Retag, again
 //
-// - The same clang on two inputs: C **from bytecode** (`jmvm2c`) and C **from Retag** (`sapl2c`).
-//   From Retag the C is much smaller and builds about **10× faster**, and the code is much faster.
+// - Inspired by `abc2retag` four days earlier, we tried C **from Retag** (`sapl2c`) instead of **from bytecode** (`jmvm2c`).
+//   Same clang, two inputs: from Retag the C is much smaller, builds **10× faster**, and runs much faster.
 // - From Retag, clang sees **whole functions with named variables**: a classic C compiler turns out
 //   to be a good code generator for a lazy functional language.
 // - Laziness is already explicit (`eval`, `thunk`), and gen1 already did strictness and lifting.
@@ -482,8 +483,8 @@ D.table ["Since 17 July 2026, all written by models", "About"]
 // - **A small VM**: 1,500 lines in 2016. New: `pack`/`unpack`, the binary loader, live linking, reflection.
 // - A **self-hosting compiler** (gen1), anchored by a typed Haskell version.
 // - One intermediate form, **Retag**, shared by every route: Sapl, Haskell lite and Clean.
-// - **LLMs** made experiments cheap: five backends were built and *measured*, instead of argued about
-//   (JMVM bytecode, bytecode-to-Wasm, bytecode-to-C, Retag-to-ABC, and Retag-to-C).
+// - **LLMs** made experiments cheap: six backends were built and *measured*, instead of argued about
+//   (JMVM bytecode, bytecode-to-Wasm, bytecode-to-C, Retag-to-ABC, Retag-to-C, and Retag-to-Wasm).
 //%% [markdown]
 // ## Two phases
 //%%
@@ -504,11 +505,11 @@ D.table ["", "17 July – mid September", "Mid September – now"]
 D.table ["Experiment", "What happened", "Replaced by"]
   [ ["Amanda-to-Sapl translator (August)", "Partly worked; a hang was never found", "The compiler written from scratch in Sapl"],
     ["A JIT to WebAssembly (September)", "Correct, but slower than the warm interpreter", "The plain interpreter in wasm"],
-    ["Bytecode to C, jmvm2c (November)", "Far behind Clean, very long builds", "Retag to C, sapl2c"],
+    ["Stack-code routes: abc2jmvm & jmvm2c (Nov)", "Slow, stuck on stack & frames", "Via Retag: abc2retag & sapl2c"],
     ["Whole-program Retag optimiser", "Doubled the compiler, subtle bugs", "One local rule in gen1"],
     ["MicroHs on the JMVM (November)", "Heavy and server-bound", "Haskell lite, in the browser"] ]
 //%% [markdown]
-// - **Fast wasm** failed twice (July, September); Retag unlocked it in November.
+// - **Fast wasm** failed twice from bytecode (July, September); stepping up to Retag unlocked Clean, C and wasm in November.
 // - Starting **from scratch** usually beat repairing, and with LLMs **throwing work away is cheap**. More: <a href="factsheets/superseded_experiments_factsheet.html" target="_blank">superseded experiments</a>.
 //%% [markdown]
 // ## Why some translations came almost for free
