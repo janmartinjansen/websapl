@@ -18,3 +18,8 @@ directories `compiler/` and `abc-interpreter/` (sources only) are left out, and
 the npm packages the page uses are in `vendor/` (each with its own license).
 The Clean sources of the sandbox itself are `sandbox.icl`, `make.icl` and
 `make.dcl`.
+
+Do not edit this copy directly: change the sandbox in the fork
+(`~/dev/clean-sandbox`, branch `jmvm-in-browser`) and run
+`bash tools/naar_websapl.sh` there, which rebuilds this directory (except this
+README and `sapl-jmvm-logo.svg`). `--check` only reports differences.
