@@ -1,0 +1,6 @@
+Kopie van de Clean-sandbox; NIET HIER WIJZIGEN.
+Bron: de fork github.com/janmartinjansen/clean-sandbox, branch jmvm-in-browser
+(lokaal ~/dev/clean-sandbox), gemaakt met: bash tools/naar_websapl.sh
+Per ongeluk hier gewijzigd? Daar: bash tools/naar_websapl.sh --terug
+bron-commit: 78f22b3
+inhoud: 5843e2ae972b58710d0e6e6d68ee2072630393a47e4d392d8b856fdf5335809a

@@ -24,10 +24,17 @@
  *   - README.md's: elke websapl-map heeft een eigen README voor de
  *     bestandsboom in de browser.
  *   - css/workbench.css, server.js: websapl-eigen, geen kopie van workbench/.
+ *
+ * clean-sandbox/ is een kopie van een andere repo (de fork
+ * ~/dev/clean-sandbox, branch jmvm-in-browser), gemaakt met
+ * tools/naar_websapl.sh daar. Dit script kopieert hem niet, maar controleert
+ * de stempel clean-sandbox/BRON.txt: is de map hier rechtstreeks gewijzigd,
+ * dan meldt het dat (zie checkCleanSandbox).
  */
 
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
 
 const REPO = path.resolve(__dirname, "..", "..");
 const WEBSAPL = path.join(REPO, "websapl");
@@ -357,9 +364,41 @@ function expected(entry) {
   return Buffer.from(text, "utf8");
 }
 
+// clean-sandbox/: de inhoud moet bij de stempel BRON.txt horen. Dezelfde
+// checksum als `inhoud` in tools/naar_websapl.sh van de fork: sha256 over de
+// regels "<sha256 van het bestand>  <pad>\n", gesorteerd op pad, zonder
+// README.md, sapl-jmvm-logo.svg en BRON.txt (bovenin) en .DS_Store.
+// Geeft null als alles klopt, anders een melding.
+function checkCleanSandbox() {
+  const dir = path.join(WEBSAPL, "clean-sandbox");
+  if (!fs.existsSync(dir)) return null;
+  const stempel = path.join(dir, "BRON.txt");
+  if (!fs.existsSync(stempel)) return "clean-sandbox/BRON.txt ontbreekt";
+  const m = fs.readFileSync(stempel, "utf8").match(/^inhoud: ([0-9a-f]{64})$/m);
+  if (!m) return "clean-sandbox/BRON.txt heeft geen regel 'inhoud:'";
+  const files = [];
+  (function walk(rel) {
+    for (const e of fs.readdirSync(path.join(dir, rel), { withFileTypes: true })) {
+      const p = rel ? rel + "/" + e.name : e.name;
+      if (e.isDirectory()) walk(p);
+      else if (e.name !== ".DS_Store" && !["README.md", "sapl-jmvm-logo.svg", "BRON.txt"].includes(p)) files.push(p);
+    }
+  })("");
+  files.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+  const lines = files.map((p) =>
+    crypto.createHash("sha256").update(fs.readFileSync(path.join(dir, p))).digest("hex") + "  " + p + "\n").join("");
+  const som = crypto.createHash("sha256").update(lines).digest("hex");
+  if (som === m[1]) return null;
+  return "websapl/clean-sandbox/ is hier rechtstreeks gewijzigd (hoort niet bij BRON.txt). " +
+    "De bron is de fork ~/dev/clean-sandbox: zet de wijziging daar terug met " +
+    "`bash tools/naar_websapl.sh --terug`, commit daar, en draai dan `bash tools/naar_websapl.sh`.";
+}
+
 function main() {
   const check = process.argv.includes("--check");
-  let drift = 0;
+  const sandbox = checkCleanSandbox();
+  if (sandbox) console.log(`LET OP   ${sandbox}`);
+  let drift = sandbox ? 1 : 0;
   let written = 0;
   let errors = 0;   // een bron die niet gekopieerd mag worden (bv. een verouderde .jvb)
   for (const entry of ENTRIES) {
@@ -391,7 +430,7 @@ function main() {
     process.exit(drift ? 1 : 0);
   }
   console.log(written ? `${written} bestand(en) bijgewerkt. Nieuw bestand erbij? Draai dan ook: node websapl/tools/build_manifest.js` : `Niets te doen: alle ${ENTRIES.length} kopieën zijn al gelijk.`);
-  if (errors) process.exit(1);
+  if (errors || sandbox) process.exit(1);
 }
 
 main();
