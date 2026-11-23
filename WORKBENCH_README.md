@@ -7,6 +7,7 @@
 ### Files (Left Sidebar)
 
 - **My Files**: Click **+ New** (in the header or sidebar) to create your own `.spp` or `.cfp` programs. Files are saved locally in your browser (`localStorage`).
+- **Sapl+ Demo**: An interactive showcase (`sapl_plus_showcase.spp` and companion `README.md`) illustrating Sapl+ lambdas, comprehensions, pattern guards, f-strings, and `|>` pipelines.
 - **Sapl Benchmarks (`.cfp`)**: Standard Core Sapl benchmarks with explicit strictness annotations and simple functional core syntax.
 - **Sapl+ Benchmarks (`.spp`)**: Standard Sapl+ benchmarks featuring guards, lambdas, list comprehensions, pattern definitions, and module imports.
 - **Local Benchmark Edits**: Editing any benchmark creates a local browser override. Click **Restore original** in the file bar to revert back to the original benchmark.
@@ -36,6 +37,7 @@ Stage views are read-only snapshots of the current source. Click **Source** or *
 
 Click any example below to open it directly in the editor:
 
+- [sapl_plus_demo_en/sapl_plus_showcase.spp](?file=sapl_plus_demo_en/sapl_plus_showcase.spp) — Six Sapl+ extensions in one showcase program (see [sapl_plus_demo_en/README.md](?file=sapl_plus_demo_en/README.md))
 - [benchmarks_sapl/fib.cfp](?file=benchmarks_sapl/fib.cfp) — Recursive `nfib` benchmark in Core Sapl
 - [benchmarks_sapl/primes.cfp](?file=benchmarks_sapl/primes.cfp) — Lazy sieve of Eratosthenes in Core Sapl
 - [benchmarks_saplplus/queens.spp](?file=benchmarks_saplplus/queens.spp) — N-Queens in Sapl+ (great for inspecting `cfp` and toggling **Strictness** on `retag`)

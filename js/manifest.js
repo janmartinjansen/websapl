@@ -4456,6 +4456,30 @@ window.WEBSAPL_TREE = [
     "_expanded": false
   },
   {
+    "name": "sapl_plus_demo_en",
+    "path": "sapl_plus_demo_en",
+    "type": "directory",
+    "children": [
+      {
+        "name": "README.md",
+        "path": "sapl_plus_demo_en/README.md",
+        "type": "file",
+        "ext": ".md",
+        "size": 5911,
+        "isBinary": false
+      },
+      {
+        "name": "sapl_plus_showcase.spp",
+        "path": "sapl_plus_demo_en/sapl_plus_showcase.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 2606,
+        "isBinary": false
+      }
+    ],
+    "_expanded": false
+  },
+  {
     "name": "selfinter",
     "path": "selfinter",
     "type": "directory",

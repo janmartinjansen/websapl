@@ -55,6 +55,7 @@
     fileMap: new Map(),   // path -> file metadata
     groups: {
       myFiles: { expanded: true },
+      saplPlusDemo: { expanded: true },
       sapl: { expanded: true },
       saplPlus: { expanded: true }
     },
@@ -327,7 +328,7 @@
     state.editor.on("change", () => {
       if (state.ignoreEditorChange) return;
       const tab = getActiveTab();
-      if (!tab || tab.isGuide || tab.activeStage !== "source") return;
+      if (!tab || tab.ext === ".md" || tab.activeStage !== "source") return;
 
       const val = state.editor.getValue();
       tab.content = val;
@@ -365,15 +366,33 @@
       }
     }
 
-    function collectFolder(dirName, targetExt) {
+    function collectFolder(dirName, targetExts) {
+      const exts = Array.isArray(targetExts) ? targetExts : [targetExts];
       const dir = rawTree.find((n) => n.type === "directory" && n.name === dirName);
       if (!dir || !Array.isArray(dir.children)) return [];
       return dir.children
-        .filter((f) => f.type === "file" && extOf(f.name) === targetExt)
+        .filter((f) => f.type === "file" && exts.includes(extOf(f.name)))
         .sort((a, b) => a.name.localeCompare(b.name));
     }
 
     state.fileMap.clear();
+
+    for (const f of collectFolder("sapl_plus_demo_en", [".md", ".spp"])) {
+      const original = typeof f.content === "string" ? f.content : "";
+      const ext = extOf(f.name);
+      state.originals.set(f.path, original);
+      const effective = (ext !== ".md" && Object.prototype.hasOwnProperty.call(state.overrides, f.path))
+        ? state.overrides[f.path]
+        : original;
+      state.fileMap.set(f.path, {
+        name: f.name,
+        path: f.path,
+        ext,
+        group: "saplPlusDemo",
+        isUserFile: false,
+        content: effective
+      });
+    }
 
     for (const f of collectFolder("benchmarks_sapl", ".cfp")) {
       const original = typeof f.content === "string" ? f.content : "";
@@ -431,6 +450,17 @@
         files: Array.from(state.fileMap.values())
           .filter((f) => f.isUserFile)
           .sort((a, b) => a.name.localeCompare(b.name))
+      },
+      {
+        key: "saplPlusDemo",
+        label: "Sapl+ Demo",
+        files: Array.from(state.fileMap.values())
+          .filter((f) => f.group === "saplPlusDemo")
+          .sort((a, b) => {
+            if (a.ext === ".md" && b.ext !== ".md") return -1;
+            if (a.ext !== ".md" && b.ext === ".md") return 1;
+            return a.name.localeCompare(b.name);
+          })
       },
       {
         key: "sapl",
@@ -510,9 +540,14 @@
           fileBtn.className = "tree-file-btn" + (f.path === state.activeTabPath ? " active" : "");
 
           const badge = document.createElement("span");
-          badge.className = "tree-icon " + (f.ext === ".spp" ? "file-icon-ama" : "file-icon-cfp");
           badge.setAttribute("aria-hidden", "true");
-          badge.textContent = f.ext === ".spp" ? "λ+" : "λ";
+          if (f.ext === ".md") {
+            badge.className = "tree-icon";
+            badge.textContent = "📄";
+          } else {
+            badge.className = "tree-icon " + (f.ext === ".spp" ? "file-icon-ama" : "file-icon-cfp");
+            badge.textContent = f.ext === ".spp" ? "λ+" : "λ";
+          }
           fileBtn.appendChild(badge);
 
           const nameSpan = document.createElement("span");
@@ -639,15 +674,16 @@
     updateBreadcrumb(tab);
 
     const isGuide = Boolean(tab && tab.isGuide);
+    const isMd = Boolean(tab && (tab.isGuide || tab.ext === ".md"));
     el.btnOpenGuide.classList.toggle("active", isGuide);
     el.btnOpenGuide.setAttribute("aria-pressed", String(isGuide));
 
-    const codeDisabled = !tab || isGuide;
+    const codeDisabled = !tab || isMd;
     el.btnSave.disabled = codeDisabled;
     el.btnCompileRun.disabled = codeDisabled;
     el.btnRun.disabled = codeDisabled;
 
-    if (isGuide) {
+    if (isMd) {
       el.stageBar.style.display = "none";
       el.editorContainer.style.display = "none";
       el.guidePreview.style.display = "block";
@@ -709,6 +745,8 @@
       icon.setAttribute("aria-hidden", "true");
       if (tab.isGuide) {
         icon.textContent = "📖";
+      } else if (tab.ext === ".md") {
+        icon.textContent = "📄";
       } else {
         icon.className = tab.ext === ".spp" ? "file-icon-ama" : "file-icon-cfp";
         icon.textContent = tab.ext === ".spp" ? "λ+" : "λ";
@@ -749,6 +787,11 @@
     }
     if (tab.isGuide) {
       el.breadcrumb.textContent = "README.md — User Guide";
+      el.btnResetBenchmark.style.display = "none";
+      return;
+    }
+    if (tab.ext === ".md") {
+      el.breadcrumb.textContent = tab.path;
       el.btnResetBenchmark.style.display = "none";
       return;
     }
@@ -881,7 +924,7 @@
 
   async function showStage(stage) {
     const tab = getActiveTab();
-    if (!tab || tab.isGuide) return;
+    if (!tab || tab.isGuide || tab.ext === ".md") return;
 
     if (stage === "cfp" && tab.ext !== ".spp") {
       stage = "source";
@@ -949,7 +992,7 @@
   // --- SAVE, CREATE, DELETE, RESET ---
   function saveActiveFile() {
     const tab = getActiveTab();
-    if (!tab || tab.isGuide) return;
+    if (!tab || tab.isGuide || tab.ext === ".md") return;
 
     if (tab.activeStage === "source") {
       tab.content = state.editor.getValue();
@@ -981,7 +1024,7 @@
 
   function restoreActiveBenchmark() {
     const tab = getActiveTab();
-    if (!tab || tab.isUserFile || tab.isGuide) return;
+    if (!tab || tab.isUserFile || tab.isGuide || tab.ext === ".md") return;
 
     const orig = state.originals.get(tab.path);
     if (typeof orig !== "string") return;
@@ -1062,7 +1105,7 @@
   // --- COMPILE, RUN, TYPECHECK ---
   async function compileAndRunActive(forceRecompile = true) {
     const tab = getActiveTab();
-    if (!tab || tab.isGuide || !state.workerReady || state.isBusy) return;
+    if (!tab || tab.isGuide || tab.ext === ".md" || !state.workerReady || state.isBusy) return;
 
     if (tab.activeStage === "source") {
       tab.content = state.editor.getValue();
@@ -1175,7 +1218,7 @@
 
     el.chkStrictness.addEventListener("change", () => {
       const tab = getActiveTab();
-      if (!tab || tab.isGuide) return;
+      if (!tab || tab.isGuide || tab.ext === ".md") return;
       if (tab.activeStage !== "source" && tab.activeStage !== "cfp" && tab.activeStage !== "types") {
         showStage(tab.activeStage);
       }
