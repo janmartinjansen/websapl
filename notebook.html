@@ -289,8 +289,9 @@
       sel.title = "Open notebook";
       sel.innerHTML = [
         '<option value="">Notebooks\u2026</option>',
-        '<option value="top2026/presentatie.spp">TOP Software 2026 Presentation</option>',
-        '<option value="notebookdemo/presentatie.spp">Notebooks: the Killer App</option>'
+        '<option value="notebooks/examples_en.spp">Interactive Examples (Tour)</option>',
+        '<option value="notebookdemo/presentatie.spp">Notebooks: the Killer App</option>',
+        '<option value="top2026/presentatie.spp">TOP Software 2026 Presentation</option>'
       ].join("");
       const fileLbl = el("file-open") && el("file-open").closest("label");
       if (fileLbl) { fileLbl.title = "Open a .spp notebook"; setLabelText(fileLbl, "Open"); }
@@ -1692,7 +1693,7 @@
     // ?nb=pad: dat notebook openen (bv. notebook.html?nb=notebooks/kennismaking.spp).
     const nbParam = new URLSearchParams(location.search).get("nb");
     if (nbParam) loadExample(nbParam);
-    else if (IS_EN) loadExample("notebookdemo/presentatie.spp");
+    else if (IS_EN) loadExample("notebooks/examples_en.spp");
     else if (stored && stored.text) load(stored.text, stored.fileName);
     else loadExample("notebooks/kennismaking.spp");
     startWorker();

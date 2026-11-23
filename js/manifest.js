@@ -3314,6 +3314,14 @@ window.WEBSAPL_TREE = [
             "isBinary": false
           },
           {
+            "name": "fruit_en.csv",
+            "path": "notebooks/data/fruit_en.csv",
+            "type": "file",
+            "ext": ".csv",
+            "size": 209,
+            "isBinary": false
+          },
+          {
             "name": "fruit.csv",
             "path": "notebooks/data/fruit.csv",
             "type": "file",
@@ -3354,6 +3362,14 @@ window.WEBSAPL_TREE = [
         "type": "file",
         "ext": ".spp",
         "size": 1538,
+        "isBinary": false
+      },
+      {
+        "name": "examples_en.spp",
+        "path": "notebooks/examples_en.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 19070,
         "isBinary": false
       },
       {
@@ -4980,7 +4996,7 @@ window.WEBSAPL_TREE = [
     "path": "notebook.html",
     "type": "file",
     "ext": ".html",
-    "size": 84953,
+    "size": 89932,
     "isBinary": false
   },
   {

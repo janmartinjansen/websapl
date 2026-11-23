@@ -1,0 +1,576 @@
+//%% [markdown]
+// # Sapl Notebooks — Interactive Examples
+//
+// Each cell is either a block of **definitions** or a single **expression**.
+// Expression cells show their rendered value: lists, tables, charts, SVG
+// drawings, interactive forms, and Elm-style widgets (`lib/display.spp`,
+// automatically available as `D`, alongside graphics in `G`). All cells form
+// one lazy program, so definition order does not matter.
+//
+// *Press **Ctrl/⌘+Enter** (or click **Run all**) to execute every cell, or
+// **Shift+Enter** inside any cell to recompute only that cell and its
+// dependents.*
+//%% [markdown]
+// ## 1. Infinite Streams, Rich Displays & Custom Renderers
+//%%
+import "lib/list.spp" as L
+import "lib/text.spp" as T
+
+primes = sieve (L.from 2)
+
+sieve xs = case xs (Cons p rest -> Cons p (sieve (L.filter (\x -> x % p != 0) rest)))
+//%%
+L.take 15 primes
+//%% [markdown]
+// Infinite lists are ordinary data. Without `take`, the notebook displays the
+// first 100 elements:
+//%%
+primes
+//%%
+D.table ["n", "nth prime", "square"] [ [n + 1, p, p * p] | (n, p) <- L.take 8 (L.indexed primes) ]
+//%%
+D.bar (L.map (\p -> p % 10) (L.take 12 primes))
+//%%
+D.lineChart (L.take 20 primes)
+//%% [markdown]
+// Any user-defined constructor can define a `render_<Constructor>` hook returning
+// a `Display`:
+//%%
+::Temperature = Celsius !degrees
+
+render_Celsius t = case t (Celsius d -> D.text (strcat "🌡 " (strcat (list2str (itoa d)) " °C")))
+//%%
+Celsius 21
+//%% [markdown]
+// `lib/text.spp` works directly on Sapl strings:
+//%%
+sentence = "  the quick brown fox jumps over the lazy dog  "
+//%%
+D.table ["word", "length"] [ [T.toUpper w, T.length w] | w <- T.words sentence ]
+//%%
+T.join " | " (L.map (T.padLeft 4) (L.map T.showInt (L.take 6 primes)))
+//%%
+D.picture [G.GraphDisc 12 (G.Pt (0.0 - 0.5) (0.0 - 0.5)) (G.Pt 0.5 0.5), G.GraphText 15 (G.Pt (0.0 - 0.2) 0.0) "Sapl"]
+//%% [markdown]
+// ## 2. Type Inference & Pure Lambda Calculus
+//
+// A **Type** cell (`//%% [type]`) infers types line by line, while a **λ**
+// cell (`//%% [lc]`) runs pure untyped lambda calculus via `lc_repl`.
+//%% [type]
+// sieve
+// L.take 15 primes
+// T.padLeft 4
+//%% [lc]
+// Y = λf.(λx. f (x x)) (λx. f (x x))
+// fact = Y (λself n. eq n 0 1 (mult n (self (sub n 1))))
+// :seval fact 10
+// :db λf x. f (f x)
+// :blc λx y. x
+//%% [markdown]
+// John Tromp's one-line **lambda-calculus prime sieve** using self-application
+// `(λp.p p)` with no numbers or `Y`, cross-checked against our Sapl sieve:
+//%% [lc]
+// primes = (λp.p p) (λp d c. c (λf t.t) ((λn. p p n ((λr.r r)(λr. n (r r)))) (λa. (λg k s c. c k (s g)) (d a)))) (λg k s c. c (λf t.f) (s g))
+// :bits 60 primes
+//%%
+T.fromChars [ if (L.elem n (L.takeWhile (\p -> p <= 61) primes)) '1' '0' | n <- L.range 2 61 ]
+//%% [markdown]
+// ## 3. Data Exploration: Typed CSV, Statistics & Plots
+//
+// `C.loadAs Sale "notebooks/data/fruit_en.csv"` parses CSV rows into typed
+// records (`lib/csv.spp`), analyzed with `lib/stats.spp` (`S`) and drawn with
+// `lib/plot.spp` (`P`).
+//%%
+import "lib/csv.spp" as C
+import "lib/stats.spp" as S
+import "lib/plot.spp" as P
+
+::Sale = { !week : Int, !fruit : String, !kg : Int, !price : Float, !note : String }
+
+sales = C.loadAs Sale "notebooks/data/fruit_en.csv"
+
+apples = [ s | s <- sales, T.equal (fruit s) "apples" ]
+pears  = [ s | s <- sales, T.equal (fruit s) "pears" ]
+
+saleKgs vs = L.map kg vs
+salePrices vs = L.map price vs
+//%%
+D.records sales
+//%%
+D.table ["metric", "apples", "pears"] [["total kg", S.sum (saleKgs apples), S.sum (saleKgs pears)], ["avg price", T.showFixed 2 (S.mean (salePrices apples)), T.showFixed 2 (S.mean (salePrices pears))]]
+//%%
+P.scatterFit (salePrices pears) (saleKgs pears)
+//%%
+S.correlation (salePrices pears) (saleKgs pears)
+//%%
+P.bars ["w1", "w2", "w3", "w4"] (saleKgs apples)
+//%%
+P.line [1, 2, 3, 4] (salePrices apples)
+//%% [markdown]
+// Schema-free loading with `C.load` infers `Int`, `Float`, or `String` per
+// column automatically:
+//%%
+C.showTable (C.load "notebooks/data/fruit_en.csv")
+//%% [markdown]
+// ## 4. Live Forms, Sliders, Choices & Sum Types
+//
+// `D.form`, `D.slider`, and `D.choice` edit the bound definition directly and
+// recompute only dependent cells.
+//%%
+::Wave = { !amplitude : Float, !frequency : Int, !damped : Bool }
+
+wave = Wave 1.0 3 False
+//%%
+D.form wave
+//%%
+samples = 80
+//%%
+D.slider 10 200 samples
+//%%
+waveform = "sine"
+//%%
+D.choice ["sine", "square", "sawtooth"] waveform
+//%%
+waveXs = [ itof i / itof samples | i <- L.range 0 samples ]
+
+waveBase x = if (T.equal waveform "square") (if (sin x >= 0.0) 1.0 (0.0 - 1.0))
+  (if (T.equal waveform "sawtooth") (waveSaw x) (sin x))
+
+waveSaw x = (x / 3.14159) - (2.0 * floor ((x + 3.14159) / 6.28318))
+
+waveHeight w x = amplitude w * waveBase (6.28318 * itof (frequency w) * x) * (if (damped w) (exp (0.0 - (3.0 * x))) 1.0)
+//%%
+P.line waveXs (L.map (waveHeight wave) waveXs)
+//%% [markdown]
+// Algebraic sum types with typed record variants become constructor-plus-field
+// forms automatically:
+//%%
+::Color = Red | Green | Blue
+
+::Shape = Circle { !radius : Float, !color : Color }
+        | Rect { !width : Float, !height : Float, !color : Color }
+        | Empty
+
+shape = Circle 0.5 Red
+//%%
+D.form shape
+//%%
+colorCode k = case k (Red -> 12) (Green -> 10) (Blue -> 9)
+
+drawShape f = case f
+  (Circle r k -> [G.GraphDisc (colorCode k) (G.Pt (0.0 - r) (0.0 - r)) (G.Pt r r)])
+  (Rect w h k -> [G.GraphPolygon (colorCode k) [G.Pt (0.0 - w / 2.0) (0.0 - h / 2.0), G.Pt (w / 2.0) (0.0 - h / 2.0), G.Pt (w / 2.0) (h / 2.0), G.Pt (0.0 - w / 2.0) (h / 2.0)]])
+  (Empty -> [])
+//%%
+D.picture (Cons (G.GraphRectangle 7 (G.Pt (0.0 - 0.95) (0.0 - 0.95)) (G.Pt 0.95 0.95)) (drawShape shape))
+//%% [markdown]
+// ## 5. Making Lazy Evaluation Visible (`fieldIsValue`)
+//
+// `fieldIsValue x i` inspects whether field `i` of a thunked constructor node
+// has been evaluated yet **without forcing it**. Here we define a completely
+// lazy list `LazyList` (`·` = unevaluated element, `…` = unevaluated tail):
+//%%
+::LazyList = LNil | LCons lhead ltail
+
+lfrom n = LCons n (lfrom (n + 1))
+
+lmap f xs = case xs (LNil -> LNil) (LCons h t -> LCons (f h) (lmap f t))
+
+lindex xs !k = case xs
+  (LCons h t -> if (k == 0) h (lindex t (k - 1)))
+  (LNil -> error "lindex: list too short")
+
+showLazy xs = T.join " " (showLazyFrom xs)
+
+showLazyFrom xs = case xs
+  (LNil -> [])
+  (LCons h t -> Cons (if (fieldIsValue xs 0 == 1) (T.showInt (getField xs 0)) "·")
+                     (if (fieldIsValue xs 1 == 1) (showLazyFrom t) ["…"]))
+
+lazyEvaluated xs !k =
+  if (k == 0) (if (fieldIsValue xs 0 == 1) (getField xs 0) (0 - 1))
+  (if (fieldIsValue xs 1 == 1) (lazyEvaluated (getField xs 1) (k - 1)) (0 - 1))
+
+lazyAllocated xs = if (fieldIsValue xs 1 == 1) (1 + lazyAllocated (getField xs 1)) 1
+
+squares =: lmap (\x -> x * x) (lfrom 0)
+//%%
+showLazy squares
+//%% [markdown]
+// Demand only indices 5 and 2, then inspect `squares` again — only cells 2
+// and 5 were forced, while all others remain thunks:
+//%%
+lindex squares 5 + lindex squares 2
+//%%
+showLazy squares
+//%% [markdown]
+// ### Lazy Dynamic Programming: Edit Distance
+//
+// A self-referential lazy matrix computes only the DP entries actually needed
+// by `(dpN, dpM)`. Blue cells had matching characters (skipping two neighbors);
+// green cells were evaluated; grey squares were never touched.
+//%%
+::WordPair = { !fromWord : String, !toWord : String }
+
+wordPair = WordPair "evaluation" "evolution"
+//%%
+D.form wordPair
+//%%
+dpN =: T.length (fromWord wordPair)
+dpM =: T.length (toWord wordPair)
+
+dpTable =: dpRows 0
+
+dpRows i = if (i > dpN) LNil (LCons (dpCols i 0) (dpRows (i + 1)))
+
+dpCols i j = if (j > dpM) LNil (LCons (dpEdit i j) (dpCols i (j + 1)))
+
+dpDist i j = lindex (lindex dpTable i) j
+
+dpSameChar i j = T.at (i - 1) (fromWord wordPair) == T.at (j - 1) (toWord wordPair)
+
+dpEdit i j =
+  if (i == 0) j
+  (if (j == 0) i
+  (if (dpSameChar i j) (dpDist (i - 1) (j - 1))
+  (1 + dpMin3 (dpDist (i - 1) j) (dpDist i (j - 1)) (dpDist (i - 1) (j - 1)))))
+
+dpMin3 a b c = if (a < b) (if (a < c) a c) (if (b < c) b c)
+
+dpCell t i j = dpCellIn (dpRow t i) j
+
+dpRow xs !i = if (i == 0) (if (fieldIsValue xs 0 == 1) (getField xs 0) LNil)
+  (if (fieldIsValue xs 1 == 1) (dpRow (getField xs 1) (i - 1)) LNil)
+
+dpCellIn r !j = case r (LNil -> 0 - 1) (LCons h t -> lazyEvaluated r j)
+
+dpSize =: 1.8 / itof (if (dpN > dpM) (dpN + 2) (dpM + 2))
+
+dpColX j = 0.0 - 0.9 + (itof j + 1.5) * dpSize
+dpRowY i = 0.9 - (itof i + 1.5) * dpSize
+
+dpText c x y s = G.GraphText c (G.Pt (x - 0.02 * itof (T.length s)) (y - 0.025)) s
+
+dpCharAt s k = T.fromChar (T.at k s)
+
+dpGridPicture t =
+  L.concat [
+    [ dpText 7 (dpColX j) (dpRowY (0 - 1)) (dpCharAt (toWord wordPair) (j - 1)) | j <- L.range 1 dpM ],
+    [ dpText 7 (dpColX (0 - 1)) (dpRowY i) (dpCharAt (fromWord wordPair) (i - 1)) | i <- L.range 1 dpN ],
+    L.concat [ dpDrawCell i j (dpCell t i j) | i <- L.range 0 dpN, j <- L.range 0 dpM ]]
+
+dpDrawCell i j v =
+  let x = dpColX j, y = dpRowY i, r = dpSize * 0.42, s = dpSize * 0.12 in
+  if (v < 0)
+    [G.GraphRectangle 8 (G.Pt (x - s) (y - s)) (G.Pt (x + s) (y + s))]
+    [G.GraphDisc (dpCellColor i j) (G.Pt (x - r) (y - r)) (G.Pt (x + r) (y + r)),
+     dpText 0 x y (T.showInt v)]
+
+dpCellColor i j =
+  if ((i == dpN) /\ (j == dpM)) 14
+  (if ((i > 0) /\ (j > 0) /\ dpSameChar i j) 11 10)
+
+dpComputedCount t = L.length [ 1 | i <- L.range 0 dpN, j <- L.range 0 dpM, dpCell t i j >= 0 ]
+
+showDistance !ans =
+  D.column [
+    D.text (T.concat ["distance ", T.showInt ans, ": ", T.showInt (dpComputedCount dpTable),
+                      " of ", T.showInt ((dpN + 1) * (dpM + 1)), " cells evaluated"]),
+    D.picture (dpGridPicture dpTable)]
+//%%
+showDistance (dpDist dpN dpM)
+//%% [markdown]
+// ## 6. Interactive & Animated Cells (Elm Architecture)
+//
+// `D.interactive model0 update view` handles clicks, keys, and embedded form
+// events; `D.animated ms model0 update view` adds periodic `D.Tick` events.
+//
+// ### Step-by-Step Sieve of Eratosthenes (click output or press a key)
+//%%
+import "lib/shape.spp" as Sh
+
+::SieveState = { !prime : Int, !crossed : [Int] }
+
+sieveLimit = 60
+sieveCols = 10
+
+sieveInit = SieveState 1 []
+
+sieveStep ev z = case ev
+  (D.Click x y -> sieveNext z)
+  (D.Key k -> sieveNext z)
+  (_ -> z)
+
+sieveNext z = case (L.filter (\m -> L.elem m (crossed z) == False) (L.range (prime z + 1) sieveLimit))
+  (Nil -> z)
+  (Cons q rest -> SieveState q (L.append (crossed z) [q * q, q * q + q .. sieveLimit]))
+
+sieveView z = D.picture (L.concatMap (sieveCell z) (L.range 2 sieveLimit))
+
+sieveCell z m =
+  let k = m - 2,
+      x = itof (k % sieveCols) * 0.19 - 0.88,
+      y = 0.8 - itof (k / sieveCols) * 0.3,
+      col = if (L.elem m (crossed z)) 8 (if (m <= prime z) 10 15) in
+  [G.GraphDisc col (G.Pt (x - 0.08) (y - 0.12)) (G.Pt (x + 0.08) (y + 0.12)),
+   G.GraphText 0 (G.Pt (x - 0.05) (y - 0.03)) (T.showInt m)]
+//%%
+D.interactive sieveInit sieveStep sieveView
+//%% [markdown]
+// ### Lissajous Animation with Embedded Live Form
+//%%
+::LissConfig = { !fx : Int, !fy : Int, !tint : Color, !lines : Bool }
+
+::LissModel = { !lcfg : LissConfig, !phase : Float }
+
+lissInit = LissModel (LissConfig 3 2 Blue True) 0.0
+
+lissStep ev m = case ev
+  (D.Input fld s -> LissModel (Sh.input fld s (lcfg m)) (phase m))
+  (D.Tick t -> LissModel (lcfg m) (phase m + 0.04))
+  (_ -> m)
+
+lissView m = D.column [D.form (lcfg m), D.picture (lissPoints (lcfg m) (phase m))]
+
+lissPoints cfg ph =
+  let pts = [ G.Pt (0.9 * sin (itof (fx cfg) * t + ph)) (0.9 * sin (itof (fy cfg) * t)) | t <- L.map (\k -> itof k * 0.0315) (L.range 0 200) ] in
+  if (lines cfg) [G.GraphPolyLine (colorCode (tint cfg)) pts]
+    (L.map (drawDot (colorCode (tint cfg))) pts)
+
+drawDot c p = case p (G.Pt x y -> G.GraphDisc c (G.Pt (x - 0.012) (y - 0.012)) (G.Pt (x + 0.012) (y + 0.012)))
+//%%
+D.animated 50 lissInit lissStep lissView
+//%% [markdown]
+// ### Spinning 3D Cube (click to tilt, press any key to pause/resume)
+//%%
+::Pt3 = Pt3 !px !py !pz
+::Edge = Edge !fromPt !toPt
+
+::Cube = { !angleX : Float, !angleY : Float, !spinning : Bool }
+
+cubeInit = Cube 0.4 0.6 True
+
+cubeVerts =:
+  let r = [0.0 - 0.55, 0.55] in
+  [Pt3 x y z | x <- r, y <- r, z <- r]
+
+cubeEdges =:
+  let r = [0.0 - 0.55, 0.55] in
+  L.concat
+    [[Edge (Pt3 (0.0 - 0.55) a b) (Pt3 0.55 a b) | a <- r, b <- r],
+     [Edge (Pt3 a (0.0 - 0.55) b) (Pt3 a 0.55 b) | a <- r, b <- r],
+     [Edge (Pt3 a b (0.0 - 0.55)) (Pt3 a b 0.55) | a <- r, b <- r]]
+
+rotX phi p = case p (Pt3 x y z -> Pt3 x (cos phi * y - sin phi * z) (sin phi * y + cos phi * z))
+
+rotY phi p = case p (Pt3 x y z -> Pt3 (cos phi * x + sin phi * z) y (cos phi * z - sin phi * x))
+
+project3 p = case p (Pt3 x y z -> G.Pt (1.6 * x / (z + 2.4)) (1.6 * y / (z + 2.4)))
+
+cubeCorner c p = project3 (rotX (angleX c) (rotY (angleY c) p))
+
+drawEdge c e = case e (Edge p q -> G.GraphPolyLine 11 [cubeCorner c p, cubeCorner c q])
+
+cubeStep ev c = case ev
+  (D.Tick t -> if (spinning c) (Cube (angleX c + 0.025) (angleY c + 0.038) True) c)
+  (D.Click x y -> Cube (0.0 - y * 1.5) (x * 1.5) (spinning c))
+  (D.Key k -> Cube (angleX c) (angleY c) (if (spinning c) False True))
+  (_ -> c)
+
+cubeView c =
+  D.picture
+    (L.append
+      (L.map (drawEdge c) cubeEdges)
+      (L.map (\p -> drawDot 14 (cubeCorner c p)) cubeVerts))
+//%%
+D.animated 50 cubeInit cubeStep cubeView
+//%% [markdown]
+// ### Space-Filling Curves (Hilbert, Sierpinski, Tartan, Peano)
+//%%
+::CurveKind = Hilbert | Sierpinski | Tartan | Peano
+
+::CurveCfg = { !kind : CurveKind, !level : Int, !speed : Int, !paused : Bool }
+
+::CurveModel = { !cCfg : CurveCfg, !drawn : Int }
+
+curveInit = CurveModel (CurveCfg Hilbert 3 1 False) 2
+
+clampInt lo hi n = if (n < lo) lo (if (n > hi) hi n)
+
+flipX p = case p (G.Pt x y -> G.Pt (0.0 - x) y)
+flipY p = case p (G.Pt x y -> G.Pt x (0.0 - y))
+turn90 p = case p (G.Pt x y -> G.Pt (0.0 - y) x)
+turn270 p = case p (G.Pt x y -> G.Pt y (0.0 - x))
+shiftPt dx dy p = case p (G.Pt x y -> G.Pt (x + dx) (y + dy))
+
+tcat xs ys = case (L.last xs) (G.Pt lx ly -> L.append xs (L.map (shiftPt lx ly) ys))
+
+tcat4 a b c d = tcat (tcat (tcat a b) c) d
+
+hilbStep v =
+  tcat4
+    (L.map (\p -> flipX (turn90 p)) v)
+    (L.map (shiftPt 1.0 0.0) v)
+    (L.map (shiftPt 0.0 1.0) v)
+    (L.map (\p -> shiftPt (0.0 - 1.0) 0.0 (flipY (turn90 p))) v)
+
+hilb n = if (n <= 0) [G.Pt 0.0 0.0] (hilbStep (hilb (n - 1)))
+
+sierStep v =
+  tcat4
+    v
+    (L.map (\p -> shiftPt (0.0 - 1.0) 1.0 (turn90 p)) v)
+    (L.map (\p -> shiftPt 0.0 1.0 (turn270 p)) v)
+    (L.map (shiftPt 1.0 1.0) v)
+
+sier n = if (n <= 0) [G.Pt 0.0 0.0] (sierStep (sier (n - 1)))
+
+tartStep v =
+  tcat4
+    v
+    (L.map (\p -> shiftPt 1.0 1.0 (turn90 p)) v)
+    (L.map (\p -> shiftPt 1.0 1.0 (turn270 p)) v)
+    (L.map (shiftPt 1.0 1.0) v)
+
+tart n = if (n <= 0) [G.Pt 0.0 0.0, G.Pt 10.0 10.0] (tartStep (tart (n - 1)))
+
+peanScale n = if (n <= 0) 0.0 (3.0 * peanScale (n - 1) + 1.0)
+
+peanRow v sc =
+  L.concat
+    [v,
+     L.map (\p -> shiftPt (sc + 0.5) sc (flipY p)) v,
+     L.map (shiftPt (2.0 * sc + 1.0) 0.0) v]
+
+peanStep h sc =
+  L.concat
+    [h,
+     L.map (\p -> shiftPt (3.0 * sc + 1.0) (sc + 0.5) (flipX p)) h,
+     L.map (shiftPt 0.0 (2.0 * sc + 1.0)) h]
+
+pean n = if (n <= 0) [G.Pt 0.0 0.0] (peanStep (peanRow (pean (n - 1)) (peanScale (n - 1))) (peanScale (n - 1)))
+
+ptX p = case p (G.Pt x y -> x)
+ptY p = case p (G.Pt x y -> y)
+
+fitPts pts =
+  let xs = L.map ptX pts,
+      ys = L.map ptY pts,
+      x0 = L.minimum xs, x1 = L.maximum xs,
+      y0 = L.minimum ys, y1 = L.maximum ys,
+      dx = x1 - x0, dy = y1 - y0,
+      span = if (dx > dy) dx dy,
+      s = if (span > 0.0) (1.55 / span) 1.0,
+      mx = (x0 + x1) * 0.5,
+      my = (y0 + y1) * 0.5 in
+  [G.Pt ((ptX p - mx) * s) ((ptY p - my) * s - 0.04) | p <- pts]
+
+hilbertRoutes =: [ fitPts (hilb k) | k <- [1 .. 5] ]
+sierpinskiRoutes =: [ fitPts (sier k) | k <- [1 .. 5] ]
+tartanRoutes =: [ fitPts (tart k) | k <- [1 .. 5] ]
+peanoRoutes =: [ fitPts (pean k) | k <- [1 .. 3] ]
+
+maxLevel c = case c (Peano -> 3) (_ -> 5)
+
+curveRoute c lvl =
+  let k = clampInt 1 (maxLevel c) lvl - 1 in
+  case c
+    (Hilbert -> L.nth k hilbertRoutes)
+    (Sierpinski -> L.nth k sierpinskiRoutes)
+    (Tartan -> L.nth k tartanRoutes)
+    (Peano -> L.nth k peanoRoutes)
+
+curveColor c = case c (Hilbert -> 11) (Sierpinski -> 14) (Tartan -> 10) (Peano -> 13)
+curveName c = case c (Hilbert -> "Hilbert") (Sierpinski -> "Sierpinski") (Tartan -> "Tartan") (Peano -> "Peano")
+
+curveTotal c n =
+  let base = case c (Tartan -> 2) (_ -> 1),
+      factor = case c (Peano -> 9) (_ -> 4) in
+  base * L.foldl (\a b -> a * factor) 1 (L.range 1 (clampInt 1 (maxLevel c) n))
+
+curveInput fld s m =
+  let old = cCfg m,
+      neu = Sh.input fld s old,
+      c0 = kind old, c1 = kind neu,
+      restart = (c1 != c0) \/ (clampInt 1 (maxLevel c1) (level neu) != clampInt 1 (maxLevel c0) (level old)) in
+  CurveModel neu (if restart 2 (drawn m))
+
+curvePause m =
+  let c = cCfg m in
+  CurveModel (CurveCfg (kind c) (level c) (speed c) (if (paused c) False True)) (drawn m)
+
+curveTick m =
+  let c = cCfg m,
+      tot = curveTotal (kind c) (level c),
+      step = clampInt 1 64 (speed c),
+      next = drawn m + step in
+  if (paused c) m (CurveModel c (if (drawn m >= tot + 20 * step) 2 next))
+
+curveStep ev m = case ev
+  (D.Input fld s -> curveInput fld s m)
+  (D.Click x y -> CurveModel (cCfg m) 2)
+  (D.Key k -> curvePause m)
+  (D.Tick t -> curveTick m)
+  (_ -> m)
+
+curveView m =
+  let cfg = cCfg m,
+      c = kind cfg,
+      lvl = clampInt 1 (maxLevel c) (level cfg),
+      pts = curveRoute c lvl,
+      tot = curveTotal c lvl,
+      cur = clampInt 1 tot (drawn m),
+      part = L.take cur pts,
+      headPt = L.last part,
+      label = T.concat [curveName c, " (level ", T.showInt lvl, "): ", T.showInt (cur - 1), " / ", T.showInt (tot - 1), " segments"] in
+  D.column
+    [D.form cfg,
+     D.picture
+       [G.GraphPolyLine (curveColor c) part,
+        drawDot 12 headPt,
+        G.GraphText 7 (G.Pt (0.0 - 0.78) 0.86) label]]
+//%%
+D.animated 50 curveInit curveStep curveView
+//%% [markdown]
+// ## 7. Value Persistence & Graph Serialization (`pack` / `unpack`)
+//
+// `=:` marks cached CAFs preserved across browser reloads when **save values**
+// is enabled. You can also serialize arbitrary heap graphs — even partial
+// function applications or cyclic/shared thunks — directly via `pack`, `unpack`,
+// `packMax`, and typed wrappers in `lib/waarden.spp` (`W.packT` / `W.unpackT`).
+//%%
+import "lib/waarden.spp" as W
+
+fibFast !n = if (n < 2) n (fibFast (n - 1) + fibFast (n - 2))
+
+fibTable =: [fibFast k | k <- [1 .. 24]]
+
+sumList xs = case xs (Nil -> 0) (Cons x r -> x + sumList r)
+//%%
+sumList fibTable
+//%%
+pack [1, 2, 3]
+//%%
+unpack (pack (L.take 5 primes))
+//%%
+addPair a b = a + b
+
+apply5 f = f 5
+
+add10 = unpack (pack (addPair 10))
+//%%
+apply5 add10
+//%%
+strlen (packMax 1000 fibTable)
+//%%
+strlen (packMax 10 fibTable)
+//%%
+try (unpack "not a value") (\msg -> strcat "error: " msg)
+//%%
+packedTable = W.packT "[Int]" fibTable
+//%%
+W.typeOf packedTable
+//%%
+L.take 5 (W.unpackT "[Int]" packedTable)
+//%%
+try (W.unpackT "[Str]" packedTable) (\msg -> [msg])

@@ -1,0 +1,9 @@
+week,fruit,kg,price,note
+1,apples,120,1.20,
+1,pears,80,1.45,"ripe, soft"
+2,apples,135,1.15,
+2,pears,70,1.50,
+3,apples,150,1.10,"promo ""buy 3"""
+3,pears,95,1.40,
+4,apples,142,1.10,
+4,pears,110,1.35,final week
