@@ -202,6 +202,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     <a href="#s3">3. Interpreter, native &amp; WebAssembly</a>
     <a href="#s4">4. Building with LLMs &amp; oracles</a>
     <a href="#s5">5. Questions &amp; proposal for Clean</a>
+    <a href="#s6">6. Backup for questions</a>
   </nav>
 
   <h2 id="s1">1. The starting point &amp; the core idea: one small VM, everything else in Sapl</h2>
@@ -274,7 +275,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
   <ul>
     <li><strong>The interpreter:</strong> The 2016 goal was staying within a factor of 5 of Clean and Haskell. Natively, the JMVM now runs at ~2.5&ndash;3&times; of Clean/GHC, and in WebAssembly it loses less than 1.5&times; against itself natively &mdash; driven by automatic strictness analysis, native <code>musttail</code> dispatch (vs. <code>switch</code> in V8/Wasm), 7 load-time superinstructions, and replacing <code>jmpt</code>&rsquo;s jump-table lookup with a predictable conditional branch after CPU hardware counters showed 93% of the gap vs. Clean&rsquo;s interpreter was operand stalls.</li>
     <li><strong>Native code through C (<code>sapl2c</code>):</strong> A three-day prototype compiling Stage-4 Retag directly to C (one C function per Sapl function) turned out to be roughly as fast as Clean native and GHC <code>-O2</code> on benchmarks and self-compilation, and ~3&times; faster than the interpreter.</li>
-    <li><strong>The crucial contrast &mdash; Retag vs. stack bytecode:</strong> Feeding the exact same <code>clang -O2</code> compiler from JMVM bytecode (<code>jmvm2c</code>) left the program well behind Clean native and took roughly 10&times; longer to compile. From Retag, Clang sees whole functions with named variables and performs register allocation cleanly. On large typed Clean code (like the 2,700-function Clean compiler compiling itself via <code>abc2retag</code>), Clean&rsquo;s native <code>cg</code> remains clearly ahead because Retag currently erases unboxed types.</li>
+    <li><strong>The crucial contrast &mdash; Retag vs. stack bytecode:</strong> Feeding the exact same <code>clang -O2</code> compiler from JMVM bytecode (<code>jmvm2c</code>) left the program well behind Clean native and took roughly 10&times; longer to compile. From Retag, Clang sees whole functions with named variables and performs register allocation cleanly. On large typed Clean code (like the 2,700-function Clean compiler compiling itself via <code>abc2retag</code>), Clean&rsquo;s native <code>cg</code> stays ahead (1.21&times;). Measured on 24 November, the missing types explain little of that on such symbolic code (~2&ndash;6%); most of it is runtime (GC work, thunk size). On integer loops types are worth 8&ndash;55%.</li>
 
     <li><strong>WebAssembly without an interpreter (20&ndash;21 November):</strong> Compiled code in the browser took several attempts. A JIT from bytecode (July&ndash;September) was slower than the warm interpreter, and a continuation-based bytecode compiler (29 September) gained only ~1.5&times;; both bytecode routes stayed under the ~3&times; a compiler needs over an interpreter to be worth it (<code>jmvm2c</code> reached 1.3&times;). From Retag it worked twice: the C of <code>sapl2c</code> through Emscripten is ~4&times; faster than the JMVM in wasm and 1.35&times; native, and <strong>r2w</strong> (<code>sapl2wasm.cfp</code>, ~1,000 lines of Sapl) writes binary wasm <em>without C or clang</em> at 1.13&ndash;1.18&times; the Emscripten result, with the whole chain running inside wasm. In Chrome, Firefox and Safari both are 3&ndash;4&times; faster than the JMVM and 3&ndash;8&times; faster than the best ABC interpreter.</li>
     <li><strong>The obstacle is the stack:</strong> every non-tail call uses the engine&rsquo;s stack (~1&nbsp;MB in browsers, which a page cannot raise); 3&ndash;6 of 14 programs overflow, the compiler itself among them. Two remedies were built and measured: JSPI stack segments (Chrome and Firefox; a depth counter costs ~23%) and an explicit stack in linear memory (all browsers; ~1.1&times; in Chrome, ~2&times; in Firefox, 4&ndash;13&times; in Safari). The proposal is tiered execution: run direct, and restart on the explicit stack (or on the JMVM in Safari) after an overflow. Restarting is only safe before anything irreversible has happened; node and a Chromium desktop app can set the stack limit directly.</li>
@@ -326,7 +327,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
   <p>
     Rather than prescribing conclusions, the talk ends with four concrete questions for the Clean and iTasks
     community &mdash; plus an honest list of what has <em>not</em> yet been measured (real iTasks applications,
-    compile time at scale, uniqueness &amp; arrays, records, <code>ccall</code>, dynamics,
+    compile time at scale, boxed arrays, records, <code>ccall</code>, dynamics,
     compiled wasm in a real page with the stack fallback, graph compatibility, an iPad, and Windows):
   </p>
   <div class="grid-2">
@@ -366,6 +367,64 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     <a href="top_advice_factsheet.html">Advice &amp; open gaps for TOP Software</a>
     <a href="clean_on_jmvm_factsheet.html">Full Clean on JMVM &amp; Clean Sandbox</a>
     <a href="clean_abc_to_jmvm_retag_factsheet.html">ABC &rarr; Retag &rarr; JMVM guide</a>
+  </div>
+
+  <h2 id="s6">6. Backup for questions</h2>
+  <p>
+    Not in the talk, but useful if it comes up, with the caveats that belong to each.
+  </p>
+  <div class="grid-2">
+    <div class="card accent">
+      <h3>clean-llvm and the Retag route</h3>
+      <p>
+        On 19 November three benchmarks from <code>clean-llvm</code> (Camil Staps, Steffen Michels, Dante van Gemert)
+        went through <code>abc2retag</code> + <code>sapl2c</code>. Measured as a ratio to Clean&rsquo;s ABC interpreter
+        in wasm (<code>abc-wasm</code>, stock), because their numbers are from an x86-64 machine and ours from an M4:
+      </p>
+      <table>
+        <tr><th>vs. <code>abc-wasm</code></th><th class="num">clean-llvm native (x86-64)</th><th class="num">sapl2c native (M4)</th></tr>
+        <tr><td><code>clausify</code></td><td class="num">0.18&times;</td><td class="num">0.14&times;</td></tr>
+        <tr><td><code>lzw_encode</code></td><td class="num">0.19&times;</td><td class="num">0.19&times;</td></tr>
+        <tr><td><code>fannkuch</code> (n=10)</td><td class="num">&ndash;</td><td class="num">0.11&times;</td></tr>
+      </table>
+      <ul>
+        <li><strong>A complementary data point, not a contest.</strong> clean-llvm deliberately keeps Clean&rsquo;s exact heap layout (graph copying to the ABC interpreter); the Retag route uses its own tagged cells. On 18 November clean-llvm still covered a first-order core (no closures yet, issue #27).</li>
+        <li><strong>Not a millisecond comparison:</strong> clean-llvm was not built or run here.</li>
+        <li><strong>Not reproducible on <code>main</code>:</strong> <code>clausify</code> and <code>lzw_encode</code> needed a wider multi-value return in <code>abc2retag</code> that breaks the fixpoint of gen1, so it was not merged; the benchmark sources were lost.</li>
+      </ul>
+    </div>
+    <div class="card warn">
+      <h3>Bugs found along the way</h3>
+      <ul>
+        <li><strong>Clean 3.1 ARM64 native</strong> gives a wrong result for <code>sort</code> (why it is left out of the averages) and a wrong, varying result for <code>hamming</code> with many copying GCs (3,563,271 instead of 3,564,000 at <code>-h 64M</code>). Fine with few GCs or the compacting GC: probably the copying GC of the ARM64 runtime.</li>
+        <li><strong><code>ABC/Parse.icl</code>:</strong> <code>parseLine{|Char|}</code> returns the position of the closing quote, not after it, so the optimiser cannot re-read its own output (reported in November). The same file in clean-llvm also has <code>parseLine{|StringLiteral|}</code> returning <code>start+1</code> instead of <code>j+1</code>; harmless while a string literal is the last argument, not reported yet.</li>
+      </ul>
+    </div>
+    <div class="card ok">
+      <h3>Clean via ABC vs. the same program from Sapl</h3>
+      <p>
+        Through <code>sapl2c</code>, the route via <code>abc2retag</code> is on average as fast as compiling the Sapl
+        version directly (1.02&times;). The outliers, measured on 24 November:
+      </p>
+      <ul>
+        <li><code>parsetest</code> 1.32&times;: the Clean port is a slightly different program (<code>pTerm xs = &hellip;</code> rebuilds a parser on every call); the Sapl version with the same line allocates as much.</li>
+        <li><code>knights</code> 1.10&times;: Clean builds the list of moves lazily, and <code>abc2retag</code> keeps that faithfully (+77% allocation). Building it eagerly fixes it (0.96&times;), but was not merged: too little gain for the risk.</li>
+        <li><code>sprimes</code> 1.19&times;: heap locality. Via ABC allocates less, does no GC, and the data stays scattered; with a smaller start heap both are equally fast.</li>
+        <li><code>primes</code> 1.11&times;: unexplained; same calls, allocation and GCs.</li>
+      </ul>
+    </div>
+    <div class="card purple">
+      <h3>What types are worth (24 November)</h3>
+      <ul>
+        <li><strong>Symbolic code:</strong> extra information from ABC (unboxed ints, strict fields) gives at most ~6% on <code>eval</code>, ~1.5% on <code>parsetest</code>, &minus;2.7% on the typed self-compile. The rest of the gap is runtime: <code>parsetest</code> spends 31% in the GC, and every thunk takes one cell more than in Clean.</li>
+        <li><strong>Integer code:</strong> without tag checks three small programs get 8&ndash;55% faster and reach or beat Clean native (<code>collatz</code> 1.00&times;, <code>sieve</code> 1.16&times;, <code>digits</code> 0.33&times;).</li>
+        <li><strong>In the interpreter:</strong> removing all tag checks gains &minus;0.5% natively and &minus;3% warm in Chrome: not worth new instructions.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="links-row">
+    <span class="lbl">Sources (repo)</span>
+    <span><code>docs/2026-11-19_clean_llvm_vergelijking_rapport.md</code> &bull; <code>docs/2026-11-22_allocatie_clean_tegen_retag.md</code> &bull; <code>docs/2026-11-24_retag_met_extra_info_eval_parsetest.md</code> &bull; <code>docs/2026-11-16_abcopt_char_parse_bugrapport.md</code></span>
   </div>
 
   <footer>
