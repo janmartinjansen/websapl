@@ -606,9 +606,9 @@ D.table ["Apple M4, native", "Mean", "Time ratio (lower = faster)"]
 // - **Small benchmarks**: C from Retag is on average a little faster than Clean's `cg` and GHC; it wins where much is allocated.
 // - **A large typed program**: `cg` still wins, but the gap shrank from **1.43× to 1.21×** in two days, once the GC
 //   stopped copying evaluated thunks and `Nil` was shared: much of it was **memory management, not types**.
-//   The rest is probably boxing: Retag is untyped.
+//   The rest is runtime too (GC, thunk size): types add only **~2–6%**.
 //
-// <p class="hint">Geometric means over 12 benchmarks. gen1 is the Sapl compiler. Clean native in a Linux VM (noise up to 15–20%); GHC without full laziness. Measured 20 Nov, after the GC improvements of 19–20 Nov. Source: experiments/clean_vergelijking/meting_2026-11-20.</p>
+// <p class="hint">Geometric means over 12 benchmarks. gen1 is the Sapl compiler. Clean native in a Linux VM (noise up to 15–20%); GHC without full laziness. Measured 20 Nov, after the GC improvements of 19–20 Nov; types: upper bounds of 21–24 Nov. Source: experiments/clean_vergelijking/meting_2026-11-20.</p>
 //%% [markdown]
 // ## Demo: the Clean sandbox, extended
 //
@@ -658,13 +658,14 @@ D.table ["Apple M4, native", "Mean", "Time ratio (lower = faster)"]
 //    Here the level of the intermediate form mattered more than the backend, and `abc2retag`
 //    shows the structure can be recovered from ABC. It may be worth a look.
 // 3. **A classic C compiler as code generator?** Via Retag it worked surprisingly well,
-//    also for Clean code via ABC. But `sapl2c` is a very early prototype, and types are lost on the way.
+//    also for Clean code via ABC. But `sapl2c` is an early prototype, and types are lost:
+//    little cost on symbolic code, **8–55%** on integer loops.
 // 4. **Developing with LLMs**: the oracles and the way of working carry over to any compiler project.
 //%% [markdown]
 // ## What has not been measured
 //
 // - A real **iTasks** application: speed, and **compile time**.
-// - **Uniqueness and arrays**, records, `ccall`, dynamics.
+// - **Boxed arrays**, records, `ccall`, dynamics (unboxed `{#Int}` arrays work since 24 Nov).
 // - Compiled wasm in a **real page**, with the stack fallback, and graph compatibility with the ABC interpreter.
 // - A real **iPad**; Windows.
 //%% [markdown]

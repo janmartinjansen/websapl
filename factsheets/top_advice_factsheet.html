@@ -146,6 +146,9 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
 <div class="update-20nov" style="margin:16px auto;max-width:1100px;padding:12px 16px;border-left:4px solid #10b981;background:rgba(16,185,129,0.08);border-radius:6px;font-size:14px;line-height:1.5">
   <strong>Update 20 November 2026.</strong> Re-measured after the GC skips evaluated thunks (indirections), constructors without fields (<code>Nil</code>, &hellip;) are shared instead of allocated, and two chars are compared directly. Clean via Retag to C is now <strong>0.87&times;</strong> Clean native on the 12 small benchmarks (was 0.95&times;), and the large typed program (gen1t, 2,700 functions) is <strong>1.21&times;</strong> slower than Clean native (197 vs. 163&nbsp;ms, measured in one session; was 1.35&ndash;1.43&times;). The compiler-like benchmarks remain the slowest via Retag (parsetest 1.51&times;, eval 1.24&times;). Much of the gap on the large program turned out to be memory management, not the missing types. The advice itself stands: lead with the toolchain; the native route is closer than it looked on 13 November. The figures below are the measurements of the date of this factsheet. Sources: <code>experiments/clean_vergelijking/meting_2026-11-20</code>, <code>docs/2026-11-19_sapl2c_tegen_clean_profiel.md</code> &sect;8&ndash;12.
 </div>
+<div class="update-24nov" style="margin:16px auto;max-width:1100px;padding:12px 16px;border-left:4px solid #10b981;background:rgba(16,185,129,0.08);border-radius:6px;font-size:14px;line-height:1.5">
+  <strong>Update 24 November 2026: what types are worth.</strong> Measured how much extra information from ABC (unboxed ints, strict fields) would give the Retag route. <strong>On symbolic code little:</strong> at most ~6% on <code>eval</code> (now 1.17&times; Clean native), ~1.5% on <code>parsetest</code>, and a type side file gave &minus;2.7% on the typed self-compile. There the rest of the gap is runtime: <code>parsetest</code> spends 31% in the GC (outside it, it is as fast as Clean), each thunk takes one cell more than in Clean, and the Clean port of <code>parsetest</code> is not quite the same program (<code>pTerm xs = &hellip;</code>, about 40% of the difference). <strong>On integer code a lot:</strong> without tag checks three small int programs get 8&ndash;55% faster and reach or beat Clean native (<code>collatz</code> 1.00&times;, <code>sieve</code> 1.16&times;, <code>digits</code> 0.33&times;). Also fixed: arrays of basic types (<code>{#Int}</code>, <code>{#Real}</code>) are now translated correctly by <code>abc2retag</code>. Source: <code>docs/2026-11-24_retag_met_extra_info_eval_parsetest.md</code>.
+</div>
 
 
   <div class="kpis">
@@ -180,9 +183,11 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     first, as <code>abc2retag</code> does.
   </p>
   <ul>
-    <li><strong>Keep the types.</strong> Retag is untyped, which is where the gap on large typed code comes from. A
-      type side file (annotations only, erasable) is the natural next step; it is untested. Upper bound
-      for the simplest form (tag checks removed on integer code): &minus;5.5% on ten safe benchmarks, up to &minus;17% on <code>fib</code>.</li>
+    <li><strong>Keep the types where code computes.</strong> Retag is untyped. On integer loops that costs 8&ndash;55%
+      (24 November), and with the types the Retag route reaches Clean native. On symbolic code (parsers,
+      interpreters, the typed self-compile) it is worth only ~2&ndash;6%; there the gap is the runtime: GC work and
+      the size of thunks. (13 November, before this was measured, this bullet said the gap on large typed code
+      came from the missing types.)</li>
     <li><strong>Do not expect to beat <code>cg</code> on large typed programs.</strong> Clean native took 164&ndash;173 ms on
       the typed self-compile, the Retag route 234 ms.</li>
   </ul>
@@ -204,7 +209,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
   <h2>4. What has not been measured</h2>
   <ul>
     <li>An iTasks-sized application: speed, and <strong>compile time</strong> (the typed self-compile is 3.7&nbsp;MB of C and takes 4.2&nbsp;s in <code>clang -O2</code>).</li>
-    <li>Parts of Clean the benchmarks do not use: uniqueness and arrays, records, <code>ccall</code>, dynamics.</li>
+    <li>Parts of Clean the benchmarks do not use: boxed arrays, records, <code>ccall</code>, dynamics (unboxed <code>{#Int}</code> arrays with unique updates work and were measured on 24 November).</li>
     <li>The native route in WebAssembly, and compatibility of the heap and descriptor layout with the ABC interpreter (iTasks ships graphs between native server and browser).</li>
     <li>Windows (<code>musttail</code> needs clang). One machine; Clean native ran in a Linux VM, with noise of 15&ndash;20% on some benchmarks.</li>
   </ul>
