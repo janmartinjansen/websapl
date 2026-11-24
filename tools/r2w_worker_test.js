@@ -40,6 +40,20 @@ const namen = ["fib", "primes", "queens", "sort", "knights", "hamming", "match",
     else if (w.stackOverflow && !groot) console.log(`ok    ${n.padEnd(10)} stackmelding (${w.foutSoort}: ${w.message}) na ${w.ms.run} ms; JMVM res ${jm}`);
     else regel(false, `${n.padEnd(10)} ${w.stage}: ${w.message} [${w.foutSoort}]`);
   }
+  // de voortzettingsvorm (eigen stack): alle 13 moeten nu ook met de standaard stack lopen
+  for (const n of namen) {
+    const pad = `benchmarks_sapl/${n}.cfp`;
+    const bron = fs.readFileSync(path.join(repo, "websapl", pad), "utf8");
+    const j = await call({ type: "COMPILE", source: bron, path: "/" + pad, stages: ["jmvm"] });
+    const r = await call({ type: "RUN", contentOrPath: j.files[0].content, isPath: false }, "RUN_COMPLETE");
+    const w = await call({ type: "COMPILE_WASM", source: bron, path: "/" + pad, cps: true }, "WASM_COMPLETE");
+    const jm = String(r.metrics.res);
+    regel(w.success && w.res === jm, `${n.padEnd(10)} eigen stack: res ${w.res} (JMVM ${jm}); generator ${w.ms.generator} ms, run ${w.ms.run} ms, ${w.wasmSize} bytes${w.success ? "" : " " + w.stage + ": " + w.message}`);
+  }
+  {
+    const w = await call({ type: "COMPILE_WASM", source: "start = f 50000000\n\nf n = if (n == 0) 0 (1 + f (n - 1))\n", path: "/tmp/diep.cfp", cps: true }, "WASM_COMPLETE");
+    regel(!w.success && w.ownStackFull, `diep (eigen stack) ${w.stage}: ${w.message}`);
+  }
   // wat de generator niet kent: een nette melding, geen crash
   for (const [naam, bron] of [["float-literal", "start = 1.5 * 2.0\n"],
                               ["try", "start = try (1 / 0) 7\n"]]) {

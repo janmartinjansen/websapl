@@ -1875,7 +1875,10 @@ async function r2wLoad() {
 // antwoord: sapl2wasm.html draait de module in de pagina zelf, want de stack
 // van een worker is in Chrome en Safari kleiner (in een worker liep in Chromium
 // maar 5 van de 13 benchmarks door, 24 november 2026).
-async function compileWasm(source, srcPath, stdinText, strictness, compileOnly = false) {
+// cps: de voortzettingsvorm (eigen stack in het geheugen van de module, doel *.k.wasm):
+// loopt niet vast op de stack van de browser, maar is trager (in Safari veel); kan dus
+// gewoon in de worker draaien. Een te diep programma geeft ownStackFull (EigenStackVol).
+async function compileWasm(source, srcPath, stdinText, strictness, compileOnly = false, cps = false, runs = 1) {
   if (!isInitialized) throw new Error("JMVM engine is not initialized.");
   const rt = await r2wLoad();
   const ms = {};
@@ -1890,7 +1893,8 @@ async function compileWasm(source, srcPath, stdinText, strictness, compileOnly =
   // 2. de generator: retag -> .wasm + .json
   t = performance.now();
   const uit = [];
-  const invoer = "/in.retag.txt\n/uit.wasm\n/uit.json\n";
+  const doel = cps ? "/uit.k.wasm" : "/uit.wasm";
+  const invoer = "/in.retag.txt\n" + doel + "\n/uit.json\n";
   let ip = 0;
   const vm = await createJMVMModule({
     noInitialRun: true,
@@ -1903,7 +1907,7 @@ async function compileWasm(source, srcPath, stdinText, strictness, compileOnly =
   vm.FS.writeFile("/in.retag.txt", retag.content);
   try { vm.callMain(["/prog.jvb"]); } catch (_) {}
   let wasm = null, meta = null;
-  try { wasm = vm.FS.readFile("/uit.wasm"); meta = JSON.parse(vm.FS.readFile("/uit.json", { encoding: "utf8" })); } catch (_) {}
+  try { wasm = vm.FS.readFile(doel); meta = JSON.parse(vm.FS.readFile("/uit.json", { encoding: "utf8" })); } catch (_) {}
   ms.generator = Math.round(performance.now() - t);
   if (!wasm || !meta) {
     // de banner van de VM weg; wat overblijft is de melding van de generator
@@ -1918,16 +1922,25 @@ async function compileWasm(source, srcPath, stdinText, strictness, compileOnly =
   catch (err) { return { success: false, stage: "compile", message: String(err && err.message || err), ms, wasmSize: wasm.length }; }
   ms.compile = Math.round(performance.now() - t);
   // 4. draaien
-  const x = await draaiR2w(rt, mod, meta, { stdin: stdinText || "", bestanden: {}, uitPad: null });
-  ms.run = Math.round(x.ms);
+  // runs: zo vaak draaien (elk een vers exemplaar) en de snelste tijd nemen; stopt bij een fout
+  let x = null;
+  for (let i = 0; i < Math.max(1, runs); i++) {
+    const y = await draaiR2w(rt, mod, meta, { stdin: stdinText || "", bestanden: {}, uitPad: null });
+    if (y.fout) { x = y; ms.run = Math.round(y.ms); break; }
+    if (!x || y.ms < ms.run) ms.run = Math.round(y.ms);
+    if (!x) x = y;
+  }
+  // de runtime sluit af met "tijd .. ms, gc .., heap .." (stderr); die regel hoort niet bij het programma
   const output = x.uit.join("\n") + (x.uit.length ? "\n" : "");
+  x.fouten = x.fouten.filter((l) => !/^tijd [0-9.]+ ms, gc /.test(l));
   const resMatch = output.match(/res:\s*([^\n\r]+)/);
   const stackOverflow = draaiR2w.isStackOverflow(x);
+  const ownStackFull = draaiR2w.isOwnStackFull(x);
   return {
     success: !x.fout, stage: x.fout ? "run" : null,
-    message: x.fout ? (stackOverflow ? "too deep for the browser stack" : x.fout) : null,
+    message: x.fout ? (stackOverflow ? "too deep for the browser stack" : ownStackFull ? "the program's own stack is full" : x.fout) : null,
     output, stderr: x.fouten.join("\n"), res: resMatch ? resMatch[1].trim() : null,
-    ms, wasmSize: wasm.length, wasm, stackOverflow, foutSoort: x.foutSoort
+    ms, wasmSize: wasm.length, wasm, stackOverflow, ownStackFull, foutSoort: x.foutSoort
   };
 }
 
@@ -1962,7 +1975,7 @@ self.onmessage = async function (e) {
 
     case "COMPILE_WASM":
       try {
-        const result = await compileWasm(msg.source, msg.path, msg.stdin || "", msg.strictness !== false, !!msg.compileOnly);
+        const result = await compileWasm(msg.source, msg.path, msg.stdin || "", msg.strictness !== false, !!msg.compileOnly, !!msg.cps, msg.runs || 1);
         postMessage({ type: "WASM_COMPLETE", id: msg.id, ...result });
       } catch (err) {
         postMessage({ type: "WASM_COMPLETE", id: msg.id, success: false, stage: "worker", message: err.message, ms: {} });

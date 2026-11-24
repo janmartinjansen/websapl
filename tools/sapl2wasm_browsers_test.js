@@ -1,6 +1,6 @@
 // sapl2wasm.html in een gewone browser (Firefox, Safari of Chrome), via de zelftest van de
-// pagina (?alles=1): alle 13 benchmarks, per benchmark dezelfde uitvoer als de JMVM of de
-// stackmelding; nooit een andere fout. De pagina stuurt haar uitkomst naar deze server.
+// pagina (?alles=1): alle 13 benchmarks, per kolom (direct, eigen stack) dezelfde uitvoer als de
+// JMVM of de stackmelding; nooit een andere fout. De pagina stuurt haar uitkomst naar deze server.
 // Firefox en Chrome kunnen headless (HEADLESS=1); Safari alleen met het scherm open (anders
 // remt Safari het tabblad af), en het tabblad blijft daarna open.
 //
@@ -27,14 +27,21 @@ const srv = http.createServer((req, res) => {
       const r = JSON.parse(body);
       console.log(r.userAgent);
       let fail = 0, door = 0;
+      let doorE = 0;
+      const f = (x) => (x.ok ? `${x.ms} ms (${(r0.jmvm / Math.max(1, x.ms)).toFixed(1)}×)${x.same ? "" : " ANDERE UITVOER"}` : x.stack ? "stack" : `fout (${x.stage})`);
+      let r0;
       for (const x of r.rijen) {
-        const gelijk = /same output, res:/.test(x.verdict);
-        const stack = x.melding && /Too deep for the browser/.test(x.melding);
-        if (gelijk) door++;
-        if (!gelijk && !stack) fail = 1;
-        console.log(`${gelijk || stack ? "ok  " : "FOUT"}  ${x.naam.padEnd(10)} ${(gelijk ? x.verdict : x.melding || x.verdict || "(niets)").replace(/\n/g, " | ")}`);
+        r0 = x;
+        const d = x.direct, e = x.eigen;
+        if (d.ok && d.same) door++;
+        if (e.ok && e.same) doorE++;
+        // direct: dezelfde uitvoer of de stackmelding; eigen stack: dezelfde uitvoer of (alleen
+        // als de eigen stack vol is) die melding
+        const ok = ((d.ok && d.same) || d.stack) && ((e.ok && e.same) || e.stack);
+        if (!ok) fail = 1;
+        console.log(`${ok ? "ok  " : "FOUT"}  ${x.naam.padEnd(10)} JMVM ${x.jmvm} ms · direct ${f(d)} · eigen stack ${f(e)}`);
       }
-      console.log(`${door} van ${r.rijen.length} via wasm (zelfde uitvoer als de JMVM), de rest met de stackmelding`);
+      console.log(`direct ${door} van ${r.rijen.length}, eigen stack ${doorE} van ${r.rijen.length} via wasm (zelfde uitvoer als de JMVM)`);
       stop(fail);
     });
     return;

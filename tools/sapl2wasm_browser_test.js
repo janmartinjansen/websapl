@@ -1,7 +1,7 @@
 // De pagina sapl2wasm.html (retag2wasm in de browser, 24 november 2026) in headless Chrome:
-// alle 13 kernbenchmarks via de knop Run. Per benchmark moet de r2w-kolom dezelfde `res:`
-// geven als de JMVM-kolom, of (voor de programma's die te diep gaan voor de stack van de
-// browser) de stackmelding; nooit een andere fout. Plan:
+// alle 13 kernbenchmarks via de knop Run. Per benchmark moet de kolom "direct" dezelfde uitvoer
+// geven als de JMVM, of (voor de programma's die te diep gaan voor de stack van de browser) de
+// stackmelding; de kolom "eigen stack" moet voor alle 13 dezelfde uitvoer geven. Plan:
 // docs/2026-11-24_retag2wasm_in_websapl_plan.md.
 //
 //   node websapl/tools/sapl2wasm_browser_test.js            (vanuit de repo-root)
@@ -28,8 +28,7 @@ const SCRIPT = (n) => `(async () => {
   $("run").click();
   await new Promise((r) => setTimeout(r, 300));
   for (let i = 0; i < 600 && $("run").disabled; i++) await new Promise((r) => setTimeout(r, 200));
-  const msg = $("msg-r2w");
-  return { verdict: $("verdict").innerText, melding: msg.hidden ? null : msg.innerText, r2w: $("t-r2w").innerText };
+  return { ...window.sapl2wasmLaatste, verdict: $("verdict").innerText };
 })()`;
 
 (async () => {
@@ -55,11 +54,13 @@ const SCRIPT = (n) => `(async () => {
       const r = await send("Runtime.evaluate", { expression: SCRIPT(n), returnByValue: true, awaitPromise: true, timeout: 180000 });
       const v = r.result && r.result.result && r.result.result.value;
       if (!v) { check(n, false, JSON.stringify(r).slice(0, 300)); continue; }
-      const gelijk = /same output, res:/.test(v.verdict);   // de hele uitvoer gelijk, niet alleen res:
-      const stack = v.melding && /Too deep for the browser/.test(v.melding);
-      if (gelijk) door++;
-      const regel = gelijk ? v.verdict.replace(/\n/g, " | ") : (v.melding || v.verdict || "(niets)").split("\n")[0];
-      check(`${n.padEnd(10)} ${regel}`, gelijk || (stack && !MOET_DOOR.includes(n)));
+      // de hele uitvoer gelijk aan die van de JMVM, niet alleen res:
+      const d = v.direct, e = v.eigen;
+      if (d.ok && d.same) door++;
+      const okD = (d.ok && d.same) || (d.stack && !MOET_DOOR.includes(n));
+      const okE = e.ok && e.same;
+      const f = (x) => (x.ok ? `${x.ms} ms${x.same ? "" : " ANDERE UITVOER"}` : x.stack ? "stack" : `fout (${x.stage})`);
+      check(`${n.padEnd(10)} JMVM ${v.jmvm} ms · direct ${f(d)} · eigen stack ${f(e)}`, okD && okE, v.verdict);
     }
     console.log(`${door} van ${NAMEN.length} via wasm (zelfde uitvoer als de JMVM), de rest met de stackmelding`);
   } finally {

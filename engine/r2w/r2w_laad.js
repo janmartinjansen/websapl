@@ -8,6 +8,10 @@
 // De runtime krijgt per run een vers exemplaar (vers geheugen); het programma importeert
 // zijn geheugen, functietabel en rt_*-functies. Vóór het instantiëren: de tabel groeit met
 // meta.table plaatsen (tbase), en malloc reserveert meta.data bytes (dbase).
+// De voortzettingsvorm (R2W_CPS, *.k.wasm) houdt de aanroepstack in het geheugen van de module;
+// boven de grens env.kspl roept het programma env.kover aan, en dat gooit deze fout.
+class EigenStackVol extends Error {}
+
 async function draaiR2w(rt, progModule, meta, io = null) {
   const uit = [], fouten = [];
   const invoer = io ? new TextEncoder().encode(io.stdin) : new Uint8Array(0);
@@ -39,7 +43,9 @@ async function draaiR2w(rt, progModule, meta, io = null) {
     ...(segImp ? { seg: segImp } : {}),
     rt: rtImp,
     env: { memory: ex.memory, table, tbase: g(tbase), dbase: g(dbase), hendp: g(ex.rt_hend_addr()),
-           contab: g(contab), contab64: g(BigInt(contab | 1), "i64"), caftab: g(ex.rt_caftab()) },
+           contab: g(contab), contab64: g(BigInt(contab | 1), "i64"), caftab: g(ex.rt_caftab()),
+           kspl: g(ex.rt_stack_lim ? ex.rt_stack_lim() : 0),
+           kover: () => { throw new EigenStackVol("the program's own stack is full"); } },
   });
   if (meta.seg) runSeg = WebAssembly.promising(p.exports.run_seg);
   if (typeof process !== "undefined" && process.env && process.env.R2W_TOON) console.error(JSON.stringify({ tbase, dbase, hendp: ex.rt_hend_addr(), contab, caftab: ex.rt_caftab() }));
@@ -67,6 +73,9 @@ async function draaiR2w(rt, progModule, meta, io = null) {
 
 // Was de fout van draaiR2w een stack-overflow van de engine (niet een eigen fout van de
 // runtime)? V8 en JavaScriptCore gooien een RangeError, SpiderMonkey een InternalError.
+// de eigen stack van de voortzettingsvorm vol (zie EigenStackVol)
+draaiR2w.isOwnStackFull = function (x) { return x.foutSoort === "EigenStackVol"; };
+
 draaiR2w.isStackOverflow = function (x) {
   if (!x.fout) return false;
   if (x.foutSoort === "RangeError") return /call stack|stack size|too much recursion/i.test(x.fout);
