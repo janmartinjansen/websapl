@@ -202,7 +202,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     <a href="#s3">3. Interpreter, native &amp; WebAssembly</a>
     <a href="#s4">4. Building with LLMs &amp; oracles</a>
     <a href="#s5">5. Questions &amp; proposal for Clean</a>
-    <a href="#s6">6. Backup for questions</a>
+    <a href="#s6">6. Further results</a>
   </nav>
 
   <h2 id="s1">1. The starting point &amp; the core idea: one small VM, everything else in Sapl</h2>
@@ -369,9 +369,9 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     <a href="clean_abc_to_jmvm_retag_factsheet.html">ABC &rarr; Retag &rarr; JMVM guide</a>
   </div>
 
-  <h2 id="s6">6. Backup for questions</h2>
+  <h2 id="s6">6. Further results (19&ndash;24 November)</h2>
   <p>
-    Not in the talk, but useful if it comes up, with the caveats that belong to each.
+    Measurements and findings from the last week before the talk, each with its limitations.
   </p>
   <div class="grid-2">
     <div class="card accent">
@@ -379,7 +379,9 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
       <p>
         On 19 November three benchmarks from <code>clean-llvm</code> (Camil Staps, Steffen Michels, Dante van Gemert)
         went through <code>abc2retag</code> + <code>sapl2c</code>. Measured as a ratio to Clean&rsquo;s ABC interpreter
-        in wasm (<code>abc-wasm</code>, stock), because their numbers are from an x86-64 machine and ours from an M4:
+        in wasm (<code>abc-wasm</code>, stock), because their numbers are from an x86-64 machine and ours from an M4.
+        This is a complementary data point, not a contest: clean-llvm deliberately keeps Clean&rsquo;s exact heap layout,
+        so that graphs can be copied to the ABC interpreter; the Retag route uses its own tagged cells.
       </p>
       <table>
         <tr><th>vs. <code>abc-wasm</code></th><th class="num">clean-llvm native (x86-64)</th><th class="num">sapl2c native (M4)</th></tr>
@@ -388,7 +390,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
         <tr><td><code>fannkuch</code> (n=10)</td><td class="num">&ndash;</td><td class="num">0.11&times;</td></tr>
       </table>
       <ul>
-        <li><strong>A complementary data point, not a contest.</strong> clean-llvm deliberately keeps Clean&rsquo;s exact heap layout (graph copying to the ABC interpreter); the Retag route uses its own tagged cells. On 18 November clean-llvm still covered a first-order core (no closures yet, issue #27).</li>
+        <li><strong>Different stages:</strong> on 18 November clean-llvm covered a first-order core (closures were still open, issue #27).</li>
         <li><strong>Not a millisecond comparison:</strong> clean-llvm was not built or run here.</li>
         <li><strong>Not reproducible on <code>main</code>:</strong> <code>clausify</code> and <code>lzw_encode</code> needed a wider multi-value return in <code>abc2retag</code> that breaks the fixpoint of gen1, so it was not merged; the benchmark sources were lost.</li>
       </ul>
@@ -397,7 +399,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
       <h3>Bugs found along the way</h3>
       <ul>
         <li><strong>Clean 3.1 ARM64 native</strong> gives a wrong result for <code>sort</code> (why it is left out of the averages) and a wrong, varying result for <code>hamming</code> with many copying GCs (3,563,271 instead of 3,564,000 at <code>-h 64M</code>). Fine with few GCs or the compacting GC: probably the copying GC of the ARM64 runtime.</li>
-        <li><strong><code>ABC/Parse.icl</code>:</strong> <code>parseLine{|Char|}</code> returns the position of the closing quote, not after it, so the optimiser cannot re-read its own output (reported in November). The same file in clean-llvm also has <code>parseLine{|StringLiteral|}</code> returning <code>start+1</code> instead of <code>j+1</code>; harmless while a string literal is the last argument, not reported yet.</li>
+        <li><strong><code>ABC/Parse.icl</code>:</strong> <code>parseLine{|Char|}</code> returns the position of the closing quote, not after it, so the optimiser cannot re-read its own output (reported in November).</li>
       </ul>
     </div>
     <div class="card ok">
