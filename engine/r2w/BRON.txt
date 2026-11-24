@@ -1,0 +1,7 @@
+# gemaakt door websapl/tools/build_r2w_runtime.sh; niet met de hand bewerken
+heapcells: 8000000
+sha256: 35300127bb400813b6aa43522f01a11ebe27243f6c7bae4593b675c4c6b687c2 experiments/sapl2c/rt.h
+sha256: cc1a95ccd50d070d8f01971479fc3a64f402a71b733f8832f64e7f1b6d9694d3 experiments/sapl2c/wasm/r2w/rt_wasm.c
+sha256: 2f1395a0bcfc3408d99b4319ce39dbebc1c344ca5c6c9ca5191a3c0179093ea6 experiments/sapl2c/wasm/r2w/bouw.sh
+sha256: 1c1a14de995d51b38c7168a4764e9f6b6552d210c8fe11ee7c00d8b351970bdd websapl/engine/r2w/rt.js
+sha256: 65616929aa40bc63128ede63b391b52c00e240b1f130293150510aa482953ea6 websapl/engine/r2w/rt.wasm

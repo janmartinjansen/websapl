@@ -9,7 +9,8 @@ const vm = require("vm");
 
 const repo = path.resolve(__dirname, "..", "..");
 const engineDir = path.join(repo, "websapl", "engine");
-process.chdir(engineDir);
+// (in een worker_thread kan chdir niet: dan heeft de hoofdthread het al gedaan)
+if (process.cwd() !== engineDir) process.chdir(engineDir);
 
 // == Een minimale worker-omgeving ============================================
 const pending = new Map();
@@ -28,7 +29,10 @@ global.importScripts = (p) => {
   // jmvm.js (de VM) of jvbtool.js (de tool-wasm): de fabriek die erin staat.
   const code = fs.readFileSync(file, "utf8") +
     "\n;if (typeof createJMVMModule !== 'undefined') globalThis.createJMVMModule = createJMVMModule;" +
-    "\n;if (typeof createJvbTool !== 'undefined') globalThis.createJvbTool = createJvbTool;";
+    "\n;if (typeof createJvbTool !== 'undefined') globalThis.createJvbTool = createJvbTool;" +
+    // retag2wasm (sapl2wasm.html): de runtime r2w/rt.js en de lader r2w/r2w_laad.js
+    "\n;if (typeof maak_rt !== 'undefined') globalThis.maak_rt = maak_rt;" +
+    "\n;if (typeof draaiR2w !== 'undefined') globalThis.draaiR2w = draaiR2w;";
   // Cache-buster (`?v=...`) strippen: in de browser een URL, hier een pad.
   const strip = (f) => (typeof f === "string" ? f.split("?")[0] : f);
   const fsShim = { ...fs, readFileSync: (f, ...rest) => fs.readFileSync(strip(f), ...rest) };

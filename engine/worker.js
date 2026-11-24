@@ -1846,6 +1846,91 @@ async function hsRun(source) {
     ms: { vertalen: Math.round(t1 - t0), draaien: Math.round(performance.now() - t1) } };
 }
 
+// == retag2wasm: Sapl naar WebAssembly in de browser (24 november 2026) =====
+// docs/2026-11-24_retag2wasm_in_websapl_plan.md, voor de pagina sapl2wasm.html.
+// gen1 (saplcomp.jvb) tot stage retag, dan de generator sapl2c.jvb (met
+// sapl2wasm.cfp) in een vers VM-exemplaar: retag -> .wasm + .json; dan
+// WebAssembly.compile en draaien tegen de runtime (r2w/rt.js + rt.wasm, rt.h
+// van sapl2c via emcc) met r2w/r2w_laad.js. De generator kent geen try/catch
+// en geen float-literals (hij stopt met een melding); een programma dat te
+// diep gaat voor de stack van de browser geeft een RangeError (V8, JSC) of
+// InternalError (SpiderMonkey).
+let sapl2cBytecode = null, r2wRuntime = null;
+async function r2wLoad() {
+  if (r2wRuntime) return r2wRuntime;
+  sapl2cBytecode = await fetchEngine("sapl2c");
+  if (!sapl2cBytecode) throw new Error("engine/sapl2c.jvb niet gevonden");
+  importScripts("./r2w/rt.js?v=" + Date.now());
+  importScripts("./r2w/r2w_laad.js?v=" + Date.now());
+  const res = await fetch("./r2w/rt.wasm?v=" + Date.now());
+  if (!res.ok) throw new Error("engine/r2w/rt.wasm niet gevonden");
+  r2wRuntime = { create: maak_rt, module: await WebAssembly.compile(await res.arrayBuffer()) };
+  return r2wRuntime;
+}
+
+// Antwoord: { success, stage (waar het misging: imports, gen1, generator,
+// compile, run), message, output, res, ms: {gen1, generator, compile, run},
+// wasmSize, wasm (de bytes, voor de downloadknop), stackOverflow, foutSoort }.
+// compileOnly: stoppen na de generator, met wasm en meta (de .json) in het
+// antwoord: sapl2wasm.html draait de module in de pagina zelf, want de stack
+// van een worker is in Chrome en Safari kleiner (in een worker liep in Chromium
+// maar 5 van de 13 benchmarks door, 24 november 2026).
+async function compileWasm(source, srcPath, stdinText, strictness, compileOnly = false) {
+  if (!isInitialized) throw new Error("JMVM engine is not initialized.");
+  const rt = await r2wLoad();
+  const ms = {};
+  let flattened;
+  try { flattened = await resolveImports(source, srcPath); }
+  catch (err) { return { success: false, stage: "imports", message: err.message, ms }; }
+  // 1. gen1: bron -> retag
+  let t = performance.now();
+  const retag = await runCompilerStage(flattened, strictness ? "retag" : "retag_nostrict", "/tmp/r2w_prog.cfp_retag");
+  ms.gen1 = Math.round(performance.now() - t);
+  if (!retag.success) return { success: false, stage: "gen1", message: retag.output, ms };
+  // 2. de generator: retag -> .wasm + .json
+  t = performance.now();
+  const uit = [];
+  const invoer = "/in.retag.txt\n/uit.wasm\n/uit.json\n";
+  let ip = 0;
+  const vm = await createJMVMModule({
+    noInitialRun: true,
+    locateFile: (p, prefix) => (p.endsWith(".wasm") ? JMVM_WASM : (prefix || "") + p),
+    stdin: () => (ip < invoer.length ? invoer.charCodeAt(ip++) : null),
+    stdout: (c) => uit.push(String.fromCharCode(c)),
+    stderr: (c) => uit.push(String.fromCharCode(c))
+  });
+  vm.FS.writeFile("/prog.jvb", sapl2cBytecode);
+  vm.FS.writeFile("/in.retag.txt", retag.content);
+  try { vm.callMain(["/prog.jvb"]); } catch (_) {}
+  let wasm = null, meta = null;
+  try { wasm = vm.FS.readFile("/uit.wasm"); meta = JSON.parse(vm.FS.readFile("/uit.json", { encoding: "utf8" })); } catch (_) {}
+  ms.generator = Math.round(performance.now() - t);
+  if (!wasm || !meta) {
+    // de banner van de VM weg; wat overblijft is de melding van de generator
+    const tekst = uit.join("").replace(/^[\s\S]*?execution started[^\n]*\n/, "").replace(/\n?(res:|stop)[\s\S]*$/, "").trim();
+    return { success: false, stage: "generator", message: tekst || "the generator wrote no wasm", ms };
+  }
+  if (compileOnly) return { success: true, stage: null, ms, wasmSize: wasm.length, wasm, meta };
+  // 3. compileren door de engine (V8 compileert lui: de echte kosten zitten in de run)
+  t = performance.now();
+  let mod;
+  try { mod = await WebAssembly.compile(wasm); }
+  catch (err) { return { success: false, stage: "compile", message: String(err && err.message || err), ms, wasmSize: wasm.length }; }
+  ms.compile = Math.round(performance.now() - t);
+  // 4. draaien
+  const x = await draaiR2w(rt, mod, meta, { stdin: stdinText || "", bestanden: {}, uitPad: null });
+  ms.run = Math.round(x.ms);
+  const output = x.uit.join("\n") + (x.uit.length ? "\n" : "");
+  const resMatch = output.match(/res:\s*([^\n\r]+)/);
+  const stackOverflow = draaiR2w.isStackOverflow(x);
+  return {
+    success: !x.fout, stage: x.fout ? "run" : null,
+    message: x.fout ? (stackOverflow ? "too deep for the browser stack" : x.fout) : null,
+    output, stderr: x.fouten.join("\n"), res: resMatch ? resMatch[1].trim() : null,
+    ms, wasmSize: wasm.length, wasm, stackOverflow, foutSoort: x.foutSoort
+  };
+}
+
 /**
  * Handle messages from the UI thread
  */
@@ -1872,6 +1957,15 @@ self.onmessage = async function (e) {
           error: err.message,
           files: []
         });
+      }
+      break;
+
+    case "COMPILE_WASM":
+      try {
+        const result = await compileWasm(msg.source, msg.path, msg.stdin || "", msg.strictness !== false, !!msg.compileOnly);
+        postMessage({ type: "WASM_COMPLETE", id: msg.id, ...result });
+      } catch (err) {
+        postMessage({ type: "WASM_COMPLETE", id: msg.id, success: false, stage: "worker", message: err.message, ms: {} });
       }
       break;
 

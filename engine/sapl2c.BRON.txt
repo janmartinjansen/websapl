@@ -1,0 +1,2 @@
+# gemaakt door websapl/tools/build_sapl2c.sh; niet met de hand bewerken
+sha256: 331d13be939cda995b3c83efc36dc328817015b14af4834ad015a821d45cc6d3 sapl_compiler/sapl2c.cfp (met #imports)

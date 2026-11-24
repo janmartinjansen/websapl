@@ -94,6 +94,11 @@ const ENTRIES = [
   { src: "sapl_compiler/saplcomp.jvb", dst: "engine/saplcomp.jvb" },   // het binaire laadformaat (laadformaat/)
   { src: "sapl_compiler/saplcomp_module.jmvm", dst: "engine/saplcomp_module.jmvm" },
   { src: "sapl_compiler/saplcomp_module.jvb", dst: "engine/saplcomp_module.jvb" },   // het binaire laadformaat (laadformaat/)
+  // retag2wasm in de browser (sapl2wasm.html, 24 november 2026): de generator (sapl2c.cfp met
+  // sapl2wasm.cfp; sapl2c.jmvm staat in git, de .jvb is afgeleid) en de lader. De runtime
+  // (engine/r2w/rt.js, rt.wasm) is geen kopie maar met emcc gebouwd: zie checkR2wRuntime.
+  { src: "sapl_compiler/sapl2c.jvb", dst: "engine/sapl2c.jvb" },   // het binaire laadformaat (laadformaat/)
+  { src: "experiments/sapl2c/wasm/r2w/r2w_laad.js", dst: "engine/r2w/r2w_laad.js" },
   // De REPL in Sapl (stap 6, 7 oktober 2026): bytecode en prelude-interface.
   { src: "repl_sapl/build/mini_repl.jmvm", dst: "repl_sapl/build/mini_repl.jmvm" },
   { src: "repl_sapl/build/mini_repl.jvb", dst: "repl_sapl/build/mini_repl.jvb" },   // het binaire laadformaat (laadformaat/)
@@ -394,11 +399,51 @@ function checkCleanSandbox() {
     "`bash tools/naar_websapl.sh --terug`, commit daar, en draai dan `bash tools/naar_websapl.sh`.";
 }
 
+// engine/r2w/rt.js + rt.wasm (de runtime van retag2wasm) bouwt
+// websapl/tools/build_r2w_runtime.sh met emcc uit rt.h. De stempel
+// engine/r2w/BRON.txt bewaart de sha256 van de bronnen en van de gebouwde
+// bestanden; wijkt er een af, dan hoort de runtime niet meer bij zijn bron.
+const R2W_BRONNEN = ["experiments/sapl2c/rt.h", "experiments/sapl2c/wasm/r2w/rt_wasm.c", "experiments/sapl2c/wasm/r2w/bouw.sh"];
+const R2W_GEBOUWD = ["websapl/engine/r2w/rt.js", "websapl/engine/r2w/rt.wasm"];
+function r2wStempelRegels() {
+  return R2W_BRONNEN.concat(R2W_GEBOUWD).map((f) =>
+    `sha256: ${crypto.createHash("sha256").update(fs.readFileSync(path.join(REPO, f))).digest("hex")} ${f}`);
+}
+function checkR2wRuntime() {
+  const stempel = path.join(WEBSAPL, "engine", "r2w", "BRON.txt");
+  if (!fs.existsSync(stempel)) return "websapl/engine/r2w/BRON.txt ontbreekt (bash websapl/tools/build_r2w_runtime.sh)";
+  const staat = new Set(fs.readFileSync(stempel, "utf8").split("\n").filter((l) => l.startsWith("sha256: ")));
+  let regels;
+  try { regels = r2wStempelRegels(); } catch (e) { return `runtime van retag2wasm: ${e.message}`; }
+  const anders = regels.filter((r) => !staat.has(r)).map((r) => r.split(" ").pop());
+  return anders.length ? `de runtime van retag2wasm hoort niet (meer) bij zijn bron (${anders.join(", ")}); bash websapl/tools/build_r2w_runtime.sh` : null;
+}
+
+// engine/sapl2c.jvb (de generator) komt uit sapl_compiler/sapl2c.jmvm, en die moet bij de
+// bron horen (sapl2c.cfp met sapl2wasm.cfp en de rest van de #imports). De stempel
+// engine/sapl2c.BRON.txt (websapl/tools/build_sapl2c.sh) bewaart de sha256 van die bron.
+function sapl2cStempelRegel() {
+  const bron = require("child_process").execFileSync("bash", ["sapl_compiler/tools/resolve_imports.sh", "sapl_compiler/sapl2c.cfp"], { cwd: REPO });
+  return `sha256: ${crypto.createHash("sha256").update(bron).digest("hex")} sapl_compiler/sapl2c.cfp (met #imports)`;
+}
+function checkSapl2c() {
+  const stempel = path.join(WEBSAPL, "engine", "sapl2c.BRON.txt");
+  if (!fs.existsSync(stempel)) return "websapl/engine/sapl2c.BRON.txt ontbreekt (bash websapl/tools/build_sapl2c.sh)";
+  let regel;
+  try { regel = sapl2cStempelRegel(); } catch (e) { return `sapl2c: ${e.message}`; }
+  return fs.readFileSync(stempel, "utf8").split("\n").includes(regel) ? null :
+    "sapl2c.jmvm hoort niet (meer) bij sapl2c.cfp/sapl2wasm.cfp; bash websapl/tools/build_sapl2c.sh";
+}
+
 function main() {
+  if (process.argv.includes("--sapl2c-stempel")) { console.log(sapl2cStempelRegel()); return; }
+  if (process.argv.includes("--r2w-stempel")) { console.log(r2wStempelRegels().join("\n")); return; }
   const check = process.argv.includes("--check");
   const sandbox = checkCleanSandbox();
   if (sandbox) console.log(`LET OP   ${sandbox}`);
-  let drift = sandbox ? 1 : 0;
+  const r2w = checkR2wRuntime() || checkSapl2c();
+  if (r2w) console.log(`LET OP   ${r2w}`);
+  let drift = (sandbox ? 1 : 0) + (r2w ? 1 : 0);
   let written = 0;
   let errors = 0;   // een bron die niet gekopieerd mag worden (bv. een verouderde .jvb)
   for (const entry of ENTRIES) {
@@ -430,7 +475,7 @@ function main() {
     process.exit(drift ? 1 : 0);
   }
   console.log(written ? `${written} bestand(en) bijgewerkt. Nieuw bestand erbij? Draai dan ook: node websapl/tools/build_manifest.js` : `Niets te doen: alle ${ENTRIES.length} kopieën zijn al gelijk.`);
-  if (errors || sandbox) process.exit(1);
+  if (errors || sandbox || r2w) process.exit(1);
 }
 
 main();
