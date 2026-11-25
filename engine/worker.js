@@ -1878,7 +1878,10 @@ async function r2wLoad() {
 // cps: de voortzettingsvorm (eigen stack in het geheugen van de module, doel *.k.wasm):
 // loopt niet vast op de stack van de browser, maar is trager (in Safari veel); kan dus
 // gewoon in de worker draaien. Een te diep programma geeft ownStackFull (EigenStackVol).
-async function compileWasm(source, srcPath, stdinText, strictness, compileOnly = false, cps = false, runs = 1) {
+// tramp: dezelfde eigen stack, maar met een trampoline in plaats van staartsprongen (doel
+// *.t.wasm): in Safari (JavaScriptCore) ~2× sneller, in Chrome en Firefox 3-7× trager
+// (experiments/sapl2c/wasm/r2w/trampoline/README.md).
+async function compileWasm(source, srcPath, stdinText, strictness, compileOnly = false, cps = false, runs = 1, tramp = false) {
   if (!isInitialized) throw new Error("JMVM engine is not initialized.");
   const rt = await r2wLoad();
   const ms = {};
@@ -1893,7 +1896,7 @@ async function compileWasm(source, srcPath, stdinText, strictness, compileOnly =
   // 2. de generator: retag -> .wasm + .json
   t = performance.now();
   const uit = [];
-  const doel = cps ? "/uit.k.wasm" : "/uit.wasm";
+  const doel = tramp ? "/uit.t.wasm" : cps ? "/uit.k.wasm" : "/uit.wasm";
   const invoer = "/in.retag.txt\n" + doel + "\n/uit.json\n";
   let ip = 0;
   const vm = await createJMVMModule({
@@ -1975,7 +1978,7 @@ self.onmessage = async function (e) {
 
     case "COMPILE_WASM":
       try {
-        const result = await compileWasm(msg.source, msg.path, msg.stdin || "", msg.strictness !== false, !!msg.compileOnly, !!msg.cps, msg.runs || 1);
+        const result = await compileWasm(msg.source, msg.path, msg.stdin || "", msg.strictness !== false, !!msg.compileOnly, !!msg.cps, msg.runs || 1, !!msg.tramp);
         postMessage({ type: "WASM_COMPLETE", id: msg.id, ...result });
       } catch (err) {
         postMessage({ type: "WASM_COMPLETE", id: msg.id, success: false, stage: "worker", message: err.message, ms: {} });

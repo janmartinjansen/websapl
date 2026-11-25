@@ -4,7 +4,9 @@
 // Firefox en Chrome kunnen headless (HEADLESS=1); Safari alleen met het scherm open (anders
 // remt Safari het tabblad af), en het tabblad blijft daarna open.
 //
-//   node websapl/tools/sapl2wasm_browsers_test.js <firefox|safari|chrome>   (vanuit de repo-root)
+//   node websapl/tools/sapl2wasm_browsers_test.js <firefox|safari|chrome> [auto|tail|tramp]   (vanuit de repo-root)
+// Het tweede argument kiest de vorm van de derde kolom (?eigen=; standaard auto: de trampoline
+// in Safari, staartsprongen in de rest). Elke vorm moet 13 van 13 halen.
 const http = require("http");
 const { spawn } = require("child_process");
 const fs = require("fs");
@@ -12,6 +14,7 @@ const os = require("os");
 const path = require("path");
 
 const welke = process.argv[2];
+const vorm = process.argv[3] || "auto";
 if (!["firefox", "safari", "chrome"].includes(welke)) { console.error("gebruik: node sapl2wasm_browsers_test.js <firefox|safari|chrome>"); process.exit(2); }
 const root = path.resolve(__dirname, "..");
 const TYPE = { ".html": "text/html", ".js": "text/javascript", ".wasm": "application/wasm", ".json": "application/json", ".cfp": "text/plain", ".jvb": "application/octet-stream", ".css": "text/css", ".spp": "text/plain" };
@@ -26,6 +29,8 @@ const srv = http.createServer((req, res) => {
       res.end("ok");
       const r = JSON.parse(body);
       console.log(r.userAgent);
+      const vormen = [...new Set(r.rijen.map((x) => x.eigen.vorm + (x.eigen.auto ? " (automatisch)" : "")))];
+      console.log("eigen stack via: " + vormen.join(", "));
       let fail = 0, door = 0;
       let doorE = 0;
       const f = (x) => (x.ok ? `${x.ms} ms (${(r0.jmvm / Math.max(1, x.ms)).toFixed(1)}×)${x.same ? "" : " ANDERE UITVOER"}` : x.stack ? "stack" : `fout (${x.stage})`);
@@ -35,9 +40,8 @@ const srv = http.createServer((req, res) => {
         const d = x.direct, e = x.eigen;
         if (d.ok && d.same) door++;
         if (e.ok && e.same) doorE++;
-        // direct: dezelfde uitvoer of de stackmelding; eigen stack: dezelfde uitvoer of (alleen
-        // als de eigen stack vol is) die melding
-        const ok = ((d.ok && d.same) || d.stack) && ((e.ok && e.same) || e.stack);
+        // direct: dezelfde uitvoer of de stackmelding; eigen stack: altijd dezelfde uitvoer
+        const ok = ((d.ok && d.same) || d.stack) && e.ok && e.same;
         if (!ok) fail = 1;
         console.log(`${ok ? "ok  " : "FOUT"}  ${x.naam.padEnd(10)} JMVM ${x.jmvm} ms · direct ${f(d)} · eigen stack ${f(e)}`);
       }
@@ -53,7 +57,7 @@ const srv = http.createServer((req, res) => {
   fs.createReadStream(p).pipe(res);
 });
 srv.listen(0, "127.0.0.1", () => {
-  const url = `http://127.0.0.1:${srv.address().port}/sapl2wasm.html?alles=1&rapport=/rapport`;
+  const url = `http://127.0.0.1:${srv.address().port}/sapl2wasm.html?alles=1&rapport=/rapport&eigen=${vorm}`;
   console.error(`pagina: ${url}`);
   const headless = !!process.env.HEADLESS;
   if (welke === "firefox") {

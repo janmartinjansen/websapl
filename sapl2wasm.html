@@ -79,6 +79,8 @@
     .col { background: var(--bg-card); border: 1px solid var(--border); border-top: 3px solid var(--c); border-radius: 10px; padding: 14px 16px; min-width: 0; }
     .col h2 { margin: 0 0 2px; font-size: 16px; }
     .col .sub { margin: 0 0 10px; color: var(--text-2); font-size: 13px; }
+    .vorm { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 6px; font-size: 13px; }
+    .vorm select { min-block-size: 30px; font-size: 13px; padding: 2px 6px; }
     .times { display: grid; grid-template-columns: auto 1fr; gap: 2px 14px; font-size: 13.5px; margin: 0 0 10px; }
     .times dt { color: var(--text-2); }
     .times dd { margin: 0; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
@@ -152,6 +154,15 @@
       <section class="col" style="--c: var(--amber);" aria-labelledby="h-r2wk">
         <h2 id="h-r2wk">retag2wasm, own stack</h2>
         <p class="sub">the same, with its own stack in memory (continuation-passing style)</p>
+        <div class="vorm">
+          <label for="vorm">Calls via</label>
+          <select id="vorm">
+            <option value="auto">Automatic (best for this browser)</option>
+            <option value="tail">Tail calls (return_call)</option>
+            <option value="tramp">A trampoline loop</option>
+          </select>
+        </div>
+        <p class="sub" id="vorm-uitleg"></p>
         <div class="msg" id="msg-r2wk" hidden></div>
         <dl class="times" id="t-r2wk"></dl>
         <pre class="out" id="out-r2wk"></pre>
@@ -170,7 +181,11 @@
           stop there with a message.</li>
         <li>The right column turns every call that is not a tail call into a continuation on its own stack (2 million
           cells) and returns through it, so the browser's stack never grows. That always fits, but costs something:
-          little in Chrome, more in Firefox, and in Safari it can be slower than the JMVM itself.</li>
+          little in Chrome, more in Firefox. Safari pays about 7× more for every tail call than for an ordinary call,
+          so there the column uses a trampoline instead: every function returns the next one, and a loop calls it.
+          That is about twice as fast in Safari, and 3–7× slower in Chrome and Firefox. <b>Automatic</b> picks the
+          trampoline for Safari and every browser on iPhone or iPad (they all use Safari's engine); the menu above
+          the column lets you choose yourself, to see the difference.</li>
         <li>Not yet supported by <code>retag2wasm</code>: <code>try</code>/<code>catch</code> and floating-point
           literals. The JMVM column runs them as usual.</li>
         <li>More background: the <a href="factsheets/wasm_backends_factsheet.html">WebAssembly backends factsheet</a>.</li>
@@ -219,6 +234,19 @@
         const res = await fetch("engine/r2w/rt.wasm?v=" + Date.now());
         rtPage = { create: maak_rt, module: await WebAssembly.compile(await res.arrayBuffer()) };
         return rtPage;
+      }
+
+      // de vorm van de derde kolom: automatisch de trampoline voor JavaScriptCore (Safari, en elke
+      // browser op iOS/iPadOS), anders staartsprongen; ?eigen=auto|tail|tramp of het menu kiest zelf
+      const ua = navigator.userAgent;
+      const isJSC = /iPad|iPhone|iPod/.test(ua) || (/AppleWebKit/.test(ua) && !/Chrome|Chromium|Edg|OPR|Firefox/.test(ua));
+      const vormSel = $("vorm");
+      const VORM_UITLEG = { tail: "every call and return is a tail call (return_call)", tramp: "every function returns the next one; a loop calls it (no tail calls)" };
+      function vormNu() { return vormSel.value === "auto" ? (isJSC ? "tramp" : "tail") : vormSel.value; }
+      function toonVorm() {
+        const v = vormNu();
+        $("vorm-uitleg").textContent = (vormSel.value === "auto" ? `Automatic chose ${v === "tramp" ? "the trampoline" : "tail calls"}${isJSC ? " (Safari's engine)" : ""}: ` : "") + VORM_UITLEG[v] + ".";
+        $("h-r2wk").textContent = "retag2wasm, own stack" + (v === "tramp" ? " (trampoline)" : "");
       }
 
       const RUNS = 3;   // beste van 3, aan beide kanten (warm meten; de eerste run is koud)
@@ -321,14 +349,26 @@
           else bericht($("msg-r2w"), "err", `${w.stage}: ${w.message}`);
         }
 
-        // 3. retag2wasm met eigen stack: in de worker (gebruikt de stack van de engine niet)
-        status.textContent = `Compiling with its own stack and running (${RUNS}×)…`;
-        const k = await wR2w.call({ type: "COMPILE_WASM", source: bron, path: pad, cps: true, runs: RUNS }, "WASM_COMPLETE");
+        vorige = { bron, pad, jmvmRun, jmvmRes, jmvmOut, w, t };
+        await eigenKolom();
+        status.textContent = "Done.";
+        runBtn.disabled = false;
+      }
+
+      // 3. retag2wasm met eigen stack: in de worker (gebruikt de stack van de engine niet); los
+      // opnieuw te draaien als het menu verandert
+      let vorige = null;
+      async function eigenKolom() {
+        const { bron, pad, jmvmRun, jmvmRes, jmvmOut, w, t } = vorige;
+        const vorm = vormNu();
+        $("msg-r2wk").hidden = true; $("dl-r2wk").hidden = true; $("out-r2wk").textContent = ""; $("t-r2wk").innerHTML = "";
+        status.textContent = `Compiling with its own stack (${vorm === "tramp" ? "trampoline" : "tail calls"}) and running (${RUNS}×)…`;
+        const k = await wR2w.call({ type: "COMPILE_WASM", source: bron, path: pad, cps: true, tramp: vorm === "tramp", runs: RUNS }, "WASM_COMPLETE");
         const tk = k.ms || {};
         times($("t-r2wk"), [["gen1 → Retag", ms(tk.gen1)], ["retag2wasm → .wasm", ms(tk.generator) + (k.wasmSize ? "  (" + (k.wasmSize / 1024).toFixed(1) + " KB)" : "")],
                             ["WebAssembly.compile", ms(tk.compile)], [`run (best of ${RUNS})`, ms(tk.run), true]]);
         $("out-r2wk").textContent = (k.output || "").trimEnd() + (k.stderr ? "\n" + k.stderr : "");
-        download("r2wk", k.wasm, ".k.wasm");
+        download("r2wk", k.wasm, vorm === "tramp" ? ".t.wasm" : ".k.wasm");
         if (!k.success) {
           if (k.ownStackFull) bericht($("msg-r2wk"), "note", `The program's own stack is full (2 million cells; stopped after ${tk.run} ms).`);
           else if (k.stage === "generator") bericht($("msg-r2wk"), "note", "retag2wasm does not support this program yet: " + (k.message || "").split("\n")[0]);
@@ -338,7 +378,7 @@
         // 4. het verschil
         const kol = (x, tijd) => ({ ok: !!x.success, ms: x.success ? tijd : null, same: !!x.success && norm(jmvmOut) === norm(x.output),
                                     res: x.res || null, stack: !!(x.stackOverflow || x.ownStackFull), stage: x.stage || null });
-        laatste = { naam: sel.value, jmvm: jmvmRun, direct: kol(w, t.run), eigen: kol(k, tk.run) };
+        laatste = { naam: sel.value, jmvm: jmvmRun, direct: kol(w, t.run), eigen: { ...kol(k, tk.run), vorm, auto: vormSel.value === "auto" } };
         $("verdict").innerHTML = "";
         if (jmvmRun) {
           const zin = (x, wie) => {
@@ -346,20 +386,26 @@
             return f >= 1 ? `${wie} runs ${f.toFixed(1)}× faster than the JMVM` : `the JMVM is ${(1 / f).toFixed(1)}× faster than ${wie}`;
           };
           const d = laatste.direct, e = laatste.eigen;
-          const eerste = d.ok ? zin(d, "retag2wasm") : e.ok ? zin(e, "retag2wasm with its own stack") : "retag2wasm could not run this program";
+          const eigenNaam = vorm === "tramp" ? "own stack (trampoline)" : "own stack";
+          const eerste = d.ok ? zin(d, "retag2wasm") : e.ok ? zin(e, "retag2wasm with its " + eigenNaam) : "retag2wasm could not run this program";
           $("verdict").append(document.createTextNode(eerste));
-          if (d.ok && e.ok) { const s2 = document.createElement("span"); s2.className = "second"; s2.textContent = "with its own stack: " + zin(e, "it").replace(/^it runs /, ""); $("verdict").append(s2); }
+          if (d.ok && e.ok) { const s2 = document.createElement("span"); s2.className = "second"; s2.textContent = "with its " + eigenNaam + ": " + zin(e, "it").replace(/^it runs /, ""); $("verdict").append(s2); }
           const delen = [`JMVM ${jmvmRun} ms`, d.ok ? `direct ${d.ms} ms` : "direct: " + (d.stack ? "stack too small" : "not run"),
-                         e.ok ? `own stack ${e.ms} ms` : "own stack: " + (e.stack ? "stack full" : "not run")];
+                         e.ok ? `${eigenNaam} ${e.ms} ms` : eigenNaam + ": " + (e.stack ? "stack full" : "not run")];
           const oks = [d, e].filter((x) => x.ok);
           const s = document.createElement("small");
           s.textContent = delen.join(" · ") + ` (best of ${RUNS}) · ` +
             (oks.every((x) => x.same) ? (oks.length ? `same output, res: ${oks[0].res}` : "") : `DIFFERENT output (JMVM res: ${(jmvmRes || "").trim()})`);
           $("verdict").append(s);
         }
-        status.textContent = "Done.";
-        runBtn.disabled = false;
       }
+      vormSel.addEventListener("change", async () => {
+        toonVorm();
+        const u = new URL(location.href);
+        if (vormSel.value === "auto") u.searchParams.delete("eigen"); else u.searchParams.set("eigen", vormSel.value);
+        history.replaceState(null, "", u);
+        if (vorige && !runBtn.disabled) { runBtn.disabled = true; vormSel.disabled = true; await eigenKolom(); status.textContent = "Done."; runBtn.disabled = false; vormSel.disabled = false; }
+      });
 
       // laatste: de uitkomst van de laatste run, voor de toetsen (window.sapl2wasmLaatste)
       let laatste = null;
@@ -377,6 +423,8 @@
       // ?example=naam kiest een voorbeeld, &run=1 draait het meteen
       const q = new URLSearchParams(location.search);
       const start = EXAMPLES.includes(q.get("example")) ? q.get("example") : "fib";
+      if (["auto", "tail", "tramp"].includes(q.get("eigen"))) vormSel.value = q.get("eigen");
+      toonVorm();
       sel.value = start;
       Promise.all([laad(start), wJmvm.klaar, wR2w.klaar]).then(() => {
         status.textContent = "Ready.";
