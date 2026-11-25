@@ -121,6 +121,7 @@ D.table ["Step, per cell", "Runs where", "Written in"]
 // <p><em>A Portable VM-based Implementation Platform for Non-strict Functional Programming Languages</em></p>
 // <ul>
 // <li>A small VM for lazy functional languages: the <b>JMVM</b>, about <b>1,500 lines of C</b></li>
+// <li><b>Pointer tagging</b>, not separate stacks: numbers and pointers share <b>one stack</b> (no A- and B-stack as in ABC)</li>
 // <li>A small core language, <b>Sapl</b>, with a compiler of about <b>1,000 lines of Amanda</b></li>
 // <li>Runs in the <b>browser</b>, and stays within a <b>factor of 5</b> of Clean and Haskell</li>
 // </ul>
