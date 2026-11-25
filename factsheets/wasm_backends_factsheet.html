@@ -502,6 +502,63 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     *Note: <code>r2w / native</code> in Node (1.61&times;) and Safari (1.64&times;) was measured before moving <code>ap1_slow</code>/<code>apply_n</code> and string helpers into the program module (which improved Node <code>r2w / emcc</code> from 1.18&times; to 1.13&times;).
   </p>
 
+  <h3>Averages Relative to Native <code>sapl2c</code> (25 Nov)</h3>
+  <p>
+    Every form measured on the same machine on 25 November. The table shows the geometric mean of the run time
+    divided by native <code>sapl2c</code> (<code>clang -O2</code>, best of 5 with the program&rsquo;s own timer). The
+    programs are the 13 benchmarks plus <code>gen1</code>. Lower is better; 1.00 is native speed.
+  </p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Form</th><th class="num">Chrome 157</th><th class="num">Firefox 160</th><th class="num">Safari 26.6</th><th>Runs</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>jmvm.wasm</code> (interpreter)</td><td class="num">4.70&times;</td><td class="num">10.9&times;</td><td class="num">6.44&times;</td><td>14/14</td></tr>
+        <tr><td><code>retag2wasm</code> direct (browser stack)</td><td class="num good">1.70&times;</td><td class="num good">2.23&times;</td><td class="num good">1.66&times;</td><td>9/14 Chrome &amp; Firefox, 11/14 Safari; <code>gen1</code> never</td></tr>
+        <tr><td><code>retag2wasm</code> own stack, tail calls</td><td class="num good">1.70&times;</td><td class="num">4.12&times;</td><td class="num bad">6.45&times;</td><td>14/14</td></tr>
+        <tr><td><code>retag2wasm</code> own stack, trampoline</td><td class="num bad">9.69&times;</td><td class="num bad">11.4&times;</td><td class="num">3.19&times;</td><td>14/14</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="caption">
+    Source of the numbers:
+    <ul>
+      <li>the 13 benchmarks were timed on the demo page <code>sapl2wasm.html</code> (best of 3, own stack in a worker);</li>
+      <li><code>gen1</code> was timed with <code>experiments/sapl2c/wasm/r2w/trampoline/meet_browser.js</code> (best of 5);</li>
+      <li>the Firefox trampoline was timed with the same script.</li>
+    </ul>
+    <p>The JMVM time for <code>gen1</code> dates from 20 November. The direct form is averaged only over the programs
+    that fit on the stack, which are the shallower ones, so it flatters that form somewhat. The automatic choice of
+    the demo: tail calls in Chrome (1.70&times;) and Firefox (4.12&times;), the trampoline in Safari
+    (3.19&times;, against 6.44&times; for the JMVM).</p>
+  </div>
+
+  <h3><code>gen1</code> Compiling Itself (25 Nov)</h3>
+  <p>
+    <code>gen1</code> is the deepest program: ~0.7&ndash;1.3 million calls deep. The direct forms
+    (<code>sapl2c</code> via Emscripten and <code>retag2wasm</code>) overflow the browser stack in every browser.
+    Run time in ms; both own-stack forms produce <code>saplcomp.jmvm</code> byte for byte. Native <code>sapl2c</code>
+    takes 215 ms.
+  </p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Form</th><th class="num">Chrome 157</th><th class="num">Firefox 160</th><th class="num">Safari 26.6</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>jmvm.wasm</code> (20 Nov)</td><td class="num">788</td><td class="num">1,141</td><td class="num">793</td></tr>
+        <tr><td><code>retag2wasm</code> with JSPI segments (20 Nov)</td><td class="num">339</td><td class="num bad">4,700</td><td class="num bad">no JSPI</td></tr>
+        <tr><td><code>retag2wasm</code> own stack, tail calls</td><td class="num good">380</td><td class="num good">694</td><td class="num bad">993</td></tr>
+        <tr><td><code>retag2wasm</code> own stack, trampoline</td><td class="num bad">1,507</td><td class="num bad">1,914</td><td class="num good">541</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="caption">
+    The own-stack forms ran with a runtime of 16M heap cells and an 8M-cell own stack (the demo&rsquo;s runtime has 8M and 2M).
+    For comparison, in Node: tail calls 528 ms, trampoline 1,496 ms.
+  </p>
+
   <h3>Multivalue Return, Cold Start &amp; Memory Footprint</h3>
   <p>
     Returning <code>{val, hp}</code> as two Wasm values (<code>-mmultivalue</code>) instead of writing through memory
