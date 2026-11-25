@@ -511,13 +511,13 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
   <div class="table-wrap">
     <table>
       <thead>
-        <tr><th>Form</th><th class="num">Chrome 157</th><th class="num">Firefox 160</th><th class="num">Safari 26.6</th><th>Runs</th></tr>
+        <tr><th>Form</th><th class="num">Node 26</th><th class="num">Chrome 157</th><th class="num">Firefox 160</th><th class="num">Safari 26.6</th><th>Runs</th></tr>
       </thead>
       <tbody>
-        <tr><td><code>jmvm.wasm</code> (interpreter)</td><td class="num">4.70&times;</td><td class="num">10.9&times;</td><td class="num">6.44&times;</td><td>14/14</td></tr>
-        <tr><td><code>retag2wasm</code> direct (browser stack)</td><td class="num good">1.70&times;</td><td class="num good">2.23&times;</td><td class="num good">1.66&times;</td><td>9/14 Chrome &amp; Firefox, 11/14 Safari; <code>gen1</code> never</td></tr>
-        <tr><td><code>retag2wasm</code> own stack, tail calls</td><td class="num good">1.70&times;</td><td class="num">4.12&times;</td><td class="num bad">6.45&times;</td><td>14/14</td></tr>
-        <tr><td><code>retag2wasm</code> own stack, trampoline</td><td class="num bad">9.69&times;</td><td class="num bad">11.4&times;</td><td class="num">3.19&times;</td><td>14/14</td></tr>
+        <tr><td><code>jmvm.wasm</code> (interpreter)</td><td class="num">&ndash;</td><td class="num">4.70&times;</td><td class="num">10.9&times;</td><td class="num">6.44&times;</td><td>14/14</td></tr>
+        <tr><td><code>retag2wasm</code> direct (browser stack)</td><td class="num">&ndash;</td><td class="num good">1.70&times;</td><td class="num good">2.23&times;</td><td class="num good">1.66&times;</td><td>9/14 Chrome &amp; Firefox, 11/14 Safari; <code>gen1</code> never</td></tr>
+        <tr><td><code>retag2wasm</code> own stack, tail calls</td><td class="num good">1.53&times;</td><td class="num good">1.70&times;</td><td class="num">4.12&times;</td><td class="num bad">6.45&times;</td><td>14/14</td></tr>
+        <tr><td><code>retag2wasm</code> own stack, trampoline</td><td class="num bad">8.66&times;</td><td class="num bad">9.69&times;</td><td class="num bad">11.4&times;</td><td class="num">3.19&times;</td><td>14/14</td></tr>
       </tbody>
     </table>
   </div>
@@ -528,10 +528,28 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
       <li><code>gen1</code> was timed with <code>experiments/sapl2c/wasm/r2w/trampoline/meet_browser.js</code> (best of 5);</li>
       <li>the Firefox trampoline was timed with the same script.</li>
     </ul>
+    <p>Node 26 (V8) was measured warm: best of 5 after 3 warm-up runs, one compiled module per program. Per
+    program the own stack ranges there from 0.62&times; (<code>twice</code>, faster than native) to 3.5&times;
+    (<code>fib</code>), with <code>gen1</code> at 1.6&times;. On 20 November the direct form in Node, with a large
+    stack, came out at about the same speed (1.13&times; Emscripten, which is 1.35&times; native).
+    Node was not measured for the JMVM and the direct form.</p>
     <p>The JMVM time for <code>gen1</code> dates from 20 November. The direct form is averaged only over the programs
     that fit on the stack, which are the shallower ones, so it flatters that form somewhat. The automatic choice of
     the demo: tail calls in Chrome (1.70&times;) and Firefox (4.12&times;), the trampoline in Safari
     (3.19&times;, against 6.44&times; for the JMVM).</p>
+  </div>
+
+  <div class="callout amber">
+    <strong>Wasm on both server and client?</strong> In Node the own stack runs at 1.53&times; native. That is the
+    price of using one <code>.wasm</code> artefact on both sides instead of native <code>sapl2c</code> on the server.
+    In return you get:
+    <ul>
+      <li>the same file on every platform Node runs on;</li>
+      <li>no clang on the server, and compiling inside the process (<code>retag2wasm</code> is itself wasm);</li>
+      <li>the module as a sandbox.</li>
+    </ul>
+    Limits: a fixed heap per module, at most 4&nbsp;GB (<code>wasm32</code>), and no <code>try</code>/<code>catch</code>
+    or float literals in <code>retag2wasm</code> yet. Not measured: Deno, Bun, Windows.
   </div>
 
   <h3><code>gen1</code> Compiling Itself (25 Nov)</h3>
@@ -556,7 +574,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
   </div>
   <p class="caption">
     The own-stack forms ran with a runtime of 16M heap cells and an 8M-cell own stack (the demo&rsquo;s runtime has 8M and 2M).
-    For comparison, in Node: tail calls 528 ms, trampoline 1,496 ms.
+    For comparison, in Node (warm, best of 5): tail calls 344 ms, trampoline 1,401 ms.
   </p>
 
   <h3>Multivalue Return, Cold Start &amp; Memory Footprint</h3>
