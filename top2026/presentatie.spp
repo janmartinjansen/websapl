@@ -643,9 +643,10 @@ D.table ["Apple M4, native", "Mean", "Time ratio (lower = faster)"]
 // - **Via C (Emscripten)**: **4× faster than the JMVM** in wasm, **3–8× faster than the best ABC interpreter** (Chrome, Firefox, Safari); within **1.35×** of native, no warm-up, less memory.
 // - **Retag straight to wasm (`retag2wasm`)**: **~1,000 lines of Sapl**, no C or clang — compiles **inside the browser itself**, at **~3.3× faster than the JMVM** (1.15–1.3× of Emscripten).
 // - **The catch**: deep recursion hits the ~1 MB browser stack (**3–6 of 14 programs stop**, the compiler among them).
-//   With an **explicit stack** all 14 run, in Chrome on average no slower; in Safari we fall back to the JMVM.
+//   With an **own stack** in memory all programs run: in Chrome and Firefox **~2.8× faster than the JMVM**.
+// - **Safari**: every tail call costs **~7× an ordinary call** there, so it gets a **trampoline** instead: **1.4–3.2× faster than the JMVM**.
 //
-// <p class="hint">Experiments of 20 November; warm. Full details, stack remedies &amp; Clean/iTasks trade-offs: <a href="factsheets/wasm_backends_factsheet.html" target="_blank">the WebAssembly factsheet</a>.</p>
+// <p class="hint"><b>Live demo</b>: <a href="sapl2wasm.html" target="_blank">sapl2wasm.html</a> compiles in the tab and runs the JMVM and both wasm forms side by side (the form per browser can be overridden) · warm, Apple M4 · details: <a href="factsheets/wasm_backends_factsheet.html" target="_blank">the WebAssembly factsheet</a>.</p>
 //%% [markdown]
 // ## What could this mean for Clean?
 //
@@ -666,7 +667,7 @@ D.table ["Apple M4, native", "Mean", "Time ratio (lower = faster)"]
 //
 // - A real **iTasks** application: speed, and **compile time**.
 // - **Boxed arrays**, records, `ccall`, dynamics (unboxed `{#Int}` arrays work since 24 Nov).
-// - Compiled wasm in a **real page**, with the stack fallback, and graph compatibility with the ABC interpreter.
+// - Compiled wasm in a **real application** (the demo page exists), and graph compatibility with the ABC interpreter.
 // - A real **iPad**; Windows.
 //%% [markdown]
 // ## A proposal
