@@ -1,0 +1,226 @@
+// lib/top.spp -- de TOP-kern: taken als data (trede 0, 27 november 2026).
+// Ontwerp: docs/2026-11-27_top_from_scratch_ontwerp.md (B2, §6).
+//
+// Een taak is een waarde van het type Taak: de structuur is data, zodat je de
+// stand kunt bekijken, bewaren (pack) en overdragen. Evaluatie is een pure
+// `stap` van een gebeurtenis en een taak naar een nieuwe taak; de waarde
+// (`waardeVan`) en de weergave (`ui`, een D.Display) volgen uit de taak.
+//
+//   import "lib/top.spp" as Top
+//   ::Klant = { !naam : String, !leeftijd : Int }
+//   t = Top.begin (Top.vulIn "Klant" (Klant "" 0))     -- waarde Geen
+//   t2 = Top.stap (Top.Invoer "0" "naam" "Ada") t      -- Instabiel (Klant "Ada" 0)
+//   t3 = Top.stap (Top.Actie "0" "Klaar") t2           -- Stabiel (Klant "Ada" 0)
+//   Top.cel (Top.vulIn "Klant" (Klant "" 0))           -- als interactieve notebookcel
+//
+// Trede 0 kent alleen Bewerk en Constant; Stap en Parallel volgen in trede 1.
+//
+// Taak-id's zijn paden in de boom: de wortel is "0", kinderen worden "0/1",
+// "0/2", ... (`begin` en `nummer` delen ze uit; een bouwer laat ze leeg).
+// Een gebeurtenis noemt het id van de taak waarvoor ze bedoeld is.
+//
+// Waar komt Stabiel vandaan? In iTasks en Toppyt is de waarde van een editor
+// nooit vanzelf stabiel; dat doet een step met een actie. Zolang er geen Stap
+// is (trede 0), heeft Bewerk één eigen actie, "Klaar": die maakt een
+// Instabiel x tot Stabiel x en sluit de editor. In trede 1 wordt dat
+// gewoon een Stap met de actie Klaar.
+module Top
+import "lib/list.spp" as L
+import "lib/text.spp" as T
+import "lib/shape.spp" as Sh
+import "lib/display.spp" as D
+
+::list = Nil | Cons !x xs
+
+// == Waarden, taken en gebeurtenissen =========================================
+
+// De waarneembare waarde van een taak. Fout: de taak is mislukt (nog niet
+// gebruikt in trede 0; ongeldige invoer is een melding, geen Fout).
+::Waarde = Geen | Instabiel x | Stabiel x | Fout !msg
+
+// Bewerk id label waarde sjabloon melding: een editor. sjabloon is de waarde
+// waarvan het formulier uitgaat zolang er geen waarde is (vulIn); melding is
+// "" of wat er mis was met de laatste invoer.
+::Taak = Bewerk !id !label waarde sjabloon !melding
+       | Constant x
+
+// Invoer id veld tekst: een veld van een formulier (veld "" is de hele
+// waarde, zoals bij Sh.input). Actie id label: een knop.
+::Gebeurtenis = Invoer !id !veld !tekst | Actie !id !label
+
+// == Bouwers ==================================================================
+
+// Een editor zonder waarde: het formulier begint bij het sjabloon.
+vulIn label sjabloon = Bewerk "" label Geen sjabloon ""
+
+// Een editor met een beginwaarde.
+bewerk label v = Bewerk "" label (Instabiel v) v ""
+
+constant x = Constant x
+
+// == Taak-id's ================================================================
+
+begin t = nummer "0" t
+
+nummer pad t =
+  case t
+    (Bewerk id l w s m -> Bewerk pad l w s m)
+    (Constant x -> t)
+
+taakId t =
+  case t
+    (Bewerk id l w s m -> id)
+    (Constant x -> "")
+
+// De id's van alle editors, in volgorde.
+bewerkIds t =
+  case t
+    (Bewerk id l w s m -> [id])
+    (Constant x -> Nil)
+
+// == De waarde ================================================================
+
+waardeVan t =
+  case t
+    (Bewerk id l w s m -> w)
+    (Constant x -> Stabiel x)
+
+meldingVan t =
+  case t
+    (Bewerk id l w s m -> m)
+    (Constant x -> "")
+
+heeftWaarde w = case w (Instabiel x -> True) (Stabiel x -> True) (_ -> False)
+
+isStabiel w = case w (Stabiel x -> True) (_ -> False)
+
+// == Evaluatie: stap ==========================================================
+
+// Een gebeurtenis voor een andere taak, of die de taak niet kent, laat de
+// taak zoals hij is.
+stap ev t =
+  case t
+    (Bewerk id l w s m -> stapBewerk ev id l w s t)
+    (Constant x -> t)
+
+stapBewerk ev id l w s t =
+  case ev
+    (Invoer i veld tekst -> if (T.equal i id) (invoerBewerk id l w s veld tekst t) t)
+    (Actie i a -> if (T.equal i id) (actieBewerk id l w s a t) t)
+
+// Na Klaar is de editor gesloten: invoer verandert niets meer.
+invoerBewerk id l w s veld tekst t =
+  if (isStabiel w) t
+  (case (probeerInvoer veld tekst (huidig w s))
+    (Gelukt v -> Bewerk id l (Instabiel v) s "")
+    (Mislukt msg -> Bewerk id l w s msg))
+
+actieBewerk id l w s a t =
+  if (T.equal a klaar)
+    (case w
+      (Instabiel x -> Bewerk id l (Stabiel x) s "")
+      (Geen -> Bewerk id l w s "nog geen waarde")
+      (_ -> t))
+    t
+
+klaar = "Klaar"
+
+// De waarde waar het formulier van uitgaat.
+huidig w s = case w (Instabiel x -> x) (Stabiel x -> x) (_ -> s)
+
+// Sh.input geeft een fout bij ongeldige invoer (een Int-veld met "abc"); die
+// vangen we, en de waarde blijft wat ze was.
+::Poging = Gelukt v | Mislukt !msg
+
+probeerInvoer veld tekst v = try (gelukt (Sh.input veld tekst v)) mislukt
+
+gelukt !v = Gelukt v
+
+mislukt msg = Mislukt msg
+
+// == Weergave =================================================================
+
+// De UI van een taak als D.Display. Een editor toont zijn label, het
+// formulier (D.form van de waarde, of van het sjabloon zolang er geen waarde
+// is), een melding en de beschikbare acties.
+ui t =
+  case t
+    (Bewerk id l w s m -> uiBewerk l w s m)
+    (Constant x -> D.column Nil)
+
+uiBewerk l w s m =
+  case w
+    (Geen -> D.column (L.append [kop l " *(vul in)*", D.form s] (uiMelding m)))
+    (Instabiel x -> D.column (L.append [kop l "", D.form x] (L.append (uiMelding m) [uiActies [klaar]])))
+    (Stabiel x -> D.column [kop l " ✓", D.text (toon x)])
+    (Fout msg -> D.column [kop l "", D.markdown (T.concat ["❌ *", msg, "*"])])
+
+kop l extra = D.markdown (T.concat ["**", l, "**", extra])
+
+uiMelding m = if (T.isEmpty m) Nil [D.markdown (T.concat ["⚠️ *", m, "*"])]
+
+// Acties als keuzelijst (de notebook heeft geen knoppen): kiezen geeft
+// D.Input "" <label>.
+uiActies as = D.choice (Cons kiesActie as) kiesActie
+
+kiesActie = "(kies een actie)"
+
+toon x = Sh.showAs (Sh.ofValue x) x
+
+toonWaarde w =
+  case w
+    (Geen -> "Geen")
+    (Instabiel x -> T.concat ["Instabiel (", toon x, ")"])
+    (Stabiel x -> T.concat ["Stabiel (", toon x, ")"])
+    (Fout msg -> T.concat ["Fout (", msg, ")"])
+
+// == Als interactieve notebookcel =============================================
+
+// Een taak als D.interactive: invoer in het formulier en de keuze van een
+// actie worden gebeurtenissen voor de eerste editor. (Het formulier van de
+// pagina zegt niet uit welk formulier een invoer komt; met meer editors in
+// één cel, vanaf trede 1, moet dat erbij.)
+cel t = D.interactive (begin t) celStap celBeeld
+
+celStap ev t =
+  case ev
+    (D.Input veld s -> celInvoer veld s t (eersteBewerk t))
+    (_ -> t)
+
+celInvoer veld s t id =
+  if (T.isEmpty veld /\ T.equal s kiesActie) t
+  (if (T.isEmpty veld /\ T.equal s klaar) (stap (Actie id s) t)
+  (stap (Invoer id veld s) t))
+
+eersteBewerk t = case (bewerkIds t) (Cons id rest -> id) (Nil -> "")
+
+celBeeld t = D.column [ui t, D.markdown (T.concat ["*Waarde:* `", toonWaarde (waardeVan t), "`"])]
+
+// == Structurele gelijkheid ===================================================
+
+// gelijk a b: dezelfde waarde, op elk type zonder functies erin. `==` op een
+// ADT vergelijkt pointers, en `pack` alleen niet genoeg: dat bewaart nog niet
+// uitgerekende delen als toepassing (`T list__append ...`), zodat twee gelijke
+// waarden verschillend kunnen inpakken. Daarom eerst alles uitrekenen.
+gelijk a b = T.equal (pack (diep a)) (pack (diep b))
+
+// diep v: rekent v helemaal uit (elk veld van elke constructor) en geeft v
+// terug. getField rekent een veld uit en zet de waarde op zijn plek.
+// Let op: op een cyclische waarde (een lijst die naar zichzelf verwijst)
+// komt diep niet terug; pack kan dat wel.
+diep !v = if (typeId v > 4) (diepVelden v 0 (ariteit v)) v
+
+diepVelden v !i !n = if (i >= n) v (diepEen (diep (getField v i)) v i n)
+
+diepEen !x v !i !n = diepVelden v (i + 1) n
+
+// Het aantal velden van de constructor van v, uit de metadata van de VM
+// ("Naam\tCon\tariteit\t...", vm/meta.h).
+ariteit v = ariteitIn (constrName v) (T.split '\t' (lookup (T.append "@meta:type:" (T.showInt (typeId v)))))
+
+ariteitIn c info = case info (Cons tn rest -> ariteitVan c rest) (Nil -> 0)
+
+ariteitVan c xs =
+  case xs
+    (Cons n r -> case r (Cons a r2 -> if (T.equal n c) (T.readInt a) (ariteitVan c r2)) (Nil -> 0))
+    (Nil -> 0)

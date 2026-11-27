@@ -1,0 +1,31 @@
+//%% [markdown]
+// # TOP-kern, trede 0: één editor als taak
+//
+// Een taak is hier een **waarde** (`Top.Taak`, uit `lib/top.spp`): de
+// structuur is data, en een gebeurtenis maakt met de pure functie `Top.stap`
+// een nieuwe taak. De waarde van de taak en het scherm volgen daaruit.
+// Ontwerp: `docs/2026-11-27_top_from_scratch_ontwerp.md`.
+//
+// Een editor begint zonder waarde (`Geen`). Na de eerste geldige invoer is
+// de waarde `Instabiel`: je kunt nog verder bewerken. De actie **Klaar**
+// maakt hem `Stabiel` en sluit de editor. (In trede 1 doet een `Stap` met
+// acties dat; tot dan heeft de editor deze ene actie zelf.)
+//%%
+import "lib/top.spp" as Top
+
+::Klant = { !naam : String, !leeftijd : Int, !lid : Bool }
+//%%
+Top.cel (Top.vulIn "Klant" (Klant "" 0 False))
+//%% [markdown]
+// Probeer een leeftijd als `abc`: de editor meldt het en de waarde blijft
+// wat ze was.
+//
+// Dezelfde taak zonder notebook, stap voor stap. De stand is gewone data:
+//%%
+t0 = Top.begin (Top.vulIn "Klant" (Klant "" 0 False))
+
+t1 = Top.stap (Top.Invoer "0" "naam" "Ada") t0
+
+t2 = Top.stap (Top.Actie "0" "Klaar") t1
+//%%
+[Top.toonWaarde (Top.waardeVan t0), Top.toonWaarde (Top.waardeVan t1), Top.toonWaarde (Top.waardeVan t2)]

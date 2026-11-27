@@ -1861,6 +1861,14 @@ window.WEBSAPL_TREE = [
         "_expanded": false
       },
       {
+        "name": "BRON.txt",
+        "path": "clean-sandbox/BRON.txt",
+        "type": "file",
+        "ext": ".txt",
+        "size": 360,
+        "isBinary": false
+      },
+      {
         "name": "index.html",
         "path": "clean-sandbox/index.html",
         "type": "file",
@@ -1905,7 +1913,7 @@ window.WEBSAPL_TREE = [
         "path": "clean-sandbox/README.md",
         "type": "file",
         "ext": ".md",
-        "size": 941,
+        "size": 1212,
         "isBinary": false
       },
       {
@@ -2289,7 +2297,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/index.html",
         "type": "file",
         "ext": ".html",
-        "size": 23154,
+        "size": 23996,
         "isBinary": false
       },
       {
@@ -2346,6 +2354,14 @@ window.WEBSAPL_TREE = [
         "type": "file",
         "ext": ".html",
         "size": 42725,
+        "isBinary": false
+      },
+      {
+        "name": "retag2wasm_factsheet.html",
+        "path": "factsheets/retag2wasm_factsheet.html",
+        "type": "file",
+        "ext": ".html",
+        "size": 39243,
         "isBinary": false
       },
       {
@@ -2417,7 +2433,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/top_advice_factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 12406,
+        "size": 13955,
         "isBinary": false
       },
       {
@@ -2425,7 +2441,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/top_talk_overview_factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 22946,
+        "size": 29557,
         "isBinary": false
       },
       {
@@ -2433,7 +2449,7 @@ window.WEBSAPL_TREE = [
         "path": "factsheets/wasm_backends_factsheet.html",
         "type": "file",
         "ext": ".html",
-        "size": 37916,
+        "size": 46427,
         "isBinary": false
       }
     ],
@@ -3245,6 +3261,14 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
+        "name": "top.spp",
+        "path": "lib/top.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 8291,
+        "isBinary": false
+      },
+      {
         "name": "verbinding.spp",
         "path": "lib/verbinding.spp",
         "type": "file",
@@ -3351,6 +3375,22 @@ window.WEBSAPL_TREE = [
             "type": "file",
             "ext": ".csv",
             "size": 355,
+            "isBinary": false
+          }
+        ],
+        "_expanded": false
+      },
+      {
+        "name": "top",
+        "path": "notebooks/top",
+        "type": "directory",
+        "children": [
+          {
+            "name": "trede0.spp",
+            "path": "notebooks/top/trede0.spp",
+            "type": "file",
+            "ext": ".spp",
+            "size": 1223,
             "isBinary": false
           }
         ],
@@ -4833,7 +4873,7 @@ window.WEBSAPL_TREE = [
         "path": "top2026/presentatie.spp",
         "type": "file",
         "ext": ".spp",
-        "size": 34464,
+        "size": 35161,
         "isBinary": false
       },
       {
@@ -5029,6 +5069,14 @@ window.WEBSAPL_TREE = [
     "type": "file",
     "ext": ".md",
     "size": 13281,
+    "isBinary": false
+  },
+  {
+    "name": "sapl2wasm.html",
+    "path": "sapl2wasm.html",
+    "type": "file",
+    "ext": ".html",
+    "size": 27688,
     "isBinary": false
   },
   {
