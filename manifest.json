@@ -3265,7 +3265,7 @@
           "path": "lib/top.spp",
           "type": "file",
           "ext": ".spp",
-          "size": 8291,
+          "size": 17360,
           "isBinary": false
         },
         {
@@ -3386,11 +3386,27 @@
           "type": "directory",
           "children": [
             {
+              "name": "demo.spp",
+              "path": "notebooks/top/demo.spp",
+              "type": "file",
+              "ext": ".spp",
+              "size": 3987,
+              "isBinary": false
+            },
+            {
               "name": "trede0.spp",
               "path": "notebooks/top/trede0.spp",
               "type": "file",
               "ext": ".spp",
-              "size": 1223,
+              "size": 1335,
+              "isBinary": false
+            },
+            {
+              "name": "trede1.spp",
+              "path": "notebooks/top/trede1.spp",
+              "type": "file",
+              "ext": ".spp",
+              "size": 2981,
               "isBinary": false
             }
           ],

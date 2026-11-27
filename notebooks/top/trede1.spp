@@ -1,0 +1,73 @@
+//%% [markdown]
+// # TOP-kern, trede 1: na elkaar en naast elkaar
+//
+// Taken uit `lib/top.spp` combineren:
+//
+// - **na elkaar**: `Top.metActie label taak f` toont de taak met een knop;
+//   kies je die (en heeft de taak een waarde `v`), dan gaat het verder met
+//   `f v`. `Top.metActies` geeft meer knoppen, `Top.daarna taak f` gaat
+//   vanzelf verder zodra de waarde stabiel is.
+// - **naast elkaar**: `Top.beide a b` (de waarde is een paar),
+//   `Top.alle [...]`, `Top.eerste [...]`, en `Top.afhankelijk links f`:
+//   rechts is `f` van de waarde van links, opnieuw gemaakt als die verandert.
+//
+// De twee voorbeelden komen uit Toppyt in Sapl (`experiments/toppyt/`), nu
+// op de nieuwe kern: de taak is data, met de voortzettingen als functies
+// erin. Ontwerp: `docs/2026-11-27_top_from_scratch_ontwerp.md`.
+//%%
+import "lib/top.spp" as Top
+import "lib/text.spp" as T
+
+::Klant = { !naam : String, !stad : String, !korting : Bool }
+
+::Order = { !klantNaam : String, !bestemming : String, !aantal : Int, !totaalPrijs : Int }
+
+berekenPrijs k aantal = let basis = aantal * 100 in if (korting k) (basis - (basis / 10)) basis
+
+bestelWorkflow k n =
+  Top.metActie "Bereken offerte"
+    (Top.beide (Top.bewerk "Klantgegevens" k) (Top.bewerk "Aantal" n))
+    bestelOfferte
+
+bestelOfferte (k, n) =
+  let prijs = berekenPrijs k n,
+      samenvatting = T.concat [naam k, " (", stad k, "): ", T.showInt n, " stuks = EUR ", T.showInt prijs] in
+  Top.metActies (Top.kijk "Offerte" samenvatting)
+    [("Aanpassen", \x -> bestelWorkflow k n),
+     ("Bestelling plaatsen", \x -> Top.constant (Order (naam k) (stad k) n prijs))]
+//%% [markdown]
+// ## 1. Een bestelling: twee editors naast elkaar, dan een offerte
+//%%
+Top.cel (bestelWorkflow (Klant "Jan" "Den Helder" False) 2)
+//%% [markdown]
+// ## 2. Een missie: rechts rekent mee met links
+//%%
+::MissiePlan = { !afstandKm : Int, !snelheidKmh : Int, !reserveMin : Int }
+
+missieAnalyse m =
+  if (snelheidKmh m <= 0)
+    (Top.kijk "Analyse" "Ongeldige snelheid (moet > 0 zijn)")
+    (missieAnalyseGeldig m)
+
+missieAnalyseGeldig m =
+  let vliegMin = (afstandKm m * 60) / snelheidKmh m,
+      totaalMin = vliegMin + reserveMin m,
+      brandstofL = totaalMin * 3,
+      status = if (brandstofL > 500) "WAARSCHUWING: tankstop nodig" "Haalbaar zonder tankstop" in
+  Top.beide (Top.beide (Top.kijk "Totale duur (min)" totaalMin) (Top.kijk "Brandstof (liter)" brandstofL))
+            (Top.kijk "Beoordeling" status)
+//%%
+Top.cel (Top.afhankelijk (Top.bewerk "Missie-invoer" (MissiePlan 180 90 30)) missieAnalyse)
+//%% [markdown]
+// ## De stand is data
+//
+// Zonder notebook: dezelfde bestelling, met gebeurtenissen die het id van
+// hun taak noemen. Na een stap krijgt de voortzetting een nieuw id (`0#1`).
+//%%
+b0 = Top.begin (bestelWorkflow (Klant "Jan" "Den Helder" False) 2)
+
+b1 = Top.stap (Top.Invoer "0/1/2" "" "5") b0
+
+b2 = Top.stap (Top.Actie "0" "Bereken offerte") b1
+//%%
+D.column [D.text (Top.alsTekst b1), D.text (Top.alsTekst b2)]

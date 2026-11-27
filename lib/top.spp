@@ -1,29 +1,26 @@
-// lib/top.spp -- de TOP-kern: taken als data (trede 0, 27 november 2026).
+// lib/top.spp -- de TOP-kern: taken als data (treden 0-1, 27 november 2026).
 // Ontwerp: docs/2026-11-27_top_from_scratch_ontwerp.md (B2, §6).
 //
 // Een taak is een waarde van het type Taak: de structuur is data, zodat je de
-// stand kunt bekijken, bewaren (pack) en overdragen. Evaluatie is een pure
+// stand kunt bekijken, bewaren (pack) en overdragen. De stukken die rekenen
+// (de voortzetting na een stap, een voorwaarde, de combinatie van parallelle
+// waarden) zijn gewone functiewaarden in die data. Evaluatie is een pure
 // `stap` van een gebeurtenis en een taak naar een nieuwe taak; de waarde
-// (`waardeVan`) en de weergave (`ui`, een D.Display) volgen uit de taak.
+// (`waardeVan`), de weergave (`ui`, een D.Display) en een tekstvorm
+// (`alsTekst`) volgen uit de taak.
 //
 //   import "lib/top.spp" as Top
 //   ::Klant = { !naam : String, !leeftijd : Int }
-//   t = Top.begin (Top.vulIn "Klant" (Klant "" 0))     -- waarde Geen
-//   t2 = Top.stap (Top.Invoer "0" "naam" "Ada") t      -- Instabiel (Klant "Ada" 0)
-//   t3 = Top.stap (Top.Actie "0" "Klaar") t2           -- Stabiel (Klant "Ada" 0)
-//   Top.cel (Top.vulIn "Klant" (Klant "" 0))           -- als interactieve notebookcel
+//   t = Top.begin (Top.metKlaar (Top.vulIn "Klant" (Klant "" 0)))   -- waarde Geen
+//   t2 = Top.stap (Top.Invoer "0/1" "naam" "Ada") t                 -- editor: Instabiel
+//   t3 = Top.stap (Top.Actie "0" "Klaar") t2                        -- Stabiel (Klant "Ada" 0)
+//   Top.cel (Top.metKlaar (Top.vulIn "Klant" (Klant "" 0)))         -- als notebookcel
 //
-// Trede 0 kent alleen Bewerk en Constant; Stap en Parallel volgen in trede 1.
-//
-// Taak-id's zijn paden in de boom: de wortel is "0", kinderen worden "0/1",
-// "0/2", ... (`begin` en `nummer` delen ze uit; een bouwer laat ze leeg).
-// Een gebeurtenis noemt het id van de taak waarvoor ze bedoeld is.
-//
-// Waar komt Stabiel vandaan? In iTasks en Toppyt is de waarde van een editor
-// nooit vanzelf stabiel; dat doet een step met een actie. Zolang er geen Stap
-// is (trede 0), heeft Bewerk één eigen actie, "Klaar": die maakt een
-// Instabiel x tot Stabiel x en sluit de editor. In trede 1 wordt dat
-// gewoon een Stap met de actie Klaar.
+// Taak-id's zijn paden in de boom: de wortel is "0", de kinderen van een taak
+// met id p zijn p/1, p/2, ... (`begin` en `nummer` delen ze uit; een bouwer
+// laat ze leeg). Gaat een Stap met id p verder, dan krijgt de voortzetting
+// id p#1 (en daarna p#2, ...): een gebeurtenis die nog voor de oude taak
+// bedoeld was, komt zo niet bij de nieuwe terecht.
 module Top
 import "lib/list.spp" as L
 import "lib/text.spp" as T
@@ -34,18 +31,37 @@ import "lib/display.spp" as D
 
 // == Waarden, taken en gebeurtenissen =========================================
 
-// De waarneembare waarde van een taak. Fout: de taak is mislukt (nog niet
-// gebruikt in trede 0; ongeldige invoer is een melding, geen Fout).
+// De waarneembare waarde van een taak. Fout: de taak is mislukt (ongeldige
+// invoer in een editor is een melding, geen Fout).
 ::Waarde = Geen | Instabiel x | Stabiel x | Fout !msg
 
 // Bewerk id label waarde sjabloon melding: een editor. sjabloon is de waarde
-// waarvan het formulier uitgaat zolang er geen waarde is (vulIn); melding is
-// "" of wat er mis was met de laatste invoer.
+//   waarvan het formulier uitgaat zolang er geen waarde is (vulIn); melding
+//   is "" of wat er mis was met de laatste invoer. Waarde Geen of Instabiel.
+// Kijk id label x: toont x; waarde Instabiel x (zoals in iTasks en Toppyt).
+// Stap id taak vervolgen: voert taak uit; een vervolg dat geldt vervangt de
+//   stap door zijn voortzetting. Waarde Geen.
+// Parallel id combineer taken: alle taken tegelijk; de waarde is
+//   combineer (de lijst waarden van de taken).
+// Afhankelijk id links maakRechts rechts: rechts = maakRechts (de waarde van
+//   links), opnieuw gemaakt zodra die waarde verandert. Waarde die van links.
+// Constant x: waarde Stabiel x, zonder scherm.
 ::Taak = Bewerk !id !label waarde sjabloon !melding
+       | Kijk !id !label x
+       | Stap !id taak vervolgen
+       | Parallel !id combineer taken
+       | Afhankelijk !id links maakRechts rechts
        | Constant x
 
+// OpActie label voorwaarde voortzetting: een knop, beschikbaar als
+//   voorwaarde (de waarde van de taak) geldt.
+// OpWaarde voorwaarde voortzetting: verder zodra voorwaarde geldt.
+// voorwaarde :: Waarde -> Bool; voortzetting :: x -> Taak krijgt de waarde
+// van de taak (lui: zonder waarde een fout als de voortzetting hem gebruikt).
+::Vervolg = OpActie !label voorwaarde voortzetting | OpWaarde voorwaarde voortzetting
+
 // Invoer id veld tekst: een veld van een formulier (veld "" is de hele
-// waarde, zoals bij Sh.input). Actie id label: een knop.
+// waarde, zoals bij Sh.input). Actie id label: een knop van een Stap.
 ::Gebeurtenis = Invoer !id !veld !tekst | Actie !id !label
 
 // == Bouwers ==================================================================
@@ -56,43 +72,142 @@ vulIn label sjabloon = Bewerk "" label Geen sjabloon ""
 // Een editor met een beginwaarde.
 bewerk label v = Bewerk "" label (Instabiel v) v ""
 
+kijk label x = Kijk "" label x
+
 constant x = Constant x
+
+// Na elkaar.
+stapMet t vervolgen = Stap "" t vervolgen
+
+// Verder met f v na de knop `label`, als de taak een waarde v heeft.
+metActie label t f = Stap "" t [OpActie label heeftWaarde f]
+
+// Meer knoppen: [(label, f), ...].
+metActies t paren = Stap "" t (L.map opActiePaar paren)
+
+opActiePaar (label, f) = OpActie label heeftWaarde f
+
+// Verder met f v zodra de taak een stabiele waarde v heeft.
+daarna t f = Stap "" t [OpWaarde isStabiel f]
+
+// Verder met f v zodra de taak een waarde v heeft.
+zodraWaarde t f = Stap "" t [OpWaarde heeftWaarde f]
+
+// Een knop Klaar die de waarde van de taak stabiel maakt.
+metKlaar t = metActie klaar t constant
+
+klaar = "Klaar"
+
+// Naast elkaar. alle: de lijst van alle waarden (stabiel als ze dat allemaal
+// zijn); beide: idem als paar; eerste: de eerste stabiele waarde, anders de
+// eerste waarde.
+alle ts = Parallel "" combineerAlle ts
+
+beide a b = Parallel "" combineerBeide [a, b]
+
+eerste ts = Parallel "" combineerEerste ts
+
+// Links een taak, rechts een taak die van de waarde van links afhangt.
+afhankelijk links f = Afhankelijk "" links f (Constant 0)
 
 // == Taak-id's ================================================================
 
 begin t = nummer "0" t
 
+// Geeft de taak en haar kinderen hun id, en voert vervolgen uit die meteen
+// al gelden (een OpWaarde op een taak die al een waarde heeft).
 nummer pad t =
   case t
-    (Bewerk id l w s m -> Bewerk pad l w s m)
+    (Bewerk i l w s m -> Bewerk pad l w s m)
+    (Kijk i l x -> Kijk pad l x)
+    (Stap i b vs -> verderStap pad (nummer (kind pad 1) b) vs)
+    (Parallel i c ts -> Parallel pad c (nummerVanaf pad 1 ts))
+    (Afhankelijk i a f r -> metRechts pad (nummer (kind pad 1) a) f)
     (Constant x -> t)
+
+nummerVanaf pad !n ts = case ts (Nil -> Nil) (Cons t rest -> Cons (nummer (kind pad n) t) (nummerVanaf pad (n + 1) rest))
+
+kind pad !n = T.concat [pad, "/", T.showInt n]
+
+// p -> p#1, p#k -> p#(k+1); alleen een # na de laatste / telt.
+volgende pad = volgendeVan pad (hekje pad (strlen pad - 1))
+
+volgendeVan pad !j =
+  if (j < 0) (T.append pad "#1")
+  (T.concat [T.take (j + 1) pad, T.showInt (T.readInt (T.drop (j + 1) pad) + 1)])
+
+hekje s !i = if (i < 0) (0 - 1) (if (strat i s == '#') i (if (strat i s == '/') (0 - 1) (hekje s (i - 1))))
 
 taakId t =
   case t
-    (Bewerk id l w s m -> id)
+    (Bewerk i l w s m -> i)
+    (Kijk i l x -> i)
+    (Stap i b vs -> i)
+    (Parallel i c ts -> i)
+    (Afhankelijk i a f r -> i)
     (Constant x -> "")
 
 // De id's van alle editors, in volgorde.
 bewerkIds t =
   case t
-    (Bewerk id l w s m -> [id])
-    (Constant x -> Nil)
+    (Bewerk i l w s m -> [i])
+    (Stap i b vs -> bewerkIds b)
+    (Parallel i c ts -> L.concatMap bewerkIds ts)
+    (Afhankelijk i a f r -> L.append (bewerkIds a) (bewerkIds r))
+    (_ -> Nil)
 
 // == De waarde ================================================================
 
 waardeVan t =
   case t
-    (Bewerk id l w s m -> w)
+    (Bewerk i l w s m -> w)
+    (Kijk i l x -> Instabiel x)
+    (Stap i b vs -> Geen)
+    (Parallel i c ts -> c (L.map waardeVan ts))
+    (Afhankelijk i a f r -> waardeVan a)
     (Constant x -> Stabiel x)
 
+// De melding van de eerste editor met een melding.
 meldingVan t =
   case t
-    (Bewerk id l w s m -> m)
-    (Constant x -> "")
+    (Bewerk i l w s m -> m)
+    (Stap i b vs -> meldingVan b)
+    (Parallel i c ts -> eersteNietLeeg (L.map meldingVan ts))
+    (Afhankelijk i a f r -> eersteNietLeeg [meldingVan a, meldingVan r])
+    (_ -> "")
+
+eersteNietLeeg ms = case ms (Nil -> "") (Cons m rest -> if (T.isEmpty m) (eersteNietLeeg rest) m)
 
 heeftWaarde w = case w (Instabiel x -> True) (Stabiel x -> True) (_ -> False)
 
 isStabiel w = case w (Stabiel x -> True) (_ -> False)
+
+isFout w = case w (Fout m -> True) (_ -> False)
+
+altijd w = True
+
+waardeUit w = case w (Instabiel x -> x) (Stabiel x -> x) (_ -> error "Top: de taak heeft geen waarde")
+
+// Combinaties voor Parallel.
+combineerAlle ws =
+  if (L.any isFout ws) (eersteFout ws)
+  (if (L.all heeftWaarde ws) (if (L.all isStabiel ws) (Stabiel (L.map waardeUit ws)) (Instabiel (L.map waardeUit ws))) Geen)
+
+combineerBeide ws =
+  case (combineerAlle ws)
+    (Stabiel xs -> Stabiel (paar xs))
+    (Instabiel xs -> Instabiel (paar xs))
+    (Fout m -> Fout m)
+    (Geen -> Geen)
+
+paar xs = case xs (Cons a r -> case r (Cons b r2 -> (a, b)))
+
+combineerEerste ws =
+  case (L.filter isStabiel ws)
+    (Cons w rest -> w)
+    (Nil -> case (L.filter heeftWaarde ws) (Cons w rest -> w) (Nil -> Geen))
+
+eersteFout ws = case (L.filter isFout ws) (Cons w rest -> w) (Nil -> Geen)
 
 // == Evaluatie: stap ==========================================================
 
@@ -100,30 +215,22 @@ isStabiel w = case w (Stabiel x -> True) (_ -> False)
 // taak zoals hij is.
 stap ev t =
   case t
-    (Bewerk id l w s m -> stapBewerk ev id l w s t)
+    (Bewerk i l w s m -> stapBewerk ev i l w s t)
+    (Kijk i l x -> t)
+    (Stap i b vs -> stapStap ev i b vs)
+    (Parallel i c ts -> Parallel i c (L.map (stap ev) ts))
+    (Afhankelijk i a f r -> stapAfhankelijk ev i a f r)
     (Constant x -> t)
 
-stapBewerk ev id l w s t =
+stapBewerk ev i l w s t =
   case ev
-    (Invoer i veld tekst -> if (T.equal i id) (invoerBewerk id l w s veld tekst t) t)
-    (Actie i a -> if (T.equal i id) (actieBewerk id l w s a t) t)
+    (Invoer j veld tekst -> if (T.equal j i) (invoerBewerk i l w s veld tekst) t)
+    (_ -> t)
 
-// Na Klaar is de editor gesloten: invoer verandert niets meer.
-invoerBewerk id l w s veld tekst t =
-  if (isStabiel w) t
-  (case (probeerInvoer veld tekst (huidig w s))
-    (Gelukt v -> Bewerk id l (Instabiel v) s "")
-    (Mislukt msg -> Bewerk id l w s msg))
-
-actieBewerk id l w s a t =
-  if (T.equal a klaar)
-    (case w
-      (Instabiel x -> Bewerk id l (Stabiel x) s "")
-      (Geen -> Bewerk id l w s "nog geen waarde")
-      (_ -> t))
-    t
-
-klaar = "Klaar"
+invoerBewerk i l w s veld tekst =
+  case (probeerInvoer veld tekst (huidig w s))
+    (Gelukt v -> Bewerk i l (Instabiel v) s "")
+    (Mislukt msg -> Bewerk i l w s msg)
 
 // De waarde waar het formulier van uitgaat.
 huidig w s = case w (Instabiel x -> x) (Stabiel x -> x) (_ -> s)
@@ -138,30 +245,84 @@ gelukt !v = Gelukt v
 
 mislukt msg = Mislukt msg
 
+// Een actie voor deze stap, of de gebeurtenis gaat naar de taak eronder.
+stapStap ev i b vs =
+  case ev
+    (Actie j a -> if (T.equal j i) (doeActie i b vs a) (verderStap i (stap ev b) vs))
+    (_ -> verderStap i (stap ev b) vs)
+
+doeActie i b vs a =
+  case (actieVoor a (waardeVan b) vs)
+    (Cons f rest -> voortzetting i f (waardeVan b))
+    (Nil -> Stap i b vs)
+
+// Na een wijziging van de taak: geldt er nu een OpWaarde?
+verderStap i b vs =
+  case (opWaardeVoor (waardeVan b) vs)
+    (Cons f rest -> voortzetting i f (waardeVan b))
+    (Nil -> Stap i b vs)
+
+voortzetting i f w = nummer (volgende i) (f (waardeUit w))
+
+// De voortzettingen van de beschikbare knoppen met dit label.
+actieVoor a w vs =
+  case vs
+    (Nil -> Nil)
+    (Cons v rest -> case v
+      (OpActie l c f -> if (T.equal l a /\ c w) [f] (actieVoor a w rest))
+      (OpWaarde c f -> actieVoor a w rest))
+
+opWaardeVoor w vs =
+  case vs
+    (Nil -> Nil)
+    (Cons v rest -> case v
+      (OpWaarde c f -> if (c w) [f] (opWaardeVoor w rest))
+      (OpActie l c f -> opWaardeVoor w rest))
+
+// De labels van de knoppen die nu beschikbaar zijn.
+actieLabels w vs =
+  case vs
+    (Nil -> Nil)
+    (Cons v rest -> case v
+      (OpActie l c f -> if (c w) (Cons l (actieLabels w rest)) (actieLabels w rest))
+      (OpWaarde c f -> actieLabels w rest))
+
+// Verandert de waarde van links, dan begint rechts opnieuw.
+stapAfhankelijk ev i a f r =
+  let a2 = stap ev a in
+  if (gelijk (waardeVan a) (waardeVan a2)) (Afhankelijk i a2 f (stap ev r)) (metRechts i a2 f)
+
+metRechts pad a f = Afhankelijk pad a f (nummer (kind pad 2) (rechtsVoor f (waardeVan a)))
+
+rechtsVoor f w = if (heeftWaarde w) (f (waardeUit w)) (Kijk "" "" "(wacht op invoer)")
+
 // == Weergave =================================================================
 
-// De UI van een taak als D.Display. Een editor toont zijn label, het
-// formulier (D.form van de waarde, of van het sjabloon zolang er geen waarde
-// is), een melding en de beschikbare acties.
+// De UI van een taak als D.Display: editors als formulier (D.form), een
+// Kijk als Markdown, de knoppen van een Stap als keuzelijst, parallelle
+// taken onder elkaar.
 ui t =
   case t
-    (Bewerk id l w s m -> uiBewerk l w s m)
+    (Bewerk i l w s m -> uiBewerk l w s m)
+    (Kijk i l x -> D.markdown (kijkTekst l x))
+    (Stap i b vs -> D.column (Cons (ui b) (uiActies (actieLabels (waardeVan b) vs))))
+    (Parallel i c ts -> D.column (L.map ui ts))
+    (Afhankelijk i a f r -> D.column [ui a, ui r])
     (Constant x -> D.column Nil)
 
 uiBewerk l w s m =
-  case w
-    (Geen -> D.column (L.append [kop l " *(vul in)*", D.form s] (uiMelding m)))
-    (Instabiel x -> D.column (L.append [kop l "", D.form x] (L.append (uiMelding m) [uiActies [klaar]])))
-    (Stabiel x -> D.column [kop l " ✓", D.text (toon x)])
-    (Fout msg -> D.column [kop l "", D.markdown (T.concat ["❌ *", msg, "*"])])
+  if (heeftWaarde w) (D.column (L.append [kop l "", D.form (huidig w s)] (uiMelding m)))
+  (D.column (L.append [kop l " *(vul in)*", D.form s] (uiMelding m)))
 
 kop l extra = D.markdown (T.concat ["**", l, "**", extra])
 
+kijkTekst l x = if (T.isEmpty l) (toon x) (T.concat ["**", l, ":** ", toon x])
+
 uiMelding m = if (T.isEmpty m) Nil [D.markdown (T.concat ["⚠️ *", m, "*"])]
 
-// Acties als keuzelijst (de notebook heeft geen knoppen): kiezen geeft
-// D.Input "" <label>.
-uiActies as = D.choice (Cons kiesActie as) kiesActie
+// Knoppen als keuzelijst (de notebook heeft geen knoppen): kiezen geeft
+// D.Input "" <label>. Zonder beschikbare knoppen niets.
+uiActies as = case as (Nil -> Nil) (_ -> [D.choice (Cons kiesActie as) kiesActie])
 
 kiesActie = "(kies een actie)"
 
@@ -174,27 +335,89 @@ toonWaarde w =
     (Stabiel x -> T.concat ["Stabiel (", toon x, ")"])
     (Fout msg -> T.concat ["Fout (", msg, ")"])
 
+// De taak als tekst, een regel per editor, weergave en rij knoppen, met id.
+alsTekst t = T.join "\n" (tekstRegels t)
+
+tekstRegels t =
+  case t
+    (Bewerk i l w s m -> [T.concat ["[", i, " Bewerk ", l, "] ", toon (huidig w s), if (heeftWaarde w) "" " (leeg)", if (T.isEmpty m) "" (T.concat ["  ! ", m])]])
+    (Kijk i l x -> [T.concat ["[", i, " ", l, "] ", toon x]])
+    (Stap i b vs -> L.append (tekstRegels b) (knoppenRegel i (actieLabels (waardeVan b) vs)))
+    (Parallel i c ts -> L.concatMap tekstRegels ts)
+    (Afhankelijk i a f r -> L.append (tekstRegels a) (tekstRegels r))
+    (Constant x -> Nil)
+
+knoppenRegel i as = case as (Nil -> Nil) (_ -> [T.concat ["[", i, " Acties] ", T.join " " (L.map tussenHaken as)]])
+
+tussenHaken s = T.concat ["[", s, "]"]
+
 // == Als interactieve notebookcel =============================================
 
-// Een taak als D.interactive: invoer in het formulier en de keuze van een
-// actie worden gebeurtenissen voor de eerste editor. (Het formulier van de
-// pagina zegt niet uit welk formulier een invoer komt; met meer editors in
-// één cel, vanaf trede 1, moet dat erbij.)
+// Een taak als D.interactive. De pagina zegt bij een formulierinvoer niet
+// uit welk formulier hij komt (`input <veld> <waarde>`), dus kiest de cel:
+//   - veld "" en het label van een beschikbare knop: die actie;
+//   - anders de eerste editor die het veld heeft (een record met een veld
+//     van die naam, een somtype met zo'n constructor of veld; veld "" gaat
+//     naar een editor van een getal, tekst of somtype).
+// Twee editors met een veld van dezelfde naam in één cel: de eerste krijgt
+// het. De kern zelf (`stap`) werkt met id's en heeft dat probleem niet.
 cel t = D.interactive (begin t) celStap celBeeld
 
 celStap ev t =
   case ev
-    (D.Input veld s -> celInvoer veld s t (eersteBewerk t))
+    (D.Input veld s -> celInvoer veld s t)
     (_ -> t)
 
-celInvoer veld s t id =
+celInvoer veld s t =
   if (T.isEmpty veld /\ T.equal s kiesActie) t
-  (if (T.isEmpty veld /\ T.equal s klaar) (stap (Actie id s) t)
-  (stap (Invoer id veld s) t))
+  (celNaar veld s t (if (T.isEmpty veld) (knopId s t) Nil))
 
-eersteBewerk t = case (bewerkIds t) (Cons id rest -> id) (Nil -> "")
+celNaar veld s t knop =
+  case knop
+    (Cons i rest -> stap (Actie i s) t)
+    (Nil -> case (editorVoor veld s t) (Cons i rest -> stap (Invoer i veld s) t) (Nil -> t))
+
+// De id van de (eerste) Stap met een beschikbare knop met dit label.
+knopId s t =
+  case t
+    (Stap i b vs -> if (bevat s (actieLabels (waardeVan b) vs)) [i] (knopId s b))
+    (Parallel i c ts -> L.concatMap (knopId s) ts)
+    (Afhankelijk i a f r -> L.append (knopId s a) (knopId s r))
+    (_ -> Nil)
+
+// De id van de eerste editor die dit veld kan ontvangen.
+editorVoor veld s t =
+  case t
+    (Bewerk i l w sj m -> if (kanOntvangen (Sh.ofValue (huidig w sj)) veld s) [i] Nil)
+    (Stap i b vs -> editorVoor veld s b)
+    (Parallel i c ts -> L.concatMap (editorVoor veld s) ts)
+    (Afhankelijk i a f r -> L.append (editorVoor veld s a) (editorVoor veld s r))
+    (_ -> Nil)
+
+kanOntvangen ty veld s =
+  if (T.isEmpty veld)
+    (case ty
+      (Sh.TRec n fs -> False)
+      (Sh.TSum n as -> bevat (T.trim s) (Sh.altNames ty))
+      (_ -> True))
+    (case ty
+      (Sh.TRec n fs -> bevat veld (Sh.fieldNames ty))
+      (Sh.TSum n as -> L.any (altHeeftVeld veld) as)
+      (_ -> False))
+
+altHeeftVeld veld a = bevat veld (L.map Sh.fieldName (Sh.altFieldsOf a))
+
+eersteBewerk t = case (bewerkIds t) (Cons i rest -> i) (Nil -> "")
 
 celBeeld t = D.column [ui t, D.markdown (T.concat ["*Waarde:* `", toonWaarde (waardeVan t), "`"])]
+
+// Als cel, met daaronder de stand van de taak als tekst (alsTekst): voor
+// een demo of om te zien welke id's de taken hebben.
+celMetStand t = D.interactive (begin t) celStap celBeeldMetStand
+
+celBeeldMetStand t = D.column [celBeeld t, D.markdown (T.concat ["*Stand:*\n```\n", standOfLeeg (alsTekst t), "\n```"])]
+
+standOfLeeg s = if (T.isEmpty s) "(geen schermen meer)" s
 
 // == Structurele gelijkheid ===================================================
 
@@ -224,3 +447,6 @@ ariteitVan c xs =
   case xs
     (Cons n r -> case r (Cons a r2 -> if (T.equal n c) (T.readInt a) (ariteitVan c r2)) (Nil -> 0))
     (Nil -> 0)
+
+// s in xs, met T.equal (L.elem gebruikt ==, op strings een pointervergelijking).
+bevat s xs = L.any (T.equal s) xs

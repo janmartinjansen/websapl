@@ -7,25 +7,26 @@
 // Ontwerp: `docs/2026-11-27_top_from_scratch_ontwerp.md`.
 //
 // Een editor begint zonder waarde (`Geen`). Na de eerste geldige invoer is
-// de waarde `Instabiel`: je kunt nog verder bewerken. De actie **Klaar**
-// maakt hem `Stabiel` en sluit de editor. (In trede 1 doet een `Stap` met
-// acties dat; tot dan heeft de editor deze ene actie zelf.)
+// zijn waarde `Instabiel`: je kunt nog verder bewerken. `Top.metKlaar` zet
+// hem in een `Stap` met de knop **Klaar**; die gaat verder met een
+// `Constant` van de waarde, en dan is de waarde van de taak `Stabiel`.
+// Tot dat moment is de waarde van de stap zelf `Geen` (zoals in iTasks).
 //%%
 import "lib/top.spp" as Top
 
 ::Klant = { !naam : String, !leeftijd : Int, !lid : Bool }
 //%%
-Top.cel (Top.vulIn "Klant" (Klant "" 0 False))
+Top.cel (Top.metKlaar (Top.vulIn "Klant" (Klant "" 0 False)))
 //%% [markdown]
 // Probeer een leeftijd als `abc`: de editor meldt het en de waarde blijft
 // wat ze was.
 //
 // Dezelfde taak zonder notebook, stap voor stap. De stand is gewone data:
 //%%
-t0 = Top.begin (Top.vulIn "Klant" (Klant "" 0 False))
+t0 = Top.begin (Top.metKlaar (Top.vulIn "Klant" (Klant "" 0 False)))
 
-t1 = Top.stap (Top.Invoer "0" "naam" "Ada") t0
+t1 = Top.stap (Top.Invoer "0/1" "naam" "Ada") t0
 
 t2 = Top.stap (Top.Actie "0" "Klaar") t1
 //%%
-[Top.toonWaarde (Top.waardeVan t0), Top.toonWaarde (Top.waardeVan t1), Top.toonWaarde (Top.waardeVan t2)]
+D.column [D.text (Top.alsTekst t0), D.text (Top.alsTekst t1), D.text (Top.toonWaarde (Top.waardeVan t2))]

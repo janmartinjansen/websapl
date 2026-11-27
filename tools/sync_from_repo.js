@@ -179,6 +179,8 @@ const ENTRIES = [
   { src: "notebooks/rekenen_op_server.spp", dst: "notebooks/rekenen_op_server.spp" },
   { src: "notebooks/taxi_minimal.spp", dst: "notebooks/taxi_minimal.spp" },
   { src: "notebooks/top/trede0.spp", dst: "notebooks/top/trede0.spp" },
+  { src: "notebooks/top/trede1.spp", dst: "notebooks/top/trede1.spp" },
+  { src: "notebooks/top/demo.spp", dst: "notebooks/top/demo.spp" },
   { src: "notebooks/haskell_lite.spp", dst: "notebooks/haskell_lite.spp" },
   { src: "notebooks/vm_metingen.spp", dst: "notebooks/vm_metingen.spp" },
   { src: "notebooks/waarden_bewaren.spp", dst: "notebooks/waarden_bewaren.spp" },

@@ -1,0 +1,96 @@
+//%% [instellingen] waarden=uit code=verborgen
+//%% [markdown]
+// # Taken als data: een nieuwe TOP-kern
+//
+// Deze pagina draait helemaal in je browser: de Sapl-compiler en de JMVM
+// zitten erin als WebAssembly, er is geen server.
+//
+// Een **taak** is hier een gewone waarde: een boom van editors, weergaven,
+// stappen en parallelle taken, met de stukken die rekenen (wat er na een
+// knop gebeurt, wat er rechts moet verschijnen) als functies erin. Een
+// gebeurtenis (een veld wijzigen, een knop kiezen) maakt met één pure
+// functie een nieuwe boom. De waarde van de taak en het scherm volgen uit
+// die boom. Onder elke taak staat de **stand**: de boom als tekst, met de
+// id's van de taken.
+//
+// Ideeën uit iTasks, gebouwd op wat we nu hebben (`lib/top.spp`; ontwerp in
+// `docs/2026-11-27_top_from_scratch_ontwerp.md`).
+//%%
+import "lib/top.spp" as Top
+import "lib/text.spp" as T
+
+::Klant = { !naam : String, !stad : String, !korting : Bool }
+
+::Order = { !klantNaam : String, !bestemming : String, !aantal : Int, !totaalPrijs : Int }
+
+::MissiePlan = { !afstandKm : Int, !snelheidKmh : Int, !reserveMin : Int }
+
+berekenPrijs k aantal = let basis = aantal * 100 in if (korting k) (basis - (basis / 10)) basis
+
+bestelWorkflow k n =
+  Top.metActie "Bereken offerte"
+    (Top.beide (Top.bewerk "Klantgegevens" k) (Top.bewerk "Aantal" n))
+    bestelOfferte
+
+bestelOfferte (k, n) =
+  let prijs = berekenPrijs k n,
+      samenvatting = T.concat [naam k, " (", stad k, "): ", T.showInt n, " stuks = EUR ", T.showInt prijs] in
+  Top.metActies (Top.kijk "Offerte" samenvatting)
+    [("Aanpassen", \x -> bestelWorkflow k n),
+     ("Bestelling plaatsen", \x -> Top.constant (Order (naam k) (stad k) n prijs))]
+
+missieAnalyse m =
+  if (snelheidKmh m <= 0)
+    (Top.kijk "Analyse" "Ongeldige snelheid (moet > 0 zijn)")
+    (missieAnalyseGeldig m)
+
+missieAnalyseGeldig m =
+  let vliegMin = (afstandKm m * 60) / snelheidKmh m,
+      totaalMin = vliegMin + reserveMin m,
+      brandstofL = totaalMin * 3,
+      status = if (brandstofL > 500) "WAARSCHUWING: tankstop nodig" "Haalbaar zonder tankstop" in
+  Top.beide (Top.beide (Top.kijk "Totale duur (min)" totaalMin) (Top.kijk "Brandstof (liter)" brandstofL))
+            (Top.kijk "Beoordeling" status)
+//%% [markdown]
+// ## 1. Eén editor
+//
+// Het formulier volgt uit het type `Klant`, zonder code per scherm. Zolang
+// je bewerkt, is de waarde van de editor *instabiel*. **Klaar** gaat verder,
+// en dan is de waarde van de taak *stabiel*. Probeer bij de stad ook iets
+// in te vullen, en kies daarna Klaar.
+//%%
+Top.celMetStand (Top.metKlaar (Top.vulIn "Klant" (Klant "" "" False)))
+//%% [markdown]
+// ## 2. Na elkaar en naast elkaar: een bestelling
+//
+// Twee editors naast elkaar (`Top.beide`), dan een knop die verdergaat met
+// een offerte. Kies je **Aanpassen**, dan begin je opnieuw met de waarden van
+// net. Let op de id's in de stand: na elke stap krijgt de nieuwe taak een
+// nieuw id (`0#1`, `0#2`, ...).
+//%%
+Top.celMetStand (bestelWorkflow (Klant "Jan" "Den Helder" False) 2)
+//%% [markdown]
+// ## 3. Afhankelijk: rechts rekent mee
+//
+// Rechts is een functie van de waarde links. Verander de afstand of de
+// snelheid, en de analyse wordt opnieuw gemaakt. Een snelheid van 0 geeft
+// een ander scherm.
+//%%
+Top.celMetStand (Top.afhankelijk (Top.bewerk "Missie-invoer" (MissiePlan 180 90 30)) missieAnalyse)
+//%% [markdown]
+// ## Hoe het in elkaar zit
+//
+// ```
+// ::Taak = Bewerk id label waarde sjabloon melding
+//        | Kijk id label x
+//        | Stap id taak vervolgen          -- knoppen of vanzelf verder
+//        | Parallel id combineer taken     -- alle, beide, eerste
+//        | Afhankelijk id links f rechts
+//        | Constant x
+//
+// stap :: Gebeurtenis -> Taak -> Taak     -- puur
+// ```
+//
+// Omdat de stand data is, kun je hem bewaren, naar een server sturen en
+// daar verder laten lopen. Dat zijn de volgende treden: gedeelde data,
+// taken op de server, en gebruikers die elk hun eigen werk zien.
