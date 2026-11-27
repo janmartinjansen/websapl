@@ -255,6 +255,7 @@ const ENTRIES = [
   { src: "docs/2026-11-13_toolchain_factsheet.html", dst: "factsheets/toolchain_factsheet.html" },
   { src: "docs/2026-11-13_retag_format_factsheet.html", dst: "factsheets/retag_format_factsheet.html" },
   { src: "docs/2026-11-13_sapl2c_translation_factsheet.html", dst: "factsheets/sapl2c_translation_factsheet.html" },
+  { src: "docs/2026-11-27_retag2wasm_factsheet.html", dst: "factsheets/retag2wasm_factsheet.html" },
   { src: "docs/2026-11-13_sapl2c_competitive_performance_factsheet.html", dst: "factsheets/sapl2c_competitive_performance_factsheet.html" },
   { src: "docs/2026-11-13_sapl2c_secret_factsheet.html", dst: "factsheets/sapl2c_secret_factsheet.html" },
   { src: "docs/2026-11-13_top_advice_factsheet.html", dst: "factsheets/top_advice_factsheet.html" },

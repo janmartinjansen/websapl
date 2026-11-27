@@ -232,7 +232,7 @@
           <h2>Native C (<code>sapl2c</code>), WebAssembly &amp; Performance</h2>
           <p class="group-desc">Compiling Stage-4 Retag to native C and WebAssembly, how <code>sapl2c</code> and <code>retag2wasm</code> work, and benchmarks against Clean and GHC.</p>
         </div>
-        <span class="group-count">6 sheets</span>
+        <span class="group-count">7 sheets</span>
       </div>
       <div class="grid">
         <a class="card" href="wasm_backends_factsheet.html" style="--card-color: var(--c3);">
@@ -263,6 +263,17 @@
             coalesced heap checks, thunks, <code>FnDesc</code> closures, and annotated excerpts from generated C.</p>
           <div class="card-foot">
             <div class="tags"><span class="tag">sapl2c</span><span class="tag">shadow stack</span><span class="tag">GC</span></div>
+            <span class="go">Open &rarr;</span>
+          </div>
+        </a>
+
+        <a class="card" href="retag2wasm_factsheet.html" style="--card-color: var(--c3);">
+          <h3>How <code>retag2wasm</code> translates Retag straight to WebAssembly</h3>
+          <p>The same Stage-4 Retag IR as <code>sapl2c</code>, written as binary <code>.wasm</code> by about 1,000 lines of Sapl:
+            calling convention with multivalue returns, shadow stack, inline fast paths, the runtime split, the measured trade-offs
+            (1.13&times; <code>emcc -O2</code>), the stack problem, and a side-by-side with <code>sapl2c</code>, with Retag, C and WAT examples.</p>
+          <div class="card-foot">
+            <div class="tags"><span class="tag">retag2wasm</span><span class="tag">WebAssembly</span><span class="tag">sapl2c</span></div>
             <span class="go">Open &rarr;</span>
           </div>
         </a>

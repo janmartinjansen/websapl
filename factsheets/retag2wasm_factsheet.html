@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>How retag2wasm Translates Retag to WebAssembly — Design, Trade-offs &amp; sapl2c</title>
+<meta name="description" content="How retag2wasm turns Stage-4 Retag directly into binary WebAssembly: the shared sapl2c IR, calling convention, shadow stack, inline fast paths, the runtime split, the trade-offs that were measured, the stack problem, and a side-by-side with sapl2c. With real Retag, C and WAT examples.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script>
+  try {
+    const t = localStorage.getItem("websapl_theme");
+    if (t) document.documentElement.setAttribute("data-theme", t);
+  } catch (_) {}
+</script>
+<style>
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --fg: #1b2230;
+  --muted: #5a6475;
+  --line: #d9dee6;
+  --accent: #1f5f8b;
+  --accent-soft: #e3eef6;
+  --warn: #9a5b00;
+  --warn-soft: #fbf0de;
+  --ok: #2c6b45;
+  --ok-soft: #e3f2e8;
+  --purple: #6d28d9;
+  --purple-soft: #f3e8ff;
+  --f-display: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161d;
+    --surface: #1a2029;
+    --fg: #e4e8ee;
+    --muted: #9aa5b6;
+    --line: #2d3542;
+    --accent: #7db7e0;
+    --accent-soft: #1d3346;
+    --warn: #e7b25c;
+    --warn-soft: #3a2c14;
+    --ok: #7fcf9c;
+    --ok-soft: #173025;
+    --purple: #c084fc;
+    --purple-soft: #2e1d47;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161d;
+  --surface: #1a2029;
+  --fg: #e4e8ee;
+  --muted: #9aa5b6;
+  --line: #2d3542;
+  --accent: #7db7e0;
+  --accent-soft: #1d3346;
+  --warn: #e7b25c;
+  --warn-soft: #3a2c14;
+  --ok: #7fcf9c;
+  --ok-soft: #173025;
+  --purple: #c084fc;
+  --purple-soft: #2e1d47;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15.5px/1.62 var(--f-body);
+}
+.wrap { max-width: 980px; margin: 0 auto; padding: 32px 20px 64px; }
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; font-size: 14px; }
+.topbar a { color: var(--muted); text-decoration: none; }
+.topbar a:hover { color: var(--accent); }
+.theme-btn {
+  background: var(--surface); color: var(--fg); border: 1px solid var(--line);
+  border-radius: 6px; padding: 5px 11px; font: 13px var(--f-body); cursor: pointer;
+}
+header { border-bottom: 2px solid var(--line); padding-bottom: 18px; margin-bottom: 28px; }
+.eyebrow {
+  font: 600 12px/1.2 var(--f-mono); text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--warn); margin-bottom: 8px;
+}
+h1 { font: 700 32px/1.15 var(--f-display); margin: 0 0 10px; letter-spacing: -0.01em; }
+.lead { color: var(--muted); font-size: 16.5px; margin: 0; max-width: 74ch; }
+h2 { font: 700 22px/1.25 var(--f-display); margin: 36px 0 12px; }
+h3 { font: 600 16.5px/1.3 var(--f-display); margin: 0 0 8px; }
+p { margin: 0 0 12px; }
+ul { margin: 6px 0 14px; padding-left: 20px; }
+li { margin: 4px 0; }
+code { font-family: var(--f-mono); font-size: 0.88em; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+a { color: var(--accent); }
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 14px 0; }
+@media (max-width: 760px) { .grid-2 { grid-template-columns: 1fr; } }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 18px 20px; margin: 14px 0;
+}
+.card.warn { border-left: 4px solid var(--warn); }
+.card.ok { border-left: 4px solid var(--ok); }
+.card.purple { border-left: 4px solid var(--purple); }
+pre {
+  background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+  padding: 12px 14px; overflow-x: auto; font: 12.5px/1.5 var(--f-mono); margin: 10px 0;
+}
+.callout {
+  background: var(--accent-soft); border-left: 3px solid var(--accent);
+  padding: 12px 15px; border-radius: 0 8px 8px 0; margin: 16px 0; font-size: 14.5px;
+}
+table {
+  width: 100%; border-collapse: collapse; margin: 16px 0; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 8px; overflow: hidden; font-size: 14px;
+}
+th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { background: var(--accent-soft); font-weight: 600; }
+tr:last-child td { border-bottom: none; }
+footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a href="index.html">&larr; Factsheets</a>
+    <button class="theme-btn" id="themeBtn" type="button">Theme</button>
+  </div>
+
+  <header>
+    <div class="eyebrow">Compiler Internals &bull; retag2wasm</div>
+    <h1>How <code>retag2wasm</code> Translates Retag Straight to WebAssembly</h1>
+    <p class="lead">
+      <code>retag2wasm</code> takes the same Stage-4 Retag IR as <a href="sapl2c_translation_factsheet.html"><code>sapl2c</code></a>
+      but writes binary <code>.wasm</code> itself, with no C, no Clang and no Binaryen, in about a thousand lines of Sapl
+      that run inside the JMVM&rsquo;s own wasm build. This sheet explains the translation, the
+      trade-offs that were measured along the way, and how it relates to <code>sapl2c</code>, with real
+      Retag, C and WAT side by side.
+    </p>
+  </header>
+
+  <h2>1. At a Glance</h2>
+  <table>
+    <thead><tr><th>Question</th><th>Answer (measured, dated)</th></tr></thead>
+    <tbody>
+      <tr><td><strong>What goes in, what comes out?</strong></td>
+        <td>Stage-4 Retag text (<code>x.retag.txt</code>, from gen1 <code>--emit=retag</code>, or from <code>abc2retag</code> for Clean) &rarr; <code>x.wasm</code> + <code>x.json</code> (table and data sizes for the loader).</td></tr>
+      <tr><td><strong>Who writes the wasm?</strong></td>
+        <td><code>sapl_compiler/sapl2wasm.cfp</code> (Sapl, ~1000 lines), imported by <code>sapl2c.cfp</code>; reference in Python: <code>experiments/sapl2c/wasm/r2w/sapl_naar_wasm.py</code>. Byte-identical output for all 13 benchmarks and gen1 (20 Nov 2026).</td></tr>
+      <tr><td><strong>How fast?</strong></td>
+        <td>1.13&times; the time of <code>emcc -O2</code> on the same IR (Node 26/V8, warm, geometric mean over 14 programs, 20 Nov 2026 evening), about 88% of clang&rsquo;s speed. In the browsers ~0.30&times; the time of <code>jmvm.wasm</code>, for the programs that fit the ~1&nbsp;MB stack (20 Nov 2026).</td></tr>
+      <tr><td><strong>Where does it run?</strong></td>
+        <td>The whole chain runs in wasm: gen1 &rarr; Retag &rarr; <code>sapl2wasm</code> (both in <code>jmvm.wasm</code>) &rarr; <code>WebAssembly.compile</code> &rarr; run against a 60&nbsp;KB runtime. Demo: <a href="../sapl2wasm.html"><code>sapl2wasm.html</code></a>.</td></tr>
+      <tr><td><strong>What does it not do?</strong></td>
+        <td><code>try</code>/<code>catch</code> and float literals (the generator stops with a message). The browser call stack is the main limit; see section 6.</td></tr>
+    </tbody>
+  </table>
+  <p>
+    Browser tables, stack measurements and the Safari trampoline numbers live in the
+    <a href="wasm_backends_factsheet.html">WebAssembly backends factsheet</a>; this sheet explains <em>why the code looks the way it does</em>.
+  </p>
+
+  <h2>2. The Pipeline: Only the Last Step Is New</h2>
+<pre>Sapl / Haskell-lite source ──► gen1 ──► Stage-4 Retag (x.retag.txt) ◄── abc2retag ◄── Clean .opt.abc
+                                              │
+                          sapl_naar_c.py / sapl2c.cfp:  the shared front
+                          IR: assignments, if/case in tail position, liveness,
+                          which variables to spill, merged heap checks,
+                          non-pointer proofs, C expressions kept as text
+                          ┌───────────────┴────────────────┐
+                          ▼                                ▼
+                emit C text (sapl2c)             parse the C expressions,
+                  ──► clang -O2                  emit wasm bytes (sapl2wasm)
+                  ──► native binary / emcc          ──► x.wasm + x.json
+                                                          │
+                       rt.h ──► rt_wasm.c ──► emcc (once) ──► rt.js + rt.wasm (60 KB)
+                                                          │
+                       r2w_laad.js: start runtime, reserve table and data, instantiate, call main</pre>
+  <p>
+    <code>sapl_naar_wasm.py</code> imports everything of <code>sapl_naar_c.py</code> up to the IR; only the writer is new.
+    <code>sapl2c.cfp</code> imports <code>sapl2wasm.cfp</code> and looks at the <strong>suffix of the target file</strong>:
+    <code>.c</code> gives C, <code>.wasm</code> the direct form with tail calls, <code>.k.wasm</code> the own-stack
+    (continuation) form and <code>.t.wasm</code> the trampoline form for Safari.
+  </p>
+  <div class="card purple">
+    <h3>The pragmatic choice: the IR still carries C expressions as text</h3>
+    <p>
+      The shared IR holds expressions such as <code>SL(3)</code>, <code>CON(0)</code>, <code>PTR(p_xs)[1]</code> or the fast and slow
+      arithmetic paths <em>as C strings</em>. <code>sapl2wasm</code> therefore contains a small parser for exactly that C subset
+      and translates the parsed expression to wasm instructions. That is why the first attempt (20 November) already had all 14 programs
+      correct on its first full run: the hard decisions came from the IR, only the writing was new. It is also why the generator is
+      ~2.7&times; slower than gen1 itself (1,012&nbsp;ms against 376&nbsp;ms for gen1 translating itself, 20 Nov 2026): every expression is
+      re-parsed from text and the bytes are built with many <code>append</code>s. For ordinary programs the translation takes a few to
+      a few tens of milliseconds, so this has not been worth fixing yet.
+    </p>
+  </div>
+
+  <h2>3. The Translation Scheme</h2>
+  <table>
+    <thead><tr><th>Aspect</th><th>In wasm</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Values</strong></td>
+        <td>Tagged <code>i64</code> cells, as on the VM and in <code>sapl2c</code>: low bits <code>00</code> = int (<code>SL(n) = n&lt;&lt;2</code>), <code>01</code> = heap pointer (<code>ptr|1</code>, not shifted), <code>11</code> = char.</td>
+        <td>The same memory model means the same GC and the same runtime for every back-end. In wasm32 a pointer is the low 32 bits of the cell: <code>(i32.and (i32.wrap_i64 v) (i32.const -4))</code> is <code>PTR(v)</code>.</td></tr>
+      <tr><td><strong>Function signature</strong></td>
+        <td><code>(i32 hp, i32 sp, i64 a0..a5) &rarr; (i64 value, i32 hp)</code></td>
+        <td>The heap pointer travels in a wasm local, not in memory. The multivalue return replaces the <code>R</code> struct of the C version.</td></tr>
+      <tr><td><strong>Tail calls and loops</strong></td>
+        <td><code>return_call</code> for a tail call to another function, <code>(loop $top)</code> + <code>br $top</code> for <code>goto top</code>.</td>
+        <td>Same uniform convention as <code>MUSTTAIL</code> in C; self-recursion becomes a real loop.</td></tr>
+      <tr><td><strong>Variables</strong></td>
+        <td>Retag variables become wasm <code>local</code>s.</td>
+        <td>The single biggest reason for the speed (section 5).</td></tr>
+      <tr><td><strong>Moving GC</strong></td>
+        <td>Live heap pointers are spilled to the <em>shadow stack</em> in linear memory (<code>sp</code>, 8 bytes per cell) around every GC-capable point and reloaded afterwards; variables proven to be non-pointers are never spilled.</td>
+        <td>Locals are invisible to the collector. Spill decisions come unchanged from the shared IR.</td></tr>
+      <tr><td><strong>Allocation</strong></td>
+        <td>One merged heap check per straight-line block, then bump allocation: <code>hp + n*8 &gt; *hendp</code> &rarr; <code>rt_gc</code>.</td>
+        <td>Fewer checks, smaller code. <code>hendp</code> lives in memory so the runtime can move it.</td></tr>
+      <tr><td><strong>Laziness</strong></td>
+        <td><code>EVALK</code> inline: pointer? thunk? then spill, <code>call_indirect</code> the thunk entry through its <code>FnDesc</code>, reload; evaluated thunks are read directly.</td>
+        <td>Most evaluations hit an already-evaluated value; the common case should cost a few instructions.</td></tr>
+      <tr><td><strong>Static data</strong></td>
+        <td>FnDescs, strings and names sit at <code>dbase</code> (a block from the runtime&rsquo;s <code>malloc</code>), functions go in the shared table from <code>tbase</code>; <code>x.json</code> says how much of each.</td>
+        <td>One program module is instantiated against a once-built runtime module.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>4. Examples: Retag &rarr; C &rarr; WAT</h2>
+  <p>
+    The Retag and C below are produced by <code>./compile --emit=retag</code> and <code>sapl_naar_c.py</code>; the WAT by
+    <code>sapl_naar_wasm.py</code>. The Sapl generator writes the same bytes directly, without WAT: for the examples here
+    the <code>.wasm</code> from <code>sapl2c.jmvm</code> is byte-identical to <code>wat2wasm</code> of the Python output.
+    WAT is shortened and re-indented by hand (<code>...</code> marks cuts); the generator writes it all on long lines.
+    Both programs were run (<code>r2w_node.js</code>): <code>fib 38</code> gives <code>res: 126491971</code>, the list program <code>res: 55</code>
+    (4.9&nbsp;KB and 3.3&nbsp;KB of wasm, helpers included).
+  </p>
+
+  <h3>Example A: <code>nfib</code>: no heap, no spills, two results</h3>
+  <pre>nfib !n = if (n &lt; 2) 1 ((nfib (n - 1) + nfib (n - 2)) + 1)</pre>
+  <p>The C version (<code>sapl2c</code>):</p>
+  <pre>static R f_nfib(cell* hp, cell* sp, cell p_n, cell u1_, ..., cell u5_) {
+  cell v1_r, v2_nfib, v3_r, v4_nfib, v5_r, v6_r;
+ top: ;
+  if ((LIKELY(!((p_n) &amp; 3)) ? (p_n &lt; SL(2)) : cmp_slow('&lt;', p_n, SL(2)))) {
+    RET(SL(1));
+  } else {
+    v1_r = (LIKELY(!((p_n) &amp; 3)) ? (p_n - SL(1)) : arith_slow('-', p_n, SL(1)));
+    CALL(v2_nfib, f_nfib(hp, sp + 0, v1_r, 0, 0, 0, 0, 0));
+    v3_r = (LIKELY(!((p_n) &amp; 3)) ? (p_n - SL(2)) : arith_slow('-', p_n, SL(2)));
+    CALL(v4_nfib, f_nfib(hp, sp + 0, v3_r, 0, 0, 0, 0, 0));
+    v5_r = (LIKELY(!((v2_nfib | v4_nfib) &amp; 3)) ? (v2_nfib + v4_nfib) : arith_slow('+', ...));
+    v6_r = (LIKELY(!((v5_r) &amp; 3)) ? (v5_r + SL(1)) : arith_slow('+', v5_r, SL(1)));
+    RET(v6_r);
+  }
+}</pre>
+  <p>The WAT version:</p>
+  <pre>(func $f_nfib (type $K)
+      (param $hp i32) (param $sp i32) (param $p_n i64) (param $u1_ i64) ... (param $u5_ i64)
+      (result i64 i32)
+  (local $v1_r i64) (local $v2_nfib i64) (local $v3_r i64) (local $v4_nfib i64)
+  (local $v5_r i64) (local $v6_r i64)
+  (loop $top
+    (if (if (result i32)
+            (i32.eqz (i64.ne (i64.and (local.get $p_n) (i64.const 3)) (i64.const 0)))   ;; tag test
+            (then (i64.lt_s (local.get $p_n) (i64.shl (i64.const 2) (i64.const 2))))    ;; n &lt; SL(2)
+            (else (call $cmp (i32.const 60) (local.get $p_n) (i64.shl (i64.const 2) (i64.const 2)))))
+      (then (return (i64.shl (i64.const 1) (i64.const 2)) (local.get $hp)))             ;; RET(SL(1))
+      (else
+        (local.set $v1_r
+          (if (result i64) (i32.eqz (i64.ne (i64.and (local.get $p_n) (i64.const 3)) (i64.const 0)))
+            (then (i64.sub (local.get $p_n) (i64.shl (i64.const 1) (i64.const 2))))
+            (else (call $rt_arith (i32.const 45) (local.get $p_n) (i64.shl (i64.const 1) (i64.const 2))))))
+        (call $f_nfib (local.get $hp) (local.get $sp) (local.get $v1_r)
+              (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0))
+        (local.set $hp) (local.set $v2_nfib)      ;; two results: pop hp, then the value
+        ... same for nfib (n - 2) -&gt; $v4_nfib ...
+        (local.set $v5_r ...)  (local.set $v6_r ...)   ;; the two additions, fast path + $rt_arith
+        (return (local.get $v6_r) (local.get $hp)))))
+  (unreachable))</pre>
+  <ul>
+    <li><code>n</code> is declared strict (<code>!n</code>, found by the strictness inference), and the analysis proves that <code>n</code> and the call results are non-pointers, so there are <strong>no spills</strong> and both recursive calls pass the same <code>$sp</code> (<code>sp + 0</code> in C).</li>
+    <li>The C ternary <code>LIKELY(!(x &amp; 3)) ? fast : slow</code> becomes an <code>if (result i64)</code>. The slow path calls <code>$rt_arith</code> with the operator as an ASCII code (45 = <code>-</code>, 43 = <code>+</code>, 60 = <code>&lt;</code>).</li>
+    <li><code>(i64.shl (i64.const 2) (i64.const 2))</code> is <code>SL(2)</code> left <em>unfolded</em>: the generator does not fold constants and leaves that to the engine. Whether folding in the generator would gain anything has not been measured.</li>
+    <li>After a non-tail call, <code>(local.set $hp) (local.set $v2_nfib)</code> pops the two results (the value is below, the heap pointer on top).</li>
+  </ul>
+
+  <h3>Example B: <code>upto</code>: allocation, a thunk and a <code>Cons</code> in one block</h3>
+  <pre>upto !a !b = if (a &gt; b) Nil (Cons a (thunk (upto (a + 1) b)))</pre>
+  <pre>if ((LIKELY(!((p_a | p_b) &amp; 3)) ? (p_a &gt; p_b) : cmp_slow('&gt;', p_a, p_b))) {
+  v1_Nil = CON(0);
+  RET(v1_Nil);
+} else {
+  v2_r = (LIKELY(!((p_a) &amp; 3)) ? (p_a + SL(1)) : arith_slow('+', p_a, SL(1)));
+  if (HEAPFULL(7)) {  GC(0);  }
+  { cell* r_ = hp; hp += 7; CNT_CREATE(2);
+    v3_thunk = TAGP(r_ + 0);
+    v4_Cons  = TAGP(r_ + 4);
+    r_[0] = ADM_THUNK(2); r_[1] = v2_r; r_[2] = p_b; r_[3] = FNCELL(d_upto);
+    r_[4] = ADM(T_CONSTR, 5, 1, 3); r_[5] = p_a; r_[6] = v3_thunk;
+  }
+  RET(v4_Cons);
+}</pre>
+  <pre>(else
+  (local.set $v2_r ...)                                  ;; a + 1, fast path + $rt_arith
+  (if (i32.gt_u (i32.add (local.get $hp) (i32.const 56))   ;; HEAPFULL(7): 7 cells x 8 bytes
+                (i32.load (global.get $hendp)))
+    (then (local.set $hp (call $rt_gc (local.get $sp) (local.get $hp)))))
+  (local.set $r_ (local.get $hp))
+  (local.set $hp (i32.add (local.get $hp) (i32.const 56)))
+  (local.set $v3_thunk (i64.extend_i32_u (i32.or (i32.add (local.get $r_) (i32.const 0))  (i32.const 1))))  ;; TAGP
+  (local.set $v4_Cons  (i64.extend_i32_u (i32.or (i32.add (local.get $r_) (i32.const 32)) (i32.const 1))))
+  (i64.store offset=0  (local.get $r_) (i64.const 274877906947))          ;; ADM_THUNK(2)
+  (i64.store offset=8  (local.get $r_) (local.get $v2_r))
+  (i64.store offset=16 (local.get $r_) (local.get $p_b))
+  (i64.store offset=24 (local.get $r_) (i64.extend_i32_u (i32.add (global.get $dbase) (i32.const 0))))  ;; FNCELL(d_upto)
+  (i64.store offset=32 (local.get $r_) (i64.const 206426886155))          ;; ADM(T_CONSTR,5,1,3)
+  (i64.store offset=40 (local.get $r_) (local.get $p_a))
+  (i64.store offset=48 (local.get $r_) (local.get $v3_thunk))
+  (return (local.get $v4_Cons) (local.get $hp)))</pre>
+  <ul>
+    <li><code>HEAPFULL(7)</code> is <code>hp + 56 &gt; *hendp</code>: seven cells (a 4-cell thunk plus a 3-cell <code>Cons</code>) of 8 bytes. One check covers both objects.</li>
+    <li>The admin words are constants. <code>274877906947</code> = <code>(4&lt;&lt;36) | 3</code> is a 4-cell thunk node; <code>206426886155</code> is <code>ADM(T_CONSTR, 5, 1, 3)</code> (type 11, type id 5, constructor 1, size 3).</li>
+    <li>C&rsquo;s <code>TAGP(r_ + 4)</code> is <code>(r_ + 32) | 1</code>. The thunk&rsquo;s last cell points at its <code>FnDesc</code> inside the data block (<code>$dbase + 0</code>).</li>
+    <li>Only the GC path touches the runtime; the allocation itself is seven stores.</li>
+  </ul>
+
+  <h3>Example C: <code>sumList</code>: forcing a lazy value inline, and a real loop</h3>
+  <pre>sumList !xs acc = case xs (Nil -&gt; acc) (Cons x rest -&gt;
+                    sumList (eval(rest)) (thunk (sumList_1 acc x)))</pre>
+  <pre>} else {   /* Cons */
+  v2_x = PTR(p_xs)[1];
+  v3_rest = PTR(p_xs)[2];
+  v4_rest = v3_rest;
+  EVALK(v4_rest, 2, {sp[0] = p_acc; sp[1] = v2_x;}, {p_acc = sp[0]; v2_x = sp[1];});
+  ...                                  /* HEAPFULL(4), allocate the thunk for acc + x */
+  { cell n0_ = v4_rest; cell n1_ = v5_thunk; p_xs = n0_; p_acc = n1_;  } goto top;
+}</pre>
+  <pre>(loop $top
+  (if (i32.eq (i32.wrap_i64 (i64.and (i64.shr_u (i64.load (i32.and (i32.wrap_i64 (local.get $p_xs)) (i32.const -4)))
+                                                (i64.const 28)) (i64.const 255)))
+              (i32.const 0))                                  ;; AUXF(*PTR(p_xs)) == 0 : Nil
+    (then ... (return ...))
+    (else
+      (local.set $v2_x    (i64.load offset=8  (i32.and (i32.wrap_i64 (local.get $p_xs)) (i32.const -4))))   ;; PTR(p_xs)[1]
+      (local.set $v3_rest (i64.load offset=16 (i32.and (i32.wrap_i64 (local.get $p_xs)) (i32.const -4))))   ;; PTR(p_xs)[2]
+      (local.set $v4_rest (local.get $v3_rest))
+      ;; EVALK(v4_rest, 2, ...): is it a pointer, and is it an unevaluated thunk?
+      (if (i64.eq (i64.and (local.get $v4_rest) (i64.const 3)) (i64.const 1)) (then
+        (local.set $adm_ (i64.load (i32.and (i32.wrap_i64 (local.get $v4_rest)) (i32.const -4))))
+        (if (i64.eq (i64.and (local.get $adm_) (i64.const 15)) (i64.const 3)) (then      ;; thunk: save, enter, reload
+          (i64.store offset=0 (local.get $sp) (local.get $p_acc))
+          (i64.store offset=8 (local.get $sp) (local.get $v2_x))
+          (call_indirect (type $K) (local.get $hp) (i32.add (local.get $sp) (i32.const 16)) (local.get $v4_rest)
+                         (i64.const 0) ... (&lt;table index taken from the thunk's FnDesc&gt;))
+          (local.set $hp) (local.set $v4_rest)
+          (local.set $p_acc (i64.load offset=0 (local.get $sp)))
+          (local.set $v2_x  (i64.load offset=8 (local.get $sp))))
+        (else (if (i64.eq (i64.and (local.get $adm_) (i64.const 15)) (i64.const 5)) (then   ;; already evaluated: read the result
+          (local.set $v4_rest (i64.load offset=8 (i32.and (i32.wrap_i64 (local.get $v4_rest)) (i32.const -4)))))))))
+      ...                                                  ;; HEAPFULL(4) + the thunk for acc + x
+      (local.set $p_xs  (local.get $n0_))
+      (local.set $p_acc (local.get $n1_))
+      (br $top))))                                         ;; goto top</pre>
+  <ul>
+    <li><code>EVALK</code> is expanded at every use: tag test (pointer?), admin test (type 3 = unevaluated thunk, type 5 = evaluated, result at offset 8), and only for a thunk the spill, the <code>call_indirect</code> and the reload. The table index comes from the thunk&rsquo;s own <code>FnDesc</code>.</li>
+    <li>Only <code>p_acc</code> and <code>v2_x</code> are spilled: they are the live values that may be pointers across the call.</li>
+    <li>The self tail call <code>sumList rest thunk</code> reassigns the parameters and branches to the top of the loop: constant stack, no <code>return_call</code>.</li>
+  </ul>
+
+  <h3>Example D: the same <code>nfib</code> in the own-stack (continuation) form</h3>
+  <p>Selected with <code>R2W_CPS=1</code> in the Python generator or a <code>.k.wasm</code> target in the Sapl generator:</p>
+  <pre>(func $f_nfib ...                                   ;; after the first recursive call has to come back:
+  ...
+  (if (i32.gt_u (local.get $sp) (global.get $kspl)) (then (call $kover) (unreachable)))   ;; own-stack bound
+  (i64.store offset=0 (local.get $sp) (local.get $p_n))                      ;; live value  -&gt; own stack
+  (i64.store offset=8 (local.get $sp) (&lt;table index of $f_nfib_k1m&gt; &lt;&lt; 2))   ;; continuation -&gt; own stack, as a tagged int
+  (return_call $f_nfib (local.get $hp) (i32.add (local.get $sp) (i32.const 16)) (local.get $v1_r) ...))
+
+;; "RET(x)" is no longer a return: pop the continuation index from the stack and jump to it
+(return_call_indirect (type $K) (local.get $hp) (i32.sub (local.get $sp) (i32.const 8)) &lt;x&gt; ...
+    (i32.wrap_i64 (i64.shr_u (i64.load (i32.sub (local.get $sp) (i32.const 8))) (i64.const 2))))
+
+(func $f_nfib_k1r ...      ;; continuation: runs after nfib (n-1) returned in $kv, with p_n reloaded from $k1
+  (local.set $v2_nfib (local.get $kv))
+  (local.set $p_n (local.get $k1))
+  (local.set $v3_r ...)    ;; n - 2
+  ... push v2_nfib and the index of $f_nfib_k2m, return_call $f_nfib again ...)
+(func $f_nfib_k2r ...)     ;; the second continuation: add, add 1, RET</pre>
+  <ul>
+    <li>A call that is not a tail call becomes: store the live values, store the table index of the continuation, <code>return_call</code> the callee. <code>RET</code> pops that index and jumps to it. The engine&rsquo;s call stack never grows.</li>
+    <li>Each call site gets its own small function (<code>_k1r</code>, <code>_k2r</code>) with the rest of the statements. That is easy because <code>if</code> and <code>case</code> only occur in tail position in the IR: after a call comes always &ldquo;the rest of the same list&rdquo;. A continuation with at most 5 live values exists in two forms: <code>_k1r</code> receives the values in registers, <code>_k1m</code> first loads them from the own stack and jumps there; after an <code>eval</code> of an already-evaluated value the code jumps to the register form directly.</li>
+    <li>The cost: a bound check per frame (<code>$kspl</code>) and an indirect jump per return.</li>
+  </ul>
+
+  <h2>5. Design Decisions and What They Were Worth</h2>
+  <table>
+    <thead><tr><th>Decision</th><th>Alternative</th><th>What was measured</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Start from Retag, not from bytecode</strong></td>
+        <td>Translate JMVM bytecode to wasm (tried twice)</td>
+        <td>Bytecode still behaves like a stack machine. Jul&ndash;Sep 2026 the first attempt was slower than the interpreter; 29 Sep (<code>jmvm2wat</code>, explicit stack) ~1.5&times; faster, too little. From Retag 3&ndash;4&times; (20 Nov). A compiler over a fast interpreter pays off only around ~3&times;.</td></tr>
+      <tr><td><strong>Write locals ourselves</strong></td>
+        <td>Rely on clang or <code>wasm-opt</code></td>
+        <td>Experiment B (20 Nov): <code>emcc -O1</code> is 0.95&times; the time of <code>-O2</code>, <code>-O2 -fno-inline</code> 1.01&times;, but <code>-O0</code> 4.49&times;, and <code>wasm-opt -O3</code> over <code>-O0</code> output 4.43&times;. Clang&rsquo;s big win is variables in locals (mem2reg), not inlining. Retag already has whole functions with named variables, so we can do that part directly.</td></tr>
+      <tr><td><strong>No Binaryen</strong></td>
+        <td>Run <code>wasm-opt</code> over the output</td>
+        <td>~5% extra at most on the generated modules (20 Nov). The generator is small enough to run inside the browser; adding a post-pass tool for ~5% was not worth it.</td></tr>
+      <tr><td><strong>Runtime as a separate module</strong></td>
+        <td>One module with everything</td>
+        <td><code>rt.h</code> is built once with emcc (60&nbsp;KB) and shared by all programs: GC, floats, I/O, strings, files. The per-program parts of <code>rt.h</code> are hooks (<code>sapl_start</code>, <code>con_name_of</code>, <code>lookup_find</code>) or fixed bounds (<code>NCAFS</code>/<code>NCON</code> at 4096). Cost: every runtime call crosses a module boundary and cannot be inlined.</td></tr>
+      <tr><td><strong>Hot paths in the program, cold paths in the runtime</strong></td>
+        <td>Everything via the runtime first</td>
+        <td>Moved in, in order (20 Nov): fast path of <code>ap1</code> (1.28&times; &rarr; 1.26&times; emcc); <code>truth()</code> inline (knights 1.46 &rarr; 1.17); <code>ap1_slow</code> and <code>apply_n</code> (<code>twice</code> 1.42 &rarr; 0.95, mean 1.20 &rarr; 1.15); the five string/compare helpers (<code>eval2</code> 1.45 &rarr; 1.25, gen1 1.18 &rarr; 1.06, mean 1.17 &rarr; <strong>1.13</strong>). Counting runtime calls (<code>R2W_TEL=1</code>) showed 43 million <code>rt_strlen</code> calls in <code>eval2</code> before that last step.</td></tr>
+      <tr><td><strong>Constants vs imported globals</strong></td>
+        <td>Bake data, heap-end and constructor-table addresses in as constants</td>
+        <td>No difference on 5 programs (20 Nov); the module stays independent of where the loader puts the data.</td></tr>
+      <tr><td><strong>Multivalue return</strong></td>
+        <td>Return the value, write <code>hp</code> to memory</td>
+        <td>On the <code>sapl2c</code> + emcc route (Node, 20 Nov): fib 262 &rarr; 133&nbsp;ms, gen1 313 &rarr; 266&nbsp;ms; mean 1.62&times; &rarr; 1.35&times; native.</td></tr>
+      <tr><td><strong>Reuse the IR, parse C text</strong></td>
+        <td>Rewrite the IR as wasm-ready trees</td>
+        <td>Fast to build and verifiable (byte-identical outputs), at the price of a slow generator (~2.7&times; gen1).</td></tr>
+    </tbody>
+  </table>
+  <div class="callout">
+    <strong>An unexplained cost:</strong> after the string helpers went into the program, <code>fib</code> became ~5% slower (in Chrome ~10%) though it uses no strings.
+    Routing <code>$cmp</code> through the runtime again did not bring it back, so the inlining guess was wrong; it looks like a layout or tiering effect in V8.
+    <code>hamming</code> showed a similar unexplained <em>gain</em>. Small wasm differences of this size should not be explained without a measurement.
+  </div>
+
+  <h2>6. The Stack: One Problem, Three Remedies</h2>
+  <p>
+    The direct form uses the engine&rsquo;s call stack for every non-tail call (an <code>EVALK</code>, a strict argument, an over-saturated call).
+    Browsers give a wasm module roughly <strong>1&nbsp;MB</strong> and web pages cannot enlarge it; <code>gen1</code> needs ~0.7&ndash;1.3 million
+    calls of depth. Natively <code>sapl2c</code> has a 4&nbsp;GB thread stack. The remedies, each of which was built and measured:
+  </p>
+  <table>
+    <thead><tr><th>Form</th><th>How</th><th>Price</th><th>Works</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Direct</strong> (<code>.wasm</code>)</td><td>engine stack</td><td>none: 1.13&times; <code>emcc -O2</code> (Node, 20 Nov)</td>
+        <td>9 of 14 in Chrome/Firefox, 11 of 14 in Safari (20 Nov); 14 of 14 in Node with a 2&nbsp;GB stack</td></tr>
+      <tr><td><strong>JSPI segments</strong> (<code>R2W_SEG</code>)</td><td>a depth counter on every non-tail call; at the limit, continue on a fresh JSPI stack</td>
+        <td>+23% even for programs that never switch (counter on every call); Firefox ~0.3&nbsp;ms per switch (gen1: 4.7&nbsp;s) (20 Nov)</td>
+        <td>14 of 14 in Node, Chrome, Firefox; not in Safari</td></tr>
+      <tr><td><strong>Own stack</strong> (<code>.k.wasm</code>, <code>R2W_CPS</code>)</td><td>continuation form, see example D</td>
+        <td>~1.12&times; <code>emcc -O2</code> in Node (equal to direct, deep programs even faster); 20 Nov: Chrome 0.34&times; <code>jmvm.wasm</code>, Firefox 0.59&times;, Safari 1.38&times; (slower than the interpreter)</td>
+        <td>14 of 14 everywhere</td></tr>
+      <tr><td><strong>Own stack, trampoline</strong> (<code>.t.wasm</code>)</td><td>each function returns the next state, <code>sapl_start</code> loops (chunks of 1000 jumps)</td>
+        <td>Made for Safari, where every <code>return_call</code> costs ~7&times; an ordinary call (JavaScriptCore): 0.48&times; <code>jmvm.wasm</code> there (25 Nov), but 3&ndash;7&times; <em>slower</em> than tail calls in Chrome and 1.8&ndash;3.3&times; in Firefox</td>
+        <td>13 of 13 benchmarks in all three (25 Nov)</td></tr>
+    </tbody>
+  </table>
+  <p>
+    The demo page <a href="../sapl2wasm.html"><code>sapl2wasm.html</code></a> shows JMVM, direct and own stack side by side and picks the own-stack
+    form per browser: tail calls in Chrome and Firefox, the trampoline in Safari and on iOS. The details and the tables are in the
+    <a href="wasm_backends_factsheet.html">backends factsheet</a>.
+  </p>
+
+  <h2>7. How It Relates to <code>sapl2c</code></h2>
+  <table>
+    <thead><tr><th></th><th><code>sapl2c</code> (C)</th><th><code>retag2wasm</code></th></tr></thead>
+    <tbody>
+      <tr><td><strong>Input and IR</strong></td><td colspan="2">Identical: Stage-4 Retag, liveness, spill sets, merged heap checks, non-pointer proofs. One front, two writers (and two reference implementations, Python and Sapl).</td></tr>
+      <tr><td><strong>Output</strong></td><td>C text, compiled by clang <code>-O2</code> (native) or emcc (wasm)</td><td>Binary wasm, written directly; no external compiler</td></tr>
+      <tr><td><strong>Who optimises</strong></td><td>Clang: mem2reg, inlining across functions, CSE, constant folding, register allocation</td><td>The generator: variables as locals, inline fast paths. The engine&rsquo;s JIT does the rest within a function; no cross-function inlining (clang inlined <code>f_notmemb</code> into <code>f_legal</code> in knights; V8 does so only to a limited degree)</td></tr>
+      <tr><td><strong>Tail calls</strong></td><td><code>MUSTTAIL return f(...)</code></td><td><code>return_call</code> / <code>return_call_indirect</code></td></tr>
+      <tr><td><strong>Return of (value, hp)</strong></td><td>struct <code>R</code> in two registers</td><td>multivalue <code>(i64, i32)</code></td></tr>
+      <tr><td><strong>Call stack</strong></td><td>Hardware stack, 4&nbsp;GB thread stack natively</td><td>Engine stack (~1&nbsp;MB in browsers) or an own stack in linear memory</td></tr>
+      <tr><td><strong><code>try</code>/<code>catch</code></strong></td><td><code>setjmp</code>-based, works</td><td>Not supported (needs wasm exceptions or an own mechanism)</td></tr>
+      <tr><td><strong>Runtime</strong></td><td><code>rt.h</code> included in the program</td><td><code>rt.h</code> built once as a module; hot parts copied into every program</td></tr>
+      <tr><td><strong>Speed</strong></td><td>~0.33&times; <code>runfast</code> natively (14 Nov); as wasm via emcc 1.35&times; native in Node (20 Nov)</td><td>1.13&times; the emcc version (Node, 20 Nov); ~1.53&times; native in Node with the own stack (25 Nov)</td></tr>
+      <tr><td><strong>Where it can run</strong></td><td>Wherever clang runs</td><td>In the browser: the generator itself is Sapl bytecode in <code>jmvm.wasm</code></td></tr>
+      <tr><td><strong>How equality of generators is tested</strong></td><td><code>vergelijk_generatoren.sh</code>: Python and Sapl produce byte-identical C</td><td><code>toets_sapl.sh</code>: Sapl output = <code>wat2wasm</code> of the Python output for 13 benchmarks + gen1; <code>keten_wasm.js --ref</code>: the wasm32 VM produces the same bytes as the native VM</td></tr>
+    </tbody>
+  </table>
+  <p>
+    In short: <code>sapl2c</code> buys speed from a mature optimiser and needs a C toolchain; <code>retag2wasm</code> keeps ~88% of that speed with a tool that
+    fits in the browser, and it inherits every correctness decision (spills, GC safety, strictness) from the shared IR.
+  </p>
+
+  <h2>8. Limitations and How to Use It</h2>
+  <ul>
+    <li><strong><code>try</code>/<code>catch</code></strong> is not supported (<code>setjmp</code> has no direct wasm equivalent). Nothing in the benchmarks or gen1 uses it.</li>
+    <li><strong>Float literals</strong> are not supported: the f32 bits must be derived from the decimal text, which Sapl cannot do without a primitive.</li>
+    <li><strong>No numeric literal above 32 bits</strong> in the source of the generator, so WebSapl can load it (<code>jmvm.wasm</code> rejects 8-byte words); admin words are computed.</li>
+    <li><strong>Memory</strong> is a fixed heap per module (wasm32: at most 4&nbsp;GB); the runtime has 8M or 16M cells (<code>RT8</code>/<code>RT16</code>).</li>
+    <li><strong>The stack</strong>: see section 6.</li>
+  </ul>
+  <p>Translate and run a program (from the repo root; <code>sapl_compiler/sapl2c.jmvm</code> is built with <code>./compile sapl_compiler/sapl2c.cfp</code> and is not in git):</p>
+<pre>./compile prog.cfp --emit=retag                 # -&gt; prog.retag.txt
+bash experiments/sapl2c/wasm/r2w/bouw.sh UIT    # once: runtime -&gt; UIT/rt.js + rt.wasm
+printf 'prog.retag.txt\nUIT/prog.wasm\nUIT/prog.json\n' | ./runfast sapl_compiler/sapl2c.jmvm
+node experiments/sapl2c/wasm/r2w/r2w_node.js UIT UIT/prog.wasm</pre>
+  <p>The suffix chooses the form: <code>prog.k.wasm</code> for the own stack, <code>prog.t.wasm</code> for the trampoline. The Python reference:</p>
+<pre>python3 experiments/sapl2c/wasm/r2w/sapl_naar_wasm.py prog.retag.txt prog.wat prog.json   # R2W_CPS=1 for the own stack
+wat2wasm --enable-tail-call prog.wat -o prog.wasm
+bash experiments/sapl2c/wasm/r2w/toets.sh UIT            # all 14 against ./runfast
+bash experiments/sapl2c/wasm/r2w/toets_sapl.sh UIT       # Sapl generator = Python generator, byte for byte</pre>
+
+  <div class="callout">
+    <strong>Further reading:</strong>
+    <a href="wasm_backends_factsheet.html">WebAssembly backends</a> (browser measurements, stack tables, trampoline),
+    <a href="sapl2c_translation_factsheet.html">How sapl2c translates Retag to C</a> (the shared IR in C form),
+    <a href="retag_format_factsheet.html">The Retag format</a>, and in the repository
+    <code>experiments/sapl2c/wasm/r2w/README.md</code>, <code>docs/2026-11-20_sapl2c_wasm_stack_verslag.md</code> and
+    <code>docs/2026-11-24_retag2wasm_in_websapl_plan.md</code> (Dutch).
+  </div>
+
+  <footer>
+    Part of the JMVM &amp; Sapl factsheet series. Maintained in <code>docs/2026-11-27_retag2wasm_factsheet.html</code>. Numbers are from 20&ndash;25 November 2026 (Apple M4); examples regenerated 27 November 2026.
+  </footer>
+</div>
+
+<script>
+document.getElementById("themeBtn").addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme") ||
+    (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  const next = cur === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("websapl_theme", next); } catch (_) {}
+});
+</script>
+</body>
+</html>
