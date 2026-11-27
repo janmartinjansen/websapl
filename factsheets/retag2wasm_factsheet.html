@@ -220,7 +220,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
         <td>One merged heap check per straight-line block, then bump allocation: <code>hp + n*8 &gt; *hendp</code> &rarr; <code>rt_gc</code>.</td>
         <td>Fewer checks, smaller code. <code>hendp</code> lives in memory so the runtime can move it.</td></tr>
       <tr><td><strong>Laziness</strong></td>
-        <td><code>EVALK</code> inline: pointer? thunk? then spill, <code>call_indirect</code> the thunk entry through its <code>FnDesc</code>, reload; evaluated thunks are read directly.</td>
+        <td><code>EVALK</code> inline: pointer? thunk? then spill, <code>call_indirect</code> the thunk entry, whose table index sits in the thunk&rsquo;s own admin word, reload; evaluated thunks are read directly.</td>
         <td>Most evaluations hit an already-evaluated value; the common case should cost a few instructions.</td></tr>
       <tr><td><strong>Static data</strong></td>
         <td>FnDescs, strings and names sit at <code>dbase</code> (a block from the runtime&rsquo;s <code>malloc</code>), functions go in the shared table from <code>tbase</code>; <code>x.json</code> says how much of each.</td>
@@ -305,26 +305,26 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
 }</pre>
   <pre>(else
   (local.set $v2_r ...)                                  ;; a + 1, fast path + $rt_arith
-  (if (i32.gt_u (i32.add (local.get $hp) (i32.const 56))   ;; HEAPFULL(7): 7 cells x 8 bytes
+  (if (i32.gt_u (i32.add (local.get $hp) (i32.const 48))   ;; 6 cells x 8 bytes: one less than the C
                 (i32.load (global.get $hendp)))
     (then (local.set $hp (call $rt_gc (local.get $sp) (local.get $hp)))))
   (local.set $r_ (local.get $hp))
-  (local.set $hp (i32.add (local.get $hp) (i32.const 56)))
+  (local.set $hp (i32.add (local.get $hp) (i32.const 48)))
   (local.set $v3_thunk (i64.extend_i32_u (i32.or (i32.add (local.get $r_) (i32.const 0))  (i32.const 1))))  ;; TAGP
-  (local.set $v4_Cons  (i64.extend_i32_u (i32.or (i32.add (local.get $r_) (i32.const 32)) (i32.const 1))))
-  (i64.store offset=0  (local.get $r_) (i64.const 274877906947))          ;; ADM_THUNK(2)
+  (local.set $v4_Cons  (i64.extend_i32_u (i32.or (i32.add (local.get $r_) (i32.const 24)) (i32.const 1))))
+  (i64.store offset=0  (local.get $r_) (i64.const 206158434307))          ;; thunk: 3 cells, table index 1
   (i64.store offset=8  (local.get $r_) (local.get $v2_r))
   (i64.store offset=16 (local.get $r_) (local.get $p_b))
-  (i64.store offset=24 (local.get $r_) (i64.extend_i32_u (i32.add (global.get $dbase) (i32.const 0))))  ;; FNCELL(d_upto)
-  (i64.store offset=32 (local.get $r_) (i64.const 206426886155))          ;; ADM(T_CONSTR,5,1,3)
-  (i64.store offset=40 (local.get $r_) (local.get $p_a))
-  (i64.store offset=48 (local.get $r_) (local.get $v3_thunk))
+  (i64.store offset=24 (local.get $r_) (i64.const 206426886155))          ;; ADM(T_CONSTR,5,1,3)
+  (i64.store offset=32 (local.get $r_) (local.get $p_a))
+  (i64.store offset=40 (local.get $r_) (local.get $v3_thunk))
   (return (local.get $v4_Cons) (local.get $hp)))</pre>
   <ul>
-    <li><code>HEAPFULL(7)</code> is <code>hp + 56 &gt; *hendp</code>: seven cells (a 4-cell thunk plus a 3-cell <code>Cons</code>) of 8 bytes. One check covers both objects.</li>
-    <li>The admin words are constants. <code>274877906947</code> = <code>(4&lt;&lt;36) | 3</code> is a 4-cell thunk node; <code>206426886155</code> is <code>ADM(T_CONSTR, 5, 1, 3)</code> (type 11, type id 5, constructor 1, size 3).</li>
-    <li>C&rsquo;s <code>TAGP(r_ + 4)</code> is <code>(r_ + 32) | 1</code>. The thunk&rsquo;s last cell points at its <code>FnDesc</code> inside the data block (<code>$dbase + 0</code>).</li>
-    <li>Only the GC path touches the runtime; the allocation itself is seven stores.</li>
+    <li>Since 27 November the wasm thunk has no <code>FNCELL</code>: the table index of its entry (relative to <code>tbase</code>) sits in bits 12..35 of the admin word, the two fields a thunk never used. So the wasm block is six cells (a 3-cell thunk plus a 3-cell <code>Cons</code>), <code>hp + 48 &gt; *hendp</code>, while the C above keeps the native layout with seven. One check covers both objects.</li>
+    <li>The admin words are constants. <code>206158434307</code> = <code>(3&lt;&lt;36) | (1&lt;&lt;12) | 3</code> is a 3-cell thunk node whose entry is table slot 1; <code>206426886155</code> is <code>ADM(T_CONSTR, 5, 1, 3)</code> (type 11, type id 5, constructor 1, size 3).</li>
+    <li>C&rsquo;s <code>TAGP(r_ + 4)</code> is <code>(r_ + 32) | 1</code>; in wasm the <code>Cons</code> starts one cell earlier, <code>(r_ + 24) | 1</code>.</li>
+    <li>The runtime cannot find a <code>FnDesc</code> in such a node any more; for <code>res:</code> and reflection the program hands it a reverse table (index &rarr; <code>FnDesc</code>) with <code>rt_set_thunks</code>, and <code>rt.h</code> reads thunks only through <code>THUNK_FNDESC</code>/<code>THUNK_NARGS</code>.</li>
+    <li>Only the GC path touches the runtime; the allocation itself is six stores.</li>
   </ul>
 
   <h3>Example C: <code>sumList</code>: forcing a lazy value inline, and a real loop</h3>
@@ -354,7 +354,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
           (i64.store offset=0 (local.get $sp) (local.get $p_acc))
           (i64.store offset=8 (local.get $sp) (local.get $v2_x))
           (call_indirect (type $K) (local.get $hp) (i32.add (local.get $sp) (i32.const 16)) (local.get $v4_rest)
-                         (i64.const 0) ... (&lt;table index taken from the thunk's FnDesc&gt;))
+                         (i64.const 0) ... (&lt;tbase + table index from bits 12..35 of $adm_&gt;))
           (local.set $hp) (local.set $v4_rest)
           (local.set $p_acc (i64.load offset=0 (local.get $sp)))
           (local.set $v2_x  (i64.load offset=8 (local.get $sp))))
@@ -365,7 +365,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
       (local.set $p_acc (local.get $n1_))
       (br $top))))                                         ;; goto top</pre>
   <ul>
-    <li><code>EVALK</code> is expanded at every use: tag test (pointer?), admin test (type 3 = unevaluated thunk, type 5 = evaluated, result at offset 8), and only for a thunk the spill, the <code>call_indirect</code> and the reload. The table index comes from the thunk&rsquo;s own <code>FnDesc</code>.</li>
+    <li><code>EVALK</code> is expanded at every use: tag test (pointer?), admin test (type 3 = unevaluated thunk, type 5 = evaluated, result at offset 8), and only for a thunk the spill, the <code>call_indirect</code> and the reload. The table index comes from the admin word already in <code>$adm_</code> (a shift, a mask and an add), so forcing reads no extra memory.</li>
     <li>Only <code>p_acc</code> and <code>v2_x</code> are spilled: they are the live values that may be pointers across the call.</li>
     <li>The self tail call <code>sumList rest thunk</code> reassigns the parameters and branches to the top of the loop: constant stack, no <code>return_call</code>.</li>
   </ul>
