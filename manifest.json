@@ -3265,7 +3265,7 @@
           "path": "lib/top_c2.spp",
           "type": "file",
           "ext": ".spp",
-          "size": 5366,
+          "size": 5455,
           "isBinary": false
         },
         {
@@ -3273,7 +3273,7 @@
           "path": "lib/top_sim.spp",
           "type": "file",
           "ext": ".spp",
-          "size": 17421,
+          "size": 20033,
           "isBinary": false
         },
         {
@@ -3281,7 +3281,7 @@
           "path": "lib/top.spp",
           "type": "file",
           "ext": ".spp",
-          "size": 34180,
+          "size": 35192,
           "isBinary": false
         },
         {
@@ -3406,7 +3406,7 @@
               "path": "notebooks/top/demo.spp",
               "type": "file",
               "ext": ".spp",
-              "size": 8717,
+              "size": 9426,
               "isBinary": false
             },
             {

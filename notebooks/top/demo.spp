@@ -169,6 +169,20 @@ Sim.cel [("Tom", TC.actorTaak X.model X.tom), ("Carrie", TC.actorTaak X.model X.
 //%%
 Sim.celHandmatig [("Tom", TC.actorTaak X.model X.tom), ("Tom op telefoon", TC.actorTaak X.model X.tom)]
 //%% [markdown]
+// ## 10. De server herstart
+//
+// De server houdt een **bewaarlog** bij: na elke wijziging de nieuwe stand
+// van die bron. Kies **Herstart de server** (in elke cel met tabbladen): de
+// server begint opnieuw, zet elke bron terug uit het bewaarlog, en de
+// tabbladen maken opnieuw verbinding. Wat er onderweg was, sturen ze nog
+// eens.
+//
+// Probeer het hier met Tom en Carrie: laat Tom een taak beginnen en iets
+// zeggen, herstart de server, en ga dan verder met Carrie. Het werkt net zo
+// in 7: de stand van de bestelling, met de functies erin, komt ook terug.
+//%%
+Sim.cel [("Tom", TC.actorTaak X.model X.tom), ("Carrie", TC.actorTaak X.model X.carrie)]
+//%% [markdown]
 // ## Hoe het in elkaar zit
 //
 // ```
@@ -195,6 +209,7 @@ Sim.celHandmatig [("Tom", TC.actorTaak X.model X.tom), ("Tom op telefoon", TC.ac
 //
 // En omdat de stand van een taak data is, kan hij zelf ook op de server
 // staan (7). Een bron kan ook gebeurtenissen aannemen in plaats van waarden
-// (8, 9): dan controleert wie de bron bijhoudt of de gebeurtenis mag. De
-// volgende treden: een server die herstart zonder dat lopende taken
-// verloren gaan, en een nieuwe versie van de code terwijl er een taak loopt.
+// (8, 9): dan controleert wie de bron bijhoudt of de gebeurtenis mag. En
+// een herstart van de server kost niets (10), omdat hij elke bron terugzet
+// uit zijn bewaarlog. De volgende trede: een nieuwe versie van de code
+// terwijl er een taak loopt.

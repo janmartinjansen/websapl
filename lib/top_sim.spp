@@ -44,8 +44,27 @@ import "lib/top.spp" as Top
 // Een bericht in de wachtrij: naar de server (van sessie s) of naar sessie s.
 ::Bericht = NaarServer !sessie !regel | NaarTab !sessie !regel
 
-// server: de lijst S.Share; log: alle bezorgde regels, nieuwste eerst.
+// server: de server (de lijst S.Share en het bewaarlog); log: alle bezorgde
+// regels, nieuwste eerst.
 ::Wereld = Wereld server bronnen tabs rij log !actief !auto
+
+// De server: de shares van server/shares.spp, en per share de laatste
+// `bewaar`-regel (het bewaarlog, zoals de gastheer het met --bewaar
+// bijhoudt; trede 6).
+::Server = Server shares bewaard
+
+::Bewaard = Bewaard !naam !regel
+
+::NaStap = NaStap server uit
+
+// Een regel naar S.step, en de `bewaar`-regels in het bewaarlog.
+stapServer regel srv = case srv (Server sh bw -> case (S.step regel sh) (S.Stap sh2 uit -> NaStap (Server sh2 (bewaarUit uit bw)) uit))
+
+bewaarUit uit bw = case uit (Nil -> bw) (Cons l rest -> bewaarUit rest (if (T.startsWith "bewaar " l) (bewaarRegel l bw) bw))
+
+bewaarRegel l bw = let naam = V.nde 1 (V.velden 2 l) in L.append (L.filter (nietBewaardAls naam) bw) [Bewaard naam l]
+
+nietBewaardAls naam b = case b (Bewaard n r -> T.equal n naam == False)
 
 // == Opbouwen =================================================================
 
@@ -54,7 +73,7 @@ import "lib/top.spp" as Top
 wereld paren =
   let tabs = maakTabs 1 paren,
       bs = alleBronnen tabs,
-      srv = L.map serverShare bs,
+      srv = Server (L.map serverShare bs) Nil,
       w0 = Wereld srv bs Nil Nil Nil 1 False in
   openAlle tabs w0
 
@@ -101,8 +120,8 @@ openAlle tabs w = case tabs (Nil -> w) (Cons tab rest -> openAlle rest (verbind 
 // het antwoord (hallo) en de `lees`-berichten gaan in de rij.
 verbind tab w =
   case w (Wereld srv bs tabs rij log a au ->
-    case (S.step (T.concat ["open ", T.showInt (sessieVan tab)]) srv)
-      (S.Stap srv2 uit -> naTab tab (Wereld srv2 bs (L.append tabs [tab]) (L.append rij (L.concatMap serverUit uit)) (logServer uit log) a au)))
+    case (stapServer (T.concat ["open ", T.showInt (sessieVan tab)]) srv)
+      (NaStap srv2 uit -> naTab tab (Wereld srv2 bs (L.append tabs [tab]) (L.append rij (L.concatMap serverUit uit)) (logServer uit log) a au)))
 
 // == De client-driver ==========================================================
 
@@ -259,7 +278,39 @@ rijVan w = case w (Wereld srv bs tabs rij log a au -> rij)
 
 tabsVan w = case w (Wereld srv bs tabs rij log a au -> tabs)
 
-serverVan w = case w (Wereld srv bs tabs rij log a au -> srv)
+serverVan w = case w (Wereld srv bs tabs rij log a au -> case srv (Server sh bw -> sh))
+
+bewaardVan w = case w (Wereld srv bs tabs rij log a au -> case srv (Server sh bw -> bw))
+
+// == Herstart (trede 6) ========================================================
+
+// De server valt weg en start opnieuw: een verse server, en per share de
+// laatste `bewaar`-regel als `herstel` (zoals server/gastheer/host.js met
+// --bewaar doet). Wat er onderweg was, is weg; de tabbladen maken opnieuw
+// verbinding, abonneren zich opnieuw, en sturen wat ze nog onderweg hadden
+// nog eens (een schrijfactie op een oude versie botst dan gewoon; een
+// gebeurtenis die de server al verwerkt had, maar waarvan het `ok` verloren
+// ging, wordt opnieuw toegepast).
+herstart w =
+  case w (Wereld srv bs tabs rij log a au -> case srv (Server sh bw ->
+    case (herstelAlle bw (Server (L.map serverShare bs) bw) Nil)
+      (NaStap srv2 uit -> opnieuwVerbinden (L.map losVan tabs) (Wereld srv2 bs Nil Nil (logServer uit (Cons "server: herstart" log)) a au))))
+
+herstelAlle bw srv uit =
+  case bw
+    (Nil -> NaStap srv uit)
+    (Cons b rest -> case b (Bewaard n regel -> case (stapServer (T.append "herstel" (T.drop 6 regel)) srv)
+      (NaStap srv2 uit2 -> herstelAlle rest srv2 (L.append uit uit2))))
+
+// Zonder abonnementen: naTab abonneert het tabblad dan opnieuw.
+losVan tab = case tab (Tab n s t bs k o wa -> Tab n s t Nil k o wa)
+
+opnieuwVerbinden tabs w =
+  case tabs
+    (Nil -> if (autoVan w) (bezorgAlles w) w)
+    (Cons tab rest -> opnieuwVerbinden rest (opnieuwSturen tab (verbind tab w)))
+
+opnieuwSturen tab w = case tab (Tab n s t bs k o wa -> voegToe (L.map (schrijfBericht s (bronnenVan w)) o) w)
 
 logVan w = case w (Wereld srv bs tabs rij log a au -> log)
 
@@ -281,8 +332,8 @@ bezorg m w =
 
 naarServer !s regel w =
   case w (Wereld srv bs tabs rij log a au ->
-    case (S.step (T.concat ["msg ", T.showInt s, " ", regel]) srv)
-      (S.Stap srv2 uit -> Wereld srv2 bs tabs (L.append rij (L.concatMap serverUit uit)) (logServer uit log) a au))
+    case (stapServer (T.concat ["msg ", T.showInt s, " ", regel]) srv)
+      (NaStap srv2 uit -> Wereld srv2 bs tabs (L.append rij (L.concatMap serverUit uit)) (logServer uit log) a au))
 
 // `to 1,2 <bericht>` wordt een bericht per tabblad; `bewaar` alleen in het log.
 serverUit l = if (T.startsWith "to " l) (L.map (naarSessie (V.naVeld 2 l)) (L.map V.leesGetal (T.split ',' (V.nde 1 (V.velden 2 l))))) Nil
@@ -315,6 +366,8 @@ knopAutoAan = "Automatisch bezorgen: aan"
 
 knopAutoUit = "Automatisch bezorgen: uit"
 
+knopHerstart = "Herstart de server"
+
 naarTabLabel tab = T.append "→ tabblad " (naamTab tab)
 
 kiesNetwerk = "(netwerk en tabbladen)"
@@ -330,9 +383,10 @@ celKnop s w =
   (if (T.equal s knopBezorgAlles) (bezorgAlles w)
   (if (T.equal s knopAutoAan) (bezorgAlles (zetAuto True w))
   (if (T.equal s knopAutoUit) (zetAuto False w)
+  (if (T.equal s knopHerstart) (herstart w)
   (case (L.filter (heeftLabel s) (tabsVan w))
     (Cons tab r -> zetActief (sessieVan tab) w)
-    (Nil -> inActief (D.Input "" s) w))))))
+    (Nil -> inActief (D.Input "" s) w)))))))
 
 heeftLabel s tab = T.equal (naarTabLabel tab) s
 
@@ -370,7 +424,7 @@ codeblok s = T.concat ["```", Top.nl, s, Top.nl, "```"]
 
 knoppen w =
   L.append (L.map naarTabLabel (L.filter (nietActief (actiefVan w)) (tabsVan w)))
-    (if (autoVan w) [knopAutoUit] [knopBezorgEen, knopBezorgAlles, knopAutoAan])
+    (L.append (if (autoVan w) [knopAutoUit] [knopBezorgEen, knopBezorgAlles, knopAutoAan]) [knopHerstart])
 
 nietActief !a tab = sessieVan tab != a
 
