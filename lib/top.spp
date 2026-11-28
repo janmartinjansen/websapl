@@ -194,6 +194,13 @@ wijzig b f = Wijzig "" b f (0 - 1) (standaardVan b) Nil
 // die naam (`bestelling`, `bestelling/1`, ...), dus in elk tabblad gelijk.
 gedeeldeTaak naam t = TaakGedeeld "" (Bron naam "Taak" (nummer naam t) Nil) (0 - 1) (Kijk "" "" "(wacht op de taak)") Nil
 
+// Een pagina die opnieuw laadt (trede 7: een nieuwe versie van de code): de
+// stand van een gedeelde taak is niet meer bekend en komt opnieuw van de
+// bron; wat er nog uit moest, is weg. Andere taken blijven zoals ze zijn.
+herlaad t = case t
+  (TaakGedeeld i b v x u -> TaakGedeeld i b (0 - 1) (Kijk "" "" "(wacht op de taak)") Nil)
+  (_ -> t)
+
 naamVan b = case b (Bron n t s f -> n)
 
 typeVan b = case b (Bron n t s f -> t)

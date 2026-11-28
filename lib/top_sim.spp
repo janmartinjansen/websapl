@@ -12,6 +12,8 @@
 //
 //   import "lib/top_sim.spp" as Sim
 //   Sim.cel [("A", taak), ("B", taak)]         -- als notebookcel
+//   Sim.celMetDefinitie "maak" ["A", "B"]      -- trede 7: taken uit `maak k`,
+//                                                 met nieuwe code (zie Code)
 //
 // In de cel werk je in één tabblad tegelijk (de pagina zegt bij een
 // formulierinvoer niet uit welk formulier hij komt); de andere tonen hun
@@ -33,6 +35,7 @@ import "lib/waarden.spp" as W
 import "lib/verbinding.spp" as V
 import "server/shares.spp" as S
 import "lib/top.spp" as Top
+import "lib/codehash.spp" as CH
 
 ::list = Nil | Cons !x xs
 
@@ -46,7 +49,16 @@ import "lib/top.spp" as Top
 
 // server: de server (de lijst S.Share en het bewaarlog); log: alle bezorgde
 // regels, nieuwste eerst.
-::Wereld = Wereld server bronnen tabs rij log !actief !auto
+::Wereld = Wereld server bronnen tabs rij log !actief !auto code
+
+// De code (trede 7). opHash: de stand van een taak gaat met code-hash over
+// de draad (CH.packH: achter elke functie een hash over haar code, en bij
+// het uitpakken precies die versie), anders met pack (op naam: na een nieuwe
+// versie van de code de nieuwste). definitie: "" of de naam van een functie
+// `Int -> Taak` (een nummer geeft een nieuwe gedeelde taak), die bij "Nieuwe
+// taak" op naam wordt opgezocht: dus in de huidige code. teller: het nummer
+// van de laatste taak.
+::Code = Code !opHash !definitie !teller
 
 // De server: de shares van server/shares.spp, en per share de laatste
 // `bewaar`-regel (het bewaarlog, zoals de gastheer het met --bewaar
@@ -70,23 +82,39 @@ nietBewaardAls naam b = case b (Bewaard n r -> T.equal n naam == False)
 
 // paren: [(naam, taak), ...]. Elk tabblad maakt verbinding (`open`) en
 // abonneert zich op zijn bronnen; de berichten staan dan in de rij.
-wereld paren =
+wereld paren = wereldMet (Code True "" 0) paren
+
+wereldMet cd paren =
   let tabs = maakTabs 1 paren,
       bs = alleBronnen tabs,
-      srv = Server (L.map serverShare bs) Nil,
-      w0 = Wereld srv bs Nil Nil Nil 1 False in
+      srv = Server (L.map (serverShare cd) bs) Nil,
+      w0 = Wereld srv bs Nil Nil Nil 1 False cd in
   openAlle tabs w0
+
+// Trede 7: elk tabblad begint met taak 1 van de definitie (de naam van een
+// functie `Int -> Taak`, zie Code).
+wereldMetDefinitie definitie namen =
+  let t = maakTaak definitie 1 in
+  wereldMet (Code True definitie 1) (L.map (\n -> (n, t)) namen)
+
+// De functie met deze naam, zoals de code nu is: unpack bindt een naam aan
+// de nieuwste versie. (De tekst is wat pack van een functie zonder
+// argumenten schrijft.)
+maakTaak definitie !k = toepassen (unpack (T.concat ["P ", definitie, " S 0"])) k
+
+toepassen f x = f x
 
 maakTabs !i ps = case ps (Nil -> Nil) (Cons p rest -> Cons (maakTab i p) (maakTabs (i + 1) rest))
 
 maakTab !i (naam, t) = Tab naam i (Top.begin t) Nil Nil Nil Nil
 
-serverShare b =
-  case (Top.verwerkVan b)
-    (Nil -> S.share (Top.naamVan b) geldig (beginTekst b))
-    (Cons f r -> S.shareMetGebeurtenissen (Top.naamVan b) geldig (verwerkTekst (Top.typeVan b) f) (beginTekst b))
+serverShare cd b =
+  if (T.contains " " (Top.naamVan b)) (error (T.concat ["TopSim: de naam van een bron mag geen spatie hebben (het protocol scheidt velden met spaties): ", Top.naamVan b]))
+  (case (Top.verwerkVan b)
+    (Nil -> S.share (Top.naamVan b) geldig (beginTekst cd b))
+    (Cons f r -> S.shareMetGebeurtenissen (Top.naamVan b) geldig (verwerkTekst (Top.typeVan b) f) (beginTekst cd b)))
 
-beginTekst b = W.packT (Top.typeVan b) (alsData (Top.typeVan b) (Top.standaardVan b))
+beginTekst cd b = inpakken cd (Top.typeVan b) (Top.standaardVan b)
 
 // De functie van een bron, op tekst (zoals de server hem aanroept): dezelfde
 // f als bij de lokale driver.
@@ -119,9 +147,9 @@ openAlle tabs w = case tabs (Nil -> w) (Cons tab rest -> openAlle rest (verbind 
 // `open` gaat rechtstreeks (zoals de gastheer bij een nieuwe verbinding);
 // het antwoord (hallo) en de `lees`-berichten gaan in de rij.
 verbind tab w =
-  case w (Wereld srv bs tabs rij log a au ->
+  case w (Wereld srv bs tabs rij log a au cd ->
     case (stapServer (T.concat ["open ", T.showInt (sessieVan tab)]) srv)
-      (NaStap srv2 uit -> naTab tab (Wereld srv2 bs (L.append tabs [tab]) (L.append rij (L.concatMap serverUit uit)) (logServer uit log) a au)))
+      (NaStap srv2 uit -> naTab tab (Wereld srv2 bs (L.append tabs [tab]) (L.append rij (L.concatMap serverUit uit)) (logServer uit log) a au cd)))
 
 // == De client-driver ==========================================================
 
@@ -139,7 +167,7 @@ naTab tab w =
     let t1 = Top.stuurNieuw k t,
         nieuw = L.filter (nietIn bs) (uniek (L.map nodigBron (Top.nodig t1)) Nil),
         lezen = L.map (leesBericht s) nieuw,
-        r = versturen s (Top.uitgaand t1) o wa (bronnenVan w) Nil,
+        r = versturen s (Top.uitgaand t1) o wa w Nil,
         tab2 = Tab n s (Top.zonderUitgaand t1) (L.append bs nieuw) k (vRond r) (vWacht r) in
     zetTab tab2 (voegToe (L.append lezen (vBerichten r)) w))
 
@@ -147,7 +175,7 @@ nietIn bs b = heeftBron (Top.naamVan b) bs == False
 
 leesBericht !s b = NaarServer s (V.lees (Top.naamVan b))
 
-bronnenVan w = case w (Wereld srv bs tabs rij log a au -> bs)
+bronnenVan w = case w (Wereld srv bs tabs rij log a au cd -> bs)
 
 // Onderweg: Schrijf-waarden (één per bron); wachtend idem.
 ::Verstuurd = Verstuurd onderweg wachtend berichten
@@ -160,13 +188,13 @@ vBerichten r = case r (Verstuurd o w b -> b)
 
 // Per bron hoogstens één schrijfactie of gebeurtenis onderweg. Erachter
 // wacht van een waarde alleen de laatste, van gebeurtenissen allemaal.
-versturen !s ws o wa bs uit =
+versturen !s ws o wa w uit =
   case ws
     (Nil -> Verstuurd o wa uit)
     (Cons x rest ->
       if (L.any (schrijftOp (opBron x)) o)
-        (versturen s rest o (wachtAchter x wa) bs uit)
-        (versturen s rest (L.append o [x]) wa bs (L.append uit [schrijfBericht s bs x])))
+        (versturen s rest o (wachtAchter x wa) w uit)
+        (versturen s rest (L.append o [x]) wa w (L.append uit [schrijfBericht s w x])))
 
 wachtAchter x wa = case x
   (Top.Schrijf n v val van -> L.append (L.filter (nietWaardeVoor n) wa) [x])
@@ -180,15 +208,30 @@ schrijftOp naam x = T.equal (opBron x) naam
 
 schrijftNietOp naam x = schrijftOp naam x == False
 
-schrijfBericht !s bs x = case x
-  (Top.Schrijf n v val van -> NaarServer s (V.schrijf n v (W.packT (Top.typeVan (bronMet n bs)) (alsData (Top.typeVan (bronMet n bs)) val))))
+schrijfBericht !s w x = let bs = bronnenVan w, cd = codeVan w in case x
+  (Top.Schrijf n v val van -> NaarServer s (V.schrijf n v (inpakken cd (Top.typeVan (bronMet n bs)) val)))
   (Top.Gebeurt b e van -> NaarServer s (V.regel ["schrijf", Top.naamVan b, "0", S.soortGebeurtenis, V.esc (W.packT typeGebeurtenis (V.heel e))]))
 
 // Wat er over de draad gaat, is data (V.heel), behalve de stand van een
-// taak: die bevat functies (de voortzettingen) en gaat met pack, op naam.
-// Binnen deze pagina is dat hetzelfde programma; tussen verschillende
-// builds is dat code op hash (fase 3 van het client-server-ontwerp).
+// taak: die bevat functies (de voortzettingen). Die gaat met pack, en met
+// Code opHash met CH.packH: elke functie met de hash van haar code, zodat
+// een lopende taak na een nieuwe versie van de code de oude versie houdt
+// (trede 7; fase 3 van het client-server-ontwerp).
 alsData ty val = if (T.equal ty "Taak") val (V.heel val)
+
+// Uitpakken gaat voor een taak altijd met CH.unpackH: een tekst zonder
+// hashes leest die zoals unpack (op naam), een tekst met hashes met precies
+// die code. Of er hashes in staan, besliste wie de stand schreef.
+inpakken cd ty val = if (T.equal ty "Taak" /\ codeOpHash cd) (T.concat [W.kop, ty, Top.nl, CH.packH val]) (W.packT ty (alsData ty val))
+
+uitpakkenTekst ty tekst =
+  if (T.equal ty "Taak") (uitpakkenH ty tekst (W.regelEind tekst 6 (strlen tekst))) (W.unpackT ty tekst)
+
+uitpakkenH ty tekst !e =
+  if (W.zelfdeType ty (W.typeOf tekst)) (CH.unpackH (strslice tekst (e + 1) (strlen tekst)))
+  (error (T.concat ["unpackT: verwacht ", ty, ", gevonden ", W.typeOf tekst]))
+
+codeOpHash cd = case cd (Code h d k -> h)
 
 // Een regel van de server voor dit tabblad.
 ontvang regel tab w =
@@ -200,7 +243,7 @@ ontvang regel tab w =
       (V.Fout m -> naTab (geweigerd m tab) w)
       (_ -> w))
 
-uitpakken b tekst w = W.unpackT (Top.typeVan (bronMet b (bronnenVan w))) tekst
+uitpakken b tekst w = uitpakkenTekst (Top.typeVan (bronMet b (bronnenVan w))) tekst
 
 // Een nieuwe waarde van een ander: onthouden en aan de taak geven.
 metWaarde b !v x tab =
@@ -264,23 +307,23 @@ nietOpgeslagen b s = case s (Top.Opgeslagen n v x -> T.equal n b == False)
 
 // == De wereld: tabbladen, server en de rij ====================================
 
-zetTab tab w = case w (Wereld srv bs tabs rij log a au -> Wereld srv bs (L.map (vervangTab tab) tabs) rij log a au)
+zetTab tab w = case w (Wereld srv bs tabs rij log a au cd -> Wereld srv bs (L.map (vervangTab tab) tabs) rij log a au cd)
 
 vervangTab tab t = if (sessieVan t == sessieVan tab) tab t
 
-tabMet !s w = case w (Wereld srv bs tabs rij log a au -> case (L.filter (heeftSessie s) tabs) (Cons t r -> [t]) (Nil -> Nil))
+tabMet !s w = case w (Wereld srv bs tabs rij log a au cd -> case (L.filter (heeftSessie s) tabs) (Cons t r -> [t]) (Nil -> Nil))
 
 heeftSessie !s t = sessieVan t == s
 
-voegToe ms w = case w (Wereld srv bs tabs rij log a au -> Wereld srv bs tabs (L.append rij ms) log a au)
+voegToe ms w = case w (Wereld srv bs tabs rij log a au cd -> Wereld srv bs tabs (L.append rij ms) log a au cd)
 
-rijVan w = case w (Wereld srv bs tabs rij log a au -> rij)
+rijVan w = case w (Wereld srv bs tabs rij log a au cd -> rij)
 
-tabsVan w = case w (Wereld srv bs tabs rij log a au -> tabs)
+tabsVan w = case w (Wereld srv bs tabs rij log a au cd -> tabs)
 
-serverVan w = case w (Wereld srv bs tabs rij log a au -> case srv (Server sh bw -> sh))
+serverVan w = case w (Wereld srv bs tabs rij log a au cd -> case srv (Server sh bw -> sh))
 
-bewaardVan w = case w (Wereld srv bs tabs rij log a au -> case srv (Server sh bw -> bw))
+bewaardVan w = case w (Wereld srv bs tabs rij log a au cd -> case srv (Server sh bw -> bw))
 
 // == Herstart (trede 6) ========================================================
 
@@ -292,9 +335,9 @@ bewaardVan w = case w (Wereld srv bs tabs rij log a au -> case srv (Server sh bw
 // gebeurtenis die de server al verwerkt had, maar waarvan het `ok` verloren
 // ging, wordt opnieuw toegepast).
 herstart w =
-  case w (Wereld srv bs tabs rij log a au -> case srv (Server sh bw ->
-    case (herstelAlle bw (Server (L.map serverShare bs) bw) Nil)
-      (NaStap srv2 uit -> opnieuwVerbinden (L.map losVan tabs) (Wereld srv2 bs Nil Nil (logServer uit (Cons "server: herstart" log)) a au))))
+  case w (Wereld srv bs tabs rij log a au cd -> case srv (Server sh bw ->
+    case (herstelAlle bw (Server (L.map (serverShare cd) bs) bw) Nil)
+      (NaStap srv2 uit -> opnieuwVerbinden (L.map losVan tabs) (Wereld srv2 bs Nil Nil (logServer uit (Cons "server: herstart" log)) a au cd))))
 
 herstelAlle bw srv uit =
   case bw
@@ -310,20 +353,70 @@ opnieuwVerbinden tabs w =
     (Nil -> if (autoVan w) (bezorgAlles w) w)
     (Cons tab rest -> opnieuwVerbinden rest (opnieuwSturen tab (verbind tab w)))
 
-opnieuwSturen tab w = case tab (Tab n s t bs k o wa -> voegToe (L.map (schrijfBericht s (bronnenVan w)) o) w)
+opnieuwSturen tab w = case tab (Tab n s t bs k o wa -> voegToe (L.map (schrijfBericht s w) o) w)
 
-logVan w = case w (Wereld srv bs tabs rij log a au -> log)
+// == Een nieuwe versie van de code (trede 7) ==================================
 
-actiefVan w = case w (Wereld srv bs tabs rij log a au -> a)
+codeVan w = case w (Wereld srv bs tabs rij log a au cd -> cd)
 
-autoVan w = case w (Wereld srv bs tabs rij log a au -> au)
+definitieVan w = case (codeVan w) (Code h d k -> d)
+
+zetHash b w = case w (Wereld srv bs tabs rij log a au cd -> case cd (Code h d k -> Wereld srv bs tabs rij log a au (Code b d k)))
+
+// Alle tabbladen laden opnieuw, zoals een browser na een nieuwe build: wat
+// een tabblad wist en nog onderweg had, is weg, ook de berichten in de rij.
+// Het sluit zijn verbinding, maakt een nieuwe en leest de stand van zijn
+// gedeelde taak opnieuw van de server, met de code die nu geladen is.
+herlaad w =
+  case w (Wereld srv bs tabs rij log a au cd ->
+    herlaadAlle tabs (Wereld srv bs Nil Nil (Cons "tabbladen: opnieuw geladen" log) a au cd))
+
+herlaadAlle tabs w =
+  case tabs
+    (Nil -> if (autoVan w) (bezorgAlles w) w)
+    (Cons tab rest -> herlaadAlle rest (verbind (opnieuwGeladen tab) (sluit (sessieVan tab) w)))
+
+opnieuwGeladen tab = case tab (Tab n s t bs k o wa -> Tab n s (Top.herlaad t) Nil Nil Nil Nil)
+
+sluit !s w =
+  case w (Wereld srv bs tabs rij log a au cd ->
+    case (stapServer (T.append "close " (T.showInt s)) srv)
+      (NaStap srv2 uit -> Wereld srv2 bs tabs rij (logServer uit log) a au cd))
+
+// Een nieuwe taak in het actieve tabblad: het volgende nummer van de
+// definitie, met de code zoals die nu is (maakTaak zoekt de functie op
+// naam op). De server krijgt er een share bij.
+nieuweTaak w =
+  case w (Wereld srv bs tabs rij log a au cd -> case cd (Code h d k ->
+    if (T.isEmpty d) w (inNieuweTaak (Top.begin (maakTaak d (k + 1))) (Wereld srv bs tabs rij log a au (Code h d (k + 1))))))
+
+inNieuweTaak t w =
+  case (tabMet (actiefVan w) w)
+    (Cons tab r -> case tab (Tab n s t0 bs k o wa ->
+      let w2 = naTab (Tab n s t bs k o wa) (metBronnen (L.map nodigBron (Top.nodig t)) w) in
+      if (autoVan w2) (bezorgAlles w2) w2))
+    (Nil -> w)
+
+metBronnen nieuw w = case w (Wereld srv bs tabs rij log a au cd -> metBronnenErbij (L.filter (nietIn bs) nieuw) w)
+
+metBronnenErbij erbij w =
+  case w (Wereld srv bs tabs rij log a au cd -> case srv (Server sh bw ->
+    Wereld (Server (L.append sh (L.map (serverShare cd) erbij)) bw) (L.append bs erbij) tabs rij (L.append (L.reverse (L.map nieuweShare erbij)) log) a au cd))
+
+nieuweShare b = T.append "server: nieuwe share " (Top.naamVan b)
+
+logVan w = case w (Wereld srv bs tabs rij log a au cd -> log)
+
+actiefVan w = case w (Wereld srv bs tabs rij log a au cd -> a)
+
+autoVan w = case w (Wereld srv bs tabs rij log a au cd -> au)
 
 // Het oudste bericht in de rij bezorgen.
 bezorgEen w =
-  case w (Wereld srv bs tabs rij log a au ->
+  case w (Wereld srv bs tabs rij log a au cd ->
     case rij
       (Nil -> w)
-      (Cons m rest -> bezorg m (Wereld srv bs tabs rest (Cons (toonBericht w m) log) a au)))
+      (Cons m rest -> bezorg m (Wereld srv bs tabs rest (Cons (toonBericht w m) log) a au cd)))
 
 bezorg m w =
   case m
@@ -331,9 +424,9 @@ bezorg m w =
     (NaarTab s regel -> case (tabMet s w) (Cons tab r -> ontvang regel tab w) (Nil -> w))
 
 naarServer !s regel w =
-  case w (Wereld srv bs tabs rij log a au ->
+  case w (Wereld srv bs tabs rij log a au cd ->
     case (stapServer (T.concat ["msg ", T.showInt s, " ", regel]) srv)
-      (NaStap srv2 uit -> Wereld srv2 bs tabs (L.append rij (L.concatMap serverUit uit)) (logServer uit log) a au))
+      (NaStap srv2 uit -> Wereld srv2 bs tabs (L.append rij (L.concatMap serverUit uit)) (logServer uit log) a au cd))
 
 // `to 1,2 <bericht>` wordt een bericht per tabblad; `bewaar` alleen in het log.
 serverUit l = if (T.startsWith "to " l) (L.map (naarSessie (V.naVeld 2 l)) (L.map V.leesGetal (T.split ',' (V.nde 1 (V.velden 2 l))))) Nil
@@ -352,11 +445,17 @@ bezorgTot !n w = if ((n <= 0) \/ L.isEmpty (rijVan w)) w (bezorgTot (n - 1) (bez
 cel paren = D.interactive (metAuto (wereld paren)) celStap beeld
 
 // Automatisch bezorgen staat aan.
-metAuto w = case w (Wereld srv bs tabs rij log a au -> bezorgAlles (Wereld srv bs tabs rij log a True))
+metAuto w = case w (Wereld srv bs tabs rij log a au cd -> bezorgAlles (Wereld srv bs tabs rij log a True cd))
 
 // Handmatig bezorgen (voor een botsing). Verbinden en abonneren gaan nog
 // vanzelf; daarna wacht elk bericht tot je het bezorgt.
 celHandmatig paren = D.interactive (zetAuto False (bezorgAlles (wereld paren))) celStap beeld
+
+// Trede 7: tabbladen met taak 1 van een definitie (de naam van een functie
+// `Int -> Taak`, als tekst: zo hangt de cel in een notebook niet van die
+// definitie af, en voert de notebook haar niet opnieuw uit als je de code
+// verandert). Zie Code en nieuweTaak.
+celMetDefinitie definitie namen = D.interactive (metAuto (wereldMetDefinitie definitie namen)) celStap beeld
 
 knopBezorgEen = "Bezorg één bericht"
 
@@ -367,6 +466,14 @@ knopAutoAan = "Automatisch bezorgen: aan"
 knopAutoUit = "Automatisch bezorgen: uit"
 
 knopHerstart = "Herstart de server"
+
+knopNieuweTaak = "Nieuwe taak in dit tabblad"
+
+knopHerlaad = "Herlaad de tabbladen"
+
+knopHashAan = "Code op hash: aan"
+
+knopHashUit = "Code op hash: uit"
 
 naarTabLabel tab = T.append "→ tabblad " (naamTab tab)
 
@@ -384,15 +491,19 @@ celKnop s w =
   (if (T.equal s knopAutoAan) (bezorgAlles (zetAuto True w))
   (if (T.equal s knopAutoUit) (zetAuto False w)
   (if (T.equal s knopHerstart) (herstart w)
+  (if (T.equal s knopNieuweTaak) (nieuweTaak w)
+  (if (T.equal s knopHerlaad) (herlaad w)
+  (if (T.equal s knopHashAan) (zetHash True w)
+  (if (T.equal s knopHashUit) (zetHash False w)
   (case (L.filter (heeftLabel s) (tabsVan w))
     (Cons tab r -> zetActief (sessieVan tab) w)
-    (Nil -> inActief (D.Input "" s) w)))))))
+    (Nil -> inActief (D.Input "" s) w)))))))))))
 
 heeftLabel s tab = T.equal (naarTabLabel tab) s
 
-zetAuto b w = case w (Wereld srv bs tabs rij log a au -> Wereld srv bs tabs rij log a b)
+zetAuto b w = case w (Wereld srv bs tabs rij log a au cd -> Wereld srv bs tabs rij log a b cd)
 
-zetActief !s w = case w (Wereld srv bs tabs rij log a au -> Wereld srv bs tabs rij log s au)
+zetActief !s w = case w (Wereld srv bs tabs rij log a au cd -> Wereld srv bs tabs rij log s au cd)
 
 // Een invoer of knop voor het actieve tabblad (Top.celStap kiest de editor
 // of de knop); daarna eventueel alles bezorgen.
@@ -407,9 +518,13 @@ inActief ev w =
 
 beeld w =
   D.column (L.append (L.concatMap (tabBeeld (actiefVan w)) (tabsVan w))
-    [D.markdown "### Server", D.markdown (codeblok (serverTekst w)),
-     D.markdown "### Netwerk", D.markdown (netwerkTekst w),
-     D.choice (Cons kiesNetwerk (knoppen w)) kiesNetwerk])
+    (L.append [D.markdown "### Server", D.markdown (codeblok (serverTekst w))]
+      (L.append (codeBeeld w)
+        [D.markdown "### Netwerk", D.markdown (netwerkTekst w),
+         D.choice (Cons kiesNetwerk (knoppen w)) kiesNetwerk])))
+
+// Alleen in een cel met een definitie (trede 7).
+codeBeeld w = if (T.isEmpty (definitieVan w)) Nil [D.markdown (codeTekst w), D.markdown (hashTekst w)]
 
 tabBeeld !a tab =
   if (sessieVan tab == a)
@@ -424,15 +539,74 @@ codeblok s = T.concat ["```", Top.nl, s, Top.nl, "```"]
 
 knoppen w =
   L.append (L.map naarTabLabel (L.filter (nietActief (actiefVan w)) (tabsVan w)))
-    (L.append (if (autoVan w) [knopAutoUit] [knopBezorgEen, knopBezorgAlles, knopAutoAan]) [knopHerstart])
+    (L.append (if (autoVan w) [knopAutoUit] [knopBezorgEen, knopBezorgAlles, knopAutoAan]) (Cons knopHerstart (codeKnoppen w)))
+
+// Alleen in een cel met een definitie (trede 7).
+codeKnoppen w = if (T.isEmpty (definitieVan w)) Nil [knopNieuweTaak, knopHerlaad, if (codeOpHash (codeVan w)) knopHashUit knopHashAan]
 
 nietActief !a tab = sessieVan tab != a
+
+// Trede 7: hoe de stand van een taak over de draad gaat.
+codeTekst w = if (T.isEmpty (definitieVan w)) "" (T.concat ["*Code op hash: ", if (codeOpHash (codeVan w)) "aan" "uit", " · taken gemaakt: ", T.showInt (tellerVan (codeVan w)), "*"])
+
+tellerVan cd = case cd (Code h d k -> k)
+
+// Per taak op de server: de functies die haar stand op hash noemt. Alleen
+// eigen functies en lambda's (λ), niet die van modules (`top__stap`), met
+// de eerste 8 tekens van de hash. Zo zie je welke versie van de code een
+// lopende taak gebruikt.
+hashTekst w = if (T.isEmpty (definitieVan w)) "" (T.join Top.nl (L.map hashRegel (L.filter (taakShare (bronnenVan w)) (serverVan w))))
+
+taakShare bs sh = case sh (S.Share n c v t ab vw -> T.equal (Top.typeVan (bronMet n bs)) "Taak")
+
+hashRegel sh = case sh (S.Share n c v t ab vw -> T.concat ["- ", n, ": ", codeOfGeen (codeIn (V.unesc t))])
+
+codeOfGeen xs = if (L.isEmpty xs) "geen code op hash" (T.join ", " (L.map (\x -> T.concat ["`", x, "`"]) xs))
+
+codeIn t = uniekT (codeVanaf t 0 (strlen t) False) Nil
+
+uniekT xs acc = case xs (Nil -> acc) (Cons x rest -> uniekT rest (if (L.any (T.equal x) acc) acc (L.append acc [x])))
+
+// De tekst van pack: tokens met een spatie ertussen; na `P` een functienaam
+// (met CH.packH `naam#hash`); een string als `s<k>:<lengte>:<tekst>`, die
+// spaties kan bevatten en dus in zijn geheel wordt overgeslagen.
+codeVanaf t !i !n naP =
+  if (i >= n) Nil
+  (if (isStringTok t i n) (codeVanaf t (stringEind t i n + 1) n False)
+  (codeTok t i (tokEind t i n) n naP))
+
+codeTok t !i !e !n naP =
+  if naP (metNaam (strslice t i e) (codeVanaf t (e + 1) n False))
+  (codeVanaf t (e + 1) n (T.equal (strslice t i e) "P"))
+
+metNaam tok rest = if (T.contains "#" tok /\ eigenNaam tok) (Cons (kortNaam tok) rest) rest
+
+eigenNaam tok = T.startsWith "__lam" tok \/ (T.contains "__" tok == False)
+
+kortNaam tok = let k = T.indexOf "#" tok in T.append (if (T.startsWith "__lam" tok) "λ" (T.take k tok)) (T.take 9 (T.drop k tok))
+
+tokEind t !i !n = if (i >= n) n (if ((strat i t == ' ') \/ (ord (strat i t) == 10)) i (tokEind t (i + 1) n))
+
+isStringTok t !i !n = if (i + 1 >= n) False (if (strat i t == 's') (if (isCijfer (strat (i + 1) t)) (dubbelePunt t (i + 1) n >= 0) False) False)
+
+isCijfer c = (ord c >= 48) /\ (ord c <= 57)
+
+// De positie van de eerste ':' vanaf i, als er alleen cijfers voor staan; anders -1.
+dubbelePunt t !i !n = if (i >= n) (0 - 1) (if (strat i t == ':') i (if (isCijfer (strat i t)) (dubbelePunt t (i + 1) n) (0 - 1)))
+
+// s<k>:<lengte>:<tekst>: de positie na de tekst.
+stringEind t !i !n =
+  let c1 = dubbelePunt t (i + 1) n,
+      c2 = dubbelePunt t (c1 + 1) n in
+  if (c2 < 0) n (c2 + 1 + getal t (c1 + 1) c2 0)
+
+getal t !i !e !acc = if (i >= e) acc (getal t (i + 1) e (acc * 10 + ord (strat i t) - 48))
 
 // De bronnen op de server: versie, waarde en abonnees.
 serverTekst w = T.join Top.nl (L.map (shareTekst (bronnenVan w)) (serverVan w))
 
 shareTekst bs sh = case sh (S.Share n c v t ab vw ->
-  T.concat [n, " v", T.showInt v, " = ", toonBronwaarde (Top.typeVan (bronMet n bs)) (W.unpackT (Top.typeVan (bronMet n bs)) (V.unesc t)), "   (abonnees: ", T.join ", " (L.map (sessieNaam bs) ab), ")"])
+  T.concat [n, " v", T.showInt v, " = ", toonBronwaarde (Top.typeVan (bronMet n bs)) (uitpakkenTekst (Top.typeVan (bronMet n bs)) (V.unesc t)), "   (abonnees: ", T.join ", " (L.map (sessieNaam bs) ab), ")"])
 
 // Een taak als de regels van haar stand, anders de waarde.
 toonBronwaarde ty x = if (T.equal ty "Taak") (T.concat ["taak { ", taakRegels x, " }"]) (kort (Top.toon x))

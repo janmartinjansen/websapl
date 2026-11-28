@@ -183,6 +183,62 @@ Sim.celHandmatig [("Tom", TC.actorTaak X.model X.tom), ("Tom op telefoon", TC.ac
 //%%
 Sim.cel [("Tom", TC.actorTaak X.model X.tom), ("Carrie", TC.actorTaak X.model X.carrie)]
 //%% [markdown]
+// ## 11. Nieuwe code terwijl er een taak loopt
+//
+// Een bestelling kan dagen lopen, en intussen verandert de code. Hier is de
+// prijs per stuk die nieuwe code: verander je hem in het formulier, dan
+// compileert de notebook de definitie opnieuw. Er is dan nieuwe code onder
+// dezelfde namen, terwijl de cel met de tabbladen gewoon doorloopt, zoals
+// de server.
+//
+// Probeer het zo:
+//
+// 1. Vul in tabblad A een naam in. De stand van *bestelling-1* staat nu op
+//    de server, en onder de server zie je welke code hij noemt: achter elke
+//    functie een hash over haar code (`flowOfferte#…`; `naam` en `stad`
+//    zijn de veldfuncties van `Klant`).
+// 2. Zet de prijs op 90.
+// 3. Kies **Herlaad de tabbladen**: zo komt een nieuwe versie in een
+//    browser. De tabbladen lezen de lopende bestelling opnieuw van de server,
+//    en bij het teruglezen komt precies de versie van die hash terug.
+// 4. Kies **Bereken offerte**: EUR 200, de oude prijs.
+// 5. Kies **Nieuwe taak in dit tabblad**: *bestelling-2* komt uit de huidige
+//    code. Onder de server heeft `flowOfferte` nu een andere hash, en de
+//    offerte wordt EUR 180.
+// 6. Maak bestelling-1 af in tabblad B, ook na **Herstart de server**: ze
+//    loopt af op de oude code (ook **Aanpassen** en opnieuw berekenen geeft
+//    EUR 200).
+//
+// En zonder hash? Zet de prijs terug op 100, kies **Nieuwe taak in dit
+// tabblad** en **Code op hash: uit**, en doe dan stap 1 tot en met 4
+// opnieuw (in dat tabblad). Nu gaat de stand op naam over de draad. Na het herladen hoort
+// die naam bij de nieuwste versie, en de lopende bestelling rekent zonder
+// melding met de nieuwe prijs.
+//%%
+::Prijzen = { !perStuk : Int }
+
+prijzen = Prijzen 100
+//%%
+D.form prijzen
+//%%
+prijsVan k n = let basis = n * perStuk prijzen in if (korting k) (basis - (basis / 10)) basis
+
+flow k n =
+  Top.metActie "Bereken offerte"
+    (Top.beide (Top.bewerk "Klantgegevens" k) (Top.bewerk "Aantal" n))
+    flowOfferte
+
+flowOfferte (k, n) =
+  let prijs = prijsVan k n,
+      samenvatting = T.concat [naam k, " (", stad k, "): ", T.showInt n, " stuks = EUR ", T.showInt prijs] in
+  Top.metActies (Top.kijk "Offerte" samenvatting)
+    [("Aanpassen", \x -> flow k n),
+     ("Bestelling plaatsen", \x -> Top.constant (Order (naam k) (stad k) n prijs))]
+
+nieuweBestelling k = Top.gedeeldeTaak (T.append "bestelling-" (T.showInt k)) (flow (Klant "Jan" "Den Helder" False) 2)
+//%%
+Sim.celMetDefinitie "nieuweBestelling" ["A", "B"]
+//%% [markdown]
 // ## Hoe het in elkaar zit
 //
 // ```
@@ -211,5 +267,6 @@ Sim.cel [("Tom", TC.actorTaak X.model X.tom), ("Carrie", TC.actorTaak X.model X.
 // staan (7). Een bron kan ook gebeurtenissen aannemen in plaats van waarden
 // (8, 9): dan controleert wie de bron bijhoudt of de gebeurtenis mag. En
 // een herstart van de server kost niets (10), omdat hij elke bron terugzet
-// uit zijn bewaarlog. De volgende trede: een nieuwe versie van de code
-// terwijl er een taak loopt.
+// uit zijn bewaarlog. Ook een nieuwe versie van de code (11) laat een
+// lopende taak heel: de stand noemt de code op hash, en een nieuwe taak
+// begint met de nieuwe code.
