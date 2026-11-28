@@ -1,4 +1,4 @@
-// lib/top.spp -- de TOP-kern: taken als data (treden 0-1, 27 november 2026).
+// lib/top.spp -- de TOP-kern: taken als data (treden 0-2, 27 november 2026).
 // Ontwerp: docs/2026-11-27_top_from_scratch_ontwerp.md (B2, §6).
 //
 // Een taak is een waarde van het type Taak: de structuur is data, zodat je de
@@ -18,9 +18,21 @@
 //
 // Taak-id's zijn paden in de boom: de wortel is "0", de kinderen van een taak
 // met id p zijn p/1, p/2, ... (`begin` en `nummer` delen ze uit; een bouwer
-// laat ze leeg). Gaat een Stap met id p verder, dan krijgt de voortzetting
-// id p#1 (en daarna p#2, ...): een gebeurtenis die nog voor de oude taak
-// bedoeld was, komt zo niet bij de nieuwe terecht.
+// laat ze leeg). Wordt een taak vervangen (een Stap gaat verder, de
+// rechterkant van Afhankelijk of de taak in metInformatie begint opnieuw),
+// dan krijgt de nieuwe taak id p#1 (en daarna p#2, ...): een gebeurtenis die
+// nog voor de oude taak bedoeld was, komt zo niet bij de nieuwe terecht.
+//
+// Gedeelde data (trede 2). Een Bron is een share met een naam. Taken op een
+// bron (bewerkGedeeld, kijkGedeeld, metInformatie, wijzig) houden de waarde
+// en de versie die ze kennen bij zich; ze krijgen een nieuwe waarde met een
+// gebeurtenis `Wijziging bron versie waarde`. Wat een taak wil schrijven,
+// blijft als uitgaande Schrijfactie in de boom staan. Wie de taak uitvoert
+// (een "driver"), haalt die op (`uitgaand`, `zonderUitgaand`) en voert ze
+// uit; `nodig` zegt welke bronnen de taak wil zien en welke versie ze kent.
+// De lokale driver hieronder (`lokaal`, `lokaalStap`) houdt de bronnen in
+// het geheugen; een server-driver stuurt dezelfde schrijfacties als bericht.
+// `stap` zelf doet geen effecten.
 module Top
 import "lib/list.spp" as L
 import "lib/text.spp" as T
@@ -35,6 +47,10 @@ import "lib/display.spp" as D
 // invoer in een editor is een melding, geen Fout).
 ::Waarde = Geen | Instabiel x | Stabiel x | Fout !msg
 
+// Een share: naam, het type als tekst (voor W.packT op de draad) en de
+// beginwaarde.
+::Bron = Bron !naam !type standaard
+
 // Bewerk id label waarde sjabloon melding: een editor. sjabloon is de waarde
 //   waarvan het formulier uitgaat zolang er geen waarde is (vulIn); melding
 //   is "" of wat er mis was met de laatste invoer. Waarde Geen of Instabiel.
@@ -46,12 +62,27 @@ import "lib/display.spp" as D
 // Afhankelijk id links maakRechts rechts: rechts = maakRechts (de waarde van
 //   links), opnieuw gemaakt zodra die waarde verandert. Waarde die van links.
 // Constant x: waarde Stabiel x, zonder scherm.
+// BewerkGedeeld id label bron versie waarde melding uit: een editor op een
+//   bron. versie -1: de waarde is nog niet bekend. uit: de schrijfacties die
+//   nog weg moeten.
+// KijkGedeeld id label bron versie waarde: toont de waarde van een bron.
+// MetInformatie id bron versie maak taak: taak = maak (de waarde van de
+//   bron), opnieuw gemaakt bij elke nieuwe versie. Waarde die van taak.
+// Wijzig id bron f versie nieuw uit: schrijft f (de waarde van de bron)
+//   zodra die bekend is; waarde dan Stabiel (die nieuwe waarde).
+// Uit uit taak: taak, plus schrijfacties van een taak die al vervangen is
+//   (een Stap die verderging); verdwijnt met zonderUitgaand.
 ::Taak = Bewerk !id !label waarde sjabloon !melding
        | Kijk !id !label x
        | Stap !id taak vervolgen
        | Parallel !id combineer taken
        | Afhankelijk !id links maakRechts rechts
        | Constant x
+       | BewerkGedeeld !id !label bron !versie waarde !melding uit
+       | KijkGedeeld !id !label bron !versie waarde
+       | MetInformatie !id bron !versie maak taak
+       | Wijzig !id bron f !versie nieuw uit
+       | Uit uit taak
 
 // OpActie label voorwaarde voortzetting: een knop, beschikbaar als
 //   voorwaarde (de waarde van de taak) geldt.
@@ -61,8 +92,18 @@ import "lib/display.spp" as D
 ::Vervolg = OpActie !label voorwaarde voortzetting | OpWaarde voorwaarde voortzetting
 
 // Invoer id veld tekst: een veld van een formulier (veld "" is de hele
-// waarde, zoals bij Sh.input). Actie id label: een knop van een Stap.
+//   waarde, zoals bij Sh.input). Actie id label: een knop van een Stap.
+// Wijziging bron versie waarde: een bron heeft een nieuwe waarde (voor elke
+//   taak op die bron met een oudere versie).
+// Botsing van bron versie waarde: de schrijfactie van taak `van` kwam te
+//   laat; dit is de actuele waarde (voor de andere taken een Wijziging).
 ::Gebeurtenis = Invoer !id !veld !tekst | Actie !id !label
+              | Wijziging !bron !versie waarde | Botsing !van !bron !versie waarde
+
+// Schrijf bron versie waarde van: schrijf waarde, uitgaande van versie (de
+// schrijfactie botst als de bron intussen een nieuwere versie heeft); van is
+// het id van de taak die schrijft.
+::Schrijfactie = Schrijf !bron !versie waarde !van
 
 // == Bouwers ==================================================================
 
@@ -110,6 +151,23 @@ eerste ts = Parallel "" combineerEerste ts
 // Links een taak, rechts een taak die van de waarde van links afhangt.
 afhankelijk links f = Afhankelijk "" links f (Constant 0)
 
+// Gedeelde data.
+bron naam type standaard = Bron naam type standaard
+
+bewerkGedeeld label b = BewerkGedeeld "" label b (0 - 1) (standaardVan b) "" Nil
+
+kijkGedeeld label b = KijkGedeeld "" label b (0 - 1) (standaardVan b)
+
+metInformatie b maak = MetInformatie "" b (0 - 1) maak (Kijk "" "" "(wacht op de gedeelde waarde)")
+
+wijzig b f = Wijzig "" b f (0 - 1) (standaardVan b) Nil
+
+naamVan b = case b (Bron n t s -> n)
+
+typeVan b = case b (Bron n t s -> t)
+
+standaardVan b = case b (Bron n t s -> s)
+
 // == Taak-id's ================================================================
 
 begin t = nummer "0" t
@@ -122,8 +180,13 @@ nummer pad t =
     (Kijk i l x -> Kijk pad l x)
     (Stap i b vs -> verderStap pad (nummer (kind pad 1) b) vs)
     (Parallel i c ts -> Parallel pad c (nummerVanaf pad 1 ts))
-    (Afhankelijk i a f r -> metRechts pad (nummer (kind pad 1) a) f)
+    (Afhankelijk i a f r -> metRechts pad (kind pad 2) (nummer (kind pad 1) a) f r)
     (Constant x -> t)
+    (BewerkGedeeld i l b v w m u -> BewerkGedeeld pad l b v w m u)
+    (KijkGedeeld i l b v w -> KijkGedeeld pad l b v w)
+    (MetInformatie i b v f x -> MetInformatie pad b v f (nummer (kind pad 1) x))
+    (Wijzig i b f v n u -> Wijzig pad b f v n u)
+    (Uit u x -> Uit u (nummer pad x))
 
 nummerVanaf pad !n ts = case ts (Nil -> Nil) (Cons t rest -> Cons (nummer (kind pad n) t) (nummerVanaf pad (n + 1) rest))
 
@@ -146,14 +209,27 @@ taakId t =
     (Parallel i c ts -> i)
     (Afhankelijk i a f r -> i)
     (Constant x -> "")
+    (BewerkGedeeld i l b v w m u -> i)
+    (KijkGedeeld i l b v w -> i)
+    (MetInformatie i b v f x -> i)
+    (Wijzig i b f v n u -> i)
+    (Uit u x -> taakId x)
 
 // De id's van alle editors, in volgorde.
 bewerkIds t =
   case t
     (Bewerk i l w s m -> [i])
-    (Stap i b vs -> bewerkIds b)
-    (Parallel i c ts -> L.concatMap bewerkIds ts)
-    (Afhankelijk i a f r -> L.append (bewerkIds a) (bewerkIds r))
+    (BewerkGedeeld i l b v w m u -> [i])
+    (_ -> L.concatMap bewerkIds (kinderen t))
+
+// De taken direct onder een taak.
+kinderen t =
+  case t
+    (Stap i b vs -> [b])
+    (Parallel i c ts -> ts)
+    (Afhankelijk i a f r -> [a, r])
+    (MetInformatie i b v f x -> [x])
+    (Uit u x -> [x])
     (_ -> Nil)
 
 // == De waarde ================================================================
@@ -166,15 +242,18 @@ waardeVan t =
     (Parallel i c ts -> c (L.map waardeVan ts))
     (Afhankelijk i a f r -> waardeVan a)
     (Constant x -> Stabiel x)
+    (BewerkGedeeld i l b v w m u -> if (v >= 0) (Instabiel w) Geen)
+    (KijkGedeeld i l b v w -> if (v >= 0) (Instabiel w) Geen)
+    (MetInformatie i b v f x -> waardeVan x)
+    (Wijzig i b f v n u -> if (v >= 0) (Stabiel n) Geen)
+    (Uit u x -> waardeVan x)
 
 // De melding van de eerste editor met een melding.
 meldingVan t =
   case t
     (Bewerk i l w s m -> m)
-    (Stap i b vs -> meldingVan b)
-    (Parallel i c ts -> eersteNietLeeg (L.map meldingVan ts))
-    (Afhankelijk i a f r -> eersteNietLeeg [meldingVan a, meldingVan r])
-    (_ -> "")
+    (BewerkGedeeld i l b v w m u -> m)
+    (_ -> eersteNietLeeg (L.map meldingVan (kinderen t)))
 
 eersteNietLeeg ms = case ms (Nil -> "") (Cons m rest -> if (T.isEmpty m) (eersteNietLeeg rest) m)
 
@@ -221,6 +300,11 @@ stap ev t =
     (Parallel i c ts -> Parallel i c (L.map (stap ev) ts))
     (Afhankelijk i a f r -> stapAfhankelijk ev i a f r)
     (Constant x -> t)
+    (BewerkGedeeld i l b v w m u -> stapBewerkGedeeld ev i l b v w m u t)
+    (KijkGedeeld i l b v w -> stapKijkGedeeld ev i l b v w t)
+    (MetInformatie i b v f x -> stapMetInformatie ev i b v f x)
+    (Wijzig i b f v n u -> stapWijzig ev i b f v n u t)
+    (Uit u x -> Uit u (stap ev x))
 
 stapBewerk ev i l w s t =
   case ev
@@ -253,16 +337,19 @@ stapStap ev i b vs =
 
 doeActie i b vs a =
   case (actieVoor a (waardeVan b) vs)
-    (Cons f rest -> voortzetting i f (waardeVan b))
+    (Cons f rest -> voortzetting i b f)
     (Nil -> Stap i b vs)
 
 // Na een wijziging van de taak: geldt er nu een OpWaarde?
 verderStap i b vs =
   case (opWaardeVoor (waardeVan b) vs)
-    (Cons f rest -> voortzetting i f (waardeVan b))
+    (Cons f rest -> voortzetting i b f)
     (Nil -> Stap i b vs)
 
-voortzetting i f w = nummer (volgende i) (f (waardeUit w))
+// De voortzetting neemt de schrijfacties van de oude taak mee.
+voortzetting i b f = metUit (uitgaand b) (nummer (volgende i) (f (waardeUit (waardeVan b))))
+
+metUit u t = case u (Nil -> t) (_ -> Uit u t)
 
 // De voortzettingen van de beschikbare knoppen met dit label.
 actieVoor a w vs =
@@ -287,14 +374,164 @@ actieLabels w vs =
       (OpActie l c f -> if (c w) (Cons l (actieLabels w rest)) (actieLabels w rest))
       (OpWaarde c f -> actieLabels w rest))
 
-// Verandert de waarde van links, dan begint rechts opnieuw.
+// Verandert de waarde van links, dan begint rechts opnieuw, met een nieuw id.
 stapAfhankelijk ev i a f r =
   let a2 = stap ev a in
-  if (gelijk (waardeVan a) (waardeVan a2)) (Afhankelijk i a2 f (stap ev r)) (metRechts i a2 f)
+  if (gelijk (waardeVan a) (waardeVan a2)) (Afhankelijk i a2 f (stap ev r)) (metRechts i (volgende (taakId r)) a2 f r)
 
-metRechts pad a f = Afhankelijk pad a f (nummer (kind pad 2) (rechtsVoor f (waardeVan a)))
+metRechts pad rid a f oud = Afhankelijk pad a f (metUit (uitgaand oud) (nummer rid (rechtsVoor f (waardeVan a))))
 
 rechtsVoor f w = if (heeftWaarde w) (f (waardeUit w)) (Kijk "" "" "(wacht op invoer)")
+
+// == Gedeelde data ============================================================
+
+// Is dit een (nieuwere) waarde voor deze bron?
+voorBron b !v ev =
+  case ev
+    (Wijziging n v2 x -> T.equal n (naamVan b) /\ (v2 > v))
+    (Botsing w n v2 x -> T.equal n (naamVan b))
+    (_ -> False)
+
+evVersie ev = case ev (Wijziging n v x -> v) (Botsing w n v x -> v) (_ -> 0)
+
+evWaarde ev = case ev (Wijziging n v x -> x) (Botsing w n v x -> x) (_ -> error "Top: geen waarde in deze gebeurtenis")
+
+// Een botsing voor de schrijfactie van taak i.
+botstVoor i ev = case ev (Botsing w n v x -> T.equal w i) (_ -> False)
+
+botsingMelding = "Iemand anders was je voor: dit is de nieuwe waarde."
+
+// De editor zet de nieuwe waarde meteen (optimistisch) en schrijft hem; de
+// versie blijft tot de bevestiging (een Wijziging) binnenkomt.
+stapBewerkGedeeld ev i l b v w m u t =
+  case ev
+    (Invoer j veld tekst -> if (T.equal j i /\ (v >= 0)) (invoerGedeeld i l b v w u veld tekst) t)
+    (_ -> if (voorBron b v ev) (BewerkGedeeld i l b (evVersie ev) (evWaarde ev) (if (botstVoor i ev) botsingMelding "") u) t)
+
+invoerGedeeld i l b v w u veld tekst =
+  case (probeerInvoer veld tekst w)
+    (Gelukt x -> BewerkGedeeld i l b v x "" (L.append u [Schrijf (naamVan b) v x i]))
+    (Mislukt msg -> BewerkGedeeld i l b v w msg u)
+
+stapKijkGedeeld ev i l b v w t = if (voorBron b v ev) (KijkGedeeld i l b (evVersie ev) (evWaarde ev)) t
+
+// Een nieuwe versie: de taak begint opnieuw (met een nieuw id), en krijgt
+// de gebeurtenis zelf ook (ze kan dezelfde bron gebruiken).
+stapMetInformatie ev i b v f x =
+  if (voorBron b v ev)
+    (MetInformatie i b (evVersie ev) f (stap ev (metUit (uitgaand x) (nummer (volgende (taakId x)) (f (evWaarde ev))))))
+    (MetInformatie i b v f (stap ev x))
+
+// De eerste waarde: schrijf f ervan. Een botsing: opnieuw, op de nieuwe waarde.
+stapWijzig ev i b f v n u t =
+  if (voorBron b v ev /\ ((v < 0) \/ botstVoor i ev))
+    (Wijzig i b f (evVersie ev) (f (evWaarde ev)) (L.append u [Schrijf (naamVan b) (evVersie ev) (f (evWaarde ev)) i]))
+    t
+
+// De schrijfacties die nog weg moeten, en de taak zonder.
+uitgaand t =
+  case t
+    (BewerkGedeeld i l b v w m u -> u)
+    (Wijzig i b f v n u -> u)
+    (Uit u x -> L.append u (uitgaand x))
+    (_ -> L.concatMap uitgaand (kinderen t))
+
+zonderUitgaand t =
+  case t
+    (BewerkGedeeld i l b v w m u -> BewerkGedeeld i l b v w m Nil)
+    (Wijzig i b f v n u -> Wijzig i b f v n Nil)
+    (Uit u x -> zonderUitgaand x)
+    (Stap i b vs -> Stap i (zonderUitgaand b) vs)
+    (Parallel i c ts -> Parallel i c (L.map zonderUitgaand ts))
+    (Afhankelijk i a f r -> Afhankelijk i (zonderUitgaand a) f (zonderUitgaand r))
+    (MetInformatie i b v f x -> MetInformatie i b v f (zonderUitgaand x))
+    (_ -> t)
+
+// Welke bronnen de taak wil zien, met de versie die ze kent (-1: nog niets).
+// Een Wijzig die al geschreven heeft, hoeft niets meer te zien.
+::Nodig = Nodig !bron !versie
+
+nodig t =
+  case t
+    (BewerkGedeeld i l b v w m u -> [Nodig b v])
+    (KijkGedeeld i l b v w -> [Nodig b v])
+    (MetInformatie i b v f x -> Cons (Nodig b v) (nodig x))
+    (Wijzig i b f v n u -> if (v < 0) [Nodig b v] Nil)
+    (_ -> L.concatMap nodig (kinderen t))
+
+// == De lokale driver: bronnen in het geheugen ================================
+
+// Opgeslagen naam versie waarde.
+::Opgeslagen = Opgeslagen !naam !versie waarde
+
+// Een taak met haar bronnen.
+::Lokaal = Lokaal taak opslag
+
+lokaal t = verwerk 50 (begin t) Nil
+
+lokaalStap ev lk = case lk (Lokaal t o -> verwerk 50 (stap ev t) o)
+
+lokaleTaak lk = case lk (Lokaal t o -> t)
+
+lokaleOpslag lk = case lk (Lokaal t o -> o)
+
+// Herhaal tot er niets meer te schrijven is en elke taak de laatste versie
+// kent: bronnen aanmaken, schrijfacties uitvoeren (een te oude wordt een
+// Botsing), nieuwe versies doorgeven. Een vervolg kan weer schrijven, dus
+// een ronde of wat; fuel tegen een taak die eindeloos blijft schrijven.
+verwerk !fuel t o =
+  let o1 = aanmaken (nodig t) o,
+      r = schrijfAlle (uitgaand t) o1 Nil,
+      o2 = rOpslag r,
+      t1 = zonderUitgaand t,
+      t2 = stuurBotsingen (rBotsingen r) o2 t1,
+      t3 = stuurNieuw o2 t2 in
+  if ((fuel <= 0) \/ (L.isEmpty (uitgaand t3) /\ L.isEmpty (achter (nodig t3) o2))) (Lokaal t3 o2) (verwerk (fuel - 1) t3 o2)
+
+aanmaken ns o = case ns (Nil -> o) (Cons n rest -> case n (Nodig b v -> aanmaken rest (if (L.isEmpty (zoekOp (naamVan b) o)) (L.append o [Opgeslagen (naamVan b) 0 (standaardVan b)]) o)))
+
+zoekOp naam o = L.filter (opNaam naam) o
+
+opNaam naam x = case x (Opgeslagen n v w -> T.equal n naam)
+
+::Geschreven = Geschreven !opslag botsingen
+
+rOpslag r = case r (Geschreven o b -> o)
+
+rBotsingen r = case r (Geschreven o b -> b)
+
+schrijfAlle ws o bs =
+  case ws
+    (Nil -> Geschreven o bs)
+    (Cons w rest -> case w (Schrijf n v x van -> case (zoekOp n o)
+      (Cons s r -> case s (Opgeslagen n2 v2 x2 ->
+        if (v == v2) (schrijfAlle rest (L.map (vervangOp n (v2 + 1) x) o) bs) (schrijfAlle rest o (L.append bs [Botst n van]))))
+      (Nil -> schrijfAlle rest o (L.append bs [Botst n van]))))
+
+::Botst = Botst !naam !van
+
+vervangOp naam !v x s = case s (Opgeslagen n v2 x2 -> if (T.equal n naam) (Opgeslagen n v x) s)
+
+stuurBotsingen bs o t = case bs (Nil -> t) (Cons b rest -> case b (Botst n van -> stuurBotsingen rest o (stuurOpgeslagen van (zoekOp n o) t)))
+
+// Elke bron waarvan een taak een oudere versie kent: een Wijziging.
+stuurNieuw o t = stuurOpgeslagen "" (L.filter (isAchter (nodig t)) o) t
+
+// van "": een Wijziging; anders een Botsing voor de schrijfactie van van.
+stuurOpgeslagen van ss t =
+  case ss
+    (Nil -> t)
+    (Cons s rest -> case s (Opgeslagen n v x -> stuurOpgeslagen van rest (stap (if (T.isEmpty van) (Wijziging n v x) (Botsing van n v x)) t)))
+
+isAchter ns s = case s (Opgeslagen n v x -> L.any (kentOuder n v) ns)
+
+kentOuder naam !v nd = case nd (Nodig b v2 -> T.equal (naamVan b) naam /\ (v2 < v))
+
+achter ns o = L.filter (isAchter ns) o
+
+toonOpslag o = T.join ", " (L.map toonOpgeslagen o)
+
+toonOpgeslagen s = case s (Opgeslagen n v x -> T.concat [n, " v", T.showInt v, " = ", toon x])
 
 // == Weergave =================================================================
 
@@ -309,6 +546,13 @@ ui t =
     (Parallel i c ts -> D.column (L.map ui ts))
     (Afhankelijk i a f r -> D.column [ui a, ui r])
     (Constant x -> D.column Nil)
+    (BewerkGedeeld i l b v w m u -> if (v >= 0) (D.column (L.append [kop l "", D.form w] (uiMelding m))) (kop l wachtTekst))
+    (KijkGedeeld i l b v w -> D.markdown (if (v >= 0) (kijkTekst l w) (T.concat ["**", l, "**", wachtTekst])))
+    (MetInformatie i b v f x -> ui x)
+    (Wijzig i b f v n u -> D.column Nil)
+    (Uit u x -> ui x)
+
+wachtTekst = " *(wacht op de gedeelde waarde)*"
 
 uiBewerk l w s m =
   if (heeftWaarde w) (D.column (L.append [kop l "", D.form (huidig w s)] (uiMelding m)))
@@ -326,7 +570,17 @@ uiActies as = case as (Nil -> Nil) (_ -> [D.choice (Cons kiesActie as) kiesActie
 
 kiesActie = "(kies een actie)"
 
-toon x = Sh.showAs (Sh.ofValue x) x
+// Een waarde als tekst: records en somtypen volgens hun vorm (Sh.showAs),
+// en paren en lijsten zoals in Sapl.
+toon x = if (typeId x > 4) (toonAdt x (constrName x)) (Sh.showAs (Sh.ofValue x) x)
+
+toonAdt x c =
+  if (T.startsWith "__Tuple" c) (T.concat ["(", T.join ", " (toonVelden x 0 (T.readInt (T.drop 7 c))), ")"])
+  (if (T.equal c "Nil") "[]"
+  (if (T.equal c "Cons") (T.concat ["[", T.join ", " (L.map toon (Sh.dyn x)), "]"])
+  (Sh.showAs (Sh.ofValue x) x)))
+
+toonVelden x !i !n = if (i >= n) Nil (Cons (toon (getField x i)) (toonVelden x (i + 1) n))
 
 toonWaarde w =
   case w
@@ -336,16 +590,20 @@ toonWaarde w =
     (Fout msg -> T.concat ["Fout (", msg, ")"])
 
 // De taak als tekst, een regel per editor, weergave en rij knoppen, met id.
-alsTekst t = T.join "\n" (tekstRegels t)
+alsTekst t = T.join nl (tekstRegels t)
 
 tekstRegels t =
   case t
-    (Bewerk i l w s m -> [T.concat ["[", i, " Bewerk ", l, "] ", toon (huidig w s), if (heeftWaarde w) "" " (leeg)", if (T.isEmpty m) "" (T.concat ["  ! ", m])]])
+    (Bewerk i l w s m -> [T.concat ["[", i, " Bewerk ", l, "] ", toon (huidig w s), if (heeftWaarde w) "" " (leeg)", meldingTekst m]])
     (Kijk i l x -> [T.concat ["[", i, " ", l, "] ", toon x]])
     (Stap i b vs -> L.append (tekstRegels b) (knoppenRegel i (actieLabels (waardeVan b) vs)))
-    (Parallel i c ts -> L.concatMap tekstRegels ts)
-    (Afhankelijk i a f r -> L.append (tekstRegels a) (tekstRegels r))
-    (Constant x -> Nil)
+    (BewerkGedeeld i l b v w m u -> [T.concat ["[", i, " Bewerk ", l, "] ", gedeeldTekst b v w, meldingTekst m]])
+    (KijkGedeeld i l b v w -> [T.concat ["[", i, " ", l, "] ", gedeeldTekst b v w]])
+    (_ -> L.concatMap tekstRegels (kinderen t))
+
+gedeeldTekst b !v w = if (v >= 0) (T.concat [toon w, "  (", naamVan b, " v", T.showInt v, ")"]) (T.concat ["?  (", naamVan b, ", wacht)"])
+
+meldingTekst m = if (T.isEmpty m) "" (T.concat ["  ! ", m])
 
 knoppenRegel i as = case as (Nil -> Nil) (_ -> [T.concat ["[", i, " Acties] ", T.join " " (L.map tussenHaken as)]])
 
@@ -353,15 +611,20 @@ tussenHaken s = T.concat ["[", s, "]"]
 
 // == Als interactieve notebookcel =============================================
 
-// Een taak als D.interactive. De pagina zegt bij een formulierinvoer niet
-// uit welk formulier hij komt (`input <veld> <waarde>`), dus kiest de cel:
+// Een taak als D.interactive, met de lokale driver (bronnen in het
+// geheugen van de cel). De pagina zegt bij een formulierinvoer niet uit
+// welk formulier hij komt (`input <veld> <waarde>`), dus kiest de cel:
 //   - veld "" en het label van een beschikbare knop: die actie;
 //   - anders de eerste editor die het veld heeft (een record met een veld
 //     van die naam, een somtype met zo'n constructor of veld; veld "" gaat
 //     naar een editor van een getal, tekst of somtype).
 // Twee editors met een veld van dezelfde naam in één cel: de eerste krijgt
 // het. De kern zelf (`stap`) werkt met id's en heeft dat probleem niet.
-cel t = D.interactive (begin t) celStap celBeeld
+cel t = D.interactive (lokaal t) celStapLokaal celBeeldLokaal
+
+celStapLokaal ev lk = case lk (Lokaal t o -> verwerk 50 (celStap ev t) o)
+
+celBeeldLokaal lk = celBeeld (lokaleTaak lk)
 
 celStap ev t =
   case ev
@@ -381,18 +644,14 @@ celNaar veld s t knop =
 knopId s t =
   case t
     (Stap i b vs -> if (bevat s (actieLabels (waardeVan b) vs)) [i] (knopId s b))
-    (Parallel i c ts -> L.concatMap (knopId s) ts)
-    (Afhankelijk i a f r -> L.append (knopId s a) (knopId s r))
-    (_ -> Nil)
+    (_ -> L.concatMap (knopId s) (kinderen t))
 
 // De id van de eerste editor die dit veld kan ontvangen.
 editorVoor veld s t =
   case t
     (Bewerk i l w sj m -> if (kanOntvangen (Sh.ofValue (huidig w sj)) veld s) [i] Nil)
-    (Stap i b vs -> editorVoor veld s b)
-    (Parallel i c ts -> L.concatMap (editorVoor veld s) ts)
-    (Afhankelijk i a f r -> L.append (editorVoor veld s a) (editorVoor veld s r))
-    (_ -> Nil)
+    (BewerkGedeeld i l b v w m u -> if ((v >= 0) /\ kanOntvangen (Sh.ofValue w) veld s) [i] Nil)
+    (_ -> L.concatMap (editorVoor veld s) (kinderen t))
 
 kanOntvangen ty veld s =
   if (T.isEmpty veld)
@@ -411,11 +670,15 @@ eersteBewerk t = case (bewerkIds t) (Cons i rest -> i) (Nil -> "")
 
 celBeeld t = D.column [ui t, D.markdown (T.concat ["*Waarde:* `", toonWaarde (waardeVan t), "`"])]
 
-// Als cel, met daaronder de stand van de taak als tekst (alsTekst): voor
-// een demo of om te zien welke id's de taken hebben.
-celMetStand t = D.interactive (begin t) celStap celBeeldMetStand
+// Als cel, met daaronder de stand van de taak als tekst (alsTekst) en de
+// bronnen: voor een demo of om te zien welke id's de taken hebben.
+celMetStand t = D.interactive (lokaal t) celStapLokaal celBeeldMetStand
 
-celBeeldMetStand t = D.column [celBeeld t, D.markdown (T.concat ["*Stand:*\n```\n", standOfLeeg (alsTekst t), "\n```"])]
+celBeeldMetStand lk =
+  case lk (Lokaal t o ->
+    D.column [celBeeld t, D.markdown (T.concat ["*Stand:*", nl, "```", nl, standOfLeeg (alsTekst t), opslagRegel o, nl, "```"])])
+
+opslagRegel o = if (L.isEmpty o) "" (T.concat [nl, "bronnen: ", toonOpslag o])
 
 standOfLeeg s = if (T.isEmpty s) "(geen schermen meer)" s
 
@@ -447,6 +710,11 @@ ariteitVan c xs =
   case xs
     (Cons n r -> case r (Cons a r2 -> if (T.equal n c) (T.readInt a) (ariteitVan c r2)) (Nil -> 0))
     (Nil -> 0)
+
+// Een regeleinde, zonder escape in de bron: de REPL in Sapl (ook in de
+// notebook) vindt in een module die hij zelf compileert de namen uit een
+// andere module niet meer in een functie met "\n" in een string.
+nl = update 10 0 (strcreate 1)
 
 // s in xs, met T.equal (L.elem gebruikt ==, op strings een pointervergelijking).
 bevat s xs = L.any (T.equal s) xs

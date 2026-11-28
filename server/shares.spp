@@ -1,0 +1,154 @@
+// server/shares.spp -- een generieke opslag van gedeelde waarden ("shares")
+// met versies en abonnementen, als pure `step` achter een gastheer (fase 1
+// van docs/2026-10-25_client_server_ontwerp.md).
+//
+//   import "server/shares.spp" as S
+//   start = S.draai [S.share "incidenten" I.controleer (I.pakken [])]
+//
+// Regels van de gastheer: `open <sessie>`, `msg <sessie> <bericht>`,
+// `close <sessie>`, en bij het starten `herstel <share> <versie> <soort>
+// <payload>` (fase 2: een share terugzetten uit het bewaarlog). Uitvoer:
+// `to <sessie>[,<sessie>...] <bericht>`; `bewaar <share> <versie> <soort>
+// <payload>` na elke geslaagde schrijf (vóór het `ok`, zodat de gastheer hem
+// bewaart voordat de client het `ok` krijgt); `hersteld <share> <versie>` of
+// `herstelfout <share> <melding>` op een `herstel`; een andere regel zonder
+// adres is een melding voor de gastheer (die zet hem op stderr). De
+// berichten zelf staan in lib/verbinding.spp. Een client kan geen `herstel`
+// sturen: zijn tekst komt altijd na `msg <sessie>`.
+//
+// De payload van een share wordt bewaard zoals hij binnenkwam (geëscapet);
+// de server rekent er niet mee. Een schrijf wordt wel gecontroleerd: de
+// functie van de share krijgt de ontescapete tekst en geeft "" (goed) of een
+// melding. Een lege regel stopt (rs-driver geeft "" bij het einde van stdin).
+module Shares
+import "lib/verbinding.spp" as V
+
+::list = Nil | Cons !x xs
+
+::Share = Share !naam controle !versie !tekst !abonnees
+
+// tekst: de waarde zoals W.packT hem maakt (niet geëscapet).
+share naam controle tekst = Share naam controle 0 (V.esc tekst) Nil
+
+::Stap = Stap !shares !uit
+
+// == De IO-lus ===============================================================
+
+draai shares = lus shares
+
+lus shares = let !l = readLine in if (strlen l == 0) 0 (stuur (step l shares))
+
+stuur r = case r (Stap sh uit -> schrijfRegels uit <#> lus sh)
+
+schrijfRegels xs = case xs (Nil -> 0) (Cons x r -> printString x <#> printString "\n" <#> schrijfRegels r)
+
+// == De pure kern ============================================================
+
+step l shares =
+  let w = V.eerste l,
+      sessie = V.leesGetal (tweede l) in
+  if (V.strEqual w "herstel") (herstellen l shares)
+  (if (sessie < 0) (Stap shares (Cons (strappend "onbekende regel van de gastheer: " l) Nil))
+  (if (V.strEqual w "open") (Stap shares (Cons (aan sessie (strappend "hallo " V.protocol)) Nil))
+  (if (V.strEqual w "close") (Stap (map (opzeggen sessie) shares) Nil)
+  (if (V.strEqual w "msg") (bericht sessie (V.naVeld 2 l) shares)
+  (Stap shares (Cons (strappend "onbekende regel van de gastheer: " l) Nil))))))
+
+tweede l = V.nde 1 (V.velden 2 l)
+
+bericht !s p shares =
+  let w = V.eerste p in
+  if (V.strEqual w "lees") (lezen s (V.naVeld 1 p) shares)
+  (if (V.strEqual w "schrijf") (schrijven s p shares)
+  (fout s shares (strappend "onbekend bericht: " w)))
+
+fout !s shares m = Stap shares (Cons (aan s (strappend "fout " m)) Nil)
+
+lezen !s naam shares = case (zoek naam shares)
+  (Nil -> fout s shares (strappend "onbekende share: " naam))
+  (Cons sh r -> Stap (map (abonneer s naam) shares) (Cons (aan s (updateRegel sh)) Nil))
+
+schrijven !s p shares = schrijvenV s p (V.velden 4 p) shares
+
+schrijvenV !s p vs shares =
+  if (V.aantal vs == 4) (schrijven2 s (V.nde 1 vs) (V.leesGetal (V.nde 2 vs)) (V.nde 3 vs) (V.naVeld 4 p) shares)
+  (fout s shares "schrijf <share> <versie> <soort> <payload>")
+
+
+schrijven2 !s naam !v soort payload shares = case (zoek naam shares)
+  (Nil -> fout s shares (strappend "onbekende share: " naam))
+  (Cons sh r ->
+    if (V.strEqual soort V.soortWaarde) (schrijven3 s sh v payload shares)
+    (fout s shares (strappend "onbekende soort: " soort)))
+
+schrijven3 !s sh !v payload shares = case sh (Share naam controle versie tekst abonnees ->
+  if (v < 0) (fout s shares "versie is geen getal")
+  (if (v != versie) (Stap shares (Cons (aan s (regelMet "conflict" naam versie tekst)) Nil))
+  (geldig s naam (versie + 1) payload (zonder s abonnees) (controle (V.unesc payload)) shares)))
+
+geldig !s naam !versie2 payload anderen melding shares =
+  if (strlen melding > 0) (fout s shares (strappend "ongeldige waarde: " (V.esc melding)))
+  (Stap (map (vervang naam versie2 payload) shares)
+        (Cons (regelMet "bewaar" naam versie2 payload)
+        (Cons (aan s (V.regel (Cons "ok" (Cons naam (Cons (V.toonGetal versie2) Nil)))))
+              (naarAlle anderen (regelMet "update" naam versie2 payload)))))
+
+// == Herstel (fase 2) =========================================================
+// `herstel <share> <versie> <soort> <payload>`: de laatste bewaarde stand van
+// een share, van de gastheer bij het starten. Dezelfde controle als bij een
+// schrijf; elk antwoord is een regel, zodat de gastheer weet wanneer het
+// terugzetten klaar is en bij een fout niet start.
+herstellen l shares = herstellenV l (V.velden 4 l) shares
+
+herstellenV l vs shares =
+  if (V.aantal vs == 4) (herstellen2 (V.nde 1 vs) (V.leesGetal (V.nde 2 vs)) (V.nde 3 vs) (V.naVeld 4 l) shares)
+  (herstelFout "?" "herstel <share> <versie> <soort> <payload>" shares)
+
+herstellen2 naam !v soort payload shares = case (zoek naam shares)
+  (Nil -> herstelFout naam "onbekende share" shares)
+  (Cons sh r ->
+    if (v < 0) (herstelFout naam "versie is geen getal" shares)
+    (if (V.strEqual soort V.soortWaarde) (herstellen3 naam v payload (controleVan sh (V.unesc payload)) shares)
+    (herstelFout naam (strappend "onbekende soort: " soort) shares)))
+
+herstellen3 naam !v payload melding shares =
+  if (strlen melding > 0) (herstelFout naam (strappend "ongeldige waarde: " (V.esc melding)) shares)
+  (Stap (map (vervang naam v payload) shares) (Cons (V.regel (Cons "hersteld" (Cons naam (Cons (V.toonGetal v) Nil)))) Nil))
+
+herstelFout naam m shares = Stap shares (Cons (strappend "herstelfout " (strappend naam (strappend " " m))) Nil)
+
+controleVan sh t = case sh (Share n c v x a -> c t)
+
+updateRegel sh = case sh (Share naam controle versie tekst abonnees -> regelMet "update" naam versie tekst)
+
+regelMet w naam !versie tekst = V.regel (Cons w (Cons naam (Cons (V.toonGetal versie) (Cons V.soortWaarde (Cons tekst Nil)))))
+
+// == Adressen ================================================================
+
+aan !s m = strappend "to " (strappend (V.toonGetal s) (strappend " " m))
+
+naarAlle sessies m = case sessies (Nil -> Nil) (_ -> Cons (strappend "to " (strappend (komma sessies) (strappend " " m))) Nil)
+
+komma xs = case xs (Nil -> "") (Cons x r -> case r (Nil -> V.toonGetal x) (_ -> strappend (V.toonGetal x) (strappend "," (komma r))))
+
+// == Hulpjes op de lijst shares ==============================================
+
+zoek naam shares = case shares (Nil -> Nil) (Cons sh r -> if (V.strEqual (naamVan sh) naam) (Cons sh Nil) (zoek naam r))
+
+naamVan sh = case sh (Share naam c v t a -> naam)
+
+abonneer !s naam sh = case sh (Share n c v t a -> if (V.strEqual n naam) (Share n c v t (Cons s (zonder s a))) sh)
+
+opzeggen !s sh = case sh (Share n c v t a -> Share n c v t (zonder s a))
+
+vervang naam !versie tekst sh = case sh (Share n c v t a -> if (V.strEqual n naam) (Share n c versie tekst a) sh)
+
+zonder !s xs = case xs (Nil -> Nil) (Cons x r -> if (x == s) (zonder s r) (heelCons x (zonder s r)))
+
+// Strikt in de hele lijst: de lijst shares leeft zo lang als de server, en
+// een luie staart (`map f (map g ...)`) groeide per bericht, want `zoek`
+// komt bij de eerste share al niet verder (gevonden met de duurtoets op een
+// kleine heap).
+map f xs = case xs (Nil -> Nil) (Cons x r -> heelCons (f x) (map f r))
+
+heelCons !x !r = Cons x r

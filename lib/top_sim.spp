@@ -1,0 +1,333 @@
+// lib/top_sim.spp -- de TOP-kern met een server, in één pagina (trede 3,
+// 27 november 2026). Ontwerp: docs/2026-11-27_top_from_scratch_ontwerp.md.
+//
+// Twee (of meer) tabbladen voeren elk een taak uit (lib/top.spp). Hun
+// gedeelde data (bronnen) staat op een server: de echte server/shares.spp,
+// dezelfde pure `S.step` die achter de gastheer (server/gastheer/host.js)
+// draait. Tabbladen en server praten met de regels van lib/verbinding.spp
+// (`lees`, `schrijf`, `update`, `ok`, `conflict`), met de waarde als W.packT.
+// De berichten gaan niet over een netwerk maar door een wachtrij die je
+// ziet en zelf bezorgt (of automatisch): zo kun je een botsing maken door
+// twee tabbladen te laten schrijven voordat er iets bezorgd is.
+//
+//   import "lib/top_sim.spp" as Sim
+//   Sim.cel [("A", taak), ("B", taak)]         -- als notebookcel
+//
+// In de cel werk je in één tabblad tegelijk (de pagina zegt bij een
+// formulierinvoer niet uit welk formulier hij komt); de andere tonen hun
+// stand als tekst. Kies "→ tabblad B" om te wisselen.
+//
+// Per tabblad (de client-driver):
+//   - een schrijfactie uit de taak (Top.uitgaand) wordt `schrijf`; per bron
+//     is er hoogstens één onderweg, een volgende wacht (alleen de laatste)
+//     en gaat na het `ok` alsnog, op de nieuwe versie;
+//   - `update`/`ok` worden een Top.Wijziging, `conflict` een Top.Botsing
+//     voor de taak die schreef;
+//   - het tabblad onthoudt de laatste waarde per bron, voor taken die later
+//     pas verschijnen (een knop die een `wijzig` start).
+module TopSim
+import "lib/list.spp" as L
+import "lib/text.spp" as T
+import "lib/display.spp" as D
+import "lib/waarden.spp" as W
+import "lib/verbinding.spp" as V
+import "server/shares.spp" as S
+import "lib/top.spp" as Top
+
+::list = Nil | Cons !x xs
+
+// Een tabblad: naam, sessienummer (bij de server), de taak, de bronnen
+// waarop het geabonneerd is, wat het van die bronnen weet (Top.Opgeslagen),
+// de schrijfacties onderweg (één per bron) en die erachter wachten.
+::Tab = Tab !naam !sessie taak bronnen kennis onderweg wachtend
+
+// Een bericht in de wachtrij: naar de server (van sessie s) of naar sessie s.
+::Bericht = NaarServer !sessie !regel | NaarTab !sessie !regel
+
+// server: de lijst S.Share; log: alle bezorgde regels, nieuwste eerst.
+::Wereld = Wereld server bronnen tabs rij log !actief !auto
+
+// == Opbouwen =================================================================
+
+// paren: [(naam, taak), ...]. Elk tabblad maakt verbinding (`open`) en
+// abonneert zich op zijn bronnen; de berichten staan dan in de rij.
+wereld paren =
+  let tabs = maakTabs 1 paren,
+      bs = alleBronnen tabs,
+      srv = L.map serverShare bs,
+      w0 = Wereld srv bs Nil Nil Nil 1 False in
+  openAlle tabs w0
+
+maakTabs !i ps = case ps (Nil -> Nil) (Cons p rest -> Cons (maakTab i p) (maakTabs (i + 1) rest))
+
+maakTab !i (naam, t) = Tab naam i (Top.begin t) Nil Nil Nil Nil
+
+serverShare b = S.share (Top.naamVan b) geldig (W.packT (Top.typeVan b) (V.heel (Top.standaardVan b)))
+
+// De server controleert hier niets (elke waarde is goed).
+geldig tekst = ""
+
+alleBronnen tabs = uniek (L.concatMap tabBronnen tabs) Nil
+
+tabBronnen tab = case tab (Tab n s t bs k o w -> L.map nodigBron (Top.nodig t))
+
+nodigBron nd = case nd (Top.Nodig b v -> b)
+
+uniek bs acc = case bs (Nil -> acc) (Cons b rest -> uniek rest (if (heeftBron (Top.naamVan b) acc) acc (L.append acc [b])))
+
+heeftBron naam bs = L.any (bronHeet naam) bs
+
+bronHeet naam b = T.equal (Top.naamVan b) naam
+
+bronMet naam bs = case (L.filter (bronHeet naam) bs) (Cons b rest -> b) (Nil -> error (T.append "TopSim: onbekende bron " naam))
+
+openAlle tabs w = case tabs (Nil -> w) (Cons tab rest -> openAlle rest (verbind tab w))
+
+// `open` gaat rechtstreeks (zoals de gastheer bij een nieuwe verbinding);
+// het antwoord (hallo) en de `lees`-berichten gaan in de rij.
+verbind tab w =
+  case w (Wereld srv bs tabs rij log a au ->
+    case (S.step (T.concat ["open ", T.showInt (sessieVan tab)]) srv)
+      (S.Stap srv2 uit -> naTab tab (Wereld srv2 bs (L.append tabs [tab]) (L.append rij (L.concatMap serverUit uit)) (logServer uit log) a au)))
+
+// == De client-driver ==========================================================
+
+sessieVan tab = case tab (Tab n s t bs k o w -> s)
+
+naamTab tab = case tab (Tab n s t bs k o w -> n)
+
+taakVan tab = case tab (Tab n s t bs k o w -> t)
+
+// Na elke wijziging van de taak van een tabblad: de waarden die het al kent
+// doorgeven (aan taken die ze nog missen), nieuwe abonnementen en de
+// schrijfacties versturen, en het tabblad terugzetten in de wereld.
+naTab tab w =
+  case tab (Tab n s t bs k o wa ->
+    let t1 = Top.stuurNieuw k t,
+        nieuw = L.filter (nietIn bs) (uniek (L.map nodigBron (Top.nodig t1)) Nil),
+        lezen = L.map (leesBericht s) nieuw,
+        r = versturen s (Top.uitgaand t1) o wa (bronnenVan w) Nil,
+        tab2 = Tab n s (Top.zonderUitgaand t1) (L.append bs nieuw) k (vRond r) (vWacht r) in
+    zetTab tab2 (voegToe (L.append lezen (vBerichten r)) w))
+
+nietIn bs b = heeftBron (Top.naamVan b) bs == False
+
+leesBericht !s b = NaarServer s (V.lees (Top.naamVan b))
+
+bronnenVan w = case w (Wereld srv bs tabs rij log a au -> bs)
+
+// Onderweg: Schrijf-waarden (één per bron); wachtend idem.
+::Verstuurd = Verstuurd onderweg wachtend berichten
+
+vRond r = case r (Verstuurd o w b -> o)
+
+vWacht r = case r (Verstuurd o w b -> w)
+
+vBerichten r = case r (Verstuurd o w b -> b)
+
+versturen !s ws o wa bs uit =
+  case ws
+    (Nil -> Verstuurd o wa uit)
+    (Cons x rest -> case x (Top.Schrijf n v val van ->
+      if (L.any (schrijftOp n) o)
+        (versturen s rest o (L.append (L.filter (schrijftNietOp n) wa) [x]) bs uit)
+        (versturen s rest (L.append o [x]) wa bs (L.append uit [schrijfBericht s bs x]))))
+
+schrijftOp naam x = case x (Top.Schrijf n v val van -> T.equal n naam)
+
+schrijftNietOp naam x = schrijftOp naam x == False
+
+schrijfBericht !s bs x = case x (Top.Schrijf n v val van -> NaarServer s (V.schrijf n v (W.packT (Top.typeVan (bronMet n bs)) (V.heel val))))
+
+// Een regel van de server voor dit tabblad.
+ontvang regel tab w =
+  case tab (Tab n s t bs k o wa ->
+    case (V.antwoord regel)
+      (V.Update b v tekst -> naTab (metWaarde b v (uitpakken b tekst w) tab) w)
+      (V.Ok b v -> naTab (bevestigd b v tab) w)
+      (V.Conflict b v tekst -> naTab (gebotst b v (uitpakken b tekst w) tab) w)
+      (_ -> w))
+
+uitpakken b tekst w = W.unpackT (Top.typeVan (bronMet b (bronnenVan w))) tekst
+
+// Een nieuwe waarde van een ander: onthouden en aan de taak geven.
+metWaarde b !v x tab =
+  case tab (Tab n s t bs k o wa -> Tab n s (Top.stap (Top.Wijziging b v x) t) bs (onthoud b v x k) o wa)
+
+// Onze schrijfactie is gelukt: de waarde die we schreven heeft nu versie v.
+// Wacht er nog een voor deze bron, dan gaat die nu, op versie v.
+bevestigd b !v tab =
+  case tab (Tab n s t bs k o wa ->
+    case (L.filter (schrijftOp b) o)
+      (Cons x r -> case x (Top.Schrijf b2 v0 val van ->
+        Tab n s (opnieuw b v (Top.stap (Top.Wijziging b v val) t) wa) bs (onthoud b v val k) (L.filter (schrijftNietOp b) o) (L.filter (schrijftNietOp b) wa)))
+      (Nil -> tab))
+
+// De wachtende schrijfactie opnieuw in de taak zetten, op de nieuwe versie:
+// naTab verstuurt hem dan (als Top.Uit, zodat zonderUitgaand hem weer haalt).
+opnieuw b !v t wa = case (L.filter (schrijftOp b) wa) (Cons x r -> case x (Top.Schrijf b2 v0 val van -> Top.Uit [Top.Schrijf b v val van] t)) (Nil -> t)
+
+// Te laat: de actuele waarde, als Botsing voor de taak die schreef; wat er
+// nog wachtte voor deze bron vervalt.
+gebotst b !v x tab =
+  case tab (Tab n s t bs k o wa ->
+    case (L.filter (schrijftOp b) o)
+      (Cons y r -> case y (Top.Schrijf b2 v0 val van ->
+        Tab n s (Top.stap (Top.Botsing van b v x) t) bs (onthoud b v x k) (L.filter (schrijftNietOp b) o) (L.filter (schrijftNietOp b) wa)))
+      (Nil -> metWaarde b v x tab))
+
+onthoud b !v x k = L.append (L.filter (nietOpgeslagen b) k) [Top.Opgeslagen b v x]
+
+nietOpgeslagen b s = case s (Top.Opgeslagen n v x -> T.equal n b == False)
+
+// == De wereld: tabbladen, server en de rij ====================================
+
+zetTab tab w = case w (Wereld srv bs tabs rij log a au -> Wereld srv bs (L.map (vervangTab tab) tabs) rij log a au)
+
+vervangTab tab t = if (sessieVan t == sessieVan tab) tab t
+
+tabMet !s w = case w (Wereld srv bs tabs rij log a au -> case (L.filter (heeftSessie s) tabs) (Cons t r -> [t]) (Nil -> Nil))
+
+heeftSessie !s t = sessieVan t == s
+
+voegToe ms w = case w (Wereld srv bs tabs rij log a au -> Wereld srv bs tabs (L.append rij ms) log a au)
+
+rijVan w = case w (Wereld srv bs tabs rij log a au -> rij)
+
+tabsVan w = case w (Wereld srv bs tabs rij log a au -> tabs)
+
+serverVan w = case w (Wereld srv bs tabs rij log a au -> srv)
+
+logVan w = case w (Wereld srv bs tabs rij log a au -> log)
+
+actiefVan w = case w (Wereld srv bs tabs rij log a au -> a)
+
+autoVan w = case w (Wereld srv bs tabs rij log a au -> au)
+
+// Het oudste bericht in de rij bezorgen.
+bezorgEen w =
+  case w (Wereld srv bs tabs rij log a au ->
+    case rij
+      (Nil -> w)
+      (Cons m rest -> bezorg m (Wereld srv bs tabs rest (Cons (toonBericht w m) log) a au)))
+
+bezorg m w =
+  case m
+    (NaarServer s regel -> naarServer s regel w)
+    (NaarTab s regel -> case (tabMet s w) (Cons tab r -> ontvang regel tab w) (Nil -> w))
+
+naarServer !s regel w =
+  case w (Wereld srv bs tabs rij log a au ->
+    case (S.step (T.concat ["msg ", T.showInt s, " ", regel]) srv)
+      (S.Stap srv2 uit -> Wereld srv2 bs tabs (L.append rij (L.concatMap serverUit uit)) (logServer uit log) a au))
+
+// `to 1,2 <bericht>` wordt een bericht per tabblad; `bewaar` alleen in het log.
+serverUit l = if (T.startsWith "to " l) (L.map (naarSessie (V.naVeld 2 l)) (L.map V.leesGetal (T.split ',' (V.nde 1 (V.velden 2 l))))) Nil
+
+naarSessie regel !s = NaarTab s regel
+
+logServer uit log = case uit (Nil -> log) (Cons l rest -> logServer rest (if (T.startsWith "to " l) log (Cons (T.append "server: " l) log)))
+
+// Alles bezorgen (ook wat er onderweg bij komt), met een grens.
+bezorgAlles w = bezorgTot 200 w
+
+bezorgTot !n w = if ((n <= 0) \/ L.isEmpty (rijVan w)) w (bezorgTot (n - 1) (bezorgEen w))
+
+// == Als notebookcel ==========================================================
+
+cel paren = D.interactive (metAuto (wereld paren)) celStap beeld
+
+// Automatisch bezorgen staat aan.
+metAuto w = case w (Wereld srv bs tabs rij log a au -> bezorgAlles (Wereld srv bs tabs rij log a True))
+
+// Handmatig bezorgen (voor een botsing). Verbinden en abonneren gaan nog
+// vanzelf; daarna wacht elk bericht tot je het bezorgt.
+celHandmatig paren = D.interactive (zetAuto False (bezorgAlles (wereld paren))) celStap beeld
+
+knopBezorgEen = "Bezorg één bericht"
+
+knopBezorgAlles = "Bezorg alle berichten"
+
+knopAutoAan = "Automatisch bezorgen: aan"
+
+knopAutoUit = "Automatisch bezorgen: uit"
+
+naarTabLabel tab = T.append "→ tabblad " (naamTab tab)
+
+kiesNetwerk = "(netwerk en tabbladen)"
+
+celStap ev w =
+  case ev
+    (D.Input veld s -> if (T.isEmpty veld) (celKnop s w) (inActief ev w))
+    (_ -> w)
+
+celKnop s w =
+  if (T.equal s kiesNetwerk) w
+  (if (T.equal s knopBezorgEen) (bezorgEen w)
+  (if (T.equal s knopBezorgAlles) (bezorgAlles w)
+  (if (T.equal s knopAutoAan) (bezorgAlles (zetAuto True w))
+  (if (T.equal s knopAutoUit) (zetAuto False w)
+  (case (L.filter (heeftLabel s) (tabsVan w))
+    (Cons tab r -> zetActief (sessieVan tab) w)
+    (Nil -> inActief (D.Input "" s) w))))))
+
+heeftLabel s tab = T.equal (naarTabLabel tab) s
+
+zetAuto b w = case w (Wereld srv bs tabs rij log a au -> Wereld srv bs tabs rij log a b)
+
+zetActief !s w = case w (Wereld srv bs tabs rij log a au -> Wereld srv bs tabs rij log s au)
+
+// Een invoer of knop voor het actieve tabblad (Top.celStap kiest de editor
+// of de knop); daarna eventueel alles bezorgen.
+inActief ev w =
+  case (tabMet (actiefVan w) w)
+    (Cons tab r -> case tab (Tab n s t bs k o wa ->
+      let w2 = naTab (Tab n s (Top.celStap ev t) bs k o wa) w in
+      if (autoVan w2) (bezorgAlles w2) w2))
+    (Nil -> w)
+
+// == Weergave =================================================================
+
+beeld w =
+  D.column (L.append (L.concatMap (tabBeeld (actiefVan w)) (tabsVan w))
+    [D.markdown "### Server", D.markdown (codeblok (serverTekst w)),
+     D.markdown "### Netwerk", D.markdown (netwerkTekst w),
+     D.choice (Cons kiesNetwerk (knoppen w)) kiesNetwerk])
+
+tabBeeld !a tab =
+  if (sessieVan tab == a)
+    [D.markdown (T.concat ["### Tabblad ", naamTab tab, " ✏️ *(hier werk je)*"]), Top.celBeeld (taakVan tab)]
+    [D.markdown (T.concat ["### Tabblad ", naamTab tab]),
+     D.markdown (codeblok (T.concat [standOfLeeg (Top.alsTekst (taakVan tab)), Top.nl, "waarde: ", Top.toonWaarde (Top.waardeVan (taakVan tab))]))]
+
+standOfLeeg s = if (T.isEmpty s) "(geen schermen meer)" s
+
+codeblok s = T.concat ["```", Top.nl, s, Top.nl, "```"]
+
+knoppen w =
+  L.append (L.map naarTabLabel (L.filter (nietActief (actiefVan w)) (tabsVan w)))
+    (if (autoVan w) [knopAutoUit] [knopBezorgEen, knopBezorgAlles, knopAutoAan])
+
+nietActief !a tab = sessieVan tab != a
+
+// De bronnen op de server: versie, waarde en abonnees.
+serverTekst w = T.join Top.nl (L.map (shareTekst (bronnenVan w)) (serverVan w))
+
+shareTekst bs sh = case sh (S.Share n c v t ab ->
+  T.concat [n, " v", T.showInt v, " = ", Top.toon (W.unpackT (Top.typeVan (bronMet n bs)) (V.unesc t)), "   (abonnees: ", T.join ", " (L.map (sessieNaam bs) ab), ")"])
+
+sessieNaam bs !s = T.showInt s
+
+netwerkTekst w =
+  T.concat ["**Onderweg** (", T.showInt (L.length (rijVan w)), "):", Top.nl, codeblok (rijOfLeeg (L.map (toonBericht w) (rijVan w))),
+            Top.nl, "**Laatst bezorgd:**", Top.nl, codeblok (rijOfLeeg (L.reverse (L.take 8 (logVan w)))),
+            Top.nl, if (autoVan w) "*Berichten worden meteen bezorgd.*" "*Berichten wachten tot je ze bezorgt.*"]
+
+rijOfLeeg xs = if (L.isEmpty xs) "(niets)" (T.join Top.nl xs)
+
+toonBericht w m =
+  case m
+    (NaarServer s regel -> T.concat [tabNaam s w, " → server: ", regel])
+    (NaarTab s regel -> T.concat ["server → ", tabNaam s w, ": ", regel])
+
+tabNaam !s w = case (tabMet s w) (Cons tab r -> naamTab tab) (Nil -> T.showInt s)

@@ -17,6 +17,7 @@
 // `docs/2026-11-27_top_from_scratch_ontwerp.md`).
 //%%
 import "lib/top.spp" as Top
+import "lib/top_sim.spp" as Sim
 import "lib/text.spp" as T
 
 ::Klant = { !naam : String, !stad : String, !korting : Bool }
@@ -78,6 +79,52 @@ Top.celMetStand (bestelWorkflow (Klant "Jan" "Den Helder" False) 2)
 //%%
 Top.celMetStand (Top.afhankelijk (Top.bewerk "Missie-invoer" (MissiePlan 180 90 30)) missieAnalyse)
 //%% [markdown]
+// ## 4. Gedeelde data
+//
+// Drie taken op één **bron** (een share): een editor, een monitor, en een
+// taak die opnieuw begint bij elke nieuwe waarde. Zet de voorraad onder de
+// 5 en er verschijnt een alarm met een knop. In de stand zie je de versie
+// van de bron.
+//%%
+voorraad = Top.bron "voorraad" "Int" 10
+
+alarm n =
+  if (n < 5)
+    (Top.metActie "Vul aan (+10)" (Top.kijk "Alarm" (T.concat ["Lage voorraad (", T.showInt n, ")!"]))
+      (\x -> Top.daarna (Top.wijzig voorraad plusTien) (\m -> Top.kijk "Alarm" m)))
+    (Top.kijk "Alarm" "Voorraad op peil")
+
+plusTien !n = n + 10
+
+magazijn = Top.bewerkGedeeld "Magazijn-editor" voorraad
+
+bewaking = Top.metInformatie voorraad alarm
+//%%
+Top.celMetStand (Top.beide (Top.beide magazijn (Top.kijkGedeeld "Live monitor" voorraad)) bewaking)
+//%% [markdown]
+// ## 5. Twee tabbladen en een server
+//
+// Nu staat de bron op een **server**, en zijn er twee **tabbladen**: in A het
+// magazijn, in B de bewaking. Alles draait hier in de pagina: de server is
+// dezelfde code die straks echt achter een WebSocket draait
+// (`server/shares.spp`), en de berichten ertussen zie je onder *Netwerk*.
+// Je werkt in één tabblad tegelijk; kies in de keuzelijst onderaan
+// **→ tabblad B** om te wisselen.
+//
+// Zet in A de voorraad op 3, ga naar B en kies daar **Vul aan (+10)**.
+//%%
+Sim.cel [("A", magazijn), ("B", bewaking)]
+//%% [markdown]
+// ## 6. Een botsing
+//
+// Hier worden berichten pas bezorgd als je dat kiest. Zet in A de voorraad
+// op 3, ga naar B en zet hem daar op 8: beide tabbladen schrijven dan op
+// dezelfde versie. Kies **Bezorg alle berichten**: de server neemt de eerste
+// aan en meldt de tweede als botsing, en B krijgt de nieuwe waarde met een
+// melding.
+//%%
+Sim.celHandmatig [("A", Top.bewerkGedeeld "Voorraad" voorraad), ("B", Top.bewerkGedeeld "Voorraad" voorraad)]
+//%% [markdown]
 // ## Hoe het in elkaar zit
 //
 // ```
@@ -87,10 +134,19 @@ Top.celMetStand (Top.afhankelijk (Top.bewerk "Missie-invoer" (MissiePlan 180 90 
 //        | Parallel id combineer taken     -- alle, beide, eerste
 //        | Afhankelijk id links f rechts
 //        | Constant x
+//        | BewerkGedeeld id label bron versie waarde melding uit
+//        | KijkGedeeld id label bron versie waarde
+//        | MetInformatie id bron versie maak taak
+//        | Wijzig id bron f versie nieuw uit
 //
 // stap :: Gebeurtenis -> Taak -> Taak     -- puur
 // ```
 //
-// Omdat de stand data is, kun je hem bewaren, naar een server sturen en
-// daar verder laten lopen. Dat zijn de volgende treden: gedeelde data,
-// taken op de server, en gebruikers die elk hun eigen werk zien.
+// Een taak op gedeelde data houdt de waarde en de versie bij zich, en wat
+// ze wil schrijven blijft als uitgaande schrijfactie in de boom staan. Wie
+// de taak uitvoert, haalt die op: in 4 een opslag in de cel, in 5 en 6 een
+// tabblad dat er een bericht naar de server van maakt.
+//
+// Omdat de stand data is, kun je hem ook zelf bewaren, naar een server
+// sturen en daar verder laten lopen. Dat zijn de volgende treden: de
+// taakstand op de server, en gebruikers die elk hun eigen werk zien.
