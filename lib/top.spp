@@ -70,6 +70,10 @@ import "lib/display.spp" as D
 //   bron), opnieuw gemaakt bij elke nieuwe versie. Waarde die van taak.
 // Wijzig id bron f versie nieuw uit: schrijft f (de waarde van de bron)
 //   zodra die bekend is; waarde dan Stabiel (die nieuwe waarde).
+// TaakGedeeld id bron versie taak uit: de stand van taak zelf is een bron
+//   (trede 4): wie hem uitvoert, schrijft na elke handeling de nieuwe boom,
+//   en een nieuwe versie van een ander vervangt de boom. Zo kan een taak
+//   die in het ene tabblad begon, in het andere worden afgemaakt.
 // Uit uit taak: taak, plus schrijfacties van een taak die al vervangen is
 //   (een Stap die verderging); verdwijnt met zonderUitgaand.
 ::Taak = Bewerk !id !label waarde sjabloon !melding
@@ -82,6 +86,7 @@ import "lib/display.spp" as D
        | KijkGedeeld !id !label bron !versie waarde
        | MetInformatie !id bron !versie maak taak
        | Wijzig !id bron f !versie nieuw uit
+       | TaakGedeeld !id bron !versie taak uit
        | Uit uit taak
 
 // OpActie label voorwaarde voortzetting: een knop, beschikbaar als
@@ -162,6 +167,10 @@ metInformatie b maak = MetInformatie "" b (0 - 1) maak (Kijk "" "" "(wacht op de
 
 wijzig b f = Wijzig "" b f (0 - 1) (standaardVan b) Nil
 
+// Een taak waarvan de stand gedeeld is, onder een naam. De id's beginnen bij
+// die naam (`bestelling`, `bestelling/1`, ...), dus in elk tabblad gelijk.
+gedeeldeTaak naam t = TaakGedeeld "" (Bron naam "Taak" (nummer naam t)) (0 - 1) (Kijk "" "" "(wacht op de taak)") Nil
+
 naamVan b = case b (Bron n t s -> n)
 
 typeVan b = case b (Bron n t s -> t)
@@ -186,6 +195,7 @@ nummer pad t =
     (KijkGedeeld i l b v w -> KijkGedeeld pad l b v w)
     (MetInformatie i b v f x -> MetInformatie pad b v f (nummer (kind pad 1) x))
     (Wijzig i b f v n u -> Wijzig pad b f v n u)
+    (TaakGedeeld i b v x u -> TaakGedeeld pad b v x u)
     (Uit u x -> Uit u (nummer pad x))
 
 nummerVanaf pad !n ts = case ts (Nil -> Nil) (Cons t rest -> Cons (nummer (kind pad n) t) (nummerVanaf pad (n + 1) rest))
@@ -213,6 +223,7 @@ taakId t =
     (KijkGedeeld i l b v w -> i)
     (MetInformatie i b v f x -> i)
     (Wijzig i b f v n u -> i)
+    (TaakGedeeld i b v x u -> i)
     (Uit u x -> taakId x)
 
 // De id's van alle editors, in volgorde.
@@ -229,6 +240,7 @@ kinderen t =
     (Parallel i c ts -> ts)
     (Afhankelijk i a f r -> [a, r])
     (MetInformatie i b v f x -> [x])
+    (TaakGedeeld i b v x u -> [x])
     (Uit u x -> [x])
     (_ -> Nil)
 
@@ -246,6 +258,7 @@ waardeVan t =
     (KijkGedeeld i l b v w -> if (v >= 0) (Instabiel w) Geen)
     (MetInformatie i b v f x -> waardeVan x)
     (Wijzig i b f v n u -> if (v >= 0) (Stabiel n) Geen)
+    (TaakGedeeld i b v x u -> waardeVan x)
     (Uit u x -> waardeVan x)
 
 // De melding van de eerste editor met een melding.
@@ -304,6 +317,7 @@ stap ev t =
     (KijkGedeeld i l b v w -> stapKijkGedeeld ev i l b v w t)
     (MetInformatie i b v f x -> stapMetInformatie ev i b v f x)
     (Wijzig i b f v n u -> stapWijzig ev i b f v n u t)
+    (TaakGedeeld i b v x u -> stapTaakGedeeld ev i b v x u)
     (Uit u x -> Uit u (stap ev x))
 
 stapBewerk ev i l w s t =
@@ -428,11 +442,28 @@ stapWijzig ev i b f v n u t =
     (Wijzig i b f (evVersie ev) (f (evWaarde ev)) (L.append u [Schrijf (naamVan b) (evVersie ev) (f (evWaarde ev)) i]))
     t
 
+// Een nieuwe versie van de taak (van een ander, of de bevestiging van onze
+// eigen): de boom vervangen. Een handeling van de gebruiker (Invoer, Actie)
+// die de boom verandert: de nieuwe boom schrijven (zonder zijn eigen
+// uitgaande schrijfacties, die gaan apart).
+stapTaakGedeeld ev i b v x u =
+  if (voorBron b v ev) (TaakGedeeld i b (evVersie ev) (evWaarde ev) u)
+  (if (isHandeling ev) (naHandeling i b v x u (stap ev x)) (TaakGedeeld i b v (stap ev x) u))
+
+naHandeling i b v x u x2 =
+  if (gelijk x x2) (TaakGedeeld i b v x2 u)
+  (TaakGedeeld i b v x2 (L.append (L.filter (nietVoorBron (naamVan b)) u) [Schrijf (naamVan b) v (zonderUitgaand x2) i]))
+
+nietVoorBron naam w = case w (Schrijf n v x van -> T.equal n naam == False)
+
+isHandeling ev = case ev (Invoer j veld tekst -> True) (Actie j a -> True) (_ -> False)
+
 // De schrijfacties die nog weg moeten, en de taak zonder.
 uitgaand t =
   case t
     (BewerkGedeeld i l b v w m u -> u)
     (Wijzig i b f v n u -> u)
+    (TaakGedeeld i b v x u -> L.append u (uitgaand x))
     (Uit u x -> L.append u (uitgaand x))
     (_ -> L.concatMap uitgaand (kinderen t))
 
@@ -445,6 +476,7 @@ zonderUitgaand t =
     (Parallel i c ts -> Parallel i c (L.map zonderUitgaand ts))
     (Afhankelijk i a f r -> Afhankelijk i (zonderUitgaand a) f (zonderUitgaand r))
     (MetInformatie i b v f x -> MetInformatie i b v f (zonderUitgaand x))
+    (TaakGedeeld i b v x u -> TaakGedeeld i b v (zonderUitgaand x) Nil)
     (_ -> t)
 
 // Welke bronnen de taak wil zien, met de versie die ze kent (-1: nog niets).
@@ -457,6 +489,7 @@ nodig t =
     (KijkGedeeld i l b v w -> [Nodig b v])
     (MetInformatie i b v f x -> Cons (Nodig b v) (nodig x))
     (Wijzig i b f v n u -> if (v < 0) [Nodig b v] Nil)
+    (TaakGedeeld i b v x u -> Cons (Nodig b v) (nodig x))
     (_ -> L.concatMap nodig (kinderen t))
 
 // == De lokale driver: bronnen in het geheugen ================================
@@ -550,6 +583,7 @@ ui t =
     (KijkGedeeld i l b v w -> D.markdown (if (v >= 0) (kijkTekst l w) (T.concat ["**", l, "**", wachtTekst])))
     (MetInformatie i b v f x -> ui x)
     (Wijzig i b f v n u -> D.column Nil)
+    (TaakGedeeld i b v x u -> ui x)
     (Uit u x -> ui x)
 
 wachtTekst = " *(wacht op de gedeelde waarde)*"

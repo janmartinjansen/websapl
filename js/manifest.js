@@ -3265,7 +3265,7 @@ window.WEBSAPL_TREE = [
         "path": "lib/top_sim.spp",
         "type": "file",
         "ext": ".spp",
-        "size": 14193,
+        "size": 14943,
         "isBinary": false
       },
       {
@@ -3273,7 +3273,7 @@ window.WEBSAPL_TREE = [
         "path": "lib/top.spp",
         "type": "file",
         "ext": ".spp",
-        "size": 29313,
+        "size": 31198,
         "isBinary": false
       },
       {
@@ -3398,7 +3398,7 @@ window.WEBSAPL_TREE = [
             "path": "notebooks/top/demo.spp",
             "type": "file",
             "ext": ".spp",
-            "size": 6383,
+            "size": 7142,
             "isBinary": false
           },
           {

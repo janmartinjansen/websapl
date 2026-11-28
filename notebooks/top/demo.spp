@@ -125,6 +125,20 @@ Sim.cel [("A", magazijn), ("B", bewaking)]
 //%%
 Sim.celHandmatig [("A", Top.bewerkGedeeld "Voorraad" voorraad), ("B", Top.bewerkGedeeld "Voorraad" voorraad)]
 //%% [markdown]
+// ## 7. Begonnen in A, afgemaakt in B
+//
+// Nu is niet alleen de data gedeeld, maar **de taak zelf**: de stand van de
+// bestelling (de boom, met de voortzettingen als functies erin) staat op de
+// server. Na elke handeling stuurt het tabblad de nieuwe stand; het andere
+// tabblad krijgt die binnen en werkt er gewoon op verder.
+//
+// Vul in A de naam in en kies **Bereken offerte**. Ga naar B: daar staat de
+// offerte. Kies in B **Bestelling plaatsen**, en kijk wat A ziet.
+//%%
+bestelling = Top.gedeeldeTaak "bestelling" (bestelWorkflow (Klant "Jan" "Den Helder" False) 2)
+//%%
+Sim.cel [("A", bestelling), ("B", bestelling)]
+//%% [markdown]
 // ## Hoe het in elkaar zit
 //
 // ```
@@ -138,6 +152,7 @@ Sim.celHandmatig [("A", Top.bewerkGedeeld "Voorraad" voorraad), ("B", Top.bewerk
 //        | KijkGedeeld id label bron versie waarde
 //        | MetInformatie id bron versie maak taak
 //        | Wijzig id bron f versie nieuw uit
+//        | TaakGedeeld id bron versie taak uit
 //
 // stap :: Gebeurtenis -> Taak -> Taak     -- puur
 // ```
@@ -147,6 +162,7 @@ Sim.celHandmatig [("A", Top.bewerkGedeeld "Voorraad" voorraad), ("B", Top.bewerk
 // de taak uitvoert, haalt die op: in 4 een opslag in de cel, in 5 en 6 een
 // tabblad dat er een bericht naar de server van maakt.
 //
-// Omdat de stand data is, kun je hem ook zelf bewaren, naar een server
-// sturen en daar verder laten lopen. Dat zijn de volgende treden: de
-// taakstand op de server, en gebruikers die elk hun eigen werk zien.
+// En omdat de stand van een taak data is, kan hij zelf ook op de server
+// staan (7). De volgende treden: gebruikers die elk hun eigen werk zien,
+// een server die herstart zonder dat lopende taken verloren gaan, en een
+// nieuwe versie van de code terwijl er een taak loopt.

@@ -62,7 +62,7 @@ maakTabs !i ps = case ps (Nil -> Nil) (Cons p rest -> Cons (maakTab i p) (maakTa
 
 maakTab !i (naam, t) = Tab naam i (Top.begin t) Nil Nil Nil Nil
 
-serverShare b = S.share (Top.naamVan b) geldig (W.packT (Top.typeVan b) (V.heel (Top.standaardVan b)))
+serverShare b = S.share (Top.naamVan b) geldig (W.packT (Top.typeVan b) (alsData (Top.typeVan b) (Top.standaardVan b)))
 
 // De server controleert hier niets (elke waarde is goed).
 geldig tekst = ""
@@ -137,7 +137,13 @@ schrijftOp naam x = case x (Top.Schrijf n v val van -> T.equal n naam)
 
 schrijftNietOp naam x = schrijftOp naam x == False
 
-schrijfBericht !s bs x = case x (Top.Schrijf n v val van -> NaarServer s (V.schrijf n v (W.packT (Top.typeVan (bronMet n bs)) (V.heel val))))
+schrijfBericht !s bs x = case x (Top.Schrijf n v val van -> NaarServer s (V.schrijf n v (W.packT (Top.typeVan (bronMet n bs)) (alsData (Top.typeVan (bronMet n bs)) val))))
+
+// Wat er over de draad gaat, is data (V.heel), behalve de stand van een
+// taak: die bevat functies (de voortzettingen) en gaat met pack, op naam.
+// Binnen deze pagina is dat hetzelfde programma; tussen verschillende
+// builds is dat code op hash (fase 3 van het client-server-ontwerp).
+alsData ty val = if (T.equal ty "Taak") val (V.heel val)
 
 // Een regel van de server voor dit tabblad.
 ontvang regel tab w =
@@ -226,7 +232,7 @@ serverUit l = if (T.startsWith "to " l) (L.map (naarSessie (V.naVeld 2 l)) (L.ma
 
 naarSessie regel !s = NaarTab s regel
 
-logServer uit log = case uit (Nil -> log) (Cons l rest -> logServer rest (if (T.startsWith "to " l) log (Cons (T.append "server: " l) log)))
+logServer uit log = case uit (Nil -> log) (Cons l rest -> logServer rest (if (T.startsWith "to " l) log (Cons (kort (T.append "server: " l)) log)))
 
 // Alles bezorgen (ook wat er onderweg bij komt), met een grens.
 bezorgAlles w = bezorgTot 200 w
@@ -314,7 +320,13 @@ nietActief !a tab = sessieVan tab != a
 serverTekst w = T.join Top.nl (L.map (shareTekst (bronnenVan w)) (serverVan w))
 
 shareTekst bs sh = case sh (S.Share n c v t ab ->
-  T.concat [n, " v", T.showInt v, " = ", Top.toon (W.unpackT (Top.typeVan (bronMet n bs)) (V.unesc t)), "   (abonnees: ", T.join ", " (L.map (sessieNaam bs) ab), ")"])
+  T.concat [n, " v", T.showInt v, " = ", toonBronwaarde (Top.typeVan (bronMet n bs)) (W.unpackT (Top.typeVan (bronMet n bs)) (V.unesc t)), "   (abonnees: ", T.join ", " (L.map (sessieNaam bs) ab), ")"])
+
+// Een taak als de regels van haar stand, anders de waarde.
+toonBronwaarde ty x = if (T.equal ty "Taak") (T.concat ["taak { ", taakRegels x, " }"]) (Top.toon x)
+
+// Een afgeronde taak heeft geen schermen meer: dan haar waarde.
+taakRegels x = if (L.isEmpty (Top.tekstRegels x)) (T.append "klaar, waarde: " (Top.toonWaarde (Top.waardeVan x))) (T.join " | " (Top.tekstRegels x))
 
 sessieNaam bs !s = T.showInt s
 
@@ -327,7 +339,10 @@ rijOfLeeg xs = if (L.isEmpty xs) "(niets)" (T.join Top.nl xs)
 
 toonBericht w m =
   case m
-    (NaarServer s regel -> T.concat [tabNaam s w, " → server: ", regel])
-    (NaarTab s regel -> T.concat ["server → ", tabNaam s w, ": ", regel])
+    (NaarServer s regel -> kort (T.concat [tabNaam s w, " → server: ", regel]))
+    (NaarTab s regel -> kort (T.concat ["server → ", tabNaam s w, ": ", regel]))
+
+// Een lange regel (de stand van een taak) afgekort.
+kort s = if (strlen s > 110) (T.append (T.take 100 s) " …") s
 
 tabNaam !s w = case (tabMet s w) (Cons tab r -> naamTab tab) (Nil -> T.showInt s)
