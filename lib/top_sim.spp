@@ -62,7 +62,21 @@ maakTabs !i ps = case ps (Nil -> Nil) (Cons p rest -> Cons (maakTab i p) (maakTa
 
 maakTab !i (naam, t) = Tab naam i (Top.begin t) Nil Nil Nil Nil
 
-serverShare b = S.share (Top.naamVan b) geldig (W.packT (Top.typeVan b) (alsData (Top.typeVan b) (Top.standaardVan b)))
+serverShare b =
+  case (Top.verwerkVan b)
+    (Nil -> S.share (Top.naamVan b) geldig (beginTekst b))
+    (Cons f r -> S.shareMetGebeurtenissen (Top.naamVan b) geldig (verwerkTekst (Top.typeVan b) f) (beginTekst b))
+
+beginTekst b = W.packT (Top.typeVan b) (alsData (Top.typeVan b) (Top.standaardVan b))
+
+// De functie van een bron, op tekst (zoals de server hem aanroept): dezelfde
+// f als bij de lokale driver.
+verwerkTekst ty f evTekst waardeTekst =
+  case (f (W.unpackT typeGebeurtenis evTekst) (W.unpackT ty waardeTekst))
+    (Top.Toegepast x2 -> S.Verwerkt (W.packT ty (alsData ty x2)))
+    (Top.Geweigerd m -> S.Geweigerd m)
+
+typeGebeurtenis = "Gebeurtenis"
 
 // De server controleert hier niets (elke waarde is goed).
 geldig tekst = ""
@@ -125,19 +139,31 @@ vWacht r = case r (Verstuurd o w b -> w)
 
 vBerichten r = case r (Verstuurd o w b -> b)
 
+// Per bron hoogstens één schrijfactie of gebeurtenis onderweg. Erachter
+// wacht van een waarde alleen de laatste, van gebeurtenissen allemaal.
 versturen !s ws o wa bs uit =
   case ws
     (Nil -> Verstuurd o wa uit)
-    (Cons x rest -> case x (Top.Schrijf n v val van ->
-      if (L.any (schrijftOp n) o)
-        (versturen s rest o (L.append (L.filter (schrijftNietOp n) wa) [x]) bs uit)
-        (versturen s rest (L.append o [x]) wa bs (L.append uit [schrijfBericht s bs x]))))
+    (Cons x rest ->
+      if (L.any (schrijftOp (opBron x)) o)
+        (versturen s rest o (wachtAchter x wa) bs uit)
+        (versturen s rest (L.append o [x]) wa bs (L.append uit [schrijfBericht s bs x])))
 
-schrijftOp naam x = case x (Top.Schrijf n v val van -> T.equal n naam)
+wachtAchter x wa = case x
+  (Top.Schrijf n v val van -> L.append (L.filter (nietWaardeVoor n) wa) [x])
+  (Top.Gebeurt b e van -> L.append wa [x])
+
+nietWaardeVoor naam x = case x (Top.Schrijf n v val van -> T.equal n naam == False) (_ -> True)
+
+opBron x = case x (Top.Schrijf n v val van -> n) (Top.Gebeurt b e van -> Top.naamVan b)
+
+schrijftOp naam x = T.equal (opBron x) naam
 
 schrijftNietOp naam x = schrijftOp naam x == False
 
-schrijfBericht !s bs x = case x (Top.Schrijf n v val van -> NaarServer s (V.schrijf n v (W.packT (Top.typeVan (bronMet n bs)) (alsData (Top.typeVan (bronMet n bs)) val))))
+schrijfBericht !s bs x = case x
+  (Top.Schrijf n v val van -> NaarServer s (V.schrijf n v (W.packT (Top.typeVan (bronMet n bs)) (alsData (Top.typeVan (bronMet n bs)) val))))
+  (Top.Gebeurt b e van -> NaarServer s (V.regel ["schrijf", Top.naamVan b, "0", S.soortGebeurtenis, V.esc (W.packT typeGebeurtenis (V.heel e))]))
 
 // Wat er over de draad gaat, is data (V.heel), behalve de stand van een
 // taak: die bevat functies (de voortzettingen) en gaat met pack, op naam.
@@ -152,6 +178,7 @@ ontvang regel tab w =
       (V.Update b v tekst -> naTab (metWaarde b v (uitpakken b tekst w) tab) w)
       (V.Ok b v -> naTab (bevestigd b v tab) w)
       (V.Conflict b v tekst -> naTab (gebotst b v (uitpakken b tekst w) tab) w)
+      (V.Fout m -> naTab (geweigerd m tab) w)
       (_ -> w))
 
 uitpakken b tekst w = W.unpackT (Top.typeVan (bronMet b (bronnenVan w))) tekst
@@ -161,26 +188,56 @@ metWaarde b !v x tab =
   case tab (Tab n s t bs k o wa -> Tab n s (Top.stap (Top.Wijziging b v x) t) bs (onthoud b v x k) o wa)
 
 // Onze schrijfactie is gelukt: de waarde die we schreven heeft nu versie v.
-// Wacht er nog een voor deze bron, dan gaat die nu, op versie v.
+// Een gebeurtenis is verwerkt (de nieuwe waarde komt als update). Wacht er
+// nog iets voor deze bron, dan gaat het volgende nu (een waarde op versie v).
 bevestigd b !v tab =
   case tab (Tab n s t bs k o wa ->
     case (L.filter (schrijftOp b) o)
-      (Cons x r -> case x (Top.Schrijf b2 v0 val van ->
-        Tab n s (opnieuw b v (Top.stap (Top.Wijziging b v val) t) wa) bs (onthoud b v val k) (L.filter (schrijftNietOp b) o) (L.filter (schrijftNietOp b) wa)))
+      (Cons x r -> volgende b v (naOk x b v t k) bs (L.filter (schrijftNietOp b) o) wa n s)
       (Nil -> tab))
 
-// De wachtende schrijfactie opnieuw in de taak zetten, op de nieuwe versie:
-// naTab verstuurt hem dan (als Top.Uit, zodat zonderUitgaand hem weer haalt).
-opnieuw b !v t wa = case (L.filter (schrijftOp b) wa) (Cons x r -> case x (Top.Schrijf b2 v0 val van -> Top.Uit [Top.Schrijf b v val van] t)) (Nil -> t)
+::NaOk = NaOk taak kennis
+
+naOk x b !v t k = case x
+  (Top.Schrijf b2 v0 val van -> NaOk (Top.stap (Top.Wijziging b v val) t) (onthoud b v val k))
+  (Top.Gebeurt bb e van -> NaOk (Top.stap (Top.Verwerkt van "") t) k)
+
+// De eerste wachtende voor bron b weer in de taak zetten (als Top.Uit, zodat
+// naTab hem verstuurt), een waarde op de nieuwe versie v.
+volgende b !v nk bs o wa n !s =
+  case nk (NaOk t k ->
+    case (L.filter (schrijftOp b) wa)
+      (Cons x r -> Tab n s (Top.Uit [opVersie v x] t) bs k o (zonderEerste x wa))
+      (Nil -> Tab n s t bs k o wa))
+
+opVersie !v x = case x (Top.Schrijf n v0 val van -> Top.Schrijf n v val van) (_ -> x)
+
+zonderEerste x wa = case wa (Nil -> Nil) (Cons y r -> if (T.equal (opBron y) (opBron x)) r (Cons y (zonderEerste x r)))
 
 // Te laat: de actuele waarde, als Botsing voor de taak die schreef; wat er
 // nog wachtte voor deze bron vervalt.
 gebotst b !v x tab =
   case tab (Tab n s t bs k o wa ->
     case (L.filter (schrijftOp b) o)
-      (Cons y r -> case y (Top.Schrijf b2 v0 val van ->
-        Tab n s (Top.stap (Top.Botsing van b v x) t) bs (onthoud b v x k) (L.filter (schrijftNietOp b) o) (L.filter (schrijftNietOp b) wa)))
+      (Cons y r -> case y
+        (Top.Schrijf b2 v0 val van ->
+          Tab n s (Top.stap (Top.Botsing van b v x) t) bs (onthoud b v x k) (L.filter (schrijftNietOp b) o) (L.filter (schrijftNietOp b) wa))
+        (_ -> metWaarde b v x tab))
       (Nil -> metWaarde b v x tab))
+
+// `fout geweigerd: <melding>`: de server weigerde onze gebeurtenis (de eerste
+// die onderweg is). De taak die hem stuurde krijgt de melding; daarna het
+// volgende dat voor die bron wacht.
+geweigerd m tab =
+  case tab (Tab n s t bs k o wa ->
+    case (L.filter isGebeurt o)
+      (Cons x r -> case x (Top.Gebeurt b e van ->
+        volgende (Top.naamVan b) 0 (NaOk (Top.stap (Top.Verwerkt van (zonderVoorvoegsel "geweigerd: " (V.unesc m))) t) k) bs (L.filter (schrijftNietOp (Top.naamVan b)) o) wa n s))
+      (Nil -> tab))
+
+isGebeurt x = case x (Top.Gebeurt b e van -> True) (_ -> False)
+
+zonderVoorvoegsel p m = if (T.startsWith p m) (T.drop (strlen p) m) m
 
 onthoud b !v x k = L.append (L.filter (nietOpgeslagen b) k) [Top.Opgeslagen b v x]
 
@@ -303,8 +360,9 @@ beeld w =
 tabBeeld !a tab =
   if (sessieVan tab == a)
     [D.markdown (T.concat ["### Tabblad ", naamTab tab, " ✏️ *(hier werk je)*"]), Top.celBeeld (taakVan tab)]
-    [D.markdown (T.concat ["### Tabblad ", naamTab tab]),
-     D.markdown (codeblok (T.concat [standOfLeeg (Top.alsTekst (taakVan tab)), Top.nl, "waarde: ", Top.toonWaarde (Top.waardeVan (taakVan tab))]))]
+    [D.markdown (T.concat ["### Tabblad ", naamTab tab, " *(kies → tabblad ", naamTab tab, " om hier te werken)*"]),
+     Top.uiLezen (taakVan tab),
+     D.markdown (T.concat ["*Waarde:* `", Top.toonWaarde (Top.waardeVan (taakVan tab)), "`"])]
 
 standOfLeeg s = if (T.isEmpty s) "(geen schermen meer)" s
 
@@ -319,11 +377,11 @@ nietActief !a tab = sessieVan tab != a
 // De bronnen op de server: versie, waarde en abonnees.
 serverTekst w = T.join Top.nl (L.map (shareTekst (bronnenVan w)) (serverVan w))
 
-shareTekst bs sh = case sh (S.Share n c v t ab ->
+shareTekst bs sh = case sh (S.Share n c v t ab vw ->
   T.concat [n, " v", T.showInt v, " = ", toonBronwaarde (Top.typeVan (bronMet n bs)) (W.unpackT (Top.typeVan (bronMet n bs)) (V.unesc t)), "   (abonnees: ", T.join ", " (L.map (sessieNaam bs) ab), ")"])
 
 // Een taak als de regels van haar stand, anders de waarde.
-toonBronwaarde ty x = if (T.equal ty "Taak") (T.concat ["taak { ", taakRegels x, " }"]) (Top.toon x)
+toonBronwaarde ty x = if (T.equal ty "Taak") (T.concat ["taak { ", taakRegels x, " }"]) (kort (Top.toon x))
 
 // Een afgeronde taak heeft geen schermen meer: dan haar waarde.
 taakRegels x = if (L.isEmpty (Top.tekstRegels x)) (T.append "klaar, waarde: " (Top.toonWaarde (Top.waardeVan x))) (T.join " | " (Top.tekstRegels x))

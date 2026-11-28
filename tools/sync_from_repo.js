@@ -168,6 +168,7 @@ const ENTRIES = [
   { src: "lib/taxi_minimal.spp", dst: "lib/taxi_minimal.spp" },
   { src: "lib/top.spp", dst: "lib/top.spp" },
   { src: "lib/top_sim.spp", dst: "lib/top_sim.spp" },
+  { src: "lib/top_c2.spp", dst: "lib/top_c2.spp" },
   { src: "server/fase1/incident.spp", dst: "server/fase1/incident.spp" },
   { src: "server/shares.spp", dst: "server/shares.spp" },
   { src: "notebooks/data_verkennen.spp", dst: "notebooks/data_verkennen.spp" },

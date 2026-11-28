@@ -47,9 +47,14 @@ import "lib/display.spp" as D
 // invoer in een editor is een melding, geen Fout).
 ::Waarde = Geen | Instabiel x | Stabiel x | Fout !msg
 
-// Een share: naam, het type als tekst (voor W.packT op de draad) en de
-// beginwaarde.
-::Bron = Bron !naam !type standaard
+// Een share: naam, het type als tekst (voor W.packT op de draad), de
+// beginwaarde, en Nil of [f] voor een bron die gebeurtenissen aanneemt
+// (trede 5): f gebeurtenis waarde geeft Toegepast <nieuwe waarde> of
+// Geweigerd <melding>. Wie de bron bijhoudt (de lokale driver, de server),
+// past f toe; zo controleert hij ook of de gebeurtenis mag.
+::Bron = Bron !naam !type standaard verwerk
+
+::Uitkomst = Toegepast x | Geweigerd !melding
 
 // Bewerk id label waarde sjabloon melding: een editor. sjabloon is de waarde
 //   waarvan het formulier uitgaat zolang er geen waarde is (vulIn); melding
@@ -65,7 +70,11 @@ import "lib/display.spp" as D
 // BewerkGedeeld id label bron versie waarde melding uit: een editor op een
 //   bron. versie -1: de waarde is nog niet bekend. uit: de schrijfacties die
 //   nog weg moeten.
-// KijkGedeeld id label bron versie waarde: toont de waarde van een bron.
+// KijkGedeeld id label bron versie waarde toonF: toont toonF (de waarde van
+//   een bron), als Markdown.
+// Stuur id bron gebeurtenis uitkomst uit: stuurt een gebeurtenis naar een
+//   bron die gebeurtenissen aanneemt; waarde Geen tot het antwoord, dan
+//   Stabiel "" (verwerkt) of Stabiel <melding> (geweigerd).
 // MetInformatie id bron versie maak taak: taak = maak (de waarde van de
 //   bron), opnieuw gemaakt bij elke nieuwe versie. Waarde die van taak.
 // Wijzig id bron f versie nieuw uit: schrijft f (de waarde van de bron)
@@ -83,7 +92,8 @@ import "lib/display.spp" as D
        | Afhankelijk !id links maakRechts rechts
        | Constant x
        | BewerkGedeeld !id !label bron !versie waarde !melding uit
-       | KijkGedeeld !id !label bron !versie waarde
+       | KijkGedeeld !id !label bron !versie waarde toonF
+       | Stuur !id bron gebeurtenis uitkomst uit
        | MetInformatie !id bron !versie maak taak
        | Wijzig !id bron f !versie nieuw uit
        | TaakGedeeld !id bron !versie taak uit
@@ -102,13 +112,18 @@ import "lib/display.spp" as D
 //   taak op die bron met een oudere versie).
 // Botsing van bron versie waarde: de schrijfactie van taak `van` kwam te
 //   laat; dit is de actuele waarde (voor de andere taken een Wijziging).
+// Verwerkt van melding: de gebeurtenis van taak `van` is verwerkt ("") of
+//   geweigerd (de melding).
 ::Gebeurtenis = Invoer !id !veld !tekst | Actie !id !label
               | Wijziging !bron !versie waarde | Botsing !van !bron !versie waarde
+              | Verwerkt !van !melding
 
 // Schrijf bron versie waarde van: schrijf waarde, uitgaande van versie (de
 // schrijfactie botst als de bron intussen een nieuwere versie heeft); van is
 // het id van de taak die schrijft.
-::Schrijfactie = Schrijf !bron !versie waarde !van
+// Gebeurt bron gebeurtenis van: een gebeurtenis voor een bron (de hele Bron,
+// met zijn functie f).
+::Schrijfactie = Schrijf !bron !versie waarde !van | Gebeurt bron gebeurtenis !van
 
 // == Bouwers ==================================================================
 
@@ -157,11 +172,19 @@ eerste ts = Parallel "" combineerEerste ts
 afhankelijk links f = Afhankelijk "" links f (Constant 0)
 
 // Gedeelde data.
-bron naam type standaard = Bron naam type standaard
+bron naam type standaard = Bron naam type standaard Nil
+
+bronMetGebeurtenissen naam type standaard f = Bron naam type standaard [f]
 
 bewerkGedeeld label b = BewerkGedeeld "" label b (0 - 1) (standaardVan b) "" Nil
 
-kijkGedeeld label b = KijkGedeeld "" label b (0 - 1) (standaardVan b)
+kijkGedeeld label b = KijkGedeeld "" label b (0 - 1) (standaardVan b) toon
+
+// Met een eigen weergave: f waarde geeft Markdown.
+kijkGedeeldMet label f b = KijkGedeeld "" label b (0 - 1) (standaardVan b) f
+
+// Een gebeurtenis sturen naar een bron die gebeurtenissen aanneemt.
+stuur b ev = Stuur "" b ev Geen [Gebeurt b ev ""]
 
 metInformatie b maak = MetInformatie "" b (0 - 1) maak (Kijk "" "" "(wacht op de gedeelde waarde)")
 
@@ -169,13 +192,15 @@ wijzig b f = Wijzig "" b f (0 - 1) (standaardVan b) Nil
 
 // Een taak waarvan de stand gedeeld is, onder een naam. De id's beginnen bij
 // die naam (`bestelling`, `bestelling/1`, ...), dus in elk tabblad gelijk.
-gedeeldeTaak naam t = TaakGedeeld "" (Bron naam "Taak" (nummer naam t)) (0 - 1) (Kijk "" "" "(wacht op de taak)") Nil
+gedeeldeTaak naam t = TaakGedeeld "" (Bron naam "Taak" (nummer naam t) Nil) (0 - 1) (Kijk "" "" "(wacht op de taak)") Nil
 
-naamVan b = case b (Bron n t s -> n)
+naamVan b = case b (Bron n t s f -> n)
 
-typeVan b = case b (Bron n t s -> t)
+typeVan b = case b (Bron n t s f -> t)
 
-standaardVan b = case b (Bron n t s -> s)
+standaardVan b = case b (Bron n t s f -> s)
+
+verwerkVan b = case b (Bron n t s f -> f)
 
 // == Taak-id's ================================================================
 
@@ -192,7 +217,8 @@ nummer pad t =
     (Afhankelijk i a f r -> metRechts pad (kind pad 2) (nummer (kind pad 1) a) f r)
     (Constant x -> t)
     (BewerkGedeeld i l b v w m u -> BewerkGedeeld pad l b v w m u)
-    (KijkGedeeld i l b v w -> KijkGedeeld pad l b v w)
+    (KijkGedeeld i l b v w f -> KijkGedeeld pad l b v w f)
+    (Stuur i b e w u -> Stuur pad b e w (L.map (metVan pad) u))
     (MetInformatie i b v f x -> MetInformatie pad b v f (nummer (kind pad 1) x))
     (Wijzig i b f v n u -> Wijzig pad b f v n u)
     (TaakGedeeld i b v x u -> TaakGedeeld pad b v x u)
@@ -220,7 +246,8 @@ taakId t =
     (Afhankelijk i a f r -> i)
     (Constant x -> "")
     (BewerkGedeeld i l b v w m u -> i)
-    (KijkGedeeld i l b v w -> i)
+    (KijkGedeeld i l b v w f -> i)
+    (Stuur i b e w u -> i)
     (MetInformatie i b v f x -> i)
     (Wijzig i b f v n u -> i)
     (TaakGedeeld i b v x u -> i)
@@ -255,7 +282,8 @@ waardeVan t =
     (Afhankelijk i a f r -> waardeVan a)
     (Constant x -> Stabiel x)
     (BewerkGedeeld i l b v w m u -> if (v >= 0) (Instabiel w) Geen)
-    (KijkGedeeld i l b v w -> if (v >= 0) (Instabiel w) Geen)
+    (KijkGedeeld i l b v w f -> if (v >= 0) (Instabiel w) Geen)
+    (Stuur i b e w u -> w)
     (MetInformatie i b v f x -> waardeVan x)
     (Wijzig i b f v n u -> if (v >= 0) (Stabiel n) Geen)
     (TaakGedeeld i b v x u -> waardeVan x)
@@ -314,7 +342,8 @@ stap ev t =
     (Afhankelijk i a f r -> stapAfhankelijk ev i a f r)
     (Constant x -> t)
     (BewerkGedeeld i l b v w m u -> stapBewerkGedeeld ev i l b v w m u t)
-    (KijkGedeeld i l b v w -> stapKijkGedeeld ev i l b v w t)
+    (KijkGedeeld i l b v w f -> stapKijkGedeeld ev i l b v w f t)
+    (Stuur i b e w u -> case ev (Verwerkt van m -> if (T.equal van i) (Stuur i b e (Stabiel m) u) t) (_ -> t))
     (MetInformatie i b v f x -> stapMetInformatie ev i b v f x)
     (Wijzig i b f v n u -> stapWijzig ev i b f v n u t)
     (TaakGedeeld i b v x u -> stapTaakGedeeld ev i b v x u)
@@ -427,7 +456,9 @@ invoerGedeeld i l b v w u veld tekst =
     (Gelukt x -> BewerkGedeeld i l b v x "" (L.append u [Schrijf (naamVan b) v x i]))
     (Mislukt msg -> BewerkGedeeld i l b v w msg u)
 
-stapKijkGedeeld ev i l b v w t = if (voorBron b v ev) (KijkGedeeld i l b (evVersie ev) (evWaarde ev)) t
+stapKijkGedeeld ev i l b v w f t = if (voorBron b v ev) (KijkGedeeld i l b (evVersie ev) (evWaarde ev) f) t
+
+metVan i w = case w (Gebeurt b e van -> Gebeurt b e i) (_ -> w)
 
 // Een nieuwe versie: de taak begint opnieuw (met een nieuw id), en krijgt
 // de gebeurtenis zelf ook (ze kan dezelfde bron gebruiken).
@@ -463,6 +494,7 @@ uitgaand t =
   case t
     (BewerkGedeeld i l b v w m u -> u)
     (Wijzig i b f v n u -> u)
+    (Stuur i b e w u -> u)
     (TaakGedeeld i b v x u -> L.append u (uitgaand x))
     (Uit u x -> L.append u (uitgaand x))
     (_ -> L.concatMap uitgaand (kinderen t))
@@ -471,6 +503,7 @@ zonderUitgaand t =
   case t
     (BewerkGedeeld i l b v w m u -> BewerkGedeeld i l b v w m Nil)
     (Wijzig i b f v n u -> Wijzig i b f v n Nil)
+    (Stuur i b e w u -> Stuur i b e w Nil)
     (Uit u x -> zonderUitgaand x)
     (Stap i b vs -> Stap i (zonderUitgaand b) vs)
     (Parallel i c ts -> Parallel i c (L.map zonderUitgaand ts))
@@ -486,7 +519,7 @@ zonderUitgaand t =
 nodig t =
   case t
     (BewerkGedeeld i l b v w m u -> [Nodig b v])
-    (KijkGedeeld i l b v w -> [Nodig b v])
+    (KijkGedeeld i l b v w f -> [Nodig b v])
     (MetInformatie i b v f x -> Cons (Nodig b v) (nodig x))
     (Wijzig i b f v n u -> if (v < 0) [Nodig b v] Nil)
     (TaakGedeeld i b v x u -> Cons (Nodig b v) (nodig x))
@@ -536,16 +569,30 @@ rBotsingen r = case r (Geschreven o b -> b)
 schrijfAlle ws o bs =
   case ws
     (Nil -> Geschreven o bs)
-    (Cons w rest -> case w (Schrijf n v x van -> case (zoekOp n o)
-      (Cons s r -> case s (Opgeslagen n2 v2 x2 ->
-        if (v == v2) (schrijfAlle rest (L.map (vervangOp n (v2 + 1) x) o) bs) (schrijfAlle rest o (L.append bs [Botst n van]))))
-      (Nil -> schrijfAlle rest o (L.append bs [Botst n van]))))
+    (Cons w rest -> case w
+      (Schrijf n v x van -> case (zoekOp n o)
+        (Cons s r -> case s (Opgeslagen n2 v2 x2 ->
+          if (v == v2) (schrijfAlle rest (L.map (vervangOp n (v2 + 1) x) o) bs) (schrijfAlle rest o (L.append bs [Botst n van]))))
+        (Nil -> schrijfAlle rest o (L.append bs [Botst n van])))
+      (Gebeurt b e van -> gebeurtLokaal rest b e van (aanmaken [Nodig b 0] o) bs))
 
-::Botst = Botst !naam !van
+// Een gebeurtenis: f van de bron toepassen op de opgeslagen waarde.
+gebeurtLokaal rest b e van o bs =
+  case (zoekOp (naamVan b) o)
+    (Cons s r -> case s (Opgeslagen n v x -> case (verwerkVan b)
+      (Cons f r2 -> case (f e x)
+        (Toegepast x2 -> schrijfAlle rest (L.map (vervangOp n (v + 1) x2) o) (L.append bs [Antwoord van ""]))
+        (Geweigerd m -> schrijfAlle rest o (L.append bs [Antwoord van m])))
+      (Nil -> schrijfAlle rest o (L.append bs [Antwoord van (T.append "bron neemt geen gebeurtenissen aan: " n)]))))
+    (Nil -> schrijfAlle rest o bs)
+
+::Botst = Botst !naam !van | Antwoord !van !melding
 
 vervangOp naam !v x s = case s (Opgeslagen n v2 x2 -> if (T.equal n naam) (Opgeslagen n v x) s)
 
-stuurBotsingen bs o t = case bs (Nil -> t) (Cons b rest -> case b (Botst n van -> stuurBotsingen rest o (stuurOpgeslagen van (zoekOp n o) t)))
+stuurBotsingen bs o t = case bs (Nil -> t) (Cons b rest -> case b
+  (Botst n van -> stuurBotsingen rest o (stuurOpgeslagen van (zoekOp n o) t))
+  (Antwoord van m -> stuurBotsingen rest o (stap (Verwerkt van m) t)))
 
 // Elke bron waarvan een taak een oudere versie kent: een Wijziging.
 stuurNieuw o t = stuurOpgeslagen "" (L.filter (isAchter (nodig t)) o) t
@@ -580,7 +627,8 @@ ui t =
     (Afhankelijk i a f r -> D.column [ui a, ui r])
     (Constant x -> D.column Nil)
     (BewerkGedeeld i l b v w m u -> if (v >= 0) (D.column (L.append [kop l "", D.form w] (uiMelding m))) (kop l wachtTekst))
-    (KijkGedeeld i l b v w -> D.markdown (if (v >= 0) (kijkTekst l w) (T.concat ["**", l, "**", wachtTekst])))
+    (KijkGedeeld i l b v w f -> D.markdown (if (v >= 0) (kijkMet l f w) (T.concat ["**", l, "**", wachtTekst])))
+    (Stuur i b e w u -> D.markdown (if (heeftWaarde w) "" "*(wordt verstuurd …)*"))
     (MetInformatie i b v f x -> ui x)
     (Wijzig i b f v n u -> D.column Nil)
     (TaakGedeeld i b v x u -> ui x)
@@ -588,13 +636,32 @@ ui t =
 
 wachtTekst = " *(wacht op de gedeelde waarde)*"
 
+// Dezelfde weergave, alleen om te lezen: een formulier als tekst, de knoppen
+// als opsomming. Voor een tabblad waarin je niet werkt (lib/top_sim.spp):
+// zijn formulieren zouden invoer krijgen die voor een ander bedoeld is.
+uiLezen t =
+  case t
+    (Bewerk i l w s m -> D.markdown (T.concat ["**", l, ":** ", if (heeftWaarde w) (toon (huidig w s)) "*(leeg)*"]))
+    (BewerkGedeeld i l b v w m u -> D.markdown (if (v >= 0) (kijkTekst l w) (T.concat ["**", l, "**", wachtTekst])))
+    (Stap i b vs -> D.column (Cons (uiLezen b) (knoppenLezen (actieLabels (waardeVan b) vs))))
+    (Parallel i c ts -> D.column (L.map uiLezen ts))
+    (Afhankelijk i a f r -> D.column [uiLezen a, uiLezen r])
+    (MetInformatie i b v f x -> uiLezen x)
+    (TaakGedeeld i b v x u -> uiLezen x)
+    (Uit u x -> uiLezen x)
+    (_ -> ui t)
+
+knoppenLezen as = case as (Nil -> Nil) (_ -> [D.markdown (T.append "*Knoppen:* " (T.join " · " as))])
+
 uiBewerk l w s m =
   if (heeftWaarde w) (D.column (L.append [kop l "", D.form (huidig w s)] (uiMelding m)))
   (D.column (L.append [kop l " *(vul in)*", D.form s] (uiMelding m)))
 
 kop l extra = D.markdown (T.concat ["**", l, "**", extra])
 
-kijkTekst l x = if (T.isEmpty l) (toon x) (T.concat ["**", l, ":** ", toon x])
+kijkTekst l x = kijkMet l toon x
+
+kijkMet l f x = if (T.isEmpty l) (f x) (T.concat ["**", l, ":** ", f x])
 
 uiMelding m = if (T.isEmpty m) Nil [D.markdown (T.concat ["⚠️ *", m, "*"])]
 
@@ -632,10 +699,19 @@ tekstRegels t =
     (Kijk i l x -> [T.concat ["[", i, " ", l, "] ", toon x]])
     (Stap i b vs -> L.append (tekstRegels b) (knoppenRegel i (actieLabels (waardeVan b) vs)))
     (BewerkGedeeld i l b v w m u -> [T.concat ["[", i, " Bewerk ", l, "] ", gedeeldTekst b v w, meldingTekst m]])
-    (KijkGedeeld i l b v w -> [T.concat ["[", i, " ", l, "] ", gedeeldTekst b v w]])
+    (KijkGedeeld i l b v w f -> [T.concat ["[", i, " ", l, "] ", gedeeldTekstMet f b v w]])
+    (Stuur i b e w u -> [T.concat ["[", i, " Stuur] ", if (heeftWaarde w) (stuurUitkomst (waardeUit w)) "onderweg"]])
     (_ -> L.concatMap tekstRegels (kinderen t))
 
+// Met een eigen weergave (meer regels Markdown): op één regel, zonder de
+// lege regels.
+nietLeeg r = T.isEmpty (T.trim r) == False
+
+gedeeldTekstMet f b !v w = if (v >= 0) (T.concat [T.join " / " (L.filter nietLeeg (T.split (strat 0 nl) (f w))), "  (", naamVan b, " v", T.showInt v, ")"]) (T.concat ["?  (", naamVan b, ", wacht)"])
+
 gedeeldTekst b !v w = if (v >= 0) (T.concat [toon w, "  (", naamVan b, " v", T.showInt v, ")"]) (T.concat ["?  (", naamVan b, ", wacht)"])
+
+stuurUitkomst m = if (T.isEmpty m) "verwerkt" (T.append "geweigerd: " m)
 
 meldingTekst m = if (T.isEmpty m) "" (T.concat ["  ! ", m])
 

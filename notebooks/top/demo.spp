@@ -18,6 +18,8 @@
 //%%
 import "lib/top.spp" as Top
 import "lib/top_sim.spp" as Sim
+import "lib/top_c2.spp" as TC
+import "lib/taxi_minimal.spp" as X
 import "lib/text.spp" as T
 
 ::Klant = { !naam : String, !stad : String, !korting : Bool }
@@ -139,6 +141,34 @@ bestelling = Top.gedeeldeTaak "bestelling" (bestelWorkflow (Klant "Jan" "Den Hel
 //%%
 Sim.cel [("A", bestelling), ("B", bestelling)]
 //%% [markdown]
+// ## 8. Gebruikers: Tom en Carrie
+//
+// Het voorbeeld `taxi_minimal` van C2Sketch: Tom wil van het vliegveld naar
+// zijn hotel, Carrie rijdt een taxi. Het model zegt wie welke taken mag doen
+// en in welke ruimte (een "information space") hij leest of schrijft. Elk
+// tabblad is nu een **gebruiker**: je ziet je eigen takenlijst en de
+// berichten in de ruimtes die je leest, en alleen de knoppen die het model
+// je nu toestaat.
+//
+// Over de lijn gaan nu **gebeurtenissen** ("Tom begint arrange_taxi_ride"),
+// niet de hele stand. De server controleert ze tegen het model en past ze
+// toe.
+//
+// Probeer: Tom begint *arrange_taxi_ride*, typt een bericht en kiest *Zeg in
+// TaxiCarrie.direct_audio*. Ga naar Carrie: zij leest het. Laat haar
+// *acquire_customers* beginnen en antwoorden.
+//%%
+Sim.cel [("Tom", TC.actorTaak X.model X.tom), ("Carrie", TC.actorTaak X.model X.carrie)]
+//%% [markdown]
+// ## 9. Dezelfde gebruiker in twee tabbladen
+//
+// Tom heeft de pagina ook op zijn telefoon open. Berichten worden hier met
+// de hand bezorgd. Laat Tom in beide tabbladen *arrange_taxi_ride*
+// beginnen voordat je bezorgt: de server weigert de tweede, want het model
+// zegt dat de taak al begonnen is. Het telefoontabblad meldt dat.
+//%%
+Sim.celHandmatig [("Tom", TC.actorTaak X.model X.tom), ("Tom op telefoon", TC.actorTaak X.model X.tom)]
+//%% [markdown]
 // ## Hoe het in elkaar zit
 //
 // ```
@@ -153,6 +183,7 @@ Sim.cel [("A", bestelling), ("B", bestelling)]
 //        | MetInformatie id bron versie maak taak
 //        | Wijzig id bron f versie nieuw uit
 //        | TaakGedeeld id bron versie taak uit
+//        | Stuur id bron gebeurtenis uitkomst uit
 //
 // stap :: Gebeurtenis -> Taak -> Taak     -- puur
 // ```
@@ -163,6 +194,7 @@ Sim.cel [("A", bestelling), ("B", bestelling)]
 // tabblad dat er een bericht naar de server van maakt.
 //
 // En omdat de stand van een taak data is, kan hij zelf ook op de server
-// staan (7). De volgende treden: gebruikers die elk hun eigen werk zien,
-// een server die herstart zonder dat lopende taken verloren gaan, en een
-// nieuwe versie van de code terwijl er een taak loopt.
+// staan (7). Een bron kan ook gebeurtenissen aannemen in plaats van waarden
+// (8, 9): dan controleert wie de bron bijhoudt of de gebeurtenis mag. De
+// volgende treden: een server die herstart zonder dat lopende taken
+// verloren gaan, en een nieuwe versie van de code terwijl er een taak loopt.

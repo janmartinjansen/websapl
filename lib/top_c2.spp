@@ -1,0 +1,123 @@
+// lib/top_c2.spp -- C2Sketch op de TOP-kern (trede 5, 28 november 2026):
+// gebruikers en toewijzing. Ontwerp: docs/2026-11-27_top_from_scratch_ontwerp.md;
+// semantiek: lib/c2sketch.spp (fase 4, stap 1).
+//
+//   import "lib/top_c2.spp" as TC
+//   import "lib/taxi_minimal.spp" as X
+//   Sim.cel [("Tom", TC.actorTaak X.model X.tom), ("Carrie", TC.actorTaak X.model X.carrie)]
+//
+// De stand van het model (C.Stand) is een bron die gebeurtenissen aanneemt
+// (Top.bronMetGebeurtenissen): over de draad gaat een C.Gebeurtenis, niet de
+// hele stand. Wie de bron bijhoudt (de server, of de lokale driver), past
+// C.controle toe (mag deze actor dit?) en dan C.pas, of weigert met de
+// melding van C.controle. Dat is een controle van het model, geen
+// beveiliging: wie de actor is, zegt het tabblad zelf.
+//
+// Per actor is er een gewone TOP-taak: wat hij ziet (zijn plek, zijn
+// takenlijst met de status, de berichten in de ruimtes die hij leest) en een
+// berichtveld, met als knoppen wat model en stand nu toestaan: een taak
+// beginnen of afronden, iets zeggen in een ruimte, naar een andere plek. Een
+// knop stuurt de gebeurtenis (Top.stuur) en toont daarna het scherm weer.
+module TopC2
+import "lib/list.spp" as L
+import "lib/text.spp" as T
+import "lib/c2sketch.spp" as C
+import "lib/top.spp" as Top
+
+::list = Nil | Cons !x xs
+
+// == De stand als bron ========================================================
+
+standBron m = Top.bronMetGebeurtenissen "stand" "C2sketch.Stand" (C.begin m) (verwerk m)
+
+verwerk m ev s = verwerkMet ev s (C.controle m ev s)
+
+verwerkMet ev s c = if (T.isEmpty c) (Top.Toegepast (C.pas ev s)) (Top.Geweigerd c)
+
+// == Het scherm van een actor =================================================
+
+actorTaak m a = scherm m a ""
+
+// melding: "" of waarom de vorige gebeurtenis geweigerd werd.
+scherm m a melding = metMelding melding (Top.stapMet (Top.beide (Top.kijkGedeeldMet "" (toonVoor m a) (standBron m)) (Top.bewerk "Bericht" "")) (knoppen m a))
+
+metMelding melding t = if (T.isEmpty melding) t (Top.beide (Top.kijk "⚠️ Geweigerd" melding) t)
+
+// De waarde van de stap is een paar (stand, berichttekst).
+standUit pr = getField pr 0
+
+tekstUit pr = getField pr 1
+
+tijd s = C.klok s + 1
+
+// Alle knoppen die er voor deze actor kunnen zijn; de voorwaarde (op de
+// stand en het bericht) zegt welke er nu beschikbaar zijn.
+knoppen m a =
+  L.concat [L.concatMap (taakKnoppen m a) (L.map C.bladId (C.takenlijst m a)),
+            L.map (zegKnop m a) (schrijfRuimtes m a),
+            L.map (gaKnop m a) (L.map C.locNaam (C.locaties m))]
+
+taakKnoppen m a id =
+  [Top.OpActie (T.append "Begin " id) (kan (magBeginnen id)) (doe m a (beginEv a id)),
+   Top.OpActie (T.append "Rond af " id) (kan (magAfronden a id)) (doe m a (rondAfEv a id))]
+
+zegKnop m a r = Top.OpActie (T.append "Zeg in " r) (kan (magZeggen m a r)) (doe m a (zegEv a r))
+
+gaKnop m a l = Top.OpActie (T.append "Ga naar " l) (kan (magGaan a l)) (doe m a (gaEv a l))
+
+// Een voorwaarde op (stand, tekst), als voorwaarde op de waarde van de stap.
+kan p w = Top.heeftWaarde w /\ p (standUit (Top.waardeUit w)) (tekstUit (Top.waardeUit w))
+
+// Na de knop: de gebeurtenis sturen, dan weer het scherm.
+doe m a maakEv pr = Top.daarna (Top.stuur (standBron m) (maakEv (standUit pr) (tekstUit pr))) (scherm m a)
+
+magBeginnen id s t = C.isOpen (C.statusVan s id)
+
+magAfronden a id s t = C.isBezigDoor a (C.statusVan s id)
+
+// Zeggen in een ruimte: er is een bericht, en de actor is bezig met een taak
+// die in die ruimte schrijft. (Strenger dan C.controle, die elke taak op de
+// takenlijst telt; zie "Een keuze voor stap 2" in het fase-4-plan.)
+magZeggen m a r s t = (T.isEmpty (T.trim t) == False) /\ L.any (bezigSchrijvend a r s) (C.takenlijst m a)
+
+bezigSchrijvend a r s b = C.isBezigDoor a (C.statusVan s (C.bladId b)) /\ L.any (schrijftIn r) (C.infoReqs (C.bladTaak b))
+
+schrijftIn r q = C.schrijft q /\ T.equal (C.ruimte q) r
+
+magGaan a l s t = (L.isEmpty (C.directOp s a) == False) /\ (L.any (T.equal l) (C.directOp s a) == False)
+
+beginEv a id s t = C.StartTaak (tijd s) a id
+
+rondAfEv a id s t = C.RondAf (tijd s) a id
+
+zegEv a r s t = C.Info (tijd s) a r t
+
+gaEv a l s t = C.Verplaats (tijd s) a (eersteVan (C.directOp s a)) l
+
+eersteVan xs = case xs (Cons x r -> x) (Nil -> "")
+
+// De ruimtes waarin een taak van deze actor kan schrijven (of lezen).
+schrijfRuimtes m a = uniek (L.concatMap (ruimtesVan C.schrijft) (C.takenlijst m a)) Nil
+
+leesRuimtes m a = uniek (L.concatMap (ruimtesVan C.leest) (C.takenlijst m a)) Nil
+
+ruimtesVan p b = L.map C.ruimte (L.filter p (C.infoReqs (C.bladTaak b)))
+
+uniek xs acc = case xs (Nil -> acc) (Cons x r -> uniek r (if (L.any (T.equal x) acc) acc (L.append acc [x])))
+
+// == Wat een actor ziet ======================================================
+
+// Markdown: een lege regel tussen de delen, anders lopen kop en lijst in
+// elkaar over.
+toonVoor m a s =
+  T.join Top.nl
+    (L.concat [[T.concat ["**Tijd** ", T.showInt (C.klok s), " · ", C.toonPlek m s a], "", "**Taken:**", ""],
+               L.map (\l -> T.append "- " (T.trim l)) (C.toonBoom m s a),
+               ["", "**Ruimtes die je leest:**", ""],
+               L.map (toonRuimte s) (leesRuimtes m a)])
+
+toonRuimte s r = T.concat ["- ", r, ": ", T.join " | " (L.map toonBericht (berichtenIn s r))]
+
+toonBericht b = T.concat [C.van b, ": ", C.tekst b]
+
+berichtenIn s r = L.concatMap (\x -> if (T.equal (C.inRuimte x) r) (C.berichten x) Nil) (C.inhoud s)

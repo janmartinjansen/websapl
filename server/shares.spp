@@ -25,10 +25,24 @@ import "lib/verbinding.spp" as V
 
 ::list = Nil | Cons !x xs
 
-::Share = Share !naam controle !versie !tekst !abonnees
+// verwerk: Nil, of [f] voor een share die gebeurtenissen aanneemt (trede 5
+// van docs/2026-11-27_top_from_scratch_ontwerp.md): f gebeurtenis waarde
+// (beide als ontescapete tekst) geeft Verwerkt <nieuwe waarde> of Geweigerd
+// <melding>. Een `schrijf <share> <versie> gebeurtenis <payload>` past f toe
+// op de actuele waarde (de versie telt dan niet: de server ordent), geeft de
+// schrijver `ok` en alle abonnees (ook de schrijver) een `update`, of bij een
+// weigering de schrijver `fout geweigerd: <melding>`.
+::Share = Share !naam controle !versie !tekst !abonnees verwerk
+
+::Uitkomst = Verwerkt !tekst | Geweigerd !melding
 
 // tekst: de waarde zoals W.packT hem maakt (niet geëscapet).
-share naam controle tekst = Share naam controle 0 (V.esc tekst) Nil
+share naam controle tekst = Share naam controle 0 (V.esc tekst) Nil Nil
+
+// Een share die ook gebeurtenissen aanneemt (zie Uitkomst).
+shareMetGebeurtenissen naam controle verwerk tekst = Share naam controle 0 (V.esc tekst) Nil [verwerk]
+
+soortGebeurtenis = "gebeurtenis"
 
 ::Stap = Stap !shares !uit
 
@@ -79,9 +93,10 @@ schrijven2 !s naam !v soort payload shares = case (zoek naam shares)
   (Nil -> fout s shares (strappend "onbekende share: " naam))
   (Cons sh r ->
     if (V.strEqual soort V.soortWaarde) (schrijven3 s sh v payload shares)
-    (fout s shares (strappend "onbekende soort: " soort)))
+    (if (V.strEqual soort soortGebeurtenis) (gebeuren s sh payload shares)
+    (fout s shares (strappend "onbekende soort: " soort))))
 
-schrijven3 !s sh !v payload shares = case sh (Share naam controle versie tekst abonnees ->
+schrijven3 !s sh !v payload shares = case sh (Share naam controle versie tekst abonnees vw ->
   if (v < 0) (fout s shares "versie is geen getal")
   (if (v != versie) (Stap shares (Cons (aan s (regelMet "conflict" naam versie tekst)) Nil))
   (geldig s naam (versie + 1) payload (zonder s abonnees) (controle (V.unesc payload)) shares)))
@@ -92,6 +107,22 @@ geldig !s naam !versie2 payload anderen melding shares =
         (Cons (regelMet "bewaar" naam versie2 payload)
         (Cons (aan s (V.regel (Cons "ok" (Cons naam (Cons (V.toonGetal versie2) Nil)))))
               (naarAlle anderen (regelMet "update" naam versie2 payload)))))
+
+// Een gebeurtenis: f toepassen op de actuele waarde.
+gebeuren !s sh payload shares = case sh (Share naam controle versie tekst abonnees vw ->
+  case vw
+    (Nil -> fout s shares (strappend "share neemt geen gebeurtenissen aan: " naam))
+    (Cons f r -> gebeurd s naam (versie + 1) abonnees (f (V.unesc payload) (V.unesc tekst)) shares))
+
+gebeurd !s naam !versie2 abonnees uitkomst shares = case uitkomst
+  (Geweigerd m -> fout s shares (strappend "geweigerd: " (V.esc m)))
+  (Verwerkt t -> gebeurdMet s naam versie2 abonnees (V.esc t) shares)
+
+gebeurdMet !s naam !versie2 abonnees payload shares =
+  Stap (map (vervang naam versie2 payload) shares)
+       (Cons (regelMet "bewaar" naam versie2 payload)
+       (Cons (aan s (V.regel (Cons "ok" (Cons naam (Cons (V.toonGetal versie2) Nil)))))
+             (naarAlle abonnees (regelMet "update" naam versie2 payload))))
 
 // == Herstel (fase 2) =========================================================
 // `herstel <share> <versie> <soort> <payload>`: de laatste bewaarde stand van
@@ -117,9 +148,9 @@ herstellen3 naam !v payload melding shares =
 
 herstelFout naam m shares = Stap shares (Cons (strappend "herstelfout " (strappend naam (strappend " " m))) Nil)
 
-controleVan sh t = case sh (Share n c v x a -> c t)
+controleVan sh t = case sh (Share n c v x a vw -> c t)
 
-updateRegel sh = case sh (Share naam controle versie tekst abonnees -> regelMet "update" naam versie tekst)
+updateRegel sh = case sh (Share naam controle versie tekst abonnees vw -> regelMet "update" naam versie tekst)
 
 regelMet w naam !versie tekst = V.regel (Cons w (Cons naam (Cons (V.toonGetal versie) (Cons V.soortWaarde (Cons tekst Nil)))))
 
@@ -135,13 +166,13 @@ komma xs = case xs (Nil -> "") (Cons x r -> case r (Nil -> V.toonGetal x) (_ -> 
 
 zoek naam shares = case shares (Nil -> Nil) (Cons sh r -> if (V.strEqual (naamVan sh) naam) (Cons sh Nil) (zoek naam r))
 
-naamVan sh = case sh (Share naam c v t a -> naam)
+naamVan sh = case sh (Share naam c v t a vw -> naam)
 
-abonneer !s naam sh = case sh (Share n c v t a -> if (V.strEqual n naam) (Share n c v t (Cons s (zonder s a))) sh)
+abonneer !s naam sh = case sh (Share n c v t a vw -> if (V.strEqual n naam) (Share n c v t (Cons s (zonder s a)) vw) sh)
 
-opzeggen !s sh = case sh (Share n c v t a -> Share n c v t (zonder s a))
+opzeggen !s sh = case sh (Share n c v t a vw -> Share n c v t (zonder s a) vw)
 
-vervang naam !versie tekst sh = case sh (Share n c v t a -> if (V.strEqual n naam) (Share n c versie tekst a) sh)
+vervang naam !versie tekst sh = case sh (Share n c v t a vw -> if (V.strEqual n naam) (Share n c versie tekst a vw) sh)
 
 zonder !s xs = case xs (Nil -> Nil) (Cons x r -> if (x == s) (zonder s r) (heelCons x (zonder s r)))
 

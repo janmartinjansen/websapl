@@ -3261,11 +3261,19 @@ window.WEBSAPL_TREE = [
         "isBinary": false
       },
       {
+        "name": "top_c2.spp",
+        "path": "lib/top_c2.spp",
+        "type": "file",
+        "ext": ".spp",
+        "size": 5366,
+        "isBinary": false
+      },
+      {
         "name": "top_sim.spp",
         "path": "lib/top_sim.spp",
         "type": "file",
         "ext": ".spp",
-        "size": 14943,
+        "size": 17421,
         "isBinary": false
       },
       {
@@ -3273,7 +3281,7 @@ window.WEBSAPL_TREE = [
         "path": "lib/top.spp",
         "type": "file",
         "ext": ".spp",
-        "size": 31198,
+        "size": 34180,
         "isBinary": false
       },
       {
@@ -3398,7 +3406,7 @@ window.WEBSAPL_TREE = [
             "path": "notebooks/top/demo.spp",
             "type": "file",
             "ext": ".spp",
-            "size": 7142,
+            "size": 8717,
             "isBinary": false
           },
           {
@@ -4657,7 +4665,7 @@ window.WEBSAPL_TREE = [
         "path": "server/shares.spp",
         "type": "file",
         "ext": ".spp",
-        "size": 7571,
+        "size": 9325,
         "isBinary": false
       }
     ],
